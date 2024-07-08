@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Serviços</h1>
+    <a href="{{ path('servico_novo') }}" class="btn btn-primary mb-3">Novo Serviço</a>
+    <ul class="list-group">
+        {% for servico in servicos %}
+            <li class="list-group-item">
+                {{ servico.nome }} - {{ servico.descricao }} - R$ {{ servico.valor }}
+                <a href="{{ path('servico_editar', {'id': servico.id}) }}" class="btn btn-sm btn-warning float-right ml-2">Editar</a>
+                <form method="post" action="{{ path('servico_deletar', {'id': servico.id}) }}" class="float-right">
+                    <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

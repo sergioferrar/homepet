@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Clientes</h1>
+    <form method="get" action="{{ path('cliente_index') }}" class="form-inline mb-3">
+        <input type="text" name="search" class="form-control mr-sm-2" placeholder="Pesquisar cliente">
+        <button type="submit" class="btn btn-primary">Pesquisar</button>
+    </form>
+    <a href="{{ path('cliente_novo') }}" class="btn btn-primary mb-3">Novo Cliente</a>
+    <ul class="list-group">
+        {% for cliente in clientes %}
+            <li class="list-group-item">
+                {{ cliente.nome }} - {{ cliente.email }} - {{ cliente.telefone }}
+                <a href="{{ path('cliente_agendamentos', {'id': cliente.id}) }}" class="btn btn-sm btn-info float-right ml-2">Ver Agendamentos</a>
+                <a href="{{ path('cliente_editar', {'id': cliente.id}) }}" class="btn btn-sm btn-warning float-right ml-2">Editar</a>
+                <form method="post" action="{{ path('cliente_deletar', {'id': cliente.id}) }}" class="float-right">
+                    <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

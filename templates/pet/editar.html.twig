@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="form-container">
+        <h1 class="mb-4">Editar Pet</h1>
+        <form method="post" action="{{ path('pet_editar', {'id': pet.id}) }}">
+            <div class="form-group">
+                <label for="nome">Nome</label>
+                <input type="text" class="form-control" id="nome" name="nome" value="{{ pet.nome }}" required>
+            </div>
+            <div class="form-group">
+                <label for="tipo">Tipo</label>
+                <input type="text" class="form-control" id="tipo" name="tipo" value="{{ pet.tipo }}" required>
+            </div>
+            <div class="form-group">
+                <label for="idade">Idade</label>
+                <input type="number" class="form-control" id="idade" name="idade" value="{{ pet.idade }}" required>
+            </div>
+            <div class="form-group">
+                <label for="dono_id">Dono</label>
+                <select class="form-control" id="dono_id" name="dono_id" required>
+                    {% for cliente in clientes %}
+                        <option value="{{ cliente.id }}" {% if cliente.id == pet.dono_id %}selected{% endif %}>{{ cliente.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

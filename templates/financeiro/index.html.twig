@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Financeiro</h1>
+    
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{{ path('financeiro_index', {'data': data|date_modify('-1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Anterior</a>
+        <h2>{{ data|date('d/m/Y') }}</h2>
+        <a href="{{ path('financeiro_index', {'data': data|date_modify('+1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Próximo</a>
+    </div>
+
+    <ul class="list-group">
+        {% for financeiro in financeiros %}
+            <li class="list-group-item bg-dark text-light">
+                {{ financeiro.data|date('d/m/Y H:i') }} - {{ financeiro.descricao }} - R$ {{ financeiro.valor }} - Pet: {{ financeiro.pet_nome }}
+                <form method="post" action="{{ path('financeiro_deletar', {'id': financeiro.id}) }}" class="float-right ml-2">
+                    <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
+                </form>
+                <a href="{{ path('financeiro_editar', {'id': financeiro.id}) }}" class="btn btn-sm btn-warning float-right ml-2">Editar</a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

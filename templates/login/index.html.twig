@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h1 class="display-4">Login</h1>
+    <form method="post" action="{{ path('login') }}">
+        <div class="form-group">
+            <label for="nome_usuario">Usuário</label>
+            <input type="text" class="form-control" id="nome_usuario" name="_username" value="{{ ultimo_nome_usuario }}" required autofocus>
+        </div>
+        <div class="form-group">
+            <label for="senha">Senha</label>
+            <input type="password" class="form-control" id="senha" name="_password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Entrar</button>
+        {% if erro %}
+            <div class="alert alert-danger mt-3">{{ erro.messageKey|trans(erro.messageData, 'security') }}</div>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}

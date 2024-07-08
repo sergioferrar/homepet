@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Agendamentos de {{ cliente.nome }}</h1>
+    <ul class="list-group">
+        {% for agendamento in agendamentos %}
+            <li class="list-group-item">
+                {{ agendamento.data|date('d/m/Y H:i') }} - {{ agendamento.pet_nome }} - {{ agendamento.servico_nome }}
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ path('cliente_index') }}" class="btn btn-secondary mt-3">Voltar</a>
+</div>
+{% endblock %}

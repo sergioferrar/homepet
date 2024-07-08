@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="jumbotron text-center" >
+    <h1 class="display-4" color: black >Bem-vindo ao Pet Shop</h1>
+    <p class="lead">Sistema de gerenciamento de agendamentos, clientes, pets e serviços.</p>
+    <hr class="my-4">
+    
+    <a class="btn btn-primary btn-lg text-white mr-2" href="{{ path('agendamento_novo') }}" role="button">Novo Agendamento</a>
+    <a class="btn btn-primary btn-lg text-white mr-2" href="{{ path('cliente_novo') }}" role="button">Cadastro de Cliente</a>
+    <a class="btn btn-primary btn-lg text-white mr-2" href="{{ path('pet_novo') }}" role="button">Cadastro de Pet</a>
+    <a class="btn btn-primary btn-lg text-white" href="{{ path('servico_novo') }}" role="button">Cadastro de Serviço</a>
+</div>
+{% endblock %}

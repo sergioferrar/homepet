@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Pets</h1>
+    <form method="get" action="{{ path('pet_index') }}" class="form-inline mb-3">
+        <input type="text" name="search" class="form-control mr-sm-2" placeholder="Pesquisar pet">
+        <button type="submit" class="btn btn-primary">Pesquisar</button>
+    </form>
+    <a href="{{ path('pet_novo') }}" class="btn btn-primary mb-3">Novo Pet</a>
+    <ul class="list-group">
+        {% for pet in pets %}
+            <li class="list-group-item">
+                {{ pet.nome }} - {{ pet.tipo }} - {{ pet.idade }} anos - Dono ID: {{ pet.dono_id }}
+                <a href="{{ path('pet_editar', {'id': pet.id}) }}" class="btn btn-sm btn-warning float-right ml-2">Editar</a>
+                <form method="post" action="{{ path('pet_deletar', {'id': pet.id}) }}" class="float-right">
+                    <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
