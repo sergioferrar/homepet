@@ -55,3 +55,23 @@ pet_deletar:
 financeiro_relatorio:
     path: /financeiro/relatorio
     controller: App\Controller\FinanceiroController::relatorio
+
+novo_agendamento:
+    path: /agendamento/novo
+    controller: App\Controller\AgendamentoController::novo
+    methods: GET|POST
+
+cadastro_cliente:
+    path: /cliente/cadastro
+    controller: App\Controller\ClienteController::cadastro
+    methods: GET|POST
+
+cadastro_pet:
+    path: /pet/cadastro
+    controller: App\Controller\PetController::cadastro
+    methods: GET|POST
+
+cadastro_servico:
+    path: /servico/cadastro
+    controller: App\Controller\ServicoController::cadastro
+    methods: GET|POST

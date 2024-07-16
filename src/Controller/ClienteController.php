@@ -125,4 +125,12 @@ class ClienteController extends AbstractController
             'agendamentos' => $agendamentos
         ]);
     }
+
+    /**
+     * @Route("/cliente/cadastro", name="cadastro_cliente")
+     */
+    public function cadastro(): Response
+    {
+        return $this->render('cliente/cadastro_cliente.html.twig');
+    }
 }

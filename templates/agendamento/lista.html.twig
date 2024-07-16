@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Agendamentos</title>
+    <style>
+        .agendamento {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .agendamento.pronto {
+            background-color: #c8e6c9; /* Verde claro */
+        }
+    </style>
+</head>
+<body>
+    <h1>Lista de Agendamentos</h1>
+    <div>
+        {% for agendamento in agendamentos %}
+            <div class="agendamento {% if agendamento.pronto %}pronto{% endif %}">
+                <p>{{ agendamento.data|date('d/m/Y') }} - {{ agendamento.pet_nome }} - {{ agendamento.servico_nome }}</p>
+                {% if not agendamento.pronto %}
+                    <a href="{{ path('agendamento_pronto', {id: agendamento.id}) }}">Marcar como Pronto</a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

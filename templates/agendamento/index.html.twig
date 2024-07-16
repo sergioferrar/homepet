@@ -10,6 +10,10 @@
         <a href="{{ path('agendamento_index', {'data': data|date_modify('+1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Próximo</a>
     </div>
 
+    <div class="mb-3">
+        <strong>Total de agendamentos: {{ totalAgendamentos }}</strong>
+    </div>
+
     <a href="{{ path('agendamento_novo') }}" class="btn btn-primary mb-3">Novo Agendamento</a>
     
     <form method="get" action="{{ path('agendamento_index') }}" class="mb-3">

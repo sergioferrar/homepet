@@ -102,4 +102,23 @@ class AgendamentoRepository
         $sql = 'UPDATE Agendamento SET concluido = 1 WHERE id = :id';
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
+
+
+    public function marcarComoPronto($id)
+    {
+        $agendamento = $this->find($id);
+        if ($agendamento) {
+            $agendamento->setPronto(true);
+            $this->_em->persist($agendamento);
+            $this->_em->flush();
+        }
+    }
+
+    public function contarAgendamentosPorData(\DateTime $data): int
+    {
+        $sql = 'SELECT COUNT(*) as total FROM Agendamento WHERE DATE(data) = :data';
+        $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
+        $result = $stmt->fetchAssociative();
+        return (int)$result['total'];
+    }
 }

@@ -30,14 +30,16 @@ class AgendamentoController extends AbstractController
     /**
      * @Route("/", name="agendamento_index", methods={"GET"})
      */
-    public function index(Request $request): Response
+     public function index(Request $request): Response
     {
         $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
         $agendamentos = $this->agendamentoRepository->findByDate($data);
+        $totalAgendamentos = $this->agendamentoRepository->contarAgendamentosPorData($data);
 
         return $this->render('agendamento/index.html.twig', [
             'agendamentos' => $agendamentos,
             'data' => $data,
+            'totalAgendamentos' => $totalAgendamentos,
         ]);
     }
 
@@ -161,4 +163,23 @@ class AgendamentoController extends AbstractController
 
         return $this->redirectToRoute('agendamento_index');
     }
+
+     /**
+     * @Route("/agendamento/pronto/{id}", name="agendamento_pronto")
+     */
+    public function marcarComoPronto($id, AgendamentoRepository $agendamentoRepository): Response
+    {
+        $agendamentoRepository->marcarComoPronto($id);
+        return $this->redirectToRoute('lista_agendamentos');
+    }
+
+    /**
+     * @Route("/agendamentos", name="lista_agendamentos")
+     */
+    public function listar(AgendamentoRepository $agendamentoRepository): Response
+    {
+        $agendamentos = $agendamentoRepository->findAll();
+        return $this->render('agendamento/lista.html.twig', ['agendamentos' => $agendamentos]);
+    }
+
 }

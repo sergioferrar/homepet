@@ -63,4 +63,15 @@ class Agendamento
         $this->concluido = $concluido;
         return $this;
     }
+
+     public function isPronto(): bool
+    {
+        return $this->pronto;
+    }
+
+    public function setPronto(bool $pronto): self
+    {
+        $this->pronto = $pronto;
+        return $this;
+    }
 }

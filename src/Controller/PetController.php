@@ -107,4 +107,12 @@ class PetController extends AbstractController
         $this->petRepository->delete($id);
         return $this->redirectToRoute('pet_index');
     }
+
+    /**
+     * @Route("/pet/cadastro", name="cadastro_pet")
+     */
+    public function cadastro(): Response
+    {
+        return $this->render('pet/cadastro_pet.html.twig');
+    }
 }
