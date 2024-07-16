@@ -25,21 +25,23 @@
         </div>
     </form>
 
-    <ul class="list-group">
-        {% for agendamento in agendamentos %}
-            <li class="list-group-item bg-dark text-light">
-                {{ agendamento.data|date('d/m/Y H:i') }} - {{ agendamento.pet_nome }} - {{ agendamento.servico_nome }}
-                {% if not agendamento.concluido %}
-                    <form method="post" action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}" class="float-right ml-2">
-                        <button type="submit" class="btn btn-sm btn-success">Pagamento concluido</button>
-                    </form>
-                {% endif %}
-                <a href="{{ path('agendamento_editar', {'id': agendamento.id}) }}" class="btn btn-sm btn-warning float-right ml-2">Editar</a>
-                <form method="post" action="{{ path('agendamento_deletar', {'id': agendamento.id}) }}" class="float-right">
-                    <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
+<ul class="list-group">
+    {% for agendamento in agendamentos %}
+        <li class="list-group-item bg-dark text-light">
+            {{ agendamento.data|date('d/m/Y H:i') }} - {{ agendamento.pet_nome }} ({{ agendamento.dono_nome }}) - {{ agendamento.servico_nome }}
+            {% if not agendamento.concluido %}
+                <form method="post" action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}" class="float-right ml-2">
+                    <button type="submit" class="btn btn-sm btn-success">Pagamento concluido</button>
                 </form>
-            </li>
-        {% endfor %}
-    </ul>
+            {% endif %}
+            <a href="{{ path('agendamento_editar', {'id': agendamento.id}) }}" class="btn btn-sm btn-warning float-right ml-2">Editar</a>
+            <form method="post" action="{{ path('agendamento_deletar', {'id': agendamento.id}) }}" class="float-right">
+                <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
+            </form>
+        </li>
+    {% endfor %}
+</ul>
+
+
 </div>
 {% endblock %}
