@@ -13,9 +13,9 @@ class AgendamentoRepository
         $this->conn = $conn;
     }
 
-     public function findAll(): array
+    public function findAll(): array
     {
-        $sql = 'SELECT a.id, a.data, a.concluido, p.nome as pet_nome, c.nome as dono_nome, s.nome as servico_nome
+        $sql = 'SELECT a.id, a.data, a.concluido, a.hora_chegada, p.nome as pet_nome, c.nome as dono_nome, s.nome as servico_nome
                 FROM Agendamento a
                 JOIN Pet p ON a.pet_id = p.id
                 JOIN Cliente c ON p.dono_id = c.id

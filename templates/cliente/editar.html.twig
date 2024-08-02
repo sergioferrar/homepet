@@ -2,27 +2,30 @@
 
 {% block body %}
 <div class="container mt-5">
-    <div class="form-container">
-        <h1 class="mb-4">Editar Cliente</h1>
-        <form method="post" action="{{ path('cliente_editar', {'id': cliente.id}) }}">
-            <div class="form-group">
-                <label for="nome">Nome</label>
-                <input type="text" class="form-control" id="nome" name="nome" value="{{ cliente.nome }}" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" class="form-control" id="email" name="email" value="{{ cliente.email }}" required>
-            </div>
-            <div class="form-group">
-                <label for="telefone">Telefone</label>
-                <input type="text" class="form-control" id="telefone" name="telefone" value="{{ cliente.telefone }}" required>
-            </div>
-            <div class="form-group">
-                <label for="Endereco">Endereço</label>
-                <input type="text" class="form-control" id="Endereco" name="Endereco" value="{{ cliente.Endereco }}" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Salvar</button>
-        </form>
-    </div>
+    <h1>Editar Cliente</h1>
+    <form method="post" action="{{ path('cliente_update', {'id': cliente.id}) }}">
+        <!-- Campos de edição existentes -->
+        <div class="form-group">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" name="nome" required class="form-control" value="{{ cliente.nome }}">
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" class="form-control" value="{{ cliente.email }}">
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            <button type="button" class="btn btn-danger" onclick="confirmDelete('{{ path('cliente_delete', {'id': cliente.id}) }}')">Deletar Cliente</button>
+        </div>
+    </form>
 </div>
+
+<script>
+function confirmDelete(url) {
+    if (confirm('Você tem certeza que deseja deletar este cliente?')) {
+        window.location.href = url;
+    }
+}
+</script>
+
 {% endblock %}

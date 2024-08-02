@@ -1,24 +1,51 @@
 {% extends 'base.html.twig' %}
 
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .mr-custom {
+        margin-right: 8px; /* Espaçamento entre os botões */
+    }
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container mt-5">
     <h1>Clientes</h1>
     <form method="get" action="{{ path('cliente_index') }}" class="form-inline mb-3">
-        <input type="text" name="search" class="form-control mr-sm-2" placeholder="Pesquisar cliente">
-        <button type="submit" class="btn btn-primary">Pesquisar</button>
+        <input type="text" name="search" class="form-control mr-sm-2" placeholder="Pesquisar cliente"><br>
+        <button type="submit" class="btn btn-secondary">Pesquisar</button>
+    <a href="{{ path('cliente_novo') }}" class="btn btn-secondary mb-0 float-end">Novo Cliente</a>
     </form>
-    <a href="{{ path('cliente_novo') }}" class="btn btn-primary mb-3">Novo Cliente</a>
-    <ul class="list-group">
+
+    <!-- Bordered Table -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Telefone</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
         {% for cliente in clientes %}
-            <li class="list-group-item">
-                {{ cliente.nome }} - {{ cliente.email }} - {{ cliente.telefone }}
-                <a href="{{ path('cliente_agendamentos', {'id': cliente.id}) }}" class="btn btn-sm btn-info float-right ml-2">Ver Agendamentos</a>
-                <a href="{{ path('cliente_editar', {'id': cliente.id}) }}" class="btn btn-sm btn-warning float-right ml-2">Editar</a>
-                <form method="post" action="{{ path('cliente_deletar', {'id': cliente.id}) }}" class="float-right">
-                    <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
-                </form>
-            </li>
+            <tr>
+                <td>{{ cliente.nome }}</td>
+                <td>{{ cliente.email }}</td>
+                <td>{{ cliente.telefone }}</td>
+                <td>
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                        <a href="{{ path('cliente_agendamentos', {'id': cliente.id}) }}" class="btn btn-info btn-sm mr-custom">Ver Agendamentos</a>
+                        <a href="{{ path('cliente_editar', {'id': cliente.id}) }}" class="btn btn-warning btn-sm mr-custom">Editar</a>
+                        <form method="post" action="{{ path('cliente_deletar', {'id': cliente.id}) }}" class="d-inline">
+                            <button type="submit" class="btn btn-danger btn-sm">Deletar</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
         {% endfor %}
-    </ul>
+        </tbody>
+    </table>
 </div>
 {% endblock %}

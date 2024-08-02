@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
+
 <div class="container mt-5">
     <h1>Agendamentos</h1>
     
@@ -14,7 +15,7 @@
         <strong>Total de agendamentos: {{ totalAgendamentos }}</strong>
     </div>
 
-    <a href="{{ path('agendamento_novo') }}" class="btn btn-primary mb-3">Novo Agendamento</a>
+    <a href="{{ path('agendamento_novo') }}" class="btn btn-secondary mb-3">Novo Agendamento</a>
     
     <form method="get" action="{{ path('agendamento_index') }}" class="mb-3">
         <div class="input-group">
@@ -25,23 +26,69 @@
         </div>
     </form>
 
-<ul class="list-group">
-    {% for agendamento in agendamentos %}
-        <li class="list-group-item bg-dark text-light">
-            {{ agendamento.data|date('d/m/Y H:i') }} - {{ agendamento.pet_nome }} ({{ agendamento.dono_nome }}) - {{ agendamento.servico_nome }}
-            {% if not agendamento.concluido %}
-                <form method="post" action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}" class="float-right ml-2">
-                    <button type="submit" class="btn btn-sm btn-success">Pagamento concluido</button>
-                </form>
-            {% endif %}
-            <a href="{{ path('agendamento_editar', {'id': agendamento.id}) }}" class="btn btn-sm btn-warning float-right ml-2">Editar</a>
-            <form method="post" action="{{ path('agendamento_deletar', {'id': agendamento.id}) }}" class="float-right">
-                <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
-            </form>
-        </li>
-    {% endfor %}
-</ul>
+
+{% block stylesheets %}
+
+<style>
+    .mr-custom {
+        margin-right: 8px; /* Espaçamento entre os botões */
+        border-radius: 10px;  /* Arredondamento dos botões */
+    }
+</style>
+{% endblock %}
 
 
+<div class="container mt-5">
+    <h1>Agendamentos</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Lista de Agendamentos</h5>
+            <p>Veja abaixo todos os agendamentos programados e suas informações detalhadas.</p>
+            <!-- Bordered Table -->
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Nome do Pet</th>
+                        <th>Nome do Dono</th>
+                        <th>Serviço</th>
+                        <th>Hora de Chegada</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for agendamento in agendamentos %}
+                    <tr>
+                        <td>{{ agendamento.data|date('d/m/Y H:i') }}</td>
+                        <td>{{ agendamento.pet_nome }}</td>
+                        <td>{{ agendamento.dono_nome }}</td>
+                        <td>{{ agendamento.servico_nome }}</td>
+                        <td>
+                            {% if agendamento.hora_chegada is defined %}
+                            {{ agendamento.hora_chegada|date('H:i') }}
+                            {% else %}
+                            Não definido
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group" aria-label="Basic example">
+                                <a href="{{ path('agendamento_editar', {'id': agendamento.id}) }}" class="btn btn-warning btn-sm mr-custom">Editar</a>
+                                <form method="post" action="{{ path('agendamento_deletar', {'id': agendamento.id}) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-danger btn-sm mr-custom">Deletar</button>
+                                </form>
+                                {% if not agendamento.concluido %}
+                                <form method="post" action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-success btn-sm">Concluído</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}

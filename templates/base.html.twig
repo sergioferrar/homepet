@@ -1,74 +1,697 @@
+
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>{% block title %}HomePet{% endblock %}</title>
-    {% block stylesheets %}
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-        <style>
-            .navbar {
-                background-color: #343a40;
-            }
-            .navbar-brand, .nav-link {
-                color: #ffffff !important;
-            }
-            .navbar-brand:hover, .nav-link:hover {
-                color: #ffffff !important;
-            }
-            .dropdown-menu {
-                background-color: #343a40;
-            }
-            .dropdown-item {
-                color: #ffffff !important;
-            }
-            .dropdown-item:hover {
-                background-color: #495057;
-            }
-        </style>
-    {% endblock %}
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Home Pet Shop System</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css')}}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css')}}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/boxicons/css/boxicons.min.css')}}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/quill/quill.snow.css')}}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/quill/quill.bubble.css')}}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/remixicon/remixicon.css')}}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/simple-datatables/style.css')}}" rel="stylesheet">
+
+  <!-- Template Main CSS File -->
+  <link href="{{ asset('assets/css/style.css')}}" rel="stylesheet">
+
+  <!-- =======================================================
+  * Template Name: NiceAdmin
+  * Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
+  * Updated: Apr 20 2024 with Bootstrap v5.3.3
+  * Author: BootstrapMade.com
+  * License: https://bootstrapmade.com/license/
+  ======================================================== -->
 </head>
+
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('home') }}">Home</a>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center">
+
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center">
+        
+            <span class="d-none d-lg-block">  Home Pet Shop</span>
+        
+        
+      </a>
+      
+    </div><!-- End Logo -->
+
+    <div class="search-bar">
+      <form class="search-form d-flex align-items-center" method="POST" action="#">
+        <input type="text" name="query" placeholder="Search" title="Enter search keyword">
+        <button type="submit" title="Search"><i class="bi bi-search"></i></button>
+      </form>
+    </div><!-- End Search Bar -->
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+
+        <li class="nav-item d-block d-lg-none">
+          <a class="nav-link nav-icon search-bar-toggle " href="#">
+            <i class="bi bi-search"></i>
+          </a>
+        </li><!-- End Search Icon-->
+
+        <li class="nav-item dropdown">
+
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-bell"></i>
+            <span class="badge bg-primary badge-number"></span>
+          </a><!-- End Notification Icon -->
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
+            <li class="dropdown-header">
+              You have 4 new notifications
+              <a href="#"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('agendamento_index') }}">Agendamentos</a>
+            <li>
+              <hr class="dropdown-divider">
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('cliente_index') }}">Clientes</a>
+
+            <li class="notification-item">
+              <i class="bi bi-exclamation-circle text-warning"></i>
+              <div>
+                <h4>Lorem Ipsum</h4>
+                <p>Quae dolorem earum veritatis oditseno</p>
+                <p>30 min. ago</p>
+              </div>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('pet_index') }}">Pets</a>
+
+            <li>
+              <hr class="dropdown-divider">
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('servico_index') }}">Serviços</a>
+
+            <li class="notification-item">
+              <i class="bi bi-x-circle text-danger"></i>
+              <div>
+                <h4>Atque rerum nesciunt</h4>
+                <p>Quae dolorem earum veritatis oditseno</p>
+                <p>1 hr. ago</p>
+              </div>
             </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="financeiroDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Financeiro
-                </a>
-                <div class="dropdown-menu" aria-labelledby="financeiroDropdown">
-                    <a class="dropdown-item" href="{{ path('financeiro_index') }}">Financeiro</a>
-                    <a class="dropdown-item" href="{{ path('financeiro_relatorio') }}">Relatório Financeiro</a>
+
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li class="notification-item">
+              <i class="bi bi-check-circle text-success"></i>
+              <div>
+                <h4>Sit rerum fuga</h4>
+                <p>Quae dolorem earum veritatis oditseno</p>
+                <p>2 hrs. ago</p>
+              </div>
+            </li>
+
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li class="notification-item">
+              <i class="bi bi-info-circle text-primary"></i>
+              <div>
+                <h4>Dicta reprehenderit</h4>
+                <p>Quae dolorem earum veritatis oditseno</p>
+                <p>4 hrs. ago</p>
+              </div>
+            </li>
+
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li class="dropdown-footer">
+              <a href="#">Show all notifications</a>
+            </li>
+
+          </ul><!-- End Notification Dropdown Items -->
+
+        </li><!-- End Notification Nav -->
+
+        <li class="nav-item dropdown">
+
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-chat-left-text"></i>
+            <span class="badge bg-success badge-number"></span>
+          </a><!-- End Messages Icon -->
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow messages">
+            <li class="dropdown-header">
+              You have 3 new messages
+              <a href="#"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li class="message-item">
+              <a href="#">
+                <img src="assets/img/messages-1.jpg" alt="" class="rounded-circle">
+                <div>
+                  <h4>Maria Hudson</h4>
+                  <p>Velit asperiores et ducimus soluta repudiandae labore officia est ut...</p>
+                  <p>4 hrs. ago</p>
                 </div>
+              </a>
             </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li class="message-item">
+              <a href="#">
+                <img src="assets/img/messages-2.jpg" alt="" class="rounded-circle">
+                <div>
+                  <h4>Anna Nelson</h4>
+                  <p>Velit asperiores et ducimus soluta repudiandae labore officia est ut...</p>
+                  <p>6 hrs. ago</p>
+                </div>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li class="message-item">
+              <a href="#">
+                <img src="assets/img/messages-3.jpg" alt="" class="rounded-circle">
+                <div>
+                  <h4>David Muldon</h4>
+                  <p>Velit asperiores et ducimus soluta repudiandae labore officia est ut...</p>
+                  <p>8 hrs. ago</p>
+                </div>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li class="dropdown-footer">
+              <a href="#">Show all messages</a>
+            </li>
+
+          </ul><!-- End Messages Dropdown Items -->
+
+        </li><!-- End Messages Nav -->
+
+        <li class="nav-item dropdown pe-3">
+
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <img src="https://avatars.githubusercontent.com/u/93411015?v=4" alt="Profile" class="rounded-circle">
+            <span class="d-none d-md-block dropdown-toggle ps-2">Sérgio Ferrari</span>
+          </a><!-- End Profile Iamge Icon -->
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+            <li class="dropdown-header">
+              <h6>Sérgio Ferrari</h6>
+              <span>CEO</span>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <i class="bi bi-person"></i>
+                <span>My Profile</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <i class="bi bi-gear"></i>
+                <span>Account Settings</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
+                <i class="bi bi-question-circle"></i>
+                <span>Need Help?</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="#">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Sign Out</span>
+              </a>
+            </li>
+
+          </ul><!-- End Profile Dropdown Items -->
+        </li><!-- End Profile Nav -->
+
+      </ul>
+    </nav><!-- End Icons Navigation -->
+
+  </header><!-- End Header -->
+
+  <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
+
+    <ul class="sidebar-nav" id="sidebar-nav">
+
+      <li class="nav-item">
+        <a class="nav-link " href="{{ path('home') }}">
+          <i class="bi bi-grid"></i>
+          <span>Home</span>
+        </a>
+      </li><!-- End Dashboard Nav -->
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#post" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-person-vcard"></i><span>Agendamento</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="post" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="{{ path('agendamento_novo') }}">
+              <i class="bi bi-circle"></i><span>Novo Agendamento</span>
+            </a>
+          </li>
+          <li>
+
+          <li>
+            <a href="{{ path('agendamento_index') }}">
+              <i class="bi bi-circle"></i><span>Ver todos</span>
+            </a>
+          </li>
         </ul>
-        {% if app.user %}
-            <div class="navbar-text-container">
-                <span>Olá, {{ app.user.username }} | <a href="{{ path('logout') }}">Logout</a></span>
-            </div>
-        {% else %}
-            <a class="nav-link" href="{{ path('login') }}">Login</a>
-        {% endif %}
-    </div>
-</nav>
+      </li>
+
+      
+      <li class="nav-item"> 
+
+        <a class="nav-link collapsed" data-bs-target="#produtos" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-person-circle"></i><span>Clientes</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="produtos" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="{{ path('cliente_novo') }}">
+              <i class="bi bi-circle"></i><span>Novo cliente</span>
+            </a>
+          </li>
+          <li>
+            <a href="{{ path('cliente_index') }}">
+              <i class="bi bi-circle"></i><span>Clientes <span class="badge badge-sm bg-danger text-white">1</span></span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#pedidos" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-shop"></i><span>Pets</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="pedidos" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="{{ path('pet_index') }}">
+              <i class="bi bi-circle"></i><span> Pets <span class="badge badge-sm bg-danger text-white">1</span></span>
+            </a>
+          </li>
+          <li>
+            <a href="{{ path('pet_novo') }}">
+              <i class="bi bi-circle"></i><span>Cadastro de Pets </span>
+            </a>
+          </li>
+        <!--  <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Cancelados</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Criar Pedido</span>
+            </a>
+          </li>-->
+        </ul>
+      </li>
+
+      <!-- EAD -->
+
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#servico" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-tools"></i><span>Serviços</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="servico" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="{{ path('servico_index') }}">
+              <i class="bi bi-circle"></i><span>Serviços Cadastrados</span>
+            </a>
+          </li>
+          <li>
+            <a href="{{ path('servico_novo') }}">
+              <i class="bi bi-circle"></i><span>Novo Serviço</span>
+            </a>
+          </li>
+          <!--<li>
+            <a href="cadastro.html">
+              <i class="bi bi-circle"></i><span>Novo Curso</span>
+            </a>
+          </li>-->
+        </ul>
+      </li>
+
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#financeiroDropdown" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-currency-dollar"></i><span>Financeiro</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="financeiroDropdown" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+                  <a href="{{ path('financeiro_index') }}">
+                <i class="bi bi-circle"></i><span>Financeiro Diário</span>
+          
+              <a href="{{ path('financeiro_relatorio') }}">
+              <i class="bi bi-circle"></i><span>Relatório Financeiro</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+      
+    
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#alunos" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-person-square"></i><span>Produtos</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="alunos" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Produtos Cadastrados</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Cadastrar Produtos <span class="badge badge-sm bg-danger text-white"></span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+<!-- 
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#suporte" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-headset"></i><span>Suporte</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="suporte" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Alerts</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#matriculas" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-journal-text"></i><span>Matriculas</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="matriculas" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Todos os Pedidos</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Vendas</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Cupons</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Pedidos Com Chargeback</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#lives" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-collection-play"></i><span>Lives</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="lives" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Alerts</span>
+            </a>
+          </li>
+        </ul>
+      </li> -->
+
+
+
+      <!-- IMOBI 
+
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#imobi" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-house"></i><span>Imóveis</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="imobi" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Ver Imóveis</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Indisponíveis</span>
+            </a>
+          </li>
+          <li>
+            <a href="cadastro.html">
+              <i class="bi bi-circle"></i><span>Novo Imóvel</span>
+            </a>
+          </li>
+        </ul>
+      </li> -->
+
+
+      
+     <!-- <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#slides-banners" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-images"></i><span>Slides / Banners</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="slides-banners" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Em Destaque</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Slides Inativos</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#paginas" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-window"></i><span>Páginas</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="paginas" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Páginas</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Nova Página</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#usuarios" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-people"></i><span>Usuários</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="usuarios" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Ver Usuários</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Clientes</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Equipe</span>
+            </a>
+          </li>
+          <li>
+            <a href="cadastro.html">
+              <i class="bi bi-circle"></i><span>Novo Usuário</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#relatorios" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-graph-up"></i><span>Relatórios</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="relatorios" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Acessos</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Alunos</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Suporte</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Vendas</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#settings" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-gear"></i><span>Settings</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="settings" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="settings.html">
+              <i class="bi bi-circle"></i><span>Configurações Gerais</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Licenciar Domínio</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>Gerenciar Pixels</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-alerts.html">
+              <i class="bi bi-circle"></i><span>API's</span>
+            </a>
+          </li>
+        </ul>
+      </li> -->
+
+
+
+      
+      <li class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="bi bi-arrow-up-right"></i><span>Ver site</span>
+        </a>
+        
+      </li>
+
+    </ul>
+
+  </aside><!-- End Sidebar-->
+
+  <main id="main" class="main">
 
 {% block body %}{% endblock %}
 
+
+
+    
 {% block javascripts %}
+
+
+
+</main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer" class="footer">
+    <div class="copyright">
+      &copy; Designed by <strong><span>Sérgio Ferrari</span></strong>
+    </div>
+    <div class="credits">
+      <!-- All the links in the footer should remain intact. -->
+      <!-- You can delete the links only if you purchased the pro version. -->
+      <!-- Licensing information: https://bootstrapmade.com/license/ -->
+      <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
+      <a href="http://homepetshop.com.br/">Homepetshop</a>
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <script src="{{ asset('assets/vendor/apexcharts/apexcharts.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/chart.js/chart.umd.js')}}"></script>
+  <script src="{{ asset('assets/vendor/echarts/echarts.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/quill/quill.js')}}"></script>
+  <script src="{{ asset('assets/vendor/simple-datatables/simple-datatables.js')}}"></script>
+  <script src="{{ asset('assets/vendor/tinymce/tinymce.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/php-email-form/validate.js')}}"></script>
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+</body>
+
+</html>
+
+
+
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

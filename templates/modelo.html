@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}HomePet{% endblock %}</title>
+    {% block stylesheets %}
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <style>
+            .navbar {
+                background-color: #343a40;
+            }
+            .navbar-brand, .nav-link {
+                color: #ffffff !important;
+            }
+            .navbar-brand:hover, .nav-link:hover {
+                color: #ffffff !important;
+            }
+            .dropdown-menu {
+                background-color: #343a40;
+            }
+            .dropdown-item {
+                color: #ffffff !important;
+            }
+            .dropdown-item:hover {
+                background-color: #495057;
+            }
+        </style>
+    {% endblock %}
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('home') }}">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('agendamento_index') }}">Agendamentos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('cliente_index') }}">Clientes</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('pet_index') }}">Pets</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('servico_index') }}">Serviços</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="financeiroDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Financeiro
+                </a>
+                <div class="dropdown-menu" aria-labelledby="financeiroDropdown">
+                    <a class="dropdown-item" href="{{ path('financeiro_index') }}">Financeiro</a>
+                    <a class="dropdown-item" href="{{ path('financeiro_relatorio') }}">Relatório Financeiro</a>
+                </div>
+            </li>
+        </ul>
+        {% if app.user %}
+            <div class="navbar-text-container">
+                <span>Olá, {{ app.user.username }} | <a href="{{ path('logout') }}">Logout</a></span>
+            </div>
+        {% else %}
+            <a class="nav-link" href="{{ path('login') }}">Login</a>
+        {% endif %}
+    </div>
+</nav>
+
+{% block body %}{% endblock %}
+
+{% block javascripts %}
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+{% endblock %}
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+
+ <div class="pagetitle">
+      <h1>Novo Agendamento</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+          <li class="breadcrumb-item">Forms</li>
+          <li class="breadcrumb-item active">Editors</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+              <!-- Multi Columns Form -->
+              <form class="row g-3">
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-8">
+
+          
+          <div class="card">
+            <div class="card-header p-1">
+             <!--<h5 class="p-3 pb-0 float-start">Agendamentos -->
+              </h5>
+                <a href="{{ path('agendamento_index') }}" class="btn btn-sm btn-secondary mt-2 me-3 float-end">Clientes Agendados</a>
+            </div>  
+            <div class="card-body">
+
+                <div class="col-md-12">
+                   <div class="form-group">
+                        <label for="pet_id">Pet</label>
+                        <select class="form-select" id="pet_id" name="pet_id" required>
+                            {% for pet in pets %}
+                                <option value="{{ pet.id }}">{{ pet.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                  <label for="inputEmail5" class="form-label">Serviço</label>
+                  <select class="form-select" id="servico_id" name="servico_id" required>
+                        {% for servico in servicos %}
+                            <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                        {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group">
+                    <label for="data">Data</label>
+                    <input type="date" class="form-control" id="data" name="data" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="recorrencia">Recorrência</label>
+                    <select class="form-control" id="recorrencia" name="recorrencia">
+                        <option value="nenhuma">Nenhuma</option>
+                        <option value="semanal">Semanal</option>
+                        <option value="quinzenal">Quinzenal</option>
+                    </select>
+                </div>
+
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="concluido" name="concluido">
+                    <label class="form-check-label" for="concluido"> Pagamento concluído</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                
+            </div>
+          </div>
+
+          
+        </div>
+
+      
+    </section>
+
+              </form><!-- End Multi Columns Form -->
+
+
+{% endblock %}
+
+
+
+
+
+
+
+
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Agendamentos</h1>
+    
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{{ path('agendamento_index', {'data': data|date_modify('-1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Anterior</a>
+        <h2>{{ data|date('d/m/Y') }}</h2>
+        <a href="{{ path('agendamento_index', {'data': data|date_modify('+1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Próximo</a>
+    </div>
+
+    <div class="mb-3">
+        <strong>Total de agendamentos: {{ totalAgendamentos }}</strong>
+    </div>
+
+    <a href="{{ path('agendamento_novo') }}" class="btn btn-primary mb-3">Novo Agendamento</a>
+    
+    <form method="get" action="{{ path('agendamento_index') }}" class="mb-3">
+        <div class="input-group">
+            <input type="date" name="data" value="{{ data|date('Y-m-d') }}" class="form-control">
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">Pesquisar</button>
+            </div>
+        </div>
+    </form>
+
+    <ul class="list-group">
+        {% for agendamento in agendamentos %}
+            <li class="list-group-item bg-dark text-light">
+                {{ agendamento.data|date('d/m/Y H:i') }} - {{ agendamento.pet_nome }} ({{ agendamento.dono_nome }}) - {{ agendamento.servico_nome }}
+                {% if agendamento.hora_chegada is defined %}
+                    <br>
+                    <strong>Hora de Chegada:</strong> {{ agendamento.hora_chegada|date('H:i') }}
+                {% endif %}
+                {% if not agendamento.concluido %}
+                    <form method="post" action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}" class="float-right ml-2">
+                        <button type="submit" class="btn btn-sm btn-success">Pagamento concluído</button>
+                    </form>
+                {% endif %}
+                <a href="{{ path('agendamento_editar', {'id': agendamento.id}) }}" class="btn btn-sm btn-warning float-right ml-2">Editar</a>
+                <form method="post" action="{{ path('agendamento_deletar', {'id': agendamento.id}) }}" class="float-right">
+                    <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

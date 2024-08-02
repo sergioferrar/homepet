@@ -8,6 +8,7 @@ class Agendamento
     private $pet_id; 
     private $servico_id;
     private $concluido = 0;
+    private $horaChegada;
 
     public function getId(): ?int
     {
@@ -72,6 +73,17 @@ class Agendamento
     public function setPronto(bool $pronto): self
     {
         $this->pronto = $pronto;
+        return $this;
+    }
+
+    public function getHoraChegada(): ?DateTime
+    {
+        return $this->horaChegada;
+    }
+
+    public function setHoraChegada(?DateTime $horaChegada): self
+    {
+        $this->horaChegada = $horaChegada;
         return $this;
     }
 }

@@ -1,42 +1,91 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<div class="container mt-5">
-    <h1>Novo Agendamento</h1>
-    <form method="post" action="{{ path('agendamento_novo') }}">
-        <div class="form-group">
-            <label for="pet_id">Pet</label>
-            <select class="form-control" id="pet_id" name="pet_id" required>
-                {% for pet in pets %}
-                    <option value="{{ pet.id }}">{{ pet.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="servico_id">Serviço</label>
-            <select class="form-control" id="servico_id" name="servico_id" required>
-                {% for servico in servicos %}
-                    <option value="{{ servico.id }}">{{ servico.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="data">Data</label>
-            <input type="date" class="form-control" id="data" name="data" required>
-        </div>
-        <div class="form-group">
-            <label for="recorrencia">Recorrência</label>
-            <select class="form-control" id="recorrencia" name="recorrencia">
-                <option value="nenhuma">Nenhuma</option>
-                <option value="semanal">Semanal</option>
-                <option value="quinzenal">Quinzenal</option>
-            </select>
-        </div>
-        <div class="form-group form-check">
-            <input type="checkbox" class="form-check-input" id="concluido" name="concluido">
-            <label class="form-check-label" for="concluido"> Pagamento concluído</label>
-        </div>
-        <button type="submit" class="btn btn-primary">Salvar</button>
-    </form>
-</div>
+
+
+              <!-- Multi Columns Form -->
+    <div class="pagetitle">
+      <h1>Novo Agendamento</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-6">
+
+          <div class="card">
+            <div class="card-body">
+            <div class="card-header p-1">
+             <!--<h5 class="p-3 pb-0 float-start">Agendamentos -->
+              </h5>
+                <a href="{{ path('agendamento_index') }}" class="btn btn-sm btn-secondary mt-3 me-3 float-end">Clientes Agendados</a>
+            </div>  
+              <h5 class="card-title">Home Pet System</h5>
+
+              <!-- Horizontal Form -->
+              <form>
+
+
+                <div class="row mb-3">
+                  <label for="inputEmail3" class="col-sm-2 col-form-label">Nome Pet</label>
+                  <div class="col-sm-10">
+      
+                  <select class="form-select" id="pet_id" name="pet_id" required>
+                      {% for pet in pets %}
+                          <option value="{{ pet.id }}">{{ pet.nome }}</option>
+                      {% endfor %}
+                  </select>
+                  </div>
+                </div>
+
+
+                <div class="row mb-3">
+                  <label for="inputEmail3" class="col-sm-2 col-form-label">Serviço </label>
+                  <div class="col-sm-10">
+                  <select class="form-select" id="servico_id" name="servico_id" required>
+                        {% for servico in servicos %}
+                            <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                        {% endfor %}
+                  </select>
+                  </div>
+                </div>
+
+
+
+                <div class="form-group ">
+                    <label for="data"  class="col-sm-2 col-form-label">Data Agendamento</label>
+                    <input type="date" class="form-control" id="data" name="data" required>
+                </div>
+
+
+                <div class="form-group">
+                    <label for="recorrencia">Recorrência</label>
+                    <select class="form-control" id="recorrencia" name="recorrencia">
+                        <option value="nenhuma">Nenhuma</option>
+                        <option value="semanal">Semanal</option>
+                        <option value="quinzenal">Quinzenal</option>
+                    </select>
+                </div><br>
+
+
+
+                <div class="text-center">
+                  <button type="submit" class="btn btn-primary">Salvar</button>
+                  <button type="reset" class="btn btn-secondary">Reset</button>
+                </div>
+              </form><!-- End Horizontal Form -->
+
+            </div>
+          </div>
+
+
+
+      
+
+    </form><!-- End Multi Columns Form -->
+
+
 {% endblock %}
