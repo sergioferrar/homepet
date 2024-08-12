@@ -1,23 +1,52 @@
 {% extends 'base.html.twig' %}
 
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .mr-custom {
+        margin-right: 8px; /* Espaçamento entre os botões */
+    }
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container mt-5">
     <h1>Pets</h1>
     <form method="get" action="{{ path('pet_index') }}" class="form-inline mb-3">
         <input type="text" name="search" class="form-control mr-sm-2" placeholder="Pesquisar pet">
-        <button type="submit" class="btn btn-primary">Pesquisar</button>
+        <button type="submit" class="btn btn-secu">Pesquisar</button>
     </form>
     <a href="{{ path('pet_novo') }}" class="btn btn-primary mb-3">Novo Pet</a>
-    <ul class="list-group">
+
+    <!-- Bordered Table -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Tipo</th>
+                <th>Idade</th>
+                <th>Dono</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
         {% for pet in pets %}
-            <li class="list-group-item">
-                {{ pet.nome }} - {{ pet.tipo }} - {{ pet.idade }} anos - Dono ID: {{ pet.dono_id }}
-                <a href="{{ path('pet_editar', {'id': pet.id}) }}" class="btn btn-sm btn-warning float-right ml-2">Editar</a>
-                <form method="post" action="{{ path('pet_deletar', {'id': pet.id}) }}" class="float-right">
-                    <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
-                </form>
-            </li>
+            <tr>
+                <td>{{ pet.nome }}</td>
+                <td>{{ pet.tipo }}</td>
+                <td>{{ pet.idade }} anos</td>
+                <td>{{ pet.dono_nome }}</td>
+                <td>
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                        <a href="{{ path('pet_editar', {'id': pet.id}) }}" class="btn btn-warning btn-sm mr-custom">Editar</a>
+                        <form method="post" action="{{ path('pet_deletar', {'id': pet.id}) }}" class="d-inline">
+                            <button type="submit" class="btn btn-danger btn-sm">Deletar</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
         {% endfor %}
-    </ul>
+        </tbody>
+    </table>
 </div>
 {% endblock %}

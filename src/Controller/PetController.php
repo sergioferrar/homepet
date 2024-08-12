@@ -28,7 +28,7 @@ class PetController extends AbstractController
      */
     public function index(): Response
     {
-        $pets = $this->petRepository->findAll();
+        $pets = $this->petRepository->findAllPets();
         return $this->render('pet/index.html.twig', ['pets' => $pets]);
     }
 

@@ -212,14 +212,24 @@
                     <br>
                     <strong>Hora de Chegada:</strong> {{ agendamento.hora_chegada|date('H:i') }}
                 {% endif %}
+
+
+
                 {% if not agendamento.concluido %}
                     <form method="post" action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}" class="float-right ml-2">
+
+
                         <button type="submit" class="btn btn-sm btn-success">Pagamento concluído</button>
                     </form>
                 {% endif %}
+
+
+
                 <a href="{{ path('agendamento_editar', {'id': agendamento.id}) }}" class="btn btn-sm btn-warning float-right ml-2">Editar</a>
                 <form method="post" action="{{ path('agendamento_deletar', {'id': agendamento.id}) }}" class="float-right">
                     <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
+
+                    
                 </form>
             </li>
         {% endfor %}

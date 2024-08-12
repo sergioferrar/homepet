@@ -65,6 +65,7 @@ class AgendamentoRepository
             'servico_id' => $agendamento->getServico_Id(),
             'concluido' => (int)$agendamento->getConcluido(),
         ]);
+        
     }
 
     public function update(Agendamento $agendamento): void

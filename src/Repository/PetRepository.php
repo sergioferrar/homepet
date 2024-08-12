@@ -13,16 +13,23 @@ class PetRepository
         $this->conn = $conn;
     }
 
-    public function findAll(): array
+    public function findAllPets(): array
     {
-        $sql = 'SELECT * FROM Pet';
+        // Certifique-se de especificar 'p.id' ao invés de apenas 'id' para evitar ambiguidade
+        $sql = 'SELECT p.id, p.nome, p.tipo, p.idade, c.nome as dono_nome
+                FROM Pet p
+                JOIN Cliente c ON p.dono_id = c.id';
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
     }
 
     public function find(int $id): ?Pet
     {
-        $sql = 'SELECT * FROM Pet WHERE id = :id';
+        $sql = 'SELECT p.id, p.nome, p.tipo, p.idade, p.dono_id, 
+            c.nome AS cliente
+            FROM Pet p
+            LEFT JOIN Cliente c ON c.id = p.dono_id
+            WHERE id = :id';
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
         $petData = $stmt->fetchAssociative();
 
