@@ -3,8 +3,7 @@
 {% block body %}
 <div class="container mt-5">
     <h1>Editar Cliente</h1>
-    <form method="post" action="{{ path('cliente_update', {'id': cliente.id}) }}">
-        <!-- Campos de edição existentes -->
+    <form method="post" action="{{ path('cliente_editar', {'id': cliente.id}) }}">
         <div class="form-group">
             <label for="nome">Nome:</label>
             <input type="text" id="nome" name="nome" required class="form-control" value="{{ cliente.nome }}">
@@ -14,9 +13,15 @@
             <input type="email" id="email" name="email" class="form-control" value="{{ cliente.email }}">
         </div>
         <div class="form-group">
-            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-            <button type="button" class="btn btn-danger" onclick="confirmDelete('{{ path('cliente_delete', {'id': cliente.id}) }}')">Deletar Cliente</button>
+            <label for="telefone">Telefone:</label>
+            <input type="text" id="telefone" name="telefone" class="form-control" value="{{ cliente.telefone }}">
         </div>
+        <div class="form-group">
+            <label for="Endereco">Endereço:</label>
+            <input type="text" id="Endereco" name="Endereco" class="form-control" value="{{ cliente.Endereco }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        <button type="button" class="btn btn-danger" onclick="confirmDelete('{{ path('cliente_deletar', {'id': cliente.id}) }}')">Deletar Cliente</button>
     </form>
 </div>
 
@@ -27,5 +32,4 @@ function confirmDelete(url) {
     }
 }
 </script>
-
 {% endblock %}
