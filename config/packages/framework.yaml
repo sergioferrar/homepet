@@ -7,10 +7,15 @@ framework:
     # Enables session support. Note that the session will ONLY be started if you read or write from it.
     # Remove or comment this section to explicitly disable session support.
     session:
-        handler_id: null
-        cookie_secure: auto
-        cookie_samesite: lax
+        handler_id: session.handler.native_file
+        save_path: '%kernel.project_dir%/var/sessions/%kernel.environment%'
+        name: MILEOTICA
+        cookie_secure: 'auto'
+        cookie_samesite: 'lax'
         storage_factory_id: session.storage.factory.native
+        cookie_lifetime: 43200
+        gc_maxlifetime: 43200
+        gc_probability: null ## solução do erro de sessão quando não tem permissão de diretorio [/var/...]
 
     #esi: true
     #fragments: true
@@ -22,3 +27,4 @@ when@test:
         test: true
         session:
             storage_factory_id: session.storage.factory.mock_file
+

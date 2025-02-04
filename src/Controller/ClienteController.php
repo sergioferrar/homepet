@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use App\Entity\Cliente;
@@ -11,7 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * @Route("/cliente")
  */
-class ClienteController extends AbstractController
+class ClienteController extends DefaultController
 {
     private $clienteRepository;
 
@@ -38,9 +39,9 @@ class ClienteController extends AbstractController
         if ($request->isMethod('POST')) {
             $cliente = new Cliente();
             $cliente->setNome($request->request->get('nome'))
-                    ->setEmail($request->request->get('email'))
-                    ->setTelefone($request->request->get('telefone'))
-                    ->setEndereco($request->request->get('Endereco'));
+                ->setEmail($request->request->get('email'))
+                ->setTelefone($request->request->get('telefone'))
+                ->setEndereco($request->request->get('Endereco'));
 
             $this->clienteRepository->save([
                 'nome' => $cliente->getNome(),
@@ -67,16 +68,16 @@ class ClienteController extends AbstractController
 
         $cliente = new Cliente();
         $cliente->setId($clienteData['id'])
-                ->setNome($clienteData['nome'])
-                ->setEmail($clienteData['email'])
-                ->setTelefone($clienteData['telefone'])
-                ->setEndereco($clienteData['Endereco']);
+            ->setNome($clienteData['nome'])
+            ->setEmail($clienteData['email'])
+            ->setTelefone($clienteData['telefone'])
+            ->setEndereco($clienteData['Endereco']);
 
         if ($request->isMethod('POST')) {
             $cliente->setNome($request->request->get('nome'))
-                    ->setEmail($request->request->get('email'))
-                    ->setTelefone($request->request->get('telefone'))
-                    ->setEndereco($request->request->get('Endereco'));
+                ->setEmail($request->request->get('email'))
+                ->setTelefone($request->request->get('telefone'))
+                ->setEndereco($request->request->get('Endereco'));
 
             $this->clienteRepository->update([
                 'id' => $cliente->getId(),

@@ -5,14 +5,52 @@ security:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users_in_memory: { memory: null }
+        # used to reload user from session & other features (e.g. switch_user)
+        app_user_provider:
+            entity:
+                class: App\Entity\Usuario
+                property: email
+        # all_users:
+            # chain:
+                # providers: ['app_user_provider']
+        # app_user_provider_custom:
+            # id: App\Security\UserProvider
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
+            pattern: ^/
+            stateless: false
+            json_login:
+                check_path: /api/login
+                username_path: username
+                password_path: password
+            context: main
+            custom_authenticators: 
+                - App\Security\CustomAuthenticator
+            # json_login:
+            #     check_path: /api/login
+            #     username_path: username
+            #     password_path: password
+            logout:
+                path: logout
+                target: /login
             lazy: true
-            provider: users_in_memory
+            provider: app_user_provider
+            remember_me:
+                secret: '%kernel.secret%' # required
+                lifetime: 604800 # 1 week in seconds
+                # by default, the feature is enabled by checking a
+                # checkbox in the login form (see below), uncomment the
+                # following line to always enable it.
+                always_remember_me: true
+            # stateless: true
+
+
+            # entry_point: App\Security\AuthenticationEntryPoint
+
+
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -20,11 +58,18 @@ security:
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
 
+    # access_decision_manager:
+    #     strategy_service: App\Security\MyCustomAccessDecisionStrategy
+
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        #PUBLICAS
+        - { path: ^/dashboard/login, roles: PUBLIC_ACCESS }
+        - { path: ^/dashboard/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/dashboard/logout, roles: PUBLIC_ACCESS }
+        #Roles
+        - { path: ^/dashboard/*, roles: [IS_AUTHENTICATED] }
 
 when@test:
     security:

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use App\Entity\Financeiro;
@@ -12,7 +13,7 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * @Route("/financeiro")
  */
-class FinanceiroController extends AbstractController
+class FinanceiroController extends DefaultController
 {
     private $financeiroRepository;
     private $petRepository;

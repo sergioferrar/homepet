@@ -1,9 +1,15 @@
 <?php
 namespace App\Entity;
 
+use App\Repository\UsuarioRepository;
+use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
-class Usuario implements UserInterface
+/**
+ * @ORM\Entity(repositoryClass=UsuarioRepository::class)
+ */
+class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 {
     private $id;
     private $nomeUsuario;
@@ -68,5 +74,29 @@ class Usuario implements UserInterface
     public function eraseCredentials()
     {
         
+    }
+
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    public function setPassword(string $password): self
+    {
+        $this->password = $password;
+
+        return $this;
     }
 }

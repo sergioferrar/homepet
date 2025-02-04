@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use App\Entity\Agendamento;
@@ -14,7 +15,7 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * @Route("/agendamento")
  */
-class AgendamentoController extends AbstractController
+class AgendamentoController extends DefaultController
 {
     private $agendamentoRepository;
     private $financeiroRepository;
@@ -30,7 +31,7 @@ class AgendamentoController extends AbstractController
     /**
      * @Route("/", name="agendamento_index", methods={"GET"})
      */
-     public function index(Request $request): Response
+    public function index(Request $request): Response
     {
         $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
         $agendamentos = $this->agendamentoRepository->findByDate($data);
@@ -164,7 +165,7 @@ class AgendamentoController extends AbstractController
         return $this->redirectToRoute('agendamento_index');
     }
 
-     /**
+    /**
      * @Route("/agendamento/pronto/{id}", name="agendamento_pronto")
      */
     public function marcarComoPronto($id, AgendamentoRepository $agendamentoRepository): Response

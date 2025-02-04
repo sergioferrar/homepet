@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use App\Entity\Servico;
@@ -11,7 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * @Route("/servico")
  */
-class ServicoController extends AbstractController
+class ServicoController extends DefaultController
 {
     private $servicoRepository;
 
@@ -87,5 +88,5 @@ class ServicoController extends AbstractController
         return $this->redirectToRoute('servico_index');
     }
 
-    
+
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -7,24 +8,48 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
-class LoginController extends AbstractController
+class LoginController extends DefaultController
 {
-    
+
 
     /**
      * @Route("/dashboard/login", name="app_login")
      */
-    public function login(Request $request): Response
+    public function login(AuthenticationUtils $authUtils, Request $request, $firewall = 'main'): Response
     {
-        $this->globalVariables();
+        $error = $authUtils->getLastAuthenticationError();
+        $lastUsername = $authUtils->getLastUsername();
 
-        $this->session = $request->getSession();
+        if ($request->get('error') && !empty($request->get('error'))) {
+            $error = ucfirst(implode(' ', explode('-', $request->get('error'))));
 
-        if ($this->session->get('login')) {
-            return $this->redirectToRoute('dashboard_home');
+            $this->addFlash('message', $error);
+
+            // para remover a queryString de erro e exibir a mensagem apenas 1 única vez deve-se ter o redirecionamento para ela mesma
+            return $this->redirectToRoute('app_login');
         }
 
-        return $this->render('dashboard/login/index.html.twig', $this->data);
+        if ($this->security->getUser()) {
+            return $this->redirectToRoute('app_login_valida');
+        }
+        // dd($request);
+        $data = [];
+
+        $data['login'] = null;
+        $data['senha'] = null;
+        $data['remember_me'] = null;
+
+        $data['error'] = $error;
+        $data['lastUsername'] = $lastUsername;
+
+        if (isset($_COOKIE['remember_me'])) {
+            $extract = explode('|', base64_decode($_COOKIE['remember_me']));
+            $data['login'] = $extract[0];
+            $data['senha'] = $extract[1];
+            $data['remember_me'] = 'checked';
+        }
+
+        return $this->render('login/index.html.twig', $data);
     }
 
     /**

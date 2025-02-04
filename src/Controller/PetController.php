@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use App\Entity\Pet;
@@ -12,7 +13,7 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * @Route("/pet")
  */
-class PetController extends AbstractController
+class PetController extends DefaultController
 {
     private $petRepository;
     private $clienteRepository;
