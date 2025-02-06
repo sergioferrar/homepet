@@ -13,7 +13,7 @@ class LoginController extends DefaultController
 
 
     /**
-     * @Route("/dashboard/login", name="app_login")
+     * @Route("/login", name="app_login")
      */
     public function login(AuthenticationUtils $authUtils, Request $request, $firewall = 'main'): Response
     {
@@ -53,38 +53,37 @@ class LoginController extends DefaultController
     }
 
     /**
-     * @Route("/dashboard/login/logar", name="app_logar")
+     * @Route("/valida-login", name="app_login_valida")
      */
-    public function doLogin(Request $request): Response
+    public function index(Request $request): Response
     {
-        $json = [];
-
-        $auth = new \App\Service\Auth();
-        $json = $auth->attempt($request, $this->getRepositorio(Users::class));
-
-        if (!empty($json->getResult())) {
-            return $this->json($json);
+        if (!$this->security->getUser()) {
+            $request->getSession()->invalidate();
+            return $this->redirectToRoute('app_login');
         }
 
-        if (!$auth->validaPasswd()) {
-            $json['error'] = true;
-            $json['message'] = 'Senha informada é inválida.';
-            $json['status'] = 'danger';
-            return $this->json($json, 500);
-        }
+//        if ($this->security->getUser()) {
+//            if ($this->security->getUser()->getStatus() == "Inativo") {
+//                $error = 'Usuário-Inativo';
+//                throw new \Exception($error, 404);
+//            }
+//        }
 
-        $request->getSession()->set('userId', $auth->getUser()->getId());
-        $request->getSession()->set('user', $auth->getUser());
         $request->getSession()->set('login', true);
+        $request->getSession()->set('user', $this->security->getUser()->getNomeUsuario());
+//        dd($request->getSession()->all());
+        // dd($this->security->getUser());
+        return $this->redirectToRoute('home');
+    }
 
-        $json = [];
-        $json['error'] = false;
-        $json['message'] = 'Login efetuado com sucesso, estamos te redirecinando.';
-        $json['status'] = 'success';
-        $json['redirect'] = $this->redirectToRoute('dashboard_home');
-        return $this->redirectToRoute('dashboard_home');
-        // return $this->json($json);
-
+    /**
+     * @Route("/logout", name="logout")
+     */
+    public function logout(Request $request): Response
+    {
+        // Valida se existe sessão expired
+        $request->getSession()->invalidate();
+        return $this->redirectToRoute('app_login');
     }
 }
 

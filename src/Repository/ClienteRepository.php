@@ -1,29 +1,26 @@
 <?php
 namespace App\Repository;
 
-use Doctrine\DBAL\Connection;
+use App\Entity\Cliente;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 
-class ClienteRepository
+/**
+ * @extends ServiceEntityRepository<Clientes>
+ *
+ * @method Cliente|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Cliente|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Cliente[]    findAll()
+ * @method Cliente[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ */
+
+class ClienteRepository extends ServiceEntityRepository
 {
     private $conn;
-
-    public function __construct(Connection $conn)
+    public function __construct(ManagerRegistry $registry)
     {
-        $this->conn = $conn;
-    }
-
-    public function findAll(): array
-    {
-        $sql = 'SELECT * FROM Cliente';
-        $stmt = $this->conn->executeQuery($sql);
-        return $stmt->fetchAllAssociative();
-    }
-
-    public function find(int $id): ?array
-    {
-        $sql = 'SELECT * FROM Cliente WHERE id = :id';
-        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
-        return $stmt->fetchAssociative();
+        parent::__construct($registry, Cliente::class);
+        $this->conn = $this->getEntityManager()->getConnection();
     }
 
     public function findAgendamentosByCliente(int $clienteId): array

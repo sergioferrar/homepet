@@ -1,13 +1,44 @@
 <?php
+
 namespace App\Entity;
 
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Entity(repositoryClass=FinanceiroRepository::class)
+ */
 class Financeiro
 {
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(name="id", type="integer")
+     */
     private $id;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
     private $descricao;
+
+    /**
+     * @ORM\Column(type="decimal", nullable=true)
+     */
     private $valor;
+
+    /**
+     * @ORM\Column(type="datetime", length=255, nullable=true)
+     */
     private $data;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private $pet_id;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
     private $pet_nome;
 
     public function getId(): ?int

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Entity;
 
 use App\Repository\UsuarioRepository;
@@ -11,19 +12,36 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
  */
 class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
     private $nomeUsuario;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
     private $senha;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $email;
+
+    /**
+     * @ORM\Column(type="json")
+     */
+    private $roles = [];
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(int $id): self
-    {
-        $this->id = $id;
-        return $this;
     }
 
     public function getNomeUsuario(): ?string
@@ -48,7 +66,7 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    
+
     public function getUsername(): string
     {
         return $this->nomeUsuario;
@@ -61,19 +79,19 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getSalt(): ?string
     {
-        
+
         return null;
     }
 
     public function getRoles(): array
     {
-        
+
         return ['ROLE_USER'];
     }
 
     public function eraseCredentials()
     {
-        
+
     }
 
     /**
@@ -83,7 +101,7 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        return (string)$this->email;
     }
 
     public function setRoles(array $roles): self
@@ -96,6 +114,18 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): self
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(?string $email): self
+    {
+        $this->email = $email;
 
         return $this;
     }

@@ -1,13 +1,43 @@
 <?php
+
 namespace App\Entity;
 
+use Doctrine\ORM\Mapping as ORM;
+/**
+ * @ORM\Entity(repositoryClass=AgendamentoRepository::class)
+ */
 class Agendamento
 {
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(name="id", type="integer")
+     */
     private $id;
+
+    /**
+     * @ORM\Column(type="datetime", length=255, nullable=true)
+     */
     private $data;
-    private $pet_id; 
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $pet_id;
+
+    /**
+     * @ORM\Column(type="integer", length=255, nullable=true)
+     */
     private $servico_id;
+
+    /**
+     * @ORM\Column(type="integer", length=255, nullable=true)
+     */
     private $concluido = 0;
+
+    /**
+     * @ORM\Column(type="datetime", length=255, nullable=true)
+     */
     private $horaChegada;
 
     public function getId(): ?int
@@ -15,10 +45,9 @@ class Agendamento
         return $this->id;
     }
 
-    public function setId(int $id): self
+    public function setId($id): void
     {
         $this->id = $id;
-        return $this;
     }
 
     public function getData(): ?\DateTime
@@ -65,7 +94,7 @@ class Agendamento
         return $this;
     }
 
-     public function isPronto(): bool
+    public function isPronto(): bool
     {
         return $this->pronto;
     }

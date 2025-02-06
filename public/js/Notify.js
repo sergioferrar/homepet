@@ -8,26 +8,28 @@
  * já existam.
  */
  const Notify = (function() {
-    const ANIMATION_TIME_MILLIS = 500; // Tempo de animação de translado para os overlay cards e alerts
+    const ANIMATION_TIME_MILLIS = 500; // Tempo de animaÃ§Ã£o de translado para os overlay cards e alerts
     const LOADING_TEXT = "Por favor, aguarde..."; // Texto default para os loadings
-    const OVERLAY_DIV_HIDE_DIST = "30px"; // Distancia para a animação de translado para os overlay cards e alerts
+    const OVERLAY_DIV_HIDE_DIST = "30px"; // Distancia para a animaÃ§Ã£o de translado para os overlay cards e alerts
 
-    // Função para criar o id randomico
+    // FunÃ§Ã£o para criar o id randomico
     var generateRandomId = function () {
         let arr = new Uint8Array(8);
         window.crypto.getRandomValues(arr);
-        let id = "notify__";
-        arr.forEach((x) => {id += x.toString(32)});
+        let id = "signotify__";
+        arr.forEach((x) => {
+            id += x.toString(32)
+        });
         return id;
     }
 
-    // Classe de handler para a notificação
-    class NotifyElement {
+    // Classe de handler para a notificaÃ§Ã£o
+    class SignotifyElement {
         constructor(id, hideFunction) {
             this.id = id;
             this.__hideFunction = hideFunction;
         }
-        
+
         hide() {
             this.__hideFunction(this.id);
         }
@@ -36,128 +38,151 @@
     //---------------------------------------------------------------------------------------------
     // Componentes HTML
     //---------------------------------------------------------------------------------------------
-    
-    
-    //Testa se o conteudo passado é uma url
+
+
+    //Testa se o conteudo passado Ã© uma url
     var checkElementoBody = function (body) {
-        
-        var elem = ''; 
+
+        var elem = '';
         try {
             body = new URL(body)
-    
+
             /*elem = `<div class="embed-responsive embed-responsive-19by9">
                       <iframe class="embed-responsive-item" src="${body}"></iframe>
                 </div>`;*/
             elem = `<div class="ratio ratio-21x9 ">
-                        <iframe src="${body}" class="embed-responsive-item" height="auto" width="auto" allowfullscreen> </iframe>
-                    </div>`;
+						<iframe src="${body}" class="embed-responsive-item" height="auto" width="auto" allowfullscreen> </iframe>
+			 		</div>`;
 
 
-        }catch(err) {
+        } catch (err) {
             //console.table(err);
             elem = body;
         }
-    
-        return elem;        
+
+        return elem;
     }
 
-    var modalComponent = function (id, body,lengthModal='lg', title = null, okCallback = null, okText = "Fechar", cancelText = null, confirmationClass = null, status = 'default') {
-        let bgmodal = status=='default'?'':'bg-'+status;
-        let textModal = status=='default'?'':'text-white'
-    return `
-        
-            <div id=${id} class="modal fade" tabindex="-1" role="dialog">
-                <div class="modal-dialog modal-${lengthModal} modal-dialog-centered" role="document">
-                    <div class="modal-content">
-                    <div class="modal-header  ${title == null ? 'd-none' : ''} ${bgmodal} ${textModal}">
-                        <h5 class="modal-title">${title}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>${checkElementoBody(body)}</p>
-                    </div>
-                    <div class="modal-footer ${okText == null ? 'd-none' : ''}">
-                        <button type="button" class="btn btn-secondary ${cancelText == null ? 'd-none' : ''}" data-bs-dismiss="modal">${cancelText}</button>
-                        <button id=${id+"_btn"} name=${okText} type="button" class="btn btn-primary ${okText == null ? 'd-none' : ''} ${confirmationClass == null ? '' : confirmationClass }">${okText}</button>
-                    </div>
-                    </div>
-                </div>
-            </div>
-        
-        `;
+    var modalComponent = function (id, body, lengthModal = 'lg', title = null, okCallback = null, okText = "Fechar", cancelText = null, confirmationClass = null, status = 'default') {
+        let bgmodal = status == 'default' ? '' : 'bg-' + status;
+        let textModal = status == 'default' ? '' : 'text-white'
+        return `
+		
+			<div id=${id} class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+				<div class="modal-dialog modal-${lengthModal} modal-dialog-centered" role="document">
+					<div class="modal-content">
+					<div class="modal-header  ${title == null ? 'd-none' : ''} ${bgmodal} ${textModal}">
+						<h5 class="modal-title">${title}</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					</div>
+					<div class="modal-body">
+						<p>${checkElementoBody(body)}</p>
+					</div>
+					<div class="modal-footer ${okText == null ? 'd-none' : ''}">
+						<button type="button" class="btn btn-secondary ${cancelText == null ? 'd-none' : ''}" data-bs-dismiss="modal">${cancelText}</button>
+						<button id=${id + "_btn"} name=${okText} type="button" class="btn btn-primary ${okText == null ? 'd-none' : ''} ${confirmationClass == null ? '' : confirmationClass}">${okText}</button>
+					</div>
+					</div>
+				</div>
+			</div>
+		`;
+    }
+
+    var modalAlertComponent = function (id, body, title = "", status = 'default', icon='fa-check', okCallback = null) {
+        let bgmodal = status == 'default' ? '' : 'bg-' + status;
+        return `
+		
+			<div id=${id} class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+				<div class="modal-dialog modal-lg modal-dialog-centered modal-confirm" role="document">
+					<div class="modal-content">
+					<div class="modal-header justify-content-center ${bgmodal}">
+						<div class="icon-box">
+							<i class="fa ${icon}"></i>
+						</div>
+					</div>
+					<div class="modal-body text-center">
+					    
+						<p>${checkElementoBody(body)}</p>
+						<button id=${id + "_btn"} type="button" class="btn btn-outline-${status} rounded" data-bs-dismiss="modal">Fechar</button>
+					</div>
+					</div>
+				</div>
+			</div>
+		`;
+        let textModal = status == 'default' ? '' : 'text-white'
     }
 
     var loadingComponent = function (text) {
         return `
-        <div class="d-flex">
-            <div class="spinner-border text-secondary mx-3" role="status"></div>
-            <div class="d-flex flex-column justify-content-center text-secondary">
-                ${text}
-            </div>
-        </div>
-        `;
+		<div class="d-flex">
+			<div class="spinner-border text-secondary mx-3" role="status"></div>
+			<div class="d-flex flex-column justify-content-center text-secondary">
+				${text}
+			</div>
+		</div>
+		`;
     }
 
     var statusCardComponent = function (id, cardType, content) {
         return `
-        <div id="${id}" class="alert alert-${cardType}" role="alert">
-            ${content}
-        </div>
-        `;
+		<div id="${id}" class="alert alert-${cardType}" role="alert">
+			${content}
+	  	</div>
+		`;
     }
 
     var overlayComponent = function (id, content) {
         return `
-        <div id="${id}" style="position: absolute; opacity: 0; width: 100%; height: 100%; top: ${OVERLAY_DIV_HIDE_DIST}; left: 0; right: 0; bottom: 0; z-index: 2;"
-        class="d-flex justify-content-center">
-            <div class="d-flex flex-column justify-content-center">
-                <div class="d-flex">
-                    ${content}
-                </div>
-            </div>
-        </div>
-        `;
+		<div id="${id}" style="position: absolute; opacity: 0; width: 100%; height: 100%; top: ${OVERLAY_DIV_HIDE_DIST}; left: 0; right: 0; bottom: 0; z-index: 2;"
+		class="d-flex justify-content-center">
+			<div class="d-flex flex-column justify-content-center">
+				<div class="d-flex">
+					${content}
+				</div>
+			</div>
+		</div>
+		`;
     }
 
     var cardInsideOverlayComponent = function (text) {
         return `
-        <div class="card" style="min-height: unset; height: unset; min-width: unset; width: unset;">
-            <div class="card-body d-flex justify-content-center px-4">
-                <div class="d-flex flex-column justify-content-center text-secondary">
-                    ${text}
-                </div>
-            </div>
-        </div>
-        `;
+		<div class="card" style="min-height: unset; height: unset; min-width: unset; width: unset;">
+			<div class="card-body d-flex justify-content-center px-4">
+				<div class="d-flex flex-column justify-content-center text-secondary">
+					${text}
+				</div>
+			</div>
+		</div>
+		`;
     }
 
     var loadingInsideOverlayComponent = function (text) {
         return `
-        <div class="card" style="min-height: unset; height: unset; min-width: unset; width: unset;">
-            <div class="card-body d-flex justify-content-center px-4">
-                <div class="spinner-border text-secondary" role="status"></div>
-                <div class="px-2"></div>
-                <div class="d-flex flex-column justify-content-center text-secondary">
-                    ${text}
-                </div>
-            </div>
-        </div>
-        `;
+		<div class="card" style="min-height: unset; height: unset; min-width: unset; width: unset;">
+			<div class="card-body d-flex justify-content-center px-4">
+				<div class="spinner-border text-secondary" role="status"></div>
+				<div class="px-2"></div>
+				<div class="d-flex flex-column justify-content-center text-secondary">
+					${text}
+				</div>
+			</div>
+		</div>
+		`;
     }
 
-    var toastComponent = function(id, body, status = 'default', timer = 5000){
+    var toastComponent = function (id, body, status = 'default') {
         let bgToast = `text-bg-${status}`;
-        console.log(timer)
+
         return `<div class="toast-container position-fixed top-0 end-0 p-3">
-                  <div id=${id} class="toast align-items-center ${bgToast} border-0" role="alert" aria-live="assertive" data-bs-config='{"delay":${timer}}' aria-atomic="true">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                          ${body}
-                        </div>
-                        <button type="button" class="btn-close me-3 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                  </div>
-                </div>`;
+				  <div id=${id} class="toast align-items-center ${bgToast} border-0" role="alert" aria-live="assertive" data-bs-config='{"delay":5000}' aria-atomic="true">
+				    <div class="d-flex">
+					    <div class="toast-body">
+					      ${body}
+					    </div>
+				    	<button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+				    </div>
+				  </div>
+				</div>`;
     }
 
     //---------------------------------------------------------------------------------------------
@@ -170,11 +195,13 @@
 
         $(divJquerySelector).append(overlayComponent(id, cardInsideOverlayComponent(text)));
 
-        $('#'+id).animate({ "opacity": "1", "top": "0" }, ANIMATION_TIME_MILLIS / 2);
+        $('#' + id).animate({"opacity": "1", "top": "0"}, ANIMATION_TIME_MILLIS / 2);
 
-        setTimeout(function () { hideOverlayDiv(id) }, timeout * 1000);
+        setTimeout(function () {
+            hideOverlayDiv(id)
+        }, timeout * 1000);
 
-        return new NotifyElement(id, hideOverlayDiv);
+        return new SignotifyElement(id, hideOverlayDiv);
     }
 
     // Cria um loading overlay sobre alguma div
@@ -183,22 +210,26 @@
 
         $(divJquerySelector).append(overlayComponent(id, loadingInsideOverlayComponent(text)));
 
-        $('#'+id).animate({ "opacity": "1", "top": "0"  }, ANIMATION_TIME_MILLIS / 2);
+        $('#' + id).animate({"opacity": "1", "top": "0"}, ANIMATION_TIME_MILLIS / 2);
 
-        setTimeout(function () { hideOverlayDiv(id) }, timeout * 1000);
+        setTimeout(function () {
+            hideOverlayDiv(id)
+        }, timeout * 1000);
 
-        return new NotifyElement(id, hideOverlayDiv);
+        return new SignotifyElement(id, hideOverlayDiv);
     }
 
     // Cria um alert no topo de alguma div
     var statusCard = function (fatherJquerySelector, content, cardType = "danger", timeout = 5) {
         let id = generateRandomId();
-    
+
         $(fatherJquerySelector).prepend(statusCardComponent(id, cardType, content));
 
-        setTimeout(function () { hideStatusCard(id) }, timeout * 1000);
+        setTimeout(function () {
+            hideStatusCard(id)
+        }, timeout * 1000);
 
-        return new NotifyElement(id, hideStatusCard);
+        return new SignotifyElement(id, hideStatusCard);
     }
 
     // Cria um loading preechendo a tela inteira
@@ -207,94 +238,116 @@
     }
 
     // Cria um modal e o abre
-    var modal = function (body, lengthModal='lg',title = null, okCallback = null, okText = "Fechar", cancelText = null, confirmationClass = null, status = 'default') {
+    var modal = function (body, lengthModal = 'lg', title = null, okCallback = null, okText = "Fechar", cancelText = null, confirmationClass = null, status = 'default') {
         let id = generateRandomId();
-        
-        
+
+
         $("body").append(modalComponent(id, body, lengthModal, title, okCallback, okText, cancelText, confirmationClass, status));
-        
-        $('#'+id).on('hidden.bs.modal', function (e) {
+
+        $('#' + id).on('hidden.bs.modal', function (e) {
             $(this).remove();
         });
 
         if (okCallback != null) {
-            $('#'+id+"_btn").click(function() {
+            $('#' + id + "_btn").click(function () {
                 okCallback();
-                $('#'+id).modal('hide');
+                $('#' + id).modal('hide');
             });
         } else {
-            $('#'+id+"_btn").click(function() {
-                $('#'+id).modal('hide');
+            $('#' + id + "_btn").click(function () {
+                $('#' + id).modal('hide');
             });
         }
 
-        $('#'+id).modal('show');
-    
-        //$("#" + id).draggable(); //permite mover modal -> Obs.: necessidade da biblioteca ui e essa biblioteca é incompatível com datepicker das notificações, etc -> verificar
-        
-        return new NotifyElement(id, hideModal);
+        $('#' + id).modal('show');
+
+        //$("#" + id).draggable(); //permite mover modal -> Obs.: necessidade da biblioteca ui e essa biblioteca Ã© incompatÃ­vel com datepicker das notificaÃ§Ãµes, etc -> verificar
+
+        return new SignotifyElement(id, hideModal);
+    }
+    var modalAlert = function (body, title = null, status = 'default', icon='fa-check', okCallback = null) {
+        let id = generateRandomId();
+//modalAlertComponent = function (id, body, title="", status = 'default', okCallback = null)
+
+        $("body").append(modalAlertComponent(id, body, title, status, icon, okCallback));
+
+        $('#' + id).on('hidden.bs.modal', function (e) {
+            $(this).remove();
+        });
+
+        if (okCallback != null) {
+            $('#' + id + "_btn").click(function () {
+                okCallback();
+                $('#' + id).modal('hide');
+            });
+        } else {
+            $('#' + id + "_btn").click(function () {
+                $('#' + id).modal('hide');
+            });
+        }
+
+        $('#' + id).modal('show');
+
+        //$("#" + id).draggable(); //permite mover modal -> Obs.: necessidade da biblioteca ui e essa biblioteca Ã© incompatÃ­vel com datepicker das notificaÃ§Ãµes, etc -> verificar
+
+        return new SignotifyElement(id, hideModal);
     }
 
-    var toast = function(body, status, timer=5000){
+    var toast = function (body, status) {
         let id = generateRandomId();
-        $('body').append(toastComponent(id, body, status, timer));
+        $('body').append(toastComponent(id, body, status));
         //hideToast
         const toastElList = $('.toast')
         // const toastList = [...toastElList].map(toastEl => new bootstrap.Toast(toastEl))
 
         toastElList.toast('show');
-        
-        $('.toast').on('hidden.bs.toast', function(){
-            $(this).remove();
-        });
-        return new NotifyElement(id, hideToast);
+        return new SignotifyElement(id, hideToast);
     }
 
     //---------------------------------------------------------------------------------------------
-    // Procedimentos de hide, preferencialmente não devem ser chamados diretamente, use o .hide()
-    // do handler ao invés. 
+    // Procedimentos de hide, preferencialmente nÃ£o devem ser chamados diretamente, use o .hide()
+    // do handler ao invÃ©s.
     //---------------------------------------------------------------------------------------------
 
-    var hideModal = function(id) {
-        if ($('#'+id).length == 0) {
+    var hideModal = function (id) {
+        if ($('#' + id).length == 0) {
             return;
         }
 
-        $('#'+id).modal('hide');
+        $('#' + id).modal('hide');
     }
 
-    var hideStatusCard = function(id) {
-        if ($('#'+id).length == 0) {
+    var hideStatusCard = function (id) {
+        if ($('#' + id).length == 0) {
             return;
         }
 
-        $('#'+id).animate({ "opacity": "0" }, ANIMATION_TIME_MILLIS);
+        $('#' + id).animate({"opacity": "0"}, ANIMATION_TIME_MILLIS);
 
         setTimeout(function () {
-            $('#'+id).remove();
+            $('#' + id).remove();
         }, ANIMATION_TIME_MILLIS * 1.01);
     }
 
-    var  hideOverlayDiv = function(id) {
-        if ($('#'+id).length == 0) {
+    var hideOverlayDiv = function (id) {
+        if ($('#' + id).length == 0) {
             return;
         }
 
-        $('#'+id).animate({ "opacity": "0", "top": OVERLAY_DIV_HIDE_DIST }, ANIMATION_TIME_MILLIS / 2);
+        $('#' + id).animate({"opacity": "0", "top": OVERLAY_DIV_HIDE_DIST}, ANIMATION_TIME_MILLIS / 2);
 
         setTimeout(function () {
-            $('#'+id).remove();
+            $('#' + id).remove();
         }, ANIMATION_TIME_MILLIS / 2 * 1.01);
     }
 
-    var hideToast = function(id) {
-        if ($('#'+id).length == 0) {
+    var hideToast = function (id) {
+        if ($('#' + id).length == 0) {
             return;
         }
 
-        $('#'+id).toast('hide').remove();
+        $('#' + id).toast('hide');
     }
-
     
     var bindEvents = function() {
         

@@ -1,28 +1,47 @@
 <?php
+
 namespace App\Repository;
 
 use App\Entity\Agendamento;
-use Doctrine\DBAL\Connection;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 
-class AgendamentoRepository
+
+/**
+ * @extends ServiceEntityRepository<Agendamento>
+ *
+ * @method Agendamento|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Agendamento|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Agendamento[]    findAll()
+ * @method Agendamento[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ */
+class AgendamentoRepository extends ServiceEntityRepository
 {
+    /**
+     * @var
+     */
     private $conn;
 
-    public function __construct(Connection $conn)
+    /**
+     * @param ManagerRegistry $registry
+     */
+    public function __construct(ManagerRegistry $registry)
     {
-        $this->conn = $conn;
+        parent::__construct($registry, Agendamento::class);
+
+        $this->conn = $registry->getManager()->getConnection();
     }
 
-    public function findAll(): array
-    {
-        $sql = 'SELECT a.id, a.data, a.concluido, a.hora_chegada, p.nome as pet_nome, c.nome as dono_nome, s.nome as servico_nome
-                FROM Agendamento a
-                JOIN Pet p ON a.pet_id = p.id
-                JOIN Cliente c ON p.dono_id = c.id
-                JOIN servico s ON a.servico_id = s.id';
-        $stmt = $this->conn->executeQuery($sql);
-        return $stmt->fetchAllAssociative();
-    }
+//    public function findAll(): array
+//    {
+//        $sql = 'SELECT a.id, a.data, a.concluido, a.hora_chegada, p.nome as pet_nome, c.nome as dono_nome, s.nome as servico_nome
+//                FROM Agendamento a
+//                JOIN Pet p ON a.pet_id = p.id
+//                JOIN Cliente c ON p.dono_id = c.id
+//                JOIN servico s ON a.servico_id = s.id';
+//        $stmt = $this->conn->executeQuery($sql);
+//        return $stmt->fetchAllAssociative();
+//    }
 
     public function findByDate(\DateTime $data): array
     {
@@ -36,25 +55,25 @@ class AgendamentoRepository
         return $stmt->fetchAllAssociative();
     }
 
-    public function find(int $id): ?Agendamento
-    {
-        $sql = 'SELECT * FROM Agendamento WHERE id = :id';
-        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
-        $agendamentoData = $stmt->fetchAssociative();
-
-        if (!$agendamentoData) {
-            return null;
-        }
-
-        $agendamento = new Agendamento();
-        $agendamento->setId($agendamentoData['id']);
-        $agendamento->setData(new \DateTime($agendamentoData['data']));
-        $agendamento->setPet_Id($agendamentoData['pet_id']);
-        $agendamento->setServico_Id($agendamentoData['servico_id']);
-        $agendamento->setConcluido((bool)$agendamentoData['concluido']);
-
-        return $agendamento;
-    }
+//    public function find(int $id): ?Agendamento
+//    {
+//        $sql = 'SELECT * FROM Agendamento WHERE id = :id';
+//        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
+//        $agendamentoData = $stmt->fetchAssociative();
+//
+//        if (!$agendamentoData) {
+//            return null;
+//        }
+//
+//        $agendamento = new Agendamento();
+//        $agendamento->setId($agendamentoData['id']);
+//        $agendamento->setData(new \DateTime($agendamentoData['data']));
+//        $agendamento->setPet_Id($agendamentoData['pet_id']);
+//        $agendamento->setServico_Id($agendamentoData['servico_id']);
+//        $agendamento->setConcluido((bool)$agendamentoData['concluido']);
+//
+//        return $agendamento;
+//    }
 
     public function save(Agendamento $agendamento): void
     {
@@ -65,7 +84,7 @@ class AgendamentoRepository
             'servico_id' => $agendamento->getServico_Id(),
             'concluido' => (int)$agendamento->getConcluido(),
         ]);
-        
+
     }
 
     public function update(Agendamento $agendamento): void

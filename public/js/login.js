@@ -21,7 +21,7 @@ $(function() {
                     formBtn.html(loadingHtml).prop('disabled', true);
                 },
                 success: function(result) {
-                    console.log(result);
+                    // console.log(result);
                     if (result.error === true) {
                         Notify.modal(result.mensagem, result.status, function() {
                             formBtn.html('Entrar').prop('disabled', false)
@@ -30,7 +30,7 @@ $(function() {
                     }
 
                     if (result.direcionaHome) {
-                        Notify.toast(result.message, 'success', 700);
+                        Notify.toast(result.message, 'success');
                         $('.toast').on('hidden.bs.toast', function() {
                             window.location.href = result.redireciona
                         });
@@ -43,6 +43,8 @@ $(function() {
                     console.log(error)
                     console.log(httpRequestError)
                     formBtn.html('Entrar').prop('disabled', false)
+                    // Notify.modal(error.responseJSON.message, 'danger', 'Mensagem do sistema', {}, null, 'Fechar', null, 'danger');
+                    Notify.toast(error.responseJSON.message, 'danger', 50000);
                 },
                 done: function(teste) {}
             });

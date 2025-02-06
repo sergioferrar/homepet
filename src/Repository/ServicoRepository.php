@@ -2,42 +2,53 @@
 namespace App\Repository;
 
 use App\Entity\Servico;
-use Doctrine\DBAL\Connection;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 
-class ServicoRepository
+/**
+ * @extends ServiceEntityRepository<Servico>
+ *
+ * @method Servico|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Servico|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Servico[]    findAll()
+ * @method Servico[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ */
+
+class ServicoRepository extends ServiceEntityRepository
 {
     private $conn;
 
-    public function __construct(Connection $conn)
+    public function __construct(ManagerRegistry $registry)
     {
-        $this->conn = $conn;
+        parent::__construct($registry, Servico::class);
+        $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function findAll(): array
-    {
-        $sql = 'SELECT * FROM servico'; // Tabela com 's' minúsculo
-        $stmt = $this->conn->executeQuery($sql);
-        return $stmt->fetchAllAssociative();
-    }
+//    public function findAll(): array
+//    {
+//        $sql = 'SELECT * FROM servico'; // Tabela com 's' minúsculo
+//        $stmt = $this->conn->executeQuery($sql);
+//        return $stmt->fetchAllAssociative();
+//    }
 
-    public function find(int $id): ?Servico
-    {
-        $sql = 'SELECT * FROM servico WHERE id = :id'; // Tabela com 's' minúsculo
-        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
-        $servicoData = $stmt->fetchAssociative();
-
-        if (!$servicoData) {
-            return null;
-        }
-
-        $servico = new Servico();
-        $servico->setId($servicoData['id']);
-        $servico->setNome($servicoData['nome']);
-        $servico->setDescricao($servicoData['descricao']);
-        $servico->setValor($servicoData['valor']);
-
-        return $servico;
-    }
+//    public function find(int $id): ?Servico
+//    {
+//        $sql = 'SELECT * FROM servico WHERE id = :id'; // Tabela com 's' minúsculo
+//        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
+//        $servicoData = $stmt->fetchAssociative();
+//
+//        if (!$servicoData) {
+//            return null;
+//        }
+//
+//        $servico = new Servico();
+//        $servico->setId($servicoData['id']);
+//        $servico->setNome($servicoData['nome']);
+//        $servico->setDescricao($servicoData['descricao']);
+//        $servico->setValor($servicoData['valor']);
+//
+//        return $servico;
+//    }
 
     public function save(Servico $servico): void
     {

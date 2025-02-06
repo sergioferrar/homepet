@@ -65,9 +65,19 @@
                                 <div class="pt-4 pb-2">
                                     <h5 class="card-title text-center pb-0 fs-4">Acesse sua conta</h5>
                                     <p class="text-center small">Informe seu login e senha para acessar</p>
+                                    {% for message in app.flashes('message') %}
+                                        <div class="alert alert-danger">
+                                            {{ message|trans }}
+                                        </div>
+                                    {% endfor %}
+                                    {% if error %}
+                                        <div class="alert alert-danger">
+                                            {{ error.getMessage()|trans }}
+                                        </div>
+                                    {% endif %}
                                 </div>
 
-                                <form class="row g-3 needs-validation" novalidate>
+                                <form class="row g-3 user" method="post" action="{{ url('api_login') }}">
 
                                     <div class="col-12">
                                         <label for="yourUsername" class="form-label">Login</label>
@@ -112,10 +122,14 @@
 
 <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="{{ asset('js/plugins/jquery/jquery.js') }}"></script>
+
+<script type="text/javascript" src="{{ asset('js/plugins/bootstrap/bootstrap.bundle.min.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script src="{{ asset('assets/js/main.js') }}"></script>
+<script src="{{ asset('js/Notify.js') }}"></script>
+<script src="{{ asset('js/login.js') }}"></script>
 </body>
 
 </html>

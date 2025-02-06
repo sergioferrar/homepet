@@ -2,15 +2,26 @@
 namespace App\Repository;
 
 use App\Entity\Pet;
-use Doctrine\DBAL\Connection;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 
-class PetRepository
+/**
+ * @extends ServiceEntityRepository<Pet>
+ *
+ * @method Pet|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Pet|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Pet[]    findAll()
+ * @method Pet[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ */
+
+class PetRepository extends ServiceEntityRepository
 {
     private $conn;
 
-    public function __construct(Connection $conn)
+    public function __construct(ManagerRegistry $registry)
     {
-        $this->conn = $conn;
+        parent::__construct($registry, Pet::class);
+        $this->conn = $this->getEntityManager()->getConnection();
     }
 
     public function findAllPets(): array
@@ -23,29 +34,29 @@ class PetRepository
         return $stmt->fetchAllAssociative();
     }
 
-    public function find(int $id): ?Pet
-    {
-        $sql = 'SELECT p.id, p.nome, p.tipo, p.idade, p.dono_id, 
-            c.nome AS cliente
-            FROM Pet p
-            LEFT JOIN Cliente c ON c.id = p.dono_id
-            WHERE id = :id';
-        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
-        $petData = $stmt->fetchAssociative();
-
-        if (!$petData) {
-            return null;
-        }
-
-        $pet = new Pet();
-        $pet->setId($petData['id'])
-            ->setNome($petData['nome'])
-            ->setTipo($petData['tipo'])
-            ->setIdade($petData['idade'])
-            ->setDono_Id($petData['dono_id']);
-
-        return $pet;
-    }
+//    public function find(int $id): ?Pet
+//    {
+//        $sql = 'SELECT p.id, p.nome, p.tipo, p.idade, p.dono_id,
+//            c.nome AS cliente
+//            FROM Pet p
+//            LEFT JOIN Cliente c ON c.id = p.dono_id
+//            WHERE id = :id';
+//        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
+//        $petData = $stmt->fetchAssociative();
+//
+//        if (!$petData) {
+//            return null;
+//        }
+//
+//        $pet = new Pet();
+//        $pet->setId($petData['id'])
+//            ->setNome($petData['nome'])
+//            ->setTipo($petData['tipo'])
+//            ->setIdade($petData['idade'])
+//            ->setDono_Id($petData['dono_id']);
+//
+//        return $pet;
+//    }
 
     public function save(Pet $pet): void
     {

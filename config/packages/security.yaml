@@ -65,11 +65,11 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
         #PUBLICAS
-        - { path: ^/dashboard/login, roles: PUBLIC_ACCESS }
-        - { path: ^/dashboard/api/login, roles: PUBLIC_ACCESS }
-        - { path: ^/dashboard/logout, roles: PUBLIC_ACCESS }
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/logout, roles: PUBLIC_ACCESS }
         #Roles
-        - { path: ^/dashboard/*, roles: [IS_AUTHENTICATED] }
+        - { path: ^/*, roles: [IS_AUTHENTICATED] }
 
 when@test:
     security:

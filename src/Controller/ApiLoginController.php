@@ -19,7 +19,7 @@ class ApiLoginController extends DefaultController
         $error = $authenticationUtils->getLastAuthenticationError();
         if ($error) {
             return new JsonResponse(
-                ['error' => $error->getMessage()],
+                ['error' => $error->getMessage(), 'status' => 'danger', 'message' => $error->getMessage()],
                 JsonResponse::HTTP_UNAUTHORIZED
             );
         }
