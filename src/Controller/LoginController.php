@@ -85,6 +85,14 @@ class LoginController extends DefaultController
         $request->getSession()->invalidate();
         return $this->redirectToRoute('app_login');
     }
+
+    /**
+     * @Route("/login/gerasenha/{senha}", name="app_gerasenha")
+     */
+    public function geraSenha(Request $request): Response
+    {
+        return $this->json(['senha' => password_hash($request->get('senha'), PASSWORD_DEFAULT, ["cost" => 10])]);
+    }
 }
 
 
