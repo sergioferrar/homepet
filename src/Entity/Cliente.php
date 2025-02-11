@@ -3,9 +3,11 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\ClienteRepository;
 
 /**
- * @ORM\Entity(repositoryClass=FinanceiroRepository::class)
+ * @ORM\Entity(repositoryClass=ClienteRepository::class)
+ * @ORM\Table(name="Cliente") 
  */
 class Cliente
 {
@@ -34,17 +36,11 @@ class Cliente
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $Endereco; // Propriedade com "E" maiúsculo
+    private $endereco; // Nome correto da propriedade
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(int $id): self
-    {
-        $this->id = $id;
-        return $this;
     }
 
     public function getNome(): ?string
@@ -63,7 +59,7 @@ class Cliente
         return $this->email;
     }
 
-    public function setEmail(string $email): self
+    public function setEmail(?string $email): self
     {
         $this->email = $email;
         return $this;
@@ -74,7 +70,7 @@ class Cliente
         return $this->telefone;
     }
 
-    public function setTelefone(string $telefone): self
+    public function setTelefone(?string $telefone): self
     {
         $this->telefone = $telefone;
         return $this;
@@ -82,12 +78,12 @@ class Cliente
 
     public function getEndereco(): ?string
     {
-        return $this->Endereco; // Método com "E" maiúsculo
+        return $this->endereco; // Nome correto da propriedade
     }
 
-    public function setEndereco(string $Endereco): self
+    public function setEndereco(?string $endereco): self
     {
-        $this->Endereco = $Endereco; // Propriedade com "E" maiúsculo
+        $this->endereco = $endereco;
         return $this;
     }
 }

@@ -5,6 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass=AgendamentoRepository::class)
+ * @ORM\Table(name="Agendamento") 
  */
 class Agendamento
 {

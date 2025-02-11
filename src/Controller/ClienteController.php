@@ -60,18 +60,11 @@ class ClienteController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
-        $clienteData = $this->clienteRepository->find($id);
+        $cliente = $this->clienteRepository->find($id);
 
-        if (!$clienteData) {
+        if (!$cliente) {
             throw $this->createNotFoundException('O cliente não foi encontrado');
         }
-
-        $cliente = new Cliente();
-        $cliente->setId($clienteData['id'])
-            ->setNome($clienteData['nome'])
-            ->setEmail($clienteData['email'])
-            ->setTelefone($clienteData['telefone'])
-            ->setEndereco($clienteData['Endereco']);
 
         if ($request->isMethod('POST')) {
             $cliente->setNome($request->request->get('nome'))
@@ -80,12 +73,13 @@ class ClienteController extends DefaultController
                 ->setEndereco($request->request->get('Endereco'));
 
             $this->clienteRepository->update([
-                'id' => $cliente->getId(),
+                'id' => $cliente->getId(), // Agora podemos pegar o ID corretamente
                 'nome' => $cliente->getNome(),
                 'email' => $cliente->getEmail(),
                 'telefone' => $cliente->getTelefone(),
                 'Endereco' => $cliente->getEndereco()
             ]);
+
             return $this->redirectToRoute('cliente_index');
         }
 
@@ -93,6 +87,7 @@ class ClienteController extends DefaultController
             'cliente' => $cliente
         ]);
     }
+
 
     /**
      * @Route("/deletar/{id}", name="cliente_deletar", methods={"POST"})
@@ -105,9 +100,17 @@ class ClienteController extends DefaultController
             throw $this->createNotFoundException('O cliente não foi encontrado');
         }
 
+        // Verifica se o cliente tem pets antes de excluir
+        if ($this->clienteRepository->hasPets($id)) {
+            $this->addFlash('error', 'Não é possível excluir este cliente, pois ele possui pets cadastrados.');
+            return $this->redirectToRoute('cliente_index');
+        }
+
         $this->clienteRepository->delete($id);
         return $this->redirectToRoute('cliente_index');
     }
+
+
 
     /**
      * @Route("/{id}/agendamentos", name="cliente_agendamentos", methods={"GET"})

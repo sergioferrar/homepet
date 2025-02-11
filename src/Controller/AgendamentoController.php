@@ -93,6 +93,7 @@ class AgendamentoController extends DefaultController
     {
         $agendamento = $this->agendamentoRepository->find($id);
 
+
         if (!$agendamento) {
             throw $this->createNotFoundException('O agendamento não foi encontrado');
         }
@@ -135,9 +136,10 @@ class AgendamentoController extends DefaultController
     }
 
     /**
-     * @Route("/concluir/{id}", name="agendamento_concluir", methods={"POST"})
+     * @Route("/concluir/{id}", name="agendamento_concluir", methods={"GET", "POST"})
      */
     public function concluir(int $id): Response
+
     {
         $agendamento = $this->agendamentoRepository->find($id);
 

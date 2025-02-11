@@ -9,6 +9,7 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=UsuarioRepository::class)
+ * @ORM\Table(name="usuario")
  */
 class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 {
