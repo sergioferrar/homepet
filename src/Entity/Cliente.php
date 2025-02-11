@@ -6,8 +6,13 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Repository\ClienteRepository;
 
 /**
+<<<<<<< HEAD
  * @ORM\Entity(repositoryClass=ClienteRepository::class)
  * @ORM\Table(name="Cliente") 
+=======
+ * @ORM\Entity(repositoryClass=FinanceiroRepository::class)
+ * @ORM\Table(name="Cliente")
+>>>>>>> 35e071d1b0d752b048b1a52ee56afdf97fca4328
  */
 class Cliente
 {

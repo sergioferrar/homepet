@@ -45,7 +45,7 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function findByDate(\DateTime $data): array
     {
-        $sql = 'SELECT a.id, a.data, a.concluido, p.nome as pet_nome, c.nome as dono_nome, s.nome as servico_nome
+        $sql = 'SELECT a.id, a.data, a.concluido, p.nome  as pet_nome, c.nome as dono_nome, s.nome as servico_nome
                 FROM Agendamento a
                 JOIN Pet p ON a.pet_id = p.id
                 JOIN Cliente c ON p.dono_id = c.id
@@ -107,7 +107,9 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function findAllPets(): array
     {
-        $sql = 'SELECT * FROM Pet';
+        $sql = "SELECT p.id, CONCAT(p.nome, ' - ', c.nome) AS nome, tipo, idade
+            FROM Pet p
+            LEFT JOIN Cliente c ON p.dono_id = c.id";
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
     }
