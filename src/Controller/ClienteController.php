@@ -76,14 +76,14 @@ class ClienteController extends DefaultController
         }
 
         if ($request->isMethod('POST')) {
-            $cliente->setNome($request->request->get('nome'))
-                ->setEmail($request->request->get('email'))
-                ->setTelefone($request->request->get('telefone'))
-                ->setRua($request->request->get('rua'))
-                ->setNumero($request->request->get('numero'))
-                ->setComplemento($request->request->get('complemento'))
-                ->setBairro($request->request->get('bairro'))
-                ->setCidade($request->request->get('cidade'));
+            $cliente->setNome($request->get('nome'))
+                ->setEmail($request->get('email'))
+                ->setTelefone($request->get('telefone'))
+                ->setRua($request->get('rua'))
+                ->setNumero($request->get('numero'))
+                ->setComplemento($request->get('complemento'))
+                ->setBairro($request->get('bairro'))
+                ->setCidade($request->get('cidade'));
 
             $this->clienteRepository->update([
                 'id' => $cliente->getId(), // Agora podemos pegar o ID corretamente

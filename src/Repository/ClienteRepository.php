@@ -43,14 +43,14 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function update(array $clienteData): void
     {
-        $sql = 'UPDATE Cliente 
+        $sql = "UPDATE Cliente 
                 SET nome = :nome, email = :email, telefone = :telefone, 
                     rua = :rua, 
                     numero = :numero, 
                     complemento = :complemento, 
                     bairro = :bairro, 
-                    cidade = :cidade, 
-               WHERE id = :id';
+                    cidade = :cidade
+               WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($clienteData);
     }
