@@ -55,25 +55,15 @@ class AgendamentoRepository extends ServiceEntityRepository
         return $stmt->fetchAllAssociative();
     }
 
-//    public function find(int $id): ?Agendamento
-//    {
-//        $sql = 'SELECT * FROM Agendamento WHERE id = :id';
-//        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
-//        $agendamentoData = $stmt->fetchAssociative();
-//
-//        if (!$agendamentoData) {
-//            return null;
-//        }
-//
-//        $agendamento = new Agendamento();
-//        $agendamento->setId($agendamentoData['id']);
-//        $agendamento->setData(new \DateTime($agendamentoData['data']));
-//        $agendamento->setPet_Id($agendamentoData['pet_id']);
-//        $agendamento->setServico_Id($agendamentoData['servico_id']);
-//        $agendamento->setConcluido((bool)$agendamentoData['concluido']);
-//
-//        return $agendamento;
-//    }
+    public function listagem(int $id)
+    {
+        $sql = 'SELECT * FROM Agendamento WHERE id = :id';
+    $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
+    $agendamentoData = $stmt->fetchAssociative();
+
+
+        return $agendamentoData;
+    }
 
     public function save(Agendamento $agendamento): void
     {

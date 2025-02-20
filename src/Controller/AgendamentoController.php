@@ -93,7 +93,6 @@ class AgendamentoController extends DefaultController
     {
         $agendamento = $this->agendamentoRepository->find($id);
 
-
         if (!$agendamento) {
             throw $this->createNotFoundException('O agendamento não foi encontrado');
         }
@@ -103,8 +102,8 @@ class AgendamentoController extends DefaultController
             $petId = $request->request->get('pet_id');
             $servicoId = $request->request->get('servico_id');
             $concluido = $request->request->get('concluido') ? true : false;
-
-            $agendamento->setData(new \DateTime($data));
+//dd();
+            $agendamento->setData((new \DateTime($data)));
             $agendamento->setPet_Id($petId);
             $agendamento->setServico_Id($servicoId);
             $agendamento->setConcluido($concluido);

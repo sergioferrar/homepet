@@ -37,7 +37,7 @@ class Agendamento
     private $concluido = 0;
 
     /**
-     * @ORM\Column(type="datetime", length=255, nullable=true, name=horaChegada)
+     * @ORM\Column(type="datetime", length=255, nullable=true, name="horaChegada")
      */
     private $horaChegada;
 
@@ -56,7 +56,7 @@ class Agendamento
         return $this->data;
     }
 
-    public function setData(\DateTime $data): self
+    public function setData($data): self
     {
         $this->data = $data;
         return $this;
