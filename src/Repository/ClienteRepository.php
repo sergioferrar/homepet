@@ -36,14 +36,21 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function save(array $clienteData): void
     {
-        $sql = 'INSERT INTO Cliente (nome, email, telefone, Endereco) VALUES (:nome, :email, :telefone, :Endereco)';
+        $sql = 'INSERT INTO Cliente (nome, email, telefone, rua, numero, complemento, bairro, cidade) VALUES (:nome, :email, :telefone, :rua, :numero, :complemento, :bairro, :cidade)';
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($clienteData);
     }
 
     public function update(array $clienteData): void
     {
-        $sql = 'UPDATE Cliente SET nome = :nome, email = :email, telefone = :telefone, Endereco = :Endereco WHERE id = :id';
+        $sql = 'UPDATE Cliente 
+                SET nome = :nome, email = :email, telefone = :telefone, 
+                    rua = :rua, 
+                    numero = :numero, 
+                    complemento = :complemento, 
+                    bairro = :bairro, 
+                    cidade = :cidade, 
+               WHERE id = :id';
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($clienteData);
     }

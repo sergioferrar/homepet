@@ -1,28 +1,87 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<div class="container mt-5">
-    <div class="form-container">
-        <h1 class="mb-4">Novo Cliente</h1>
-        <form method="post" action="{{ path('cliente_novo') }}">
-            <div class="form-group">
-                <label for="nome">Nome</label>
-                <input type="text" class="form-control" id="nome" name="nome" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label for="telefone">Telefone</label>
-                <input type="text" class="form-control" id="telefone" name="telefone" required>
-            </div>
-            <div class="form-group">
-                <label for="Endereco">Endereço</label>
-                <input type="text" class="form-control" id="Endereco" name="Endereco" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Salvar</button>
-        </form>
+    <div class="container mt-5">
+        <div class="form-container row">
+            <h1 class="mb-4">Novo Cliente</h1>
+            <form method="post" action="{{ path('cliente_novo') }}">
+                <div class="form-group mb-2">
+                    <label for="nome">Nome</label>
+                    <input type="text" class="form-control" id="nome" name="nome" required>
+                </div>
+
+                <div class="row">
+                    <div class="col-6">
+                        <label for="email">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="col-3">
+                        <label for="telefone">Telefone</label>
+                        <input type="text" class="form-control" id="telefone" name="telefone" required>
+                    </div>
+                    <div class="col-3 pt-4">
+                        <label for="telefone" class="me-4">Whatsapp?</label>
+                        <div class="btn-group float-end" role="group" aria-label="Basic radio toggle button group">
+                            <input type="radio" class="btn-check" name="whatsapp" id="whatsapp1" autocomplete="off"
+                                   checked>
+                            <label class="btn btn-outline-primary" for="whatsapp1">Sim</label>
+
+                            <input type="radio" class="btn-check" name="whatsapp" id="whatsapp2" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="whatsapp2">Não</label>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-2">
+                        <label for="cep">CEP</label>
+                        <input type="text" class="form-control" id="cep" name="cep" required>
+                    </div>
+                    <div class="col-6">
+                        <label for="rua">Rua</label>
+                        <input type="text" class="form-control" id="rua" name="rua" required>
+                    </div>
+                    <div class="col-1">
+                        <label for="numero">Número</label>
+                        <input type="text" class="form-control" id="numero" name="numero" required>
+                    </div>
+                    <div class="col-3">
+                        <label for="complemento">Complemento</label>
+                        <input type="text" class="form-control" id="complemento" name="complemento" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label for="bairro">Bairro</label>
+                        <input type="text" class="form-control" id="bairro" name="bairro" required>
+                    </div>
+                    <div class="col-6">
+                        <label for="cidade">Cidade</label>
+                        <input type="text" class="form-control" id="cidade" name="cidade" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary float-end">Salvar</button>
+            </form>
+        </div>
     </div>
-</div>
+{% endblock %}
+{% block javascripts %}
+    <script>
+        $(function(){
+            $('#cep').change(function () {
+                var cep = $(this).val().replace('-', '').replace('.', '');
+
+                if (cep.length === 8) {
+                    $.get("https://viacep.com.br/ws/" + cep + "/json", function (data) {
+                        if (!data.erro) {
+                            $('#bairro').val(data.bairro);
+                            $('#complemento').val(data.complemento);
+                            $('#cidade').val(data.localidade);
+                            $('#rua').val(data.logradouro);
+                        }
+                    }, 'json');
+                }
+            });
+        });
+    </script>
 {% endblock %}

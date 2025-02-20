@@ -41,13 +41,22 @@ class ClienteController extends DefaultController
             $cliente->setNome($request->request->get('nome'))
                 ->setEmail($request->request->get('email'))
                 ->setTelefone($request->request->get('telefone'))
-                ->setEndereco($request->request->get('Endereco'));
+                ->setRua($request->request->get('rua'))
+                ->setNumero($request->request->get('numero'))
+                ->setComplemento($request->request->get('complemento'))
+                ->setBairro($request->request->get('bairro'))
+                ->setCidade($request->request->get('cidade'))
+            ;
 
             $this->clienteRepository->save([
                 'nome' => $cliente->getNome(),
                 'email' => $cliente->getEmail(),
                 'telefone' => $cliente->getTelefone(),
-                'Endereco' => $cliente->getEndereco()
+                'rua' => $cliente->getRua(),
+                'numero' => $cliente->getNumero(),
+                'complemento' => $cliente->getComplemento(),
+                'bairro' => $cliente->getBairro(),
+                'cidade' => $cliente->getCidade(),
             ]);
             return $this->redirectToRoute('cliente_index');
         }
@@ -70,19 +79,27 @@ class ClienteController extends DefaultController
             $cliente->setNome($request->request->get('nome'))
                 ->setEmail($request->request->get('email'))
                 ->setTelefone($request->request->get('telefone'))
-                ->setEndereco($request->request->get('Endereco'));
+                ->setRua($request->request->get('rua'))
+                ->setNumero($request->request->get('numero'))
+                ->setComplemento($request->request->get('complemento'))
+                ->setBairro($request->request->get('bairro'))
+                ->setCidade($request->request->get('cidade'));
 
             $this->clienteRepository->update([
                 'id' => $cliente->getId(), // Agora podemos pegar o ID corretamente
                 'nome' => $cliente->getNome(),
                 'email' => $cliente->getEmail(),
                 'telefone' => $cliente->getTelefone(),
-                'Endereco' => $cliente->getEndereco()
+                'rua' => $cliente->getRua(),
+                'numero' => $cliente->getNumero(),
+                'complemento' => $cliente->getComplemento(),
+                'bairro' => $cliente->getBairro(),
+                'cidade' => $cliente->getCidade(),
             ]);
 
             return $this->redirectToRoute('cliente_index');
         }
-
+//        dd($cliente);
         return $this->render('cliente/editar.html.twig', [
             'cliente' => $cliente
         ]);

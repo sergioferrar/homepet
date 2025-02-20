@@ -41,7 +41,37 @@ class Cliente
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $endereco; // Nome correto da propriedade
+    private $rua;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $numero;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $complemento;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $bairro;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $cidade;
+
+    /**
+     * @ORM\Column(type="string", length=6)
+     */
+    private $whatsapp;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $cep; // Nome correto da propriedade
 
     public function getId(): ?int
     {
@@ -81,14 +111,86 @@ class Cliente
         return $this;
     }
 
-    public function getEndereco(): ?string
+    public function getRua(): ?string
     {
-        return $this->endereco; // Nome correto da propriedade
+        return $this->rua; // Nome correto da propriedade
     }
 
-    public function setEndereco(?string $endereco): self
+    public function setRua(?string $rua): self
     {
-        $this->endereco = $endereco;
+        $this->rua = $rua;
+        return $this;
+    }
+
+    public function getNumero(): ?int
+    {
+        return $this->numero;
+    }
+
+    public function setNumero(int $numero): self
+    {
+        $this->numero = $numero;
+
+        return $this;
+    }
+
+    public function getComplemento(): ?string
+    {
+        return $this->complemento;
+    }
+
+    public function setComplemento(string $complemento): self
+    {
+        $this->complemento = $complemento;
+
+        return $this;
+    }
+
+    public function getBairro(): ?string
+    {
+        return $this->bairro;
+    }
+
+    public function setBairro(?string $bairro): self
+    {
+        $this->bairro = $bairro;
+
+        return $this;
+    }
+
+    public function getCidade(): ?string
+    {
+        return $this->cidade;
+    }
+
+    public function setCidade(?string $cidade): self
+    {
+        $this->cidade = $cidade;
+
+        return $this;
+    }
+
+    public function getWhatsapp(): ?string
+    {
+        return $this->whatsapp;
+    }
+
+    public function setWhatsapp(string $whatsapp): self
+    {
+        $this->whatsapp = $whatsapp;
+
+        return $this;
+    }
+
+    public function getCep(): ?int
+    {
+        return $this->cep;
+    }
+
+    public function setCep(int $cep): self
+    {
+        $this->cep = $cep;
+
         return $this;
     }
 }

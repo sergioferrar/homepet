@@ -174,7 +174,7 @@
         let bgToast = `text-bg-${status}`;
 
         return `<div class="toast-container position-fixed top-0 end-0 p-3">
-				  <div id=${id} class="toast align-items-center ${bgToast} border-0" role="alert" aria-live="assertive" data-bs-config='{"delay":5000}' aria-atomic="true">
+				  <div id=${id} class="toast align-items-center ${bgToast} border-0" role="alert" aria-live="assertive" data-bs-config='{"delay":1500}' aria-atomic="true">
 				    <div class="d-flex">
 					    <div class="toast-body">
 					      ${body}

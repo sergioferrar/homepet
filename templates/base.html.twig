@@ -29,6 +29,7 @@
   <link href="{{ asset('assets/vendor/simple-datatables/style.css')}}" rel="stylesheet">
 
   <!-- Template Main CSS File -->
+  <link href="{{ asset('js/plugins/datatables/dataTables.bootstrap4.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/css/style.css')}}" rel="stylesheet">
 
   <!-- =======================================================
@@ -308,10 +309,10 @@
       
       <li class="nav-item"> 
 
-        <a class="nav-link collapsed" data-bs-target="#produtos" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-person-circle"></i><span>Clientes</span><i class="bi bi-chevron-down ms-auto"></i>
+        <a class="nav-link " href="{{ path('cliente_index') }}">
+          <i class="bi bi-person-circle"></i><span>Clientes</span>
         </a>
-        <ul id="produtos" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+        <ul id="produtos" class="nav-content collapse d-none " data-bs-parent="#sidebar-nav">
           <li>
             <a href="{{ path('cliente_novo') }}">
               <i class="bi bi-circle"></i><span>Novo cliente</span>
@@ -416,21 +417,9 @@
         </ul>
       </li>
       <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#suporte" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-person"></i><span>Usuários</span><i class="bi bi-chevron-down ms-auto"></i>
+        <a class="nav-link" href="{{ url('app_usuario') }}">
+          <i class="bi bi-person"></i><span>Usuários</span>
         </a>
-        <ul id="suporte" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            <a href="{{ url('app_usuario') }}">
-              <i class="bi bi-circle"></i><span>Ver todos</span>
-            </a>
-          </li>
-          <li>
-            <a href="{{ url('app_usuario_create') }}">
-              <i class="bi bi-circle"></i><span>Novo usuário</span>
-            </a>
-          </li>
-        </ul>
       </li>
 
 <!-- 
@@ -667,7 +656,7 @@
 
 
     
-{% block javascripts %}
+
 
 
 
@@ -689,6 +678,9 @@
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
+  <script src="{{asset('js/plugins/jquery/jquery.min.js')}}"></script>
+  <script src="{{asset('js/plugins/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
+
   <!-- Vendor JS Files -->
   <script src="{{ asset('assets/vendor/apexcharts/apexcharts.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
@@ -700,18 +692,14 @@
   <script src="{{ asset('assets/vendor/php-email-form/validate.js')}}"></script>
 
   <!-- Template Main JS File -->
-  <script src="assets/js/main.js"></script>
-
-</body>
-
-</html>
+  <script src="{{ asset('js/plugins/datatables/jquery.dataTables.js') }}"></script>
+  <script src="{{ asset('js/plugins/datatables/dataTables.bootstrap4.js') }}"></script>
+  <script src="{{ asset('assets/js/main.js') }}"></script>
 
 
 
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-{% endblock %}
+  {% block javascripts %}{% endblock %}
+
 </body>
 </html>

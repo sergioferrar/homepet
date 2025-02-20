@@ -34,12 +34,19 @@
                 <td>{{ cliente.email }}</td>
                 <td>{{ cliente.telefone }}</td>
                 <td>
-                    <div class="btn-group" role="group" aria-label="Basic example">
-                        <a href="{{ path('cliente_agendamentos', {'id': cliente.id}) }}" class="btn btn-info btn-sm mr-custom">Ver Agendamentos</a>
-                        <a href="{{ path('cliente_editar', {'id': cliente.id}) }}" class="btn btn-warning btn-sm mr-custom">Editar</a>
-                        <form method="post" action="{{ path('cliente_deletar', {'id': cliente.id}) }}" class="d-inline">
-                            <button type="submit" class="btn btn-danger btn-sm">Deletar</button>
-                        </form>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Ação
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a href="{{ path('cliente_agendamentos', {'id': cliente.id}) }}" class="dropdown-item mr-custom">Ver Agendamentos</a></li>
+                            <li><a href="{{ path('cliente_editar', {'id': cliente.id}) }}" class="dropdown-item mr-custom">Editar</a></li>
+                            <li>
+                                <form method="post" action="{{ path('cliente_deletar', {'id': cliente.id}) }}" class="d-inline">
+                                    <button type="submit" class="dropdown-item">Deletar</button>
+                                </form>
+                            </li>
+                        </ul>
                     </div>
                 </td>
             </tr>
@@ -47,4 +54,12 @@
         </tbody>
     </table>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        $(function(){
+            $('.table').datatables()
+        });
+    </script>
 {% endblock %}

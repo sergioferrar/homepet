@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Listagem de usuários{% endblock %}
+
+{% block body %}
+
+    <div class="container mt-5">
+        <h1>Usuários
+        </h1>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="#" class="btn btn-secondary">Anterior</a>
+            <h2>{{ "now"|date('d/m/Y') }}</h2>
+            <a href="#" class="btn btn-secondary">Próximo</a>
+        </div>
+
+        <!-- Bordered Table -->
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Valor</th>
+                <th>Pet</th>
+                <th>Ações</th>
+            </tr>
+            </thead>
+            <tbody>
+            { % for financeiro in financeiros %}
+                <tr>
+                    <td>{ { financeiro.data|date('d/m/Y H:i') }}</td>
+                    <td>{ { financeiro.descricao }}</td>
+                    <td>R$ { { financeiro.valor|number_format(2, ',', '.') }}</td>
+                    <td>{ { financeiro.pet_nome }}</td>
+                    <td>
+                        <div class="btn-group" role="group" aria-label="Basic example">
+                            <a href="{ { path('financeiro_editar', {'id': financeiro.id}) }}" class="btn btn-warning btn-sm mr-custom">Editar</a>
+                            <form method="post" action="{ { path('financeiro_deletar', {'id': financeiro.id}) }}" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm">Deletar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            { % endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
