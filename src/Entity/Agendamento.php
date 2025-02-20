@@ -37,7 +37,7 @@ class Agendamento
     private $concluido = 0;
 
     /**
-     * @ORM\Column(type="datetime", length=255, nullable=true)
+     * @ORM\Column(type="datetime", length=255, nullable=true, name=horaChegada)
      */
     private $horaChegada;
 
