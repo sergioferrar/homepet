@@ -25,17 +25,37 @@ class Pet
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $tipo;
-
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
     private $idade;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
+    private $sexo;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $raca;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $porte;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $observacoes;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private $dono_id;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $especie;
 
     public function getId(): ?int
     {
@@ -48,7 +68,6 @@ class Pet
         return $this;
     }
 
-
     public function getNome(): ?string
     {
         return $this->nome;
@@ -57,17 +76,6 @@ class Pet
     public function setNome(string $nome): self
     {
         $this->nome = $nome;
-        return $this;
-    }
-
-    public function getTipo(): ?string
-    {
-        return $this->tipo;
-    }
-
-    public function setTipo(string $tipo): self
-    {
-        $this->tipo = $tipo;
         return $this;
     }
 
@@ -82,14 +90,69 @@ class Pet
         return $this;
     }
 
-    public function getdono_id(): ?int
+    public function getSexo(): ?string
+    {
+        return $this->sexo;
+    }
+
+    public function setSexo(string $sexo): self
+    {
+        $this->sexo = $sexo;
+        return $this;
+    }
+
+    public function getRaca(): ?string
+    {
+        return $this->raca;
+    }
+
+    public function setRaca(string $raca): self
+    {
+        $this->raca = $raca;
+        return $this;
+    }
+
+    public function getPorte(): ?string
+    {
+        return $this->porte;
+    }
+
+    public function setPorte(string $porte): self
+    {
+        $this->porte = $porte;
+        return $this;
+    }
+
+    public function getObservacoes(): ?string
+    {
+        return $this->observacoes;
+    }
+
+    public function setObservacoes(?string $observacoes): self
+    {
+        $this->observacoes = $observacoes;
+        return $this;
+    }
+
+    public function getDono_Id(): ?int
     {
         return $this->dono_id;
     }
 
-    public function setdono_id(int $dono_id): self
+    public function setDono_Id(int $dono_id): self
     {
         $this->dono_id = $dono_id;
+        return $this;
+    }
+
+    public function getEspecie(): ?string
+    {
+        return $this->especie;
+    }
+
+    public function setEspecie(string $especie): self
+    {
+        $this->especie = $especie;
         return $this;
     }
 }

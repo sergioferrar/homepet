@@ -64,7 +64,7 @@ class FinanceiroController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
-        $financeiro = $this->financeiroRepository->find($id);
+        $financeiro = $this->financeiroRepository->find($id); // Corrigido
 
         if (!$financeiro) {
             throw $this->createNotFoundException('O registro financeiro não foi encontrado');
@@ -74,7 +74,7 @@ class FinanceiroController extends DefaultController
             $financeiro->setDescricao($request->request->get('descricao'));
             $financeiro->setValor((float)$request->request->get('valor'));
             $financeiro->setData(new \DateTime($request->request->get('data')));
-            $financeiro->setPet_Id($request->request->get('pet_id') !== '' ? (int)$request->request->get('pet_id') : null);
+            $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int)$request->request->get('pet_id') : null);
 
             $this->financeiroRepository->update($financeiro);
             return $this->redirectToRoute('financeiro_index');
@@ -86,12 +86,13 @@ class FinanceiroController extends DefaultController
         ]);
     }
 
+
     /**
      * @Route("/deletar/{id}", name="financeiro_deletar", methods={"POST"})
      */
     public function deletar(Request $request, int $id): Response
     {
-        $financeiro = $this->financeiroRepository->find($id);
+        $financeiro = $this->financeiroRepository->find($id); // Corrigido
 
         if (!$financeiro) {
             throw $this->createNotFoundException('O registro financeiro não foi encontrado');
@@ -100,6 +101,7 @@ class FinanceiroController extends DefaultController
         $this->financeiroRepository->delete($id);
         return $this->redirectToRoute('financeiro_index');
     }
+
 
     /**
      * @Route("/relatorio", name="financeiro_relatorio", methods={"GET"})

@@ -156,7 +156,8 @@ class AgendamentoController extends DefaultController
         $financeiro->setDescricao('Serviço para o pet: ' . $agendamento->getPet_Id());
         $financeiro->setValor($servico->getValor());
         $financeiro->setData(new \DateTime());
-        $financeiro->setPet_Id($agendamento->getPet_Id());
+        $financeiro->setPetId($agendamento->getPet_Id());
+
 
         $this->financeiroRepository->save($financeiro);
 

@@ -3,50 +3,130 @@
 {% block stylesheets %}
 {{ parent() }}
 <style>
-    .mr-custom {
-        margin-right: 8px; /* Espaçamento entre os botões */
+    /* Estilo do container da tabela */
+    .table-container {
+        background: #f0faff; /* Azul claro */
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15); /* Efeito flutuante */
+        margin-top: 20px;
+        overflow: hidden;
+    }
+
+    /* Estilo da tabela */
+    .table-custom {
+        width: 100%;
+        border-radius: 12px;
+        border-collapse: separate;
+        border-spacing: 0;
+        overflow: hidden;
+    }
+
+    .table-custom thead {
+        background-color: #007bff; /* Azul escuro */
+        color: white;
+    }
+
+    .table-custom th, .table-custom td {
+        padding: 14px;
+        text-align: center;
+        border-bottom: 2px solid #ddd;
+    }
+
+    .table-custom tbody tr {
+        transition: all 0.3s ease-in-out;
+    }
+
+    .table-custom tbody tr:hover {
+        background-color: #cce5ff; /* Azul suave */
+    }
+
+    /* Estilização do dropdown */
+    .btn-dropdown {
+        background-color: #007bff;
+        color: white;
+        border-radius: 8px;
+        padding: 6px 12px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-dropdown:hover {
+        background-color: #0056b3;
+    }
+
+    .dropdown-menu {
+        min-width: 140px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .dropdown-item {
+        text-align: center;
+        padding: 10px;
+    }
+
+    .dropdown-item:hover {
+        background: #cce5ff;
     }
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-5">
-    <h1>Pets</h1>
+    <h1 class="text-primary">Lista de Pets</h1>
     <form method="get" action="{{ path('pet_index') }}" class="form-inline mb-3">
         <input type="text" name="search" class="form-control mr-sm-2" placeholder="Pesquisar pet">
-        <button type="submit" class="btn btn-secu">Pesquisar</button>
+        <button type="submit" class="btn btn-secondary">Pesquisar</button>
     </form>
     <a href="{{ path('pet_novo') }}" class="btn btn-primary mb-3">Novo Pet</a>
 
-    <!-- Bordered Table -->
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Tipo</th>
-                <th>Idade</th>
-                <th>Dono</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for pet in pets %}
-            <tr>
-                <td>{{ pet.nome }}</td>
-                <td>{{ pet.tipo }}</td>
-                <td>{{ pet.idade }} anos</td>
-                <td>{{ pet.dono_nome }}</td>
-                <td>
-                    <div class="btn-group" role="group" aria-label="Basic example">
-                        <a href="{{ path('pet_editar', {'id': pet.id}) }}" class="btn btn-warning btn-sm mr-custom">Editar</a>
-                        <form method="post" action="{{ path('pet_deletar', {'id': pet.id}) }}" class="d-inline">
-                            <button type="submit" class="btn btn-danger btn-sm">Deletar</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <!-- Container da Tabela -->
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="table table-bordered table-custom">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Espécie</th>
+                        <th>Sexo</th>
+                        <th>Raça</th>
+                        <th>Porte</th>
+                        <th>Idade</th>
+                        <th>Observações</th>
+                        <th>Dono</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for pet in pets %}
+                    <tr>
+                        <td>{{ pet.nome }}</td>
+                        <td>{{ pet.especie }}</td>
+                        <td>{{ pet.sexo }}</td>
+                        <td>{{ pet.raca }}</td>
+                        <td>{{ pet.porte }}</td>
+                        <td>{{ pet.idade }} anos</td>
+                        <td>{{ pet.observacoes }}</td>
+                        <td>{{ pet.dono_nome }}</td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-dropdown btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Ações
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="{{ path('pet_editar', {'id': pet.id}) }}">Editar</a>
+                                    <form method="post" action="{{ path('pet_deletar', {'id': pet.id}) }}" class="d-inline">
+                                        <button type="submit" class="dropdown-item text-danger">Deletar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}

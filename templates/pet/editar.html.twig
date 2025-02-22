@@ -3,25 +3,54 @@
 {% block body %}
 <div class="container mt-5">
     <div class="form-container">
-        <h1 class="mb-4">Editar Pet</h1>
-        <form method="post" action="{{ path('pet_editar', {'id': pet.id}) }}">
+        <h1 class="mb-4">{% if pet is defined %}Editar{% else %}Novo{% endif %} Pet</h1>
+        <form method="post" action="{% if pet is defined %}{{ path('pet_editar', {'id': pet.id}) }}{% else %}{{ path('pet_novo') }}{% endif %}">
             <div class="form-group">
                 <label for="nome">Nome</label>
-                <input type="text" class="form-control" id="nome" name="nome" value="{{ pet.nome }}" required>
+                <input type="text" class="form-control" id="nome" name="nome" value="{{ pet.nome|default('') }}" required>
             </div>
             <div class="form-group">
-                <label for="tipo">Tipo</label>
-                <input type="text" class="form-control" id="tipo" name="tipo" value="{{ pet.tipo }}" required>
+                <label for="especie">Espécie</label>
+                <input type="text" class="form-control" id="especie" name="especie" value="{{ pet.especie|default('') }}" required>
+            </div>
+            <div class="form-group">
+                <label for="sexo">Sexo</label>
+                <select class="form-control" id="sexo" name="sexo" required>
+                    <option value="M" {% if pet.sexo is defined and pet.sexo == 'M' %}selected{% endif %}>Macho</option>
+                    <option value="F" {% if pet.sexo is defined and pet.sexo == 'F' %}selected{% endif %}>Fêmea</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="raca">Raça</label>
+                <input type="text" class="form-control" id="raca" name="raca" list="lista_racas" autocomplete="off" value="{{ pet.raca|default('') }}" required>
+                <datalist id="lista_racas">
+                    {% for raca in racas %}
+                        <option value="{{ raca }}">
+                    {% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label for="porte">Porte</label>
+                <select class="form-control" id="porte" name="porte" required>
+                    <option value="Pequeno" {% if pet.porte is defined and pet.porte == 'Pequeno' %}selected{% endif %}>Pequeno</option>
+                    <option value="Médio" {% if pet.porte is defined and pet.porte == 'Médio' %}selected{% endif %}>Médio</option>
+                    <option value="Grande" {% if pet.porte is defined and pet.porte == 'Grande' %}selected{% endif %}>Grande</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="idade">Idade</label>
-                <input type="number" class="form-control" id="idade" name="idade" value="{{ pet.idade }}" required>
+                <input type="number" class="form-control" id="idade" name="idade" value="{{ pet.idade|default('') }}" required>
+            </div>
+            <div class="form-group">
+                <label for="observacoes">Observações</label>
+                <textarea class="form-control" id="observacoes" name="observacoes" rows="3">{{ pet.observacoes|default('') }}</textarea>
             </div>
             <div class="form-group">
                 <label for="dono_id">Dono</label>
                 <select class="form-control" id="dono_id" name="dono_id" required>
                     {% for cliente in clientes %}
-                        <option value="{{ cliente.id }}" {% if cliente.id == pet.dono_id %}selected{% endif %}>{{ cliente.nome }}</option>
+                        <option value="{{ cliente.id }}" {% if pet.dono_id is defined and cliente.id == pet.dono_id %}selected{% endif %}>{{ cliente.nome }}</option>
                     {% endfor %}
                 </select>
             </div>

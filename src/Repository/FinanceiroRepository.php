@@ -36,30 +36,55 @@ class FinanceiroRepository
 
     public function save(Financeiro $financeiro): void
     {
-        $sql = 'INSERT INTO Financeiro (descricao, valor, data, pet_id) VALUES (:descricao, :valor, :data, :pet_id)';
-        $this->conn->executeQuery($sql, [
-            'descricao' => $financeiro->getDescricao(),
-            'valor' => $financeiro->getValor(),
-            'data' => $financeiro->getData()->format('Y-m-d'),
-            'pet_id' => $financeiro->getpet_id(),
-        ]);
+        $sql = 'INSERT INTO Financeiro (descricao, valor, data, pet_id) 
+                VALUES (:descricao, :valor, :data, :pet_id)';
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('descricao', $financeiro->getDescricao());
+        $stmt->bindValue('valor', $financeiro->getValor());
+        $stmt->bindValue('data', $financeiro->getData()->format('Y-m-d'));
+        $stmt->bindValue('pet_id', $financeiro->getPetId() ?? null);
+        $stmt->execute();
     }
 
     public function update(Financeiro $financeiro): void
     {
-        $sql = 'UPDATE Financeiro SET descricao = :descricao, valor = :valor, data = :data, pet_id = :pet_id WHERE id = :id';
-        $this->conn->executeQuery($sql, [
-            'descricao' => $financeiro->getDescricao(),
-            'valor' => $financeiro->getValor(),
-            'data' => $financeiro->getData()->format('Y-m-d'),
-            'pet_id' => $financeiro->getpet_id(),
-            'id' => $financeiro->getId(),
-        ]);
+        $sql = 'UPDATE Financeiro 
+                SET descricao = :descricao, valor = :valor, data = :data, pet_id = :pet_id 
+                WHERE id = :id';
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('descricao', $financeiro->getDescricao());
+        $stmt->bindValue('valor', $financeiro->getValor());
+        $stmt->bindValue('data', $financeiro->getData()->format('Y-m-d'));
+        $stmt->bindValue('pet_id', $financeiro->getPetId() ?? null);
+        $stmt->bindValue('id', $financeiro->getId());
+        $stmt->execute();
     }
 
     public function delete(int $id): void
     {
         $sql = 'DELETE FROM Financeiro WHERE id = :id';
         $this->conn->executeQuery($sql, ['id' => $id]);
+    }
+
+    public function find(int $id): ?Financeiro
+    {
+        $sql = 'SELECT * FROM Financeiro WHERE id = :id';
+        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
+        $financeiroData = $stmt->fetchAssociative();
+
+        if (!$financeiroData) {
+            return null;
+        }
+
+        $financeiro = new Financeiro();
+        $financeiro->setId($financeiroData['id']);
+        $financeiro->setDescricao($financeiroData['descricao']);
+        $financeiro->setValor((float) $financeiroData['valor']);
+        $financeiro->setData(new \DateTime($financeiroData['data']));
+        $financeiro->setPetId($financeiroData['pet_id'] ?? null);
+
+        return $financeiro;
     }
 }
