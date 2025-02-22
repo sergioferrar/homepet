@@ -1,8 +1,2 @@
-ALTER TABLE `homepet`.`cliente`
-    ADD COLUMN `numero` VARCHAR(45) NULL DEFAULT NULL AFTER `rua`,
-ADD COLUMN `complemento` VARCHAR(255) NULL DEFAULT NULL AFTER `numero`,
-ADD COLUMN `bairro` VARCHAR(255) NULL DEFAULT NULL AFTER `complemento`,
-ADD COLUMN `cidade` VARCHAR(150) NULL DEFAULT NULL AFTER `bairro`,
-ADD COLUMN `cep` INT NULL DEFAULT NULL AFTER `cidade`,
-ADD COLUMN `whatsapp` ENUM("Sim", "Não") "Não" AFTER `telefone`;
-CHANGE COLUMN `endereco` `rua` VARCHAR(255) NULL DEFAULT NULL ;
+ALTER TABLE `homepet`.`usuario`
+    ADD COLUMN `access_level` ENUM("Admin", "Atendente") NULL DEFAULT NULL AFTER `roles`;
