@@ -38,7 +38,7 @@ class Financeiro
     private $pet_id;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, name="")
      */
     private $pet_nome;
 

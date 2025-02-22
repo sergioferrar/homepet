@@ -2,35 +2,17 @@
 namespace App\Repository;
 
 use App\Entity\Financeiro;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
 
-/**
- * @extends ServiceEntityRepository<Financeiro>
- *
- * @method Financeiro|null find($id, $lockMode = null, $lockVersion = null)
- * @method Financeiro|null findOneBy(array $criteria, array $orderBy = null)
- * @method Financeiro[]    findAll()
- * @method Financeiro[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- */
-class FinanceiroRepository extends ServiceEntityRepository
+class FinanceiroRepository
 {
     private $conn;
 
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(Connection $connection)
     {
-        parent::__construct($registry, Financeiro::class);
-        $this->conn = $this->getEntityManager()->getConnection();
+        $this->conn = $connection;
     }
-
-//    public function findAll(): array
-//    {
-//        $sql = 'SELECT f.id, f.descricao, f.valor, f.data, p.nome as pet_nome, f.pet_id
-//                FROM Financeiro f
-//                LEFT JOIN Pet p ON f.pet_id = p.id';
-//        $stmt = $this->conn->executeQuery($sql);
-//        return $stmt->fetchAllAssociative();
-//    }
 
     public function findByDate(\DateTime $data): array
     {
@@ -51,30 +33,6 @@ class FinanceiroRepository extends ServiceEntityRepository
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
     }
-
-//    public function find(int $id): ?Financeiro
-//    {
-//        $sql = 'SELECT f.*, p.nome as pet_nome
-//                FROM Financeiro f
-//                LEFT JOIN Pet p ON f.pet_id = p.id
-//                WHERE f.id = :id';
-//        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
-//        $financeiroData = $stmt->fetchAssociative();
-//
-//        if (!$financeiroData) {
-//            return null;
-//        }
-//
-//        $financeiro = new Financeiro();
-//        $financeiro->setId($financeiroData['id']);
-//        $financeiro->setDescricao($financeiroData['descricao']);
-//        $financeiro->setValor($financeiroData['valor']);
-//        $financeiro->setData(new \DateTime($financeiroData['data']));
-//        $financeiro->setpet_nome($financeiroData['pet_nome'] ?? null);
-//        $financeiro->setpet_id($financeiroData['pet_id'] ?? null);
-//
-//        return $financeiro;
-//    }
 
     public function save(Financeiro $financeiro): void
     {
