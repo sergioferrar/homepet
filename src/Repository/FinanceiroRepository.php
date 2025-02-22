@@ -95,7 +95,7 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function totalAgendamentoDia()
     {
         $sql = "SELECT COUNT(*) AS totalAgendamento
-        FROM agendamento
+        FROM Agendamento
         WHERE concluido = 1 AND DATE(data) = DATE(NOW())";
 
         $query = $this->conn->executeQuery($sql);
@@ -105,7 +105,7 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function totalAnimais()
     {
         $sql = "SELECT COUNT(*) AS totalAnimal
-        FROM pet";
+        FROM Pet";
 
         $query = $this->conn->query($sql);
         return $query->fetch();
@@ -114,7 +114,7 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function totalLucro()
     {
         $sql = "SELECT sum(valor) AS lucroTotal
-        FROM financeiro";
+        FROM Financeiro";
 
         $query = $this->conn->query($sql);
         return $query->fetch();
