@@ -26,12 +26,12 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     private $nomeUsuario;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $senha;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $email;
 
@@ -114,7 +114,7 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setPassword(string $password): self
     {
-        $this->password = $password;
+        $this->senha = $password;
 
         return $this;
     }
