@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="container mt-5">
+        <h1>Editar usuario</h1>
+        <form method="post" action="{{ url('usuario_edit_save') }}">
+            <div class="form-group">
+                <label for="nome_usuario">Nome do usuário</label>
+                <input type="text" class="form-control" id="nome_usuario" name="nome_usuario" value="{{ usuario.nomeUsuario}}" required>
+            </div>
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ usuario.email}}" required>
+            </div>
+            <div class="form-group">
+                <label for="senha">Senha</label>
+                <input type="password" class="form-control" id="senha" name="senha" required>
+            </div>
+            <div class="form-group">
+                <label for="pet_id">Nivel de acesso</label>
+                <select name="access_level" id="access_level" class="form-select">
+                    <option value="">Selecione o nivel de acesso</option>
+                    <option {% if usuario.accessLevel == 'Admin' %} selected {% endif %} value="Admin">Admin</option>
+                    <option {% if usuario.accessLevel == 'Atendente' %} selected {% endif %}  value="Atendente">Atendente</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        </form>
+    </div>
+{% endblock %}

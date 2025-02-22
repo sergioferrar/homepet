@@ -89,4 +89,6 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
         $this->getEntityManager()->flush();
     }
 
+
+
 }

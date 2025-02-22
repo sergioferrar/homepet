@@ -69,11 +69,10 @@ class AccessDeniedListener implements EventSubscriberInterface
     {
         // echo "onKernelException"; exit;
         $exception = $event->getThrowable();
-        // dd($exception);
-        $request = $event->getRequest();
-        $route = $request->attributes->get('_route');
-        $mensagem = '';
         dd($exception);
+        $request = $event->getRequest();
+        $mensagem = '';
+
         if (!$request->getSession()->has('login') && !$this->security->getUser()) {
             $mensagem = 'Você-não-está-logado,-area-restrita';
 
@@ -90,6 +89,16 @@ class AccessDeniedListener implements EventSubscriberInterface
             if($this->security->getUser()->getStatus() == "Inativo"){
                 $mensagem = 'Usuário-Inativo';
             }
+            $url = $this->router->generate('logout', ['error' => $mensagem]);
+            $event->getRequest()->getSession()->save();
+            $response = new RedirectResponse($url);
+            $event->setResponse($response);
+            $event->stopPropagation();
+            return $response;
+        }
+
+        if (!$this->security->getUser()) {
+            $mensagem = 'A-sua-sessão-expirou';
             $url = $this->router->generate('logout', ['error' => $mensagem]);
             $event->getRequest()->getSession()->save();
             $response = new RedirectResponse($url);

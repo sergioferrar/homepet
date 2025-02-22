@@ -40,6 +40,11 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
      */
     private $roles = [];
 
+    /**
+     * @ORM\Column(type="string", length=255, name="access_level")
+     */
+    private $accessLevel;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -86,7 +91,7 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-
+//        $this->roles;
         return ['ROLE_USER'];
     }
 
@@ -127,6 +132,18 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(?string $email): self
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getAccessLevel(): ?string
+    {
+        return $this->accessLevel;
+    }
+
+    public function setAccessLevel(?string $accessLevel): self
+    {
+        $this->accessLevel = $accessLevel;
 
         return $this;
     }
