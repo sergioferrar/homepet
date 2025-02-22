@@ -5,13 +5,22 @@ use App\Entity\Financeiro;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception;
 
-class FinanceiroRepository
+/**
+ * @extends ServiceEntityRepository<Financeiro>
+ *
+ * @method Financeiro|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Financeiro|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Financeiro[]    findAll()
+ * @method Financeiro[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ */
+class FinanceiroRepository extends ServiceEntityRepository
 {
     private $conn;
 
-    public function __construct(Connection $connection)
+    public function __construct(ManagerRegistry $registry)
     {
-        $this->conn = $connection;
+        parent::__construct($registry, Financeiro::class);
+        $this->conn = $this->getEntityManager()->getConnection();
     }
 
     public function findByDate(\DateTime $data): array
@@ -38,7 +47,7 @@ class FinanceiroRepository
     {
         $sql = 'INSERT INTO Financeiro (descricao, valor, data, pet_id) 
                 VALUES (:descricao, :valor, :data, :pet_id)';
-        
+
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('descricao', $financeiro->getDescricao());
         $stmt->bindValue('valor', $financeiro->getValor());
@@ -62,29 +71,52 @@ class FinanceiroRepository
         $stmt->execute();
     }
 
+    /**
+     * TODO
+     * NÃO SE DEVE DELETAR DADOS DA BASE DE DADOS
+     * MUDA APENAS O STATUS PARA INATIVO
+     */
     public function delete(int $id): void
     {
         $sql = 'DELETE FROM Financeiro WHERE id = :id';
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
-    public function find(int $id): ?Financeiro
+    public function totalAgendamento()
     {
-        $sql = 'SELECT * FROM Financeiro WHERE id = :id';
-        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
-        $financeiroData = $stmt->fetchAssociative();
+        $sql = "SELECT COUNT(*) AS totalAgendamento
+        FROM agendamento
+        WHERE concluido = 1";
 
-        if (!$financeiroData) {
-            return null;
-        }
+        $query = $this->conn->executeQuery($sql);
+        return $query->fetchAssociative();
+    }
 
-        $financeiro = new Financeiro();
-        $financeiro->setId($financeiroData['id']);
-        $financeiro->setDescricao($financeiroData['descricao']);
-        $financeiro->setValor((float) $financeiroData['valor']);
-        $financeiro->setData(new \DateTime($financeiroData['data']));
-        $financeiro->setPetId($financeiroData['pet_id'] ?? null);
+    public function totalAgendamentoDia()
+    {
+        $sql = "SELECT COUNT(*) AS totalAgendamento
+        FROM agendamento
+        WHERE concluido = 1 AND DATE(data) = DATE(NOW())";
 
-        return $financeiro;
+        $query = $this->conn->executeQuery($sql);
+        return $query->fetchAssociative();
+    }
+
+    public function totalAnimais()
+    {
+        $sql = "SELECT COUNT(*) AS totalAnimal
+        FROM pet";
+
+        $query = $this->conn->query($sql);
+        return $query->fetch();
+    }
+
+    public function totalLucro()
+    {
+        $sql = "SELECT sum(valor) AS lucroTotal
+        FROM financeiro";
+
+        $query = $this->conn->query($sql);
+        return $query->fetch();
     }
 }

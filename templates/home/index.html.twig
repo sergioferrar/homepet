@@ -1,8 +1,9 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<div class="jumbotron text-center" >
+<div class="jumbotron text-center mb-5" >
     <h1 class="display-4" color: black >Bem-vindo ao Home Pet Shop</h1>
+
     <p class="lead">Sistema de gerenciamento de agendamentos, clientes, pets e serviços.</p>
     <hr class="my-4">
     
@@ -11,4 +12,124 @@
     <a class="btn btn-primary btn-lg text-white mr-2" href="{{ path('pet_novo') }}" role="button">Cadastro de Pet</a>
     <a class="btn btn-primary btn-lg text-white" href="{{ path('servico_novo') }}" role="button">Cadastro de Serviço</a>
 </div>
+
+    <section class="section dashboard">
+        <div class="row">
+
+            <!-- Left side columns -->
+            <div class="col-lg-12">
+                <div class="row">
+
+                    <!-- Sales Card -->
+                    <div class="col-xxl-3 col-md-6">
+                        <div class="card info-card sales-card">
+
+
+
+                            <div class="card-body">
+                                <h5 class="card-title">Agendamento <span>| Mês</span></h5>
+
+                                <div class="d-flex align-items-center">
+                                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-calendar3"></i>
+                                    </div>
+                                    <div class="ps-3">
+                                        <h6>{{ agendamento }}</h6>
+                                        <span class="text-success small pt-1 fw-bold d-none">0%</span> <span class="text-muted small pt-2 ps-1">increase</span>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div><!-- End Sales Card -->
+
+                    <!-- Revenue Card -->
+                    <div class="col-xxl-3 col-md-6">
+                        <div class="card info-card revenue-card">
+
+
+
+                            <div class="card-body">
+                                <h5 class="card-title">Agendamentos <span>| Hoje</span></h5>
+
+                                <div class="d-flex align-items-center">
+                                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-calendar3"></i>
+                                    </div>
+                                    <div class="ps-3">
+                                        <h6>{{ agendamentoHoje }}</h6>
+                                        <span class="text-success small pt-1 fw-bold d-none">8%</span> <span class="text-muted small pt-2 ps-1">increase</span>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div><!-- End Revenue Card -->
+
+                    <!-- Customers Card -->
+                    <div class="col-xxl-3 col-xl-12">
+
+                        <div class="card info-card customers-card">
+
+
+                            <div class="card-body">
+                                <h5 class="card-title">Total Lucro</h5>
+
+                                <div class="d-flex align-items-center">
+                                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-currency-dollar"></i>
+                                    </div>
+                                    <div class="ps-3">
+                                        <h6>R$ {{ lucrototal }}</h6>
+                                        <span class="text-danger small pt-1 fw-bold d-none">6%</span>
+                                        <span class="text-muted small pt-2 ps-1 d-none">decrease</span>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div><!-- End Customers Card -->
+                    <div class="col-xxl-3 col-xl-12">
+
+                        <div class="card info-card customers-card">
+
+
+
+                            <div class="card-body">
+                                <h5 class="card-title">Animais</h5>
+
+                                <div class="d-flex align-items-center">
+                                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-journal-bookmark"></i>
+                                    </div>
+                                    <div class="ps-3">
+                                        <h6>{{ animais }}</h6>
+                                        <span class="text-danger small pt-1 fw-bold d-none">12%</span>
+                                        <span class="text-muted small pt-2 ps-1 d-none">decrease</span>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div><!-- End Customers Card -->
+
+                    <!-- Reports -->
+
+                    <!-- Recent Sales -->
+
+                    <!-- Top Selling -->
+
+                </div>
+            </div><!-- End Left side columns -->
+
+            <!-- Right side columns -->
+
+        </div>
+    </section>
 {% endblock %}
