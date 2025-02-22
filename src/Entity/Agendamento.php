@@ -17,7 +17,7 @@ class Agendamento
     private $id;
 
     /**
-     * @ORM\Column(type="datetime", length=255, nullable=true)
+     * @ORM\Column(type="datetime", nullable=true)
      */
     private $data;
 
@@ -27,17 +27,22 @@ class Agendamento
     private $pet_id;
 
     /**
-     * @ORM\Column(type="integer", length=255, nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      */
     private $servico_id;
 
     /**
-     * @ORM\Column(type="integer", length=255, nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      */
     private $concluido = 0;
 
     /**
-     * @ORM\Column(type="datetime", length=255, nullable=true, name="horaChegada")
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $pronto = 0;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true, name="horaChegada")
      */
     private $horaChegada;
 

@@ -1,76 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block stylesheets %}
-{{ parent() }}
-<style>
-    /* Estilo do container da tabela */
-    .table-container {
-        background: #f0faff; /* Azul claro */
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15); /* Efeito flutuante */
-        margin-top: 20px;
-        overflow: hidden;
-    }
 
-    /* Estilo da tabela */
-    .table-custom {
-        width: 100%;
-        border-radius: 12px;
-        border-collapse: separate;
-        border-spacing: 0;
-        overflow: hidden;
-    }
-
-    .table-custom thead {
-        background-color: #007bff; /* Azul escuro */
-        color: white;
-    }
-
-    .table-custom th, .table-custom td {
-        padding: 14px;
-        text-align: center;
-        border-bottom: 2px solid #ddd;
-    }
-
-    .table-custom tbody tr {
-        transition: all 0.3s ease-in-out;
-    }
-
-    .table-custom tbody tr:hover {
-        background-color: #cce5ff; /* Azul suave */
-    }
-
-    /* Estilização do dropdown */
-    .btn-dropdown {
-        background-color: #007bff;
-        color: white;
-        border-radius: 8px;
-        padding: 6px 12px;
-        border: none;
-        cursor: pointer;
-    }
-
-    .btn-dropdown:hover {
-        background-color: #0056b3;
-    }
-
-    .dropdown-menu {
-        min-width: 140px;
-        border-radius: 8px;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .dropdown-item {
-        text-align: center;
-        padding: 10px;
-    }
-
-    .dropdown-item:hover {
-        background: #cce5ff;
-    }
-</style>
-{% endblock %}
 
 {% block body %}
 <div class="container mt-5">
@@ -84,8 +14,8 @@
     <!-- Container da Tabela -->
     <div class="table-container">
         <div class="table-responsive">
-            <table class="table table-bordered table-custom">
-                <thead>
+            <table class="table table-sm table-striped datatable table-bordered">
+                <thead class="bg-dark text-white">
                     <tr>
                         <th>Nome</th>
                         <th>Espécie</th>
