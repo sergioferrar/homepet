@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Agendamento;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @extends ServiceEntityRepository<Agendamento>
@@ -26,15 +27,20 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function findByDate(\DateTime $data): array
     {
-        $sql = 'SELECT a.id, a.data, a.concluido, p.nome as pet_nome, c.nome as dono_nome, s.nome as servico_nome
+        $sql = 'SELECT a.id, a.data, a.concluido, a.horaChegada, a.horaSaida, a.metodo_pagamento, 
+                       p.nome as pet_nome, 
+                       c.nome as dono_nome, 
+                       CONCAT(s.nome, " - ", s.valor) as servico_nome
                 FROM Agendamento a
                 JOIN Pet p ON a.pet_id = p.id
                 JOIN Cliente c ON p.dono_id = c.id
                 JOIN servico s ON a.servico_id = s.id
                 WHERE DATE(a.data) = :data';
+
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
         return $stmt->fetchAllAssociative();
     }
+
 
     public function listagem(int $id)
     {
@@ -45,26 +51,39 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function save(Agendamento $agendamento): void
     {
-        $sql = 'INSERT INTO Agendamento (data, pet_id, servico_id, concluido) VALUES (:data, :pet_id, :servico_id, :concluido)';
+        $sql = 'INSERT INTO Agendamento (data, pet_id, servico_id, concluido, metodo_pagamento, horaChegada, horaSaida) 
+                VALUES (:data, :pet_id, :servico_id, :concluido, :metodo_pagamento, :horaChegada, :horaSaida)';
+        
         $this->conn->executeQuery($sql, [
             'data' => $agendamento->getData()->format('Y-m-d H:i:s'),
             'pet_id' => $agendamento->getPet_Id(),
             'servico_id' => $agendamento->getServico_Id(),
             'concluido' => (int)$agendamento->getConcluido(),
+            'metodo_pagamento' => $agendamento->getMetodoPagamento(),
+            'horaChegada' => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
+            'horaSaida' => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
         ]);
     }
 
     public function update(Agendamento $agendamento): void
     {
-        $sql = 'UPDATE Agendamento SET data = :data, pet_id = :pet_id, servico_id = :servico_id, concluido = :concluido WHERE id = :id';
+        $sql = 'UPDATE Agendamento 
+                SET data = :data, pet_id = :pet_id, servico_id = :servico_id, concluido = :concluido, 
+                    metodo_pagamento = :metodo_pagamento, horaChegada = :horaChegada, horaSaida = :horaSaida
+                WHERE id = :id';
+
         $this->conn->executeQuery($sql, [
             'data' => $agendamento->getData()->format('Y-m-d H:i:s'),
             'pet_id' => $agendamento->getPet_Id(),
             'servico_id' => $agendamento->getServico_Id(),
             'concluido' => (int)$agendamento->getConcluido(),
+            'metodo_pagamento' => $agendamento->getMetodoPagamento(),
+            'horaChegada' => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
+            'horaSaida' => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
             'id' => $agendamento->getId(),
         ]);
     }
+
 
     public function delete(int $id): void
     {
@@ -83,25 +102,9 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function findAllServicos(): array
     {
-        $sql = 'SELECT * FROM servico';
+        $sql = 'SELECT id, CONCAT(nome, " - ", valor) as nome FROM servico';
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
-    }
-
-    public function marcarComoConcluido(int $id): void
-    {
-        $sql = 'UPDATE Agendamento SET concluido = 1 WHERE id = :id';
-        $this->conn->executeQuery($sql, ['id' => $id]);
-    }
-
-    public function marcarComoPronto($id)
-    {
-        $agendamento = $this->find($id);
-        if ($agendamento) {
-            $agendamento->setPronto(true);
-            $this->_em->persist($agendamento);
-            $this->_em->flush();
-        }
     }
 
     public function contarAgendamentosPorData(\DateTime $data): int

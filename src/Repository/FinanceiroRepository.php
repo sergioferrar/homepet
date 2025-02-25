@@ -33,15 +33,22 @@ class FinanceiroRepository extends ServiceEntityRepository
         return $stmt->fetchAllAssociative();
     }
 
-    public function getRelatorio(): array
+    public function getRelatorioPorPeriodo(\DateTime $dataInicio, \DateTime $dataFim): array
     {
         $sql = 'SELECT DATE(f.data) as data, SUM(f.valor) as total
                 FROM Financeiro f
+                WHERE f.data BETWEEN :dataInicio AND :dataFim
                 GROUP BY DATE(f.data)
                 ORDER BY DATE(f.data) DESC';
-        $stmt = $this->conn->executeQuery($sql);
+
+        $stmt = $this->conn->executeQuery($sql, [
+            'dataInicio' => $dataInicio->format('Y-m-d'),
+            'dataFim' => $dataFim->format('Y-m-d')
+        ]);
+
         return $stmt->fetchAllAssociative();
     }
+
 
     public function save(Financeiro $financeiro): void
     {
@@ -85,7 +92,7 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function totalAgendamento()
     {
         $sql = "SELECT COUNT(*) AS totalAgendamento
-        FROM agendamento
+        FROM Agendamento
         WHERE concluido = 1";
 
         $query = $this->conn->executeQuery($sql);

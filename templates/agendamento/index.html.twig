@@ -4,7 +4,7 @@
 
 <div class="container mt-5">
     <h1>Agendamentos</h1>
-    
+
     <div class="d-flex justify-content-between align-items-center mb-3">
         <a href="{{ path('agendamento_index', {'data': data|date_modify('-1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Anterior</a>
         <h2>{{ data|date('d/m/Y') }}</h2>
@@ -16,7 +16,7 @@
     </div>
 
     <a href="{{ path('agendamento_novo') }}" class="btn btn-secondary mb-3">Novo Agendamento</a>
-    
+
     <form method="get" action="{{ path('agendamento_index') }}" class="mb-3">
         <div class="input-group">
             <input type="date" name="data" value="{{ data|date('Y-m-d') }}" class="form-control">
@@ -26,26 +26,28 @@
         </div>
     </form>
 
-
 {% block stylesheets %}
-
 <style>
     .mr-custom {
-        margin-right: 8px; /* Espaçamento entre os botões */
-        border-radius: 10px;  /* Arredondamento dos botões */
+        margin-right: 8px;
+        border-radius: 10px;
+    }
+    .linha-amarela {
+        background-color: yellow !important;
+    }
+    .texto-verde {
+        color: green !important;
+        font-weight: bold;
     }
 </style>
 {% endblock %}
 
-
 <div class="container mt-5">
-    <h1>Agendamentos</h1>
-
     <div class="card">
         <div class="card-body">
             <h5 class="card-title">Lista de Agendamentos</h5>
             <p>Veja abaixo todos os agendamentos programados e suas informações detalhadas.</p>
-            <!-- Bordered Table -->
+
             <table class="table table-bordered datatable">
                 <thead>
                     <tr>
@@ -54,35 +56,53 @@
                         <th>Nome do Dono</th>
                         <th>Serviço</th>
                         <th>Hora de Chegada</th>
+                        <th>Hora de Saída</th>
+                        <th>Método de Pagamento</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for agendamento in agendamentos %}
-                    <tr>
+                    <tr class="{% if agendamento.metodo_pagamento == 'pendente' %}linha-amarela{% endif %}">
                         <td>{{ agendamento.data|date('d/m/Y H:i') }}</td>
-                        <td>{{ agendamento.pet_nome }}</td>
+                        <td class="{% if agendamento.concluido %}texto-verde{% endif %}">
+                            {{ agendamento.pet_nome }}
+                        </td>
                         <td>{{ agendamento.dono_nome }}</td>
                         <td>{{ agendamento.servico_nome }}</td>
+                        <td>{{ agendamento.horaChegada is defined and agendamento.horaChegada is not null ? agendamento.horaChegada|date('H:i') : 'Não definido' }}</td>
+
                         <td>
-                            {% if agendamento.hora_chegada is defined %}
-                            {{ agendamento.hora_chegada|date('H:i') }}
-                            {% else %}
-                            Não definido
-                            {% endif %}
+                            <form method="post" action="{{ path('agendamento_alterar_saida', {'id': agendamento.id}) }}">
+                                <input type="time" name="hora_saida" class="form-control"
+                                       value="{{ agendamento.horaSaida is defined and agendamento.horaSaida is not null ? agendamento.horaSaida|date('H:i') : '' }}"
+                                       onchange="this.form.submit()">
+                            </form>
                         </td>
+
                         <td>
-                            <div class="btn-group" role="group" aria-label="Basic example">
-                                <a href="{{ path('agendamento_editar', {'id': agendamento.id}) }}" class="btn btn-warning btn-sm mr-custom">Editar</a>
-                                <form method="post" action="{{ path('agendamento_deletar', {'id': agendamento.id}) }}" class="d-inline">
-                                    <button type="submit" class="btn btn-danger btn-sm mr-custom">Deletar</button>
-                                </form>
-                                {% if not agendamento.concluido %}
-                                <form method="post" action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}" class="d-inline">
-                                    <button type="submit" class="btn btn-success btn-sm">Concluído</button>
-                                </form>
-                                {% endif %}
-                            </div>
+                            <form method="post" action="{{ path('agendamento_alterar_pagamento', {'id': agendamento.id}) }}">
+                                <select name="metodo_pagamento" class="form-control" onchange="this.form.submit()">
+                                    <option value="dinheiro" {% if agendamento.metodo_pagamento == 'dinheiro' %}selected{% endif %}>Dinheiro</option>
+                                    <option value="pix" {% if agendamento.metodo_pagamento == 'pix' %}selected{% endif %}>Pix</option>
+                                    <option value="credito" {% if agendamento.metodo_pagamento == 'credito' %}selected{% endif %}>Cartão de Crédito</option>
+                                    <option value="debito" {% if agendamento.metodo_pagamento == 'debito' %}selected{% endif %}>Cartão de Débito</option>
+                                    <option value="pendente" {% if agendamento.metodo_pagamento == 'pendente' %}selected{% endif %}>Pendente</option>
+                                </select>
+                            </form>
+                        </td>
+
+                        <td>
+                            <form method="post" action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}">
+                                <select name="acao" class="form-control" onchange="this.form.submit()">
+                                    <option value="">Selecione</option>
+                                    <option value="editar">Editar</option>
+                                    {% if not agendamento.concluido %}
+                                        <option value="concluir">Concluir</option>
+                                    {% endif %}
+                                    <option value="deletar">Deletar</option>
+                                </select>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
@@ -91,4 +111,21 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll("select[name='acao']").forEach(select => {
+            select.addEventListener("change", function() {
+                if (this.value === "deletar") {
+                    if (!confirm("Tem certeza que deseja deletar este agendamento?")) {
+                        this.value = "";
+                        return;
+                    }
+                }
+                this.form.submit();
+            });
+        });
+    });
+</script>
+
 {% endblock %}

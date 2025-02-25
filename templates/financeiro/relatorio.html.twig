@@ -4,15 +4,14 @@
 {{ parent() }}
 <style>
     .table-custom {
-        background-color: #343a40; /* Mantém a consistência com o tema escuro da navbar */
+        background-color: #343a40;
         color: #ffffff;
     }
-    .table-custom th,
-    .table-custom td {
-        border-color: #495057; /* Cor dos bordos mais suave para melhorar a visibilidade */
+    .table-custom th, .table-custom td {
+        border-color: #495057;
     }
     .table-custom thead th {
-        background-color: #495057; /* Cabeçalho com um tom mais escuro para destaque */
+        background-color: #495057;
     }
 </style>
 {% endblock %}
@@ -20,6 +19,24 @@
 {% block body %}
 <div class="container mt-5">
     <h1>Relatório Financeiro</h1>
+
+    <!-- Formulário de filtro -->
+    <form method="GET" action="{{ path('financeiro_relatorio') }}" class="mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="mes_inicio">Mês Inicial</label>
+                <input type="month" id="mes_inicio" name="mes_inicio" class="form-control" value="{{ mes_inicio }}">
+            </div>
+            <div class="col-md-4">
+                <label for="mes_fim">Mês Final</label>
+                <input type="month" id="mes_fim" name="mes_fim" class="form-control" value="{{ mes_fim }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary mt-4">Filtrar</button>
+            </div>
+        </div>
+    </form>
+
     <table class="table table-custom table-striped mt-3">
         <thead>
             <tr>
@@ -32,6 +49,10 @@
                 <tr>
                     <td>{{ item.data|date('d/m/Y') }}</td>
                     <td>R$ {{ item.total|number_format(2, ',', '.') }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="2" class="text-center">Nenhum registro encontrado.</td>
                 </tr>
             {% endfor %}
         </tbody>

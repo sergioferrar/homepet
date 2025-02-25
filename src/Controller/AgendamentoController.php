@@ -54,13 +54,20 @@ class AgendamentoController extends DefaultController
             $petId = $request->request->get('pet_id');
             $servicoId = $request->request->get('servico_id');
             $recorrencia = $request->request->get('recorrencia');
+            $metodoPagamento = $request->request->get('metodo_pagamento', 'pendente'); // NOVO CAMPO
+            $horaChegada = $request->request->get('hora_chegada'); // NOVO CAMPO
 
             $agendamento = new Agendamento();
             $agendamento->setData(new \DateTime($data));
             $agendamento->setPet_Id($petId);
             $agendamento->setServico_Id($servicoId);
             $agendamento->setConcluido(false);
-
+            $agendamento->setMetodoPagamento($metodoPagamento); // NOVO CAMPO
+            
+            if ($horaChegada) {
+                $agendamento->setHoraChegada(new \DateTime($data . ' ' . $horaChegada));
+            }
+            
             $this->agendamentoRepository->save($agendamento);
 
             if ($recorrencia === 'semanal' || $recorrencia === 'quinzenal') {
@@ -72,6 +79,10 @@ class AgendamentoController extends DefaultController
                     $agendamentoRecorrente->setPet_Id($petId);
                     $agendamentoRecorrente->setServico_Id($servicoId);
                     $agendamentoRecorrente->setConcluido(false);
+                    $agendamentoRecorrente->setMetodoPagamento($metodoPagamento); // NOVO CAMPO
+                    if ($horaChegada) {
+                        $agendamentoRecorrente->setHoraChegada(new \DateTime($novaData->format('Y-m-d') . ' ' . $horaChegada));
+                    }
                     $this->agendamentoRepository->save($agendamentoRecorrente);
                     $data = $novaData->format('Y-m-d');
                 }
@@ -85,6 +96,8 @@ class AgendamentoController extends DefaultController
             'servicos' => $this->agendamentoRepository->findAllServicos(),
         ]);
     }
+
+
 
     /**
      * @Route("/editar/{id}", name="agendamento_editar", methods={"GET", "POST"})
@@ -170,11 +183,16 @@ class AgendamentoController extends DefaultController
     /**
      * @Route("/agendamento/pronto/{id}", name="agendamento_pronto")
      */
-    public function marcarComoPronto($id, AgendamentoRepository $agendamentoRepository): Response
+    public function marcarComoPronto($id)
     {
-        $agendamentoRepository->marcarComoPronto($id);
-        return $this->redirectToRoute('lista_agendamentos');
+        $agendamento = $this->find($id);
+        if ($agendamento) {
+            $agendamento->setConcluido(true);
+            $this->_em->persist($agendamento);
+            $this->_em->flush();
+        }
     }
+
 
     /**
      * @Route("/agendamentos", name="lista_agendamentos")
@@ -184,5 +202,126 @@ class AgendamentoController extends DefaultController
         $agendamentos = $agendamentoRepository->findAll();
         return $this->render('agendamento/lista.html.twig', ['agendamentos' => $agendamentos]);
     }
+
+    /**
+     * @Route("/alterar-pagamento/{id}", name="agendamento_alterar_pagamento", methods={"POST"})
+     */
+    public function alterarPagamento(int $id, Request $request): Response
+    {
+        $agendamento = $this->agendamentoRepository->find($id);
+        if (!$agendamento) {
+            throw $this->createNotFoundException('Agendamento não encontrado.');
+        }
+
+        $metodoPagamento = $request->request->get('metodo_pagamento');
+        if (!in_array($metodoPagamento, ['dinheiro', 'pix', 'credito', 'debito', 'pendente'])) {
+            throw new \InvalidArgumentException('Método de pagamento inválido.');
+        }
+
+        $agendamento->setMetodoPagamento($metodoPagamento);
+        $this->agendamentoRepository->update($agendamento);
+
+        return $this->redirectToRoute('agendamento_index', ['data' => $agendamento->getData()->format('Y-m-d')]);
+    }
+
+    /**
+     * @Route("/alterar-saida/{id}", name="agendamento_alterar_saida", methods={"POST"})
+     */
+    public function alterarHoraSaida(Request $request, int $id): Response
+    {
+        $agendamento = $this->agendamentoRepository->find($id);
+        if (!$agendamento) {
+            throw $this->createNotFoundException('O agendamento não foi encontrado.');
+        }
+
+        $horaSaida = $request->request->get('hora_saida');
+        if ($horaSaida) {
+            $agendamento->setHoraSaida(new \DateTime(date('Y-m-d') . ' ' . $horaSaida));
+            $this->agendamentoRepository->update($agendamento);
+        }
+
+        return $this->redirectToRoute('agendamento_index');
+    }
+
+    /**
+     * @Route("/agendamento/executar-acao/{id}", name="agendamento_executar_acao", methods={"POST"})
+     */
+    public function executarAcao(Request $request, int $id): Response
+    {
+        $agendamento = $this->agendamentoRepository->find($id);
+
+        if (!$agendamento) {
+            throw $this->createNotFoundException('O agendamento não foi encontrado.');
+        }
+
+        $acao = $request->request->get('acao');
+        $metodoPagamento = $request->request->get('metodo_pagamento');
+
+        // Alteração do método de pagamento
+        if ($metodoPagamento) {
+            if (!in_array($metodoPagamento, ['dinheiro', 'pix', 'credito', 'debito', 'pendente'])) {
+                throw new \InvalidArgumentException('Método de pagamento inválido.');
+            }
+            $agendamento->setMetodoPagamento($metodoPagamento);
+            $this->agendamentoRepository->update($agendamento);
+
+            return $this->redirectToRoute('agendamento_index', ['data' => $agendamento->getData()->format('Y-m-d')]);
+        }
+
+        // Ações específicas do select de ações
+        switch ($acao) {
+            case 'editar':
+                return $this->redirectToRoute('agendamento_editar', ['id' => $id]);
+
+            case 'deletar':
+                $this->agendamentoRepository->delete($id);
+                return $this->redirectToRoute('agendamento_index');
+
+            case 'concluir':
+                if (!$agendamento->getConcluido()) {
+                    $servico = $this->servicoRepository->find($agendamento->getServico_Id());
+
+                    if (!$servico) {
+                        throw $this->createNotFoundException('O serviço não foi encontrado.');
+                    }
+
+                    $financeiro = new Financeiro();
+                    $financeiro->setDescricao('Serviço para o pet: ' . $agendamento->getPet_Id());
+                    $financeiro->setValor($servico->getValor());
+                    $financeiro->setData(new \DateTime());
+                    $financeiro->setPetId($agendamento->getPet_Id());
+
+                    $this->financeiroRepository->save($financeiro);
+                }
+
+                $agendamento->setConcluido(true);
+                $this->agendamentoRepository->update($agendamento);
+                return $this->redirectToRoute('agendamento_index');
+
+            case 'pendente':
+                if ($agendamento->getMetodoPagamento() !== 'pendente') {
+                    $servico = $this->servicoRepository->find($agendamento->getServico_Id());
+
+                    if (!$servico) {
+                        throw $this->createNotFoundException('O serviço não foi encontrado.');
+                    }
+
+                    $financeiro = new Financeiro();
+                    $financeiro->setDescricao('Serviço pendente para o pet: ' . $agendamento->getPet_Id());
+                    $financeiro->setValor($servico->getValor());
+                    $financeiro->setData(new \DateTime());
+                    $financeiro->setPetId($agendamento->getPet_Id());
+
+                    $this->financeiroRepository->save($financeiro);
+                }
+
+                $agendamento->setMetodoPagamento('pendente');
+                $this->agendamentoRepository->update($agendamento);
+                return $this->redirectToRoute('agendamento_index');
+        }
+
+        return $this->redirectToRoute('agendamento_index');
+    }
+
 
 }

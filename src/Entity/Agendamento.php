@@ -46,6 +46,16 @@ class Agendamento
      */
     private $horaChegada;
 
+    /**
+     * @ORM\Column(type="string", length=20, nullable=false, options={"default": "pendente"})
+     */
+    private $metodo_pagamento = 'pendente';
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true, name="horaSaida")
+     */
+    private $horaSaida;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -111,14 +121,39 @@ class Agendamento
         return $this;
     }
 
-    public function getHoraChegada(): ?DateTime
+    public function getHoraChegada(): ?\DateTime
     {
         return $this->horaChegada;
     }
 
-    public function setHoraChegada(?DateTime $horaChegada): self
+    public function setHoraChegada(?\DateTime $horaChegada): self
     {
         $this->horaChegada = $horaChegada;
         return $this;
     }
+
+
+    public function getMetodoPagamento(): ?string
+    {
+        return $this->metodo_pagamento;
+    }
+
+    public function setMetodoPagamento(string $metodo_pagamento): self
+    {
+        $this->metodo_pagamento = $metodo_pagamento;
+        return $this;
+    }
+
+    public function getHoraSaida(): ?\DateTime
+    {
+        return $this->horaSaida;
+    }
+
+    public function setHoraSaida(?\DateTime $horaSaida): self
+    {
+        $this->horaSaida = $horaSaida;
+        return $this;
+    }
+
+
 }

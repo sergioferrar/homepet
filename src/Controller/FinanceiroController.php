@@ -106,9 +106,27 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/relatorio", name="financeiro_relatorio", methods={"GET"})
      */
-    public function relatorio(): Response
+    public function relatorio(Request $request): Response
     {
-        $relatorio = $this->financeiroRepository->getRelatorio();
-        return $this->render('financeiro/relatorio.html.twig', ['relatorio' => $relatorio]);
+        // Obtém os parâmetros do formulário
+        $mesInicio = $request->query->get('mes_inicio');
+        $mesFim = $request->query->get('mes_fim');
+
+        // Define os períodos padrão para o mês atual, se nenhum for fornecido
+        $dataInicio = $mesInicio ? new \DateTime($mesInicio . '-01') : new \DateTime('first day of this month');
+        $dataFim = $mesFim ? new \DateTime($mesFim . '-01') : new \DateTime('last day of this month');
+
+        // Ajusta a data final para o último dia do mês
+        $dataFim->modify('last day of this month');
+
+        // Busca os dados no repositório filtrados pelo período
+        $relatorio = $this->financeiroRepository->getRelatorioPorPeriodo($dataInicio, $dataFim);
+
+        return $this->render('financeiro/relatorio.html.twig', [
+            'relatorio' => $relatorio,
+            'mes_inicio' => $dataInicio->format('Y-m'),
+            'mes_fim' => $dataFim->format('Y-m')
+        ]);
     }
+
 }
