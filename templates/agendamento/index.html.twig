@@ -1,7 +1,6 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-
 <div class="container mt-5">
     <h1>Agendamentos</h1>
 
@@ -39,6 +38,9 @@
         color: green !important;
         font-weight: bold;
     }
+    .linha-azul {
+        background-color: lightblue !important;
+    }
 </style>
 {% endblock %}
 
@@ -55,6 +57,8 @@
                         <th>Nome do Pet</th>
                         <th>Nome do Dono</th>
                         <th>Serviço</th>
+                        <th>Táxi Dog</th>
+                        <th>Valor Táxi Dog</th>
                         <th>Hora de Chegada</th>
                         <th>Hora de Saída</th>
                         <th>Método de Pagamento</th>
@@ -63,13 +67,16 @@
                 </thead>
                 <tbody>
                     {% for agendamento in agendamentos %}
-                    <tr class="{% if agendamento.metodo_pagamento == 'pendente' %}linha-amarela{% endif %}">
-                        <td>{{ agendamento.data|date('d/m/Y H:i') }}</td>
+                    <tr class="{% if agendamento.metodo_pagamento == 'pendente' %}linha-amarela{% endif %}
+                               {% if agendamento.taxi_dog %}linha-azul{% endif %}">
+                        <td>{{ agendamento.data|date('d/m/Y') }}</td>
                         <td class="{% if agendamento.concluido %}texto-verde{% endif %}">
                             {{ agendamento.pet_nome }}
                         </td>
                         <td>{{ agendamento.dono_nome }}</td>
                         <td>{{ agendamento.servico_nome }}</td>
+                        <td>{{ agendamento.taxi_dog ? 'Sim' : 'Não' }}</td>
+                        <td>{{ agendamento.taxa_taxi_dog is not null ? "R$ " ~ agendamento.taxa_taxi_dog : '-' }}</td>
                         <td>{{ agendamento.horaChegada is defined and agendamento.horaChegada is not null ? agendamento.horaChegada|date('H:i') : 'Não definido' }}</td>
 
                         <td>

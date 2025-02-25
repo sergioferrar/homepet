@@ -8,7 +8,7 @@
             <li class="breadcrumb-item"><a href="{{ path('home') }}">Home</a></li>
         </ol>
     </nav>
-</div><!-- End Page Title -->
+</div>
 
 <section class="section">
     <div class="row">
@@ -16,9 +16,7 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Home Pet System</h5>
-                    <!-- Horizontal Form -->
                     <form method="post" action="{{ path('agendamento_novo') }}">
-                         <!-- Adicionando token CSRF para segurança -->
                         <div class="row mb-3">
                             <label for="pet_id" class="col-sm-2 col-form-label">Nome Pet</label>
                             <div class="col-sm-10">
@@ -29,6 +27,7 @@
                                 </select>
                             </div>
                         </div>
+
                         <div class="row mb-3">
                             <label for="servico_id" class="col-sm-2 col-form-label">Serviço</label>
                             <div class="col-sm-10">
@@ -39,14 +38,17 @@
                                 </select>
                             </div>
                         </div>
+
                         <div class="form-group">
                             <label for="data" class="col-sm-2 col-form-label">Data Agendamento</label>
                             <input type="date" class="form-control" id="data" name="data" required>
                         </div>
+
                         <div class="form-group">
                             <label for="hora_chegada" class="col-sm-2 col-form-label">Hora de Chegada</label>
                             <input type="time" class="form-control" id="hora_chegada" name="hora_chegada" required>
                         </div>
+
                         <div class="form-group">
                             <label for="metodo_pagamento">Método de Pagamento</label>
                             <select class="form-control" id="metodo_pagamento" name="metodo_pagamento">
@@ -57,22 +59,42 @@
                                 <option value="pendente" selected>Pendente</option>
                             </select>
                         </div>
+
+                        <!-- Adicionando opção de Táxi Dog -->
                         <div class="form-group">
-                            <label for="recorrencia">Recorrência</label>
-                            <select class="form-control" id="recorrencia" name="recorrencia">
-                                <option value="nenhuma">Nenhuma</option>
-                                <option value="semanal">Semanal</option>
-                                <option value="quinzenal">Quinzenal</option>
+                            <label for="taxi_dog">Usará Táxi Dog?</label>
+                            <select class="form-control" id="taxi_dog" name="taxi_dog" onchange="toggleTaxa()">
+                                <option value="nao" selected>Não</option>
+                                <option value="sim">Sim</option>
                             </select>
                         </div>
+
+                        <div class="form-group" id="taxa_container" style="display: none;">
+                            <label for="taxa_taxi_dog">Valor da Taxa Táxi Dog</label>
+                            <input type="number" class="form-control" id="taxa_taxi_dog" name="taxa_taxi_dog" step="0.01">
+                        </div>
+
                         <div class="text-center">
                             <button type="submit" class="btn btn-primary">Salvar</button>
                             <button type="reset" class="btn btn-secondary">Reset</button>
                         </div>
-                    </form><!-- End Horizontal Form -->
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+<script>
+    function toggleTaxa() {
+        var select = document.getElementById("taxi_dog");
+        var taxaContainer = document.getElementById("taxa_container");
+        if (select.value === "sim") {
+            taxaContainer.style.display = "block";
+        } else {
+            taxaContainer.style.display = "none";
+        }
+    }
+</script>
+
 {% endblock %}

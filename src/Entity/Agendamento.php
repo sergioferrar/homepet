@@ -55,6 +55,16 @@ class Agendamento
      * @ORM\Column(type="datetime", nullable=true, name="horaSaida")
      */
     private $horaSaida;
+    /**
+     * @ORM\Column(type="boolean", name="taxi_dog")
+     */
+    private bool $taxi_dog = false;
+
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true, name="taxa_taxi_dog")
+     */
+    private ?float $taxa_taxi_dog = null;
+    
 
     public function getId(): ?int
     {
@@ -153,6 +163,26 @@ class Agendamento
     {
         $this->horaSaida = $horaSaida;
         return $this;
+    }
+
+    public function getTaxiDog(): bool
+    {
+        return $this->taxi_dog;
+    }
+
+    public function setTaxiDog(bool $taxi_dog): void
+    {
+        $this->taxi_dog = $taxi_dog;
+    }
+
+    public function getTaxaTaxiDog(): ?float
+    {
+        return $this->taxa_taxi_dog;
+    }
+
+    public function setTaxaTaxiDog(?float $taxa_taxi_dog): void
+    {
+        $this->taxa_taxi_dog = $taxa_taxi_dog;
     }
 
 

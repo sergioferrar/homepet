@@ -54,24 +54,30 @@ class AgendamentoController extends DefaultController
             $petId = $request->request->get('pet_id');
             $servicoId = $request->request->get('servico_id');
             $recorrencia = $request->request->get('recorrencia');
-            $metodoPagamento = $request->request->get('metodo_pagamento', 'pendente'); // NOVO CAMPO
-            $horaChegada = $request->request->get('hora_chegada'); // NOVO CAMPO
+            $metodoPagamento = $request->request->get('metodo_pagamento', 'pendente');
+            $horaChegada = $request->request->get('hora_chegada');
+            $taxiDog = $request->request->get('taxi_dog') ? true : false;
+            $taxaTaxiDog = $request->request->get('taxa_taxi_dog') ?: null; // Se não enviado, mantém NULL
 
             $agendamento = new Agendamento();
             $agendamento->setData(new \DateTime($data));
             $agendamento->setPet_Id($petId);
             $agendamento->setServico_Id($servicoId);
             $agendamento->setConcluido(false);
-            $agendamento->setMetodoPagamento($metodoPagamento); // NOVO CAMPO
-            
+            $agendamento->setMetodoPagamento($metodoPagamento);
+            $agendamento->setTaxiDog($taxiDog);
+            $agendamento->setTaxaTaxiDog($taxaTaxiDog);
+
             if ($horaChegada) {
                 $agendamento->setHoraChegada(new \DateTime($data . ' ' . $horaChegada));
             }
-            
+
             $this->agendamentoRepository->save($agendamento);
 
+            // Tratamento de recorrência
             if ($recorrencia === 'semanal' || $recorrencia === 'quinzenal') {
                 $intervalo = $recorrencia === 'semanal' ? 'P1W' : 'P2W';
+
                 for ($i = 1; $i < 4; $i++) {
                     $novaData = (new \DateTime($data))->add(new \DateInterval($intervalo));
                     $agendamentoRecorrente = new Agendamento();
@@ -79,10 +85,14 @@ class AgendamentoController extends DefaultController
                     $agendamentoRecorrente->setPet_Id($petId);
                     $agendamentoRecorrente->setServico_Id($servicoId);
                     $agendamentoRecorrente->setConcluido(false);
-                    $agendamentoRecorrente->setMetodoPagamento($metodoPagamento); // NOVO CAMPO
+                    $agendamentoRecorrente->setMetodoPagamento($metodoPagamento);
+                    $agendamentoRecorrente->setTaxiDog($taxiDog);
+                    $agendamentoRecorrente->setTaxaTaxiDog($taxaTaxiDog);
+
                     if ($horaChegada) {
                         $agendamentoRecorrente->setHoraChegada(new \DateTime($novaData->format('Y-m-d') . ' ' . $horaChegada));
                     }
+
                     $this->agendamentoRepository->save($agendamentoRecorrente);
                     $data = $novaData->format('Y-m-d');
                 }
@@ -148,10 +158,9 @@ class AgendamentoController extends DefaultController
     }
 
     /**
-     * @Route("/concluir/{id}", name="agendamento_concluir", methods={"GET", "POST"})
+     * @Route("/concluir/{id}", name="agendamento_concluir", methods={"POST"})
      */
     public function concluir(int $id): Response
-
     {
         $agendamento = $this->agendamentoRepository->find($id);
 
@@ -165,12 +174,18 @@ class AgendamentoController extends DefaultController
             throw $this->createNotFoundException('O serviço não foi encontrado');
         }
 
+        // Criar registro financeiro
         $financeiro = new Financeiro();
         $financeiro->setDescricao('Serviço para o pet: ' . $agendamento->getPet_Id());
         $financeiro->setValor($servico->getValor());
         $financeiro->setData(new \DateTime());
         $financeiro->setPetId($agendamento->getPet_Id());
 
+        // Adicionar taxa do táxi dog, se aplicável
+        if ($agendamento->getTaxiDog() && $agendamento->getTaxaTaxiDog()) {
+            $financeiro->setValor($financeiro->getValor() + $agendamento->getTaxaTaxiDog());
+            $financeiro->setDescricao($financeiro->getDescricao() . ' + Táxi Dog');
+        }
 
         $this->financeiroRepository->save($financeiro);
 

@@ -27,7 +27,8 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function findByDate(\DateTime $data): array
     {
-        $sql = 'SELECT a.id, a.data, a.concluido, a.horaChegada, a.horaSaida, a.metodo_pagamento, 
+        $sql = 'SELECT a.id, a.data, a.concluido, a.horaChegada, a.horaSaida, 
+                       a.metodo_pagamento, a.taxi_dog, a.taxa_taxi_dog, 
                        p.nome as pet_nome, 
                        c.nome as dono_nome, 
                        CONCAT(s.nome, " - ", s.valor) as servico_nome
@@ -42,6 +43,7 @@ class AgendamentoRepository extends ServiceEntityRepository
     }
 
 
+
     public function listagem(int $id)
     {
         $sql = 'SELECT * FROM Agendamento WHERE id = :id';
@@ -51,9 +53,9 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function save(Agendamento $agendamento): void
     {
-        $sql = 'INSERT INTO Agendamento (data, pet_id, servico_id, concluido, metodo_pagamento, horaChegada, horaSaida) 
-                VALUES (:data, :pet_id, :servico_id, :concluido, :metodo_pagamento, :horaChegada, :horaSaida)';
-        
+        $sql = 'INSERT INTO Agendamento (data, pet_id, servico_id, concluido, metodo_pagamento, horaChegada, horaSaida, taxi_dog, taxa_taxi_dog) 
+                VALUES (:data, :pet_id, :servico_id, :concluido, :metodo_pagamento, :horaChegada, :horaSaida, :taxi_dog, :taxa_taxi_dog)';
+
         $this->conn->executeQuery($sql, [
             'data' => $agendamento->getData()->format('Y-m-d H:i:s'),
             'pet_id' => $agendamento->getPet_Id(),
@@ -62,14 +64,17 @@ class AgendamentoRepository extends ServiceEntityRepository
             'metodo_pagamento' => $agendamento->getMetodoPagamento(),
             'horaChegada' => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
             'horaSaida' => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
+            'taxi_dog' => (int)$agendamento->getTaxiDog(),
+            'taxa_taxi_dog' => $agendamento->getTaxaTaxiDog(),
         ]);
     }
-
-    public function update(Agendamento $agendamento): void
+    
+     public function update(Agendamento $agendamento): void
     {
         $sql = 'UPDATE Agendamento 
                 SET data = :data, pet_id = :pet_id, servico_id = :servico_id, concluido = :concluido, 
-                    metodo_pagamento = :metodo_pagamento, horaChegada = :horaChegada, horaSaida = :horaSaida
+                    metodo_pagamento = :metodo_pagamento, horaChegada = :horaChegada, horaSaida = :horaSaida,
+                    taxi_dog = :taxi_dog, taxa_taxi_dog = :taxa_taxi_dog
                 WHERE id = :id';
 
         $this->conn->executeQuery($sql, [
@@ -80,10 +85,11 @@ class AgendamentoRepository extends ServiceEntityRepository
             'metodo_pagamento' => $agendamento->getMetodoPagamento(),
             'horaChegada' => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
             'horaSaida' => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
+            'taxi_dog' => (int)$agendamento->getTaxiDog(),
+            'taxa_taxi_dog' => $agendamento->getTaxaTaxiDog(),
             'id' => $agendamento->getId(),
         ]);
     }
-
 
     public function delete(int $id): void
     {
