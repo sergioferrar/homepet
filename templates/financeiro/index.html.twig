@@ -33,7 +33,7 @@
         <tbody>
         {% for financeiro in financeiros %}
             <tr>
-                <td>{{ financeiro.data|date('d/m/Y H:i') }}</td>
+                <td>{{ financeiro.data|date('d/m/Y') }}</td>
                 <td>{{ financeiro.descricao }}</td>
                 <td>R$ {{ financeiro.valor|number_format(2, ',', '.') }}</td>
                 <td>{{ financeiro.pet_nome }}</td>
