@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Financeiro Pendente</h1>
+    
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{{ path('financeiro_pendente', {'data': data|date_modify('-1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Anterior</a>
+        <h2>{{ data|date('d/m/Y') }}</h2>
+        <a href="{{ path('financeiro_pendente', {'data': data|date_modify('+1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Próximo</a>
+    </div>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Valor</th>
+                <th>Pet</th>
+                <th>Ação</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for financeiro in financeiros %}
+            <tr>
+                <td>{{ financeiro.data|date('d/m/Y') }}</td>
+                <td>{{ financeiro.descricao }}</td>
+                <td>R$ {{ financeiro.valor|number_format(2, ',', '.') }}</td>
+                <td>{{ financeiro.pet_nome }}</td>
+                <td>
+                    <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': financeiro.id}) }}">
+                        <button type="submit" class="btn btn-success btn-sm">Confirmar Pagamento</button>
+                    </form>
+                </td>
+
+
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4" class="text-center">Nenhum pagamento pendente.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

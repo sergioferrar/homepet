@@ -25,13 +25,18 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function findByDate(\DateTime $data): array
     {
-        $sql = 'SELECT f.id, f.descricao, f.valor, f.data, p.nome as pet_nome, f.pet_id
+        $sql = 'SELECT f.id, 
+                       CONCAT("Serviço para ", p.nome, " - Dono: ", c.nome) AS descricao, 
+                       f.valor, f.data, p.nome as pet_nome, c.nome as dono_nome
                 FROM Financeiro f
                 LEFT JOIN Pet p ON f.pet_id = p.id
+                LEFT JOIN Cliente c ON p.dono_id = c.id
                 WHERE DATE(f.data) = :data';
+
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
         return $stmt->fetchAllAssociative();
     }
+
 
     public function getRelatorioPorPeriodo(\DateTime $dataInicio, \DateTime $dataFim): array
     {
@@ -126,4 +131,21 @@ class FinanceiroRepository extends ServiceEntityRepository
         $query = $this->conn->query($sql);
         return $query->fetch();
     }
+
+    public function savePendente(Financeiro $financeiro): void
+    {
+        $sql = 'INSERT INTO FinanceiroPendente (descricao, valor, data, pet_id) 
+                VALUES (:descricao, :valor, :data, :pet_id)';
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('descricao', $financeiro->getDescricao());
+        $stmt->bindValue('valor', $financeiro->getValor());
+        $stmt->bindValue('data', $financeiro->getData()->format('Y-m-d'));
+        $stmt->bindValue('pet_id', $financeiro->getPetId() ?? null);
+        $stmt->execute();
+    }
+
+    
+
+
 }

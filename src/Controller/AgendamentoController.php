@@ -270,20 +270,7 @@ class AgendamentoController extends DefaultController
         }
 
         $acao = $request->request->get('acao');
-        $metodoPagamento = $request->request->get('metodo_pagamento');
 
-        // Alteração do método de pagamento
-        if ($metodoPagamento) {
-            if (!in_array($metodoPagamento, ['dinheiro', 'pix', 'credito', 'debito', 'pendente'])) {
-                throw new \InvalidArgumentException('Método de pagamento inválido.');
-            }
-            $agendamento->setMetodoPagamento($metodoPagamento);
-            $this->agendamentoRepository->update($agendamento);
-
-            return $this->redirectToRoute('agendamento_index', ['data' => $agendamento->getData()->format('Y-m-d')]);
-        }
-
-        // Ações específicas do select de ações
         switch ($acao) {
             case 'editar':
                 return $this->redirectToRoute('agendamento_editar', ['id' => $id]);
@@ -295,7 +282,6 @@ class AgendamentoController extends DefaultController
             case 'concluir':
                 if (!$agendamento->getConcluido()) {
                     $servico = $this->servicoRepository->find($agendamento->getServico_Id());
-
                     if (!$servico) {
                         throw $this->createNotFoundException('O serviço não foi encontrado.');
                     }
@@ -314,21 +300,20 @@ class AgendamentoController extends DefaultController
                 return $this->redirectToRoute('agendamento_index');
 
             case 'pendente':
-                if ($agendamento->getMetodoPagamento() !== 'pendente') {
-                    $servico = $this->servicoRepository->find($agendamento->getServico_Id());
-
-                    if (!$servico) {
-                        throw $this->createNotFoundException('O serviço não foi encontrado.');
-                    }
-
-                    $financeiro = new Financeiro();
-                    $financeiro->setDescricao('Serviço pendente para o pet: ' . $agendamento->getPet_Id());
-                    $financeiro->setValor($servico->getValor());
-                    $financeiro->setData(new \DateTime());
-                    $financeiro->setPetId($agendamento->getPet_Id());
-
-                    $this->financeiroRepository->save($financeiro);
+                $servico = $this->servicoRepository->find($agendamento->getServico_Id());
+                if (!$servico) {
+                    throw $this->createNotFoundException('O serviço não foi encontrado.');
                 }
+
+                // Criar entrada no financeiro pendente
+                $financeiroPendente = new Financeiro();
+                $financeiroPendente->setDescricao('Pagamento pendente - Serviço para o pet: ' . $agendamento->getPet_Id());
+                $financeiroPendente->setValor($servico->getValor());
+                $financeiroPendente->setData(new \DateTime());
+                $financeiroPendente->setPetId($agendamento->getPet_Id());
+
+                // Salvando no Financeiro Pendente (Novo método savePendente no repositório)
+                $this->financeiroRepository->savePendente($financeiroPendente);
 
                 $agendamento->setMetodoPagamento('pendente');
                 $this->agendamentoRepository->update($agendamento);
@@ -337,6 +322,8 @@ class AgendamentoController extends DefaultController
 
         return $this->redirectToRoute('agendamento_index');
     }
+
+
 
 
 }

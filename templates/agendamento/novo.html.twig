@@ -2,56 +2,55 @@
 
 {% block body %}
 <div class="pagetitle">
-    <h1>Novo Agendamento</h1>
+    <h1 class="text-primary">Novo Agendamento</h1>
     <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ path('home') }}">Home</a></li>
+        <ol class="breadcrumb bg-light p-2 rounded">
+            <li class="breadcrumb-item"><a href="{{ path('home') }}" class="text-decoration-none text-primary">Home</a></li>
         </ol>
     </nav>
 </div>
 
 <section class="section">
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="card">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <div class="card shadow-lg border-0">
                 <div class="card-body">
-                    <h5 class="card-title">Home Pet System</h5>
+                    <h5 class="card-title text-center text-uppercase">Home Pet System</h5>
                     <form method="post" action="{{ path('agendamento_novo') }}">
-                        <div class="row mb-3">
-                            <label for="pet_id" class="col-sm-2 col-form-label">Nome Pet</label>
-                            <div class="col-sm-10">
-                                <select class="form-select" id="pet_id" name="pet_id" required>
-                                    {% for pet in pets %}
-                                        <option value="{{ pet.id }}">{{ pet.nome }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                        
+                        <div class="mb-3">
+                            <label for="pet_nome" class="form-label">Nome do Pet</label>
+                            <input type="text" class="form-control" id="pet_nome" name="pet_nome" list="lista_pets" required oninput="atualizarPetId()">
+                            <datalist id="lista_pets">
+                                {% for pet in pets %}
+                                    <option data-id="{{ pet.id }}" value="{{ pet.nome }}">
+                                {% endfor %}
+                            </datalist>
+                            <input type="hidden" id="pet_id" name="pet_id">
                         </div>
 
-                        <div class="row mb-3">
-                            <label for="servico_id" class="col-sm-2 col-form-label">Serviço</label>
-                            <div class="col-sm-10">
-                                <select class="form-select" id="servico_id" name="servico_id" required>
-                                    {% for servico in servicos %}
-                                        <option value="{{ servico.id }}">{{ servico.nome }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                        <div class="mb-3">
+                            <label for="servico_id" class="form-label">Serviço</label>
+                            <select class="form-select" id="servico_id" name="servico_id" required>
+                                {% for servico in servicos %}
+                                    <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
 
-                        <div class="form-group">
-                            <label for="data" class="col-sm-2 col-form-label">Data Agendamento</label>
+                        <div class="mb-3">
+                            <label for="data" class="form-label">Data Agendamento</label>
                             <input type="date" class="form-control" id="data" name="data" required>
                         </div>
 
-                        <div class="form-group">
-                            <label for="hora_chegada" class="col-sm-2 col-form-label">Hora de Chegada</label>
+                        <div class="mb-3">
+                            <label for="hora_chegada" class="form-label">Hora de Chegada</label>
                             <input type="time" class="form-control" id="hora_chegada" name="hora_chegada" required>
                         </div>
 
-                        <div class="form-group">
-                            <label for="metodo_pagamento">Método de Pagamento</label>
-                            <select class="form-control" id="metodo_pagamento" name="metodo_pagamento">
+                        <div class="mb-3">
+                            <label for="metodo_pagamento" class="form-label">Método de Pagamento</label>
+                            <select class="form-select" id="metodo_pagamento" name="metodo_pagamento">
                                 <option value="dinheiro">Dinheiro</option>
                                 <option value="pix">Pix</option>
                                 <option value="credito">Cartão de Crédito</option>
@@ -60,23 +59,22 @@
                             </select>
                         </div>
 
-                        <!-- Adicionando opção de Táxi Dog -->
-                        <div class="form-group">
-                            <label for="taxi_dog">Usará Táxi Dog?</label>
-                            <select class="form-control" id="taxi_dog" name="taxi_dog" onchange="toggleTaxa()">
+                        <div class="mb-3">
+                            <label for="taxi_dog" class="form-label">Usará Táxi Dog?</label>
+                            <select class="form-select" id="taxi_dog" name="taxi_dog" onchange="toggleTaxa()">
                                 <option value="nao" selected>Não</option>
                                 <option value="sim">Sim</option>
                             </select>
                         </div>
 
-                        <div class="form-group" id="taxa_container" style="display: none;">
-                            <label for="taxa_taxi_dog">Valor da Taxa Táxi Dog</label>
+                        <div class="mb-3" id="taxa_container" style="display: none;">
+                            <label for="taxa_taxi_dog" class="form-label">Valor da Taxa Táxi Dog</label>
                             <input type="number" class="form-control" id="taxa_taxi_dog" name="taxa_taxi_dog" step="0.01">
                         </div>
 
                         <div class="text-center">
-                            <button type="submit" class="btn btn-primary">Salvar</button>
-                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="submit" class="btn btn-success w-15">Agendar</button>
+                            <button type="reset" class="btn btn-secondary w-15">Reset</button>
                         </div>
                     </form>
                 </div>
@@ -89,10 +87,21 @@
     function toggleTaxa() {
         var select = document.getElementById("taxi_dog");
         var taxaContainer = document.getElementById("taxa_container");
-        if (select.value === "sim") {
-            taxaContainer.style.display = "block";
-        } else {
-            taxaContainer.style.display = "none";
+        taxaContainer.style.display = (select.value === "sim") ? "block" : "none";
+    }
+
+    function atualizarPetId() {
+        var input = document.getElementById("pet_nome");
+        var hiddenInput = document.getElementById("pet_id");
+        var options = document.getElementById("lista_pets").options;
+        
+        hiddenInput.value = "";  // Reseta o valor caso não encontre correspondência
+
+        for (var i = 0; i < options.length; i++) {
+            if (options[i].value === input.value) {
+                hiddenInput.value = options[i].getAttribute("data-id");
+                break;
+            }
         }
     }
 </script>

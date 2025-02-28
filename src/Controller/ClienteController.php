@@ -58,7 +58,9 @@ class ClienteController extends DefaultController
                 'bairro' => $cliente->getBairro(),
                 'cidade' => $cliente->getCidade(),
             ]);
-            return $this->redirectToRoute('cliente_index');
+            $clienteId = $this->clienteRepository->getLastInsertedId();
+            return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
+ 
         }
 
         return $this->render('cliente/novo.html.twig');
@@ -97,7 +99,9 @@ class ClienteController extends DefaultController
                 'cidade' => $cliente->getCidade(),
             ]);
 
-            return $this->redirectToRoute('cliente_index');
+            $clienteId = $this->clienteRepository->getLastInsertedId();
+            return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
+ 
         }
 //        dd($cliente);
         return $this->render('cliente/editar.html.twig', [
@@ -120,11 +124,15 @@ class ClienteController extends DefaultController
         // Verifica se o cliente tem pets antes de excluir
         if ($this->clienteRepository->hasPets($id)) {
             $this->addFlash('error', 'Não é possível excluir este cliente, pois ele possui pets cadastrados.');
-            return $this->redirectToRoute('cliente_index');
+            $clienteId = $this->clienteRepository->getLastInsertedId();
+            return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
+ 
         }
 
         $this->clienteRepository->delete($id);
-        return $this->redirectToRoute('cliente_index');
+        $clienteId = $this->clienteRepository->getLastInsertedId();
+        return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
+ 
     }
 
 

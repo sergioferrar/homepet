@@ -1,21 +1,86 @@
 {% extends 'base.html.twig' %}
 
-
+{% block stylesheets %}
+<style>
+    body {
+        background-color: #eef5ff;
+        font-family: 'Arial', sans-serif;
+    }
+    .table-container {
+        background: #ffffff;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+    }
+    .pagetitle h1 {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #0056b3;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    .btn-primary {
+        background-color: #0056b3;
+        border-color: #0056b3;
+        font-weight: bold;
+    }
+    .btn-primary:hover {
+        background-color: #004494;
+        border-color: #004494;
+    }
+    .table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+    .table thead th {
+        background: linear-gradient(45deg, #0056b3, #007bff);
+        color: white;
+        font-weight: bold;
+        padding: 12px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        text-align: center;
+    }
+    .table tbody tr {
+        background-color: white;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 10px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .table tbody tr:hover {
+        transform: translateY(-5px);
+        box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
+    }
+    .table tbody td {
+        padding: 12px;
+        text-align: center;
+        font-weight: 500;
+        border-bottom: 1px solid #ddd;
+        background: white;
+        border-radius: 10px;
+    }
+    .dropdown-menu {
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .dropdown-item:hover {
+        background-color: #cce5ff;
+    }
+</style>
+{% endblock %}
 
 {% block body %}
 <div class="container mt-5">
-    <h1 class="text-primary">Lista de Pets</h1>
-    <form method="get" action="{{ path('pet_index') }}" class="form-inline mb-3">
-        <input type="text" name="search" class="form-control mr-sm-2" placeholder="Pesquisar pet">
-        <button type="submit" class="btn btn-secondary">Pesquisar</button>
-    </form>
-    <a href="{{ path('pet_novo') }}" class="btn btn-primary mb-3">Novo Pet</a>
+    <h1 class="text-primary fw-bold text-center">Lista de Pets</h1>
+    <div class="d-flex justify-content-between mb-3">
+        <a href="{{ path('pet_novo') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold text-light shadow">+ Novo Pet</a>
+    </div>
 
     <!-- Container da Tabela -->
     <div class="table-container">
         <div class="table-responsive">
-            <table class="table table-sm table-striped datatable table-bordered">
-                <thead class="bg-dark text-white">
+            <table class="table table-hover table-striped table-bordered datatable">
+                <thead>
                     <tr>
                         <th>Nome</th>
                         <th>Espécie</th>
@@ -25,26 +90,26 @@
                         <th>Idade</th>
                         <th>Observações</th>
                         <th>Dono</th>
-                        <th>Ações</th>
+                        <th class="text-center">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                 {% for pet in pets %}
                     <tr>
-                        <td>{{ pet.nome }}</td>
+                        <td class="fw-bold text-primary">{{ pet.nome }}</td>
                         <td>{{ pet.especie }}</td>
                         <td>{{ pet.sexo }}</td>
                         <td>{{ pet.raca }}</td>
                         <td>{{ pet.porte }}</td>
                         <td>{{ pet.idade }} anos</td>
                         <td>{{ pet.observacoes }}</td>
-                        <td>{{ pet.dono_nome }}</td>
-                        <td>
+                        <td class="fw-bold">{{ pet.dono_nome }}</td>
+                        <td class="text-center">
                             <div class="dropdown">
-                                <button class="btn btn-dropdown btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <button class="btn btn-primary btn-sm dropdown-toggle rounded-pill px-3 fw-bold text-light shadow" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     Ações
                                 </button>
-                                <div class="dropdown-menu">
+                                <div class="dropdown-menu rounded-3 shadow">
                                     <a class="dropdown-item" href="{{ path('pet_editar', {'id': pet.id}) }}">Editar</a>
                                     <form method="post" action="{{ path('pet_deletar', {'id': pet.id}) }}" class="d-inline">
                                         <button type="submit" class="dropdown-item text-danger">Deletar</button>

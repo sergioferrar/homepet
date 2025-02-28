@@ -389,16 +389,24 @@
             <a class="nav-link collapsed" data-bs-target="#financeiroDropdown" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-currency-dollar"></i><span>Financeiro</span><i class="bi bi-chevron-down ms-auto"></i>
             </a>
-            <ul id="financeiroDropdown" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-                <li>
-                    <a href="{{ path('financeiro_index') }}">
-                        <i class="bi bi-circle"></i><span>Financeiro Diário</span>
-
+                <ul id="financeiroDropdown" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a href="{{ path('financeiro_index') }}">
+                            <i class="bi bi-circle"></i><span>Financeiro Diário</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ path('financeiro_pendente') }}">
+                            <i class="bi bi-circle text-danger"></i><span>Financeiro Pendente</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="{{ path('financeiro_relatorio') }}">
                             <i class="bi bi-circle"></i><span>Relatório Financeiro</span>
                         </a>
-                </li>
-            </ul>
+                    </li>
+                </ul>
+
         </li>
 
 

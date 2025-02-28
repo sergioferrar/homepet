@@ -36,6 +36,12 @@
             </div>
         </div>
     </form>
+    <div class="col-md-4 d-flex align-items-end">
+        <a href="{{ path('financeiro_relatorio_export', {'mes_inicio': mes_inicio, 'mes_fim': mes_fim}) }}" class="btn btn-success w-100">
+            Baixar Excel
+        </a>
+    </div>
+
 
     <table class="table table-custom table-striped mt-3">
         <thead>

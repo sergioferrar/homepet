@@ -1,87 +1,148 @@
 {% extends 'base.html.twig' %}
 
+{% block stylesheets %}
+<style>
+    body {
+        background-color: #eef5ff;
+        font-family: 'Arial', sans-serif;
+    }
+    .card {
+        border-radius: 15px;
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+        padding: 20px;
+    }
+    .pagetitle h1 {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #0056b3;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    .btn-success {
+        background-color: #0056b3;
+        border-color: #0056b3;
+        font-weight: bold;
+    }
+    .btn-success:hover {
+        background-color: #004494;
+        border-color: #004494;
+    }
+    .form-control {
+        border-radius: 10px;
+        padding: 10px;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .form-control:focus {
+        box-shadow: 0 4px 10px rgba(0, 86, 179, 0.2);
+    }
+    .form-label {
+        font-weight: bold;
+    }
+    .btn-group label {
+        border-radius: 10px !important;
+    }
+    .section {
+        padding: 30px;
+    }
+</style>
+{% endblock %}
+
 {% block body %}
-    <div class="container mt-5">
-        <div class="form-container row">
-            <h1 class="mb-4">Novo Cliente</h1>
-            <form method="post" action="{{ path('cliente_novo') }}">
-                <div class="form-group mb-2">
-                    <label for="nome">Nome</label>
-                    <input type="text" class="form-control" id="nome" name="nome" required>
-                </div>
+<div class="pagetitle">
+    <h1 class="text-primary">Novo Cliente</h1>
+    <nav>
+        <ol class="breadcrumb bg-light p-2 rounded">
+            <li class="breadcrumb-item"><a href="{{ path('home') }}" class="text-decoration-none text-primary">Home</a></li>
+        </ol>
+    </nav>
+</div>
 
-                <div class="row">
-                    <div class="col-6">
-                        <label for="email">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    <div class="col-3">
-                        <label for="telefone">Telefone</label>
-                        <input type="text" class="form-control" id="telefone" name="telefone" required>
-                    </div>
-                    <div class="col-3 pt-4">
-                        <label for="telefone" class="me-4">Whatsapp?</label>
-                        <div class="btn-group float-end" role="group" aria-label="Basic radio toggle button group">
-                            <input type="radio" class="btn-check" name="whatsapp" id="whatsapp1" autocomplete="off"
-                                   checked>
-                            <label class="btn btn-outline-primary" for="whatsapp1">Sim</label>
-
-                            <input type="radio" class="btn-check" name="whatsapp" id="whatsapp2" autocomplete="off">
-                            <label class="btn btn-outline-primary" for="whatsapp2">Não</label>
-
+<section class="section">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-center text-uppercase">Cadastro de Cliente</h5>
+                    <form method="post" action="{{ path('cliente_novo') }}">
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required>
                         </div>
-                    </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="telefone" class="form-label">Telefone</label>
+                                <input type="text" class="form-control" id="telefone" name="telefone" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Whatsapp?</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="whatsapp" id="whatsapp1" autocomplete="off" checked>
+                                    <label class="btn btn-outline-primary" for="whatsapp1">Sim</label>
+                                    <input type="radio" class="btn-check" name="whatsapp" id="whatsapp2" autocomplete="off">
+                                    <label class="btn btn-outline-primary" for="whatsapp2">Não</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-2 mb-3">
+                                <label for="cep" class="form-label">CEP</label>
+                                <input type="text" class="form-control" id="cep" name="cep" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="rua" class="form-label">Rua</label>
+                                <input type="text" class="form-control" id="rua" name="rua" required>
+                            </div>
+                            <div class="col-md-1 mb-3">
+                                <label for="numero" class="form-label">Número</label>
+                                <input type="text" class="form-control" id="numero" name="numero" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="complemento" class="form-label">Complemento</label>
+                                <input type="text" class="form-control" id="complemento" name="complemento" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="bairro" class="form-label">Bairro</label>
+                                <input type="text" class="form-control" id="bairro" name="bairro" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cidade" class="form-label">Cidade</label>
+                                <input type="text" class="form-control" id="cidade" name="cidade" required>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success w-50">Salvar</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="row mb-2">
-                    <div class="col-2">
-                        <label for="cep">CEP</label>
-                        <input type="text" class="form-control" id="cep" name="cep" required>
-                    </div>
-                    <div class="col-6">
-                        <label for="rua">Rua</label>
-                        <input type="text" class="form-control" id="rua" name="rua" required>
-                    </div>
-                    <div class="col-1">
-                        <label for="numero">Número</label>
-                        <input type="text" class="form-control" id="numero" name="numero" required>
-                    </div>
-                    <div class="col-3">
-                        <label for="complemento">Complemento</label>
-                        <input type="text" class="form-control" id="complemento" name="complemento" required>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <label for="bairro">Bairro</label>
-                        <input type="text" class="form-control" id="bairro" name="bairro" required>
-                    </div>
-                    <div class="col-6">
-                        <label for="cidade">Cidade</label>
-                        <input type="text" class="form-control" id="cidade" name="cidade" required>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary float-end">Salvar</button>
-            </form>
+            </div>
         </div>
     </div>
-{% endblock %}
-{% block javascripts %}
-    <script>
-        $(function(){
-            $('#cep').change(function () {
-                var cep = $(this).val().replace('-', '').replace('.', '');
+</section>
 
-                if (cep.length === 8) {
-                    $.get("https://viacep.com.br/ws/" + cep + "/json", function (data) {
-                        if (!data.erro) {
-                            $('#bairro').val(data.bairro);
-                            $('#complemento').val(data.complemento);
-                            $('#cidade').val(data.localidade);
-                            $('#rua').val(data.logradouro);
-                        }
-                    }, 'json');
-                }
-            });
+{% block javascripts %}
+<script>
+    $(function(){
+        $('#cep').change(function () {
+            var cep = $(this).val().replace('-', '').replace('.', '');
+            if (cep.length === 8) {
+                $.get("https://viacep.com.br/ws/" + cep + "/json", function (data) {
+                    if (!data.erro) {
+                        $('#bairro').val(data.bairro);
+                        $('#complemento').val(data.complemento);
+                        $('#cidade').val(data.localidade);
+                        $('#rua').val(data.logradouro);
+                    }
+                }, 'json');
+            }
         });
-    </script>
+    });
+</script>
+{% endblock %}
+
 {% endblock %}

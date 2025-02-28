@@ -67,4 +67,10 @@ class ClienteRepository extends ServiceEntityRepository
         $stmt = $this->conn->executeQuery($sql, ['term' => '%' . $term . '%']);
         return $stmt->fetchAllAssociative();
     }
+
+    public function getLastInsertedId(): int
+    {
+        return $this->conn->lastInsertId();
+    }
+
 }

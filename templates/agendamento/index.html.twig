@@ -1,123 +1,107 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<div class="container mt-5">
-    <h1>Agendamentos</h1>
+<div class="pagetitle">
+    <h1 class="text-primary">Agendamentos</h1>
+    <nav>
+        <ol class="breadcrumb bg-light p-2 rounded">
+            <li class="breadcrumb-item"><a href="{{ path('home') }}" class="text-decoration-none text-primary">Home</a></li>
+        </ol>
+    </nav>
+</div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <a href="{{ path('agendamento_index', {'data': data|date_modify('-1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Anterior</a>
-        <h2>{{ data|date('d/m/Y') }}</h2>
-        <a href="{{ path('agendamento_index', {'data': data|date_modify('+1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Próximo</a>
-    </div>
+<section class="section">
+    <div class="row justify-content-center">
+        <div class="col-lg-15">
+            <div class="card shadow-lg border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-center text-uppercase">Lista de Agendamentos</h5>
+                    <p class="text-center">Gerencie os agendamentos programados de forma eficiente.</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <a href="{{ path('agendamento_index', {'data': data|date_modify('-1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Anterior</a>
+                        <h2>{{ data|date('d/m/Y') }}</h2>
+                        <a href="{{ path('agendamento_index', {'data': data|date_modify('+1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Próximo</a>
+                    </div>
 
-    <div class="mb-3">
-        <strong>Total de agendamentos: {{ totalAgendamentos }}</strong>
-    </div>
+                    <div class="mb-3">
+                        <strong>Total de agendamentos: {{ totalAgendamentos }}</strong>
+                    </div>
 
-    <a href="{{ path('agendamento_novo') }}" class="btn btn-secondary mb-3">Novo Agendamento</a>
+                    <a href="{{ path('agendamento_novo') }}" class="btn btn-success mb-3">Novo Agendamento</a>
 
-    <form method="get" action="{{ path('agendamento_index') }}" class="mb-3">
-        <div class="input-group">
-            <input type="date" name="data" value="{{ data|date('Y-m-d') }}" class="form-control">
-            <div class="input-group-append">
-                <button type="submit" class="btn btn-primary">Pesquisar</button>
+                    <form method="get" action="{{ path('agendamento_index') }}" class="mb-3">
+                        <div class="input-group">
+                            <input type="date" name="data" value="{{ data|date('Y-m-d') }}" class="form-control">
+                            <button type="submit" class="btn btn-primary">Pesquisar</button>
+                        </div>
+                    </form>
+                    
+                    <table class="table table-bordered datatable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data</th>
+                                <th>Nome do Pet</th>
+                                <th>Nome do Dono</th>
+                                <th>Serviço</th>
+                                <th>Táxi Dog</th>
+                                <th>Valor Táxi Dog</th>
+                                <th>Hora de Chegada</th>
+                                <th>Hora de Saída</th>
+                                <th>Método de Pagamento</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for agendamento in agendamentos %}
+                            <tr class="{% if agendamento.metodo_pagamento == 'pendente' %}table-warning text-dark fw-bold{% endif %} {% if agendamento.taxi_dog %}table-info{% endif %}">
+                                <td>{{ agendamento.data|date('d/m/Y') }}</td>
+                                <td class="{% if agendamento.concluido %}text-success fw-bold{% endif %}">{{ agendamento.pet_nome }}</td>
+                                <td>{{ agendamento.dono_nome }}</td>
+                                <td>{{ agendamento.servico_nome }}</td>
+                                <td>{{ agendamento.taxi_dog ? 'Sim' : 'Não' }}</td>
+                                <td>{{ agendamento.taxa_taxi_dog is not null ? "R$ " ~ agendamento.taxa_taxi_dog : '-' }}</td>
+                                <td>{{ agendamento.horaChegada is defined and agendamento.horaChegada is not null ? agendamento.horaChegada|date('H:i') : 'Não definido' }}</td>
+                                <td>
+                                    <form method="post" action="{{ path('agendamento_alterar_saida', {'id': agendamento.id}) }}">
+                                        <input type="time" name="hora_saida" class="form-control"
+                                               value="{{ agendamento.horaSaida is defined and agendamento.horaSaida is not null ? agendamento.horaSaida|date('H:i') : '' }}"
+                                               onchange="this.form.submit()">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="post" action="{{ path('agendamento_alterar_pagamento', {'id': agendamento.id}) }}">
+                                        <select name="metodo_pagamento" class="form-control bg-light" onchange="this.form.submit()">
+                                            <option value="dinheiro" {% if agendamento.metodo_pagamento == 'dinheiro' %}selected{% endif %}>Dinheiro</option>
+                                            <option value="pix" {% if agendamento.metodo_pagamento == 'pix' %}selected{% endif %}>Pix</option>
+                                            <option value="credito" {% if agendamento.metodo_pagamento == 'credito' %}selected{% endif %}>Cartão de Crédito</option>
+                                            <option value="debito" {% if agendamento.metodo_pagamento == 'debito' %}selected{% endif %}>Cartão de Débito</option>
+                                            <option value="pendente" {% if agendamento.metodo_pagamento == 'pendente' %}selected{% endif %} class="bg-danger text-white">Pendente</option>
+                                        </select>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="post" action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}">
+                                        <select name="acao" class="form-control" onchange="this.form.submit()">
+                                            <option value="">Selecione</option>
+                                            <option value="editar">Editar</option>
+                                            {% if not agendamento.concluido %}
+                                                <option value="concluir">Concluir</option>
+                                                <option value="pendente" class="bg-warning text-dark">Pendente</option>
+                                            {% endif %}
+                                            <option value="deletar">Deletar</option>
+                                        </select>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </form>
-
-{% block stylesheets %}
-<style>
-    .mr-custom {
-        margin-right: 8px;
-        border-radius: 10px;
-    }
-    .linha-amarela {
-        background-color: yellow !important;
-    }
-    .texto-verde {
-        color: green !important;
-        font-weight: bold;
-    }
-    .linha-azul {
-        background-color: lightblue !important;
-    }
-</style>
-{% endblock %}
-
-<div class="container mt-5">
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Lista de Agendamentos</h5>
-            <p>Veja abaixo todos os agendamentos programados e suas informações detalhadas.</p>
-
-            <table class="table table-bordered datatable">
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Nome do Pet</th>
-                        <th>Nome do Dono</th>
-                        <th>Serviço</th>
-                        <th>Táxi Dog</th>
-                        <th>Valor Táxi Dog</th>
-                        <th>Hora de Chegada</th>
-                        <th>Hora de Saída</th>
-                        <th>Método de Pagamento</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for agendamento in agendamentos %}
-                    <tr class="{% if agendamento.metodo_pagamento == 'pendente' %}linha-amarela{% endif %}
-                               {% if agendamento.taxi_dog %}linha-azul{% endif %}">
-                        <td>{{ agendamento.data|date('d/m/Y') }}</td>
-                        <td class="{% if agendamento.concluido %}texto-verde{% endif %}">
-                            {{ agendamento.pet_nome }}
-                        </td>
-                        <td>{{ agendamento.dono_nome }}</td>
-                        <td>{{ agendamento.servico_nome }}</td>
-                        <td>{{ agendamento.taxi_dog ? 'Sim' : 'Não' }}</td>
-                        <td>{{ agendamento.taxa_taxi_dog is not null ? "R$ " ~ agendamento.taxa_taxi_dog : '-' }}</td>
-                        <td>{{ agendamento.horaChegada is defined and agendamento.horaChegada is not null ? agendamento.horaChegada|date('H:i') : 'Não definido' }}</td>
-
-                        <td>
-                            <form method="post" action="{{ path('agendamento_alterar_saida', {'id': agendamento.id}) }}">
-                                <input type="time" name="hora_saida" class="form-control"
-                                       value="{{ agendamento.horaSaida is defined and agendamento.horaSaida is not null ? agendamento.horaSaida|date('H:i') : '' }}"
-                                       onchange="this.form.submit()">
-                            </form>
-                        </td>
-
-                        <td>
-                            <form method="post" action="{{ path('agendamento_alterar_pagamento', {'id': agendamento.id}) }}">
-                                <select name="metodo_pagamento" class="form-control" onchange="this.form.submit()">
-                                    <option value="dinheiro" {% if agendamento.metodo_pagamento == 'dinheiro' %}selected{% endif %}>Dinheiro</option>
-                                    <option value="pix" {% if agendamento.metodo_pagamento == 'pix' %}selected{% endif %}>Pix</option>
-                                    <option value="credito" {% if agendamento.metodo_pagamento == 'credito' %}selected{% endif %}>Cartão de Crédito</option>
-                                    <option value="debito" {% if agendamento.metodo_pagamento == 'debito' %}selected{% endif %}>Cartão de Débito</option>
-                                    <option value="pendente" {% if agendamento.metodo_pagamento == 'pendente' %}selected{% endif %}>Pendente</option>
-                                </select>
-                            </form>
-                        </td>
-
-                        <td>
-                            <form method="post" action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}">
-                                <select name="acao" class="form-control" onchange="this.form.submit()">
-                                    <option value="">Selecione</option>
-                                    <option value="editar">Editar</option>
-                                    {% if not agendamento.concluido %}
-                                        <option value="concluir">Concluir</option>
-                                    {% endif %}
-                                    <option value="deletar">Deletar</option>
-                                </select>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
     </div>
-</div>
+</section>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {

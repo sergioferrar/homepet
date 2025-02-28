@@ -4,11 +4,15 @@ namespace App\Controller;
 
 use App\Entity\Financeiro;
 use App\Repository\FinanceiroRepository;
+use App\Repository\FinanceiroPendenteRepository;
 use App\Repository\PetRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /**
  * @Route("/financeiro")
@@ -127,6 +131,143 @@ class FinanceiroController extends DefaultController
             'mes_inicio' => $dataInicio->format('Y-m'),
             'mes_fim' => $dataFim->format('Y-m')
         ]);
+    }
+
+    /**
+     * @Route("/pendente", name="financeiro_pendente", methods={"GET"})
+     */
+    public function financeiroPendente(Request $request, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
+    {
+        $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
+        $financeirosPendentes = $financeiroPendenteRepository->findByDate($data);
+
+        return $this->render('financeiro/pendente.html.twig', [
+            'financeiros' => $financeirosPendentes,
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * @Route("/pendente/pagar/{id}", name="financeiro_pagar", methods={"POST"})
+     */
+    public function pagarFinanceiroPendente(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
+    {
+        // Buscar o registro no FinanceiroPendente
+        $financeiroPendente = $financeiroPendenteRepository->findPendenteById($id);
+
+        if (!$financeiroPendente) {
+            throw $this->createNotFoundException('Registro financeiro pendente não encontrado.');
+        }
+
+        // Criar um novo registro no Financeiro Diário
+        $financeiro = new Financeiro();
+        $financeiro->setDescricao($financeiroPendente['descricao']);
+        $financeiro->setValor($financeiroPendente['valor']);
+        $financeiro->setData(new \DateTime()); // Define a data do pagamento como hoje
+        $financeiro->setPetId($financeiroPendente['pet_id']);
+
+        // Salvar no Financeiro Diário
+        $this->financeiroRepository->save($financeiro);
+
+        // Remover do Financeiro Pendente
+        $financeiroPendenteRepository->deletePendente($id);
+
+        $this->addFlash('success', 'Pagamento confirmado e movido para o Financeiro Diário.');
+
+        return $this->redirectToRoute('financeiro_pendente');
+    }
+
+
+    /**
+     * @Route("/pendente/confirmar/{id}", name="financeiro_confirmar_pagamento", methods={"POST"})
+     */
+    public function confirmarPagamento(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
+    {
+        // Buscar o registro no FinanceiroPendente
+        $financeiroPendente = $financeiroPendenteRepository->findPendenteById($id);
+
+        if (!$financeiroPendente) {
+            throw $this->createNotFoundException('Registro financeiro pendente não encontrado.');
+        }
+
+        // Criar um novo registro no Financeiro Diário
+        $financeiro = new Financeiro();
+        $financeiro->setDescricao($financeiroPendente['descricao']);
+        $financeiro->setValor($financeiroPendente['valor']);
+        $financeiro->setData(new \DateTime()); // Data do pagamento
+        $financeiro->setPetId($financeiroPendente['pet_id']);
+
+        // Salvar no Financeiro Diário
+        $this->financeiroRepository->save($financeiro);
+
+        // Remover do Financeiro Pendente
+        $financeiroPendenteRepository->deletePendente($id);
+
+        $this->addFlash('success', 'Pagamento confirmado e movido para o Financeiro Diário.');
+
+        return $this->redirectToRoute('financeiro_pendente');
+    }
+
+    /**
+     * @Route("/executar-acao/{id}", name="financeiro_executar_acao", methods={"POST"})
+     */
+    public function executarAcao(Request $request, int $id): Response
+    {
+        $acao = $request->request->get('acao');
+        
+        if (!$acao) {
+            return $this->redirectToRoute('financeiro_index');
+        }
+
+        if ($acao === 'editar') {
+            return $this->redirectToRoute('financeiro_editar', ['id' => $id]);
+        }
+
+        if ($acao === 'deletar') {
+            return $this->redirectToRoute('financeiro_deletar', ['id' => $id]);
+        }
+
+        return $this->redirectToRoute('financeiro_index');
+    }
+
+    /**
+     * @Route("/relatorio/export", name="financeiro_relatorio_export", methods={"GET"})
+     */
+    public function exportRelatorioExcel(Request $request): Response
+    {
+        $mesInicio = $request->query->get('mes_inicio');
+        $mesFim = $request->query->get('mes_fim');
+
+        $dataInicio = $mesInicio ? new \DateTime($mesInicio . '-01') : new \DateTime('first day of this month');
+        $dataFim = $mesFim ? new \DateTime($mesFim . '-01') : new \DateTime('last day of this month');
+        $dataFim->modify('last day of this month');
+
+        $relatorio = $this->financeiroRepository->getRelatorioPorPeriodo($dataInicio, $dataFim);
+
+        // Criar planilha com PhpSpreadsheet
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Cabeçalhos
+        $sheet->setCellValue('A1', 'Data');
+        $sheet->setCellValue('B1', 'Total');
+
+        // Adicionar os dados
+        $row = 2;
+        foreach ($relatorio as $item) {
+            $sheet->setCellValue('A' . $row, \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel(new \DateTime($item['data'])));
+            $sheet->getStyle('A' . $row)->getNumberFormat()->setFormatCode('DD/MM/YYYY');
+            $sheet->setCellValue('B' . $row, $item['total']);
+            $row++;
+        }
+
+        // Criar resposta
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $fileName = 'relatorio_financeiro.xlsx';
+        $temp_file = tempnam(sys_get_temp_dir(), $fileName);
+        $writer->save($temp_file);
+
+        return $this->file($temp_file, $fileName, ResponseHeaderBag::DISPOSITION_ATTACHMENT);
     }
 
 }
