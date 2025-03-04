@@ -43,7 +43,6 @@ class EstabelecimentoController extends DefaultController
 
         // Criar database apartir do estabelecimento criado
         $database = $this->getRepositorio(Estabelecimento::class)->verificaDatabase($estabelecimento->getId());
-
         if (!$database) {
             ## Inicia a criação do diretório para "download" do dump
             $this->tempDirManager->init();
@@ -67,6 +66,7 @@ class EstabelecimentoController extends DefaultController
             //restaura o backup no novo banco
             $restaura_bd = "mysql -u root -p -h " . end($base) . " -c homepet_{$estabelecimento->getId()} < " . $diretorio;
             shell_exec($restaura_bd);
+            dd($database);
 
             $this->tempDirManager->deletarDiretorio();
         }

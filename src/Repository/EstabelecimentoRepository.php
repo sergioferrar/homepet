@@ -16,9 +16,11 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class EstabelecimentoRepository extends ServiceEntityRepository
 {
+    private $conn;
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Estabelecimento::class);
+        $this->conn = $this->getEntityManager()->getConnection();
     }
 
     public function add(Estabelecimento $entity, bool $flush = false): void
