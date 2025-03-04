@@ -66,7 +66,7 @@ class EstabelecimentoController extends DefaultController
             //restaura o backup no novo banco
             $restaura_bd = "mysql -u root -p -h " . end($base) . " -c homepet_{$estabelecimento->getId()} < " . $diretorio;
             shell_exec($restaura_bd);
-            dd($database);
+
 
             $this->tempDirManager->deletarDiretorio();
         }
