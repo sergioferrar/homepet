@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Agendamento;
 use App\Entity\Financeiro;
+use App\Entity\Servico;
 use App\Repository\AgendamentoRepository;
 use App\Repository\FinanceiroRepository;
 use App\Repository\ServicoRepository;
@@ -17,25 +18,16 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class AgendamentoController extends DefaultController
 {
-    private $agendamentoRepository;
-    private $financeiroRepository;
-    private $servicoRepository;
-
-    public function __construct(AgendamentoRepository $agendamentoRepository, FinanceiroRepository $financeiroRepository, ServicoRepository $servicoRepository)
-    {
-        $this->agendamentoRepository = $agendamentoRepository;
-        $this->financeiroRepository = $financeiroRepository;
-        $this->servicoRepository = $servicoRepository;
-    }
 
     /**
      * @Route("/", name="agendamento_index", methods={"GET"})
      */
     public function index(Request $request): Response
     {
+
         $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
-        $agendamentos = $this->agendamentoRepository->findByDate($data);
-        $totalAgendamentos = $this->agendamentoRepository->contarAgendamentosPorData($data);
+        $agendamentos = $this->getRepositorio(Agendamento::class)->findByDate($this->session->get('userId'), $data);
+        $totalAgendamentos = $this->getRepositorio(Agendamento::class)->contarAgendamentosPorData($this->session->get('userId'), $data);
 
         return $this->render('agendamento/index.html.twig', [
             'agendamentos' => $agendamentos,
@@ -50,14 +42,14 @@ class AgendamentoController extends DefaultController
     public function novo(Request $request): Response
     {
         if ($request->isMethod('POST')) {
-            $data = $request->request->get('data');
-            $petId = $request->request->get('pet_id');
-            $servicoId = $request->request->get('servico_id');
-            $recorrencia = $request->request->get('recorrencia');
-            $metodoPagamento = $request->request->get('metodo_pagamento', 'pendente');
-            $horaChegada = $request->request->get('hora_chegada');
-            $taxiDog = $request->request->get('taxi_dog') ? true : false;
-            $taxaTaxiDog = $request->request->get('taxa_taxi_dog') ?: null; // Se não enviado, mantém NULL
+            $data = $request->get('data');
+            $petId = $request->get('pet_id');
+            $servicoId = $request->get('servico_id');
+            $recorrencia = $request->get('recorrencia');
+            $metodoPagamento = $request->get('metodo_pagamento', 'pendente');
+            $horaChegada = $request->get('hora_chegada');
+            $taxiDog = $request->get('taxi_dog') ? true : false;
+            $taxaTaxiDog = $request->get('taxa_taxi_dog') ?: null; // Se não enviado, mantém NULL
 
             $agendamento = new Agendamento();
             $agendamento->setData(new \DateTime($data));
@@ -72,7 +64,7 @@ class AgendamentoController extends DefaultController
                 $agendamento->setHoraChegada(new \DateTime($data . ' ' . $horaChegada));
             }
 
-            $this->agendamentoRepository->save($agendamento);
+            $this->getRepositorio(Agendamento::class)->save($this->session->get('userId'), $agendamento);
 
             // Tratamento de recorrência
             if ($recorrencia === 'semanal' || $recorrencia === 'quinzenal') {
@@ -93,7 +85,7 @@ class AgendamentoController extends DefaultController
                         $agendamentoRecorrente->setHoraChegada(new \DateTime($novaData->format('Y-m-d') . ' ' . $horaChegada));
                     }
 
-                    $this->agendamentoRepository->save($agendamentoRecorrente);
+                    $this->getRepositorio(Agendamento::class)->save($this->session->get('userId'), $agendamentoRecorrente);
                     $data = $novaData->format('Y-m-d');
                 }
             }
@@ -102,11 +94,10 @@ class AgendamentoController extends DefaultController
         }
 
         return $this->render('agendamento/novo.html.twig', [
-            'pets' => $this->agendamentoRepository->findAllPets(),
-            'servicos' => $this->agendamentoRepository->findAllServicos(),
+            'pets' => $this->getRepositorio(Agendamento::class)->findAllPets($this->session->get('userId')),
+            'servicos' => $this->getRepositorio(Agendamento::class)->findAllServicos($this->session->get('userId')),
         ]);
     }
-
 
 
     /**
@@ -114,31 +105,32 @@ class AgendamentoController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
-        $agendamento = $this->agendamentoRepository->find($id);
+        $agendamento = $this->getRepositorio(Agendamento::class)->listaAgendamentoPorId($this->session->get('userId'), $id);
 
         if (!$agendamento) {
             throw $this->createNotFoundException('O agendamento não foi encontrado');
         }
 
         if ($request->isMethod('POST')) {
-            $data = $request->request->get('data');
-            $petId = $request->request->get('pet_id');
-            $servicoId = $request->request->get('servico_id');
-            $concluido = $request->request->get('concluido') ? true : false;
-//dd();
-            $agendamento->setData((new \DateTime($data)));
-            $agendamento->setPet_Id($petId);
-            $agendamento->setServico_Id($servicoId);
-            $agendamento->setConcluido($concluido);
+            $data = $request->get('data');
+            $petId = $request->get('pet_id');
+            $servicoId = $request->get('servico_id');
+            $concluido = $request->get('concluido') ? true : false;
 
-            $this->agendamentoRepository->update($agendamento);
+//            $agendamentos = new Agendamento();
+            $agendamento['data'] = (new \DateTime($data));
+            $agendamento['pet_id'] = $petId;
+            $agendamento['servico_id'] = $servicoId;
+            $agendamento['concluido'] = $concluido;
+
+            $this->getRepositorio(Agendamento::class)->update($this->session->get('userId'), $agendamento);
             return $this->redirectToRoute('agendamento_index', ['data' => (new \DateTime($data))->format('Y-m-d')]);
         }
 
         return $this->render('agendamento/editar.html.twig', [
             'agendamento' => $agendamento,
-            'pets' => $this->agendamentoRepository->findAllPets(),
-            'servicos' => $this->agendamentoRepository->findAllServicos(),
+            'pets' => $this->getRepositorio(Agendamento::class)->findAllPets($this->session->get('userId')),
+            'servicos' => $this->getRepositorio(Agendamento::class)->findAllServicos($this->session->get('userId')),
         ]);
     }
 
@@ -147,28 +139,28 @@ class AgendamentoController extends DefaultController
      */
     public function deletar(Request $request, int $id): Response
     {
-        $agendamento = $this->agendamentoRepository->find($id);
+        $agendamento = $this->getRepositorio(Agendamento::class)->listaAgendamentoPorId($this->session->get('userId'), $id);
 
         if (!$agendamento) {
             throw $this->createNotFoundException('O agendamento não foi encontrado');
         }
 
-        $this->agendamentoRepository->delete($id);
+        $this->getRepositorio(Agendamento::class)->delete($this->session->get('userId'), $id);
         return $this->redirectToRoute('agendamento_index');
     }
 
     /**
      * @Route("/concluir/{id}", name="agendamento_concluir", methods={"POST"})
      */
-    public function concluir(int $id): Response
+    public function concluir(Request $request, int $id): Response
     {
-        $agendamento = $this->agendamentoRepository->find($id);
+        $agendamento = $this->getRepositorio(Agendamento::class)->listaAgendamentoPorId($this->session->get('userId'), $id);
 
         if (!$agendamento) {
             throw $this->createNotFoundException('O agendamento não foi encontrado');
         }
 
-        $servico = $this->servicoRepository->find($agendamento->getServico_Id());
+        $servico = $this->getRepositorio(Servico::class)->listaServicoPorId($this->session->get('userId'), $agendamento['servico_id']);
 
         if (!$servico) {
             throw $this->createNotFoundException('O serviço não foi encontrado');
@@ -176,21 +168,21 @@ class AgendamentoController extends DefaultController
 
         // Criar registro financeiro
         $financeiro = new Financeiro();
-        $financeiro->setDescricao('Serviço para o pet: ' . $agendamento->getPet_Id());
-        $financeiro->setValor($servico->getValor());
+        $financeiro->setDescricao('Serviço para o pet: ' . $agendamento['pet_id']);
+        $financeiro->setValor($servico['valor']);
         $financeiro->setData(new \DateTime());
-        $financeiro->setPetId($agendamento->getPet_Id());
+        $financeiro->setPetId($agendamento['pet_id']);
 
         // Adicionar taxa do táxi dog, se aplicável
-        if ($agendamento->getTaxiDog() && $agendamento->getTaxaTaxiDog()) {
-            $financeiro->setValor($financeiro->getValor() + $agendamento->getTaxaTaxiDog());
+        if ($agendamento['taxi_dog'] && $agendamento['taxa_taxi_dog']) {
+            $financeiro->setValor($financeiro->getValor() + $agendamento['taxa_taxi_dog']);
             $financeiro->setDescricao($financeiro->getDescricao() . ' + Táxi Dog');
         }
 
-        $this->financeiroRepository->save($financeiro);
+        $this->getRepositorio(Financeiro::class)->save($this->session->get('userId'), $financeiro);
 
-        $agendamento->setConcluido(true);
-        $this->agendamentoRepository->update($agendamento);
+        $agendamento['concluido'] = true;
+        $this->getRepositorio(Agendamento::class)->update($agendamento);
 
         return $this->redirectToRoute('agendamento_index');
     }
@@ -198,7 +190,7 @@ class AgendamentoController extends DefaultController
     /**
      * @Route("/agendamento/pronto/{id}", name="agendamento_pronto")
      */
-    public function marcarComoPronto($id)
+    public function marcarComoPronto(Request $request, $id)
     {
         $agendamento = $this->find($id);
         if ($agendamento) {
@@ -223,20 +215,20 @@ class AgendamentoController extends DefaultController
      */
     public function alterarPagamento(int $id, Request $request): Response
     {
-        $agendamento = $this->agendamentoRepository->find($id);
+        $agendamento = $this->getRepositorio(Agendamento::class)->listaAgendamentoPorId($this->session->get('userId'), $id);
         if (!$agendamento) {
             throw $this->createNotFoundException('Agendamento não encontrado.');
         }
 
-        $metodoPagamento = $request->request->get('metodo_pagamento');
+        $metodoPagamento = $request->get('metodo_pagamento');
         if (!in_array($metodoPagamento, ['dinheiro', 'pix', 'credito', 'debito', 'pendente'])) {
             throw new \InvalidArgumentException('Método de pagamento inválido.');
         }
 
-        $agendamento->setMetodoPagamento($metodoPagamento);
-        $this->agendamentoRepository->update($agendamento);
+        $agendamento['metodo_pagamento'] = $metodoPagamento;
+        $this->getRepositorio(Agendamento::class)->update($this->session->get('userId'), $agendamento);
 
-        return $this->redirectToRoute('agendamento_index', ['data' => $agendamento->getData()->format('Y-m-d')]);
+        return $this->redirectToRoute('agendamento_index', ['data' => date('Y-m-d', strtotime($agendamento['data']))]);
     }
 
     /**
@@ -244,15 +236,15 @@ class AgendamentoController extends DefaultController
      */
     public function alterarHoraSaida(Request $request, int $id): Response
     {
-        $agendamento = $this->agendamentoRepository->find($id);
+        $agendamento = $this->getRepositorio(Agendamento::class)->listaAgendamentoPorId($this->session->get('userId'), $id);
         if (!$agendamento) {
             throw $this->createNotFoundException('O agendamento não foi encontrado.');
         }
 
-        $horaSaida = $request->request->get('hora_saida');
+        $horaSaida = $request->get('hora_saida');
         if ($horaSaida) {
-            $agendamento->setHoraSaida(new \DateTime(date('Y-m-d') . ' ' . $horaSaida));
-            $this->agendamentoRepository->update($agendamento);
+            $agendamento['horaSaida'] = (new \DateTime(date('Y-m-d') . ' ' . $horaSaida))->format('Y-m-d H:i:s');
+            $this->getRepositorio(Agendamento::class)->update($this->session->get('userId'), $agendamento);
         }
 
         return $this->redirectToRoute('agendamento_index');
@@ -263,67 +255,64 @@ class AgendamentoController extends DefaultController
      */
     public function executarAcao(Request $request, int $id): Response
     {
-        $agendamento = $this->agendamentoRepository->find($id);
+        $agendamento = $this->getRepositorio(Agendamento::class)->listaAgendamentoPorId($this->session->get('userId'), $id);
 
         if (!$agendamento) {
             throw $this->createNotFoundException('O agendamento não foi encontrado.');
         }
 
-        $acao = $request->request->get('acao');
+        $acao = $request->get('acao');
 
         switch ($acao) {
             case 'editar':
                 return $this->redirectToRoute('agendamento_editar', ['id' => $id]);
 
             case 'deletar':
-                $this->agendamentoRepository->delete($id);
+                $this->getRepositorio(Agendamento::class)->delete($this->session->get('userId'), $id);
                 return $this->redirectToRoute('agendamento_index');
 
             case 'concluir':
-                if (!$agendamento->getConcluido()) {
-                    $servico = $this->servicoRepository->find($agendamento->getServico_Id());
+                if (!$agendamento['concluido']) {
+                    $servico = $this->getRepositorio(Servico::class)->listaServicoPorId($this->session->get('userId'), $agendamento['servico_id']);
                     if (!$servico) {
                         throw $this->createNotFoundException('O serviço não foi encontrado.');
                     }
 
                     $financeiro = new Financeiro();
-                    $financeiro->setDescricao('Serviço para o pet: ' . $agendamento->getPet_Id());
+                    $financeiro->setDescricao('Serviço para o pet: ' . $agendamento['pet_id']);
                     $financeiro->setValor($servico->getValor());
                     $financeiro->setData(new \DateTime());
-                    $financeiro->setPetId($agendamento->getPet_Id());
+                    $financeiro->setPetId($agendamento['pet_id']);
 
-                    $this->financeiroRepository->save($financeiro);
+                    $this->getRepositorio(Financeiro::class)->save($this->session->get('userId'), $financeiro);
                 }
 
                 $agendamento->setConcluido(true);
-                $this->agendamentoRepository->update($agendamento);
+                $this->getRepositorio(Agendamento::class)->update($this->session->get('userId'), $agendamento);
                 return $this->redirectToRoute('agendamento_index');
 
             case 'pendente':
-                $servico = $this->servicoRepository->find($agendamento->getServico_Id());
+                $servico = $this->getRepositorio(Servico::class)->find($agendamento['servico_id']);
                 if (!$servico) {
                     throw $this->createNotFoundException('O serviço não foi encontrado.');
                 }
 
                 // Criar entrada no financeiro pendente
                 $financeiroPendente = new Financeiro();
-                $financeiroPendente->setDescricao('Pagamento pendente - Serviço para o pet: ' . $agendamento->getPet_Id());
+                $financeiroPendente->setDescricao('Pagamento pendente - Serviço para o pet: ' . $agendamento['pet_id']);
                 $financeiroPendente->setValor($servico->getValor());
                 $financeiroPendente->setData(new \DateTime());
-                $financeiroPendente->setPetId($agendamento->getPet_Id());
+                $financeiroPendente->setPetId($agendamento['pet_id']);
 
                 // Salvando no Financeiro Pendente (Novo método savePendente no repositório)
-                $this->financeiroRepository->savePendente($financeiroPendente);
+                $this->getRepositorio(Financeiro::class)->savePendente($this->session->get('userId'), $financeiroPendente);
 
                 $agendamento->setMetodoPagamento('pendente');
-                $this->agendamentoRepository->update($agendamento);
+                $this->getRepositorio(Agendamento::class)->update($this->session->get('userId'), $agendamento);
                 return $this->redirectToRoute('agendamento_index');
         }
 
         return $this->redirectToRoute('agendamento_index');
     }
-
-
-
 
 }

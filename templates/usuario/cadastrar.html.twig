@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Sistema de gerenciamento de Pet shops - Homepetshop</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+
+    <!-- Favicons -->
+    <link href="assets/img/favicon.png" rel="icon">
+    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+          rel="stylesheet">
+
+
+    <!-- Template Main CSS File -->
+    <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .hero {
+            background: linear-gradient(to right, #ff8a00, #e52e71);
+            color: white;
+            padding: 80px 20px;
+        }
+        .btn-primary {
+            background-color: #ff8a00;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #e52e71;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .footer {
+            background: #343a40;
+            color: white;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+<header class="hero text-center">
+    <h1>Gerencie seu Petshop com Facilidade</h1>
+    <p>Automatize processos, reduza erros e aumente seus lucros com o Home Pet Shop.</p>
+</header>
+
+<section class="container my-5 text-center">
+    <h2>Transforme seu Petshop com Tecnologia</h2>
+    <p>Com o Home Pet Shop, você pode ter o controle total do seu estabelecimento.</p>
+    <img src="{{ asset('images/petshop02.png') }}" class="img-fluid rounded" alt="Gestão de petshops">
+</section>
+
+<section class="container my-5">
+    <div class="row text-center">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h3>📅 Agendamentos</h3>
+                <p>Gerencie os horários de atendimento com facilidade.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h3>💰 Controle Financeiro</h3>
+                <p>Relatórios completos sobre receitas e despesas.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h3>🐶 Cadastro de Pets</h3>
+                <p>Registre clientes e seus pets para um atendimento personalizado.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<section class="container my-5 vh-100" id="cta">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <h2>Cadastre seu Usuário</h2>
+            <p>Experimente gratuitamente e veja como nosso sistema pode revolucionar seu negócio.</p>
+            <form method="post" action="{{ url('petshop_usuario_cadastrar') }}">
+                <div class="form-group">
+                    <label for="nome_usuario">Nome do usuário</label>
+                    <input type="text" class="form-control" id="nome_usuario" name="nome_usuario" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" class="form-control" id="senha" name="senha" required>
+                </div>
+                <div class="form-group">
+                    <input type="hidden" name="estabelecimento" value="{{ estabelecimento }}">
+                    <input type="hidden" name="access_level" value="Admin">
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </form>
+        </div>
+        <div class="col-md-6 text-center">
+            <img src="{{ asset('images/petshop01.png') }}" class="img-fluid rounded" alt="Cadastro de estabelecimento">
+        </div>
+    </div>
+</section>
+
+
+
+
+<section class="bg-light py-5 text-center">
+    <h2>Controle Total do seu Petshop</h2>
+    <p>Acompanhe seu faturamento, controle serviços e otimize seu tempo.</p>
+    <img src="{{ asset('images/petshop03.jpg') }}" class="img-fluid" alt="Painel administrativo">
+</section>
+
+<section class="container my-5 text-center">
+    <h2>Comece Agora Mesmo!</h2>
+    <p>Cadastre-se e experimente gratuitamente!</p>
+    <a href="#cta" class="btn btn-success btn-lg">Criar Conta Gratuita</a>
+</section>
+
+<footer class="footer text-center">
+    <p>&copy; 2025 Home Pet Shop - Todos os direitos reservados.</p>
+</footer>
+
+<!-- Vendor JS Files -->
+<script src="../../vendors/apexcharts/apexcharts.min.js"></script>
+<script src="../../vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../../vendors/chart.js/chart.umd.js"></script>
+<script src="../../vendors/echarts/echarts.min.js"></script>
+<script src="../../vendors/quill/quill.js"></script>
+<script src="../../vendors/simple-datatables/simple-datatables.js"></script>
+<script src="../../vendors/tinymce/tinymce.min.js"></script>
+<script src="../../vendors/php-email-form/validate.js"></script>
+
+<!-- Template Main JS File -->
+<script src="assets/js/main.js"></script>
+
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015"
+        integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ=="
+        data-cf-beacon='{"rayId":"90c98a6ccdc6f266","serverTiming":{"name":{"cfExtPri":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.1.0","token":"68c5ca450bae485a842ff76066d69420"}'
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

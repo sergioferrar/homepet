@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repository;
 
 use App\Entity\Cliente;
@@ -13,59 +14,101 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Cliente[]    findAll()
  * @method Cliente[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-
 class ClienteRepository extends ServiceEntityRepository
 {
     private $conn;
+    private $baseId;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Cliente::class);
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function findAgendamentosByCliente(int $clienteId): array
+    public function setBaseId($baseId = 'homepet_login')
+    {
+        $this->baseId = $baseId;
+    }
+
+    public function findAgendamentosByCliente($baseId, int $clienteId): array
     {
         $sql = 'SELECT a.id, a.data, p.nome as pet_nome, s.nome as servico_nome
-                FROM Agendamento a
-                JOIN Pet p ON a.pet_id = p.id
-                JOIN servico s ON a.servico_id = s.id
+                FROM homepet_{$baseid}.agendamento a
+                JOIN homepet_{$baseid}.pet p ON a.pet_id = p.id
+                JOIN homepet_{$baseid}.servico s ON a.servico_id = s.id
                 WHERE p.dono_id = :clienteId';
         $stmt = $this->conn->executeQuery($sql, ['clienteId' => $clienteId]);
         return $stmt->fetchAllAssociative();
     }
 
-    public function save(array $clienteData): void
-    {
-        $sql = 'INSERT INTO Cliente (nome, email, telefone, rua, numero, complemento, bairro, cidade) VALUES (:nome, :email, :telefone, :rua, :numero, :complemento, :bairro, :cidade)';
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute($clienteData);
+    public function localizaTodosClientePorID($baseId, $clienteId){
+        $sql = "SELECT * FROM homepet_{$baseId}.cliente WHERE id='{$clienteId}'";
+
+        $query = $this->conn->query($sql);
+        return $query->fetch();
     }
 
-    public function update(array $clienteData): void
-    {
-        $sql = "UPDATE Cliente 
-                SET nome = :nome, email = :email, telefone = :telefone, 
-                    rua = :rua, 
-                    numero = :numero, 
-                    complemento = :complemento, 
-                    bairro = :bairro, 
-                    cidade = :cidade
-               WHERE id = :id";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute($clienteData);
+    public function localizaTodosCliente($baseId){
+        $sql = "SELECT * FROM homepet_{$baseId}.cliente";
+
+        $query = $this->conn->query($sql);
+        return $query->fetchAll();
     }
 
-    public function delete(int $id): void
+    public function save($baseId, array $clientData): void
     {
-        $sql = 'DELETE FROM Cliente WHERE id = :id';
+        $sql = "INSERT INTO homepet_{$baseId}.cliente (nome, email, telefone, rua, numero, complemento, bairro, cidade, whatsapp) VALUES 
+        ('{$clientData['nome']}', '{$clientData['email']}', '{$clientData['telefone']}', '{$clientData['rua']}', '{$clientData['numero']}', '{$clientData['complemento']}', '{$clientData['bairro']}', '{$clientData['cidade']}', '{$clientData['whatsapp']}')";
+        $stmt = $this->conn->query($sql);
+        
+        //return $this->conn->lastInsertId();
+    }
+
+    /**
+    Tive que fazer essa alteração de modo que não estava atualizando os dados devido o execute e o executeQuery
+    fazem de forma que o Doctrine ta ainda inccompleto, estou ainda revendo esses casos.
+    */
+    public function update($baseId, array $clienteData): void
+    {
+        $sql = "UPDATE homepet_{$baseId}.cliente 
+                SET nome = '{$clienteData['nome']}', email = '{$clienteData['email']}', telefone = '{$clienteData['telefone']}', 
+                    rua = '{$clienteData['rua']}', 
+                    numero = '{$clienteData['numero']}', 
+                    complemento = '{$clienteData['complemento']}', 
+                    bairro = '{$clienteData['bairro']}', 
+                    cidade = '{$clienteData['cidade']}',
+                    whatsapp = '{$clienteData['whatsapp']}'
+               WHERE id = '{$clienteData['id']}'";
+
+        $stmt = $this->conn->query($sql);
+        //$stmt->execute($clienteData);
+    }
+
+    public function delete($baseId, int $id): void
+    {
+        $sql = 'DELETE FROM homepet_{$baseid}.cliente WHERE id = :id';
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
-    public function search(string $term): array
+    public function search($baseId, string $term = null): array
     {
-        $sql = 'SELECT * FROM Cliente WHERE nome LIKE :term OR email LIKE :term OR telefone LIKE :term OR Endereco LIKE :term';
-        $stmt = $this->conn->executeQuery($sql, ['term' => '%' . $term . '%']);
-        return $stmt->fetchAllAssociative();
+        $search = '';
+        $where = '';
+        if ($term && $term != null) {
+            $search = ['term' => '%' . $term . '%'];
+            $where = 'WHERE nome LIKE :term OR email LIKE :term OR telefone LIKE :term OR Endereco LIKE :term';
+        }
+        $sql = 'SELECT * 
+                FROM homepet_'.$baseId.'.cliente 
+                ' . $where;
+        if ($term && !empty($term)) {
+
+            $stmt = $this->conn->executeQuery($sql, ['term' => '%' . $term . '%']);
+            return $stmt->fetchAllAssociative();
+
+        }
+        $query = $this->conn->query($sql);
+        return $query->fetchAll();
     }
 
     public function getLastInsertedId(): int

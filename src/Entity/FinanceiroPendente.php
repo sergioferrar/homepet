@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\FinanceiroPendenteRepository;
 
 /**
  * @ORM\Entity(repositoryClass=App\Repository\FinanceiroPendenteRepository::class)

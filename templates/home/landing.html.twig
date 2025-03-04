@@ -95,7 +95,7 @@
             <div class="col-md-6">
                 <h2>Cadastre seu Estabelecimento</h2>
                 <p>Experimente gratuitamente e veja como nosso sistema pode revolucionar seu negócio.</p>
-                <form action="salvar_estabelecimento.php" method="POST" class="p-4 border rounded bg-light">
+                <form action="{{ url('estabelecimento_cadastrar') }}" method="POST" class="p-4 border rounded bg-light">
                 <div class="mb-3">
                     <label for="razaoSocial" class="form-label">Razão Social</label>
                     <input type="text" class="form-control" id="razaoSocial" name="razaoSocial" required>

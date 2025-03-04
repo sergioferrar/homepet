@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Financeiro;
+use App\Entity\Pet;
 use App\Repository\FinanceiroRepository;
 use App\Repository\FinanceiroPendenteRepository;
 use App\Repository\PetRepository;
@@ -19,14 +20,6 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
  */
 class FinanceiroController extends DefaultController
 {
-    private $financeiroRepository;
-    private $petRepository;
-
-    public function __construct(FinanceiroRepository $financeiroRepository, PetRepository $petRepository)
-    {
-        $this->financeiroRepository = $financeiroRepository;
-        $this->petRepository = $petRepository;
-    }
 
     /**
      * @Route("/", name="financeiro_index", methods={"GET"})
@@ -34,7 +27,7 @@ class FinanceiroController extends DefaultController
     public function index(Request $request): Response
     {
         $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
-        $financeiros = $this->financeiroRepository->findByDate($data);
+        $financeiros = $this->getRepositorio(Financeiro::class)->findByDate($this->session->get('userId'), $data);
 
         return $this->render('financeiro/index.html.twig', [
             'financeiros' => $financeiros,
@@ -54,12 +47,12 @@ class FinanceiroController extends DefaultController
             $financeiro->setData(new \DateTime($request->request->get('data')));
             $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int)$request->request->get('pet_id') : null);
 
-            $this->financeiroRepository->save($financeiro);
+            $this->getRepositorio(Financeiro::class)->save($this->session->get('userId'), $financeiro);
             return $this->redirectToRoute('financeiro_index');
         }
 
         return $this->render('financeiro/novo.html.twig', [
-            'pets' => $this->petRepository->findAll()
+            'pets' => $this->getRepositorio(Pet::class)->findAllPets($this->session->get('userId'))
         ]);
     }
 
@@ -68,7 +61,7 @@ class FinanceiroController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
-        $financeiro = $this->financeiroRepository->find($id); // Corrigido
+        $financeiro = $this->getRepositorio(Financeiro::class)->findFinanceiro($this->session->get('userId'), $id); // Corrigido
 
         if (!$financeiro) {
             throw $this->createNotFoundException('O registro financeiro não foi encontrado');
@@ -80,13 +73,13 @@ class FinanceiroController extends DefaultController
             $financeiro->setData(new \DateTime($request->request->get('data')));
             $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int)$request->request->get('pet_id') : null);
 
-            $this->financeiroRepository->update($financeiro);
+            $this->getRepositorio(Financeiro::class)->update($this->session->get('userId'), $financeiro);
             return $this->redirectToRoute('financeiro_index');
         }
 
         return $this->render('financeiro/editar.html.twig', [
             'financeiro' => $financeiro,
-            'pets' => $this->petRepository->findAll()
+            'pets' => $this->getRepositorio(Pet::class)->findAllPets($this->session->get('userId'))
         ]);
     }
 
@@ -96,13 +89,13 @@ class FinanceiroController extends DefaultController
      */
     public function deletar(Request $request, int $id): Response
     {
-        $financeiro = $this->financeiroRepository->find($id); // Corrigido
+        $financeiro = $this->getRepositorio(Financeiro::class)->find($this->session->get('userId'), $id); // Corrigido
 
         if (!$financeiro) {
             throw $this->createNotFoundException('O registro financeiro não foi encontrado');
         }
 
-        $this->financeiroRepository->delete($id);
+        $this->getRepositorio(Financeiro::class)->delete($this->session->get('userId'), $id);
         return $this->redirectToRoute('financeiro_index');
     }
 
@@ -124,7 +117,7 @@ class FinanceiroController extends DefaultController
         $dataFim->modify('last day of this month');
 
         // Busca os dados no repositório filtrados pelo período
-        $relatorio = $this->financeiroRepository->getRelatorioPorPeriodo($dataInicio, $dataFim);
+        $relatorio = $this->getRepositorio(Financeiro::class)->getRelatorioPorPeriodo($this->session->get('userId'), $dataInicio, $dataFim);
 
         return $this->render('financeiro/relatorio.html.twig', [
             'relatorio' => $relatorio,
@@ -139,7 +132,7 @@ class FinanceiroController extends DefaultController
     public function financeiroPendente(Request $request, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
     {
         $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
-        $financeirosPendentes = $financeiroPendenteRepository->findByDate($data);
+        $financeirosPendentes = $financeiroPendenteRepository->findByDate($this->session->get('userId'), $data);
 
         return $this->render('financeiro/pendente.html.twig', [
             'financeiros' => $financeirosPendentes,
@@ -150,10 +143,10 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/pendente/pagar/{id}", name="financeiro_pagar", methods={"POST"})
      */
-    public function pagarFinanceiroPendente(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
+    public function pagarFinanceiroPendente(int $id): Response
     {
         // Buscar o registro no FinanceiroPendente
-        $financeiroPendente = $financeiroPendenteRepository->findPendenteById($id);
+        $financeiroPendente = $this->getRepositorio(FinanceiroPendente::class)->findPendenteById($this->session->get('userId'), $id);
 
         if (!$financeiroPendente) {
             throw $this->createNotFoundException('Registro financeiro pendente não encontrado.');
@@ -167,10 +160,10 @@ class FinanceiroController extends DefaultController
         $financeiro->setPetId($financeiroPendente['pet_id']);
 
         // Salvar no Financeiro Diário
-        $this->financeiroRepository->save($financeiro);
+        $this->getRepositorio(Financeiro::class)->save($this->session->get('userId'), $financeiro);
 
         // Remover do Financeiro Pendente
-        $financeiroPendenteRepository->deletePendente($id);
+        $this->getRepositorio(FinanceiroPendente::class)->deletePendente($this->session->get('userId'), $id);
 
         $this->addFlash('success', 'Pagamento confirmado e movido para o Financeiro Diário.');
 
@@ -184,7 +177,7 @@ class FinanceiroController extends DefaultController
     public function confirmarPagamento(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
     {
         // Buscar o registro no FinanceiroPendente
-        $financeiroPendente = $financeiroPendenteRepository->findPendenteById($id);
+        $financeiroPendente = $financeiroPendenteRepository->findPendenteById($this->session->get('userId'), $id);
 
         if (!$financeiroPendente) {
             throw $this->createNotFoundException('Registro financeiro pendente não encontrado.');
@@ -198,10 +191,10 @@ class FinanceiroController extends DefaultController
         $financeiro->setPetId($financeiroPendente['pet_id']);
 
         // Salvar no Financeiro Diário
-        $this->financeiroRepository->save($financeiro);
+        $this->getRepositorio(Financeiro::class)->save($this->session->get('userId'), $financeiro);
 
         // Remover do Financeiro Pendente
-        $financeiroPendenteRepository->deletePendente($id);
+        $financeiroPendenteRepository->deletePendente($this->session->get('userId'), $id);
 
         $this->addFlash('success', 'Pagamento confirmado e movido para o Financeiro Diário.');
 
@@ -242,7 +235,7 @@ class FinanceiroController extends DefaultController
         $dataFim = $mesFim ? new \DateTime($mesFim . '-01') : new \DateTime('last day of this month');
         $dataFim->modify('last day of this month');
 
-        $relatorio = $this->financeiroRepository->getRelatorioPorPeriodo($dataInicio, $dataFim);
+        $relatorio = $this->getRepositorio(Financeiro::class)->getRelatorioPorPeriodo($this->session->get('userId'), $dataInicio, $dataFim);
 
         // Criar planilha com PhpSpreadsheet
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();

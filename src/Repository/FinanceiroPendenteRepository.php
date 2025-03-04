@@ -16,24 +16,24 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function findByDate(\DateTime $data): array
+    public function findByDate($baseId, \DateTime $data): array
     {
-        $sql = 'SELECT f.id, 
-                       CONCAT("Serviço para ", p.nome, " - Dono: ", c.nome) AS descricao, 
+        $sql = "SELECT f.id, 
+                       CONCAT('Serviço para ', p.nome, ' - Dono: ', c.nome) AS descricao, 
                        f.valor, f.data, f.pet_id, p.nome as pet_nome, c.nome as dono_nome, f.metodo_pagamento
-                FROM FinanceiroPendente f
-                LEFT JOIN Pet p ON f.pet_id = p.id
-                LEFT JOIN Cliente c ON p.dono_id = c.id
-                WHERE DATE(f.data) = :data';
+                FROM homepet_{$baseId}.financeiroPendente f
+                LEFT JOIN homepet_{$baseId}.pet p ON f.pet_id = p.id
+                LEFT JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
+                WHERE DATE(f.data) = :data";
 
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
         return $stmt->fetchAllAssociative();
     }
 
-    public function confirmarPagamento(int $id): void
+    public function confirmarPagamento($baseId, int $id): void
     {
         // Buscar o registro pendente
-        $sql = 'SELECT * FROM FinanceiroPendente WHERE id = :id';
+        $sql = "SELECT * FROM homepet_{$baseId}.financeiroPendente WHERE id = :id";
         $registroPendente = $this->conn->executeQuery($sql, ['id' => $id])->fetchAssociative();
 
         if (!$registroPendente) {
@@ -41,8 +41,8 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         }
 
         // Inserir no Financeiro Diário
-        $sqlInsert = 'INSERT INTO Financeiro (descricao, valor, data, pet_id) 
-                      VALUES (:descricao, :valor, :data, :pet_id)';
+        $sqlInsert = "INSERT INTO homepet_{$baseId}.financeiro (descricao, valor, data, pet_id) 
+                      VALUES (:descricao, :valor, :data, :pet_id)";
         
         $this->conn->executeQuery($sqlInsert, [
             'descricao' => $registroPendente['descricao'],
@@ -52,20 +52,20 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         ]);
 
         // Remover do FinanceiroPendente
-        $sqlDelete = 'DELETE FROM FinanceiroPendente WHERE id = :id';
+        $sqlDelete = "DELETE FROM homepet_{$baseId}.FinanceiroPendente WHERE id = :id";
         $this->conn->executeQuery($sqlDelete, ['id' => $id]);
     }
 
-    public function findPendenteById(int $id)
+    public function findPendenteById($baseId, int $id)
     {
-        $sql = 'SELECT * FROM FinanceiroPendente WHERE id = :id';
+        $sql = "SELECT * FROM homepet_{$baseId}.financeiroPendente WHERE id = :id";
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
         return $stmt->fetchAssociative();
     }
 
-    public function deletePendente(int $id): void
+    public function deletePendente($baseId, int $id): void
     {
-        $sql = 'DELETE FROM FinanceiroPendente WHERE id = :id';
+        $sql = "DELETE FROM homepet_{$baseId}.financeiroPendente WHERE id = :id";
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 

@@ -17,6 +17,7 @@ use Doctrine\Persistence\ManagerRegistry;
 class PetRepository extends ServiceEntityRepository
 {
     private $conn;
+    private $baseId;
 
     public function __construct(ManagerRegistry $registry)
     {
@@ -24,19 +25,29 @@ class PetRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function findAllPets(): array
+    public function findPetById($baseId, $petId): array
     {
-        $sql = 'SELECT p.id, p.nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.observacoes, c.nome as dono_nome
-                FROM Pet p
-                JOIN Cliente c ON p.dono_id = c.id';
+        $sql = "SELECT p.id, p.nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.observacoes, c.nome as dono_nome, c.id AS dono_id
+                FROM homepet_{$baseId}.pet p
+                JOIN homepet_{$baseId}.cliente c ON (p.dono_id = c.id)
+                WHERE p.id ={$petId}";
+        $stmt = $this->conn->executeQuery($sql);
+        return $stmt->fetchAssociative();
+    }
+
+    public function findAllPets($baseId): array
+    {
+        $sql = "SELECT p.id, CONCAT(p.nome, ' - ', c.nome) AS nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.observacoes, c.nome as dono_nome
+                FROM homepet_{$baseId}.pet p
+                JOIN homepet_{$baseId}.cliente c ON (p.dono_id = c.id)";
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
     }
 
-    public function save(Pet $pet): void
+    public function save($baseId, Pet $pet): void
     {
-        $sql = 'INSERT INTO Pet (nome, especie, sexo, raca, porte, idade, observacoes, dono_id) 
-                VALUES (:nome, :especie, :sexo, :raca, :porte, :idade, :observacoes, :dono_id)';
+        $sql = "INSERT INTO homepet_{$baseId}.pet (nome, especie, sexo, raca, porte, idade, observacoes, dono_id) 
+                VALUES (:nome, :especie, :sexo, :raca, :porte, :idade, :observacoes, :dono_id)";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('nome', $pet->getNome());
         $stmt->bindValue('especie', $pet->getEspecie());
@@ -49,10 +60,10 @@ class PetRepository extends ServiceEntityRepository
         $stmt->execute();
     }
 
-    public function update(Pet $pet): void
+    public function update($baseId, Pet $pet): void
     {
-        $sql = 'UPDATE Pet SET nome = :nome, especie = :especie, sexo = :sexo, raca = :raca, porte = :porte, 
-                idade = :idade, observacoes = :observacoes, dono_id = :dono_id WHERE id = :id';
+        $sql = "UPDATE homepet_{$baseId}.pet SET nome = :nome, especie = :especie, sexo = :sexo, raca = :raca, porte = :porte, 
+                idade = :idade, observacoes = :observacoes, dono_id = :dono_id WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('nome', $pet->getNome());
         $stmt->bindValue('especie', $pet->getEspecie());
@@ -67,9 +78,9 @@ class PetRepository extends ServiceEntityRepository
     }
 
 
-    public function delete(int $id): void
+    public function delete($baseId, int $id): void
     {
-        $sql = 'DELETE FROM Pet WHERE id = :id';
+        $sql = "DELETE FROM homepet_{$baseId}.pet WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('id', $id);
         $stmt->execute();

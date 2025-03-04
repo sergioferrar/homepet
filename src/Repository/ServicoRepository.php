@@ -24,35 +24,47 @@ class ServicoRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-//    public function findAll(): array
-//    {
-//        $sql = 'SELECT * FROM servico'; // Tabela com 's' minúsculo
-//        $stmt = $this->conn->executeQuery($sql);
-//        return $stmt->fetchAllAssociative();
-//    }
-
-//    public function find(int $id): ?Servico
-//    {
-//        $sql = 'SELECT * FROM servico WHERE id = :id'; // Tabela com 's' minúsculo
-//        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
-//        $servicoData = $stmt->fetchAssociative();
-//
-//        if (!$servicoData) {
-//            return null;
-//        }
-//
-//        $servico = new Servico();
-//        $servico->setId($servicoData['id']);
-//        $servico->setNome($servicoData['nome']);
-//        $servico->setDescricao($servicoData['descricao']);
-//        $servico->setValor($servicoData['valor']);
-//
-//        return $servico;
-//    }
-
-    public function save(Servico $servico): void
+    public function listaServicoPorId($baseId, $idServico)
     {
-        $sql = 'INSERT INTO servico (nome, descricao, valor) VALUES (:nome, :descricao, :valor)'; // Tabela com 's' minúsculo
+        $sql = "SELECT id, nome, descricao, valor 
+            FROM homepet_{$baseId}.servico
+            WHERE id = {$idServico}";
+
+        $query = $this->conn->query($sql);
+        return $query->fetch();
+    }
+
+    public function findAllService($baseId): array
+    {
+        $sql = "SELECT * FROM homepet_{$baseId}.servico"; // Tabela com 's' minúsculo
+        $stmt = $this->conn->executeQuery($sql);
+        return $stmt->fetchAllAssociative();
+    }
+
+    public function findService($baseId, int $id): ?Servico
+    {
+        $sql = "SELECT * FROM homepet_{$baseId}.servico WHERE id = :id"; // Tabela com 's' minúsculo
+        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
+        $servicoData = $stmt->fetchAssociative();
+
+        if (!$servicoData) {
+            return null;
+        }
+
+        $servico = new Servico();
+        $servico->setId($servicoData['id']);
+        $servico->setNome($servicoData['nome']);
+        $servico->setDescricao($servicoData['descricao']);
+        $servico->setValor($servicoData['valor']);
+
+        return $servico;
+    }
+
+    public function save($baseId, Servico $servico): void
+    {
+        // Tabela com 's' minúsculo
+        $sql = "INSERT INTO homepet_{$baseId}.servico (nome, descricao, valor) VALUES (:nome, :descricao, :valor)";
+
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('nome', $servico->getNome());
         $stmt->bindValue('descricao', $servico->getDescricao());
@@ -60,9 +72,10 @@ class ServicoRepository extends ServiceEntityRepository
         $stmt->execute();
     }
 
-    public function update(Servico $servico): void
+    public function update($baseId, Servico $servico): void
     {
-        $sql = 'UPDATE servico SET nome = :nome, descricao = :descricao, valor = :valor WHERE id = :id'; // Tabela com 's' minúsculo
+        // Tabela com 's' minúsculo
+        $sql = "UPDATE homepet_{$baseId}.servico SET nome = :nome, descricao = :descricao, valor = :valor WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('nome', $servico->getNome());
         $stmt->bindValue('descricao', $servico->getDescricao());
@@ -71,9 +84,10 @@ class ServicoRepository extends ServiceEntityRepository
         $stmt->execute();
     }
 
-    public function delete(int $id): void
+    public function delete($baseId, int $id): void
     {
-        $sql = 'DELETE FROM servico WHERE id = :id'; // Tabela com 's' minúsculo
+        // Tabela com 's' minúsculo
+        $sql = "DELETE FROM homepet_{$baseId}.servico WHERE id = :id"; 
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 }

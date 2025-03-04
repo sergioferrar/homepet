@@ -10,11 +10,6 @@ security:
             entity:
                 class: App\Entity\Usuario
                 property: email
-        # all_users:
-            # chain:
-                # providers: ['app_user_provider']
-        # app_user_provider_custom:
-            # id: App\Security\UserProvider
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
@@ -68,6 +63,9 @@ security:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/logout, roles: PUBLIC_ACCESS }
+        - { path: ^/landing, roles: PUBLIC_ACCESS }
+        - { path: ^/estabelecimento/cadastrar, roles: PUBLIC_ACCESS }
+        - { path: ^/usuario/cadastrar, roles: PUBLIC_ACCESS }
         #Roles
         - { path: ^/*, roles: [IS_AUTHENTICATED] }
 

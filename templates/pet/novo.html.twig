@@ -4,7 +4,7 @@
 {{ parent() }}
 <style>
     .autocomplete-items {
-        position: absolute;
+        position: absolute !important;
         border: 1px solid #d4d4d4;
         border-bottom: none;
         border-top: none;
@@ -13,13 +13,16 @@
         left: 0;
         right: 0;
         background-color: #fff;
+        cursor: pointer;
     }
-    .autocomplete-items div {
+    .autocomplete-items .lista {
         padding: 10px;
         cursor: pointer;
         border-bottom: 1px solid #d4d4d4;
+        margin-bottom: 5px;
+        width: 100% !important
     }
-    .autocomplete-items div:hover {
+    .autocomplete-items .lista:hover {
         background-color: #e9e9e9;
     }
 </style>
@@ -47,6 +50,7 @@
             </div>
             <div class="form-group autocomplete">
                 <label for="raca">Raça</label>
+
                 <input type="text" class="form-control" id="raca" name="raca" value="{{ pet.raca|default('') }}" required>
                 <div id="autocomplete-list" class="autocomplete-items"></div>
             </div>
@@ -90,13 +94,17 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!val) return false;
         
         var divList = document.createElement("div");
-        divList.setAttribute("id", "autocomplete-list");
-        divList.setAttribute("class", "autocomplete-items");
+        divList.setAttribute("id", "autocomplete-list")
+
+        divList.setAttribute("class", "autocomplete-items card p-3");
+        var cardBody = $('.autocomplete-items').append('')
         this.parentNode.appendChild(divList);
 
         racas.forEach(function (raca) {
             if (raca.toLowerCase().indexOf(val.toLowerCase()) !== -1) {
                 var item = document.createElement("div");
+
+                item.setAttribute("class", "lista p-1");
                 item.innerHTML = "<strong>" + raca.substr(0, val.length) + "</strong>" + raca.substr(val.length);
                 item.innerHTML += "<input type='hidden' value='" + raca + "'>";
                 

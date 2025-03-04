@@ -72,6 +72,7 @@ class LoginController extends DefaultController
         $request->getSession()->set('login', true);
         $request->getSession()->set('user', $this->security->getUser()->getNomeUsuario());
         $request->getSession()->set('accessLevel', $this->security->getUser()->getAccessLevel());
+        $request->getSession()->set('userId', $this->security->getUser()->getId());
 //        dd($request->getSession()->all());
         // dd($this->security->getUser());
         return $this->redirectToRoute('home');

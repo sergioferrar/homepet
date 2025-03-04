@@ -20,8 +20,13 @@
                 <label for="access_level">Nivel de acesso</label>
                 <select name="access_level" id="access_level" class="form-select">
                     <option value="">Selecione o nivel de acesso</option>
+                    {% if app.session.get('accessLevel') == 'Super Admin' %}
+                        <option value="Super Admin">Super Admin</option>
+                    {% endif %}
                     <option value="Admin">Admin</option>
+                    <option value="Balconista">Balconista</option>
                     <option value="Atendente">Atendente</option>
+                    <option value="Tosador">Tosador</option>
                 </select>
             </div>
             <button type="submit" class="btn btn-primary">Salvar</button>

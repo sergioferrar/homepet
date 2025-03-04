@@ -45,6 +45,11 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
      */
     private $accessLevel;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $petshop_id;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -144,6 +149,18 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     public function setAccessLevel(?string $accessLevel): self
     {
         $this->accessLevel = $accessLevel;
+
+        return $this;
+    }
+
+    public function getPetshopId(): ?int
+    {
+        return $this->petshop_id;
+    }
+
+    public function setPetshopId(int $petshop_id): self
+    {
+        $this->petshop_id = $petshop_id;
 
         return $this;
     }

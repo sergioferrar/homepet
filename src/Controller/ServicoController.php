@@ -14,19 +14,12 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class ServicoController extends DefaultController
 {
-    private $servicoRepository;
-
-    public function __construct(ServicoRepository $servicoRepository)
-    {
-        $this->servicoRepository = $servicoRepository;
-    }
-
     /**
      * @Route("/", name="servico_index", methods={"GET"})
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $servicos = $this->servicoRepository->findAll();
+        $servicos = $this->getRepositorio(Servico::class)->findAllService($this->session->get('userId'));
         return $this->render('servico/index.html.twig', ['servicos' => $servicos]);
     }
 
@@ -41,7 +34,7 @@ class ServicoController extends DefaultController
             $servico->setDescricao($request->request->get('descricao'));
             $servico->setValor((float)$request->request->get('valor'));
 
-            $this->servicoRepository->save($servico);
+            $this->getRepositorio(Servico::class)->save($this->session->get('userId'), $servico);
             return $this->redirectToRoute('servico_index');
         }
 
@@ -53,7 +46,7 @@ class ServicoController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
-        $servico = $this->servicoRepository->find($id);
+        $servico = $this->getRepositorio(Servico::class)->findService($this->session->get('userId'), $id);
 
         if (!$servico) {
             throw $this->createNotFoundException('O serviço não foi encontrado');
@@ -64,7 +57,7 @@ class ServicoController extends DefaultController
             $servico->setDescricao($request->request->get('descricao'));
             $servico->setValor((float)$request->request->get('valor'));
 
-            $this->servicoRepository->update($servico);
+            $this->getRepositorio(Servico::class)->update($this->session->get('userId'), $servico);
             return $this->redirectToRoute('servico_index');
         }
 
@@ -78,13 +71,13 @@ class ServicoController extends DefaultController
      */
     public function deletar(Request $request, int $id): Response
     {
-        $servico = $this->servicoRepository->find($id);
+        $servico = $this->getRepositorio(Servico::class)->findService($this->session->get('userId'), $id);
 
         if (!$servico) {
             throw $this->createNotFoundException('O serviço não foi encontrado');
         }
 
-        $this->servicoRepository->delete($id);
+        $this->getRepositorio(Servico::class)->delete($this->session->get('userId'), $id);
         return $this->redirectToRoute('servico_index');
     }
 

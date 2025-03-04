@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repository;
 
 use App\Entity\Financeiro;
@@ -23,28 +24,38 @@ class FinanceiroRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function findByDate(\DateTime $data): array
+    public function findFinanceiro($baseId, $financeiroId): array
     {
-        $sql = 'SELECT f.id, 
-                       CONCAT("Serviço para ", p.nome, " - Dono: ", c.nome) AS descricao, 
+        $sql = "SELECT *
+                FROM homepet_{$baseId}.financeiro
+                WHERE id = :id";
+
+        $stmt = $this->conn->executeQuery($sql, ['id' => $financeiroId]);
+        return $stmt->fetchAssociative();
+    }
+
+    public function findByDate($baseId, \DateTime $data): array
+    {
+        $sql = "SELECT f.id, 
+                       CONCAT('Serviço para ', p.nome, ' - Dono: ', c.nome) AS descricao, 
                        f.valor, f.data, p.nome as pet_nome, c.nome as dono_nome
-                FROM Financeiro f
-                LEFT JOIN Pet p ON f.pet_id = p.id
-                LEFT JOIN Cliente c ON p.dono_id = c.id
-                WHERE DATE(f.data) = :data';
+                FROM homepet_{$baseId}.financeiro f
+                LEFT JOIN homepet_{$baseId}.pet p ON f.pet_id = p.id
+                LEFT JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
+                WHERE DATE(f.data) = :data";
 
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
         return $stmt->fetchAllAssociative();
     }
 
 
-    public function getRelatorioPorPeriodo(\DateTime $dataInicio, \DateTime $dataFim): array
+    public function getRelatorioPorPeriodo($baseId, \DateTime $dataInicio, \DateTime $dataFim): array
     {
-        $sql = 'SELECT DATE(f.data) as data, SUM(f.valor) as total
-                FROM Financeiro f
+        $sql = "SELECT DATE(f.data) as data, SUM(f.valor) as total
+                FROM homepet_{$baseId}.financeiro f
                 WHERE f.data BETWEEN :dataInicio AND :dataFim
                 GROUP BY DATE(f.data)
-                ORDER BY DATE(f.data) DESC';
+                ORDER BY DATE(f.data) DESC";
 
         $stmt = $this->conn->executeQuery($sql, [
             'dataInicio' => $dataInicio->format('Y-m-d'),
@@ -55,10 +66,10 @@ class FinanceiroRepository extends ServiceEntityRepository
     }
 
 
-    public function save(Financeiro $financeiro): void
+    public function save($baseId, Financeiro $financeiro): void
     {
-        $sql = 'INSERT INTO Financeiro (descricao, valor, data, pet_id) 
-                VALUES (:descricao, :valor, :data, :pet_id)';
+        $sql = "INSERT INTO homepet_{$baseId}.financeiro (descricao, valor, data, pet_id) 
+                VALUES (:descricao, :valor, :data, :pet_id)";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('descricao', $financeiro->getDescricao());
@@ -68,11 +79,11 @@ class FinanceiroRepository extends ServiceEntityRepository
         $stmt->execute();
     }
 
-    public function update(Financeiro $financeiro): void
+    public function update($baseId, Financeiro $financeiro): void
     {
-        $sql = 'UPDATE Financeiro 
+        $sql = "UPDATE homepet_{$baseId}.financeiro 
                 SET descricao = :descricao, valor = :valor, data = :data, pet_id = :pet_id 
-                WHERE id = :id';
+                WHERE id = :id";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('descricao', $financeiro->getDescricao());
@@ -88,54 +99,63 @@ class FinanceiroRepository extends ServiceEntityRepository
      * NÃO SE DEVE DELETAR DADOS DA BASE DE DADOS
      * MUDA APENAS O STATUS PARA INATIVO
      */
-    public function delete(int $id): void
+    public function delete($baseId, int $id): void
     {
-        $sql = 'DELETE FROM Financeiro WHERE id = :id';
+        $sql = "DELETE FROM homepet_{$baseId}.financeiro WHERE id = :id";
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
-    public function totalAgendamento()
+    public function totalAgendamento($baseId)
     {
         $sql = "SELECT COUNT(*) AS totalAgendamento
-        FROM Agendamento
+        FROM homepet_{$baseId}.agendamento
         WHERE concluido = 1";
 
         $query = $this->conn->executeQuery($sql);
         return $query->fetchAssociative();
     }
 
-    public function totalAgendamentoDia()
+    public function totalAgendamentoDia($baseId)
     {
         $sql = "SELECT COUNT(*) AS totalAgendamento
-        FROM Agendamento
+        FROM homepet_{$baseId}.agendamento
         WHERE concluido = 1 AND DATE(data) = DATE(NOW())";
 
         $query = $this->conn->executeQuery($sql);
         return $query->fetchAssociative();
     }
 
-    public function totalAnimais()
+    public function totalAnimais($baseId)
     {
         $sql = "SELECT COUNT(*) AS totalAnimal
-        FROM Pet";
+        FROM homepet_{$baseId}.pet";
 
         $query = $this->conn->query($sql);
         return $query->fetch();
     }
 
-    public function totalLucro()
+    public function totalLucro($baseId)
     {
         $sql = "SELECT sum(valor) AS lucroTotal
-        FROM Financeiro";
+        FROM homepet_{$baseId}.financeiro";
 
         $query = $this->conn->query($sql);
         return $query->fetch();
     }
 
-    public function savePendente(Financeiro $financeiro): void
+    public function lucroDiario($baseId)
     {
-        $sql = 'INSERT INTO FinanceiroPendente (descricao, valor, data, pet_id) 
-                VALUES (:descricao, :valor, :data, :pet_id)';
+        $sql = "SELECT SUM(valor) as valor, data
+        FROM homepet_{$baseId}.financeiro GROUP BY data";
+
+        $query = $this->conn->query($sql);
+        return $query->fetchAll();
+    }
+
+    public function savePendente($baseId, Financeiro $financeiro): void
+    {
+        $sql = "INSERT INTO homepet_{$baseId}.financeiroPendente (descricao, valor, data, pet_id) 
+                VALUES (:descricao, :valor, :data, :pet_id)";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('descricao', $financeiro->getDescricao());
@@ -144,8 +164,5 @@ class FinanceiroRepository extends ServiceEntityRepository
         $stmt->bindValue('pet_id', $financeiro->getPetId() ?? null);
         $stmt->execute();
     }
-
-    
-
 
 }

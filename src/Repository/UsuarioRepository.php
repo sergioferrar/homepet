@@ -24,12 +24,18 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
      * @var
      */
     private $conn;
+    private $baseId;
 
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Usuario::class);
 
         $this->conn = $registry->getManager()->getConnection();
+    }
+
+    public function setBaseId($baseId='homepet_login')
+    {
+        $this->baseId = $baseId;
     }
 
 

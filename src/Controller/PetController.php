@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Cliente;
 use App\Entity\Pet;
 use App\Repository\PetRepository;
 use App\Repository\ClienteRepository;
@@ -18,18 +19,13 @@ class PetController extends DefaultController
     private $petRepository;
     private $clienteRepository;
 
-    public function __construct(PetRepository $petRepository, ClienteRepository $clienteRepository)
-    {
-        $this->petRepository = $petRepository;
-        $this->clienteRepository = $clienteRepository;
-    }
 
     /**
      * @Route("/", name="pet_index", methods={"GET"})
      */
     public function index(): Response
     {
-        $pets = $this->petRepository->findAllPets();
+        $pets = $this->getRepositorio(Pet::class)->findAllPets($this->session->get('userId'));
         return $this->render('pet/index.html.twig', ['pets' => $pets]);
     }
 
@@ -39,28 +35,27 @@ class PetController extends DefaultController
     public function novo(Request $request): Response
     {
         if ($request->isMethod('POST')) {
-            $donoId = $request->request->get('dono_id');
+            $donoId = $request->get('dono_id');
 
-            $cliente = $this->clienteRepository->find($donoId);
-            if (!$cliente) {
-                throw $this->createNotFoundException('O cliente não foi encontrado');
-            }
+//            $cliente = $this->getRepositorio(Cliente::class)->findAgendamentosByCliente($this->session->get('userId'), $donoId);
+//            if (!$cliente) {
+//                throw $this->createNotFoundException('O cliente não foi encontrado');
+//            }
 
             $pet = new Pet();
-            $pet->setNome($request->request->get('nome'))
-                ->setEspecie($request->request->get('especie'))
-                ->setSexo($request->request->get('sexo'))
-                ->setRaca($request->request->get('raca'))
-                ->setPorte($request->request->get('porte'))
-                ->setIdade($request->request->get('idade'))
-                ->setObservacoes($request->request->get('observacoes'))
+            $pet->setNome($request->get('nome'))
+                ->setEspecie($request->get('especie'))
+                ->setSexo($request->get('sexo'))
+                ->setRaca($request->get('raca'))
+                ->setPorte($request->get('porte'))
+                ->setIdade($request->get('idade'))
+                ->setObservacoes($request->get('observacoes'))
                 ->setDono_Id($donoId);
-
-            $this->petRepository->save($pet);
+            $this->getRepositorio(Pet::class)->save($this->session->get('userId'), $pet);
             return $this->redirectToRoute('pet_index');
         }
 
-        $clientes = $this->clienteRepository->findAll();
+        $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($this->session->get('userId'));
         $racas = ["Border Collie", "Poodle", "Pastor Alemão", "Golden Retriever", "Doberman Pinscher",
             "Pastor de Shetland", "Labrador Retriever", "Papillion", "Rottweiler", "Cão de gado australiano",
             "Welsh Corgi Pembroke", "Schnauzer Mini", "Springer Spaniel", "Pastor Belga Tervuren",
@@ -88,6 +83,8 @@ class PetController extends DefaultController
             "Chihuahua", "Lhasa Apso", "Bullmastiff", "Shih Tzu", "Basset Hound", "Mastiff", "Beagle",
             "Pequinês", "Bloodhound", "Borzoi", "Chow Chow", "Bulldog", "Basenji", "Afghan Hound"];
 
+        sort($racas, SORT_LOCALE_STRING);
+
         return $this->render('pet/novo.html.twig', [
             'clientes' => $clientes,
             'racas' => $racas
@@ -100,34 +97,34 @@ class PetController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
-        $pet = $this->petRepository->find($id);
-
+        $pet = $this->getRepositorio(Pet::class)->findPetById($this->session->get('userId'), $id);
         if (!$pet) {
             throw $this->createNotFoundException('O pet não foi encontrado');
         }
 
         if ($request->isMethod('POST')) {
-            $donoId = $request->request->get('dono_id');
+            $donoId = $request->get('dono_id');
 
-            $cliente = $this->clienteRepository->find($donoId);
+            $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->session->get('userId'),$donoId);
             if (!$cliente) {
                 throw $this->createNotFoundException('O cliente não foi encontrado');
             }
-
-            $pet->setNome($request->request->get('nome') ?? '')
-                ->setEspecie($request->request->get('especie') ?? '')
-                ->setSexo($request->request->get('sexo') ?? '')
-                ->setRaca($request->request->get('raca') ?? '')
-                ->setPorte($request->request->get('porte') ?? '')
-                ->setIdade($request->request->get('idade') ?? 0)
-                ->setObservacoes($request->request->get('observacoes') ?? '')
+            $pets = new Pet();
+            $pets->setNome($request->get('nome') ?? '')
+                ->setId($pet['id'])
+                ->setEspecie($request->get('especie') ?? '')
+                ->setSexo($request->get('sexo') ?? '')
+                ->setRaca($request->get('raca') ?? '')
+                ->setPorte($request->get('porte') ?? '')
+                ->setIdade($request->get('idade') ?? 0)
+                ->setObservacoes($request->get('observacoes') ?? '')
                 ->setDono_Id($donoId);
 
-            $this->petRepository->update($pet);
+            $this->getRepositorio(Pet::class)->update($this->session->get('userId'), $pets);
             return $this->redirectToRoute('pet_index');
         }
 
-        $clientes = $this->clienteRepository->findAll();
+        $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($this->session->get('userId'));
 
         // Definição da lista de raças para passar à view
         $racas = [
@@ -159,6 +156,7 @@ class PetController extends DefaultController
             "Pequinês", "Bloodhound", "Borzoi", "Chow Chow", "Bulldog", "Basenji", "Afghan Hound"
         ];
 
+        sort($racas, SORT_LOCALE_STRING);
         return $this->render('pet/editar.html.twig', [
             'pet' => $pet,
             'clientes' => $clientes,
@@ -172,13 +170,13 @@ class PetController extends DefaultController
      */
     public function deletar(Request $request, int $id): Response
     {
-        $pet = $this->petRepository->find($id);
+        $pet = $this->getRepositorio(Pet::class)->find($id);
 
         if (!$pet) {
             throw $this->createNotFoundException('O pet não foi encontrado');
         }
 
-        $this->petRepository->delete($id);
+        $this->getRepositorio(Pet::class)->delete($id);
         return $this->redirectToRoute('pet_index');
     }
 

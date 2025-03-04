@@ -53,8 +53,26 @@ class UsuarioController extends DefaultController
         $usuario->setNomeUsuario($request->get('nome_usuario'));
         $usuario->setSenha(password_hash($request->get('senha'), PASSWORD_DEFAULT, ["cost" => 10]));
         $usuario->setEmail($request->get('email'));
-        $usuario->setAccessLevel($request->get('access_evel'));
-        $usuario->setRoles(["ROLE_ADMIN"]);
+        $usuario->setAccessLevel($request->get('access_level'));
+
+        switch ($request->get('access_level')) {
+            case 'Super Admin':
+            case 'Admin':
+                $roles = ['ROLE_ADMIN'];
+                break;
+            case 'Atendente':
+            case 'Tosador':
+            case 'Balconista':
+                $roles = ['ROLE_ADMIN_USER'];
+                break;
+            default:
+                $roles = ['ROLE_USER'];
+                break;
+        }
+
+        $usuario->setRoles($roles);
+        $usuario->setPetshopId($this->security->getUser()->getPetshopId());
+
         $this->getRepositorio(Usuario::class)->add($usuario, true);
 
         return $this->redirectToRoute('app_usuario');

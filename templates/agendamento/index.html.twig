@@ -40,7 +40,7 @@
                     <table class="table table-bordered datatable">
                         <thead class="table-light">
                             <tr>
-                                <th>Data</th>
+{#                                <th>Data</th>#}
                                 <th>Nome do Pet</th>
                                 <th>Nome do Dono</th>
                                 <th>Serviço</th>
@@ -55,7 +55,7 @@
                         <tbody>
                             {% for agendamento in agendamentos %}
                             <tr class="{% if agendamento.metodo_pagamento == 'pendente' %}table-warning text-dark fw-bold{% endif %} {% if agendamento.taxi_dog %}table-info{% endif %}">
-                                <td>{{ agendamento.data|date('d/m/Y') }}</td>
+{#                                <td>{{ agendamento.data|date('d/m/Y') }}</td>#}
                                 <td class="{% if agendamento.concluido %}text-success fw-bold{% endif %}">{{ agendamento.pet_nome }}</td>
                                 <td>{{ agendamento.dono_nome }}</td>
                                 <td>{{ agendamento.servico_nome }}</td>

@@ -2,15 +2,13 @@
 
 namespace App\Controller;
 
-use App\Entity\Menu;
 use App\Entity\Usuario;
-use App\Service\FirewallSwitcher;
 use App\Service\TempDirManager;
-use App\Service\Utils;
 use Doctrine\Persistence\ObjectRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Security;
@@ -18,49 +16,29 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class DefaultController extends AbstractController
 {
-    const NAO_AUTORIZADO = 403;
-    const NAO_AUTORIZADO_MENSAGEM = 'Você não tem permissão de acesso a esta página.';
 
-    const NAO_LOCALIZADO = 404;
-    const NAO_LOCALIZADO_MENSAGEM = 'A página que você procura não existe, favor listar sua página apartir dos links no menu lateral.';
-
-    const BAD_AUTHENTICATE = 419;
-    const BAD_AUTHENTICATE_MENSAGEM = 'Página expirada, favor faça a autenticação e tente novamente.';
-
-    const BAD_REQUESTS = 429;
-    const BAD_REQUESTS_MENSAGEM = 'Houve muitas requisições, o sistema entendeu que foi necessário fazer uma parada brusca para não ocorrer algo crítico.';
-
-    const BAD_SERVIDOR = 500;
-    const BAD_SERVIDOR_MENSAGEM = 'Houve um problema interno no servidor, tente novamente mais tarde!';
-
-    const UNAVAILABLE_SERVICE = 503;
-    const UNAVAILABLE_SERVICE_MENSAGEM = 'Serviço indisponível.';
 
     public $data;
     public $user;
-    public $listaMenus;
-    public $titlePage;
-    public $directoryMananger;
     public $managerRegistry;
     protected $security;
-    protected $securityMessage = 'Você não tem permissão de acesso a esta página.';
     protected $rule = 'IS_AUTHENTICATED';
-    protected $firewallSwitcher = 'IS_AUTHENTICATED';
     protected $cnpj = '##.###.###/####-##';
     protected $cpf = '###.###.###-##';
+    protected $request;
+    protected $session;
+    public $tempDirManager;
 
     /**
-     * @param SessionInterface $session
      * @param Security $security
-     * @param TempDirManager $tempDirManager
      */
-    public function __construct(
-        ?Security       $security,
-        ManagerRegistry $managerRegistry
-    )
+    public function __construct(?Security $security, ManagerRegistry $managerRegistry, RequestStack $request, TempDirManager $tempDirManager)
     {
         $this->security = $security;
         $this->managerRegistry = $managerRegistry;
+        $this->request = $request->getCurrentRequest();
+        $this->session = $this->request->getSession();
+        $this->tempDirManager = $tempDirManager;
     }
 
     /**

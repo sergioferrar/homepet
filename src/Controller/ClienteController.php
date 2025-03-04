@@ -14,12 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class ClienteController extends DefaultController
 {
-    private $clienteRepository;
 
-    public function __construct(ClienteRepository $clienteRepository)
-    {
-        $this->clienteRepository = $clienteRepository;
-    }
 
     /**
      * @Route("/", name="cliente_index", methods={"GET"})
@@ -27,7 +22,9 @@ class ClienteController extends DefaultController
     public function index(Request $request): Response
     {
         $search = $request->query->get('search');
-        $clientes = $search ? $this->clienteRepository->search($search) : $this->clienteRepository->findAll();
+
+        $clientes =  $this->getRepositorio(Cliente::class)->search($this->session->get('userId'), $search);
+
         return $this->render('cliente/index.html.twig', ['clientes' => $clientes]);
     }
 
@@ -45,10 +42,9 @@ class ClienteController extends DefaultController
                 ->setNumero($request->request->get('numero'))
                 ->setComplemento($request->request->get('complemento'))
                 ->setBairro($request->request->get('bairro'))
-                ->setCidade($request->request->get('cidade'))
-            ;
+                ->setCidade($request->request->get('cidade'));
 
-            $this->clienteRepository->save([
+            $this->getRepositorio(Cliente::class)->save($this->session->get('userId'), [
                 'nome' => $cliente->getNome(),
                 'email' => $cliente->getEmail(),
                 'telefone' => $cliente->getTelefone(),
@@ -57,10 +53,11 @@ class ClienteController extends DefaultController
                 'complemento' => $cliente->getComplemento(),
                 'bairro' => $cliente->getBairro(),
                 'cidade' => $cliente->getCidade(),
+                'whatsapp' => $request->get('whatsapp'),
             ]);
-            $clienteId = $this->clienteRepository->getLastInsertedId();
+            $clienteId = $this->getRepositorio(Cliente::class)->getLastInsertedId();
             return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
- 
+
         }
 
         return $this->render('cliente/novo.html.twig');
@@ -71,37 +68,34 @@ class ClienteController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
-        $cliente = $this->clienteRepository->find($id);
+        $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->session->get('userId'), $id);
 
         if (!$cliente) {
             throw $this->createNotFoundException('O cliente não foi encontrado');
         }
 
         if ($request->isMethod('POST')) {
-            $cliente->setNome($request->get('nome'))
+            $clientes = new Cliente();
+            $clientes->setNome($request->get('nome'))
+                ->setId($cliente['id'])
                 ->setEmail($request->get('email'))
                 ->setTelefone($request->get('telefone'))
                 ->setRua($request->get('rua'))
                 ->setNumero($request->get('numero'))
                 ->setComplemento($request->get('complemento'))
                 ->setBairro($request->get('bairro'))
-                ->setCidade($request->get('cidade'));
+                ->setCidade($request->get('cidade'))
+                ->setWhatsapp($request->get('whatsapp'))
+                ;
+            $cliente['whatsapp'] = $request->get('whatsapp');
+            $cliente['nome'] = $request->get('nome');
 
-            $this->clienteRepository->update([
-                'id' => $cliente->getId(), // Agora podemos pegar o ID corretamente
-                'nome' => $cliente->getNome(),
-                'email' => $cliente->getEmail(),
-                'telefone' => $cliente->getTelefone(),
-                'rua' => $cliente->getRua(),
-                'numero' => $cliente->getNumero(),
-                'complemento' => $cliente->getComplemento(),
-                'bairro' => $cliente->getBairro(),
-                'cidade' => $cliente->getCidade(),
-            ]);
+            $this->getRepositorio(Cliente::class)->update($this->session->get('userId'), $cliente);
+//            dd($cliente, $clientes, $request);
 
-            $clienteId = $this->clienteRepository->getLastInsertedId();
-            return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
- 
+            // $clienteId = $this->getRepositorio(Cliente::class)->getLastInsertedId();
+            //return $this->redirectToRoute('pet_novo', ['cliente_id' => $id]);
+
         }
 //        dd($cliente);
         return $this->render('cliente/editar.html.twig', [
@@ -113,42 +107,41 @@ class ClienteController extends DefaultController
     /**
      * @Route("/deletar/{id}", name="cliente_deletar", methods={"POST"})
      */
-    public function deletar(int $id): Response
+    public function deletar(Request $request, int $id): Response
     {
-        $cliente = $this->clienteRepository->find($id);
+        $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->session->get('userId'), $id);
 
         if (!$cliente) {
             throw $this->createNotFoundException('O cliente não foi encontrado');
         }
 
         // Verifica se o cliente tem pets antes de excluir
-        if ($this->clienteRepository->hasPets($id)) {
+        if ($this->getRepositorio(Cliente::class)->hasPets($id)) {
             $this->addFlash('error', 'Não é possível excluir este cliente, pois ele possui pets cadastrados.');
             $clienteId = $this->clienteRepository->getLastInsertedId();
             return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
- 
+
         }
 
-        $this->clienteRepository->delete($id);
-        $clienteId = $this->clienteRepository->getLastInsertedId();
+        $this->getRepositorio(Cliente::class)->delete($this->session->get('userId'), $id);
+        $clienteId = $this->getRepositorio(Cliente::class)->getLastInsertedId();
         return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
- 
-    }
 
+    }
 
 
     /**
      * @Route("/{id}/agendamentos", name="cliente_agendamentos", methods={"GET"})
      */
-    public function agendamentos(int $id): Response
+    public function agendamentos(Request $request, int $id): Response
     {
-        $clienteData = $this->clienteRepository->find($id);
+        $clienteData = $this->getRepositorio(Cliente::class)->findAgendamentosByCliente($this->session->get('userId'), $id);
 
         if (!$clienteData) {
             throw $this->createNotFoundException('O cliente não foi encontrado');
         }
 
-        $agendamentos = $this->clienteRepository->findAgendamentosByCliente($id);
+        $agendamentos = $this->getRepositorio(Cliente::class)->findAgendamentosByCliente($id);
         return $this->render('cliente/agendamentos.html.twig', [
             'cliente' => $clienteData,
             'agendamentos' => $agendamentos

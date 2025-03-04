@@ -74,9 +74,10 @@ class AccessDeniedListener implements EventSubscriberInterface
         $mensagem = '';
 
         if (!$request->getSession()->has('login') && !$this->security->getUser()) {
-            $mensagem = 'Você-não-está-logado,-area-restrita';
+            $mensagem = '';//str_replace(' ', '-', 'Sua sessão expirou');
+            $param = ($mensagem != ''?['error' => $mensagem]:[]);
 
-            $url = $this->router->generate('logout', ['error' => $mensagem]);
+            $url = $this->router->generate('logout', $param);
             $event->getRequest()->getSession()->save();
             $response = new RedirectResponse($url);
             $event->setResponse($response);
@@ -86,7 +87,7 @@ class AccessDeniedListener implements EventSubscriberInterface
 
         if (!$request->getSession()->has('login') && $this->security->getUser()) {
             $mensagem = 'A-sua-sessão-expirou';
-            if($this->security->getUser()->getStatus() == "Inativo"){
+            if ($this->security->getUser()->getStatus() == "Inativo") {
                 $mensagem = 'Usuário-Inativo';
             }
             $url = $this->router->generate('logout', ['error' => $mensagem]);
@@ -154,7 +155,7 @@ class AccessDeniedListener implements EventSubscriberInterface
 
         $listaGrupo = [];
         foreach ($listaPermissaoPorRota as $row) {
-            $listaGrupo[$row['idGrupo']] = (int) $row['idGrupo'];
+            $listaGrupo[$row['idGrupo']] = (int)$row['idGrupo'];
         }
 
         $habilitado = true;

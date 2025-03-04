@@ -21,7 +21,7 @@
             <select class="form-control" id="pet_id" name="pet_id">
                 <option value="">Selecione um pet</option>
                 {% for pet in pets %}
-                    <option value="{{ pet.id }}" {% if pet.id == financeiro.getPetId() %}selected{% endif %}>{{ pet.nome }}</option>
+                    <option value="{{ pet.id }}" {% if pet.id == financeiro.pet_id %}selected{% endif %}>{{ pet.nome }}</option>
                 {% endfor %}
             </select>
         </div>
