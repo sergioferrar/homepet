@@ -34,6 +34,16 @@ class FinanceiroRepository extends ServiceEntityRepository
         return $stmt->fetchAssociative();
     }
 
+    public function findAllFinanceiro($baseId, $financeiroId): array
+    {
+        $sql = "SELECT id, descricao, valor, data, pet_id, pet_nome
+                FROM homepet_{$baseId}.financeiro
+                WHERE id = :id";
+
+        $stmt = $this->conn->executeQuery($sql, ['id' => $financeiroId]);
+        return $stmt->fetchAllAssociative();
+    }
+
     public function findByDate($baseId, \DateTime $data): array
     {
         $sql = "SELECT f.id, 
@@ -150,19 +160,6 @@ class FinanceiroRepository extends ServiceEntityRepository
 
         $query = $this->conn->query($sql);
         return $query->fetchAll();
-    }
-
-    public function savePendente($baseId, Financeiro $financeiro): void
-    {
-        $sql = "INSERT INTO homepet_{$baseId}.financeiroPendente (descricao, valor, data, pet_id) 
-                VALUES (:descricao, :valor, :data, :pet_id)";
-
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue('descricao', $financeiro->getDescricao());
-        $stmt->bindValue('valor', $financeiro->getValor());
-        $stmt->bindValue('data', $financeiro->getData()->format('Y-m-d'));
-        $stmt->bindValue('pet_id', $financeiro->getPetId() ?? null);
-        $stmt->execute();
     }
 
 }

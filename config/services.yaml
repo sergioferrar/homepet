@@ -27,3 +27,7 @@ services:
         shared: false
         arguments:
             $diretorioProjeto: '%kernel.project_dir%'
+
+    App\Service\DatabaseBkp:
+        arguments:
+            $connection: '@doctrine.dbal.default_connection'

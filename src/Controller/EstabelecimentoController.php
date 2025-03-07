@@ -52,8 +52,8 @@ class EstabelecimentoController extends DefaultController
 //            $diretorio = $this->tempDirManager->obterCaminho($arquivoSQL);
 
             $backupFile = dirname(__DIR__, 2) . '/instalation.sql';
-            $bkp = new DatabaseBkp("homepet_{$estabelecimento->getId()}");
-            $bkp->conectBase()
+            
+            $this->databaseBkp->setDbName("homepet_{$estabelecimento->getId()}")
                 ->createDatabase()
                 ->importDatabase($backupFile);
 

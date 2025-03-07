@@ -88,13 +88,18 @@ class AgendamentoRepository extends ServiceEntityRepository
                 WHERE id = :id";
 
         $this->conn->executeQuery($sql, [
-            'data' => $agendamento['data']->format('Y-m-d H:i:s'),
+            'data' => is_string($agendamento['data']) ? $agendamento['data'] : $agendamento['data']->format('Y-m-d H:i:s'),
             'pet_id' => $agendamento['pet_id'],
             'servico_id' => $agendamento['servico_id'],
             'concluido' => (int)$agendamento['concluido'],
             'metodo_pagamento' => $agendamento['metodo_pagamento'],
-            'horaChegada' => $agendamento['horaChegada'] ?? null,
-            'horaSaida' => $agendamento['horaSaida'] ?? null,
+            'horaChegada' => isset($agendamento['horaChegada']) && !empty($agendamento['horaChegada']) 
+                ? (is_string($agendamento['horaChegada']) ? $agendamento['horaChegada'] : $agendamento['horaChegada']->format('Y-m-d H:i:s')) 
+                : null,
+
+            'horaSaida' => isset($agendamento['horaSaida']) && !empty($agendamento['horaSaida']) 
+                ? (is_string($agendamento['horaSaida']) ? $agendamento['horaSaida'] : $agendamento['horaSaida']->format('Y-m-d H:i:s')) 
+                : null,
             'taxi_dog' => (int)$agendamento['taxi_dog'],
             'taxa_taxi_dog' => $agendamento['taxa_taxi_dog'],
             'id' => $agendamento['id'],

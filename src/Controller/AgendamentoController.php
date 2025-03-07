@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Agendamento;
 use App\Entity\Financeiro;
+use App\Entity\FinanceiroPendente;
 use App\Entity\Servico;
 use App\Repository\AgendamentoRepository;
 use App\Repository\FinanceiroRepository;
@@ -280,34 +281,41 @@ class AgendamentoController extends DefaultController
 
                     $financeiro = new Financeiro();
                     $financeiro->setDescricao('Serviço para o pet: ' . $agendamento['pet_id']);
-                    $financeiro->setValor($servico->getValor());
+                    $financeiro->setValor($servico['valor']);//
                     $financeiro->setData(new \DateTime());
                     $financeiro->setPetId($agendamento['pet_id']);
 
                     $this->getRepositorio(Financeiro::class)->save($this->session->get('userId'), $financeiro);
                 }
 
-                $agendamento->setConcluido(true);
+                $agendamento['concluido'] = true;//->setConcluido(true);
                 $this->getRepositorio(Agendamento::class)->update($this->session->get('userId'), $agendamento);
                 return $this->redirectToRoute('agendamento_index');
 
             case 'pendente':
-                $servico = $this->getRepositorio(Servico::class)->find($agendamento['servico_id']);
+                $servico = $this->getRepositorio(Servico::class)->listaServicoPorId($this->session->get('userId'), $agendamento['servico_id']);
                 if (!$servico) {
                     throw $this->createNotFoundException('O serviço não foi encontrado.');
                 }
 
+                $valida = $this->getRepositorio(FinanceiroPendente::class)->verificaServicoExistente($this->session->get('userId'), $request->get('id'));
+//dd($valida, $request->get('id'));
+                if($valida){
+                    return $this->redirectToRoute('agendamento_index');
+                }
+
                 // Criar entrada no financeiro pendente
-                $financeiroPendente = new Financeiro();
+                $financeiroPendente = new FinanceiroPendente();
                 $financeiroPendente->setDescricao('Pagamento pendente - Serviço para o pet: ' . $agendamento['pet_id']);
-                $financeiroPendente->setValor($servico->getValor());
+                $financeiroPendente->setValor($servico['valor']);
                 $financeiroPendente->setData(new \DateTime());
                 $financeiroPendente->setPetId($agendamento['pet_id']);
+                $financeiroPendente->setAgendamentoId($request->get('id'));
 
                 // Salvando no Financeiro Pendente (Novo método savePendente no repositório)
-                $this->getRepositorio(Financeiro::class)->savePendente($this->session->get('userId'), $financeiroPendente);
+                $this->getRepositorio(FinanceiroPendente::class)->savePendente($this->session->get('userId'), $financeiroPendente);
 
-                $agendamento->setMetodoPagamento('pendente');
+                $agendamento['metodo_pagamento'] = 'pendente';
                 $this->getRepositorio(Agendamento::class)->update($this->session->get('userId'), $agendamento);
                 return $this->redirectToRoute('agendamento_index');
         }

@@ -89,7 +89,7 @@ class FinanceiroController extends DefaultController
      */
     public function deletar(Request $request, int $id): Response
     {
-        $financeiro = $this->getRepositorio(Financeiro::class)->find($this->session->get('userId'), $id); // Corrigido
+        $financeiro = $this->getRepositorio(Financeiro::class)->findAllFinanceiro($this->session->get('userId'), $id); // Corrigido
 
         if (!$financeiro) {
             throw $this->createNotFoundException('O registro financeiro não foi encontrado');

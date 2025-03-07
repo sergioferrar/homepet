@@ -38,6 +38,11 @@ class FinanceiroPendente
      */
     private $petId;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $agendamentoId;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -84,6 +89,17 @@ class FinanceiroPendente
     public function setPetId(?int $petId): self
     {
         $this->petId = $petId;
+        return $this;
+    }
+
+    public function getAgendamentoId(): ?int
+    {
+        return $this->agendamentoId;
+    }
+
+    public function setAgendamentoId(?int $agendamentoId): self
+    {
+        $this->agendamentoId = $agendamentoId;
         return $this;
     }
 }

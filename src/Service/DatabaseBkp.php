@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Connection;
 
 class DatabaseBkp
 {
@@ -13,29 +14,16 @@ class DatabaseBkp
     private $dbPass;
 
 
-    public function __construct($dbName)
+    public function __construct(Connection $connection)
     {
-        $hosts = explode(':', explode('mysql://', $_SERVER['DATABASE_URL'])[1]);
-        $base = explode('@', $hosts[1]);
-        $this->dbHost = end($base);
-        $this->dbUser = $hosts[0];
-        $this->dbPass = $base[0];
-        $this->dbName = $dbName;
+        $this->conn = $connection;
     }
 
-    public function conectBase(): DatabaseBkp
-    {
-        $connectionParams = [
-            'dbname' => 'mysql', // Precisa estar conectado a um banco já existente
-            'user' => $this->dbUser,
-            'password' => $this->dbPass,
-            'host' => $this->dbHost,
-            'driver' => 'pdo_mysql',
-        ];
-
-        $this->conn = DriverManager::getConnection($connectionParams);
+    public function setDbName($dbName){
+        $this->dbName = $dbName;
         return $this;
     }
+
 
     public function createDatabase(): DatabaseBkp
     {

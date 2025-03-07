@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Usuario;
+use App\Service\DatabaseBkp;
 use App\Service\TempDirManager;
 use Doctrine\Persistence\ObjectRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -28,17 +29,19 @@ class DefaultController extends AbstractController
     protected $request;
     protected $session;
     public $tempDirManager;
+    public $databaseBkp;
 
     /**
      * @param Security $security
      */
-    public function __construct(?Security $security, ManagerRegistry $managerRegistry, RequestStack $request, TempDirManager $tempDirManager)
+    public function __construct(?Security $security, ManagerRegistry $managerRegistry, RequestStack $request, TempDirManager $tempDirManager, DatabaseBkp $databaseBkp)
     {
         $this->security = $security;
         $this->managerRegistry = $managerRegistry;
         $this->request = $request->getCurrentRequest();
         $this->session = $this->request->getSession();
         $this->tempDirManager = $tempDirManager;
+        $this->databaseBkp = $databaseBkp;
     }
 
     /**

@@ -359,7 +359,7 @@
 
         <!-- EAD -->
 
-        {% if app.session.get('accessLevel') == 'Admin' %}
+        {% if app.session.get('accessLevel') == 'Admin' and app.session.get('accessLevel') == 'Super Admin' %}
             <li class="nav-item">
                 <a class="nav-link collapsed" data-bs-target="#servico" data-bs-toggle="collapse" href="#">
                     <i class="bi bi-tools"></i><span>Serviços</span><i class="bi bi-chevron-down ms-auto"></i>
