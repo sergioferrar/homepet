@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Estabelecimento;
 use App\Entity\Usuario;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,9 +16,19 @@ class UsuarioController extends DefaultController
      */
     public function index(Request $request): Response
     {
-        $usuarios = $this->getRepositorio(Usuario::class)->findAll();
-//        dd($usuarios);
         $data = [];
+        $repositorio = $this->getRepositorio(Usuario::class);
+        switch ($this->security->getUser()->getAccessLevel()) {
+            case 'Super Admin':
+                $usuarios = $repositorio->listaTodos();
+                $pethop = $this->getRepositorio(Estabelecimento::class)->find($request->getSession()->get('userId'));
+                $data['estabelecimento'] = $pethop;
+                break;
+            case 'Admin':
+                $usuarios = $repositorio->listaTodosPrivado($request->getSession()->get('userId'));
+                break;
+        }
+
         $data['usuarios'] = $usuarios;
 
         return $this->render('usuario/index.html.twig', $data);

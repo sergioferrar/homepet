@@ -38,6 +38,24 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
         $this->baseId = $baseId;
     }
 
+    public function listaTodos(){
+        $sql = "SELECT u.*, e.* 
+            FROM usuario u
+            LEFT JOIN estabelecimento e ON (e.id = u.petshop_id) 
+            ";
+        $query = $this->conn->query($sql);
+        return $query->fetchAll();
+    }
+
+    public function listaTodosPrivado($petshop_id){
+        $sql = "SELECT u.*
+            FROM usuario u
+            WHERE u.petshop_id = $petshop_id
+            ";
+        $query = $this->conn->query($sql);
+        return $query->fetchAll();
+    }
+
 
     public function loadUserByIdentifier(string $usernameOrEmail): ?Usuario
     {
