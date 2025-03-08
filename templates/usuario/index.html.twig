@@ -20,15 +20,21 @@
                 <th>Nome do usuário</th>
                 <th>E-mail</th>
                 <th>Nivel</th>
+                {% if app.session.get('accessLevel') == 'Super Admin' %}
+                    <th>Estabelecimento</th>
+                {% endif %}
                 <th>Ações</th>
             </tr>
             </thead>
             <tbody>
             {% for usuario in usuarios %}
                 <tr>
-                    <td>{{ usuario.nomeUsuario }}</td>
+                    <td>{{ usuario.nome_usuario }}</td>
                     <td>{{ usuario.email }}</td>
-                    <td>{{ usuario.accessLevel }}</td>
+                    <td>{{ usuario.access_level }}</td>
+                    {% if app.session.get('accessLevel') == 'Super Admin' %}
+                        <td>{{ usuario.razaoSocial }}</td>
+                    {% endif %}
                     <td>
                         <div class="btn-group" role="group" aria-label="Basic example">
                             <a href="{{ path('usuario_edit', {'id': usuario.id}) }}" class="btn btn-warning btn-sm mr-custom">Editar</a>
