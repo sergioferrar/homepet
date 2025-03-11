@@ -47,7 +47,8 @@ class AgendamentoRepository extends ServiceEntityRepository
                 JOIN homepet_{$baseId}.pet p ON p.id = a.pet_id
                 JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
                 JOIN homepet_{$baseId}.servico s ON a.servico_id = s.id
-                WHERE DATE(a.data) = :data";
+                WHERE DATE(a.data) = :data
+                ORDER BY a.horaChegada ASC";
 
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
         return $stmt->fetchAllAssociative();
@@ -63,14 +64,16 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function save($baseId, Agendamento $agendamento): void
     {
-        $sql = "INSERT INTO homepet_{$baseId}.agendamento (data, pet_id, servico_id, concluido, metodo_pagamento, horaChegada, horaSaida, taxi_dog, taxa_taxi_dog) 
-                VALUES (:data, :pet_id, :servico_id, :concluido, :metodo_pagamento, :horaChegada, :horaSaida, :taxi_dog, :taxa_taxi_dog)";
+        $sql = "INSERT INTO homepet_{$baseId}.agendamento 
+                (data, pet_id, servico_id, concluido, metodo_pagamento, horaChegada, horaSaida, taxi_dog, taxa_taxi_dog) 
+                VALUES 
+                (:data, :pet_id, :servico_id, :concluido, :metodo_pagamento, :horaChegada, :horaSaida, :taxi_dog, :taxa_taxi_dog)";
 
         $this->conn->executeQuery($sql, [
             'data' => $agendamento->getData()->format('Y-m-d H:i:s'),
-            'pet_id' => $agendamento->getPet_Id(),
-            'servico_id' => $agendamento->getServico_Id(),
-            'concluido' => (int)$agendamento->getConcluido(),
+            'pet_id' => $agendamento->getPetId(),
+            'servico_id' => $agendamento->getServicoId(),
+            'concluido' => (int)$agendamento->isConcluido(), // CORREÇÃO
             'metodo_pagamento' => $agendamento->getMetodoPagamento(),
             'horaChegada' => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
             'horaSaida' => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
@@ -79,7 +82,7 @@ class AgendamentoRepository extends ServiceEntityRepository
         ]);
     }
 
-    public function update($baseId, $agendamento): void
+    public function update($baseId, Agendamento $agendamento): void
     {
         $sql = "UPDATE homepet_{$baseId}.agendamento 
                 SET data = :data, pet_id = :pet_id, servico_id = :servico_id, concluido = :concluido, 
@@ -88,23 +91,21 @@ class AgendamentoRepository extends ServiceEntityRepository
                 WHERE id = :id";
 
         $this->conn->executeQuery($sql, [
-            'data' => is_string($agendamento['data']) ? $agendamento['data'] : $agendamento['data']->format('Y-m-d H:i:s'),
-            'pet_id' => $agendamento['pet_id'],
-            'servico_id' => $agendamento['servico_id'],
-            'concluido' => (int)$agendamento['concluido'],
-            'metodo_pagamento' => $agendamento['metodo_pagamento'],
-            'horaChegada' => isset($agendamento['horaChegada']) && !empty($agendamento['horaChegada']) 
-                ? (is_string($agendamento['horaChegada']) ? $agendamento['horaChegada'] : $agendamento['horaChegada']->format('Y-m-d H:i:s')) 
-                : null,
-
-            'horaSaida' => isset($agendamento['horaSaida']) && !empty($agendamento['horaSaida']) 
-                ? (is_string($agendamento['horaSaida']) ? $agendamento['horaSaida'] : $agendamento['horaSaida']->format('Y-m-d H:i:s')) 
-                : null,
-            'taxi_dog' => (int)$agendamento['taxi_dog'],
-            'taxa_taxi_dog' => $agendamento['taxa_taxi_dog'],
-            'id' => $agendamento['id'],
+            'data' => $agendamento->getData()->format('Y-m-d H:i:s'),
+            'pet_id' => $agendamento->getPetId(),
+            'servico_id' => $agendamento->getServicoId(),
+            'concluido' => (int)$agendamento->isConcluido(),
+            'metodo_pagamento' => $agendamento->getMetodoPagamento(),
+            'horaChegada' => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
+            'horaSaida' => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
+            'taxi_dog' => (int)$agendamento->getTaxiDog(),
+            'taxa_taxi_dog' => $agendamento->getTaxaTaxiDog(),
+            'id' => $agendamento->getId(),
         ]);
     }
+
+
+
 
     public function delete($baseId, int $id): void
     {

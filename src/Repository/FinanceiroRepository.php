@@ -24,15 +24,27 @@ class FinanceiroRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function findFinanceiro($baseId, $financeiroId): array
+    public function findFinanceiro($baseId, int $financeiroId): ?Financeiro
     {
-        $sql = "SELECT *
-                FROM homepet_{$baseId}.financeiro
-                WHERE id = :id";
-
+        $sql = "SELECT * FROM homepet_{$baseId}.financeiro WHERE id = :id";
         $stmt = $this->conn->executeQuery($sql, ['id' => $financeiroId]);
-        return $stmt->fetchAssociative();
+        $dados = $stmt->fetchAssociative();
+
+        if (!$dados) {
+            return null; // Retorna null se não encontrar o registro
+        }
+
+        // Criando e preenchendo um objeto da entidade `Financeiro`
+        $financeiro = new Financeiro();
+        $financeiro->setId($dados['id']);
+        $financeiro->setDescricao($dados['descricao']);
+        $financeiro->setValor((float) $dados['valor']);
+        $financeiro->setData(new \DateTime($dados['data']));
+        $financeiro->setPetId($dados['pet_id']);
+
+        return $financeiro; // Retorna um objeto válido
     }
+
 
     public function findAllFinanceiro($baseId, $financeiroId): array
     {
