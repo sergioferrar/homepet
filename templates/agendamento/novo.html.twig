@@ -49,14 +49,30 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="metodo_pagamento" class="form-label">Método de Pagamento</label>
-                            <select class="form-select" id="metodo_pagamento" name="metodo_pagamento">
-                                <option value="dinheiro">Dinheiro</option>
-                                <option value="pix">Pix</option>
-                                <option value="credito">Cartão de Crédito</option>
-                                <option value="debito">Cartão de Débito</option>
-                                <option value="pendente" selected>Pendente</option>
+                            <label for="recorrencia" class="form-label">Pacote</label>
+                            <select class="form-select" id="recorrencia" name="recorrencia">
+                                <option value="">Nenhum</option>
+                                <option value="semanal">Semanal</option>
+                                <option value="quinzenal">Quinzenal</option>
                             </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="metodo_pagamento" class="form-label">Método de Pagamento</label>
+                                <select class="form-select" id="metodo_pagamento" name="metodo_pagamento">
+                                    <option value="dinheiro">Dinheiro</option>
+                                    <option value="pix">Pix</option>
+                                    <option value="credito">Cartão de Crédito</option>
+                                    <option value="debito">Cartão de Débito</option>
+                                    <option value="pendente" selected>Pendente</option>
+                                    <option value="pacote_semanal_1">Pacote Semanal - 1ª Semana</option>
+                                    <option value="pacote_semanal_2">Pacote Semanal - 2ª Semana</option>
+                                    <option value="pacote_semanal_3">Pacote Semanal - 3ª Semana</option>
+                                    <option value="pacote_semanal_4">Pacote Semanal - 4ª Semana</option>
+                                    <option value="pacote_quinzenal">Pacote Quinzenal</option>
+                                </select>
+
+
                         </div>
 
                         <div class="mb-3">
@@ -104,6 +120,20 @@
             }
         }
     }
+
+    document.getElementById("recorrencia").addEventListener("change", function() {
+        let pagamentoSelect = document.getElementById("metodo_pagamento");
+        pagamentoSelect.querySelector("option[value='pacote_semanal']").style.display = "none";
+        pagamentoSelect.querySelector("option[value='pacote_quinzenal']").style.display = "none";
+
+        if (this.value === "semanal") {
+            pagamentoSelect.querySelector("option[value='pacote_semanal']").style.display = "block";
+            pagamentoSelect.value = "pacote_semanal";
+        } else if (this.value === "quinzenal") {
+            pagamentoSelect.querySelector("option[value='pacote_quinzenal']").style.display = "block";
+            pagamentoSelect.value = "pacote_quinzenal";
+        }
+    });
 </script>
 
 {% endblock %}

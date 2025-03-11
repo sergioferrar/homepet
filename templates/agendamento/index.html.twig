@@ -40,7 +40,6 @@
                     <table class="table table-bordered datatable">
                         <thead class="table-light">
                             <tr>
-{#                                <th>Data</th>#}
                                 <th>Nome do Pet</th>
                                 <th>Nome do Dono</th>
                                 <th>Serviço</th>
@@ -53,9 +52,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for agendamento in agendamentos %}
+                            {% for agendamento in agendamentos|sort((a, b) => a.horaChegada <=> b.horaChegada) %}
                             <tr class="{% if agendamento.metodo_pagamento == 'pendente' %}table-warning text-dark fw-bold{% endif %} {% if agendamento.taxi_dog %}table-info{% endif %}">
-{#                                <td>{{ agendamento.data|date('d/m/Y') }}</td>#}
                                 <td class="{% if agendamento.concluido %}text-success fw-bold{% endif %}">{{ agendamento.pet_nome }}</td>
                                 <td>{{ agendamento.dono_nome }}</td>
                                 <td>{{ agendamento.servico_nome }}</td>
@@ -69,17 +67,23 @@
                                                onchange="this.form.submit()">
                                     </form>
                                 </td>
-                                <td>
-                                    <form method="post" action="{{ path('agendamento_alterar_pagamento', {'id': agendamento.id}) }}">
-                                        <select name="metodo_pagamento" class="form-control bg-light" onchange="this.form.submit()">
-                                            <option value="dinheiro" {% if agendamento.metodo_pagamento == 'dinheiro' %}selected{% endif %}>Dinheiro</option>
-                                            <option value="pix" {% if agendamento.metodo_pagamento == 'pix' %}selected{% endif %}>Pix</option>
-                                            <option value="credito" {% if agendamento.metodo_pagamento == 'credito' %}selected{% endif %}>Cartão de Crédito</option>
-                                            <option value="debito" {% if agendamento.metodo_pagamento == 'debito' %}selected{% endif %}>Cartão de Débito</option>
-                                            <option value="pendente" {% if agendamento.metodo_pagamento == 'pendente' %}selected{% endif %} class="bg-danger text-white">Pendente</option>
-                                        </select>
-                                    </form>
-                                </td>
+                                    <td>
+                                        <form method="post" action="{{ path('agendamento_alterar_pagamento', {'id': agendamento.id}) }}">
+                                            <select name="metodo_pagamento" class="form-control bg-light" onchange="this.form.submit()">
+                                                <option value="dinheiro" {% if agendamento.metodo_pagamento == 'dinheiro' %}selected{% endif %}>Dinheiro</option>
+                                                <option value="pix" {% if agendamento.metodo_pagamento == 'pix' %}selected{% endif %}>Pix</option>
+                                                <option value="credito" {% if agendamento.metodo_pagamento == 'credito' %}selected{% endif %}>Cartão de Crédito</option>
+                                                <option value="debito" {% if agendamento.metodo_pagamento == 'debito' %}selected{% endif %}>Cartão de Débito</option>
+                                                <option value="pendente" {% if agendamento.metodo_pagamento == 'pendente' %}selected{% endif %} class="bg-danger text-white">Pendente</option>
+                                                <option value="pacote_semanal_1" {% if agendamento.metodo_pagamento == 'pacote_semanal_1' %}selected{% endif %}>Pacote Semanal 1</option>
+                                                <option value="pacote_semanal_2" {% if agendamento.metodo_pagamento == 'pacote_semanal_2' %}selected{% endif %}>Pacote Semanal 2</option>
+                                                <option value="pacote_semanal_3" {% if agendamento.metodo_pagamento == 'pacote_semanal_3' %}selected{% endif %}>Pacote Semanal 3</option>
+                                                <option value="pacote_semanal_4" {% if agendamento.metodo_pagamento == 'pacote_semanal_4' %}selected{% endif %}>Pacote Semanal 4</option>
+                                                <option value="pacote_quinzenal" {% if agendamento.metodo_pagamento == 'pacote_quinzenal' %}selected{% endif %}>Pacote Quinzenal</option>
+                                            </select>
+                                        </form>
+                                    </td>
+
                                 <td>
                                     <form method="post" action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}">
                                         <select name="acao" class="form-control" onchange="this.form.submit()">

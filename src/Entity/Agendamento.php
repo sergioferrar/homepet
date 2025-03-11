@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\AgendamentoRepository;
+
 /**
  * @ORM\Entity(repositoryClass=AgendamentoRepository::class)
  */
@@ -32,14 +33,14 @@ class Agendamento
     private $servico_id;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="boolean", options={"default": false})
      */
-    private $concluido = 0;
+    private $concluido = false;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="boolean", options={"default": false})
      */
-    private $pronto = 0;
+    private $pronto = false;
 
     /**
      * @ORM\Column(type="datetime", nullable=true, name="horaChegada")
@@ -47,7 +48,7 @@ class Agendamento
     private $horaChegada;
 
     /**
-     * @ORM\Column(type="string", length=20, nullable=false, options={"default": "pendente"})
+     * @ORM\Column(type="string", length=30, nullable=false, options={"default": "pendente"})
      */
     private $metodo_pagamento = 'pendente';
 
@@ -55,8 +56,9 @@ class Agendamento
      * @ORM\Column(type="datetime", nullable=true, name="horaSaida")
      */
     private $horaSaida;
+
     /**
-     * @ORM\Column(type="boolean", name="taxi_dog")
+     * @ORM\Column(type="boolean", name="taxi_dog", options={"default": false})
      */
     private bool $taxi_dog = false;
 
@@ -64,16 +66,26 @@ class Agendamento
      * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true, name="taxa_taxi_dog")
      */
     private ?float $taxa_taxi_dog = null;
-    
+
+    /**
+     * @ORM\Column(type="boolean", name="pacote_semanal", options={"default": false})
+     */
+    private bool $pacote_semanal = false;
+
+    /**
+     * @ORM\Column(type="boolean", name="pacote_quinzenal", options={"default": false})
+     */
+    private bool $pacote_quinzenal = false;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function setId($id): void
+    public function setId(int $id): self
     {
         $this->id = $id;
+        return $this;
     }
 
     public function getData(): ?\DateTime
@@ -81,35 +93,35 @@ class Agendamento
         return $this->data;
     }
 
-    public function setData($data): self
+    public function setData(\DateTime $data): self
     {
         $this->data = $data;
         return $this;
     }
 
-    public function getPet_Id(): ?int
+    public function getPetId(): ?int
     {
         return $this->pet_id;
     }
 
-    public function setPet_Id(int $pet_id): self
+    public function setPetId(int $pet_id): self
     {
         $this->pet_id = $pet_id;
         return $this;
     }
 
-    public function getServico_Id(): ?int
+    public function getServicoId(): ?int
     {
         return $this->servico_id;
     }
 
-    public function setServico_Id(int $servico_id): self
+    public function setServicoId(int $servico_id): self
     {
         $this->servico_id = $servico_id;
         return $this;
     }
 
-    public function getConcluido(): ?bool
+    public function isConcluido(): bool
     {
         return $this->concluido;
     }
@@ -142,7 +154,6 @@ class Agendamento
         return $this;
     }
 
-
     public function getMetodoPagamento(): ?string
     {
         return $this->metodo_pagamento;
@@ -170,9 +181,10 @@ class Agendamento
         return $this->taxi_dog;
     }
 
-    public function setTaxiDog(bool $taxi_dog): void
+    public function setTaxiDog(bool $taxi_dog): self
     {
         $this->taxi_dog = $taxi_dog;
+        return $this;
     }
 
     public function getTaxaTaxiDog(): ?float
@@ -180,10 +192,31 @@ class Agendamento
         return $this->taxa_taxi_dog;
     }
 
-    public function setTaxaTaxiDog(?float $taxa_taxi_dog): void
+    public function setTaxaTaxiDog(?float $taxa_taxi_dog): self
     {
         $this->taxa_taxi_dog = $taxa_taxi_dog;
+        return $this;
     }
 
+    public function getPacoteSemanal(): bool
+    {
+        return $this->pacote_semanal;
+    }
 
+    public function setPacoteSemanal(bool $pacote_semanal): self
+    {
+        $this->pacote_semanal = $pacote_semanal;
+        return $this;
+    }
+
+    public function getPacoteQuinzenal(): bool
+    {
+        return $this->pacote_quinzenal;
+    }
+
+    public function setPacoteQuinzenal(bool $pacote_quinzenal): self
+    {
+        $this->pacote_quinzenal = $pacote_quinzenal;
+        return $this;
+    }
 }

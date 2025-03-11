@@ -61,7 +61,8 @@ class FinanceiroController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
-        $financeiro = $this->getRepositorio(Financeiro::class)->findFinanceiro($this->session->get('userId'), $id); // Corrigido
+        $repo = $this->getRepositorio(Financeiro::class);
+        $financeiro = $repo->findFinanceiro($this->session->get('userId'), $id);
 
         if (!$financeiro) {
             throw $this->createNotFoundException('O registro financeiro não foi encontrado');
@@ -69,11 +70,11 @@ class FinanceiroController extends DefaultController
 
         if ($request->isMethod('POST')) {
             $financeiro->setDescricao($request->request->get('descricao'));
-            $financeiro->setValor((float)$request->request->get('valor'));
+            $financeiro->setValor((float) $request->request->get('valor'));
             $financeiro->setData(new \DateTime($request->request->get('data')));
-            $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int)$request->request->get('pet_id') : null);
+            $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int) $request->request->get('pet_id') : null);
 
-            $this->getRepositorio(Financeiro::class)->update($this->session->get('userId'), $financeiro);
+            $repo->update($this->session->get('userId'), $financeiro);
             return $this->redirectToRoute('financeiro_index');
         }
 
@@ -82,6 +83,8 @@ class FinanceiroController extends DefaultController
             'pets' => $this->getRepositorio(Pet::class)->findAllPets($this->session->get('userId'))
         ]);
     }
+
+
 
 
     /**
