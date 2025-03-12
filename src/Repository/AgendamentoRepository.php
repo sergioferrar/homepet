@@ -40,8 +40,9 @@ class AgendamentoRepository extends ServiceEntityRepository
     {
         $sql = "SELECT a.id, a.data, a.concluido, a.horaChegada, a.horaSaida, 
                        a.metodo_pagamento, a.taxi_dog, a.taxa_taxi_dog, 
-                       p.nome as pet_nome, 
-                       c.nome as dono_nome, 
+                       p.id AS pet_id, p.nome AS pet_nome, 
+                       c.id AS dono_id, c.nome AS dono_nome, c.email, c.telefone, 
+                       c.rua, c.numero, c.complemento, c.bairro, c.cidade, c.whatsapp, c.cep,
                        CONCAT(s.nome, ' - ', s.valor) as servico_nome
                 FROM homepet_{$baseId}.agendamento a
                 JOIN homepet_{$baseId}.pet p ON p.id = a.pet_id
@@ -53,6 +54,8 @@ class AgendamentoRepository extends ServiceEntityRepository
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
         return $stmt->fetchAllAssociative();
     }
+
+
 
 
     public function listagem($baseId, int $id)
@@ -136,4 +139,17 @@ class AgendamentoRepository extends ServiceEntityRepository
         $result = $stmt->fetchAssociative();
         return (int)$result['total'];
     }
+
+    public function findAllDonos($baseId): array
+    {
+        $sql = "SELECT DISTINCT c.id, c.nome 
+                FROM homepet_{$baseId}.cliente c
+                JOIN homepet_{$baseId}.pet p ON p.dono_id = c.id
+                ORDER BY c.nome ASC";
+
+        $stmt = $this->conn->executeQuery($sql);
+        return $stmt->fetchAllAssociative();
+    }
+
+
 }

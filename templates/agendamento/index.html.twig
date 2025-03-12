@@ -55,38 +55,41 @@
                             {% for agendamento in agendamentos|sort((a, b) => a.horaChegada <=> b.horaChegada) %}
                             <tr class="{% if agendamento.metodo_pagamento == 'pendente' %}table-warning text-dark fw-bold{% endif %} {% if agendamento.taxi_dog %}table-info{% endif %}">
                                 <td class="{% if agendamento.concluido %}text-success fw-bold{% endif %}">{{ agendamento.pet_nome }}</td>
-                                <td>{{ agendamento.dono_nome }}</td>
+                                <td>{{ agendamento.dono_nome }}
+                                    <a href="#" class="text-primary fw-bold buscar-cliente" data-pet-id="{{ agendamento.pet_id }}">
+                                        {{ agendamento.dono_nome }}
+                                    </a>
+                                </td>
                                 <td>{{ agendamento.servico_nome }}</td>
                                 <td>{{ agendamento.taxi_dog ? 'Sim' : 'Não' }}</td>
                                 <td>{{ agendamento.taxa_taxi_dog is not null ? "R$ " ~ agendamento.taxa_taxi_dog : '-' }}</td>
                                 <td>{{ agendamento.horaChegada is defined and agendamento.horaChegada is not null ? agendamento.horaChegada|date('H:i') : 'Não definido' }}</td>
                                 <td>
-                                    <form method="post" action="{{ path('agendamento_alterar_saida', {'id': agendamento.id}) }}">
+                                    <form method="post" action="{{ path('agendamento_alterar_saida', {'id': agendamento.id}) }}" class="reload-form">
                                         <input type="time" name="hora_saida" class="form-control"
-                                               value="{{ agendamento.horaSaida is defined and agendamento.horaSaida is not null ? agendamento.horaSaida|date('H:i') : '' }}"
-                                               onchange="this.form.submit()">
+                                               value="{{ agendamento.horaSaida is defined and agendamento.horaSaida is not null ? agendamento.horaSaida|date('H:i') : '' }}">
                                     </form>
                                 </td>
-                                    <td>
-                                        <form method="post" action="{{ path('agendamento_alterar_pagamento', {'id': agendamento.id}) }}">
-                                            <select name="metodo_pagamento" class="form-control bg-light" onchange="this.form.submit()">
-                                                <option value="dinheiro" {% if agendamento.metodo_pagamento == 'dinheiro' %}selected{% endif %}>Dinheiro</option>
-                                                <option value="pix" {% if agendamento.metodo_pagamento == 'pix' %}selected{% endif %}>Pix</option>
-                                                <option value="credito" {% if agendamento.metodo_pagamento == 'credito' %}selected{% endif %}>Cartão de Crédito</option>
-                                                <option value="debito" {% if agendamento.metodo_pagamento == 'debito' %}selected{% endif %}>Cartão de Débito</option>
-                                                <option value="pendente" {% if agendamento.metodo_pagamento == 'pendente' %}selected{% endif %} class="bg-danger text-white">Pendente</option>
-                                                <option value="pacote_semanal_1" {% if agendamento.metodo_pagamento == 'pacote_semanal_1' %}selected{% endif %}>Pacote Semanal 1</option>
-                                                <option value="pacote_semanal_2" {% if agendamento.metodo_pagamento == 'pacote_semanal_2' %}selected{% endif %}>Pacote Semanal 2</option>
-                                                <option value="pacote_semanal_3" {% if agendamento.metodo_pagamento == 'pacote_semanal_3' %}selected{% endif %}>Pacote Semanal 3</option>
-                                                <option value="pacote_semanal_4" {% if agendamento.metodo_pagamento == 'pacote_semanal_4' %}selected{% endif %}>Pacote Semanal 4</option>
-                                                <option value="pacote_quinzenal" {% if agendamento.metodo_pagamento == 'pacote_quinzenal' %}selected{% endif %}>Pacote Quinzenal</option>
-                                            </select>
-                                        </form>
-                                    </td>
-
                                 <td>
-                                    <form method="post" action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}">
-                                        <select name="acao" class="form-control" onchange="this.form.submit()">
+                                    <form method="post" action="{{ path('agendamento_alterar_pagamento', {'id': agendamento.id}) }}" class="reload-form">
+                                        <select name="metodo_pagamento" class="form-control bg-light">
+                                            <option value="dinheiro" {% if agendamento.metodo_pagamento == 'dinheiro' %}selected{% endif %}>Dinheiro</option>
+                                            <option value="pix" {% if agendamento.metodo_pagamento == 'pix' %}selected{% endif %}>Pix</option>
+                                            <option value="credito" {% if agendamento.metodo_pagamento == 'credito' %}selected{% endif %}>Cartão de Crédito</option>
+                                            <option value="debito" {% if agendamento.metodo_pagamento == 'debito' %}selected{% endif %}>Cartão de Débito</option>
+                                            <option value="pendente" {% if agendamento.metodo_pagamento == 'pendente' %}selected{% endif %} class="bg-danger text-white">Pendente</option>
+                                            <option value="pacote_semanal_1" {% if agendamento.metodo_pagamento == 'pacote_semanal_1' %}selected{% endif %}>Pacote Semanal 1</option>
+                                            <option value="pacote_semanal_2" {% if agendamento.metodo_pagamento == 'pacote_semanal_2' %}selected{% endif %}>Pacote Semanal 2</option>
+                                            <option value="pacote_semanal_3" {% if agendamento.metodo_pagamento == 'pacote_semanal_3' %}selected{% endif %}>Pacote Semanal 3</option>
+                                            <option value="pacote_semanal_4" {% if agendamento.metodo_pagamento == 'pacote_semanal_4' %}selected{% endif %}>Pacote Semanal 4</option>
+                                            <option value="pacote_quinzenal" {% if agendamento.metodo_pagamento == 'pacote_quinzenal' %}selected{% endif %}>Pacote Quinzenal</option>
+                                            <option value="pacote_mensal" {% if agendamento.metodo_pagamento == 'pacote_mensal' %}selected{% endif %}>Pacote Mensal</option>
+                                        </select>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="post" action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}" class="reload-form">
+                                        <select name="acao" class="form-control">
                                             <option value="">Selecione</option>
                                             <option value="editar">Editar</option>
                                             {% if not agendamento.concluido %}
@@ -107,20 +110,153 @@
     </div>
 </section>
 
+
+<!-- Modal para informações do cliente -->
+<div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Informações do Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Nome:</strong> <span id="clienteNome"></span></p>
+                <p><strong>Email:</strong> <span id="clienteEmail"></span></p>
+                <p><strong>Telefone:</strong> <span id="clienteTelefone"></span></p>
+                <p><strong>Endereço:</strong> <span id="clienteEndereco"></span></p>
+                <p><strong>Bairro:</strong> <span id="clienteBairro"></span></p>
+                <p><strong>Cidade:</strong> <span id="clienteCidade"></span></p>
+                <p><strong>CEP:</strong> <span id="clienteCep"></span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+{% endblock %}
+{% block javascripts %}
+
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        document.querySelectorAll("select[name='acao']").forEach(select => {
-            select.addEventListener("change", function() {
-                if (this.value === "deletar") {
-                    if (!confirm("Tem certeza que deseja deletar este agendamento?")) {
-                        this.value = "";
-                        return;
+    document.addEventListener("DOMContentLoaded", function () {
+        function salvarPosicaoScroll() {
+            sessionStorage.setItem("scrollPos", window.scrollY);
+        }
+
+        function restaurarPosicaoScroll() {
+            let scrollPos = sessionStorage.getItem("scrollPos");
+            if (scrollPos !== null) {
+                window.scrollTo(0, scrollPos);
+                sessionStorage.removeItem("scrollPos");
+            }
+        }
+
+        // Enviar os formulários via AJAX para evitar resposta JSON na tela
+        document.querySelectorAll(".reload-form").forEach(form => {
+            form.addEventListener("change", function (event) {
+                event.preventDefault();
+                salvarPosicaoScroll();
+
+                let formData = new FormData(this);
+                let actionUrl = this.action;
+
+                fetch(actionUrl, {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "sucesso") {
+                        location.reload(); // Recarrega a página mantendo o scroll
+                    } else {
+                        alert("Erro: " + data.mensagem);
                     }
-                }
-                this.form.submit();
+                })
+                .catch(error => console.error("Erro na requisição AJAX:", error));
             });
         });
+
+        restaurarPosicaoScroll();
     });
+</script>
+
+<script>
+    $(function(){
+        $('.buscar-cliente').on('click', function(){
+            var petId = $(this).data('pet-id');
+            var modalCliente = $('#modalCliente');
+            
+            
+            if (!petId) {
+                Notify.modal("Erro: Pet ID não encontrado.", 'md', 'Mensagem do sistema');
+                return;
+            }
+            
+            $.ajax({
+                type:'POST',
+                data:{pet_id:petId},
+                dataType:'json',
+                url:`{{url('home')}}agendamento/api/buscar-cliente?pet_id=`+petId,
+                success: function(data){
+                    if (data.status === "sucesso") {
+                        modalCliente.find('#clienteNome').html(data.cliente.nome);
+                        modalCliente.find('#clienteEmail').html(data.cliente.email);
+                        modalCliente.find('#clienteTelefone').html(data.cliente.telefone || data.cliente.whatsapp);
+                        modalCliente.find('#clienteEndereco').html(`${data.cliente.rua}, ${data.cliente.numero} ${data.cliente.complemento}`);
+                        modalCliente.find('#clienteBairro').html(data.cliente.bairro);
+                        modalCliente.find('#clienteCidade').html(data.cliente.cidade);
+                        modalCliente.find('#clienteCep').html(data.cliente.cep);
+                        modalCliente.modal('show');
+                       
+                    } else {
+                        alert("Erro ao buscar informações do cliente: " + data.mensagem);
+                    }
+                },
+                error:function(er, httpx){
+                    console.log(er)
+                    console.log(httpx)
+                },
+            });
+
+            return false;
+        });
+    });
+   /* document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".buscar-cliente").forEach(element => {
+            element.addEventListener("click", function (event) {
+                event.preventDefault(); // Impede a navegação padrão do link
+
+                let petId = this.getAttribute("data-pet-id");
+
+                if (!petId) {
+                    alert("Erro: Pet ID não encontrado.");
+                    return;
+                }
+
+                fetch(`/api/buscar-cliente?pet_id=${petId}`)
+
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "sucesso") {
+                            document.getElementById("clienteNome").innerText = data.cliente.nome;
+                            document.getElementById("clienteEmail").innerText = data.cliente.email;
+                            document.getElementById("clienteTelefone").innerText = data.cliente.telefone || data.cliente.whatsapp;
+                            document.getElementById("clienteEndereco").innerText = `${data.cliente.rua}, ${data.cliente.numero} ${data.cliente.complemento}`;
+                            document.getElementById("clienteBairro").innerText = data.cliente.bairro;
+                            document.getElementById("clienteCidade").innerText = data.cliente.cidade;
+                            document.getElementById("clienteCep").innerText = data.cliente.cep;
+
+                            let modal = new bootstrap.Modal(document.getElementById('modalCliente'));
+                            modal.show();
+                        } else {
+                            alert("Erro ao buscar informações do cliente: " + data.mensagem);
+                        }
+                    })
+                    .catch(error => alert("Erro ao buscar cliente: " + error));
+            });
+        });
+    });*/
 </script>
 
 {% endblock %}

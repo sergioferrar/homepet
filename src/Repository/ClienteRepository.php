@@ -32,11 +32,11 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function findAgendamentosByCliente($baseId, int $clienteId): array
     {
-        $sql = 'SELECT a.id, a.data, p.nome as pet_nome, s.nome as servico_nome
-                FROM homepet_{$baseid}.agendamento a
-                JOIN homepet_{$baseid}.pet p ON a.pet_id = p.id
-                JOIN homepet_{$baseid}.servico s ON a.servico_id = s.id
-                WHERE p.dono_id = :clienteId';
+        $sql = "SELECT c.id, c.nome, email, telefone, rua, bairro, cidade, cep, p.dono_id AS dono, p.id, p.nome AS nomePet, p.dono_id, complemento, numero
+                FROM homepet_1.cliente c 
+                JOIN homepet_1.pet p ON c.id = p.id
+                WHERE c.id = $clienteId";
+        //die($sql);
         $stmt = $this->conn->executeQuery($sql, ['clienteId' => $clienteId]);
         return $stmt->fetchAllAssociative();
     }

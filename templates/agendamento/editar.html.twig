@@ -1,34 +1,60 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<div class="container mt-5">
-    <h1>Editar Agendamento</h1>
-    <form method="post" action="{{ path('agendamento_editar', {'id': agendamento.id}) }}">
-        <div class="form-group">
-            <label for="pet_id">Pet</label>
-            <select class="form-control" id="pet_id" name="pet_id" required>
-                {% for pet in pets %}
-                    <option value="{{ pet.id }}" {% if pet.id == agendamento.pet_id %}selected{% endif %}>{{ pet.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="servico_id">Serviço</label>
-            <select class="form-control" id="servico_id" name="servico_id" required>
-                {% for servico in servicos %}
-                    <option value="{{ servico.id }}" {% if servico.id == agendamento.servico_id %}selected{% endif %}>{{ servico.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="data">Data</label>
-            <input type="date" class="form-control" id="data" name="data" value="{{ agendamento.data|date('Y-m-d') }}" required>
-        </div>
-        <div class="form-group form-check">
-            <input type="checkbox" class="form-check-input" id="concluido" name="concluido" {% if agendamento.concluido %}checked{% endif %}>
-            <label class="form-check-label" for="concluido"> Pagamento concluído</label>
-        </div>
-        <button type="submit" class="btn btn-primary">Salvar</button>
-    </form>
-</div>
+<form method="post" action="{{ path('agendamento_editar', {'id': agendamento.id}) }}">
+    <div class="mb-3">
+        <label class="form-label">Nome do Pet</label>
+        <select name="pet_id" class="form-control">
+            {% for pet in pets %}
+                <option value="{{ pet.id }}" {% if pet.id == agendamento.pet_id %}selected{% endif %}>
+                    {{ pet.nome }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Serviço</label>
+        <select name="servico_id" class="form-control">
+            {% for servico in servicos %}
+                <option value="{{ servico.id }}" {% if servico.id == agendamento.servico_id %}selected{% endif %}>
+                    {{ servico.nome }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Data</label>
+        <input type="date" name="data" class="form-control" value="{{ agendamento.data|date('Y-m-d') }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Hora de Chegada</label>
+        <input type="time" name="hora_chegada" class="form-control" value="{{ agendamento.horaChegada is not null ? agendamento.horaChegada|date('H:i') : '' }}">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Método de Pagamento</label>
+        <select name="metodo_pagamento" class="form-control">
+            <option value="dinheiro" {% if agendamento.metodo_pagamento == 'dinheiro' %}selected{% endif %}>Dinheiro</option>
+            <option value="pix" {% if agendamento.metodo_pagamento == 'pix' %}selected{% endif %}>Pix</option>
+            <option value="credito" {% if agendamento.metodo_pagamento == 'credito' %}selected{% endif %}>Cartão de Crédito</option>
+            <option value="debito" {% if agendamento.metodo_pagamento == 'debito' %}selected{% endif %}>Cartão de Débito</option>
+            <option value="pendente" {% if agendamento.metodo_pagamento == 'pendente' %}selected{% endif %} class="bg-danger text-white">Pendente</option>
+            <option value="pacote_semanal_1" {% if agendamento.metodo_pagamento == 'pacote_semanal_1' %}selected{% endif %}>Pacote Semanal 1</option>
+            <option value="pacote_quinzenal" {% if agendamento.metodo_pagamento == 'pacote_quinzenal' %}selected{% endif %}>Pacote Quinzenal</option>
+            <option value="pacote_mensal_1" {% if agendamento.metodo_pagamento == 'pacote_mensal_1' %}selected{% endif %}>Pacote Mensal 1</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Concluído?</label>
+        <input type="checkbox" name="concluido" {% if agendamento.concluido %}checked{% endif %}>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+</form>
+
+
 {% endblock %}
