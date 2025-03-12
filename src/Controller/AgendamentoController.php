@@ -3,14 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\Agendamento;
+use App\Entity\Cliente;
 use App\Entity\Financeiro;
 use App\Entity\FinanceiroPendente;
 use App\Entity\Servico;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\JsonResponse;
-
 
 /**
  * @Route("/agendamento")
@@ -36,53 +36,51 @@ class AgendamentoController extends DefaultController
 /**
  * @Route("/novo", name="agendamento_novo", methods={"GET", "POST"})
  */
-public function novo(Request $request): Response
-{
-    if ($request->isMethod('POST')) {
-        $dados = $request->request->all();
-        $userId = $this->session->get('userId');
+    public function novo(Request $request): Response
+    {
+        if ($request->isMethod('POST')) {
+            $dados = $request->request->all();
+            $userId = $this->session->get('userId');
 
-        if (!isset($dados['pets']) || empty($dados['pets'])) {
-            $this->addFlash('danger', 'É necessário cadastrar pelo menos um pet.');
-            return $this->redirectToRoute('agendamento_novo');
-        }
-
-        foreach ($dados['pets'] as $pet) {
-            if (!isset($pet['pet_id'], $pet['servico_id'])) {
-                continue; // Se algum dado estiver faltando, ignora
+            if (!isset($dados['pets']) || empty($dados['pets'])) {
+                $this->addFlash('danger', 'É necessário cadastrar pelo menos um pet.');
+                return $this->redirectToRoute('agendamento_novo');
             }
 
-            $agendamento = new Agendamento();
-            $agendamento->setData(new \DateTime($dados['data']));
-            $agendamento->setPetId($pet['pet_id']);
-            $agendamento->setServicoId($pet['servico_id']);
-            $agendamento->setMetodoPagamento($pet['metodo_pagamento'] ?? 'pendente');
-            $agendamento->setTaxiDog(!empty($pet['taxi_dog']));
-            $agendamento->setTaxaTaxiDog(isset($pet['taxa_taxi_dog']) && $pet['taxa_taxi_dog'] !== '' ? (float)$pet['taxa_taxi_dog'] : null);
-            $agendamento->setConcluido(false);
+            foreach ($dados['pets'] as $pet) {
+                if (!isset($pet['pet_id'], $pet['servico_id'])) {
+                    continue; // Se algum dado estiver faltando, ignora
+                }
 
-            if (!empty($dados['hora_chegada'])) {
-                $agendamento->setHoraChegada(new \DateTime($dados['data'] . ' ' . $dados['hora_chegada']));
+                $agendamento = new Agendamento();
+                $agendamento->setData(new \DateTime($dados['data']));
+                $agendamento->setPetId($pet['pet_id']);
+                $agendamento->setServicoId($pet['servico_id']);
+                $agendamento->setMetodoPagamento($pet['metodo_pagamento'] ?? 'pendente');
+                $agendamento->setTaxiDog(!empty($pet['taxi_dog']));
+                $agendamento->setTaxaTaxiDog(isset($pet['taxa_taxi_dog']) && $pet['taxa_taxi_dog'] !== '' ? (float) $pet['taxa_taxi_dog'] : null);
+                $agendamento->setConcluido(false);
+
+                if (!empty($dados['hora_chegada'])) {
+                    $agendamento->setHoraChegada(new \DateTime($dados['data'] . ' ' . $dados['hora_chegada']));
+                }
+
+                // Salvar agendamento no repositório
+                $this->getRepositorio(Agendamento::class)->save($userId, $agendamento);
             }
 
-            // Salvar agendamento no repositório
-            $this->getRepositorio(Agendamento::class)->save($userId, $agendamento);
+            // Retorna para a index apenas após salvar todos os agendamentos
+            return $this->redirectToRoute('agendamento_index', ['data' => $dados['data']]);
         }
 
-        // Retorna para a index apenas após salvar todos os agendamentos
-        return $this->redirectToRoute('agendamento_index', ['data' => $dados['data']]);
+        $donos = $this->getRepositorio(Agendamento::class)->findAllDonos($this->session->get('userId'));
+
+        return $this->render('agendamento/novo.html.twig', [
+            'donos' => $donos,
+            'pets' => $this->getRepositorio(Agendamento::class)->findAllPets($this->session->get('userId')),
+            'servicos' => $this->getRepositorio(Agendamento::class)->findAllServicos($this->session->get('userId')),
+        ]);
     }
-
-    $donos = $this->getRepositorio(Agendamento::class)->findAllDonos($this->session->get('userId'));
-
-    return $this->render('agendamento/novo.html.twig', [
-        'donos' => $donos,
-        'pets' => $this->getRepositorio(Agendamento::class)->findAllPets($this->session->get('userId')),
-        'servicos' => $this->getRepositorio(Agendamento::class)->findAllServicos($this->session->get('userId')),
-    ]);
-}
-
-
 
     /**
      * @Route("/editar/{id}", name="agendamento_editar", methods={"GET", "POST"})
@@ -102,7 +100,7 @@ public function novo(Request $request): Response
             $agendamento->setData(new \DateTime($request->get('data')));
             $agendamento->setPetId($request->get('pet_id'));
             $agendamento->setServicoId($request->get('servico_id'));
-            $agendamento->setConcluido((bool)$request->get('concluido'));
+            $agendamento->setConcluido((bool) $request->get('concluido'));
             $agendamento->setMetodoPagamento($dados['metodo_pagamento']);
 
             $repo->update($this->session->get('userId'), $agendamento);
@@ -116,8 +114,6 @@ public function novo(Request $request): Response
             'servicos' => $repo->findAllServicos($this->session->get('userId')),
         ]);
     }
-
-
 
     /**
      * @Route("/deletar/{id}", name="agendamento_deletar", methods={"POST"})
@@ -184,7 +180,7 @@ public function novo(Request $request): Response
         $metodosPermitidos = [
             'dinheiro', 'pix', 'credito', 'debito', 'pendente',
             'pacote_semanal', 'pacote_semanal_1', 'pacote_semanal_2', 'pacote_semanal_3', 'pacote_semanal_4',
-            'pacote_quinzenal'
+            'pacote_quinzenal',
         ];
 
         if (!in_array($metodoPagamento, $metodosPermitidos, true)) {
@@ -196,11 +192,11 @@ public function novo(Request $request): Response
         $agendamento->setData(new \DateTime($dados['data']));
         $agendamento->setPetId($dados['pet_id']);
         $agendamento->setServicoId($dados['servico_id']);
-        $agendamento->setConcluido((bool)$dados['concluido']);
+        $agendamento->setConcluido((bool) $dados['concluido']);
         $agendamento->setMetodoPagamento($metodoPagamento);
         $agendamento->setHoraChegada(!empty($dados['horaChegada']) ? new \DateTime($dados['horaChegada']) : null);
         $agendamento->setHoraSaida(!empty($dados['horaSaida']) ? new \DateTime($dados['horaSaida']) : null);
-        $agendamento->setTaxiDog((bool)$dados['taxi_dog']);
+        $agendamento->setTaxiDog((bool) $dados['taxi_dog']);
         $agendamento->setTaxaTaxiDog($dados['taxa_taxi_dog']);
 
         $repo->update($this->session->get('userId'), $agendamento);
@@ -227,11 +223,11 @@ public function novo(Request $request): Response
             $agendamento->setData(new \DateTime($dados['data']));
             $agendamento->setPetId($dados['pet_id']);
             $agendamento->setServicoId($dados['servico_id']);
-            $agendamento->setConcluido((bool)$dados['concluido']);
+            $agendamento->setConcluido((bool) $dados['concluido']);
             $agendamento->setMetodoPagamento($dados['metodo_pagamento']);
             $agendamento->setHoraChegada($dados['horaChegada'] ? new \DateTime($dados['horaChegada']) : null);
             $agendamento->setHoraSaida(new \DateTime(date('Y-m-d') . ' ' . $horaSaida));
-            $agendamento->setTaxiDog((bool)$dados['taxi_dog']);
+            $agendamento->setTaxiDog((bool) $dados['taxi_dog']);
             $agendamento->setTaxaTaxiDog($dados['taxa_taxi_dog']);
 
             $repo->update($this->session->get('userId'), $agendamento);
@@ -241,7 +237,6 @@ public function novo(Request $request): Response
 
         return $this->json(['status' => 'erro', 'mensagem' => 'Hora de saída não informada.'], Response::HTTP_BAD_REQUEST);
     }
-
 
     /**
      * @Route("/agendamento/executar-acao/{id}", name="agendamento_executar_acao", methods={"POST"})
@@ -293,7 +288,7 @@ public function novo(Request $request): Response
                 $agendamento->setMetodoPagamento($dados['metodo_pagamento']);
                 $agendamento->setHoraChegada($dados['horaChegada'] ? new \DateTime($dados['horaChegada']) : null);
                 $agendamento->setHoraSaida($dados['horaSaida'] ? new \DateTime($dados['horaSaida']) : null);
-                $agendamento->setTaxiDog((bool)$dados['taxi_dog']);
+                $agendamento->setTaxiDog((bool) $dados['taxi_dog']);
                 $agendamento->setTaxaTaxiDog($dados['taxa_taxi_dog']);
 
                 $repo->update($this->session->get('userId'), $agendamento);
@@ -302,7 +297,7 @@ public function novo(Request $request): Response
                     'status' => 'sucesso',
                     'mensagem' => 'Agendamento concluído com sucesso.',
                     'id' => $id,
-                    'concluido' => true
+                    'concluido' => true,
                 ]);
 
             case 'pendente':
@@ -337,7 +332,7 @@ public function novo(Request $request): Response
                 $agendamento->setMetodoPagamento('pendente');
                 $agendamento->setHoraChegada($dados['horaChegada'] ? new \DateTime($dados['horaChegada']) : null);
                 $agendamento->setHoraSaida($dados['horaSaida'] ? new \DateTime($dados['horaSaida']) : null);
-                $agendamento->setTaxiDog((bool)$dados['taxi_dog']);
+                $agendamento->setTaxiDog((bool) $dados['taxi_dog']);
                 $agendamento->setTaxaTaxiDog($dados['taxa_taxi_dog']);
 
                 $repo->update($this->session->get('userId'), $agendamento);
@@ -346,7 +341,7 @@ public function novo(Request $request): Response
                     'status' => 'sucesso',
                     'mensagem' => 'Agendamento marcado como pendente e registrado no financeiro pendente.',
                     'id' => $id,
-                    'metodo_pagamento' => 'pendente'
+                    'metodo_pagamento' => 'pendente',
                 ]);
 
             default:
@@ -359,8 +354,7 @@ public function novo(Request $request): Response
      */
     public function buscarCliente(Request $request): JsonResponse
     {
-        $petId = $request->query->get('pet_id');
-        
+        $petId = $request->get('pet_id');
 
         if (!$petId) {
             return $this->json(['status' => 'erro', 'mensagem' => 'Pet ID não informado.'], Response::HTTP_BAD_REQUEST);
@@ -368,16 +362,7 @@ public function novo(Request $request): Response
 
         $baseId = $this->session->get('userId');
 
-        $cliente = $this->getRepositorio(Cliente::class)->findAgendamentosByCliente($baseId, );
-
-        $sql = "SELECT c.id, c.nome, c.email, c.telefone, c.whatsapp, 
-                       c.rua, c.numero, c.complemento, c.bairro, c.cidade, c.cep
-                FROM homepet_{$baseId}.cliente c
-                JOIN homepet_{$baseId}.pet p ON c.id = p.dono_id
-                WHERE p.id = :pet_id";
-
-        $stmt = $this->getRepositorio(Agendamento::class)->getConnection()->executeQuery($sql, ['pet_id' => $petId]);
-        $cliente = $stmt->fetchAssociative();
+        $cliente = $this->getRepositorio(Cliente::class)->findAgendamentosByCliente($baseId, $petId);
 
         if (!$cliente) {
             return $this->json(['status' => 'erro', 'mensagem' => 'Cliente não encontrado.'], Response::HTTP_NOT_FOUND);
@@ -386,7 +371,4 @@ public function novo(Request $request): Response
         return $this->json(['status' => 'sucesso', 'cliente' => $cliente]);
     }
 
-
-
 }
-
