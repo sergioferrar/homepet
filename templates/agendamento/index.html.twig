@@ -55,8 +55,8 @@
                             {% for agendamento in agendamentos|sort((a, b) => a.horaChegada <=> b.horaChegada) %}
                             <tr class="{% if agendamento.metodo_pagamento == 'pendente' %}table-warning text-dark fw-bold{% endif %} {% if agendamento.taxi_dog %}table-info{% endif %}">
                                 <td class="{% if agendamento.concluido %}text-success fw-bold{% endif %}">{{ agendamento.pet_nome }}</td>
-                                <td>{{ agendamento.dono_nome }}
-                                    <a href="#" class="text-primary fw-bold buscar-cliente" data-pet-id="{{ agendamento.pet_id }}">
+                                <td>
+                                    <a href="javascript:void(0);" class="text-primary fw-bold buscar-cliente" data-pet-id="{{ agendamento.pet_id }}">
                                         {{ agendamento.dono_nome }}
                                     </a>
                                 </td>
@@ -197,7 +197,7 @@
                 type:'POST',
                 data:{pet_id:petId},
                 dataType:'json',
-                url:`{{url('home')}}agendamento/api/buscar-cliente?pet_id=`+petId,
+                url:`{{url('home')}}agendamento/api/buscar-cliente`,
                 success: function(data){
                     if (data.status === "sucesso") {
                         modalCliente.find('#clienteNome').html(data.cliente.nome);
