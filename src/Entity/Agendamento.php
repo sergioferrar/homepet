@@ -23,16 +23,6 @@ class Agendamento
     private $data;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
-    private $pet_id;
-
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
-    private $servico_id;
-
-    /**
      * @ORM\Column(type="boolean", options={"default": false})
      */
     private $concluido = false;
@@ -77,6 +67,11 @@ class Agendamento
      */
     private bool $pacote_quinzenal = false;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true, name="donoId")
+     */
+    private $donoId;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -96,28 +91,6 @@ class Agendamento
     public function setData(\DateTime $data): self
     {
         $this->data = $data;
-        return $this;
-    }
-
-    public function getPetId(): ?int
-    {
-        return $this->pet_id;
-    }
-
-    public function setPetId(int $pet_id): self
-    {
-        $this->pet_id = $pet_id;
-        return $this;
-    }
-
-    public function getServicoId(): ?int
-    {
-        return $this->servico_id;
-    }
-
-    public function setServicoId(int $servico_id): self
-    {
-        $this->servico_id = $servico_id;
         return $this;
     }
 
@@ -217,6 +190,18 @@ class Agendamento
     public function setPacoteQuinzenal(bool $pacote_quinzenal): self
     {
         $this->pacote_quinzenal = $pacote_quinzenal;
+        return $this;
+    }
+
+    public function getDonoId(): ?int
+    {
+        return $this->donoId;
+    }
+
+    public function setDonoId(?int $donoId): self
+    {
+        $this->donoId = $donoId;
+
         return $this;
     }
 }

@@ -39,6 +39,7 @@ class AgendamentoController extends DefaultController
     public function novo(Request $request): Response
     {
         if ($request->isMethod('POST')) {
+            //dd($request);
             $dados = $request->request->all();
             $userId = $this->session->get('userId');
 
@@ -47,18 +48,12 @@ class AgendamentoController extends DefaultController
                 return $this->redirectToRoute('agendamento_novo');
             }
 
-            foreach ($dados['pets'] as $pet) {
-                if (!isset($pet['pet_id'], $pet['servico_id'])) {
-                    continue; // Se algum dado estiver faltando, ignora
-                }
-
-                $agendamento = new Agendamento();
+           $agendamento = new Agendamento();
                 $agendamento->setData(new \DateTime($dados['data']));
-                $agendamento->setPetId($pet['pet_id']);
-                $agendamento->setServicoId($pet['servico_id']);
-                $agendamento->setMetodoPagamento($pet['metodo_pagamento'] ?? 'pendente');
-                $agendamento->setTaxiDog(!empty($pet['taxi_dog']));
-                $agendamento->setTaxaTaxiDog(isset($pet['taxa_taxi_dog']) && $pet['taxa_taxi_dog'] !== '' ? (float) $pet['taxa_taxi_dog'] : null);
+                
+                $agendamento->setMetodoPagamento($dados['metodo_pagamento'] ?? 'pendente');
+                $agendamento->setTaxiDog(!empty($dados['taxi_dog']));
+                $agendamento->setTaxaTaxiDog(isset($dados['taxa_taxi_dog']) && $dados['taxa_taxi_dog'] !== '' ? (float) $dados['taxa_taxi_dog'] : null);
                 $agendamento->setConcluido(false);
 
                 if (!empty($dados['hora_chegada'])) {
@@ -66,8 +61,9 @@ class AgendamentoController extends DefaultController
                 }
 
                 // Salvar agendamento no repositório
-                $this->getRepositorio(Agendamento::class)->save($userId, $agendamento);
-            }
+                $agendamentoId = $this->getRepositorio(Agendamento::class)->save($userId, $agendamento);
+
+                $this->getRepositorio(Agendamento::class)->saveAgendamentoServico($userId, $agendamentoId, $request->get('pets'), $request->get('servicos'));
 
             // Retorna para a index apenas após salvar todos os agendamentos
             return $this->redirectToRoute('agendamento_index', ['data' => $dados['data']]);
