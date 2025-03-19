@@ -45,10 +45,12 @@ class AgendamentoRepository extends ServiceEntityRepository
                        c.rua, c.numero, c.complemento, c.bairro, c.cidade, c.whatsapp, c.cep,
                        CONCAT(s.nome, ' - ', s.valor) as servico_nome
                 FROM homepet_{$baseId}.agendamento a
-                LEFT JOIN homepet_{$baseId}.pet p ON p.id = a.pet_id
-                LEFT JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
-                LEFT JOIN homepet_{$baseId}.servico s ON a.servico_id = s.id
+                LEFT JOIN homepet_{$baseId}.agendamento_pet_servico j ON j.agendamentoId = a.id
+                LEFT JOIN homepet_{$baseId}.pet p ON p.id = j.petId
+                LEFT JOIN homepet_{$baseId}.cliente c ON c.id = p.dono_id
+                LEFT JOIN homepet_{$baseId}.servico s ON s.id = j.servicoId
                 WHERE DATE(a.data) = :data
+                GROUP BY a.id
                 ORDER BY a.horaChegada ASC";
 
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
@@ -65,17 +67,18 @@ class AgendamentoRepository extends ServiceEntityRepository
         return $stmt->fetchAssociative();
     }
 
-    public function save($baseId, Agendamento $agendamento): void
+    public function save($baseId, Agendamento $agendamento)
     {
+
         $sql = "INSERT INTO homepet_{$baseId}.agendamento 
-                (data, pet_id, servico_id, concluido, metodo_pagamento, horaChegada, horaSaida, taxi_dog, taxa_taxi_dog) 
+                (data, concluido, metodo_pagamento, horaChegada, horaSaida, taxi_dog, taxa_taxi_dog) 
                 VALUES 
-                (:data, :pet_id, :servico_id, :concluido, :metodo_pagamento, :horaChegada, :horaSaida, :taxi_dog, :taxa_taxi_dog)";
+                (:data, :concluido, :metodo_pagamento, :horaChegada, :horaSaida, :taxi_dog, :taxa_taxi_dog)";
 
         $this->conn->executeQuery($sql, [
             'data' => $agendamento->getData()->format('Y-m-d H:i:s'),
-            'pet_id' => $agendamento->getPetId(),
-            'servico_id' => $agendamento->getServicoId(),
+            //'pet_id' => $agendamento->getPetId(),
+            //'servico_id' => $agendamento->getServicoId(),
             'concluido' => (int)$agendamento->isConcluido(), // CORREÇÃO
             'metodo_pagamento' => $agendamento->getMetodoPagamento(),
             'horaChegada' => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
@@ -83,6 +86,19 @@ class AgendamentoRepository extends ServiceEntityRepository
             'taxi_dog' => (int)$agendamento->getTaxiDog(),
             'taxa_taxi_dog' => $agendamento->getTaxaTaxiDog(),
         ]);
+
+        return $this->conn->lastInsertId();
+    }
+
+    public function saveAgendamentoServico($baseId, $agendamentoId, $pet, $servico)
+    {
+        $countData = count($pet) -1;
+        for($int = 0; $int <= $countData; $int++){
+            $sql = "INSERT INTO homepet_{$baseId}.agendamento_pet_servico (agendamentoId, petId, servicoId) 
+            VALUES ('{$agendamentoId}', '{$pet[$int]['pet_id']}', '{$servico[$int]}')";
+
+            $this->conn->executeQuery($sql);
+        }
     }
 
     public function update($baseId, Agendamento $agendamento): void
