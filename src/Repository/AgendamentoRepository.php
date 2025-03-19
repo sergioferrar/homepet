@@ -45,9 +45,9 @@ class AgendamentoRepository extends ServiceEntityRepository
                        c.rua, c.numero, c.complemento, c.bairro, c.cidade, c.whatsapp, c.cep,
                        CONCAT(s.nome, ' - ', s.valor) as servico_nome
                 FROM homepet_{$baseId}.agendamento a
-                JOIN homepet_{$baseId}.pet p ON p.id = a.pet_id
-                JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
-                JOIN homepet_{$baseId}.servico s ON a.servico_id = s.id
+                LEFT JOIN homepet_{$baseId}.pet p ON p.id = a.pet_id
+                LEFT JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
+                LEFT JOIN homepet_{$baseId}.servico s ON a.servico_id = s.id
                 WHERE DATE(a.data) = :data
                 ORDER BY a.horaChegada ASC";
 
