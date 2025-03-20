@@ -47,7 +47,7 @@
                                 <div id="servicos-container-0">
                                     <div class="mb-3 servico-item" data-id=0>
                                         <label class="form-label">Serviço</label>
-                                        <select class="form-select" name="servicos[]" required>
+                                        <select class="form-select" name="pets[0][servicos][]" required>
                                             {% for servico in servicos %}
                                                 <option value="{{ servico.id }}">{{ servico.nome }}</option>
                                             {% endfor %}
@@ -122,7 +122,7 @@
 {% block javascripts %}
 
     <script>
-        let petIndex = 1;
+        let petIndex = 0;
 
         function atualizarPetId(input) {
             let petIdInput = input.closest(".pet-group").querySelector(".pet-id");
@@ -152,132 +152,90 @@
             
         }
 
-//        var $conteudo = $('.pet-group').html();
-        function adicionarPet() {
-            /*$('html').on('click', '.addpet', function(){
-                let $clone = $(".pet-group").last().clone(); // Clona o último elemento
-                //$clone.append('<button class="remove-btn">X</button>'); // Adiciona botão de remover
-                $(".custom-pet-group").append($clone); // Adiciona ao container
-            });*/
+$(document).ready(function () {
+    // Adicionar novo pet
+    $(".addpet").click(function () {
+        petIndex++;
 
-            /*const container = document.getElementById("pets-container");
-            const newPet = document.createElement("div");
-            newPet.classList.add("pet-group");
-            newPet.innerHTML = `
-            <div class="mb-3">
-                <label class="form-label">Nome do Pet</label>
-                <input type="text" class="form-control pet-nome" name="pets[\${petIndex}][pet_nome]" list="lista_pets" required oninput="atualizarPetId(this)">
-                <input type="hidden" class="pet-id" name="pets[\${petIndex}][pet_id]">
-            </div>
-            <div id="servicos-container-\${petIndex}">
-                <div class="mb-3 servico-item">
-                    <label class="form-label">Serviço</label>
-                    <select class="form-select" name="pets[\${petIndex}][servicos][]" required>
-                        {% for servico in servicos %}
-                            <option value="{{ servico.id }}">{{ servico.nome }}</option>
+        let petHtml = `
+            <div class="pet-group mt-3" data-pet-index="${petIndex}">
+                <div class="mb-3">
+                    <label class="form-label">Nome do Pet</label>
+                    <input type="text" class="form-control pet-nome" name="pets[${petIndex}][pet_nome]"
+                           list="lista_pets" required oninput="atualizarPetId(this)">
+                    <datalist id="lista_pets">
+                        {% for pet in pets %}
+                            <option data-id="{{ pet.id }}" value="{{ pet.nome }}">
                         {% endfor %}
-                    </select>
+                    </datalist>
+                    <input type="hidden" class="pet-id" name="pets[${petIndex}][pet_id]">
                 </div>
-            </div>
-            <button type="button" class="btn btn-success add-servico mt-2" data-pet-index="\${petIndex}">+ Serviço</button>
-            <div class="mb-3">
-                <label class="form-label">Método de Pagamento</label>
-                <select class="form-select" name="pets[\${petIndex}][metodo_pagamento]">
-                    <option value="dinheiro">Dinheiro</option>
-                    <option value="pix">Pix</option>
-                    <option value="credito">Cartão de Crédito</option>
-                    <option value="debito">Cartão de Débito</option>
-                    <option value="pendente" selected>Pendente</option>
-                </select>
-            </div>
-            `;
-            container.appendChild(newPet);
-            petIndex++;*/
-        }
 
- $(document).ready(function () {
-        let petIndex = 1; // Controla os índices dos pets
-        
-        // Adicionar novo pet
-        $(".addpet").click(function () {
-            let $lastCard = $(".pet-group").last();
-            let $clone = $lastCard.clone(); // Clona a estrutura
+                <div id="servicos-container-${petIndex}" class="servicos-container">
+                    <div class="mb-3 servico-item">
+                        <label class="form-label">Serviço</label>
+                        <select class="form-select" name="pets[${petIndex}][servicos][]" required>
+                            {% for servico in servicos %}
+                                <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
 
-            // Atualiza os índices do novo pet
-            $clone.find("input, select").each(function () {
-                let name = $(this).attr("name");
-                if (name) {
-                    let newName = name.replace(/\d+/, petIndex);
-                    $(this).attr("name", newName);
-                }
-            });
-
-            // Limpa valores dos campos clonados
-            $clone.find("input[type='text'], input[type='hidden']").val("");
-            $clone.find("select").val("");
-
-            // Atualiza o ID do container de serviços
-            $clone.find("#servicos-container-0").attr("id", `servicos-container-${petIndex}`);
-
-            // Atualiza o botão de adicionar serviço
-            $clone.find(".add-servico").attr("data-pet-index", petIndex);
-
-            // Adiciona botão de remover pet
-            $clone.find(".remover-item").html(`
+                <button type="button" class="btn btn-success add-servico mt-2" data-pet-index="${petIndex}">
+                    <i class="bx bxs-wrench"></i> + Serviço
+                </button>
                 <button type="button" class="btn btn-danger remove-pet mt-2">
                     <i class="bx bx-trash"></i> Remover Pet
                 </button>
-            `);
+            </div>
+        `;
 
-            $(".pet-group").last().after($clone); // Adiciona o clone após o último
-            petIndex++;
-        });
-
-        // Remover pet
-        $(document).on("click", ".remove-pet", function () {
-            $(this).closest(".pet-group").remove();
-        });
-
-        // Adicionar serviço dentro de um pet específico
-        $(document).on("click", ".add-servico", function () {
-            let petIndex = $(this).attr("data-pet-index");
-            let $servicosContainer = $(`#servicos-container-${petIndex}`);
-            let $newServico = $servicosContainer.find(".servico-item").first().clone();
-
-            // Limpa o select do serviço
-            $newServico.find("select").val("");
-
-            $servicosContainer.append($newServico);
-        });
+        $(".custom-pet-group").append(petHtml);
     });
 
-    // Atualizar campo hidden com ID do pet
+    // Adicionar serviço ao pet correspondente
+    $(document).on("click", ".add-servico", function () {
+        let petIndex = $(this).data("pet-index");
 
-/*
-        document.addEventListener("DOMContentLoaded", function () {
-            document.querySelectorAll(".add-servico").forEach(button => {
-                button.addEventListener("click", function () {
-                    let petIndex = this.getAttribute("data-pet-index");
-                    let servicosContainer = document.getElementById(`servicos-container-${petIndex}`);
-                    let newServico = document.createElement("div");
-                    newServico.classList.add("servico-item", "mt-2");
-                    newServico.innerHTML = `
-            <label class="form-label">Serviço</label>
-            <select class="form-select" name="pets[${petIndex}][servicos][]" required>
-                {% for servico in servicos %}
-                    <option value="{{ servico.id }}">{{ servico.nome }}</option>
-                {% endfor %}
-            </select>
-            <button type="button" class="btn btn-danger remove-servico mt-2">Remover</button>
-            `;
-                    servicosContainer.appendChild(newServico);
-                });
-            });
-            document.addEventListener("click", function (event) {
-                if (event.target.classList.contains("remove-servico")) {
-                    event.target.parentElement.remove();
-                }
-            });
-        });*/
+        let servicoHtml = `
+            <div class="mb-3 servico-item">
+                <select class="form-select" name="pets[${petIndex}][servicos][]" required>
+                    {% for servico in servicos %}
+                        <option value="{{ servico.id }}">{{ servico.nome }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn btn-danger remove-servico mt-2">
+                    <i class="bx bx-trash"></i> Remover Serviço
+                </button>
+            </div>
+        `;
+
+        $(`#servicos-container-${petIndex}`).append(servicoHtml);
+    });
+
+    // Remover pet
+    $(document).on("click", ".remove-pet", function () {
+        $(this).closest(".pet-group").remove();
+    });
+
+    // Remover serviço
+    $(document).on("click", ".remove-servico", function () {
+        $(this).closest(".servico-item").remove();
+    });
+
+    // Atualizar ID do pet com base na seleção do nome
+    $(document).on("input", ".pet-nome", function () {
+        let input = $(this);
+        let selectedOption = $("#lista_pets option").filter(function () {
+            return $(this).val() === input.val();
+        }).first();
+
+        if (selectedOption.length) {
+            input.siblings(".pet-id").val(selectedOption.data("id"));
+        }
+    });
+});
+
     </script>
 {% endblock %}
