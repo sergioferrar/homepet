@@ -52,11 +52,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for agendamento in agendamentos|sort((a, b) => a.horaChegada <=> b.horaChegada) %}
+                            {% for agendamento in agendamentos %}
                             <tr class="{% if agendamento.metodo_pagamento == 'pendente' %}table-warning text-dark fw-bold{% endif %} {% if agendamento.taxi_dog %}table-info{% endif %}">
                                 <td class="{% if agendamento.concluido %}text-success fw-bold{% endif %}">{{ agendamento.pet_nome }}</td>
                                 <td>
-                                    <a href="javascript:void(0);" class="text-primary fw-bold buscar-cliente" data-pet-id="{{ agendamento.pet_id }}">
+                                    <a href="javascript:void(0);" class="text-primary fw-bold buscar-cliente" data-pet-id="{{ agendamento.dono_id }}">
                                         {{ agendamento.dono_nome }}
                                     </a>
                                 </td>
