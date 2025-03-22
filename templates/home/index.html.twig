@@ -1,17 +1,69 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<div class="jumbotron text-center mb-5" >
-    <h1 class="display-4" color: black >Bem-vindo ao Home Pet Shop</h1>
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-10 col-lg-8">
+                <div class="card shadow-lg welcome-box text-center px-4 py-3 border-0">
+                    <div class="mb-2 d-flex justify-content-center gap-2">
+                        <i class="fa-solid fa-dog fa-lg text-primary"></i>
+                        <i class="fa-solid fa-dog fa-lg text-warning"></i>
+                        <i class="fa-solid fa-dog fa-lg text-info"></i>
+                    </div>
+                    <h2 class="mb-2 fw-semibold fs-4">Bem-vindo ao <span class="text-primary">System Pet</span></h2>
+                    <p class="text-muted mb-0 small">Sistema de gerenciamento de agendamentos, clientes, pets e serviços.</p>
+                </div>
+            </div>
+        </div>
 
-    <p class="lead">Sistema de gerenciamento de agendamentos, clientes, pets e serviços.</p>
-    <hr class="my-4">
-    
-    <a class="btn btn-primary btn-lg text-white mr-2" href="{{ path('agendamento_novo') }}" role="button">Novo Agendamento</a>
-    <a class="btn btn-primary btn-lg text-white mr-2" href="{{ path('cliente_novo') }}" role="button">Cadastro de Cliente</a>
-    <a class="btn btn-primary btn-lg text-white mr-2" href="{{ path('pet_novo') }}" role="button">Cadastro de Pet</a>
-    <a class="btn btn-primary btn-lg text-white" href="{{ path('servico_novo') }}" role="button">Cadastro de Serviço</a>
-</div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-6 col-lg-3">
+                <a href="{{ path('agendamento_novo') }}" class="text-decoration-none">
+                    <div class="card text-white bg-primary card-menu shadow text-center h-100">
+                        <div class="card-body py-3 d-flex flex-column justify-content-center align-items-center">
+                            <i class="fa-solid fa-calendar-plus fa-xl mb-2"></i>
+                            <h6 class="mb-0">Novo Agendamento</h6>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <a href="{{ path('cliente_novo') }}" class="text-decoration-none">
+                    <div class="card text-white bg-success card-menu shadow text-center h-100">
+                        <div class="card-body py-3 d-flex flex-column justify-content-center align-items-center">
+                            <i class="fa-solid fa-user-plus fa-xl mb-2"></i>
+                            <h6 class="mb-0">Cadastro de Cliente</h6>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <a href="{{ path('pet_novo') }}" class="text-decoration-none">
+                    <div class="card text-white bg-warning card-menu shadow text-center h-100">
+                        <div class="card-body py-3 d-flex flex-column justify-content-center align-items-center">
+                            <i class="fa-solid fa-dog fa-xl mb-2" style="color: black;"></i>
+                            <h6 class="mb-0 text-dark">Cadastro de Pet</h6>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <a href="{{ path('servico_novo') }}" class="text-decoration-none">
+                    <div class="card text-white bg-info card-menu shadow text-center h-100">
+                        <div class="card-body py-3 d-flex flex-column justify-content-center align-items-center">
+                            <i class="fa-solid fa-scissors fa-xl mb-2"></i>
+                            <h6 class="mb-0">Cadastro de Serviço</h6>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <br>
+
+
+
 
     <section class="section dashboard">
         <div class="row">
@@ -194,4 +246,8 @@
             </div><!-- End Reports -->
         </div>
     </section>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 {% endblock %}
