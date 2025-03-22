@@ -25,9 +25,19 @@
                 <div class="row justify-content-between">
                     <div class="col-lg-8 col-md-6 col-sm-12">
                         <div class="card shadow-lg border-0">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-6 h3 mt-2">Dados do Pet e serviços</div>
+                                    <div class="col-6">
+                                        <span class="btn btn-primary float-end addpet mt-2" onclick="adicionarPet()">
+                                            <i class="bx bxl-baidu"></i> + Adicionar Pet
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="card-body pt-3">
                                 <div class="pet-group">
-                                    <div class="mb-3">
+                                    <div class="mb-3 hr">
                                         <label class="form-label">Nome do Pet</label>
                                         <input type="text" class="form-control pet-nome" name="pets[0][pet_nome]"
                                                list="lista_pets" required oninput="atualizarPetId(this)">
@@ -39,11 +49,7 @@
                                         </datalist>
                                     </div>
                                 </div>
-                                <span class="btn btn-primary addpet mt-2" onclick="adicionarPet()">
-                                    <i class="bx bxl-baidu"></i> + Adicionar Pet
-                                </span>
                                 
-                                <div class="custom-pet-group"></div>
                                 <div id="servicos-container-0">
                                     <div class="mb-3 servico-item" data-id=0>
                                         <label class="form-label">Serviço</label>
@@ -58,11 +64,15 @@
                                 <button type="button" class="btn btn-success add-servico mt-2"
                                         data-pet-index="0"><i class="bx bxs-wrench"></i> + Serviço
                                 </button>
+                                <div class="custom-pet-group"></div>
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-4 col-md-6 col-sm-12">
                         <div class="card shadow-lg border-0">
+                            <div class="card-header">
+                                <div class="h3 mt-2">Dados adicionais</div>
+                            </div>
                             <div class="card-body pt-3">
                                 <div class="mb-3">
                                     <label class="form-label">Método de Pagamento</label>
@@ -99,9 +109,11 @@
                                     <label class="form-label">Hora de Chegada</label>
                                     <input type="time" class="form-control" name="hora_chegada" required>
                                 </div>
-                                <div class="text-center">
-                                    <button type="submit" class="btn btn-success">Agendar</button>
-                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-success btn-block">
+                                   <i class="bx bxs-save"></i> Agendar
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -122,6 +134,7 @@
 {% block javascripts %}
 
     <script>
+    $(document).ready(function () {
         let petIndex = 0;
 
         function atualizarPetId(input) {
@@ -152,7 +165,6 @@
             
         }
 
-$(document).ready(function () {
     // Adicionar novo pet
     $(".addpet").click(function () {
         petIndex++;
