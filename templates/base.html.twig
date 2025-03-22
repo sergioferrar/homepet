@@ -6,6 +6,57 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
     <title>Home Pet Shop System</title>
+
+      <style>
+        body {
+          background-image: url('{{ asset('images/pataazul.jpg') }}');
+          background-repeat: no-repeat;
+          background-size: 100%;
+          background-position: top center;
+        }
+        .fundacat{
+
+            background-image: url('{{ asset('images/pataazul.jpg') }}');
+            background-size: cover; 
+            background-repeat: no-repeat;
+            background-attachment: local;
+{#             background-position-y: -50px;
+            background-position-X: -1250px; #}
+        }
+{#         .sidebar-nav{
+          background-image: url('{{ asset('images/fundotela.png') }}');
+          background-size: cover;
+          background-repeat: no-repeat;
+          height: 100px;
+        } #}
+
+        .card-menu {
+            border-radius: 1rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            min-height: 130px;
+        }
+
+        .card-menu:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-menu h6 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .welcome-box {
+            border-radius: 1.5rem;
+            background-color: #ffffff;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .welcome-box:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        }
+    </style>
     <meta content="" name="description">
     <meta content="" name="keywords">
 
@@ -40,7 +91,12 @@
     ======================================================== -->
 </head>
 
+{% if app.request.attributes.get('_route') == 'home' %}
+<body class="fundacat">
+{% else %}
 <body>
+{% endif %}
+
 
 <!-- ======= Header ======= -->
 <header id="header" class="header fixed-top d-flex align-items-center">
