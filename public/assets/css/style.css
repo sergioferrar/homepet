@@ -1231,3 +1231,42 @@ h6 {
   font-size: 13px;
   color: #012970;
 }
+
+/*
+ CUSTOMIZAÇÕES DO SERGIO
+*/
+
+
+.fundacat{
+  background-image: url('../../images/pataazul.jpg');
+  background-size: cover; 
+  background-repeat: no-repeat;
+  background-attachment: local;
+}
+
+.card-menu {
+  border-radius: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-height: 130px;
+}
+
+.card-menu:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.card-menu h6 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.welcome-box {
+  border-radius: 1.5rem;
+  background-color: #ffffff;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.welcome-box:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
