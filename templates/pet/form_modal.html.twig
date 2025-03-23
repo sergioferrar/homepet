@@ -1,0 +1,54 @@
+<form id="formEditarPet" method="post" action="{{ path('pet_editar', {'id': pet.id}) }}">
+    <div class="container-sm p-2">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="nome" class="form-label">Nome</label>
+                <input type="text" class="form-control rounded-3" id="nome" name="nome" value="{{ pet.nome }}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="especie" class="form-label">Espécie</label>
+                <input type="text" class="form-control rounded-3" id="especie" name="especie" value="{{ pet.especie }}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="sexo" class="form-label">Sexo</label>
+                <select class="form-select rounded-3" id="sexo" name="sexo" required>
+                    <option value="Macho" {% if pet.sexo == 'Macho' %}selected{% endif %}>Macho</option>
+                    <option value="Fêmea" {% if pet.sexo == 'Fêmea' %}selected{% endif %}>Fêmea</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="porte" class="form-label">Porte</label>
+                <input type="text" class="form-control rounded-3" id="porte" name="porte" value="{{ pet.porte }}">
+            </div>
+            <div class="col-md-6">
+                <label for="raca" class="form-label">Raça</label>
+                <select class="form-select rounded-3" id="raca" name="raca">
+                    {% for raca in racas %}
+                        <option value="{{ raca }}" {% if pet.raca == raca %}selected{% endif %}>{{ raca }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="idade" class="form-label">Idade</label>
+                <input type="number" class="form-control rounded-3" id="idade" name="idade" value="{{ pet.idade }}">
+            </div>
+            <div class="col-md-12">
+                <label for="observacoes" class="form-label">Observações</label>
+                <textarea class="form-control rounded-3" id="observacoes" name="observacoes" rows="2">{{ pet.observacoes }}</textarea>
+            </div>
+            <div class="col-md-12">
+                <label for="dono_id" class="form-label">Dono</label>
+                <select class="form-select rounded-3" id="dono_id" name="dono_id" required>
+                    {% for cliente in clientes %}
+                        <option value="{{ cliente.id }}" {% if pet.dono_id == cliente.id %}selected{% endif %}>{{ cliente.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="text-end mt-3">
+            <button type="button" class="btn btn-primary rounded-pill px-4 shadow" onclick="submitEditarPet(this)">
+                💾 Salvar
+            </button>
+        </div>
+    </div>
+</form>

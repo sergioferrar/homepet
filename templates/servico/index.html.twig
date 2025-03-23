@@ -3,44 +3,210 @@
 {% block stylesheets %}
 {{ parent() }}
 <style>
-    .mr-custom {
-        margin-right: 8px; /* Espaçamento entre os botões */
+    .icon-pets {
+        font-size: 2rem;
+        margin: 0 8px;
+    }
+
+    .floating-title {
+        background-color: #ffffff;
+        padding: 20px 40px;
+        border-radius: 15px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        display: inline-block;
+        animation: floatIn 0.6s ease;
+    }
+
+    @keyframes floatIn {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .card-pet {
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s ease;
+    }
+
+    .card-pet:hover {
+        transform: translateY(-5px);
+    }
+
+    .valor-label {
+        font-size: 1.1rem;
+        color: #198754;
+        font-weight: bold;
+    }
+
+    .action-select {
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-size: 0.95rem;
+    }
+
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px; /* espaçamento entre botões */
+        margin-top: 30px;
+    }
+
+    .pagination-wrapper button {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        color: #0d6efd;
+        font-weight: 500;
+        padding: 6px 16px;
+        border-radius: 999px; /* borda redondinha */
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+        display: inline-block;
+        min-width: 44px;
+    }
+
+    .pagination-wrapper button:hover {
+        background-color: #0d6efd;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .pagination-wrapper button.active {
+        background-color: #0d6efd;
+        color: #fff;
+        font-weight: bold;
+        border: 1px solid #0a58ca;
     }
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-5">
-    <h1>Serviços</h1>
-    <a href="{{ path('servico_novo') }}" class="btn btn-primary mb-3">Novo Serviço</a>
+    <div class="text-center mb-4">
+        <h1 class="floating-title">
+            <span class="icon-pets">🐶</span>
+            Serviços
+            <span class="icon-pets">🐱</span>
+        </h1>
+    </div>
 
-    <!-- Bordered Table -->
-    <table class="table table-bordered datatable">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Descrição</th>
-                <th>Valor</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
+    <p class="mb-4 text-center">
+        <span class="icon-pets">🐾</span> Lista de serviços oferecidos
+    </p>
+
+    <div class="text-end mb-4">
+        <a href="{{ path('servico_novo') }}" class="btn btn-primary">
+            ➕ Novo Serviço
+        </a>
+    </div>
+
+    <div class="row" id="card-container">
         {% for servico in servicos %}
-            <tr>
-                <td>{{ servico.nome }}</td>
-                <td>{{ servico.descricao }}</td>
-                <td>R$ {{ servico.valor|number_format(2, ',', '.') }}</td>
-                <td>
-                    <div class="btn-group" role="group" aria-label="Basic example">
-                        <a href="{{ path('servico_editar', {'id': servico.id}) }}" class="btn btn-warning btn-sm mr-custom">Editar</a>
-                        <form method="post" action="{{ path('servico_deletar', {'id': servico.id}) }}" class="d-inline">
-                            <button type="submit" class="btn btn-danger btn-sm">Deletar</button>
-                        </form>
+            <div class="col-md-4 mb-4 card-servico">
+                <div class="card card-pet h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">🐶 {{ servico.nome }}</h5>
+                        <p class="card-text">📄 {{ servico.descricao }}</p>
+                        <p class="valor-label">💰 R$ {{ servico.valor|number_format(2, ',', '.') }}</p>
+
+                        <select class="form-select action-select mt-3" onchange="handleAction(this, {{ servico.id }})">
+                            <option selected disabled>🔽 Ações</option>
+                            <option value="editar">✏️ Editar</option>
+                            <option value="deletar">🗑️ Deletar</option>
+                        </select>
+                        <form id="delete-form-{{ servico.id }}" method="post" action="{{ path('servico_deletar', {'id': servico.id}) }}" style="display: none;"></form>
                     </div>
-                </td>
-            </tr>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12 text-center">
+                <div class="alert alert-info">Nenhum serviço cadastrado.</div>
+            </div>
         {% endfor %}
-        </tbody>
-    </table>
+    </div>
+
+    <div class="pagination-wrapper" id="pagination"></div>
 </div>
+
+<script>
+    function handleAction(selectElement, id) {
+        const action = selectElement.value;
+        if (action === 'editar') {
+            window.location.href = '/servico/editar/' + id;
+        } else if (action === 'deletar') {
+            if (confirm('Tem certeza que deseja deletar este serviço?')) {
+                document.getElementById('delete-form-' + id).submit();
+            } else {
+                selectElement.selectedIndex = 0;
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const cards = Array.from(document.querySelectorAll('.card-servico'));
+        const pagination = document.getElementById('pagination');
+        const cardsPerPage = 6;
+        const totalPages = Math.ceil(cards.length / cardsPerPage);
+        let currentPage = 1;
+
+        function renderPage(page) {
+            currentPage = page;
+            const start = (page - 1) * cardsPerPage;
+            const end = page * cardsPerPage;
+
+            cards.forEach((card, index) => {
+                card.style.display = (index >= start && index < end) ? 'block' : 'none';
+            });
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            pagination.innerHTML = '';
+
+            // Botão Anterior
+            if (currentPage > 1) {
+                const prev = document.createElement('button');
+                prev.textContent = '◀️';
+                prev.addEventListener('click', () => renderPage(currentPage - 1));
+                pagination.appendChild(prev);
+            }
+
+            // Páginas visíveis: no máximo 4
+            let startPage = Math.max(currentPage - 1, 1);
+            let endPage = Math.min(startPage + 3, totalPages);
+            if (endPage - startPage < 3 && startPage > 1) {
+                startPage = Math.max(endPage - 3, 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.classList.toggle('active', i === currentPage);
+                btn.addEventListener('click', () => renderPage(i));
+                pagination.appendChild(btn);
+            }
+
+            // Botão Próximo
+            if (currentPage < totalPages) {
+                const next = document.createElement('button');
+                next.textContent = '▶️';
+                next.addEventListener('click', () => renderPage(currentPage + 1));
+                pagination.appendChild(next);
+            }
+        }
+
+        if (cards.length > 0) {
+            renderPage(1);
+        }
+    });
+</script>
 {% endblock %}

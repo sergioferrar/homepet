@@ -2,81 +2,44 @@
 
 {% block stylesheets %}
 <style>
-    body {
-        background-color: #eef5ff;
-        font-family: 'Arial', sans-serif;
+    .modal-backdrop {
+        z-index: 104 !important;
     }
-    .table-container {
-        background: #ffffff;
+    .modal-dialog {
+        max-width: 600px;
+        margin: 1.75rem auto;
+    }
+    .modal-content {
         border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
     }
-    .pagetitle h1 {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #0056b3;
-        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
-    }
-    .btn-primary {
-        background-color: #0056b3;
-        border-color: #0056b3;
-        font-weight: bold;
-    }
-    .btn-primary:hover {
-        background-color: #004494;
-        border-color: #004494;
-    }
-    .table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0 10px;
-    }
-    .table thead th {
-        background: linear-gradient(45deg, #0056b3, #007bff);
-        color: white;
-        font-weight: bold;
-        padding: 12px;
+    .modal-body form .form-control,
+    .modal-body form .form-select {
         border-radius: 10px;
-        text-transform: uppercase;
-        text-align: center;
+        margin-bottom: 15px;
     }
-    .table tbody tr {
-        background-color: white;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border-radius: 10px;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    .modal-body h5 {
+        font-weight: 600;
+        font-size: 1.4rem;
     }
-    .table tbody tr:hover {
-        transform: translateY(-5px);
-        box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
-    }
-    .table tbody td {
-        padding: 12px;
-        text-align: center;
-        font-weight: 500;
-        border-bottom: 1px solid #ddd;
-        background: white;
-        border-radius: 10px;
-    }
-    .dropdown-menu {
-        border-radius: 10px;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .dropdown-item:hover {
-        background-color: #cce5ff;
+    .modal-footer {
+        justify-content: flex-end;
     }
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-5">
-    <h1 class="text-primary fw-bold text-center">Lista de Pets</h1>
-    <div class="d-flex justify-content-between mb-3">
-        <a href="{{ path('pet_novo') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold text-light shadow">+ Novo Pet</a>
+    <div class="text-center mb-4">
+        <h1 class="page-title">🐾 Lista de Pets</h1>
     </div>
 
-    <!-- Container da Tabela -->
+    <div class="d-flex justify-content-between mb-3">
+        <a href="{{ path('pet_novo') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold text-light shadow">
+            + Novo Pet
+        </a>
+    </div>
+
     <div class="table-container">
         <div class="table-responsive">
             <table class="table table-hover table-striped table-bordered datatable">
@@ -96,7 +59,7 @@
                 <tbody>
                 {% for pet in pets %}
                     <tr>
-                        <td class="fw-bold text-primary">{{ pet.nome }}</td>
+                        <td class="fw-bold">{{ pet.nome }}</td>
                         <td>{{ pet.especie }}</td>
                         <td>{{ pet.sexo }}</td>
                         <td>{{ pet.raca }}</td>
@@ -105,17 +68,17 @@
                         <td>{{ pet.observacoes }}</td>
                         <td class="fw-bold">{{ pet.dono_nome }}</td>
                         <td class="text-center">
-                            <div class="dropdown">
-                                <button class="btn btn-primary btn-sm dropdown-toggle rounded-pill px-3 fw-bold text-light shadow" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    Ações
-                                </button>
-                                <div class="dropdown-menu rounded-3 shadow">
-                                    <a class="dropdown-item" href="{{ path('pet_editar', {'id': pet.id}) }}">Editar</a>
-                                    <form method="post" action="{{ path('pet_deletar', {'id': pet.id}) }}" class="d-inline">
-                                        <button type="submit" class="dropdown-item text-danger">Deletar</button>
-                                    </form>
-                                </div>
-                            </div>
+                            <select class="form-select action-select"
+                                    data-edit-url="{{ path('pet_editar', {'id': pet.id}) }}"
+                                    data-id="{{ pet.id }}"
+                                    onchange="handlePetAction(this)">
+                                <option selected disabled>🔽 Ações</option>
+                                <option value="editar">✏️ Editar</option>
+                                <option value="deletar">🗑️ Deletar</option>
+                            </select>
+                            <form id="delete-pet-form-{{ pet.id }}" method="post"
+                                  action="{{ path('pet_deletar', {'id': pet.id}) }}"
+                                  style="display: none;"></form>
                         </td>
                     </tr>
                 {% endfor %}
@@ -124,4 +87,91 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de edição -->
+<div class="modal fade" id="modalEditarPet" tabindex="-1" aria-labelledby="modalEditarPetLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content p-3">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditarPetLabel">Editar Pet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body" id="editarPetContent">
+                <!-- Conteúdo via AJAX -->
+                <div class="text-center">Carregando...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de sucesso -->
+<div id="toastSuccess" class="toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true">
+  <div class="d-flex">
+    <div class="toast-body">
+      Pet atualizado com sucesso! 🐾
+    </div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+  </div>
+</div>
+
+<script>
+    function handlePetAction(selectElement) {
+        const action = selectElement.value;
+        const id = selectElement.getAttribute('data-id');
+        const editUrl = selectElement.getAttribute('data-edit-url');
+
+        if (action === 'editar') {
+            const modal = new bootstrap.Modal(document.getElementById('modalEditarPet'));
+            document.getElementById('editarPetContent').innerHTML = '<div class="text-center">Carregando...</div>';
+            fetch(editUrl)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('editarPetContent').innerHTML = html;
+                });
+            modal.show();
+        } else if (action === 'deletar') {
+            if (confirm('Tem certeza que deseja deletar este pet?')) {
+                document.getElementById('delete-pet-form-' + id).submit();
+            } else {
+                selectElement.selectedIndex = 0;
+            }
+        }
+    }
+
+    function submitEditarPet(button) {
+        const form = document.getElementById('formEditarPet');
+        const url = form.action;
+        const formData = new FormData(form);
+
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Erro ao salvar');
+            return response.text();
+        })
+        .then(() => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarPet'));
+            modal.hide();
+            showToast('Pet atualizado com sucesso! 🐶');
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        })
+        .catch(() => {
+            alert('Erro ao salvar o pet. Verifique os dados.');
+        });
+    }
+
+    function showToast(msg) {
+        const toastEl = document.getElementById('toastSuccess');
+        toastEl.querySelector('.toast-body').innerText = msg;
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+</script>
 {% endblock %}
