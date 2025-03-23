@@ -92,46 +92,22 @@ class PetController extends DefaultController
     }
 
 
-    /**
-     * @Route("/editar/{id}", name="pet_editar", methods={"GET", "POST"})
-     */
-    public function editar(Request $request, int $id): Response
-    {
-        $pet = $this->getRepositorio(Pet::class)->findPetById($this->session->get('userId'), $id);
-        if (!$pet) {
-            throw $this->createNotFoundException('O pet não foi encontrado');
-        }
+/**
+ * @Route("/editar/{id}", name="pet_editar", methods={"GET", "POST"})
+ */
+public function editar(Request $request, int $id): Response
+{
+    $pet = $this->getRepositorio(Pet::class)->findPetById($this->session->get('userId'), $id);
+    if (!$pet) {
+        throw $this->createNotFoundException('O pet não foi encontrado');
+    }
 
-        if ($request->isMethod('POST')) {
-            $donoId = $request->get('dono_id');
+    $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($this->session->get('userId'));
 
-            $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->session->get('userId'),$donoId);
-            if (!$cliente) {
-                throw $this->createNotFoundException('O cliente não foi encontrado');
-            }
-            $pets = new Pet();
-            $pets->setNome($request->get('nome') ?? '')
-                ->setId($pet['id'])
-                ->setEspecie($request->get('especie') ?? '')
-                ->setSexo($request->get('sexo') ?? '')
-                ->setRaca($request->get('raca') ?? '')
-                ->setPorte($request->get('porte') ?? '')
-                ->setIdade($request->get('idade') ?? 0)
-                ->setObservacoes($request->get('observacoes') ?? '')
-                ->setDono_Id($donoId);
-
-            $this->getRepositorio(Pet::class)->update($this->session->get('userId'), $pets);
-            return $this->redirectToRoute('pet_index');
-        }
-
-        $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($this->session->get('userId'));
-
-        // Definição da lista de raças para passar à view
-        $racas = [
-            "Border Collie", "Poodle", "Pastor Alemão", "Golden Retriever", "Doberman Pinscher",
-            "Pastor de Shetland", "Labrador Retriever", "Papillion", "Rottweiler", "Australian Cattle Dog",
+    $racas = ["Border Collie", "Poodle", "Pastor Alemão", "Golden Retriever", "Doberman Pinscher",
+            "Pastor de Shetland", "Labrador Retriever", "Papillion", "Rottweiler", "Cão de gado australiano",
             "Welsh Corgi Pembroke", "Schnauzer Mini", "Springer Spaniel", "Pastor Belga Tervuren",
-            "Pastor Belga Groenandel", "Schipperke", "Collie", "Keeshound", "Braco Alemão de Pelo Curto",
+            "Pastor Belga Groenandel", "Schipperke", "Collie", "Keeshound", "Braço Alemão de Pelo Curto",
             "Cocker Spaniel Inglês", "Flat Coated Retriever", "Schnauzer Standard", "Spaniel Brittany",
             "Cocker Spaniel Americano", "Weimaraner", "Pastor Belga Malinois", "Bernese Montain Dog",
             "Spitz Alemão Anão", "Cão D'água Irlandês", "Vizsla", "Cardigan Welsh Corgi",
@@ -147,22 +123,55 @@ class PetController extends DefaultController
             "Spaniel do Tibet", "Foxhound Inglês", "Foxhound Americano", "Greyhound", "Grifo de Aponte de Pelo Duro",
             "West Highland White Terrier", "Deerhound Escocês", "Boxer", "Dogue Alemão", "Teckels",
             "Stafforshire Bull Terrier", "Malamute do Alaska", "Whippet", "Shar Pei", "Fox Terrier de Pelo Duro",
-            "Rodesiano", "Ibizan Hound", "Welsh Terrier", "Irish Terrier", "Boston Terrier", "Akita",
+            "Rodesiano", "Ibiza Hound", "Welsh Terrier", "Irish Terrier", "Boston Terrier","Akita",
             "Skye Terrier", "Norfolk Terrier", "Sealyham Terrier", "Pug", "Bulldog Francês", "Grifo Belga",
             "Maltês", "Galgo Italiano", "Cão de Crista Chinês", "Dandie Dinmont Terrier",
             "Pequeno Grifo da Vendéia", "Terrier Tibetano", "Chin Japonês", "Lakeland Terrier",
-            "Old English Sheepdog", "Cão dos Pirineus", "São Bernardo", "Scottish Terrier", "Bull Terrier",
+            "Old Pastor Inglês", "Cão dos Pirineus", "São Bernardo", "Scottish Terrier", "Bull Terrier",
             "Chihuahua", "Lhasa Apso", "Bullmastiff", "Shih Tzu", "Basset Hound", "Mastiff", "Beagle",
-            "Pequinês", "Bloodhound", "Borzoi", "Chow Chow", "Bulldog", "Basenji", "Afghan Hound"
-        ];
+            "Pequinês", "Bloodhound", "Borzoi", "Chow Chow", "Bulldog", "Basenji", "Afghan Hound"];
+    sort($racas, SORT_LOCALE_STRING);
 
-        sort($racas, SORT_LOCALE_STRING);
-        return $this->render('pet/editar.html.twig', [
+    if ($request->isMethod('POST')) {
+        $donoId = $request->get('dono_id');
+
+        $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->session->get('userId'), $donoId);
+        if (!$cliente) {
+            throw $this->createNotFoundException('O cliente não foi encontrado');
+        }
+
+        $pets = new Pet();
+        $pets->setId($pet['id'])
+            ->setNome($request->get('nome') ?? '')
+            ->setEspecie($request->get('especie') ?? '')
+            ->setSexo($request->get('sexo') ?? '')
+            ->setRaca($request->get('raca') ?? '')
+            ->setPorte($request->get('porte') ?? '')
+            ->setIdade($request->get('idade') ?? 0)
+            ->setObservacoes($request->get('observacoes') ?? '')
+            ->setDono_Id($donoId);
+
+        $this->getRepositorio(Pet::class)->update($this->session->get('userId'), $pets);
+        return $this->redirectToRoute('pet_index');
+    }
+
+    // Se for uma requisição AJAX, renderiza apenas o formulário para o modal
+    if ($request->isXmlHttpRequest()) {
+        return $this->render('pet/_form_modal.html.twig', [
             'pet' => $pet,
             'clientes' => $clientes,
             'racas' => $racas
         ]);
     }
+
+    // Caso contrário, renderiza a página inteira normalmente
+    return $this->render('pet/editar.html.twig', [
+        'pet' => $pet,
+        'clientes' => $clientes,
+        'racas' => $racas
+    ]);
+}
+
 
 
     /**
