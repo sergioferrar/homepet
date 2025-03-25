@@ -54,7 +54,7 @@
                                     <div id="servicos-container-0">
                                         <div class="mb-3 servico-item" data-id=0>
                                             <label class="form-label">Serviço</label>
-                                            <select class="form-select" name="pets[{{row.id}}][servicos][]" required>
+                                            <select class="form-select" name="pets[{{row.id}}][servicos][]" disabled>
                                                 {% for servico in servicos %}
                                                     <option {% if row.servicoId == servico.id %} selected {% endif %} value="{{ servico.id }}">{{ servico.nome }}</option>
                                                 {% endfor %}
@@ -135,8 +135,8 @@
                                 <div class="mb-3">
                                     <label class="form-label">Táxi Dog</label>
                                     <select class="form-select taxi-dog" name="taxi_dog">
-                                        <option {% if agendamento.taxi_dog == 'nao' %} selected {% endif %} value="nao" selected>Não</option>
-                                        <option {% if agendamento.taxi_dog == 'sim' %} selected {% endif %} value="sim">Sim</option>
+                                        <option {% if agendamento.taxi_dog == '0' %} selected {% endif %} value="0">Não</option>
+                                        <option {% if agendamento.taxi_dog == '1' %} selected {% endif %} value="1">Sim</option>
                                     </select>
                                 </div>
                                 <div class="mb-3 taxa-container" {% if agendamento.taxi_dog == 'nao' %} style="display: none;" {% endif  %}>

@@ -117,13 +117,51 @@ class AgendamentoRepository extends ServiceEntityRepository
                 WHERE id = :id";
 
         $this->conn->executeQuery($sql, [
-            'data'             => $agendamento->getData()->format('Y-m-d H:i:s'),
-            'pet_id'           => $agendamento->getPetId(),
-            'servico_id'       => $agendamento->getServicoId(),
+            'data' => $agendamento->getData()->format('Y-m-d H:i:s'),
+            'pet_id' => $agendamento->getPetId(),
+            'servico_id' => $agendamento->getServicoId(),
+            'concluido' => (int) $agendamento->isConcluido(),
+            'metodo_pagamento' => $agendamento->getMetodoPagamento(),
+            'horaChegada' => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
+            'horaSaida' => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
+            'taxi_dog' => (int) $agendamento->getTaxiDog(),
+            'taxa_taxi_dog' => $agendamento->getTaxaTaxiDog(),
+            'id' => $agendamento->getId(),
+        ]);
+    }
+
+    public function updatePagamento($baseId, Agendamento $agendamento): void
+    {
+        $sql = "UPDATE homepet_{$baseId}.agendamento
+                SET metodo_pagamento = :metodo_pagamento
+                WHERE id = :id";
+
+        $this->conn->executeQuery($sql, [
+            'metodo_pagamento' => $agendamento->getMetodoPagamento(),
+            'id' => $agendamento->getId(),
+        ]);
+    }   
+
+    public function updateSaida($baseId, Agendamento $agendamento): void
+    {
+        $sql = "UPDATE homepet_{$baseId}.agendamento
+                SET horaSaida = :horaSaida
+                WHERE id = :id";
+        $this->conn->executeQuery($sql, [
+            'horaSaida' => $agendamento->getHoraSaida()->format('Y-m-d H:i:s'),
+            'id' => $agendamento->getId(),
+        ]);
+    }    
+
+    public function updateAgendamento($baseId, Agendamento $agendamento): void
+    {
+        $sql = "UPDATE homepet_{$baseId}.agendamento
+                SET concluido = :concluido, metodo_pagamento = :metodo_pagamento, taxi_dog = :taxi_dog, taxa_taxi_dog = :taxa_taxi_dog
+                WHERE id = :id";
+
+        $this->conn->executeQuery($sql, [
             'concluido'        => (int) $agendamento->isConcluido(),
             'metodo_pagamento' => $agendamento->getMetodoPagamento(),
-            'horaChegada'      => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
-            'horaSaida'        => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
             'taxi_dog'         => (int) $agendamento->getTaxiDog(),
             'taxa_taxi_dog'    => $agendamento->getTaxaTaxiDog(),
             'id'               => $agendamento->getId(),
