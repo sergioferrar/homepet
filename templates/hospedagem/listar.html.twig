@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="pagetitle">
+        <h1 class="text-center shadow-sm rounded p-2">🐾 Hospedagens Agendadas</h1>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-striped datatable">
+                <thead>
+                    <tr>
+                        {# <th>Cliente</th> #}
+                        <th>Pet</th>
+                        <th>Data Entrada</th>
+                        <th>Data Saída</th>
+                        <th>Valor</th>
+                        <th>Observações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in dados %}
+                        <tr>
+                            {# <td>{{ item.cliente_nome }}</td> #}
+                            <td>{{ item.pet_nome }}</td>
+                            <td>{{ item.data_entrada|date('d/m/Y') }}</td>
+                            <td>{{ item.data_saida|date('d/m/Y') }}</td>
+                            <td>R$ {{ item.valor }}</td>
+                            <td>{{ item.observacoes }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">Nenhuma hospedagem cadastrada.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

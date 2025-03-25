@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="pagetitle">
+    <h1 class="text-center shadow-sm rounded p-2">🐶 Agendar Hospedagem</h1>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="POST" action="{{ path('hospedagem_agendar') }}">
+
+            <div class="mb-3">
+                <label class="form-label">Pet (Dono - Nome):</label>
+                <input type="text" name="pet_nome" class="form-control" list="lista_pets" required oninput="atualizarPetId(this)">
+                <datalist id="lista_pets">
+                    {% for pet in pets %}
+                        <option data-id="{{ pet.id }}" value="{{ pet.dono_nome ~ ' - ' ~ pet.nome }}"></option>
+                    {% endfor %}
+                </datalist>
+                <input type="hidden" name="pet_id" id="pet_id_hidden">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Data Entrada:</label>
+                <input type="date" name="dataEntrada" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Data Saída:</label>
+                <input type="date" name="dataSaida" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Valor (R$):</label>
+                <input type="number" name="valor" class="form-control" step="0.01" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Observações:</label>
+                <textarea name="observacoes" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-calendar-plus"></i> Agendar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function atualizarPetId(input) {
+        const datalist = document.getElementById('lista_pets');
+        const hiddenInput = document.getElementById('pet_id_hidden');
+        const value = input.value;
+
+        hiddenInput.value = '';
+
+        for (let option of datalist.options) {
+            if (option.value === value) {
+                hiddenInput.value = option.dataset.id;
+                break;
+            }
+        }
+    }
+</script>
+{% endblock %}
