@@ -92,7 +92,18 @@
                                     </form>
                                 </td>
                                 <td>
-                                    <form method="post" action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}" class="reload-form">
+                                    <div class="dropdown">
+  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Ações
+  </button>
+  <ul class="dropdown-menu">
+    <li><a data-acao="editar" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}" href="javascript:void(0);" class="reload-form dropdown-item"><i class="bi pencil-square"></i> Editar</a></li>
+    <li><a data-acao="concluir" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}" href="javascript:void(0);" class="reload-form dropdown-item">Concluir</a></li>
+    <li><a data-acao="pendente" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}" href="javascript:void(0);" class="reload-form dropdown-item text-bg-warning">Pendente</a></li>
+    <li><a data-acao="deletar" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}" href="javascript:void(0);" class="reload-form dropdown-item">Deletar</a></li>
+  </ul>
+</div>
+                                    <form method="post" action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}" class="reload-form d-none">
                                         <select name="acao" class="form-control">
                                             <option value="">Selecione</option>
                                             <option value="editar">Editar</option>
@@ -155,7 +166,20 @@
                 sessionStorage.removeItem("scrollPos");
             }
         }
+        
+        var url = $('meta[name="baseurl"]').attr('content');
 
+        $('.reload-form').on('click', function(){
+            var rota = $(this).data('action');
+            var acao = $(this).data('acao');
+            var id = $(this).data('id');
+            console.log(acao);
+            if(acao == 'editar'){
+                return window.location.href= url+'agendamento/editar/'+id
+            }
+            return false;
+        });
+/*
         // Enviar os formulários via AJAX para evitar resposta JSON na tela
         document.querySelectorAll(".reload-form").forEach(form => {
             form.addEventListener("change", function (event) {
@@ -179,13 +203,11 @@
                 })
                 .catch(error => console.error("Erro na requisição AJAX:", error));
             });
-        });
+        });*/
 
         restaurarPosicaoScroll();
     });
-</script>
 
-<script>
     $(function(){
         $('.buscar-cliente').on('click', function(){
             var petId = $(this).data('pet-id');
