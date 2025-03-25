@@ -69,13 +69,13 @@
                                 <td>{{ agendamento.taxa_taxi_dog is not null ? "R$ " ~ agendamento.taxa_taxi_dog : '-' }}</td>
                                 <td>{{ agendamento.horaChegada is defined and agendamento.horaChegada is not null ? agendamento.horaChegada|date('H:i') : 'Não definido' }}</td>
                                 <td>
-                                    <form method="post" action="{{ path('agendamento_alterar_saida', {'id': agendamento.id}) }}" class="reload-form">
+                                    <form method="post" action="{{ path('agendamento_alterar_saida', {'id': agendamento.id}) }}" class="reload-form-select">
                                         <input type="time" name="hora_saida" class="form-control"
                                                value="{{ agendamento.horaSaida is defined and agendamento.horaSaida is not null ? agendamento.horaSaida|date('H:i') : '' }}">
                                     </form>
                                 </td>
                                 <td>
-                                    <form method="post" action="{{ path('agendamento_alterar_pagamento', {'id': agendamento.id}) }}" class="reload-form">
+                                    <form method="post" action="{{ path('agendamento_alterar_pagamento', {'id': agendamento.id}) }}" class="reload-form-select">
                                         <select name="metodo_pagamento" class="form-control bg-light">
                                             <option value="dinheiro" {% if agendamento.metodo_pagamento == 'dinheiro' %}selected{% endif %}>Dinheiro</option>
                                             <option value="pix" {% if agendamento.metodo_pagamento == 'pix' %}selected{% endif %}>Pix</option>
@@ -97,23 +97,13 @@
     Ações
   </button>
   <ul class="dropdown-menu">
-    <li><a data-acao="editar" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}" href="javascript:void(0);" class="reload-form dropdown-item"><i class="bi pencil-square"></i> Editar</a></li>
-    <li><a data-acao="concluir" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}" href="javascript:void(0);" class="reload-form dropdown-item">Concluir</a></li>
-    <li><a data-acao="pendente" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}" href="javascript:void(0);" class="reload-form dropdown-item text-bg-warning">Pendente</a></li>
-    <li><a data-acao="deletar" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}" href="javascript:void(0);" class="reload-form dropdown-item">Deletar</a></li>
+    <li><a data-acao="editar" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_editar', {'id': agendamento.id}) }}" href="javascript:void(0);" class="reload-form dropdown-item"><i class="bi pencil-square"></i> Editar</a></li>
+    <li><a data-acao="concluir" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'concluir'}) }}" href="javascript:void(0);" class="reload-form dropdown-item">Concluir</a></li>
+    <li><a data-acao="pendente" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'pendente'}) }}" href="javascript:void(0);" class="reload-form dropdown-item text-bg-warning">Pendente</a></li>
+    <li><a data-acao="deletar" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'deletar'}) }}" href="javascript:void(0);" class="reload-form dropdown-item">Deletar</a></li>
   </ul>
 </div>
-                                    <form method="post" action="{{ path('agendamento_executar_acao', {'id': agendamento.id}) }}" class="reload-form d-none">
-                                        <select name="acao" class="form-control">
-                                            <option value="">Selecione</option>
-                                            <option value="editar">Editar</option>
-                                            {% if not agendamento.concluido %}
-                                                <option value="concluir">Concluir</option>
-                                                <option value="pendente" class="bg-warning text-dark">Pendente</option>
-                                            {% endif %}
-                                            <option value="deletar">Deletar</option>
-                                        </select>
-                                    </form>
+                                    
                                 </td>
                             </tr>
                             {% endfor %}
@@ -173,11 +163,32 @@
             var rota = $(this).data('action');
             var acao = $(this).data('acao');
             var id = $(this).data('id');
+            
+            return window.location.href= rota
+            
+        });
+
+        $('.reload-form-select').on('change', function(){
+            var rota = $(this).attr('action');
+            var acao = $(this).data('acao');
+            var id = $(this).data('id');
             console.log(acao);
-            if(acao == 'editar'){
-                return window.location.href= url+'agendamento/editar/'+id
-            }
-            return false;
+
+            let formData = new FormData(this);
+            fetch(rota, {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "sucesso") {
+                        location.reload(); // Recarrega a página mantendo o scroll
+                    } else {
+                        alert("Erro: " + data.mensagem);
+                    }
+                })
+                .catch(error => console.error("Erro na requisição AJAX:", error));
+            
         });
 /*
         // Enviar os formulários via AJAX para evitar resposta JSON na tela

@@ -104,13 +104,15 @@ class AgendamentoController extends DefaultController
             
             $agendamento = new Agendamento();
             $agendamento->setId($id);
-            $agendamento->setData(new \DateTime($request->get('data')));
+            //$agendamento->setData(new \DateTime($request->get('data')));
             $agendamento->setConcluido((bool) $request->get('concluido'));
             $agendamento->setMetodoPagamento($dados['metodo_pagamento']);
-            dd($agendamento);
-            $this->getRepositorio(Agendamento::class)->update($this->session->get('userId'), $agendamento);
+            $agendamento->setTaxiDog($data['taxi_dog'] === 'sim');
+            $agendamento->setTaxaTaxiDog($data['taxa_taxi_dog'] ?? 0);
 
-            return $this->redirectToRoute('agendamento_index', ['data' => $agendamento->getData()->format('Y-m-d')]);
+            $this->getRepositorio(Agendamento::class)->updateAgendamento($this->session->get('userId'), $agendamento);
+
+            return $this->redirectToRoute('agendamento_index', ['data' => (new \DateTime($request->get('data')))->format('Y-m-d')]);
         }
 
         return $this->render('agendamento/editar.html.twig', [
@@ -196,17 +198,9 @@ class AgendamentoController extends DefaultController
 
         $agendamento = new Agendamento();
         $agendamento->setId($id);
-        $agendamento->setData(new \DateTime($dados['data']));
-        $agendamento->setPetId($dados['pet_id']);
-        $agendamento->setServicoId($dados['servico_id']);
-        $agendamento->setConcluido((bool) $dados['concluido']);
         $agendamento->setMetodoPagamento($metodoPagamento);
-        $agendamento->setHoraChegada(! empty($dados['horaChegada']) ? new \DateTime($dados['horaChegada']) : null);
-        $agendamento->setHoraSaida(! empty($dados['horaSaida']) ? new \DateTime($dados['horaSaida']) : null);
-        $agendamento->setTaxiDog((bool) $dados['taxi_dog']);
-        $agendamento->setTaxaTaxiDog($dados['taxa_taxi_dog']);
 
-        $repo->update($this->session->get('userId'), $agendamento);
+        $repo->updatePagamento($this->session->get('userId'), $agendamento);
 
         return $this->json(['status' => 'sucesso']);
     }
@@ -227,17 +221,9 @@ class AgendamentoController extends DefaultController
         if ($horaSaida) {
             $agendamento = new Agendamento();
             $agendamento->setId($id);
-            $agendamento->setData(new \DateTime($dados['data']));
-            $agendamento->setPetId($dados['pet_id']);
-            $agendamento->setServicoId($dados['servico_id']);
-            $agendamento->setConcluido((bool) $dados['concluido']);
-            $agendamento->setMetodoPagamento($dados['metodo_pagamento']);
-            $agendamento->setHoraChegada($dados['horaChegada'] ? new \DateTime($dados['horaChegada']) : null);
-            $agendamento->setHoraSaida(new \DateTime(date('Y-m-d') . ' ' . $horaSaida));
-            $agendamento->setTaxiDog((bool) $dados['taxi_dog']);
-            $agendamento->setTaxaTaxiDog($dados['taxa_taxi_dog']);
+            $agendamento->setHoraSaida((new \DateTime(date('Y-m-d') . ' ' . $horaSaida)));
 
-            $repo->update($this->session->get('userId'), $agendamento);
+            $repo->updateSaida($this->session->get('userId'), $agendamento);
 
             return $this->json(['status' => 'sucesso', 'mensagem' => 'Hora de saída atualizada.', 'hora_saida' => $horaSaida]);
         }
@@ -246,9 +232,9 @@ class AgendamentoController extends DefaultController
     }
 
     /**
-     * @Route("/agendamento/executar-acao/{id}", name="agendamento_executar_acao", methods={"POST"})
+     * @Route("/agendamento/executar-acao/{id}/{acao}", name="agendamento_executar_acao")
      */
-    public function executarAcao(Request $request, int $id): Response
+    public function executarAcao(Request $request, int $id, string $acao): Response
     {
         $repo  = $this->getRepositorio(Agendamento::class);
         $dados = $repo->listaAgendamentoPorId($this->session->get('userId'), $id);
@@ -257,7 +243,6 @@ class AgendamentoController extends DefaultController
             return $this->json(['status' => 'erro', 'mensagem' => 'O agendamento não foi encontrado.'], Response::HTTP_NOT_FOUND);
         }
 
-        $acao = $request->get('acao');
 
         switch ($acao) {
             case 'deletar':
