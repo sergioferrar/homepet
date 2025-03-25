@@ -26,21 +26,35 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function listaAgendamentoPorId($baseId, $idAgendamento)
     {
-        $sql = "SELECT id, data, concluido, pronto, horaChegada, metodo_pagamento, horaSaida, taxi_dog, taxa_taxi_dog
-            FROM homepet_{$baseId}.agendamento
-            WHERE id = {$idAgendamento}";
+        $sql = "SELECT a.id, data, concluido, pronto, horaChegada, metodo_pagamento, horaSaida, horaChegada, taxi_dog, taxa_taxi_dog
+            FROM homepet_{$baseId}.agendamento a
+            LEFT JOIN homepet_{$baseId}.agendamento_pet_servico aps ON a.id = aps.agendamentoId
+            WHERE a.id = {$idAgendamento}";
 
         $query = $this->conn->query($sql);
         return $query->fetch();
+    }
+
+    public function listaApsPorId($baseId, $idAgendamento)
+    {
+        $sql = "SELECT aps.id, agendamentoId, petId, servicoId, p.nome AS pet_nome, c.nome AS cliente_nome, s.nome AS servico_nome, s.valor
+            FROM homepet_{$baseId}.agendamento_pet_servico aps
+            JOIN homepet_{$baseId}.pet p ON (p.id = aps.petId)
+            JOIN homepet_{$baseId}.cliente c ON (c.id = p.dono_id)
+            JOIN homepet_{$baseId}.servico s ON (s.id = aps.servicoId)
+            WHERE agendamentoId = {$idAgendamento}";
+
+        $query = $this->conn->query($sql);
+        return $query->fetchAll();
     }
 
     public function findByDate($baseId, \DateTime $data): array
     {
         $sql = "SELECT a.id AS agendamento_id, a.data, c.id AS dono_id, c.nome AS dono_nome,
                 GROUP_CONCAT(DISTINCT p.nome ORDER BY p.nome SEPARATOR ', ') AS pet_nome,
-                GROUP_CONCAT(DISTINCT s.descricao ORDER BY s.descricao SEPARATOR ', ') AS servico_nome,
+                GROUP_CONCAT(DISTINCT CONCAT('(', s.descricao, ' R$ ', s.valor, ')') ORDER BY s.descricao SEPARATOR ', ') AS servico_nome,
                  c.email, c.telefone, c.rua, c.numero, c.complemento, c.bairro, c.cidade, c.whatsapp, c.cep,
-                 a.id, a.data, a.concluido, a.horaChegada, a.horaSaida, a.metodo_pagamento, a.taxi_dog, a.taxa_taxi_dog
+                 a.id, a.data, a.concluido, a.horaChegada, a.horaSaida, a.metodo_pagamento, a.taxi_dog, a.taxa_taxi_dog, s.valor
             FROM homepet_{$baseId}.agendamento a
             JOIN homepet_{$baseId}.agendamento_pet_servico aps ON a.id = aps.agendamentoId
             JOIN homepet_{$baseId}.pet p ON aps.petId = p.id

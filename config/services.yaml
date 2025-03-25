@@ -25,8 +25,3 @@ services:
     App\Service\DatabaseBkp:
         arguments:
             $connection: '@doctrine.dbal.default_connection'
-
-    # Registro manual do repositório da hospedagem (com conexão direta via DBAL)
-    App\Repository\HospedagemCaesRepository:
-        arguments:
-            $conn: '@doctrine.dbal.default_connection'

@@ -1,19 +1,31 @@
 <?php
+
 namespace App\Repository;
 
 use App\Entity\HospedagemCaes;
-use Doctrine\DBAL\Connection;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 
-class HospedagemCaesRepository
+/**
+ * @extends ServiceEntityRepository<HospedagemCaes>
+ *
+ * @method HospedagemCaes|null find($id, $lockMode = null, $lockVersion = null)
+ * @method HospedagemCaes|null findOneBy(array $criteria, array $orderBy = null)
+ * @method HospedagemCaes[]    findAll()
+ * @method HospedagemCaes[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ */
+class HospedagemCaesRepository extends ServiceEntityRepository
 {
-    private Connection $conn;
+    private $conn;
+    private $baseId;
 
-    public function __construct(Connection $conn)
+    public function __construct(ManagerRegistry $registry)
     {
-        $this->conn = $conn;
+        parent::__construct($registry, HospedagemCaes::class);
+        $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function insert($baseId, HospedagemCaes $h): void
+    public function insert($baseId, HospedagemCaes_ $h): void
     {
         $sql = "INSERT INTO homepet_{$baseId}.hospedagem_caes (cliente_id, pet_id, data_entrada, data_saida, valor, observacoes)
                 VALUES (:cliente_id, :pet_id, :data_entrada, :data_saida, :valor, :observacoes)";
@@ -27,7 +39,7 @@ class HospedagemCaesRepository
         ]);
     }
 
-    public function registrarFinanceiro($baseId, HospedagemCaes $h): void
+    public function registrarFinanceiro($baseId, HospedagemCaes_ $h): void
     {
         $sql = "INSERT INTO homepet_{$baseId}.financeiro (descricao, valor, data, pet_id, pet_nome)
                 VALUES (:descricao, :valor, NOW(), :pet_id, (SELECT nome FROM homepet_{$baseId}.pet WHERE id = :pet_id LIMIT 1))";
@@ -54,7 +66,7 @@ class HospedagemCaesRepository
 
 
 
-    public function findAll($baseId): array
+    public function localizaTodos($baseId): array
     {
         $sql = "SELECT h.id, h.cliente_id, c.nome AS cliente_nome,
                        h.pet_id, p.nome AS pet_nome,
@@ -68,7 +80,7 @@ class HospedagemCaesRepository
     }
 
 
-    public function findById($baseId, int $id): ?array
+    public function localizaPorId($baseId, int $id): ?array
     {
         $sql = "SELECT * FROM homepet_{$baseId}.hospedagem_caes WHERE id = :id";
         return $this->conn->fetchAssociative($sql, ['id' => $id]) ?: null;
@@ -78,4 +90,28 @@ class HospedagemCaesRepository
     {
         $this->conn->executeQuery("DELETE FROM homepet_{$baseId}.hospedagem_caes WHERE id = :id", ['id' => $id]);
     }
+//    /**
+//     * @return HospedagemCaes[] Returns an array of HospedagemCaes objects
+//     */
+//    public function findByExampleField($value): array
+//    {
+//        return $this->createQueryBuilder('h')
+//            ->andWhere('h.exampleField = :val')
+//            ->setParameter('val', $value)
+//            ->orderBy('h.id', 'ASC')
+//            ->setMaxResults(10)
+//            ->getQuery()
+//            ->getResult()
+//        ;
+//    }
+
+//    public function findOneBySomeField($value): ?HospedagemCaes
+//    {
+//        return $this->createQueryBuilder('h')
+//            ->andWhere('h.exampleField = :val')
+//            ->setParameter('val', $value)
+//            ->getQuery()
+//            ->getOneOrNullResult()
+//        ;
+//    }
 }

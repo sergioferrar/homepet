@@ -87,30 +87,38 @@ class AgendamentoController extends DefaultController
     public function editar(Request $request, int $id): Response
     {
         $repo  = $this->getRepositorio(Agendamento::class);
-        $dados = $repo->listaAgendamentoPorId($this->session->get('userId'), $id);
+        $dados = $this->getRepositorio(Agendamento::class)
+            ->listaAgendamentoPorId($this->session->get('userId'), $request->get('id'));
+        
+        $aps = $this->getRepositorio(Agendamento::class)
+            ->listaApsPorId($this->session->get('userId'), $request->get('id'));
 
         if (! $dados) {
             throw $this->createNotFoundException('O agendamento não foi encontrado');
         }
 
         if ($request->isMethod('POST')) {
+            $data = $request->request->all();
+
+            $userId = $this->session->get('userId');
+            
             $agendamento = new Agendamento();
             $agendamento->setId($id);
             $agendamento->setData(new \DateTime($request->get('data')));
-            $agendamento->setPetId($request->get('pet_id'));
-            $agendamento->setServicoId($request->get('servico_id'));
             $agendamento->setConcluido((bool) $request->get('concluido'));
             $agendamento->setMetodoPagamento($dados['metodo_pagamento']);
-
-            $repo->update($this->session->get('userId'), $agendamento);
+            dd($agendamento);
+            $this->getRepositorio(Agendamento::class)->update($this->session->get('userId'), $agendamento);
 
             return $this->redirectToRoute('agendamento_index', ['data' => $agendamento->getData()->format('Y-m-d')]);
         }
 
         return $this->render('agendamento/editar.html.twig', [
+            'agendamentoId' => $request->get('id'),
             'agendamento' => $dados,
-            'pets'        => $repo->findAllPets($this->session->get('userId')),
-            'servicos'    => $repo->findAllServicos($this->session->get('userId')),
+            'aps' => $repo->listaApsPorId($this->session->get('userId'), $request->get('id')),
+            'pets' => $repo->findAllPets($this->session->get('userId')),
+            'servicos' => $repo->findAllServicos($this->session->get('userId')),
         ]);
     }
 
