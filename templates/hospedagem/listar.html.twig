@@ -10,27 +10,36 @@
             <table class="table table-striped datatable">
                 <thead>
                     <tr>
-                        {# <th>Cliente</th> #}
+                        <th>Cliente</th>
                         <th>Pet</th>
                         <th>Data Entrada</th>
                         <th>Data Saída</th>
                         <th>Valor</th>
                         <th>Observações</th>
+                        <th class="text-center">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in dados %}
                         <tr>
-                            {# <td>{{ item.cliente_nome }}</td> #}
+                            <td>{{ item.cliente_nome }}</td>
                             <td>{{ item.pet_nome }}</td>
                             <td>{{ item.data_entrada|date('d/m/Y') }}</td>
                             <td>{{ item.data_saida|date('d/m/Y') }}</td>
                             <td>R$ {{ item.valor }}</td>
                             <td>{{ item.observacoes }}</td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <a href="{{ path('hospedagem_editar', { id: item.id }) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+                                    <form method="post" action="{{ path('hospedagem_concluir_pagamento', { id: item.id }) }}" onsubmit="return confirm('Confirmar pagamento?');">
+                                        <button class="btn btn-sm btn-success ms-1">💰 Pago</button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="6" class="text-center">Nenhuma hospedagem cadastrada.</td>
+                            <td colspan="7" class="text-center">Nenhuma hospedagem cadastrada.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
