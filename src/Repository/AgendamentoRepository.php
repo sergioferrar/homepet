@@ -130,6 +130,15 @@ class AgendamentoRepository extends ServiceEntityRepository
         ]);
     }
 
+    public function updateConcluido($baseId, $idAgendamento): void
+    {
+        $sql = "UPDATE homepet_{$baseId}.agendamento
+                SET concluido = 1
+                WHERE id = $idAgendamento";
+
+        $this->conn->executeQuery($sql);
+    }   
+
     public function updatePagamento($baseId, Agendamento $agendamento): void
     {
         $sql = "UPDATE homepet_{$baseId}.agendamento
