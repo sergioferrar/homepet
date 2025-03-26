@@ -251,39 +251,27 @@ class AgendamentoController extends DefaultController
 
             case 'concluir':
                 if (! $dados['concluido']) {
-                    $servico = $this->getRepositorio(Servico::class)->listaServicoPorId($this->session->get('userId'), $dados['servico_id']);
-                    if (! $servico) {
-                        return $this->json(['status' => 'erro', 'mensagem' => 'O serviço não foi encontrado.'], Response::HTTP_NOT_FOUND);
+
+                    $listaServicoPorAgendamento = $this->getRepositorio(Agendamento::class)->listaApsPorId($this->session->get('userId'), $id);
+
+                    foreach ($listaServicoPorAgendamento as $row) {
+                        // Registrar no financeiro quando o serviço for concluído
+                        $financeiro = new Financeiro();
+                        $financeiro->setDescricao('Serviço para o pet: ' . $row['pet_nome']);
+                        $financeiro->setValor($row['valor']);
+                        $financeiro->setData(new \DateTime());
+                        $financeiro->setPetId($row['petId']);
+
+                        if ($dados['taxi_dog']) {
+                            $financeiro->setValor($financeiro->getValor() + $dados['taxa_taxi_dog']);
+                            $financeiro->setDescricao($financeiro->getDescricao() . ' + Táxi Dog');
+                        }
+
+                        $this->getRepositorio(Financeiro::class)->save($this->session->get('userId'), $financeiro);
                     }
-
-                    // Registrar no financeiro quando o serviço for concluído
-                    $financeiro = new Financeiro();
-                    $financeiro->setDescricao('Serviço para o pet: ' . $dados['pet_id']);
-                    $financeiro->setValor($servico['valor']);
-                    $financeiro->setData(new \DateTime());
-                    $financeiro->setPetId($dados['pet_id']);
-
-                    if ($dados['taxi_dog']) {
-                        $financeiro->setValor($financeiro->getValor() + $dados['taxa_taxi_dog']);
-                        $financeiro->setDescricao($financeiro->getDescricao() . ' + Táxi Dog');
-                    }
-
-                    $this->getRepositorio(Financeiro::class)->save($this->session->get('userId'), $financeiro);
                 }
 
-                $agendamento = new Agendamento();
-                $agendamento->setId($id);
-                $agendamento->setData(new \DateTime($dados['data']));
-                $agendamento->setPetId($dados['pet_id']);
-                $agendamento->setServicoId($dados['servico_id']);
-                $agendamento->setConcluido(true);
-                $agendamento->setMetodoPagamento($dados['metodo_pagamento']);
-                $agendamento->setHoraChegada($dados['horaChegada'] ? new \DateTime($dados['horaChegada']) : null);
-                $agendamento->setHoraSaida($dados['horaSaida'] ? new \DateTime($dados['horaSaida']) : null);
-                $agendamento->setTaxiDog((bool) $dados['taxi_dog']);
-                $agendamento->setTaxaTaxiDog($dados['taxa_taxi_dog']);
-
-                $repo->update($this->session->get('userId'), $agendamento);
+                $repo->updateConcluido($this->session->get('userId'), $id);
 
                 return $this->json([
                     'status'    => 'sucesso',
