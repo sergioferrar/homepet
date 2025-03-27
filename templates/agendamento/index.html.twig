@@ -163,8 +163,25 @@
             var rota = $(this).data('action');
             var acao = $(this).data('acao');
             var id = $(this).data('id');
+
+
             
-            return window.location.href= rota
+            //return window.location.href= rota
+
+            fetch(rota, {
+                    method: "POST",
+                    body: {}
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        Notify.toast(data.mensagem,data.status);
+                        //location.reload(); // Recarrega a página mantendo o scroll
+                    } else {
+                        alert("Erro: " + data.mensagem);
+                    }
+                })
+                .catch(error => console.error("Erro na requisição AJAX:", error));
             
         });
 
@@ -182,9 +199,12 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "sucesso") {
-                        location.reload(); // Recarrega a página mantendo o scroll
+                        Notify.toast(data.mensagem,'success');
+                        //location.reload(); // Recarrega a página mantendo o scroll
                     } else {
-                        alert("Erro: " + data.mensagem);
+                        //alert("Erro: " + data.mensagem);
+                        Notify.toast(data.mensagem,danger);
+                        //location.reload(); // Recarrega a página mantendo o scroll
                     }
                 })
                 .catch(error => console.error("Erro na requisição AJAX:", error));
