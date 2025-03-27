@@ -202,7 +202,7 @@ class AgendamentoController extends DefaultController
 
         $repo->updatePagamento($this->session->get('userId'), $agendamento);
 
-        return $this->json(['status' => 'sucesso']);
+        return $this->json(['status' => 'success', 'mensagem' => 'A forma de pagamento foi alterada com sucesso!']);
     }
 
     /**
@@ -274,7 +274,7 @@ class AgendamentoController extends DefaultController
                 $repo->updateConcluido($this->session->get('userId'), $id);
 
                 return $this->json([
-                    'status'    => 'sucesso',
+                    'status'    => 'success',
                     'mensagem'  => 'Agendamento concluído com sucesso.',
                     'id'        => $id,
                     'concluido' => true,
