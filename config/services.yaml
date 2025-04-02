@@ -1,5 +1,5 @@
-# config/services.yaml
 parameters:
+    diretorio_temp: '%kernel.project_dir%/var/tmp' # Adiciona o caminho completo já resolvido
 
 services:
     # default configuration for services in *this* file

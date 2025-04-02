@@ -93,17 +93,32 @@
                                 </td>
                                 <td>
                                     <div class="dropdown">
-  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-    Ações
-  </button>
-  <ul class="dropdown-menu">
-    <li><a data-acao="editar" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_editar', {'id': agendamento.id}) }}" href="javascript:void(0);" class="reload-form dropdown-item"><i class="bi pencil-square"></i> Editar</a></li>
-    <li><a data-acao="concluir" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'concluir'}) }}" href="javascript:void(0);" class="reload-form dropdown-item">Concluir</a></li>
-    <li><a data-acao="pendente" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'pendente'}) }}" href="javascript:void(0);" class="reload-form dropdown-item text-bg-warning">Pendente</a></li>
-    <li><a data-acao="deletar" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'deletar'}) }}" href="javascript:void(0);" class="reload-form dropdown-item">Deletar</a></li>
-  </ul>
-</div>
-                                    
+                                      <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Ações
+                                      </button>
+                                      <ul class="dropdown-menu">
+                                        <li>
+                                          <a href="{{ path('agendamento_editar', {'id': agendamento.id}) }}" class="dropdown-item">
+                                            <i class="bi bi-pencil-square"></i> Editar
+                                          </a>
+                                        </li>
+                                        <li>
+                                          <a data-acao="concluir" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'concluir'}) }}" href="javascript:void(0);" class="reload-form dropdown-item">
+                                            Concluir
+                                          </a>
+                                        </li>
+                                        <li>
+                                          <a data-acao="pendente" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'pendente'}) }}" href="javascript:void(0);" class="reload-form dropdown-item text-bg-warning">
+                                            Pendente
+                                          </a>
+                                        </li>
+                                        <li>
+                                          <a data-acao="deletar" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'deletar'}) }}" href="javascript:void(0);" class="reload-form dropdown-item">
+                                            Deletar
+                                          </a>
+                                        </li>
+                                      </ul>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}

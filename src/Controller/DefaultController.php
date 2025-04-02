@@ -17,8 +17,6 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class DefaultController extends AbstractController
 {
-
-
     public $data;
     public $user;
     public $managerRegistry;
@@ -95,7 +93,6 @@ class DefaultController extends AbstractController
 
     protected function filterSecurity($numbers, $aumentaConta = 1)
     {
-        // $numbers = \App\Service\Utils::str_to_integer($numbers);
         $nNumber = '';
         $totalChars = strlen($numbers);
         $conta = intval(ceil(($totalChars / 2) / 2));
@@ -115,7 +112,6 @@ class DefaultController extends AbstractController
             return (\App\Service\Utils::mask($nNumber, $this->cpf));
         }
         return $nNumber;
-        // return (\App\Service\Utils::mask($nNumber, $this->{$tipo}));
     }
 
     /**

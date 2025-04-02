@@ -4,7 +4,7 @@
 {{ parent() }}
 <style>
     .mr-custom {
-        margin-right: 8px; /* Espaçamento entre os botões */
+        margin-right: 8px;
     }
     .btn-secondary {
         background-color: #007bff;
@@ -30,7 +30,7 @@
 
     <a href="{{ path('cliente_novo') }}" class="btn btn-secondary mb-3">+ Novo Cliente</a>
 
-    <table class="table table-bordered ">
+    <table class="table table-bordered datatable">
         <thead>
             <tr>
                 <th>Nome</th>
@@ -42,12 +42,13 @@
         <tbody>
         {% for cliente in clientes %}
             <tr>
-                <td>{{ cliente.nome }}</td>
-                <td>{{ cliente.email }}</td>
-                <td>{{ cliente.telefone }}</td>
+                <td>{{ cliente.nome ?? '-' }}</td>
+                <td>{{ cliente.email ?? '-' }}</td>
+                <td>{{ cliente.telefone ?? '-' }}</td>
                 <td>
                     <div class="dropdown">
-                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                aria-expanded="false" aria-label="Ações para o cliente {{ cliente.nome }}">
                             Ação
                         </button>
                         <ul class="dropdown-menu">
@@ -55,7 +56,10 @@
                             <li><a href="{{ path('cliente_editar', {'id': cliente.id}) }}" class="dropdown-item">Editar</a></li>
                             <li>
                                 <form method="post" action="{{ path('cliente_deletar', {'id': cliente.id}) }}" class="d-inline">
-                                    <button type="submit" class="dropdown-item text-danger">Deletar</button>
+                                    <button type="submit" class="dropdown-item text-danger"
+                                            onclick="return confirm('Tem certeza que deseja deletar este cliente?')">
+                                        Deletar
+                                    </button>
                                 </form>
                             </li>
                         </ul>
@@ -70,8 +74,8 @@
 
 {% block javascripts %}
     <script>
-        $(function(){
-            $('.table').DataTable();
+        \$(function(){
+            \$('.datatable').DataTable();
         });
     </script>
 {% endblock %}

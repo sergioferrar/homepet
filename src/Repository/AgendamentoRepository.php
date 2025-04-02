@@ -111,24 +111,27 @@ class AgendamentoRepository extends ServiceEntityRepository
     public function update($baseId, Agendamento $agendamento): void
     {
         $sql = "UPDATE homepet_{$baseId}.agendamento
-                SET data = :data, pet_id = :pet_id, servico_id = :servico_id, concluido = :concluido,
-                    metodo_pagamento = :metodo_pagamento, horaChegada = :horaChegada, horaSaida = :horaSaida,
-                    taxi_dog = :taxi_dog, taxa_taxi_dog = :taxa_taxi_dog
+                SET data = :data, 
+                    concluido = :concluido,
+                    metodo_pagamento = :metodo_pagamento, 
+                    horaChegada = :horaChegada, 
+                    horaSaida = :horaSaida,
+                    taxi_dog = :taxi_dog, 
+                    taxa_taxi_dog = :taxa_taxi_dog
                 WHERE id = :id";
 
         $this->conn->executeQuery($sql, [
-            'data' => $agendamento->getData()->format('Y-m-d H:i:s'),
-            'pet_id' => $agendamento->getPetId(),
-            'servico_id' => $agendamento->getServicoId(),
-            'concluido' => (int) $agendamento->isConcluido(),
+            'data'             => $agendamento->getData()->format('Y-m-d H:i:s'),
+            'concluido'        => (int) $agendamento->isConcluido(),
             'metodo_pagamento' => $agendamento->getMetodoPagamento(),
-            'horaChegada' => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
-            'horaSaida' => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
-            'taxi_dog' => (int) $agendamento->getTaxiDog(),
-            'taxa_taxi_dog' => $agendamento->getTaxaTaxiDog(),
-            'id' => $agendamento->getId(),
+            'horaChegada'      => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
+            'horaSaida'        => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
+            'taxi_dog'         => (int) $agendamento->getTaxiDog(),
+            'taxa_taxi_dog'    => $agendamento->getTaxaTaxiDog(),
+            'id'               => $agendamento->getId(),
         ]);
     }
+
 
     public function updateConcluido($baseId, $idAgendamento): void
     {
