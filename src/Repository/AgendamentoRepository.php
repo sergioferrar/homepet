@@ -50,23 +50,42 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function findByDate($baseId, \DateTime $data): array
     {
-        $sql = "SELECT a.id AS agendamento_id, a.data, c.id AS dono_id, c.nome AS dono_nome,
-                GROUP_CONCAT(DISTINCT p.nome ORDER BY p.nome SEPARATOR ', ') AS pet_nome,
-                GROUP_CONCAT(DISTINCT CONCAT('(', s.descricao, ' R$ ', s.valor, ')') ORDER BY s.descricao SEPARATOR ', ') AS servico_nome,
-                 c.email, c.telefone, c.rua, c.numero, c.complemento, c.bairro, c.cidade, c.whatsapp, c.cep,
-                 a.id, a.data, a.concluido, a.horaChegada, a.horaSaida, a.metodo_pagamento, a.taxi_dog, a.taxa_taxi_dog, s.valor
-            FROM homepet_{$baseId}.agendamento a
-            JOIN homepet_{$baseId}.agendamento_pet_servico aps ON a.id = aps.agendamentoId
-            JOIN homepet_{$baseId}.pet p ON aps.petId = p.id
-            JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
-            JOIN homepet_{$baseId}.servico s ON aps.servicoId = s.id
-            WHERE DATE(a.data) = :data
-            GROUP BY a.id, c.id, c.nome, a.data
-            ORDER BY a.data DESC";
+        $sql = "SELECT 
+                    a.id AS id,
+                    a.data,
+                    a.horaChegada,
+                    a.horaSaida,
+                    a.concluido,
+                    a.metodo_pagamento,
+                    a.taxi_dog,
+                    a.taxa_taxi_dog,
+
+                    p.nome AS pet_nome,
+                    p.id AS pet_id,
+
+                    c.id AS dono_id,
+                    c.nome AS dono_nome,
+                    c.email, c.telefone, c.rua, c.numero, c.complemento, 
+                    c.bairro, c.cidade, c.whatsapp, c.cep,
+
+                    GROUP_CONCAT(CONCAT(s.nome, ' (R$ ', s.valor, ')') ORDER BY s.nome SEPARATOR ', ') AS servico_nome
+
+                FROM homepet_{$baseId}.agendamento a
+                INNER JOIN homepet_{$baseId}.agendamento_pet_servico aps ON aps.agendamentoId = a.id
+                INNER JOIN homepet_{$baseId}.pet p ON aps.petId = p.id
+                INNER JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
+                INNER JOIN homepet_{$baseId}.servico s ON aps.servicoId = s.id
+                WHERE DATE(a.data) = :data
+                GROUP BY a.id, p.id
+                ORDER BY a.horaChegada ASC, c.nome, p.nome";
 
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
+
         return $stmt->fetchAllAssociative();
     }
+
+
+
 
     public function listagem($baseId, int $id)
     {
