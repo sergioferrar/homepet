@@ -75,32 +75,31 @@ class ClienteController extends DefaultController
         }
 
         if ($request->isMethod('POST')) {
-            $clientes = new Cliente();
-            $clientes->setNome($request->get('nome'))
-                ->setId($cliente['id'])
-                ->setEmail($request->get('email'))
-                ->setTelefone($request->get('telefone'))
-                ->setRua($request->get('rua'))
-                ->setNumero($request->get('numero'))
-                ->setComplemento($request->get('complemento'))
-                ->setBairro($request->get('bairro'))
-                ->setCidade($request->get('cidade'))
-                ->setWhatsapp($request->get('whatsapp'))
-                ;
-            $cliente['whatsapp'] = $request->get('whatsapp');
-            $cliente['nome'] = $request->get('nome');
+            $clienteAtualizado = [
+                'id'         => $cliente['id'],
+                'nome'       => $request->get('nome'),
+                'email'      => $request->get('email'),
+                'telefone'   => $request->get('telefone'),
+                'rua'        => $request->get('rua'),
+                'numero'     => $request->get('numero'),
+                'complemento'=> $request->get('complemento'),
+                'bairro'     => $request->get('bairro'),
+                'cidade'     => $request->get('cidade'),
+                'whatsapp'   => $request->get('whatsapp') ?? '',
+                'cep'        => $request->get('cep'),
+            ];
 
-            $this->getRepositorio(Cliente::class)->update($this->session->get('userId'), $cliente);
-//            dd($cliente, $clientes, $request);
+            $this->getRepositorio(Cliente::class)->update($this->session->get('userId'), $clienteAtualizado);
 
-            // $clienteId = $this->getRepositorio(Cliente::class)->getLastInsertedId();
-            //return $this->redirectToRoute('pet_novo', ['cliente_id' => $id]);
-
+            return $this->redirectToRoute('cliente_index');
         }
-//        dd($cliente);
+
+        // ⚠️ ISSO AQUI ESTAVA FALTANDO:
         return $this->render('cliente/editar.html.twig', [
             'cliente' => $cliente
         ]);
+
+
     }
 
 
@@ -129,24 +128,28 @@ class ClienteController extends DefaultController
 
     }
 
-
     /**
      * @Route("/{id}/agendamentos", name="cliente_agendamentos", methods={"GET"})
      */
     public function agendamentos(Request $request, int $id): Response
     {
-        $clienteData = $this->getRepositorio(Cliente::class)->findAgendamentosByCliente($this->session->get('userId'), $id);
+        $baseId = $this->session->get('userId');
+
+        $clienteData = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($baseId, $id);
 
         if (!$clienteData) {
             throw $this->createNotFoundException('O cliente não foi encontrado');
         }
 
-        $agendamentos = $this->getRepositorio(Cliente::class)->findAgendamentosByCliente($id);
+        $agendamentos = $this->getRepositorio(Cliente::class)->findAgendamentosByCliente($baseId, $id);
+
         return $this->render('cliente/agendamentos.html.twig', [
             'cliente' => $clienteData,
             'agendamentos' => $agendamentos
         ]);
     }
+
+
 
     /**
      * @Route("/cliente/cadastro", name="cadastro_cliente")

@@ -58,17 +58,24 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function findByDate($baseId, \DateTime $data): array
     {
-        $sql = "SELECT f.id, 
-                       CONCAT('Serviço para ', p.nome, ' - Dono: ', c.nome) AS descricao, 
-                       f.valor, f.data, p.nome as pet_nome, c.nome as dono_nome
+        $sql = "SELECT 
+                    MIN(f.id) as id, 
+                    c.nome AS dono_nome,
+                    GROUP_CONCAT(DISTINCT p.nome SEPARATOR ', ') AS pets,
+                    SUM(f.valor) AS total_valor,
+                    DATE(f.data) AS data
                 FROM homepet_{$baseId}.financeiro f
                 LEFT JOIN homepet_{$baseId}.pet p ON f.pet_id = p.id
                 LEFT JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
-                WHERE DATE(f.data) = :data";
+                WHERE DATE(f.data) = :data
+                GROUP BY c.id, DATE(f.data)
+                ORDER BY c.nome";
 
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
         return $stmt->fetchAllAssociative();
     }
+
+
 
 
     public function getRelatorioPorPeriodo($baseId, \DateTime $dataInicio, \DateTime $dataFim): array

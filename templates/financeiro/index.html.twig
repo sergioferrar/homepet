@@ -4,52 +4,75 @@
 {{ parent() }}
 <style>
     .mr-custom {
-        margin-right: 8px; /* Espaçamento entre os botões */
+        margin-right: 8px;
     }
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-5">
-    <h1>Financeiro</h1>
-    
+    <h1>Financeiro Diário</h1>
+
     <div class="d-flex justify-content-between align-items-center mb-3">
         <a href="{{ path('financeiro_index', {'data': data|date_modify('-1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Anterior</a>
         <h2>{{ data|date('d/m/Y') }}</h2>
         <a href="{{ path('financeiro_index', {'data': data|date_modify('+1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Próximo</a>
     </div>
 
-    <!-- Bordered Table -->
     <table class="table table-bordered datatable">
         <thead>
             <tr>
+                <th>Dono</th>
+                <th>Pets</th>
                 <th>Data</th>
-                <th>Descrição</th>
-                <th>Valor</th>
-                <th>Pet</th>
+                <th>Total (R$)</th>
                 <th>Ações</th>
             </tr>
         </thead>
         <tbody>
-        {% for financeiro in financeiros %}
+        {% for item in financeiros %}
             <tr>
-                <td>{{ financeiro.data|date('d/m/Y') }}</td>
-                <td>{{ financeiro.descricao }}</td>
-                <td>R$ {{ financeiro.valor|number_format(2, ',', '.') }}</td>
-                <td>{{ financeiro.pet_nome }}</td>
+                <td>{{ item.dono_nome }}</td>
+                <td>{{ item.pets }}</td>
+                <td>{{ item.data|date('d/m/Y') }}</td>
+                <td>R$ {{ item.total_valor|number_format(2, ',', '.') }}</td>
                 <td>
-                    <div class="btn-group" role="group" aria-label="Basic example">
-                        <a href="{{ path('financeiro_editar', {'id': financeiro.id}) }}" class="btn btn-warning btn-sm mr-custom">Editar</a>
-                        <form method="post" action="{{ path('financeiro_deletar', {'id': financeiro.id}) }}" class="d-inline">
-                            <button type="submit" class="btn btn-danger btn-sm">Deletar</button>
-                        </form>
-                    </div>
+                    <select class="form-select form-select-sm acao-select" data-id="{{ item.id }}">
+                        <option selected disabled>Selecionar</option>
+                        <option value="editar">Editar</option>
+                        <option value="deletar">Deletar</option>
+                    </select>
                 </td>
             </tr>
+        {% else %}
+            <tr><td colspan="5">Nenhum lançamento encontrado.</td></tr>
         {% endfor %}
         </tbody>
     </table>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.acao-select').forEach(function (select) {
+            select.addEventListener('change', function () {
+                const id = this.dataset.id;
+                const action = this.value;
+
+                if (action === 'editar') {
+                    window.location.href = `/homepet/public/financeiro/editar/${id}`;
+                } else if (action === 'deletar') {
+                    if (confirm('Tem certeza que deseja deletar?')) {
+                        const form = document.createElement('form');
+                        form.method = 'post';
+                        form.action = `/homepet/public/financeiro/deletar/${id}`;
+                        document.body.appendChild(form);
+                        form.submit();
+                    } else {
+                        this.value = ''; // reset
+                    }
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
-
-
