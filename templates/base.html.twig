@@ -46,18 +46,13 @@
 <body>
 {% endif %}
 
-
 <!-- ======= Header ======= -->
 <header id="header" class="header fixed-top d-flex align-items-center">
 
     <div class="d-flex align-items-center justify-content-between">
         <a href="{{ path('home') }}" class="logo d-flex align-items-center">
-
-            <span class="d-none d-lg-block">  Home Pet Shop</span>
-
-
+            <span class="d-none d-lg-block">Home Pet Shop</span>
         </a>
-
     </div><!-- End Logo -->
 
     <div class="search-bar">
@@ -77,7 +72,6 @@
             </li><!-- End Search Icon-->
 
             <li class="nav-item dropdown">
-
                 <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
                     <i class="bi bi-bell"></i>
                     <span class="badge bg-primary badge-number"></span>
@@ -146,84 +140,21 @@
                     <li class="dropdown-footer">
                         <a href="#">Show all notifications</a>
                     </li>
-
                 </ul><!-- End Notification Dropdown Items -->
-
             </li><!-- End Notification Nav -->
 
             <li class="nav-item dropdown">
-
                 <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
                     <i class="bi bi-chat-left-text"></i>
                     <span class="badge bg-success badge-number"></span>
                 </a><!-- End Messages Icon -->
-
-                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow messages">
-                    <li class="dropdown-header">
-                        You have 3 new messages
-                        <a href="#"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
-                    <li class="message-item">
-                        <a href="#">
-                            {#<img src="assets/img/messages-1.jpg" alt="" class="rounded-circle">#}
-                            <div>
-                                <h4>Maria Hudson</h4>
-                                <p>Velit asperiores et ducimus soluta repudiandae labore officia est ut...</p>
-                                <p>4 hrs. ago</p>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
-                    <li class="message-item">
-                        <a href="#">
-                            {#<img src="assets/img/messages-2.jpg" alt="" class="rounded-circle">#}
-                            <div>
-                                <h4>Anna Nelson</h4>
-                                <p>Velit asperiores et ducimus soluta repudiandae labore officia est ut...</p>
-                                <p>6 hrs. ago</p>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
-                    <li class="message-item">
-                        <a href="#">
-                            {#<img src="assets/img/messages-3.jpg" alt="" class="rounded-circle">#}
-                            <div>
-                                <h4>David Muldon</h4>
-                                <p>Velit asperiores et ducimus soluta repudiandae labore officia est ut...</p>
-                                <p>8 hrs. ago</p>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
-                    <li class="dropdown-footer">
-                        <a href="#">Show all messages</a>
-                    </li>
-
-                </ul><!-- End Messages Dropdown Items -->
-
             </li><!-- End Messages Nav -->
 
             <li class="nav-item dropdown pe-3">
-
                 <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-                    <img src="https://avatars.githubusercontent.com/u/93411015?v=4" alt="Profile"
-                         class="rounded-circle">
+                    <img src="https://avatars.githubusercontent.com/u/93411015?v=4" alt="Profile" class="rounded-circle">
                     <span class="d-none d-md-block dropdown-toggle ps-2">{{ app.session.get('user') }}</span>
-                </a><!-- End Profile Iamge Icon -->
+                </a><!-- End Profile Image Icon -->
 
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                     <li class="dropdown-header">
@@ -270,20 +201,15 @@
                             <span>Deslogar</span>
                         </a>
                     </li>
-
                 </ul><!-- End Profile Dropdown Items -->
             </li><!-- End Profile Nav -->
-
         </ul>
     </nav><!-- End Icons Navigation -->
-
 </header><!-- End Header -->
 
 <!-- ======= Sidebar ======= -->
 <aside id="sidebar" class="sidebar">
-
     <ul class="sidebar-nav" id="sidebar-nav">
-
         <li class="nav-item">
             <a class="nav-link " href="{{ path('home') }}">
                 <i class="bi bi-grid"></i>
@@ -302,8 +228,6 @@
                     </a>
                 </li>
                 <li>
-
-                <li>
                     <a href="{{ path('agendamento_index') }}">
                         <i class="bi bi-circle"></i><span>Ver todos</span>
                     </a>
@@ -311,9 +235,7 @@
             </ul>
         </li>
 
-
         <li class="nav-item">
-
             <a class="nav-link " href="{{ path('cliente_index') }}">
                 <i class="bi bi-person-circle"></i><span>Clientes</span>
             </a>
@@ -325,13 +247,11 @@
                 </li>
                 <li>
                     <a href="{{ path('cliente_index') }}">
-                        <i class="bi bi-circle"></i><span>Clientes <span
-                                    class="badge badge-sm bg-danger text-white">1</span></span>
+                        <i class="bi bi-circle"></i><span>Clientes <span class="badge badge-sm bg-danger text-white">1</span></span>
                     </a>
                 </li>
             </ul>
         </li>
-
 
         <li class="nav-item">
             <a class="nav-link collapsed" data-bs-target="#pedidos" data-bs-toggle="collapse" href="#">
@@ -340,8 +260,7 @@
             <ul id="pedidos" class="nav-content collapse " data-bs-parent="#sidebar-nav">
                 <li>
                     <a href="{{ path('pet_index') }}">
-                        <i class="bi bi-circle"></i><span> Pets <span
-                                    class="badge badge-sm bg-danger text-white">1</span></span>
+                        <i class="bi bi-circle"></i><span> Pets <span class="badge badge-sm bg-danger text-white">1</span></span>
                     </a>
                 </li>
                 <li>
@@ -349,21 +268,10 @@
                         <i class="bi bi-circle"></i><span>Cadastro de Pets </span>
                     </a>
                 </li>
-                <!--  <li>
-                    <a href="components-alerts.html">
-                      <i class="bi bi-circle"></i><span>Cancelados</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="components-alerts.html">
-                      <i class="bi bi-circle"></i><span>Criar Pedido</span>
-                    </a>
-                  </li>-->
             </ul>
         </li>
 
         <!-- EAD -->
-
         {% if app.session.get('accessLevel') == 'Admin' or app.session.get('accessLevel') == 'Super Admin' %}
             <li class="nav-item">
                 <a class="nav-link collapsed" data-bs-target="#servico" data-bs-toggle="collapse" href="#">
@@ -380,11 +288,6 @@
                             <i class="bi bi-circle"></i><span>Novo Serviço</span>
                         </a>
                     </li>
-                    <!--<li>
-                      <a href="cadastro.html">
-                        <i class="bi bi-circle"></i><span>Novo Curso</span>
-                      </a>
-                    </li>-->
                 </ul>
             </li>
         {% endif %}
@@ -394,28 +297,26 @@
             <a class="nav-link collapsed" data-bs-target="#financeiroDropdown" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-currency-dollar"></i><span>Financeiro</span><i class="bi bi-chevron-down ms-auto"></i>
             </a>
-                <ul id="financeiroDropdown" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-                    <li>
-                        <a href="{{ path('financeiro_index') }}">
-                            <i class="bi bi-circle"></i><span>Financeiro Diário</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ path('financeiro_pendente') }}">
-                            <i class="bi bi-circle text-danger"></i><span>Financeiro Pendente</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ path('financeiro_relatorio') }}">
-                            <i class="bi bi-circle"></i><span>Relatório Financeiro</span>
-                        </a>
-                    </li>
-                </ul>
-
+            <ul id="financeiroDropdown" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="{{ path('financeiro_index') }}">
+                        <i class="bi bi-circle"></i><span>Financeiro Diário</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ path('financeiro_pendente') }}">
+                        <i class="bi bi-circle text-danger"></i><span>Financeiro Pendente</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ path('financeiro_relatorio') }}">
+                        <i class="bi bi-circle"></i><span>Relatório Financeiro</span>
+                    </a>
+                </li>
+            </ul>
         </li>
-
-
         {% endif %}
+
         <li class="nav-item">
             <a class="nav-link collapsed" data-bs-target="#alunos" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-person-square"></i><span>Produtos</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -428,33 +329,55 @@
                 </li>
                 <li>
                     <a href="components-alerts.html">
-                        <i class="bi bi-circle"></i><span>Cadastrar Produtos <span
-                            class="badge badge-sm bg-danger text-white"></span>
+                        <i class="bi bi-circle"></i><span>Cadastrar Produtos <span class="badge badge-sm bg-danger text-white"></span></span>
                     </a>
                 </li>
             </ul>
         </li>
 
         {% if app.session.get('accessLevel') == 'Admin' or app.session.get('accessLevel') == 'Super Admin' %}
-            <li class="nav-item">
-              <a class="nav-link collapsed" data-bs-target="#matriculas" data-bs-toggle="collapse" href="#">
-                <i class="bi bi-journal-text"></i><span>Hospedagem de Caes</span><i class="bi bi-chevron-down ms-auto"></i>
-              </a>
-              <ul id="matriculas" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-                <li>
-                  <a href="{{ path('hospedagem_agendar') }}">
-                    <i class="bi bi-circle"></i><span>Novo Agendamento</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="{{ path('hospedagem_listar') }}">
-                    <i class="bi bi-circle"></i><span>Ver Hospedagens</span>
-                  </a>
-                </li>
-              </ul>
-            </li>
-         {% endif %}
+        <li class="nav-item">
+            <a class="nav-link" href="{{ path('agendamento_quadro') }}">
+                <i class="bi bi-kanban"></i><span>Quadro de Banho & Tosa</span>
+            </a>
+        </li>
 
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#clinica-veterinaria" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-hospital"></i><span>Clínica Veterinária</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="clinica-veterinaria" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="{{ path('pet_index') }}">
+                        <i class="bi bi-circle"></i><span>Gerenciamento de Pacientes</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ path('agendamento_index') }}">
+                        <i class="bi bi-circle"></i><span>Agendamento e Atendimento</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#matriculas" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-journal-text"></i><span>Hospedagem de Cães</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="matriculas" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="{{ path('hospedagem_agendar') }}">
+                        <i class="bi bi-circle"></i><span>Novo Agendamento</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ path('hospedagem_listar') }}">
+                        <i class="bi bi-circle"></i><span>Ver Hospedagens</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+        {% endif %}
 
         <li class="nav-item">
             <a class="nav-link" href="{{ url('app_usuario') }}">
@@ -462,213 +385,22 @@
             </a>
         </li>
 
-        <!--
-              <li class="nav-item">
-                <a class="nav-link collapsed" data-bs-target="#suporte" data-bs-toggle="collapse" href="#">
-                  <i class="bi bi-headset"></i><span>Suporte</span><i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <ul id="suporte" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-                  <li>
-                    <a href="components-alerts.html">
-                      <i class="bi bi-circle"></i><span>Alerts</span>
-                    </a>
-                  </li>
-                </ul>
-              </li>
-
-
-
-              <li class="nav-item">
-                <a class="nav-link collapsed" data-bs-target="#lives" data-bs-toggle="collapse" href="#">
-                  <i class="bi bi-collection-play"></i><span>Lives</span><i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <ul id="lives" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-                  <li>
-                    <a href="components-alerts.html">
-                      <i class="bi bi-circle"></i><span>Alerts</span>
-                    </a>
-                  </li>
-                </ul>
-              </li> -->
-
-
-        <!-- IMOBI
-
-
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#imobi" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-house"></i><span>Imóveis</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="imobi" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="components-alerts.html">
-                <i class="bi bi-circle"></i><span>Ver Imóveis</span>
-              </a>
-            </li>
-            <li>
-              <a href="components-alerts.html">
-                <i class="bi bi-circle"></i><span>Indisponíveis</span>
-              </a>
-            </li>
-            <li>
-              <a href="cadastro.html">
-                <i class="bi bi-circle"></i><span>Novo Imóvel</span>
-              </a>
-            </li>
-          </ul>
-        </li> -->
-
-
-        <!-- <li class="nav-item">
-           <a class="nav-link collapsed" data-bs-target="#slides-banners" data-bs-toggle="collapse" href="#">
-             <i class="bi bi-images"></i><span>Slides / Banners</span><i class="bi bi-chevron-down ms-auto"></i>
-           </a>
-           <ul id="slides-banners" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Em Destaque</span>
-               </a>
-             </li>
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Slides Inativos</span>
-               </a>
-             </li>
-           </ul>
-         </li>
-
-
-         <li class="nav-item">
-           <a class="nav-link collapsed" data-bs-target="#paginas" data-bs-toggle="collapse" href="#">
-             <i class="bi bi-window"></i><span>Páginas</span><i class="bi bi-chevron-down ms-auto"></i>
-           </a>
-           <ul id="paginas" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Páginas</span>
-               </a>
-             </li>
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Nova Página</span>
-               </a>
-             </li>
-           </ul>
-         </li>
-
-
-
-         <li class="nav-item">
-           <a class="nav-link collapsed" data-bs-target="#usuarios" data-bs-toggle="collapse" href="#">
-             <i class="bi bi-people"></i><span>Usuários</span><i class="bi bi-chevron-down ms-auto"></i>
-           </a>
-           <ul id="usuarios" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Ver Usuários</span>
-               </a>
-             </li>
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Clientes</span>
-               </a>
-             </li>
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Equipe</span>
-               </a>
-             </li>
-             <li>
-               <a href="cadastro.html">
-                 <i class="bi bi-circle"></i><span>Novo Usuário</span>
-               </a>
-             </li>
-           </ul>
-         </li>
-
-
-
-         <li class="nav-item">
-           <a class="nav-link collapsed" data-bs-target="#relatorios" data-bs-toggle="collapse" href="#">
-             <i class="bi bi-graph-up"></i><span>Relatórios</span><i class="bi bi-chevron-down ms-auto"></i>
-           </a>
-           <ul id="relatorios" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Acessos</span>
-               </a>
-             </li>
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Alunos</span>
-               </a>
-             </li>
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Suporte</span>
-               </a>
-             </li>
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Vendas</span>
-               </a>
-             </li>
-           </ul>
-         </li>
-
-
-
-         <li class="nav-item">
-           <a class="nav-link collapsed" data-bs-target="#settings" data-bs-toggle="collapse" href="#">
-             <i class="bi bi-gear"></i><span>Settings</span><i class="bi bi-chevron-down ms-auto"></i>
-           </a>
-           <ul id="settings" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-             <li>
-               <a href="settings.html">
-                 <i class="bi bi-circle"></i><span>Configurações Gerais</span>
-               </a>
-             </li>
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Licenciar Domínio</span>
-               </a>
-             </li>
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>Gerenciar Pixels</span>
-               </a>
-             </li>
-             <li>
-               <a href="components-alerts.html">
-                 <i class="bi bi-circle"></i><span>API's</span>
-               </a>
-             </li>
-           </ul>
-         </li> -->
-
-
         <li class="nav-item">
             <a class="nav-link" href="#">
                 <i class="bi bi-arrow-up-right"></i><span>Ver site</span>
             </a>
-
         </li>
-
     </ul>
-
 </aside><!-- End Sidebar-->
 
 <main id="main" class="main">
-
     {% block body %}{% endblock %}
-
-
 </main><!-- End #main -->
 
 <!-- ======= Footer ======= -->
 <footer id="footer" class="footer">
     <div class="copyright">
-        &copy; Designed by <strong><span>Sérgio Ferrari</span></strong>
+        © Designed by <strong><span>Sérgio Ferrari</span></strong>
     </div>
     <div class="credits">
         <!-- All the links in the footer should remain intact. -->
@@ -679,8 +411,7 @@
     </div>
 </footer><!-- End Footer -->
 
-<a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
-            class="bi bi-arrow-up-short"></i></a>
+<a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
 <script src="{{ asset('js/plugins/jquery/jquery.min.js') }}"></script>
 <script src="{{ asset('js/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
@@ -700,7 +431,6 @@
 <script src="{{ asset('js/plugins/datatables/dataTables.bootstrap4.js') }}"></script>
 <script src="{{ asset('assets/js/main.js') }}"></script>
 <script src="{{ asset('js/Notify.js') }}"></script>
-
 
 {% block javascripts %}{% endblock %}
 

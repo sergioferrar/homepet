@@ -55,19 +55,17 @@ class AgendamentoRepository extends ServiceEntityRepository
                     a.data,
                     a.horaChegada,
                     a.horaSaida,
+                    a.status,
                     a.concluido,
                     a.metodo_pagamento,
                     a.taxi_dog,
                     a.taxa_taxi_dog,
-
                     p.nome AS pet_nome,
                     p.id AS pet_id,
-
                     c.id AS dono_id,
                     c.nome AS dono_nome,
                     c.email, c.telefone, c.rua, c.numero, c.complemento, 
                     c.bairro, c.cidade, c.whatsapp, c.cep,
-
                     GROUP_CONCAT(CONCAT(s.nome, ' (R$ ', s.valor, ')') ORDER BY s.nome SEPARATOR ', ') AS servico_nome
 
                 FROM homepet_{$baseId}.agendamento a
@@ -98,14 +96,15 @@ class AgendamentoRepository extends ServiceEntityRepository
     {
 
         $sql = "INSERT INTO homepet_{$baseId}.agendamento
-                (data, concluido, metodo_pagamento, horaChegada, horaSaida, taxi_dog, taxa_taxi_dog)
+                (data, concluido, metodo_pagamento, horaChegada, horaSaida, taxi_dog, taxa_taxi_dog, status)
                 VALUES
-                (:data, :concluido, :metodo_pagamento, :horaChegada, :horaSaida, :taxi_dog, :taxa_taxi_dog)";
+                (:data, :concluido, :metodo_pagamento, :horaChegada, :horaSaida, :taxi_dog, :taxa_taxi_dog, :status)";
+
+
 
         $this->conn->executeQuery($sql, [
             'data'             => $agendamento->getData()->format('Y-m-d H:i:s'),
-                                                                     //'pet_id' => $agendamento->getPetId(),
-                                                                     //'servico_id' => $agendamento->getServicoId(),
+            'status'          => $agendamento->getStatus(),
             'concluido'        => (int) $agendamento->isConcluido(), // CORREÇÃO
             'metodo_pagamento' => $agendamento->getMetodoPagamento(),
             'horaChegada'      => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
@@ -136,7 +135,8 @@ class AgendamentoRepository extends ServiceEntityRepository
                     horaChegada = :horaChegada, 
                     horaSaida = :horaSaida,
                     taxi_dog = :taxi_dog, 
-                    taxa_taxi_dog = :taxa_taxi_dog
+                    taxa_taxi_dog = :taxa_taxi_dog,
+                    status = :status
                 WHERE id = :id";
 
         $this->conn->executeQuery($sql, [
@@ -147,6 +147,7 @@ class AgendamentoRepository extends ServiceEntityRepository
             'horaSaida'        => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
             'taxi_dog'         => (int) $agendamento->getTaxiDog(),
             'taxa_taxi_dog'    => $agendamento->getTaxaTaxiDog(),
+            'status'           => $agendamento->getStatus(),
             'id'               => $agendamento->getId(),
         ]);
     }
@@ -187,17 +188,28 @@ class AgendamentoRepository extends ServiceEntityRepository
     public function updateAgendamento($baseId, Agendamento $agendamento): void
     {
         $sql = "UPDATE homepet_{$baseId}.agendamento
-                SET concluido = :concluido, metodo_pagamento = :metodo_pagamento, taxi_dog = :taxi_dog, taxa_taxi_dog = :taxa_taxi_dog
+                SET 
+                    data = :data,
+                    horaChegada = :horaChegada,
+                    concluido = :concluido,
+                    metodo_pagamento = :metodo_pagamento,
+                    taxi_dog = :taxi_dog,
+                    taxa_taxi_dog = :taxa_taxi_dog,
+                    status = :status
                 WHERE id = :id";
 
         $this->conn->executeQuery($sql, [
+            'data'             => $agendamento->getData()->format('Y-m-d H:i:s'),
+            'horaChegada'      => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
             'concluido'        => (int) $agendamento->isConcluido(),
             'metodo_pagamento' => $agendamento->getMetodoPagamento(),
             'taxi_dog'         => (int) $agendamento->getTaxiDog(),
             'taxa_taxi_dog'    => $agendamento->getTaxaTaxiDog(),
+            'status'           => $agendamento->getStatus(),
             'id'               => $agendamento->getId(),
         ]);
     }
+
 
     public function delete($baseId, int $id): void
     {
@@ -247,6 +259,69 @@ class AgendamentoRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    public function findByStatus(string $baseId, string $status): array
+    {
+        $sql = "SELECT 
+                    a.id,
+                    a.data,
+                    a.horaChegada,
+                    a.horaSaida,
+                    a.status,
+                    p.nome AS pet_nome,
+                    c.nome AS dono_nome,
+                    s.nome AS servico_nome
+                FROM homepet_{$baseId}.agendamento a
+                JOIN homepet_{$baseId}.agendamento_pet_servico aps ON a.id = aps.agendamentoId
+                JOIN homepet_{$baseId}.pet p ON aps.petId = p.id
+                JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
+                JOIN homepet_{$baseId}.servico s ON aps.servicoId = s.id
+                WHERE a.status = :status
+                ORDER BY a.horaChegada ASC";
+
+        $stmt = $this->conn->executeQuery($sql, ['status' => $status]);
+        return $stmt->fetchAllAssociative();
+    }
+
+    public function atualizarStatusPetServico(string $baseId, int $id, string $status): void
+    {
+        $sql = "UPDATE homepet_{$baseId}.agendamento_pet_servico 
+                SET status = :status 
+                WHERE id = :id";
+
+        $this->conn->executeQuery($sql, [
+            'status' => $status,
+            'id'     => $id,
+        ]);
+    }
+
+    public function listarQuadroPorPet($baseId, \DateTime $data): array
+    {
+        $sql = "SELECT 
+                    aps.id AS aps_id, 
+                    a.id AS agendamento_id,
+                    a.data,
+                    a.taxi_dog, 
+                    aps.status,
+                    p.id AS pet_id,
+                    p.nome AS pet_nome,
+                    c.nome AS dono_nome,
+                    GROUP_CONCAT(s.nome SEPARATOR ', ') AS servico_nome
+                FROM homepet_{$baseId}.agendamento_pet_servico aps
+                JOIN homepet_{$baseId}.agendamento a ON aps.agendamentoId = a.id
+                JOIN homepet_{$baseId}.pet p ON aps.petId = p.id
+                JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
+                JOIN homepet_{$baseId}.servico s ON aps.servicoId = s.id
+                WHERE DATE(a.data) = :data
+                GROUP BY a.id, p.id, aps.status, p.nome, c.nome
+                ORDER BY a.horaChegada ASC";
+
+        $stmt = $this->conn->executeQuery($sql, [
+            'data' => $data->format('Y-m-d'),
+        ]);
+
+        return $stmt->fetchAllAssociative();
     }
 
 }
