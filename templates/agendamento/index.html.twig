@@ -66,7 +66,28 @@
                                 </td>
                                 <td>{{ agendamento.servico_nome }}</td>
                                 <td>{{ agendamento.taxi_dog ? 'Sim' : 'Não' }}</td>
-                                <td>{{ agendamento.taxa_taxi_dog is not null ? "R$ " ~ agendamento.taxa_taxi_dog : '-' }}</td>
+                                <td>
+                                    {% set exibir_taxa = true %}
+                                    {% set current_id = agendamento.id %}
+                                    {% set current_dono = agendamento.dono_id %}
+
+                                    {% if loop.index0 > 0 %}
+                                        {% for i in 0..(loop.index0 - 1) %}
+                                            {% if agendamentos[i].id == current_id and agendamentos[i].dono_id == current_dono %}
+                                                {% set exibir_taxa = false %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+
+                                    {% if agendamento.taxi_dog and exibir_taxa %}
+                                        R$ {{ agendamento.taxa_taxi_dog }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
+
+
                                 <td>{{ agendamento.horaChegada is defined and agendamento.horaChegada is not null ? agendamento.horaChegada|date('H:i') : 'Não definido' }}</td>
                                 <td>
                                     <form method="post" action="{{ path('agendamento_alterar_saida', {'id': agendamento.id}) }}" class="reload-form-select">

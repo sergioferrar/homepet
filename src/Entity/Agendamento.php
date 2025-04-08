@@ -72,6 +72,12 @@ class Agendamento
      */
     private $donoId;
 
+    /**
+     * @ORM\Column(type="string", length=20, options={"default": "aguardando"})
+     */
+    private ?string $status = 'aguardando';
+
+
     public function getId(): ?int
     {
         return $this->id;
@@ -204,4 +210,15 @@ class Agendamento
 
         return $this;
     }
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+        return $this;
+    }
+
 }

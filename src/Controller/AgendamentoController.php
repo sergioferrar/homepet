@@ -33,9 +33,9 @@ class AgendamentoController extends DefaultController
         ]);
     }
 
-/**
- * @Route("/novo", name="agendamento_novo", methods={"GET", "POST"})
- */
+    /**
+     * @Route("/novo", name="agendamento_novo", methods={"GET", "POST"})
+     */
     public function novo(Request $request): Response
     {
         if ($request->isMethod('POST')) {
@@ -48,21 +48,19 @@ class AgendamentoController extends DefaultController
             $agendamento->setHoraChegada(new \DateTime($data['hora_chegada']));
             $agendamento->setMetodoPagamento($data['metodo_pagamento']);
             $agendamento->setTaxiDog($data['taxi_dog'] === 'sim');
+            $agendamento->setStatus('aguardando');
             $agendamento->setTaxaTaxiDog(
                 isset($data['taxa_taxi_dog']) && $data['taxa_taxi_dog'] !== ''
                     ? (float) $data['taxa_taxi_dog']
                     : null
             );
-
-
+            $agendamento->setStatus('aguardando');
             $em = $this->getRepositorio(Agendamento::class)->save($userId, $agendamento);
 
             // Processando pets e serviços associados
             foreach ($data['pets'] as $petData) {
-
                 // Processar cada serviço vinculado ao pet
                 foreach ($petData['servicos'] as $servicoId) {
-
                     // Criando a relação entre agendamento, pet e serviço
                     $agendamentoPetServico = new AgendamentoPetServico();
                     $agendamentoPetServico->setAgendamentoId($em);
@@ -109,7 +107,6 @@ class AgendamentoController extends DefaultController
             
             $agendamento = new Agendamento();
             $agendamento->setId($id);
-            //$agendamento->setData(new \DateTime($request->get('data')));
             $agendamento->setConcluido((bool) $dados['concluido']);
             $agendamento->setMetodoPagamento($data['metodo_pagamento']);
             $agendamento->setData(new \DateTime($data['data']));
@@ -120,8 +117,6 @@ class AgendamentoController extends DefaultController
                     ? (float) $data['taxa_taxi_dog']
                     : null
             );
-
-
 
             $this->getRepositorio(Agendamento::class)->updateAgendamento($this->session->get('userId'), $agendamento);
 
@@ -256,29 +251,50 @@ class AgendamentoController extends DefaultController
             return $this->json(['status' => 'erro', 'mensagem' => 'O agendamento não foi encontrado.'], Response::HTTP_NOT_FOUND);
         }
 
-
         switch ($acao) {
             case 'deletar':
                 $repo->delete($this->session->get('userId'), $id);
                 return $this->json(['status' => 'sucesso', 'mensagem' => 'Agendamento deletado com sucesso.', 'id' => $id]);
 
             case 'concluir':
-                if (! $dados['concluido']) {
+                if (!$dados['concluido']) {
+                    $listaServicoPorAgendamento = $this->getRepositorio(Agendamento::class)
+                        ->listaApsPorId($this->session->get('userId'), $id);
 
-                    $listaServicoPorAgendamento = $this->getRepositorio(Agendamento::class)->listaApsPorId($this->session->get('userId'), $id);
+                    // Agrupar serviços por cliente, não por pet
+                    $clientes = [];
 
                     foreach ($listaServicoPorAgendamento as $row) {
-                        // Registrar no financeiro quando o serviço for concluído
-                        $financeiro = new Financeiro();
-                        $financeiro->setDescricao('Serviço para o pet: ' . $row['pet_nome']);
-                        $financeiro->setValor($row['valor']);
-                        $financeiro->setData(new \DateTime());
-                        $financeiro->setPetId($row['petId']);
+                        $clienteId = $row['cliente_nome']; // pode usar ID do cliente se tiver disponível
 
-                        if ($dados['taxi_dog']) {
-                            $financeiro->setValor($financeiro->getValor() + $dados['taxa_taxi_dog']);
-                            $financeiro->setDescricao($financeiro->getDescricao() . ' + Táxi Dog');
+                        if (!isset($clientes[$clienteId])) {
+                            $clientes[$clienteId] = [
+                                'descricao' => [],
+                                'valor_total' => 0,
+                                'petIds' => [],
+                            ];
                         }
+
+                        $clientes[$clienteId]['descricao'][] = "{$row['servico_nome']} para {$row['pet_nome']}";
+                        $clientes[$clienteId]['valor_total'] += (float) $row['valor'];
+                        $clientes[$clienteId]['petIds'][] = $row['petId'];
+                    }
+
+                    // Agora, cria APENAS UM REGISTRO NO FINANCEIRO POR CLIENTE
+                    foreach ($clientes as $clienteNome => $info) {
+                        $descricaoFinal = implode(', ', $info['descricao']);
+
+                        // Táxi Dog, apenas uma vez por cliente
+                        if ($dados['taxi_dog']) {
+                            $info['valor_total'] += (float) $dados['taxa_taxi_dog'];
+                            $descricaoFinal .= ' + Táxi Dog';
+                        }
+
+                        $financeiro = new Financeiro();
+                        $financeiro->setDescricao($descricaoFinal);
+                        $financeiro->setValor($info['valor_total']);
+                        $financeiro->setData(new \DateTime());
+                        $financeiro->setPetId($info['petIds'][0]); // Aqui você pode deixar o primeiro pet ou nulo.
 
                         $this->getRepositorio(Financeiro::class)->save($this->session->get('userId'), $financeiro);
                     }
@@ -297,18 +313,54 @@ class AgendamentoController extends DefaultController
                 $financeiroRepo = $this->getRepositorio(FinanceiroPendente::class);
                 $listaServicoPorAgendamento = $this->getRepositorio(Agendamento::class)->listaApsPorId($this->session->get('userId'), $id);
 
-                foreach ($listaServicoPorAgendamento as $row) {
-                    $existePendente = $financeiroRepo->verificaServicoExistente($this->session->get('userId'), $id, $row['petId']);
+                // Agrupar serviços por cliente, similar ao 'concluir'
+                $clientes = [];
 
-                    if (! $existePendente) {
+                foreach ($listaServicoPorAgendamento as $row) {
+                    $clienteId = $row['cliente_nome'];
+
+                    if (!isset($clientes[$clienteId])) {
+                        $clientes[$clienteId] = [
+                            'descricao'   => [],
+                            'valor_total' => 0,
+                            'petIds'      => [],
+                        ];
+                    }
+
+                    $clientes[$clienteId]['descricao'][] = "{$row['servico_nome']} para {$row['pet_nome']}";
+                    $clientes[$clienteId]['valor_total'] += (float) $row['valor'];
+                    $clientes[$clienteId]['petIds'][] = $row['petId'];
+                }
+
+                // Criar um registro no financeiro pendente por cliente
+                foreach ($clientes as $clienteNome => $info) {
+                    $descricaoFinal = "Pagamento pendente - " . implode(', ', $info['descricao']);
+
+                    if ($dados['taxi_dog']) {
+                        $info['valor_total'] += (float) $dados['taxa_taxi_dog'];
+                        $descricaoFinal .= ' + Táxi Dog';
+                    }
+
+                    // Verificar se já existe um registro pendente para este agendamento e cliente
+                    $existePendente = $financeiroRepo->verificaServicoExistente($this->session->get('userId'), $id, $info['petIds'][0]);
+
+                    if (!$existePendente) {
                         $financeiroPendente = new FinanceiroPendente();
-                        $financeiroPendente->setDescricao('Pagamento pendente - Serviço para o pet: ' . $row['pet_nome']);
-                        $financeiroPendente->setValor($row['valor']);
+                        $financeiroPendente->setDescricao($descricaoFinal);
+                        $financeiroPendente->setValor($info['valor_total']);
                         $financeiroPendente->setData(new \DateTime());
-                        $financeiroPendente->setPetId($row['petId']);
+                        $financeiroPendente->setPetId($info['petIds'][0]); // Usa o primeiro pet do cliente
                         $financeiroPendente->setAgendamentoId($id);
 
-                        $financeiroRepo->savePendente($this->session->get('userId'), $financeiroPendente);
+                        try {
+                            $financeiroRepo->savePendente($this->session->get('userId'), $financeiroPendente);
+                        } catch (\Exception $e) {
+                            error_log("Erro ao salvar no financeiro pendente: " . $e->getMessage());
+                            return $this->json([
+                                'status'   => 'erro',
+                                'mensagem' => 'Erro ao registrar no financeiro pendente: ' . $e->getMessage(),
+                            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+                        }
                     }
                 }
 
@@ -335,7 +387,6 @@ class AgendamentoController extends DefaultController
                     'id'               => $id,
                     'metodo_pagamento' => 'pendente',
                 ]);
-
 
             default:
                 return $this->json(['status' => 'erro', 'mensagem' => 'Ação inválida.'], Response::HTTP_BAD_REQUEST);
@@ -364,4 +415,68 @@ class AgendamentoController extends DefaultController
         return $this->json(['status' => 'sucesso', 'cliente' => $cliente]);
     }
 
+    /**
+     * @Route("/agendamento/quadro", name="agendamento_quadro")
+     */
+    public function quadroDeTarefas(Request $request): Response
+    {
+        $baseId = $this->session->get('userId');
+        $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
+
+        $itens = $this->getRepositorio(Agendamento::class)->listarQuadroPorPet($baseId, $data);
+
+        $aguardando = [];
+        $em_processo = [];
+        $finalizado = [];
+
+        $processed = [];
+
+        foreach ($itens as $item) {
+            $key = $item['agendamento_id'] . '-' . $item['pet_id'];
+
+            if (isset($processed[$key])) {
+                continue;
+            }
+
+            $processed[$key] = true;
+
+            switch ($item['status']) {
+                case 'em_processo':
+                    $em_processo[] = $item;
+                    break;
+                case 'finalizado':
+                    $finalizado[] = $item;
+                    break;
+                default:
+                    $aguardando[] = $item;
+            }
+        }
+
+        return $this->render('agendamento/quadro.html.twig', [
+            'aguardando' => $aguardando,
+            'em_processo' => $em_processo,
+            'finalizado' => $finalizado,
+            'data' => $data, // Passa a data para o template
+        ]);
+    }
+
+    /**
+     * @Route("/alterar-status-pet/{id}", name="alterar_status_pet", methods={"POST"})
+     */
+    public function alterarStatusPet(Request $request, int $id): JsonResponse
+    {
+        $status = json_decode($request->getContent(), true)['status'] ?? null;
+
+        if (!in_array($status, ['aguardando', 'em_processo', 'finalizado'], true)) {
+            return $this->json(['status' => 'erro', 'mensagem' => 'Status inválido.'], 400);
+        }
+
+        $this->getRepositorio(Agendamento::class)->atualizarStatusPetServico(
+            $this->session->get('userId'),
+            $id,
+            $status
+        );
+
+        return $this->json(['status' => 'sucesso', 'mensagem' => 'Status atualizado com sucesso.']);
+    }
 }
