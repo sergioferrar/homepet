@@ -21,9 +21,9 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         $sql = "SELECT f.id, 
                        CONCAT('Serviço para ', p.nome, ' - Dono: ', c.nome) AS descricao, 
                        f.valor, f.data, f.pet_id, p.nome as pet_nome, c.nome as dono_nome, f.metodo_pagamento
-                FROM homepet_{$baseId}.financeiropendente f
-                LEFT JOIN homepet_{$baseId}.pet p ON f.pet_id = p.id
-                LEFT JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
+                FROM u199209817_{$baseId}.financeiropendente f
+                LEFT JOIN u199209817_{$baseId}.pet p ON f.pet_id = p.id
+                LEFT JOIN u199209817_{$baseId}.cliente c ON p.dono_id = c.id
                 WHERE DATE(f.data) = :data";
 
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
@@ -33,7 +33,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function confirmarPagamento($baseId, int $id): void
     {
         // Buscar o registro pendente
-        $sql = "SELECT * FROM homepet_{$baseId}.financeiropendente WHERE id = :id";
+        $sql = "SELECT * FROM u199209817_{$baseId}.financeiropendente WHERE id = :id";
         $registroPendente = $this->conn->executeQuery($sql, ['id' => $id])->fetchAssociative();
 
         if (!$registroPendente) {
@@ -41,7 +41,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         }
 
         // Inserir no Financeiro Diário
-        $sqlInsert = "INSERT INTO homepet_{$baseId}.financeiro (descricao, valor, data, pet_id) 
+        $sqlInsert = "INSERT INTO u199209817_{$baseId}.financeiro (descricao, valor, data, pet_id) 
                       VALUES (:descricao, :valor, :data, :pet_id)";
         
         $this->conn->executeQuery($sqlInsert, [
@@ -52,33 +52,33 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         ]);
 
         // Remover do Financeiropendente
-        $sqlDelete = "DELETE FROM homepet_{$baseId}.Financeiropendente WHERE id = :id";
+        $sqlDelete = "DELETE FROM u199209817_{$baseId}.Financeiropendente WHERE id = :id";
         $this->conn->executeQuery($sqlDelete, ['id' => $id]);
     }
 
     public function findPendenteById($baseId, int $id)
     {
-        $sql = "SELECT * FROM homepet_{$baseId}.financeiropendente WHERE id = :id";
+        $sql = "SELECT * FROM u199209817_{$baseId}.financeiropendente WHERE id = :id";
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
         return $stmt->fetchAssociative();
     }
 
     public function deletePendente($baseId, int $id): void
     {
-        $sql = "DELETE FROM homepet_{$baseId}.financeiropendente WHERE id = :id";
+        $sql = "DELETE FROM u199209817_{$baseId}.financeiropendente WHERE id = :id";
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
 
     public function verificaServicoExistente($baseId, $agendamentoId){
-        $sql = "SELECT id FROM homepet_{$baseId}.financeiropendente WHERE agendamento_id = $agendamentoId";
+        $sql = "SELECT id FROM u199209817_{$baseId}.financeiropendente WHERE agendamento_id = $agendamentoId";
         $query = $this->conn->query($sql);
         return $query->fetch();
     }
 
     public function savePendente($baseId, FinanceiroPendente $financeiro): void
     {
-        $sql = "INSERT INTO homepet_{$baseId}.financeiropendente (descricao, valor, data, pet_id, agendamento_id) 
+        $sql = "INSERT INTO u199209817_{$baseId}.financeiropendente (descricao, valor, data, pet_id, agendamento_id) 
                 VALUES (:descricao, :valor, :data, :pet_id, :agendamento_id)";
 
         $stmt = $this->conn->prepare($sql);

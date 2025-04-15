@@ -28,8 +28,8 @@ class PetRepository extends ServiceEntityRepository
     public function findPetById($baseId, $petId): array
     {
         $sql = "SELECT p.id, p.nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.observacoes, c.nome as dono_nome, c.id AS dono_id
-                FROM homepet_{$baseId}.pet p
-                JOIN homepet_{$baseId}.cliente c ON (p.dono_id = c.id)
+                FROM u199209817_{$baseId}.pet p
+                JOIN u199209817_{$baseId}.cliente c ON (p.dono_id = c.id)
                 WHERE p.id ={$petId}";
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAssociative();
@@ -38,15 +38,15 @@ class PetRepository extends ServiceEntityRepository
     public function findAllPets($baseId): array
     {
         $sql = "SELECT p.id, CONCAT(p.nome, ' - ', c.nome) AS nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.observacoes, c.nome as dono_nome
-                FROM homepet_{$baseId}.pet p
-                JOIN homepet_{$baseId}.cliente c ON (p.dono_id = c.id)";
+                FROM u199209817_{$baseId}.pet p
+                JOIN u199209817_{$baseId}.cliente c ON (p.dono_id = c.id)";
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
     }
 
     public function save($baseId, Pet $pet): void
     {
-        $sql = "INSERT INTO homepet_{$baseId}.pet (nome, especie, sexo, raca, porte, idade, observacoes, dono_id) 
+        $sql = "INSERT INTO u199209817_{$baseId}.pet (nome, especie, sexo, raca, porte, idade, observacoes, dono_id) 
                 VALUES (:nome, :especie, :sexo, :raca, :porte, :idade, :observacoes, :dono_id)";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('nome', $pet->getNome());
@@ -62,7 +62,7 @@ class PetRepository extends ServiceEntityRepository
 
     public function update($baseId, Pet $pet): void
     {
-        $sql = "UPDATE homepet_{$baseId}.pet SET nome = :nome, especie = :especie, sexo = :sexo, raca = :raca, porte = :porte, 
+        $sql = "UPDATE u199209817_{$baseId}.pet SET nome = :nome, especie = :especie, sexo = :sexo, raca = :raca, porte = :porte, 
                 idade = :idade, observacoes = :observacoes, dono_id = :dono_id WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('nome', $pet->getNome());
@@ -80,7 +80,7 @@ class PetRepository extends ServiceEntityRepository
 
     public function delete($baseId, int $id): void
     {
-        $sql = "DELETE FROM homepet_{$baseId}.pet WHERE id = :id";
+        $sql = "DELETE FROM u199209817_{$baseId}.pet WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('id', $id);
         $stmt->execute();
