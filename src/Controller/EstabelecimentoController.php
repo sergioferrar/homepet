@@ -16,6 +16,7 @@ class EstabelecimentoController extends DefaultController
      */
     public function index(): Response
     {
+        $this->switchDB();
         return $this->render('estabelecimento/index.html.twig', [
             'controller_name' => 'EstabelecimentoController',
         ]);
@@ -26,6 +27,7 @@ class EstabelecimentoController extends DefaultController
      */
     public function cadastrar(Request $request): Response
     {
+        $this->switchDB();
         $estabelecimento = new Estabelecimento();
 
         $estabelecimento->setRazaoSocial($request->get('razaoSocial'));
@@ -87,6 +89,7 @@ class EstabelecimentoController extends DefaultController
      */
     public function cadastrarUsuario(Request $request): Response
     {
+        $this->switchDB();
         if ($request->isMethod('POST')) {
             $usuario = new Usuario();
             $usuario->setNomeUsuario($request->get('nome_usuario'));

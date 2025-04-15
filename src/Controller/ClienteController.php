@@ -21,6 +21,7 @@ class ClienteController extends DefaultController
      */
     public function index(Request $request): Response
     {
+        $this->switchDB();
         $search = $request->query->get('search');
 
         $clientes =  $this->getRepositorio(Cliente::class)->search($this->session->get('userId'), $search);
@@ -33,6 +34,7 @@ class ClienteController extends DefaultController
      */
     public function novo(Request $request): Response
     {
+        $this->switchDB();
         if ($request->isMethod('POST')) {
             $cliente = new Cliente();
             $cliente->setNome($request->request->get('nome'))
@@ -68,6 +70,7 @@ class ClienteController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
+        $this->switchDB();
         $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->session->get('userId'), $id);
 
         if (!$cliente) {
@@ -108,6 +111,7 @@ class ClienteController extends DefaultController
      */
     public function deletar(Request $request, int $id): Response
     {
+        $this->switchDB();
         $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->session->get('userId'), $id);
 
         if (!$cliente) {
@@ -133,6 +137,7 @@ class ClienteController extends DefaultController
      */
     public function agendamentos(Request $request, int $id): Response
     {
+        $this->switchDB();
         $baseId = $this->session->get('userId');
 
         $clienteData = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($baseId, $id);
@@ -156,6 +161,7 @@ class ClienteController extends DefaultController
      */
     public function cadastro(): Response
     {
+        $this->switchDB();
         return $this->render('cliente/cadastro_cliente.html.twig');
     }
 }

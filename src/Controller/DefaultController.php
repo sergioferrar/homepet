@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Security;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Service\DynamicConnectionManager;
 
 class DefaultController extends AbstractController
 {
@@ -40,6 +41,12 @@ class DefaultController extends AbstractController
         $this->session = $this->request->getSession();
         $this->tempDirManager = $tempDirManager;
         $this->databaseBkp = $databaseBkp;
+    }
+
+    public function switchDB():void
+    {
+        $estabelecimentoId = "u199209817_{$this->session->get('userId')}";
+        (new DynamicConnectionManager($this->managerRegistry))->switchDatabase($estabelecimentoId, $estabelecimentoId);
     }
 
     /**

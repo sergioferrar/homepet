@@ -16,6 +16,7 @@ class UsuarioController extends DefaultController
      */
     public function index(Request $request): Response
     {
+        $this->switchDB();
         $data = [];
         $repositorio = $this->getRepositorio(Usuario::class);
         switch ($this->security->getUser()->getAccessLevel()) {
@@ -39,6 +40,7 @@ class UsuarioController extends DefaultController
      */
     public function create(Request $request): Response
     {
+        $this->switchDB();
         return $this->render('usuario/create.html.twig', [
             'controller_name' => 'UsuarioController',
         ]);
@@ -49,6 +51,7 @@ class UsuarioController extends DefaultController
      */
     public function edit(Request $request): Response
     {
+        $this->switchDB();
         $usuarios = $this->getRepositorio(Usuario::class)->findOneBy(['id' => $request->get('id')]);
         $data = [];
         $data['usuario'] = $usuarios;
@@ -60,6 +63,7 @@ class UsuarioController extends DefaultController
      */
     public function store(Request $request): Response
     {
+        $this->switchDB();
         $usuario = new Usuario();
         $usuario->setNomeUsuario($request->get('nome_usuario'));
         $usuario->setSenha(password_hash($request->get('senha'), PASSWORD_DEFAULT, ["cost" => 10]));
@@ -94,6 +98,7 @@ class UsuarioController extends DefaultController
      */
     public function update(Request $request): Response
     {
+        $this->switchDB();
         $usuario = new Usuario();
         $usuario->setNomeUsuario($request->get('nome_usuario'));
         $usuario->setSenha(password_hash($request->get('senha'), PASSWORD_DEFAULT, ["cost" => 10]));

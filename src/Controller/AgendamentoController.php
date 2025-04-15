@@ -22,6 +22,7 @@ class AgendamentoController extends DefaultController
      */
     public function index(Request $request): Response
     {
+        $this->switchDB();
         $data              = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
         $agendamentos      = $this->getRepositorio(Agendamento::class)->findByDate($this->session->get('userId'), $data);
         $totalAgendamentos = $this->getRepositorio(Agendamento::class)->contarAgendamentosPorData($this->session->get('userId'), $data);
@@ -38,6 +39,7 @@ class AgendamentoController extends DefaultController
      */
     public function novo(Request $request): Response
     {
+        $this->switchDB();
         if ($request->isMethod('POST')) {
             $data = $request->request->all();
 
@@ -89,6 +91,7 @@ class AgendamentoController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
+        $this->switchDB();
         $repo  = $this->getRepositorio(Agendamento::class);
         $dados = $this->getRepositorio(Agendamento::class)
             ->listaAgendamentoPorId($this->session->get('userId'), $request->get('id'));
@@ -137,6 +140,7 @@ class AgendamentoController extends DefaultController
      */
     public function deletar(int $id): Response
     {
+        $this->switchDB();
         $this->getRepositorio(Agendamento::class)->delete($this->session->get('userId'), $id);
         return $this->redirectToRoute('agendamento_index');
     }
@@ -146,6 +150,7 @@ class AgendamentoController extends DefaultController
      */
     public function concluir(int $id): Response
     {
+        $this->switchDB();
         $repo  = $this->getRepositorio(Agendamento::class);
         $dados = $repo->listaAgendamentoPorId($this->session->get('userId'), $id);
 
@@ -185,6 +190,7 @@ class AgendamentoController extends DefaultController
      */
     public function alterarPagamento(int $id, Request $request): Response
     {
+        $this->switchDB();
         $repo  = $this->getRepositorio(Agendamento::class);
         $dados = $repo->listaAgendamentoPorId($this->session->get('userId'), $id);
 
@@ -218,6 +224,7 @@ class AgendamentoController extends DefaultController
      */
     public function alterarHoraSaida(Request $request, int $id): Response
     {
+        $this->switchDB();
         $repo  = $this->getRepositorio(Agendamento::class);
         $dados = $repo->listaAgendamentoPorId($this->session->get('userId'), $id);
 
@@ -244,6 +251,7 @@ class AgendamentoController extends DefaultController
      */
     public function executarAcao(Request $request, int $id, string $acao): Response
     {
+        $this->switchDB();
         $repo  = $this->getRepositorio(Agendamento::class);
         $dados = $repo->listaAgendamentoPorId($this->session->get('userId'), $id);
 
@@ -398,6 +406,7 @@ class AgendamentoController extends DefaultController
      */
     public function buscarCliente(Request $request): JsonResponse
     {
+        $this->switchDB();
         $petId = $request->get('pet_id');
 
         if (! $petId) {
@@ -420,6 +429,7 @@ class AgendamentoController extends DefaultController
      */
     public function quadroDeTarefas(Request $request): Response
     {
+        $this->switchDB();
         $baseId = $this->session->get('userId');
         $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
 
@@ -465,6 +475,7 @@ class AgendamentoController extends DefaultController
      */
     public function alterarStatusPet(Request $request, int $id): JsonResponse
     {
+        $this->switchDB();
         $status = json_decode($request->getContent(), true)['status'] ?? null;
 
         if (!in_array($status, ['aguardando', 'em_processo', 'finalizado'], true)) {
