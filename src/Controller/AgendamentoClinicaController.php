@@ -13,6 +13,8 @@ class AgendamentoClinicaController extends AbstractController
      */
     public function index(): Response
     {
+        $this->switchDB();
+        // Aqui vai ter que chamar o $this->switchswitchDB('username','dbname')
         return $this->render('agendamento_clinica/index.html.twig', [
             'controller_name' => 'AgendamentoClinicaController',
         ]);

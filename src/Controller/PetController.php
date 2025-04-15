@@ -25,6 +25,7 @@ class PetController extends DefaultController
      */
     public function index(): Response
     {
+        $this->switchDB();
         $pets = $this->getRepositorio(Pet::class)->findAllPets($this->session->get('userId'));
         return $this->render('pet/index.html.twig', ['pets' => $pets]);
     }
@@ -34,6 +35,7 @@ class PetController extends DefaultController
      */
     public function novo(Request $request): Response
     {
+        $this->switchDB();
         if ($request->isMethod('POST')) {
             $donoId = $request->get('dono_id');
 
@@ -97,6 +99,7 @@ class PetController extends DefaultController
  */
 public function editar(Request $request, int $id): Response
 {
+    $this->switchDB();
     $pet = $this->getRepositorio(Pet::class)->findPetById($this->session->get('userId'), $id);
     if (!$pet) {
         throw $this->createNotFoundException('O pet não foi encontrado');
@@ -179,6 +182,7 @@ public function editar(Request $request, int $id): Response
      */
     public function deletar(Request $request, int $id): Response
     {
+        $this->switchDB();
         $pet = $this->getRepositorio(Pet::class)->find($id);
 
         if (!$pet) {
@@ -194,6 +198,7 @@ public function editar(Request $request, int $id): Response
      */
     public function cadastro(): Response
     {
+        $this->switchDB();
         return $this->render('pet/cadastro_pet.html.twig');
     }
 }

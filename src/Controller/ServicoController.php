@@ -19,6 +19,7 @@ class ServicoController extends DefaultController
      */
     public function index(Request $request): Response
     {
+        $this->switchDB();
         $servicos = $this->getRepositorio(Servico::class)->findAllService($this->session->get('userId'));
         return $this->render('servico/index.html.twig', ['servicos' => $servicos]);
     }
@@ -28,6 +29,7 @@ class ServicoController extends DefaultController
      */
     public function novo(Request $request): Response
     {
+        $this->switchDB();
         if ($request->isMethod('POST')) {
             $servico = new Servico();
             $servico->setNome($request->request->get('nome'));
@@ -46,6 +48,7 @@ class ServicoController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
+        $this->switchDB();
         $servico = $this->getRepositorio(Servico::class)->findService($this->session->get('userId'), $id);
 
         if (!$servico) {
@@ -71,6 +74,7 @@ class ServicoController extends DefaultController
      */
     public function deletar(Request $request, int $id): Response
     {
+        $this->switchDB();
         $servico = $this->getRepositorio(Servico::class)->findService($this->session->get('userId'), $id);
 
         if (!$servico) {

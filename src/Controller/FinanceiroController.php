@@ -26,6 +26,7 @@ class FinanceiroController extends DefaultController
      */
     public function index(Request $request): Response
     {
+        $this->switchDB();
         $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
         $financeiros = $this->getRepositorio(Financeiro::class)->findByDate($this->session->get('userId'), $data);
 
@@ -40,6 +41,7 @@ class FinanceiroController extends DefaultController
      */
     public function novo(Request $request): Response
     {
+        $this->switchDB();
         if ($request->isMethod('POST')) {
             $financeiro = new Financeiro();
             $financeiro->setDescricao($request->request->get('descricao'));
@@ -61,6 +63,7 @@ class FinanceiroController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
+        $this->switchDB();
         $repo = $this->getRepositorio(Financeiro::class);
         $financeiro = $repo->findFinanceiro($this->session->get('userId'), $id);
 
@@ -92,6 +95,7 @@ class FinanceiroController extends DefaultController
      */
     public function deletar(Request $request, int $id): Response
     {
+        $this->switchDB();
         $financeiro = $this->getRepositorio(Financeiro::class)->findAllFinanceiro($this->session->get('userId'), $id); // Corrigido
 
         if (!$financeiro) {
@@ -108,6 +112,7 @@ class FinanceiroController extends DefaultController
      */
     public function relatorio(Request $request): Response
     {
+        $this->switchDB();
         // Obtém os parâmetros do formulário
         $mesInicio = $request->query->get('mes_inicio');
         $mesFim = $request->query->get('mes_fim');
@@ -134,6 +139,7 @@ class FinanceiroController extends DefaultController
      */
     public function financeiroPendente(Request $request, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
     {
+        $this->switchDB();
         $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
         $financeirosPendentes = $financeiroPendenteRepository->findByDate($this->session->get('userId'), $data);
 
@@ -148,6 +154,7 @@ class FinanceiroController extends DefaultController
      */
     public function pagarFinanceiroPendente(int $id): Response
     {
+        $this->switchDB();
         // Buscar o registro no FinanceiroPendente
         $financeiroPendente = $this->getRepositorio(FinanceiroPendente::class)->findPendenteById($this->session->get('userId'), $id);
 
@@ -179,6 +186,7 @@ class FinanceiroController extends DefaultController
      */
     public function confirmarPagamento(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
     {
+        $this->switchDB();
         // Buscar o registro no FinanceiroPendente
         $financeiroPendente = $financeiroPendenteRepository->findPendenteById($this->session->get('userId'), $id);
 
@@ -209,6 +217,7 @@ class FinanceiroController extends DefaultController
      */
     public function executarAcao(Request $request, int $id): Response
     {
+        $this->switchDB();
         $acao = $request->request->get('acao');
         
         if (!$acao) {
@@ -231,6 +240,7 @@ class FinanceiroController extends DefaultController
      */
     public function exportRelatorioExcel(Request $request): Response
     {
+        $this->switchDB();
         $mesInicio = $request->query->get('mes_inicio');
         $mesFim = $request->query->get('mes_fim');
 

@@ -21,6 +21,7 @@ class HospedagemController extends DefaultController
      */
     public function agendar(Request $request): Response
     {
+        $this->switchDB();
         $baseId = $request->getSession()->get('userId');
 
         if ($request->isMethod('POST')) {
@@ -53,6 +54,7 @@ class HospedagemController extends DefaultController
      */
     public function listar(Request $request): Response
     {
+        $this->switchDB();
         $baseId = $request->getSession()->get('userId');
         return $this->render('hospedagem/listar.html.twig', [
             'dados' => $this->getRepositorio(HospedagemCaes::class)->localizaTodos($baseId)
@@ -64,6 +66,7 @@ class HospedagemController extends DefaultController
      */
     public function deletar(Request $request, int $id): Response
     {
+        $this->switchDB();
         $baseId = $request->getSession()->get('userId');
 
         if (!$this->getRepositorio(HospedagemCaes::class)->localizaPorId($baseId, $id)) {
@@ -79,6 +82,7 @@ class HospedagemController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
+        $this->switchDB();
         $baseId = $request->getSession()->get('userId');
         $hospedagem = $this->getRepositorio(HospedagemCaes::class)->localizaPorId($baseId, $id);
 
@@ -120,6 +124,7 @@ class HospedagemController extends DefaultController
      */
     public function concluirPagamento(Request $request, int $id): Response
     {
+        $this->switchDB();
         $baseId = $request->getSession()->get('userId');
         $hospedagem = $this->getRepositorio(HospedagemCaes::class)->localizaPorId($baseId, $id);
 
