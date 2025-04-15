@@ -29,7 +29,7 @@ class DynamicConnectionManager
         // senha, host e driver permanecem os mesmos
 
         $reflection = new \ReflectionClass($this->connection);
-        $property = $reflection->getProperty('_params');
+        $property = $reflection->getProperty('params');
         $property->setAccessible(true);
         $property->setValue($this->connection, $params);
 
