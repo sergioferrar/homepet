@@ -25,7 +25,7 @@ class ClienteRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function setBaseId($baseId = 'homepet_login')
+    public function setBaseId($baseId = 'u199209817_login')
     {
         $this->baseId = $baseId;
     }
@@ -44,10 +44,10 @@ class ClienteRepository extends ServiceEntityRepository
                 a.concluido,
                 p.nome AS pet_nome,
                 s.nome AS servico_nome
-            FROM homepet_{$baseId}.agendamento a
-            INNER JOIN homepet_{$baseId}.agendamento_pet_servico aps ON aps.agendamentoId = a.id
-            INNER JOIN homepet_{$baseId}.pet p ON p.id = aps.petId
-            INNER JOIN homepet_{$baseId}.servico s ON s.id = aps.servicoId
+            FROM u199209817_{$baseId}.agendamento a
+            INNER JOIN u199209817_{$baseId}.agendamento_pet_servico aps ON aps.agendamentoId = a.id
+            INNER JOIN u199209817_{$baseId}.pet p ON p.id = aps.petId
+            INNER JOIN u199209817_{$baseId}.servico s ON s.id = aps.servicoId
             WHERE p.dono_id = :clienteId
             ORDER BY a.data DESC, a.horaChegada DESC";
 
@@ -56,14 +56,14 @@ class ClienteRepository extends ServiceEntityRepository
     }
 
     public function localizaTodosClientePorID($baseId, $clienteId){
-        $sql = "SELECT * FROM homepet_{$baseId}.cliente WHERE id='{$clienteId}'";
+        $sql = "SELECT * FROM u199209817_{$baseId}.cliente WHERE id='{$clienteId}'";
 
         $query = $this->conn->query($sql);
         return $query->fetch();
     }
 
     public function localizaTodosCliente($baseId){
-        $sql = "SELECT * FROM homepet_{$baseId}.cliente";
+        $sql = "SELECT * FROM u199209817_{$baseId}.cliente";
 
         $query = $this->conn->query($sql);
         return $query->fetchAll();
@@ -71,7 +71,7 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function save($baseId, array $clientData): void
     {
-        $sql = "INSERT INTO homepet_{$baseId}.cliente (nome, email, telefone, rua, numero, complemento, bairro, cidade, whatsapp) VALUES 
+        $sql = "INSERT INTO u199209817_{$baseId}.cliente (nome, email, telefone, rua, numero, complemento, bairro, cidade, whatsapp) VALUES 
         ('{$clientData['nome']}', '{$clientData['email']}', '{$clientData['telefone']}', '{$clientData['rua']}', '{$clientData['numero']}', '{$clientData['complemento']}', '{$clientData['bairro']}', '{$clientData['cidade']}', '{$clientData['whatsapp']}')";
         $stmt = $this->conn->query($sql);
         
@@ -84,7 +84,7 @@ class ClienteRepository extends ServiceEntityRepository
     */
     public function update($baseId, array $clienteData): void
     {
-        $sql = "UPDATE homepet_{$baseId}.cliente 
+        $sql = "UPDATE u199209817_{$baseId}.cliente 
                 SET nome = '{$clienteData['nome']}', email = '{$clienteData['email']}', telefone = '{$clienteData['telefone']}', 
                     rua = '{$clienteData['rua']}', 
                     numero = '{$clienteData['numero']}', 
@@ -100,7 +100,7 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function delete($baseId, int $id): void
     {
-        $sql = 'DELETE FROM homepet_{$baseid}.cliente WHERE id = :id';
+        $sql = 'DELETE FROM u199209817_{$baseid}.cliente WHERE id = :id';
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
@@ -113,7 +113,7 @@ class ClienteRepository extends ServiceEntityRepository
             $where = 'WHERE nome LIKE :term OR email LIKE :term OR telefone LIKE :term OR Endereco LIKE :term';
         }
         $sql = 'SELECT * 
-                FROM homepet_'.$baseId.'.cliente 
+                FROM u199209817_'.$baseId.'.cliente 
                 ' . $where;
         if ($term && !empty($term)) {
 

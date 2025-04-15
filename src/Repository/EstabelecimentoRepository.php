@@ -45,7 +45,7 @@ class EstabelecimentoRepository extends ServiceEntityRepository
     {
         $sql = "SELECT SCHEMA_NAME
             FROM INFORMATION_SCHEMA.SCHEMATA
-            WHERE SCHEMA_NAME ='homepet_{$baseId}'";
+            WHERE SCHEMA_NAME ='u199209817_{$baseId}'";
 
         $query = $this->conn->query($sql);
         return $query->fetch();
