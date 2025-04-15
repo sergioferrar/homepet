@@ -1,13 +1,12 @@
 <?php
-
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\FinanceiroPendenteRepository;
 
 /**
- * @ORM\Entity(repositoryClass=App\Repository\FinanceiroPendenteRepository::class)
- * @ORM\Table(name="FinanceiroPendente")
+ * @ORM\Entity(repositoryClass=FinanceiroPendenteRepository::class)
+ * @ORM\Table(name="financeiropendente")
  */
 class FinanceiroPendente
 {
@@ -37,6 +36,11 @@ class FinanceiroPendente
      * @ORM\Column(type="integer", nullable=true)
      */
     private $petId;
+
+    /**
+     * @ORM\Column(type="string", columnDefinition="ENUM('dinheiro', 'pix', 'credito', 'debito', 'pendente')")
+     */
+    private $metodoPagamento;
 
     /**
      * @ORM\Column(type="integer", nullable=true)
@@ -70,12 +74,12 @@ class FinanceiroPendente
         return $this;
     }
 
-    public function getData(): ?\DateTime
+    public function getData(): ?\DateTimeInterface
     {
         return $this->data;
     }
 
-    public function setData(\DateTime $data): self
+    public function setData(\DateTimeInterface $data): self
     {
         $this->data = $data;
         return $this;
@@ -89,6 +93,17 @@ class FinanceiroPendente
     public function setPetId(?int $petId): self
     {
         $this->petId = $petId;
+        return $this;
+    }
+
+    public function getMetodoPagamento(): ?string
+    {
+        return $this->metodoPagamento;
+    }
+
+    public function setMetodoPagamento(string $metodoPagamento): self
+    {
+        $this->metodoPagamento = $metodoPagamento;
         return $this;
     }
 

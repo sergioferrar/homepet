@@ -130,4 +130,27 @@ class ClienteRepository extends ServiceEntityRepository
         return $this->conn->lastInsertId();
     }
 
+    public function findClienteByPetId($baseId, int $petId): ?array
+    {
+        $sql = "SELECT 
+                    c.id,
+                    c.nome,
+                    c.email,
+                    c.telefone,
+                    c.whatsapp,
+                    c.rua,
+                    c.numero,
+                    c.complemento,
+                    c.bairro,
+                    c.cidade,
+                    c.cep
+                FROM homepet_{$baseId}.cliente c
+                INNER JOIN homepet_{$baseId}.pet p ON p.dono_id = c.id
+                WHERE p.id = :petId";
+
+        $stmt = $this->conn->executeQuery($sql, ['petId' => $petId]);
+        return $stmt->fetchAssociative() ?: null;
+    }
+
+
 }
