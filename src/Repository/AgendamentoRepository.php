@@ -24,15 +24,35 @@ class AgendamentoRepository extends ServiceEntityRepository
         $this->conn = $registry->getManager()->getConnection();
     }
 
-    public function listaAgendamentoPorId($baseId, $idAgendamento)
+    public function listaAgendamentoPorId($baseId, $id)
     {
+<<<<<<< HEAD
         $sql = "SELECT a.id, data, concluido, pronto, horaChegada, metodo_pagamento, horaSaida, horaChegada, taxi_dog, taxa_taxi_dog
             FROM u199209817_{$baseId}.agendamento a
             LEFT JOIN u199209817_{$baseId}.agendamento_pet_servico aps ON a.id = aps.agendamentoId
             WHERE a.id = {$idAgendamento}";
+=======
+        $sql = "SELECT a.id, a.data, a.concluido, a.pronto, a.horaChegada, a.metodo_pagamento, a.horaSaida, 
+                       a.taxi_dog, a.taxa_taxi_dog, a.pacote_semanal, a.pacote_quinzenal, a.donoId, a.status
+                FROM homepet_{$baseId}.agendamento a
+                WHERE a.id = :id";
+        
+        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
+        $result = $stmt->fetchAssociative();
+>>>>>>> ea91d6e (ajustes)
 
-        $query = $this->conn->query($sql);
-        return $query->fetch();
+        if ($result) {
+            // Converter taxa_taxi_dog para float
+            $result['taxa_taxi_dog'] = $result['taxa_taxi_dog'] !== null ? (float) $result['taxa_taxi_dog'] : 0.0;
+            // Converter outros campos booleanos, se necessário
+            $result['concluido'] = (bool) $result['concluido'];
+            $result['pronto'] = (bool) $result['pronto'];
+            $result['taxi_dog'] = (bool) $result['taxi_dog'];
+            $result['pacote_semanal'] = (bool) $result['pacote_semanal'];
+            $result['pacote_quinzenal'] = (bool) $result['pacote_quinzenal'];
+        }
+
+        return $result;
     }
 
     public function listaApsPorId($baseId, $idAgendamento)

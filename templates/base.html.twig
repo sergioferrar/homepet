@@ -10,13 +10,12 @@
     <meta content="" name="keywords">
 
     <!-- Favicons -->
-    <link href="assets/img/favicon.png" rel="icon">
-    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <link href="{{ asset('assets/img/favicon.png') }}" rel="icon">
+    <link href="{{ asset('assets/img/apple-touch-icon.png') }}" rel="apple-touch-icon">
 
     <!-- Google Fonts -->
     <link href="https://fonts.gstatic.com" rel="preconnect">
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
-          rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
 
     <!-- Vendor CSS Files -->
     <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
@@ -31,13 +30,120 @@
     <link href="{{ asset('js/plugins/datatables/dataTables.bootstrap4.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
 
-    <!-- =======================================================
-    * Template Name: NiceAdmin
-    * Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
-    * Updated: Apr 20 2024 with Bootstrap v5.3.3
-    * Author: BootstrapMade.com
-    * License: https://bootstrapmade.com/license/
-    ======================================================== -->
+    <!-- Custom Responsive CSS -->
+    <style>
+        /* Estilizar a sidebar como colapsável em todas as resoluções */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: #fff;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        /* Estado colapsado */
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        /* Ajustar o header e o main */
+        .header {
+            transition: padding-left 0.3s ease-in-out;
+            padding-left: 250px; /* Alinhado com a sidebar aberta */
+        }
+
+        .main {
+            padding: 20px;
+            min-height: calc(100vh - 120px);
+            transition: margin-left 0.3s ease-in-out;
+            margin-left: 250px; /* Alinhado com a sidebar aberta */
+        }
+
+        /* Quando a sidebar está colapsada */
+        .header.collapsed {
+            padding-left: 0;
+        }
+
+        .main.collapsed {
+            margin-left: 0;
+        }
+
+        /* Tornar botões e links touch-friendly */
+        .nav-link, .dropdown-item, .btn {
+            padding: 10px 15px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        /* Ajustar o header para evitar sobreposição */
+        .header-nav ul {
+            flex-wrap: nowrap;
+        }
+
+        /* Estilizar o botão de toggle da sidebar */
+        .sidebar-toggle {
+            font-size: 24px;
+            padding: 10px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        /* Ajustar dropdowns */
+        .dropdown-menu {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        /* Garantir que o footer não sobreponha o conteúdo */
+        .footer {
+            padding: 15px;
+            text-align: center;
+        }
+
+        /* Comportamento em telas menores */
+        @media (max-width: 991px) {
+            .sidebar {
+                transform: translateX(-100%); /* Começa colapsada em mobile */
+            }
+            .sidebar.active {
+                transform: translateX(0); /* Abre ao ativar */
+            }
+            .header {
+                padding-left: 0; /* Sem padding em mobile por padrão */
+            }
+            .main {
+                margin-left: 0; /* Sem margem em mobile por padrão */
+            }
+            .header .search-bar {
+                display: none;
+            }
+            .header .search-bar.active {
+                display: block;
+                position: absolute;
+                top: 60px;
+                left: 0;
+                right: 0;
+                background: #fff;
+                padding: 10px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                z-index: 999;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .header-nav .nav-item {
+                margin-left: 5px;
+            }
+            .dropdown-menu {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 
 {% if app.request.attributes.get('_route') == 'home' %}
@@ -48,10 +154,14 @@
 
 <!-- ======= Header ======= -->
 <header id="header" class="header fixed-top d-flex align-items-center">
-
     <div class="d-flex align-items-center justify-content-between">
+        <!-- Botão de toggle para a sidebar (visível em todas as resoluções) -->
+        <button class="sidebar-toggle me-2" type="button" aria-label="Toggle sidebar">
+            <i class="bi bi-list"></i>
+        </button>
         <a href="{{ path('home') }}" class="logo d-flex align-items-center">
             <span class="d-none d-lg-block">Home Pet Shop</span>
+            <span class="d-lg-none">HPS</span>
         </a>
     </div><!-- End Logo -->
 
@@ -64,9 +174,8 @@
 
     <nav class="header-nav ms-auto">
         <ul class="d-flex align-items-center">
-
             <li class="nav-item d-block d-lg-none">
-                <a class="nav-link nav-icon search-bar-toggle " href="#">
+                <a class="nav-link nav-icon search-bar-toggle" href="#">
                     <i class="bi bi-search"></i>
                 </a>
             </li><!-- End Search Icon-->
@@ -75,17 +184,13 @@
                 <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
                     <i class="bi bi-bell"></i>
                     <span class="badge bg-primary badge-number"></span>
-                </a><!-- End Notification Icon -->
-
+                </a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
                     <li class="dropdown-header">
                         You have 4 new notifications
                         <a href="#"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
                     </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
+                    <li><hr class="dropdown-divider"></li>
                     <li class="notification-item">
                         <i class="bi bi-exclamation-circle text-warning"></i>
                         <div>
@@ -94,11 +199,7 @@
                             <p>30 min. ago</p>
                         </div>
                     </li>
-
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
+                    <li><hr class="dropdown-divider"></li>
                     <li class="notification-item">
                         <i class="bi bi-x-circle text-danger"></i>
                         <div>
@@ -107,11 +208,7 @@
                             <p>1 hr. ago</p>
                         </div>
                     </li>
-
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
+                    <li><hr class="dropdown-divider"></li>
                     <li class="notification-item">
                         <i class="bi bi-check-circle text-success"></i>
                         <div>
@@ -120,11 +217,7 @@
                             <p>2 hrs. ago</p>
                         </div>
                     </li>
-
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
+                    <li><hr class="dropdown-divider"></li>
                     <li class="notification-item">
                         <i class="bi bi-info-circle text-primary"></i>
                         <div>
@@ -133,75 +226,59 @@
                             <p>4 hrs. ago</p>
                         </div>
                     </li>
-
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
+                    <li><hr class="dropdown-divider"></li>
                     <li class="dropdown-footer">
                         <a href="#">Show all notifications</a>
                     </li>
-                </ul><!-- End Notification Dropdown Items -->
+                </ul>
             </li><!-- End Notification Nav -->
 
             <li class="nav-item dropdown">
                 <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
                     <i class="bi bi-chat-left-text"></i>
                     <span class="badge bg-success badge-number"></span>
-                </a><!-- End Messages Icon -->
+                </a>
             </li><!-- End Messages Nav -->
 
             <li class="nav-item dropdown pe-3">
                 <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
                     <img src="https://avatars.githubusercontent.com/u/93411015?v=4" alt="Profile" class="rounded-circle">
                     <span class="d-none d-md-block dropdown-toggle ps-2">{{ app.session.get('user') }}</span>
-                </a><!-- End Profile Image Icon -->
-
+                </a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                     <li class="dropdown-header">
                         <h6>{{ app.session.get('user') }}</h6>
                         <span>{{ app.session.get('accessLevel') }}</span>
                     </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
+                    <li><hr class="dropdown-divider"></li>
                     <li class="d-none">
                         <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
                             <i class="bi bi-person"></i>
                             <span>My Profile</span>
                         </a>
                     </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
+                    <li><hr class="dropdown-divider"></li>
                     <li class="d-none">
                         <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
                             <i class="bi bi-gear"></i>
                             <span>Account Settings</span>
                         </a>
                     </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
+                    <li><hr class="dropdown-divider"></li>
                     <li class="d-none">
                         <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
                             <i class="bi bi-question-circle"></i>
                             <span>Need Help?</span>
                         </a>
                     </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
+                    <li><hr class="dropdown-divider"></li>
                     <li>
                         <a class="dropdown-item d-flex align-items-center" href="{{ url('logout') }}">
                             <i class="bi bi-box-arrow-right"></i>
                             <span>Deslogar</span>
                         </a>
                     </li>
-                </ul><!-- End Profile Dropdown Items -->
+                </ul>
             </li><!-- End Profile Nav -->
         </ul>
     </nav><!-- End Icons Navigation -->
@@ -211,17 +288,16 @@
 <aside id="sidebar" class="sidebar">
     <ul class="sidebar-nav" id="sidebar-nav">
         <li class="nav-item">
-            <a class="nav-link " href="{{ path('home') }}">
+            <a class="nav-link" href="{{ path('home') }}">
                 <i class="bi bi-grid"></i>
                 <span>Home</span>
             </a>
-        </li><!-- End Dashboard Nav -->
-
+        </li>
         <li class="nav-item">
             <a class="nav-link collapsed" data-bs-target="#post" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-person-vcard"></i><span>Agendamento</span><i class="bi bi-chevron-down ms-auto"></i>
             </a>
-            <ul id="post" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <ul id="post" class="nav-content collapse" data-bs-parent="#sidebar-nav">
                 <li>
                     <a href="{{ path('agendamento_novo') }}">
                         <i class="bi bi-circle"></i><span>Novo Agendamento</span>
@@ -234,50 +310,34 @@
                 </li>
             </ul>
         </li>
-
         <li class="nav-item">
-            <a class="nav-link " href="{{ path('cliente_index') }}">
+            <a class="nav-link" href="{{ path('cliente_index') }}">
                 <i class="bi bi-person-circle"></i><span>Clientes</span>
             </a>
-            <ul id="produtos" class="nav-content collapse d-none " data-bs-parent="#sidebar-nav">
-                <li>
-                    <a href="{{ path('cliente_novo') }}">
-                        <i class="bi bi-circle"></i><span>Novo cliente</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ path('cliente_index') }}">
-                        <i class="bi bi-circle"></i><span>Clientes <span class="badge badge-sm bg-danger text-white">1</span></span>
-                    </a>
-                </li>
-            </ul>
         </li>
-
         <li class="nav-item">
             <a class="nav-link collapsed" data-bs-target="#pedidos" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-shop"></i><span>Pets</span><i class="bi bi-chevron-down ms-auto"></i>
             </a>
-            <ul id="pedidos" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <ul id="pedidos" class="nav-content collapse" data-bs-parent="#sidebar-nav">
                 <li>
                     <a href="{{ path('pet_index') }}">
-                        <i class="bi bi-circle"></i><span> Pets <span class="badge badge-sm bg-danger text-white">1</span></span>
+                        <i class="bi bi-circle"></i><span>Pets <span class="badge badge-sm bg-danger text-white">1</span></span>
                     </a>
                 </li>
                 <li>
                     <a href="{{ path('pet_novo') }}">
-                        <i class="bi bi-circle"></i><span>Cadastro de Pets </span>
+                        <i class="bi bi-circle"></i><span>Cadastro de Pets</span>
                     </a>
                 </li>
             </ul>
         </li>
-
-        <!-- EAD -->
         {% if app.session.get('accessLevel') == 'Admin' or app.session.get('accessLevel') == 'Super Admin' %}
             <li class="nav-item">
                 <a class="nav-link collapsed" data-bs-target="#servico" data-bs-toggle="collapse" href="#">
                     <i class="bi bi-tools"></i><span>Serviços</span><i class="bi bi-chevron-down ms-auto"></i>
                 </a>
-                <ul id="servico" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <ul id="servico" class="nav-content collapse" data-bs-parent="#sidebar-nav">
                     <li>
                         <a href="{{ path('servico_index') }}">
                             <i class="bi bi-circle"></i><span>Serviços Cadastrados</span>
@@ -290,101 +350,73 @@
                     </li>
                 </ul>
             </li>
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#financeiroDropdown" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-currency-dollar"></i><span>Financeiro</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="financeiroDropdown" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a href="{{ path('financeiro_index') }}">
+                            <i class="bi bi-circle"></i><span>Financeiro Diário</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ path('financeiro_pendente') }}">
+                            <i class="bi bi-circle text-danger"></i><span>Financeiro Pendente</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ path('financeiro_relatorio') }}">
+                            <i class="bi bi-circle"></i><span>Relatório Financeiro</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('agendamento_quadro') }}">
+                    <i class="bi bi-kanban"></i><span>Quadro de Banho & Tosa</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#clinica-veterinaria" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-hospital"></i><span>Clínica Veterinária</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="clinica-veterinaria" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a href="{{ path('pet_index') }}">
+                            <i class="bi bi-circle"></i><span>Gerenciamento de Pacientes</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ path('agendamento_index') }}">
+                            <i class="bi bi-circle"></i><span>Agendamento e Atendimento</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#matriculas" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-journal-text"></i><span>Hospedagem de Cães</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="matriculas" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a href="{{ path('hospedagem_agendar') }}">
+                            <i class="bi bi-circle"></i><span>Novo Agendamento</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ path('hospedagem_listar') }}">
+                            <i class="bi bi-circle"></i><span>Ver Hospedagens</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
         {% endif %}
-
-        {% if app.session.get('accessLevel') == 'Admin' or app.session.get('accessLevel') == 'Super Admin' %}
-        <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#financeiroDropdown" data-bs-toggle="collapse" href="#">
-                <i class="bi bi-currency-dollar"></i><span>Financeiro</span><i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="financeiroDropdown" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-                <li>
-                    <a href="{{ path('financeiro_index') }}">
-                        <i class="bi bi-circle"></i><span>Financeiro Diário</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ path('financeiro_pendente') }}">
-                        <i class="bi bi-circle text-danger"></i><span>Financeiro Pendente</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ path('financeiro_relatorio') }}">
-                        <i class="bi bi-circle"></i><span>Relatório Financeiro</span>
-                    </a>
-                </li>
-            </ul>
-        </li>
-        {% endif %}
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#alunos" data-bs-toggle="collapse" href="#">
-                <i class="bi bi-person-square"></i><span>Produtos</span><i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="alunos" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-                <li>
-                    <a href="components-alerts.html">
-                        <i class="bi bi-circle"></i><span>Produtos Cadastrados</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="components-alerts.html">
-                        <i class="bi bi-circle"></i><span>Cadastrar Produtos <span class="badge badge-sm bg-danger text-white"></span></span>
-                    </a>
-                </li>
-            </ul>
-        </li>
-
-        {% if app.session.get('accessLevel') == 'Admin' or app.session.get('accessLevel') == 'Super Admin' %}
-        <li class="nav-item">
-            <a class="nav-link" href="{{ path('agendamento_quadro') }}">
-                <i class="bi bi-kanban"></i><span>Quadro de Banho & Tosa</span>
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#clinica-veterinaria" data-bs-toggle="collapse" href="#">
-                <i class="bi bi-hospital"></i><span>Clínica Veterinária</span><i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="clinica-veterinaria" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-                <li>
-                    <a href="{{ path('pet_index') }}">
-                        <i class="bi bi-circle"></i><span>Gerenciamento de Pacientes</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ path('agendamento_index') }}">
-                        <i class="bi bi-circle"></i><span>Agendamento e Atendimento</span>
-                    </a>
-                </li>
-            </ul>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#matriculas" data-bs-toggle="collapse" href="#">
-                <i class="bi bi-journal-text"></i><span>Hospedagem de Cães</span><i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="matriculas" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-                <li>
-                    <a href="{{ path('hospedagem_agendar') }}">
-                        <i class="bi bi-circle"></i><span>Novo Agendamento</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ path('hospedagem_listar') }}">
-                        <i class="bi bi-circle"></i><span>Ver Hospedagens</span>
-                    </a>
-                </li>
-            </ul>
-        </li>
-        {% endif %}
-
         <li class="nav-item">
             <a class="nav-link" href="{{ url('app_usuario') }}">
                 <i class="bi bi-person"></i><span>Usuários</span>
             </a>
         </li>
-
         <li class="nav-item">
             <a class="nav-link" href="#">
                 <i class="bi bi-arrow-up-right"></i><span>Ver site</span>
@@ -403,22 +435,16 @@
         © Designed by <strong><span>Sérgio Ferrari</span></strong>
     </div>
     <div class="credits">
-        <!-- All the links in the footer should remain intact. -->
-        <!-- You can delete the links only if you purchased the pro version. -->
-        <!-- Licensing information: https://bootstrapmade.com/license/ -->
-        <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
         <a href="http://homepetshop.com.br/">Homepetshop</a>
     </div>
 </footer><!-- End Footer -->
 
 <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-<script src="{{ asset('js/plugins/jquery/jquery.min.js') }}"></script>
-<script src="{{ asset('js/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-
 <!-- Vendor JS Files -->
-<script src="{{ asset('assets/vendor/apexcharts/apexcharts.min.js') }}"></script>
+<script src="{{ asset('js/plugins/jquery/jquery.min.js') }}"></script>
 <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ asset('assets/vendor/apexcharts/apexcharts.min.js') }}"></script>
 <script src="{{ asset('assets/vendor/chart.js/chart.umd.js') }}"></script>
 <script src="{{ asset('assets/vendor/echarts/echarts.min.js') }}"></script>
 <script src="{{ asset('assets/vendor/quill/quill.js') }}"></script>
@@ -431,6 +457,53 @@
 <script src="{{ asset('js/plugins/datatables/dataTables.bootstrap4.js') }}"></script>
 <script src="{{ asset('assets/js/main.js') }}"></script>
 <script src="{{ asset('js/Notify.js') }}"></script>
+
+<!-- Custom JS for Sidebar Toggle -->
+<script>
+    $(document).ready(function() {
+        // Estado inicial: sidebar colapsada em mobile, aberta em desktop
+        if ($(window).width() < 992) {
+            $('.sidebar').addClass('collapsed');
+            $('.header').addClass('collapsed');
+            $('.main').addClass('collapsed');
+        }
+
+        // Toggle sidebar em qualquer resolução
+        $('.sidebar-toggle').on('click', function() {
+            $('.sidebar').toggleClass('collapsed active');
+            $('.header').toggleClass('collapsed');
+            $('.main').toggleClass('collapsed');
+        });
+
+        // Toggle search bar em mobile
+        $('.search-bar-toggle').on('click', function(e) {
+            e.preventDefault();
+            $('.search-bar').toggleClass('active');
+        });
+
+        // Fechar sidebar ao clicar fora dela em mobile
+        $(document).on('click', function(e) {
+            if ($(window).width() < 992 && !$('.sidebar').hasClass('collapsed') && !$(e.target).closest('.sidebar, .sidebar-toggle').length) {
+                $('.sidebar').addClass('collapsed').removeClass('active');
+                $('.header').addClass('collapsed');
+                $('.main').addClass('collapsed');
+            }
+        });
+
+        // Ajustar layout ao redimensionar
+        $(window).on('resize', function() {
+            if ($(window).width() < 992 && !$('.sidebar').hasClass('collapsed')) {
+                $('.sidebar').addClass('collapsed').removeClass('active');
+                $('.header').addClass('collapsed');
+                $('.main').addClass('collapsed');
+            } else if ($(window).width() >= 992 && $('.sidebar').hasClass('collapsed') && !$('.sidebar').hasClass('active')) {
+                $('.sidebar').removeClass('collapsed');
+                $('.header').removeClass('collapsed');
+                $('.main').removeClass('collapsed');
+            }
+        });
+    });
+</script>
 
 {% block javascripts %}{% endblock %}
 

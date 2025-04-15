@@ -21,26 +21,14 @@
                 </div>
                 <div class="card-body mt-3">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                    {# <h5 class="card-title text-center text-uppercase">Lista de Agendamentos</h5> #}
-                    
-{#                         <a href="{{ path('agendamento_index', {'data': data|date_modify('-1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Anterior</a>
-                        <h2>{{ data|date('d/m/Y') }}</h2>
-                        <a href="{{ path('agendamento_index', {'data': data|date_modify('+1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Próximo</a> #}
                         <form method="get" action="{{ path('agendamento_index') }}" class="col-4 mb-3">
                             <div class="input-group">
                                 <input type="date" name="data" value="{{ data|date('Y-m-d') }}" class="form-control">
                                 <button type="submit" class="btn btn-primary">Pesquisar</button>
                             </div>
                         </form>
-                    
                     </div>
 
-{#                     <div class="mb-3">
-                        <strong>Total de agendamentos: {{ totalAgendamentos }}</strong>
-                    </div> #}
-
-
-                    
                     <table class="table table-bordered datatable">
                         <thead class="table-light">
                             <tr>
@@ -60,7 +48,10 @@
                             <tr class="{% if agendamento.metodo_pagamento == 'pendente' %}table-warning text-dark fw-bold{% endif %} {% if agendamento.taxi_dog %}table-info{% endif %}">
                                 <td class="{% if agendamento.concluido %}text-success fw-bold{% endif %}">{{ agendamento.pet_nome }}</td>
                                 <td>
-                                    <a href="javascript:void(0);" class="text-primary fw-bold buscar-cliente" data-pet-id="{{ agendamento.dono_id }}">
+                                    <a href="javascript:void(0);" class="text-primary fw-bold buscar-cliente" data-dono-id="{{ agendamento.dono_id }}">
+                                        {{ agendamento.dono_nome }}
+                                    </a>
+
                                         {{ agendamento.dono_nome }}
                                     </a>
                                 </td>
@@ -85,9 +76,6 @@
                                         -
                                     {% endif %}
                                 </td>
-
-
-
                                 <td>{{ agendamento.horaChegada is defined and agendamento.horaChegada is not null ? agendamento.horaChegada|date('H:i') : 'Não definido' }}</td>
                                 <td>
                                     <form method="post" action="{{ path('agendamento_alterar_saida', {'id': agendamento.id}) }}" class="reload-form-select">
@@ -124,13 +112,13 @@
                                           </a>
                                         </li>
                                         <li>
-                                          <a data-acao="concluir" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'concluir'}) }}" href="javascript:void(0);" class="reload-form dropdown-item">
-                                            Concluir
+                                          <a data-acao="concluir" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}" href="javascript:void(0);" class="dropdown-item open-concluir-modal">
+                                            Concluir Pagamento
                                           </a>
                                         </li>
                                         <li>
                                           <a data-acao="pendente" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'pendente'}) }}" href="javascript:void(0);" class="reload-form dropdown-item text-bg-warning">
-                                            Pendente
+                                            Pagamento Pendente
                                           </a>
                                         </li>
                                         <li>
@@ -150,7 +138,6 @@
         </div>
     </div>
 </section>
-
 
 <!-- Modal para informações do cliente -->
 <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
@@ -174,13 +161,245 @@
 </div>
 
 
+<!-- Modal para Concluir Agendamento -->
+<div class="modal fade" id="modalConcluir" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Concluir Agendamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Serviços Prestados</h6>
+                <div id="servicos-list"></div>
 
+                <hr>
+
+                <h6>Financeiro Pendente</h6>
+                <div id="pendentes-list">
+                    <p>Nenhum registro pendente encontrado.</p>
+                </div>
+
+                <hr>
+
+                <div class="mb-3">
+                    <label for="desconto" class="form-label">Desconto (R$):</label>
+                    <input type="number" step="0.01" min="0" class="form-control" id="desconto" value="0">
+                </div>
+
+                <div class="mb-3">
+                    <label for="total" class="form-label">Total (R$):</label>
+                    <input type="text" class="form-control" id="total" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label for="metodo_pagamento" class="form-label">Método de Pagamento:</label>
+                    <select name="metodo_pagamento" id="metodo_pagamento" class="form-control">
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="pix">Pix</option>
+                        <option value="credito">Cartão de Crédito</option>
+                        <option value="debito">Cartão de Débito</option>
+                        <option value="pacote_semanal_1">Pacote Semanal 1</option>
+                        <option value="pacote_semanal_2">Pacote Semanal 2</option>
+                        <option value="pacote_semanal_3">Pacote Semanal 3</option>
+                        <option value="pacote_semanal_4">Pacote Semanal 4</option>
+                        <option value="pacote_quinzenal">Pacote Quinzenal</option>
+                        <option value="pacote_mensal">Pacote Mensal</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <div>
+                    <button type="button" class="btn btn-warning" id="btn-marcar-pendente">
+                        <i class="bi bi-clock-history"></i> Pagamento Pendente
+                    </button>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" id="btn-concluir-pagamento">
+                        <i class="bi bi-cash-coin"></i> Concluir Pagamento
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 {% endblock %}
-{% block javascripts %}
 
+{% block javascripts %}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+    //     // Depuração para verificar inicializações do DataTables
+    //     console.log('Inicializando DataTables...');
+
+    //     // Verificar se a tabela existe
+    //     const table = $('.datatable');
+    //     if (table.length) {
+    //         // Se já foi inicializada, destruir a instância anterior
+    //         if ($.fn.DataTable.isDataTable(table)) {
+    //             console.log('DataTables já inicializado, destruindo instância anterior...');
+    //             table.DataTable().destroy();
+    //         }
+
+    //         // Inicializar o DataTables
+    //         console.log('Inicializando DataTables pela primeira vez...');
+    //         table.DataTable({
+    //             "language": {
+    //                 "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
+    //             },
+    //             "paging": true,
+    //             "searching": true,
+    //             "info": true,
+    //             "lengthChange": true,
+    //             "pageLength": 10,
+    //             "dom": 'lfrtip' // Define a estrutura padrão: length, filter, table, info, pagination
+    //         });
+    //         console.log('DataTables inicializado com sucesso.');
+    //     } else {
+    //         console.log('Tabela .datatable não encontrada.');
+    //     }
+
+    //     let totalOriginal = 0;
+
+        // Função para abrir o modal de conclusão
+        $('.open-concluir-modal').on('click', function(e) {
+            e.preventDefault(); // Impede o comportamento padrão do link
+            console.log('Botão Concluir clicado'); // Para depuração
+
+            const rota = $(this).data('action');
+            const agendamentoId = $(this).data('id'); // Definir agendamentoId aqui
+
+            fetch(rota, {
+                method: "GET"
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro na requisição: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Dados recebidos:', data); // Para depuração
+
+                if (data.status === "success") {
+                    const servicosList = $('#servicos-list');
+                    const pendentesList = $('#pendentes-list');
+                    const totalInput = $('#total');
+
+                    // Limpar listas
+                    servicosList.empty();
+                    pendentesList.empty();
+
+                    // Preencher serviços
+                    $.each(data.clientes, function(clienteNome, info) {
+                        servicosList.append(`<h6>Cliente: ${clienteNome}</h6>`);
+                        const ul = $('<ul></ul>');
+                        $.each(info.servicos, function(index, servico) {
+                            ul.append(`<li>${servico.servico_nome} para ${servico.pet_nome}: R$ ${servico.valor.toFixed(2)}</li>`);
+                        });
+                        if (data.agendamento.taxi_dog) {
+                            const taxaTaxiDog = parseFloat(data.agendamento.taxa_taxi_dog) || 0;
+                            ul.append(`<li>Táxi Dog: R$ ${taxaTaxiDog.toFixed(2)}</li>`);
+                        }
+                        servicosList.append(ul);
+                    });
+
+                    // Preencher pendentes
+                    if (data.pendentes && data.pendentes.length > 0) {
+                        const ul = $('<ul></ul>');
+                        $.each(data.pendentes, function(index, pendente) {
+                            const valorPendente = parseFloat(pendente.valor) || 0;
+                            ul.append(`<li>${pendente.descricao}: R$ ${valorPendente.toFixed(2)}</li>`);
+                        });
+                        pendentesList.html(ul);
+                    } else {
+                        pendentesList.html('<p>Nenhum registro pendente encontrado.</p>');
+                    }
+
+                    // Definir total
+                    totalOriginal = parseFloat(data.total_geral) || 0;
+                    totalInput.val(totalOriginal.toFixed(2));
+
+                    // Abrir modal usando a API nativa do Bootstrap 5
+                    try {
+                        const modalElement = document.getElementById('modalConcluir');
+                        const modal = new bootstrap.Modal(modalElement);
+                        modal.show();
+                        console.log('Modal aberto com sucesso');
+                    } catch (error) {
+                        console.error('Erro ao abrir o modal:', error);
+                    }
+
+                    // Adicionar depuração para o evento de fechamento
+                    const modalElement = document.getElementById('modalConcluir');
+                    modalElement.addEventListener('hidden.bs.modal', function () {
+                        console.log('Modal está sendo fechado');
+                    });
+
+                    // Concluir pagamento
+                    $('#btn-concluir-pagamento').off('click').on('click', function() {
+                        console.log('Botão Concluir Pagamento clicado'); // Para depuração
+                        const desconto = parseFloat($('#desconto').val()) || 0;
+                        const metodoPagamento = $('#metodo_pagamento').val();
+
+                        const url = "{{ path('agendamento_concluir_pagamento', {'id': 'AGENDAMENTO_ID'}) }}".replace('AGENDAMENTO_ID', agendamentoId);
+                        console.log('Enviando requisição para:', url); // Para depuração
+
+                        fetch(url, {
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: new URLSearchParams({
+                                'desconto': desconto,
+                                'metodo_pagamento': metodoPagamento
+                            })
+                        })
+                        .then(response => {
+                            console.log('Resposta recebida:', response); // Para depuração
+                            return response.json().then(data => ({ status: response.status, data }));
+                        })
+                        .then(({ status, data }) => {
+                            console.log('Dados da resposta:', data); // Para depuração
+                            if (status === 200 && data.status === "success") {
+                                Notify.toast(data.mensagem, "success");
+                                const modalElement = document.getElementById('modalConcluir');
+                                const modal = bootstrap.Modal.getInstance(modalElement);
+                                modal.hide();
+                                location.reload();
+                            } else {
+                                // Tratar erro 400 ou outros erros
+                                const mensagemErro = data.mensagem === "Este agendamento já foi concluído anteriormente." 
+                                    ? "Pagamento já foi lançado ou concluído." 
+                                    : data.mensagem || "Erro ao processar o pagamento.";
+                                Notify.toast(mensagemErro, "danger");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Erro na requisição AJAX:", error);
+                            Notify.toast("Erro ao processar o pagamento: " + error.message, "danger");
+                        });
+                    });
+                } else {
+                    Notify.toast("Erro: " + data.mensagem, "danger");
+                }
+            })
+            .catch(error => {
+                console.error("Erro na requisição AJAX:", error);
+                Notify.toast("Erro ao carregar os dados: " + error.message, "danger");
+            });
+        });
+
+        // Atualizar total ao mudar o desconto
+        $('#desconto').on('input', function() {
+            const desconto = parseFloat($(this).val()) || 0;
+            const total = totalOriginal - desconto;
+            $('#total').val(total.toFixed(2));
+        });
+
+        // Outros scripts existentes
         function salvarPosicaoScroll() {
             sessionStorage.setItem("scrollPos", window.scrollY);
         }
@@ -192,164 +411,101 @@
                 sessionStorage.removeItem("scrollPos");
             }
         }
-        
-        var url = $('meta[name="baseurl"]').attr('content');
 
-        $('.reload-form').on('click', function(){
+        $('.reload-form').on('click', function() {
             var rota = $(this).data('action');
             var acao = $(this).data('acao');
             var id = $(this).data('id');
 
-
-            
-            //return window.location.href= rota
-
             fetch(rota, {
-                    method: "POST",
-                    body: {}
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        Notify.toast(data.mensagem,data.status);
-                        //location.reload(); // Recarrega a página mantendo o scroll
-                    } else {
-                        alert("Erro: " + data.mensagem);
-                    }
-                })
-                .catch(error => console.error("Erro na requisição AJAX:", error));
-            
+                method: "POST",
+                body: {}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    Notify.toast(data.mensagem, data.status);
+                } else {
+                    Notify.toast("Erro: " + data.mensagem, "danger");
+                }
+            })
+            .catch(error => console.error("Erro na requisição AJAX:", error));
         });
 
-        $('.reload-form-select').on('change', function(){
+        $('.reload-form-select').on('change', function() {
             var rota = $(this).attr('action');
             var acao = $(this).data('acao');
             var id = $(this).data('id');
-            console.log(acao);
 
             let formData = new FormData(this);
             fetch(rota, {
-                    method: "POST",
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "sucesso") {
-                        Notify.toast(data.mensagem,'success');
-                        //location.reload(); // Recarrega a página mantendo o scroll
-                    } else {
-                        //alert("Erro: " + data.mensagem);
-                        Notify.toast(data.mensagem,danger);
-                        //location.reload(); // Recarrega a página mantendo o scroll
-                    }
-                })
-                .catch(error => console.error("Erro na requisição AJAX:", error));
-            
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "sucesso") {
+                    Notify.toast(data.mensagem, 'success');
+                } else {
+                    Notify.toast(data.mensagem, 'danger');
+                }
+            })
+            .catch(error => console.error("Erro na requisição AJAX:", error));
         });
-/*
-        // Enviar os formulários via AJAX para evitar resposta JSON na tela
-        document.querySelectorAll(".reload-form").forEach(form => {
-            form.addEventListener("change", function (event) {
-                event.preventDefault();
-                salvarPosicaoScroll();
-
-                let formData = new FormData(this);
-                let actionUrl = this.action;
-
-                fetch(actionUrl, {
-                    method: "POST",
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "sucesso") {
-                        location.reload(); // Recarrega a página mantendo o scroll
-                    } else {
-                        alert("Erro: " + data.mensagem);
-                    }
-                })
-                .catch(error => console.error("Erro na requisição AJAX:", error));
-            });
-        });*/
 
         restaurarPosicaoScroll();
     });
 
-    $(function(){
-        $('.buscar-cliente').on('click', function(){
-            var petId = $(this).data('pet-id');
+    $(function () {
+        $(document).on('click', '.buscar-cliente', function () {
+            var donoId = $(this).data('dono-id');
             var modalCliente = $('#modalCliente');
-            
-            
-            if (!petId) {
-                Notify.modal("Erro: Pet ID não encontrado.", 'md', 'Mensagem do sistema');
+
+            if (!donoId) {
+                Notify.modal("Erro: Dono ID não encontrado.", 'md', 'Mensagem do sistema');
                 return;
             }
-            
+
+            const url = "{{ absolute_url(path('api_buscar_cliente')) }}";
+
             $.ajax({
-                type:'POST',
-                data:{pet_id:petId},
-                dataType:'json',
-                url:`{{url('home')}}agendamento/api/buscar-cliente`,
-                success: function(data){
+                type: 'POST',
+                url: url,
+                data: { dono_id: donoId },
+                dataType: 'json',
+                success: function (data) {
                     if (data.status === "sucesso") {
-                        modalCliente.find('#clienteNome').html(data.cliente.nome);
-                        modalCliente.find('#clienteEmail').html(data.cliente.email);
-                        modalCliente.find('#clienteTelefone').html(data.cliente.telefone || data.cliente.whatsapp);
-                        modalCliente.find('#clienteEndereco').html(`${data.cliente.rua}, ${data.cliente.numero} ${data.cliente.complemento}`);
-                        modalCliente.find('#clienteBairro').html(data.cliente.bairro);
-                        modalCliente.find('#clienteCidade').html(data.cliente.cidade);
-                        modalCliente.find('#clienteCep').html(data.cliente.cep);
-                        modalCliente.modal('show');
-                       
+                        modalCliente.find('#clienteNome').html(data.cliente.nome || '-');
+                        modalCliente.find('#clienteEmail').html(data.cliente.email || '-');
+                        modalCliente.find('#clienteTelefone').html(data.cliente.telefone || data.cliente.whatsapp || '-');
+
+                        const endereco = [
+                            data.cliente.rua,
+                            data.cliente.numero,
+                            data.cliente.complemento
+                        ].filter(Boolean).join(', ');
+                        modalCliente.find('#clienteEndereco').html(endereco || '-');
+                        modalCliente.find('#clienteBairro').html(data.cliente.bairro || '-');
+                        modalCliente.find('#clienteCidade').html(data.cliente.cidade || '-');
+                        modalCliente.find('#clienteCep').html(data.cliente.cep || '-');
+
+                        const modal = new bootstrap.Modal(document.getElementById('modalCliente'));
+                        modal.show();
                     } else {
-                        alert("Erro ao buscar informações do cliente: " + data.mensagem);
+                        Notify.toast("Erro: " + data.mensagem, "danger");
                     }
                 },
-                error:function(er, httpx){
-                    console.log(er)
-                    console.log(httpx)
-                },
+                error: function (xhr, status, error) {
+                    console.error('Erro AJAX:', xhr.responseText || error);
+                    Notify.toast("Erro na requisição: " + error, "danger");
+                }
             });
 
             return false;
         });
     });
-   /* document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll(".buscar-cliente").forEach(element => {
-            element.addEventListener("click", function (event) {
-                event.preventDefault(); // Impede a navegação padrão do link
 
-                let petId = this.getAttribute("data-pet-id");
+    
 
-                if (!petId) {
-                    alert("Erro: Pet ID não encontrado.");
-                    return;
-                }
-
-                fetch(`/api/buscar-cliente?pet_id=${petId}`)
-
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === "sucesso") {
-                            document.getElementById("clienteNome").innerText = data.cliente.nome;
-                            document.getElementById("clienteEmail").innerText = data.cliente.email;
-                            document.getElementById("clienteTelefone").innerText = data.cliente.telefone || data.cliente.whatsapp;
-                            document.getElementById("clienteEndereco").innerText = `${data.cliente.rua}, ${data.cliente.numero} ${data.cliente.complemento}`;
-                            document.getElementById("clienteBairro").innerText = data.cliente.bairro;
-                            document.getElementById("clienteCidade").innerText = data.cliente.cidade;
-                            document.getElementById("clienteCep").innerText = data.cliente.cep;
-
-                            let modal = new bootstrap.Modal(document.getElementById('modalCliente'));
-                            modal.show();
-                        } else {
-                            alert("Erro ao buscar informações do cliente: " + data.mensagem);
-                        }
-                    })
-                    .catch(error => alert("Erro ao buscar cliente: " + error));
-            });
-        });
-    });*/
 </script>
-
 {% endblock %}
