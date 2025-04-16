@@ -150,12 +150,8 @@ class AgendamentoController extends DefaultController
      */
     public function concluir(int $id): JsonResponse
     {
-<<<<<<< HEAD
         $this->switchDB();
         $repo  = $this->getRepositorio(Agendamento::class);
-=======
-        $repo = $this->getRepositorio(Agendamento::class);
->>>>>>> ea91d6e (ajustes)
         $dados = $repo->listaAgendamentoPorId($this->session->get('userId'), $id);
 
         if (!$dados) {
@@ -440,12 +436,8 @@ class AgendamentoController extends DefaultController
      */
     public function buscarCliente(Request $request): JsonResponse
     {
-<<<<<<< HEAD
         $this->switchDB();
         $petId = $request->get('pet_id');
-=======
-        $donoId = $request->get('dono_id');
->>>>>>> ea91d6e (ajustes)
 
         if (! $donoId) {
             return $this->json(['status' => 'erro', 'mensagem' => 'Dono ID não informado.'], Response::HTTP_BAD_REQUEST);
