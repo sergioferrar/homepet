@@ -27,26 +27,23 @@ class AgendamentoRepository extends ServiceEntityRepository
     public function listaAgendamentoPorId($baseId, $id)
     {
         $sql = "SELECT a.id, data, concluido, pronto, horaChegada, metodo_pagamento, horaSaida, horaChegada, taxi_dog, taxa_taxi_dog
-            FROM u199209817_{$baseId}.agendamento a
-            LEFT JOIN u199209817_{$baseId}.agendamento_pet_servico aps ON a.id = aps.agendamentoId
-            WHERE a.id = {$idAgendamento}";
-        
+                FROM u199209817_{$baseId}.agendamento a
+                LEFT JOIN u199209817_{$baseId}.agendamento_pet_servico aps ON a.id = aps.agendamentoId
+                WHERE a.id = :id";
+
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
         $result = $stmt->fetchAssociative();
 
         if ($result) {
-            // Converter taxa_taxi_dog para float
             $result['taxa_taxi_dog'] = $result['taxa_taxi_dog'] !== null ? (float) $result['taxa_taxi_dog'] : 0.0;
-            // Converter outros campos booleanos, se necessário
             $result['concluido'] = (bool) $result['concluido'];
             $result['pronto'] = (bool) $result['pronto'];
             $result['taxi_dog'] = (bool) $result['taxi_dog'];
-            $result['pacote_semanal'] = (bool) $result['pacote_semanal'];
-            $result['pacote_quinzenal'] = (bool) $result['pacote_quinzenal'];
         }
 
         return $result;
     }
+
 
     public function listaApsPorId($baseId, $idAgendamento)
     {

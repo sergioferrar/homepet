@@ -21,7 +21,7 @@
                 </div>
                 <div class="card-body mt-3">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <form method="get" action="{{ path('agendamento_index') }}" class="col-4 mb-3">
+                        <form method="get" action="{{ path('agendamento_index') }}" class="col-12 col-md-4 mb-3">
                             <div class="input-group">
                                 <input type="date" name="data" value="{{ data|date('Y-m-d') }}" class="form-control">
                                 <button type="submit" class="btn btn-primary">Pesquisar</button>
@@ -29,115 +29,103 @@
                         </form>
                     </div>
 
-                    <table class="table table-bordered datatable">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Nome do Pet</th>
-                                <th>Nome do Dono</th>
-                                <th>Serviço</th>
-                                <th>Táxi Dog</th>
-                                <th>Valor Táxi Dog</th>
-                                <th>Hora de Chegada</th>
-                                <th>Hora de Saída</th>
-                                <th>Método de Pagamento</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for agendamento in agendamentos %}
-                            <tr class="{% if agendamento.metodo_pagamento == 'pendente' %}table-warning text-dark fw-bold{% endif %} {% if agendamento.taxi_dog %}table-info{% endif %}">
-                                <td class="{% if agendamento.concluido %}text-success fw-bold{% endif %}">{{ agendamento.pet_nome }}</td>
-                                <td>
-                                    <a href="javascript:void(0);" class="text-primary fw-bold buscar-cliente" data-dono-id="{{ agendamento.dono_id }}">
-                                        {{ agendamento.dono_nome }}
-                                    </a>
-
-                                        {{ agendamento.dono_nome }}
-                                    </a>
-                                </td>
-                                <td>{{ agendamento.servico_nome }}</td>
-                                <td>{{ agendamento.taxi_dog ? 'Sim' : 'Não' }}</td>
-                                <td>
-                                    {% set exibir_taxa = true %}
-                                    {% set current_id = agendamento.id %}
-                                    {% set current_dono = agendamento.dono_id %}
-
-                                    {% if loop.index0 > 0 %}
-                                        {% for i in 0..(loop.index0 - 1) %}
-                                            {% if agendamentos[i].id == current_id and agendamentos[i].dono_id == current_dono %}
-                                                {% set exibir_taxa = false %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped table-bordered align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="text-start">🐾 Pet</th>
+                                    <th class="text-start">👤 Tutor</th>
+                                    <th class="text-start">🛁 Serviço</th>
+                                    <th class="text-start">🚗 Táxi</th>
+                                    <th class="text-center">💰 Valor Táxi</th>
+                                    <th class="text-center">🕓 Chegada</th>
+                                    <th class="text-center">🕕 Saída</th>
+                                    <th class="text-center">💳 Pagamento</th>
+                                    <th class="text-center">⚙️ Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for agendamento in agendamentos %}
+                                    {% set cor_texto = '' %}
+                                    {% if agendamento.metodo_pagamento == 'pendente' %}
+                                        {% set cor_texto = 'text-danger fw-bold' %}
+                                    {% elseif agendamento.concluido %}
+                                        {% set cor_texto = 'text-success fw-bold' %}
+                                    {% endif %}
+                                    <tr>
+                                        <td class="text-start {{ cor_texto }}">{{ agendamento.pet_nome }}</td>
+                                        <td class="text-start {{ cor_texto }}">
+                                            <a href="javascript:void(0);" class="text-decoration-none buscar-cliente {{ cor_texto }}" data-dono-id="{{ agendamento.dono_id }}">
+                                                {{ agendamento.dono_nome }}
+                                            </a>
+                                        </td>
+                                        <td class="text-start {{ cor_texto }}">{{ agendamento.servico_nome }}</td>
+                                        <td class="text-start {{ cor_texto }}">{{ agendamento.taxi_dog ? 'Sim' : 'Não' }}</td>
+                                        <td class="text-center {{ cor_texto }}">
+                                            {% set exibir_taxa = true %}
+                                            {% set current_id = agendamento.id %}
+                                            {% set current_dono = agendamento.dono_id %}
+                                            {% if loop.index0 > 0 %}
+                                                {% for i in 0..(loop.index0 - 1) %}
+                                                    {% if agendamentos[i].id == current_id and agendamentos[i].dono_id == current_dono %}
+                                                        {% set exibir_taxa = false %}
+                                                    {% endif %}
+                                                {% endfor %}
                                             {% endif %}
-                                        {% endfor %}
-                                    {% endif %}
+                                            {% if agendamento.taxi_dog and exibir_taxa %}
+                                                R$ {{ agendamento.taxa_taxi_dog }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center {{ cor_texto }}">{{ agendamento.horaChegada ? agendamento.horaChegada|date('H:i') : '---' }}</td>
+                                        <td class="text-center {{ cor_texto }}">
+                                            <form method="post" action="{{ path('agendamento_alterar_saida', {'id': agendamento.id}) }}" class="reload-form-select">
+                                                <input type="time" name="hora_saida" class="form-control"
+                                                    value="{{ agendamento.horaSaida ? agendamento.horaSaida|date('H:i') : '' }}">
+                                            </form>
+                                        </td>
+                                        <td class="text-center {{ cor_texto }}">
+                                            <form method="post" action="{{ path('agendamento_alterar_pagamento', {'id': agendamento.id}) }}" class="reload-form-select">
+                                                <select name="metodo_pagamento" class="form-control bg-light">
+                                                    <option value="dinheiro" {% if agendamento.metodo_pagamento == 'dinheiro' %}selected{% endif %}>Dinheiro</option>
+                                                    <option value="pix" {% if agendamento.metodo_pagamento == 'pix' %}selected{% endif %}>Pix</option>
+                                                    <option value="credito" {% if agendamento.metodo_pagamento == 'credito' %}selected{% endif %}>Crédito</option>
+                                                    <option value="debito" {% if agendamento.metodo_pagamento == 'debito' %}selected{% endif %}>Débito</option>
+                                                    <option value="pendente" {% if agendamento.metodo_pagamento == 'pendente' %}selected{% endif %}>Pendente</option>
+                                                    <option value="pacote_semanal_1" {% if agendamento.metodo_pagamento == 'pacote_semanal_1' %}selected{% endif %}>Pacote Semanal 1</option>
+                                                    <option value="pacote_semanal_2" {% if agendamento.metodo_pagamento == 'pacote_semanal_2' %}selected{% endif %}>Pacote Semanal 2</option>
+                                                    <option value="pacote_semanal_3" {% if agendamento.metodo_pagamento == 'pacote_semanal_3' %}selected{% endif %}>Pacote Semanal 3</option>
+                                                    <option value="pacote_semanal_4" {% if agendamento.metodo_pagamento == 'pacote_semanal_4' %}selected{% endif %}>Pacote Semanal 4</option>
+                                                    <option value="pacote_quinzenal" {% if agendamento.metodo_pagamento == 'pacote_quinzenal' %}selected{% endif %}>Pacote Quinzenal</option>
+                                                    <option value="pacote_mensal" {% if agendamento.metodo_pagamento == 'pacote_mensal' %}selected{% endif %}>Pacote Mensal</option>
+                                                </select>
+                                            </form>
+                                        </td>
+                                        <td class="text-center {{ cor_texto }}">
+                                            <div class="dropdown">
+                                                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Ações
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="{{ path('agendamento_editar', {'id': agendamento.id}) }}">Editar</a></li>
+                                                    <li><a class="dropdown-item open-concluir-modal" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}" href="javascript:void(0);">Concluir Pagamento</a></li>
+                                                    <li><a class="dropdown-item reload-form text-danger" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao': 'deletar'}) }}" href="javascript:void(0);">Deletar</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
 
-                                    {% if agendamento.taxi_dog and exibir_taxa %}
-                                        R$ {{ agendamento.taxa_taxi_dog }}
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
-                                <td>{{ agendamento.horaChegada is defined and agendamento.horaChegada is not null ? agendamento.horaChegada|date('H:i') : 'Não definido' }}</td>
-                                <td>
-                                    <form method="post" action="{{ path('agendamento_alterar_saida', {'id': agendamento.id}) }}" class="reload-form-select">
-                                        <input type="time" name="hora_saida" class="form-control"
-                                               value="{{ agendamento.horaSaida is defined and agendamento.horaSaida is not null ? agendamento.horaSaida|date('H:i') : '' }}">
-                                    </form>
-                                </td>
-                                <td>
-                                    <form method="post" action="{{ path('agendamento_alterar_pagamento', {'id': agendamento.id}) }}" class="reload-form-select">
-                                        <select name="metodo_pagamento" class="form-control bg-light">
-                                            <option value="dinheiro" {% if agendamento.metodo_pagamento == 'dinheiro' %}selected{% endif %}>Dinheiro</option>
-                                            <option value="pix" {% if agendamento.metodo_pagamento == 'pix' %}selected{% endif %}>Pix</option>
-                                            <option value="credito" {% if agendamento.metodo_pagamento == 'credito' %}selected{% endif %}>Cartão de Crédito</option>
-                                            <option value="debito" {% if agendamento.metodo_pagamento == 'debito' %}selected{% endif %}>Cartão de Débito</option>
-                                            <option value="pendente" {% if agendamento.metodo_pagamento == 'pendente' %}selected{% endif %} class="bg-danger text-white">Pendente</option>
-                                            <option value="pacote_semanal_1" {% if agendamento.metodo_pagamento == 'pacote_semanal_1' %}selected{% endif %}>Pacote Semanal 1</option>
-                                            <option value="pacote_semanal_2" {% if agendamento.metodo_pagamento == 'pacote_semanal_2' %}selected{% endif %}>Pacote Semanal 2</option>
-                                            <option value="pacote_semanal_3" {% if agendamento.metodo_pagamento == 'pacote_semanal_3' %}selected{% endif %}>Pacote Semanal 3</option>
-                                            <option value="pacote_semanal_4" {% if agendamento.metodo_pagamento == 'pacote_semanal_4' %}selected{% endif %}>Pacote Semanal 4</option>
-                                            <option value="pacote_quinzenal" {% if agendamento.metodo_pagamento == 'pacote_quinzenal' %}selected{% endif %}>Pacote Quinzenal</option>
-                                            <option value="pacote_mensal" {% if agendamento.metodo_pagamento == 'pacote_mensal' %}selected{% endif %}>Pacote Mensal</option>
-                                        </select>
-                                    </form>
-                                </td>
-                                <td>
-                                    <div class="dropdown">
-                                      <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Ações
-                                      </button>
-                                      <ul class="dropdown-menu">
-                                        <li>
-                                          <a href="{{ path('agendamento_editar', {'id': agendamento.id}) }}" class="dropdown-item">
-                                            <i class="bi bi-pencil-square"></i> Editar
-                                          </a>
-                                        </li>
-                                        <li>
-                                          <a data-acao="concluir" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}" href="javascript:void(0);" class="dropdown-item open-concluir-modal">
-                                            Concluir Pagamento
-                                          </a>
-                                        </li>
-                                        <li>
-                                          <a data-acao="pendente" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'pendente'}) }}" href="javascript:void(0);" class="reload-form dropdown-item text-bg-warning">
-                                            Pagamento Pendente
-                                          </a>
-                                        </li>
-                                        <li>
-                                          <a data-acao="deletar" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao':'deletar'}) }}" href="javascript:void(0);" class="reload-form dropdown-item">
-                                            Deletar
-                                          </a>
-                                        </li>
-                                      </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
 
 <!-- Modal para informações do cliente -->
 <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
@@ -210,7 +198,7 @@
             </div>
             <div class="modal-footer d-flex justify-content-between">
                 <div>
-                    <button type="button" class="btn btn-warning" id="btn-marcar-pendente">
+                    <button type="button" class="btn btn-warning" id="btn-marcar-pendente" data-id="" data-ja-acionado="false">
                         <i class="bi bi-clock-history"></i> Pagamento Pendente
                     </button>
                 </div>
@@ -230,6 +218,8 @@
 
 {% block javascripts %}
 <script>
+    let agendamentosPendentesMarcados = new Set(); // controle local de marcados
+
     document.addEventListener("DOMContentLoaded", function () {
     //     // Depuração para verificar inicializações do DataTables
     //     console.log('Inicializando DataTables...');
@@ -270,6 +260,7 @@
 
             const rota = $(this).data('action');
             const agendamentoId = $(this).data('id'); // Definir agendamentoId aqui
+            $('#btn-marcar-pendente').data('id', agendamentoId);
 
             fetch(rota, {
                 method: "GET"
@@ -505,7 +496,43 @@
         });
     });
 
-    
+    $('#btn-marcar-pendente').off('click').on('click', function () {
+        const botao = $(this);
+        const agendamentoId = botao.data('id');
+
+        // Verifica se esse agendamento já foi marcado como pendente
+        if (agendamentosPendentesMarcados.has(agendamentoId)) {
+            Notify.toast("⚠️ Este agendamento já foi marcado como pendente anteriormente.", "warning");
+            return;
+        }
+
+        const rota = "{{ path('agendamento_executar_acao', {'id': 'ID_PLACEHOLDER', 'acao': 'pendente'}) }}".replace('ID_PLACEHOLDER', agendamentoId);
+
+        fetch(rota, {
+            method: "POST",
+            body: {}
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "sucesso") {
+                Notify.toast(data.mensagem, 'success');
+                agendamentosPendentesMarcados.add(agendamentoId); // marca como pendente
+                botao.prop('disabled', true); // desativa o botão
+                const modalElement = document.getElementById('modalConcluir');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                modal.hide();
+                location.reload();
+            } else {
+                Notify.toast(data.mensagem || "Erro ao marcar como pendente.", 'danger');
+            }
+        })
+        .catch(error => {
+            console.error("Erro na requisição AJAX:", error);
+            Notify.toast("Erro na requisição: " + error.message, 'danger');
+        });
+    });
+
+
 
 </script>
 {% endblock %}

@@ -437,9 +437,9 @@ class AgendamentoController extends DefaultController
     public function buscarCliente(Request $request): JsonResponse
     {
         $this->switchDB();
-        $petId = $request->get('pet_id');
+        $donoId = $request->get('dono_id'); // <-- Adiciona isso
 
-        if (! $donoId) {
+        if (!$donoId) {
             return $this->json(['status' => 'erro', 'mensagem' => 'Dono ID não informado.'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -523,7 +523,7 @@ class AgendamentoController extends DefaultController
         return $this->json(['status' => 'sucesso', 'mensagem' => 'Status atualizado com sucesso.']);
     }
 
-    /**
+     /**
      * @Route("/concluir-pagamento/{id}", name="agendamento_concluir_pagamento", methods={"POST"})
      */
     public function concluirPagamento(Request $request, int $id): JsonResponse
@@ -535,7 +535,6 @@ class AgendamentoController extends DefaultController
             return $this->json(['status' => 'erro', 'mensagem' => 'O agendamento não foi encontrado.'], Response::HTTP_NOT_FOUND);
         }
 
-        // Verificar se o agendamento já está concluído
         if ($dados['concluido']) {
             return $this->json(['status' => 'erro', 'mensagem' => 'Este agendamento já foi concluído anteriormente.'], Response::HTTP_BAD_REQUEST);
         }
@@ -543,10 +542,7 @@ class AgendamentoController extends DefaultController
         $desconto = (float) $request->request->get('desconto', 0);
         $metodoPagamento = $request->request->get('metodo_pagamento');
 
-        // Buscar os serviços associados ao agendamento
         $listaServicoPorAgendamento = $repo->listaApsPorId($this->session->get('userId'), $id);
-
-        // Agrupar serviços por cliente
         $clientes = [];
         $totalGeral = 0;
 
@@ -568,7 +564,6 @@ class AgendamentoController extends DefaultController
             $totalGeral += (float) $row['valor'];
         }
 
-        // Adicionar Táxi Dog ao total, se aplicável
         if ($dados['taxi_dog']) {
             $totalGeral += (float) $dados['taxa_taxi_dog'];
             foreach ($clientes as &$cliente) {
@@ -577,33 +572,13 @@ class AgendamentoController extends DefaultController
             }
         }
 
-        // Aplicar desconto
         $totalGeral -= $desconto;
         $descontoPorCliente = count($clientes) > 0 ? $desconto / count($clientes) : 0;
         foreach ($clientes as &$cliente) {
             $cliente['valor_total'] -= $descontoPorCliente;
         }
 
-        // Verificar se já existe um registro pendente para este agendamento
-        $financeiroPendenteRepo = $this->getRepositorio(FinanceiroPendente::class);
-        $existePendente = $financeiroPendenteRepo->verificaServicoExistente($this->session->get('userId'), $id);
-
-        if (!$existePendente) {
-            // Se não houver registro pendente, criar um
-            foreach ($clientes as $clienteNome => $info) {
-                $financeiroPendente = new FinanceiroPendente();
-                $financeiroPendente->setDescricao(implode(', ', $info['descricao']));
-                $financeiroPendente->setValor($info['valor_total']);
-                $financeiroPendente->setData(new \DateTime());
-                $financeiroPendente->setPetId($info['petIds'][0]);
-                $financeiroPendente->setMetodoPagamento($metodoPagamento);
-                $financeiroPendente->setAgendamentoId($id);
-
-                $financeiroPendenteRepo->savePendente($this->session->get('userId'), $financeiroPendente);
-            }
-        }
-
-        // Registrar no financeiro (apenas se o agendamento não estiver concluído)
+        // Removida criação no financeiro pendente aqui. Apenas registra financeiro real.
         foreach ($clientes as $clienteNome => $info) {
             $financeiro = new Financeiro();
             $financeiro->setDescricao(implode(', ', $info['descricao']));
@@ -614,7 +589,6 @@ class AgendamentoController extends DefaultController
             $this->getRepositorio(Financeiro::class)->save($this->session->get('userId'), $financeiro);
         }
 
-        // Atualizar o agendamento preservando hora de chegada, saída e status adicionais
         $agendamento = new Agendamento();
         $agendamento->setId($id);
         $agendamento->setData(new \DateTime($dados['data']));
@@ -624,12 +598,13 @@ class AgendamentoController extends DefaultController
         $agendamento->setTaxaTaxiDog($dados['taxa_taxi_dog'] ?? null);
         $agendamento->setConcluido(true);
         $agendamento->setMetodoPagamento($metodoPagamento);
-        $agendamento->setStatus($dados['status'] ?? 'concluido');
+        $agendamento->setStatus('concluido');
 
         $repo->update($this->session->get('userId'), $agendamento);
 
-        // Remover registros pendentes, se existirem
+        // Remover registros pendentes antigos, caso existam
         try {
+            $financeiroPendenteRepo = $this->getRepositorio(FinanceiroPendente::class);
             $financeiroPendenteRepo->removeByBaseId($this->session->get('userId'), $id);
         } catch (\Exception $e) {
             error_log("Erro ao remover registros pendentes: " . $e->getMessage());
@@ -640,5 +615,6 @@ class AgendamentoController extends DefaultController
             'mensagem' => 'Pagamento concluído com sucesso!',
         ]);
     }
+
 
 }
