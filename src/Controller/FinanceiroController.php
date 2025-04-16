@@ -276,4 +276,65 @@ class FinanceiroController extends DefaultController
         return $this->file($temp_file, $fileName, ResponseHeaderBag::DISPOSITION_ATTACHMENT);
     }
 
+    /**
+     * @Route("/pendente/confirmar-todos/{agendamentoId}", name="financeiro_confirmar_todos_pendentes", methods={"POST"})
+     */
+    public function confirmarTodosPendentes(int $agendamentoId): Response
+    {
+        $this->switchDB();
+        $baseId = $this->session->get('userId');
+
+        /** @var FinanceiroPendenteRepository $repoPendente */
+        $repoPendente = $this->getRepositorio(\App\Entity\FinanceiroPendente::class);
+        /** @var \App\Repository\FinanceiroRepository $repoFinanceiro */
+        $repoFinanceiro = $this->getRepositorio(\App\Entity\Financeiro::class);
+
+        // Buscar todos os registros pendentes desse agendamento
+        $pendentes = $repoPendente->findByBaseId($baseId, ['agendamentoId' => $agendamentoId]);
+
+        if (empty($pendentes)) {
+            return new JsonResponse(['status' => 'erro', 'mensagem' => 'Nenhum pagamento pendente encontrado.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Mover para o financeiro
+        foreach ($pendentes as $pendente) {
+            $financeiro = new Financeiro();
+            $financeiro->setDescricao($pendente['descricao']);
+            $financeiro->setValor($pendente['valor']);
+            $financeiro->setData(new \DateTime());
+            $financeiro->setPetId($pendente['pet_id']);
+
+            $repoFinanceiro->save($baseId, $financeiro);
+        }
+
+        // Apagar todos os pendentes do agendamento
+        $repoPendente->removeByBaseId($baseId, $agendamentoId);
+
+        // Buscar dados completos do agendamento antes de atualizar
+        $dadosAgendamento = $this->getRepositorio(\App\Entity\Agendamento::class)->listaAgendamentoPorId($baseId, $agendamentoId);
+
+        $agendamento = new \App\Entity\Agendamento();
+        $agendamento->setId($agendamentoId);
+        $agendamento->setMetodoPagamento('pix');
+        $agendamento->setStatus('concluido');
+        $agendamento->setConcluido(true);
+        $agendamento->setData(new \DateTime($dadosAgendamento['data']));
+        $agendamento->setHoraChegada($dadosAgendamento['horaChegada'] ? new \DateTime($dadosAgendamento['horaChegada']) : null);
+        $agendamento->setHoraSaida($dadosAgendamento['horaSaida'] ? new \DateTime($dadosAgendamento['horaSaida']) : null);
+        $agendamento->setTaxiDog((bool) $dadosAgendamento['taxi_dog']);
+        $agendamento->setTaxaTaxiDog(
+            isset($dadosAgendamento['taxa_taxi_dog']) && $dadosAgendamento['taxa_taxi_dog'] !== ''
+                ? (float) $dadosAgendamento['taxa_taxi_dog']
+                : null
+        );
+
+        $this->getRepositorio(\App\Entity\Agendamento::class)->updateAgendamento($baseId, $agendamento);
+
+
+        return new JsonResponse([
+            'status' => 'success',
+            'mensagem' => 'Todos os pagamentos pendentes foram confirmados e movidos para o financeiro.',
+        ]);
+    }
+
 }
