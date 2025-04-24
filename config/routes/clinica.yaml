@@ -1,0 +1,3 @@
+clinica_index:
+  path: /clinica
+  controller: App\Controller\AgendamentoClinicaController::index

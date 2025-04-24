@@ -1,0 +1,84 @@
+{% extends 'base_clinica.html.twig' %}
+
+{% block conteudo_clinica %}
+<div class="card shadow border-0">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <strong>📅 Agendamentos da Clínica</strong>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoAgendamento">
+            <i class="bi bi-plus-circle me-1"></i> Novo Agendamento
+        </button>
+    </div>
+    <div class="card-body">
+        {% if agendamentos is not empty %}
+            <table class="table table-bordered table-hover">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Procedimento</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in agendamentos %}
+                        <tr>
+                            <td>{{ a.data|date('d/m/Y') }}</td>
+                            <td>{{ a.hora|date('H:i') }}</td>
+                            <td>{{ a.procedimento }}</td>
+                            <td>{{ a.status }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="alert alert-info">Nenhum agendamento encontrado.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Novo Agendamento -->
+<div class="modal fade" id="modalNovoAgendamento" tabindex="-1" aria-labelledby="modalNovoAgendamentoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNovoAgendamentoLabel">📝 Novo Agendamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Data</label>
+                    <input type="date" name="data" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Hora</label>
+                    <input type="time" name="hora" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Procedimento</label>
+                    <input type="text" name="procedimento" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tutor</label>
+                    <select name="dono_id" class="form-select" required>
+                        {% for c in clientes %}
+                            <option value="{{ c.id }}">{{ c.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Pet</label>
+                    <select name="pet_id" class="form-select" required>
+                        {% for p in pets %}
+                            <option value="{{ p.id }}">{{ p.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Salvar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

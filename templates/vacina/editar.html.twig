@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="pagetitle mb-4">
+    <h1 class="text-primary">🛠 Editar Vacina</h1>
+    <p class="text-muted">Atualize os dados da vacina aplicada no pet.</p>
+</div>
+
+<section class="section">
+    <div class="card shadow border-0">
+        <div class="card-header bg-light">
+            <strong>Formulário de Edição</strong>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="pet_id" class="form-label">🐶 Pet</label>
+                    <select name="pet_id" id="pet_id" class="form-select" required>
+                        <option value="" disabled>Selecione o pet</option>
+                        {% for pet in pets %}
+                            <option value="{{ pet.id }}" {{ vacina.pet_id == pet.id ? 'selected' : '' }}>
+                                {{ pet.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="tipo" class="form-label">📌 Tipo de Vacina</label>
+                    <input list="vacinaTipos" class="form-control" id="tipo" name="tipo" value="{{ vacina.tipo }}" required>
+                    <datalist id="vacinaTipos">
+                        <optgroup label="Vacinas para Cães">
+                            {% for item in vacinasCao %}
+                                <option value="{{ item }}">
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="Vacinas para Gatos">
+                            {% for item in vacinasGato %}
+                                <option value="{{ item }}">
+                            {% endfor %}
+                        </optgroup>
+                    </datalist>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="data_aplicacao" class="form-label">📅 Data de Aplicação</label>
+                        <input type="date" class="form-control" id="data_aplicacao" name="data_aplicacao" value="{{ vacina.data_aplicacao|date('Y-m-d') }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="data_validade" class="form-label">📆 Validade</label>
+                        <input type="date" class="form-control" id="data_validade" name="data_validade" value="{{ vacina.data_validade|date('Y-m-d') }}" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="lote" class="form-label">🔢 Lote</label>
+                    <input type="text" class="form-control" id="lote" name="lote" value="{{ vacina.lote }}" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i> Atualizar Vacina
+                </button>
+                <a href="{{ path('vacina_index') }}" class="btn btn-secondary ms-2">
+                    <i class="bi bi-arrow-left-circle"></i> Voltar
+                </a>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
