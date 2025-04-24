@@ -1,14 +1,11 @@
 parameters:
-    diretorio_temp: '%kernel.project_dir%/var/tmp' # Adiciona o caminho completo já resolvido
+    diretorio_temp: '%kernel.project_dir%/var/tmp'
 
 services:
-    # default configuration for services in *this* file
     _defaults:
-        autowire: true      # Automatically injects dependencies in your services.
-        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        autowire: true
+        autoconfigure: true
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
         exclude:
@@ -25,3 +22,7 @@ services:
     App\Service\DatabaseBkp:
         arguments:
             $connection: '@doctrine.dbal.default_connection'
+
+    App\Repository\AgendamentoClinicaRepository:
+        arguments:
+            $conn: '@doctrine.dbal.default_connection'

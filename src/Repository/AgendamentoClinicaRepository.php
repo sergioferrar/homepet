@@ -3,64 +3,40 @@
 namespace App\Repository;
 
 use App\Entity\AgendamentoClinica;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\DBAL\Connection;
 
-/**
- * @extends ServiceEntityRepository<AgendamentoClinica>
- *
- * @method AgendamentoClinica|null find($id, $lockMode = null, $lockVersion = null)
- * @method AgendamentoClinica|null findOneBy(array $criteria, array $orderBy = null)
- * @method AgendamentoClinica[]    findAll()
- * @method AgendamentoClinica[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- */
-class AgendamentoClinicaRepository extends ServiceEntityRepository
+class AgendamentoClinicaRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private $conn;
+    public function __construct(Connection $conn) { $this->conn = $conn; }
+
+    public function findByDate($baseId, \DateTime $data): array
     {
-        parent::__construct($registry, AgendamentoClinica::class);
+        $sql = "SELECT * FROM u199209817_{$baseId}.agendamento_clinica WHERE DATE(data) = :data ORDER BY hora ASC";
+        return $this->conn->fetchAllAssociative($sql, ['data' => $data->format('Y-m-d')]);
     }
 
-    public function add(AgendamentoClinica $entity, bool $flush = false): void
+    public function save($baseId, AgendamentoClinica $a): void
     {
-        $this->getEntityManager()->persist($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
+        $sql = "INSERT INTO u199209817_{$baseId}.agendamento_clinica (data, hora, procedimento, status, pet_id, dono_id)
+                VALUES (:data, :hora, :procedimento, :status, :pet_id, :dono_id)";
+        $this->conn->executeQuery($sql, [
+            'data' => $a->getData()->format('Y-m-d'),
+            'hora' => $a->getHora()->format('H:i:s'),
+            'procedimento' => $a->getProcedimento(),
+            'status' => $a->getStatus(),
+            'pet_id' => $a->getPetId(),
+            'dono_id' => $a->getDonoId(),
+        ]);
     }
 
-    public function remove(AgendamentoClinica $entity, bool $flush = false): void
+    public function findAllClientes($baseId): array
     {
-        $this->getEntityManager()->remove($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
+        return $this->conn->fetchAllAssociative("SELECT id, nome FROM u199209817_{$baseId}.cliente");
     }
 
-//    /**
-//     * @return AgendamentoClinica[] Returns an array of AgendamentoClinica objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('a')
-//            ->andWhere('a.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('a.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?AgendamentoClinica
-//    {
-//        return $this->createQueryBuilder('a')
-//            ->andWhere('a.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function findAllPets($baseId): array
+    {
+        return $this->conn->fetchAllAssociative("SELECT id, nome FROM u199209817_{$baseId}.pet");
+    }
 }

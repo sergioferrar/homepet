@@ -2,11 +2,11 @@
 
 namespace App\Entity;
 
-use App\Repository\AgendamentoClinicaRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=AgendamentoClinicaRepository::class)
+ * @ORM\Entity()
+ * @ORM\Table(name="agendamento_clinica")
  */
 class AgendamentoClinica
 {
@@ -20,22 +20,101 @@ class AgendamentoClinica
     /**
      * @ORM\Column(type="datetime")
      */
-    private $dataHora;
+    private $data;
+
+    /**
+     * @ORM\Column(type="time")
+     */
+    private $hora;
+
+    /**
+     * @ORM\Column(type="string")
+     */
+    private $procedimento;
+
+    /**
+     * @ORM\Column(type="string")
+     */
+    private $status;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $pet_id;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $dono_id;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getDataHora(): ?\DateTimeInterface
+    public function getData(): ?\DateTimeInterface
     {
-        return $this->dataHora;
+        return $this->data;
     }
 
-    public function setDataHora(\DateTimeInterface $dataHora): self
+    public function setData(\DateTimeInterface $data): self
     {
-        $this->dataHora = $dataHora;
+        $this->data = $data;
+        return $this;
+    }
 
+    public function getHora(): ?\DateTimeInterface
+    {
+        return $this->hora;
+    }
+
+    public function setHora(\DateTimeInterface $hora): self
+    {
+        $this->hora = $hora;
+        return $this;
+    }
+
+    public function getProcedimento(): ?string
+    {
+        return $this->procedimento;
+    }
+
+    public function setProcedimento(string $procedimento): self
+    {
+        $this->procedimento = $procedimento;
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+        return $this;
+    }
+
+    public function getPetId(): ?int
+    {
+        return $this->pet_id;
+    }
+
+    public function setPetId(?int $pet_id): self
+    {
+        $this->pet_id = $pet_id;
+        return $this;
+    }
+
+    public function getDonoId(): ?int
+    {
+        return $this->dono_id;
+    }
+
+    public function setDonoId(?int $dono_id): self
+    {
+        $this->dono_id = $dono_id;
         return $this;
     }
 }

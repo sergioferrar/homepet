@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Fila de Espera{% endblock %}
+
+{% block body %}
+<div class="pagetitle mb-4">
+    <h1 class="text-primary">👥 Fila de Espera</h1>
+    <div class="d-flex gap-2 mt-2">
+        <a href="{{ path('clinica_index') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-calendar2-week"></i> Agendamentos</a>
+        <a href="{{ path('vacina_index') }}" class="btn btn-outline-success btn-sm"><i class="bi bi-eyedropper"></i> Vacinas</a>
+        <a href="{{ path('exame_index') }}" class="btn btn-outline-info btn-sm"><i class="bi bi-file-medical"></i> Exames</a>
+        <a href="{{ path('estoque_index') }}" class="btn btn-outline-warning btn-sm"><i class="bi bi-box"></i> Estoque</a>
+        <a href="{{ path('fila_espera') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-people"></i> Fila de Espera</a>
+    </div>
+</div>
+
+<section class="section">
+    <div class="card shadow border-0">
+        <div class="card-body">
+            <p class="text-muted">Listagem básica da fila de espera.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

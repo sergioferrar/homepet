@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="pagetitle mb-4">
+    <h1 class="text-primary">🏥 Clínica Veterinária</h1>
+    <p class="text-muted">Gerencie agendamentos, vacinas, exames e mais.</p>
+</div>
+
+{% include 'components/navbar_clinica.html.twig' %}
+
+<div class="clinica-content">
+    {% block conteudo_clinica %}{% endblock %}
+</div>
+{% endblock %}
