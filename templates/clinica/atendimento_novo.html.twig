@@ -1,0 +1,151 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Novo Atendimento - Clínica Veterinária{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .form-container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+        }
+        
+        .form-section-title {
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+        
+        .procedimento-item {
+            background-color: #f8f9fc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+        
+        .procedimento-item:hover {
+            background-color: #eaecf4;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <h1 class="h3 mb-4 text-gray-800">Novo Atendimento</h1>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-container">
+                    <form method="post" action="{{ path('clinica_atendimento_novo') }}">
+                        <div class="form-section">
+                            <h5 class="form-section-title text-primary">Informações do Atendimento</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="pet">Pet <span class="text-danger">*</span></label>
+                                        <select name="pet" id="pet" class="form-control" required>
+                                            <option value="">Selecione um pet</option>
+                                            {% for pet in pets %}
+                                                <option value="{{ pet.id }}">{{ pet.nome }} ({{ pet.cliente.nome }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="data_atendimento">Data <span class="text-danger">*</span></label>
+                                        <input type="date" name="data_atendimento" id="data_atendimento" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="hora_atendimento">Hora <span class="text-danger">*</span></label>
+                                        <input type="time" name="hora_atendimento" id="hora_atendimento" class="form-control" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h5 class="form-section-title text-primary">Procedimentos</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="procedimentos-container">
+                                        {% for procedimento in procedimentos %}
+                                            <div class="procedimento-item">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" class="custom-control-input" id="procedimento_{{ procedimento.id }}" name="procedimentos[]" value="{{ procedimento.id }}">
+                                                    <label class="custom-control-label" for="procedimento_{{ procedimento.id }}">
+                                                        <strong>{{ procedimento.nome }}</strong>
+                                                        <span class="text-primary ml-2">R$ {{ procedimento.valor|number_format(2, ',', '.') }}</span>
+                                                    </label>
+                                                </div>
+                                                <p class="mb-0 ml-4 text-muted small">{{ procedimento.descricao }}</p>
+                                                <p class="mb-0 ml-4 text-muted small">
+                                                    <i class="fas fa-clock"></i> Duração estimada: {{ procedimento.duracao }} minutos
+                                                </p>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h5 class="form-section-title text-primary">Observações</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <textarea name="observacoes" id="observacoes" rows="4" class="form-control" placeholder="Informe aqui quaisquer observações relevantes para este atendimento..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 text-right">
+                                <a href="{{ path('clinica_atendimentos') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save"></i> Salvar Atendimento
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Preencher a data atual por padrão
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            
+            document.getElementById('data_atendimento').value = `${year}-${month}-${day}`;
+            
+            // Preencher a hora atual arredondada para o próximo horário disponível (de 30 em 30 minutos)
+            const hours = String(today.getHours()).padStart(2, '0');
+            const minutes = today.getMinutes() < 30 ? '30' : '00';
+            const nextHour = today.getMinutes() < 30 ? hours : String(today.getHours() + 1).padStart(2, '0');
+            
+            document.getElementById('hora_atendimento').value = `${today.getMinutes() < 30 ? hours : nextHour}:${minutes}`;
+        });
+    </script>
+{% endblock %}

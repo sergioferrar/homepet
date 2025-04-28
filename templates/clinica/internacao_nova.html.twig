@@ -1,0 +1,113 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nova Internação - Clínica Veterinária{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .form-container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+        }
+        
+        .form-section-title {
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <h1 class="h3 mb-4 text-gray-800">Nova Internação</h1>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-container">
+                    <form method="post" action="{{ path('clinica_internacao_nova') }}">
+                        <div class="form-section">
+                            <h5 class="form-section-title text-danger">Informações da Internação</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="pet">Pet <span class="text-danger">*</span></label>
+                                        <select name="pet" id="pet" class="form-control" required>
+                                            <option value="">Selecione um pet</option>
+                                            {% for pet in pets %}
+                                                <option value="{{ pet.id }}">{{ pet.nome }} ({{ pet.cliente.nome }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="data_inicio">Data de Início <span class="text-danger">*</span></label>
+                                        <input type="date" name="data_inicio" id="data_inicio" class="form-control" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h5 class="form-section-title text-danger">Motivo da Internação</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <textarea name="motivo" id="motivo" rows="3" class="form-control" placeholder="Informe o motivo da internação..." required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h5 class="form-section-title text-danger">Observações</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <textarea name="observacoes" id="observacoes" rows="4" class="form-control" placeholder="Informe aqui quaisquer observações relevantes para esta internação..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 text-right">
+                                <a href="{{ path('clinica_internacoes') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save"></i> Iniciar Internação
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Preencher a data atual por padrão
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            
+            document.getElementById('data_inicio').value = `${year}-${month}-${day}`;
+        });
+    </script>
+{% endblock %}

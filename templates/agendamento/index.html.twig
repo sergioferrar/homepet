@@ -1,6 +1,12 @@
 {% extends 'base.html.twig' %}
 {% block body %}
 
+<style>
+.table-responsive {
+    overflow: visible !important;
+}
+</style>
+
 <div class="pagetitle">
     <h1 class="text-primary">Agendamentos</h1>
     <nav>
@@ -103,16 +109,16 @@
                                             </form>
                                         </td>
                                         <td class="text-center {{ cor_texto }}">
-                                            <div class="dropdown">
-                                                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    Ações
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li><a class="dropdown-item" href="{{ path('agendamento_editar', {'id': agendamento.id}) }}">Editar</a></li>
-                                                    <li><a class="dropdown-item open-concluir-modal" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}" href="javascript:void(0);">Concluir Pagamento</a></li>
-                                                    <li><a class="dropdown-item reload-form text-danger" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao': 'deletar'}) }}" href="javascript:void(0);">Deletar</a></li>
-                                                </ul>
-                                            </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Ações
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end"> <!-- classe adicionada aqui -->
+                                                <li><a class="dropdown-item" href="{{ path('agendamento_editar', {'id': agendamento.id}) }}">Editar</a></li>
+                                                <li><a class="dropdown-item open-concluir-modal" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}" href="javascript:void(0);">Concluir Pagamento</a></li>
+                                                <li><a class="dropdown-item reload-form text-danger" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao': 'deletar'}) }}" href="javascript:void(0);">Deletar</a></li>
+                                            </ul>
+                                        </div>
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -218,6 +224,8 @@
 
 {% block javascripts %}
 <script>
+
+    
     let agendamentosPendentesMarcados = new Set(); // controle local de marcados
 
     document.addEventListener("DOMContentLoaded", function () {
