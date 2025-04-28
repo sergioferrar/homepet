@@ -14,10 +14,18 @@
                 <input type="text" name="pet_nome" class="form-control" list="lista_pets" required oninput="atualizarPetId(this)">
                 <datalist id="lista_pets">
                     {% for pet in pets %}
-                        <option data-id="{{ pet.id }}" value="{{ pet.dono_nome ~ ' - ' ~ pet.nome }}"></option>
+                        <option 
+                            data-id="{{ pet.id }}" 
+                            data-cliente="{{ pet.dono_id }}" 
+                            value="{{ pet.dono_nome ~ ' - ' ~ pet.nome }}">
+                        </option>
                     {% endfor %}
                 </datalist>
+
+
                 <input type="hidden" name="pet_id" id="pet_id_hidden">
+                <input type="hidden" name="cliente_id" id="cliente_id_hidden">
+
             </div>
 
             <div class="mb-3">
@@ -52,17 +60,21 @@
 <script>
     function atualizarPetId(input) {
         const datalist = document.getElementById('lista_pets');
-        const hiddenInput = document.getElementById('pet_id_hidden');
+        const petHidden = document.getElementById('pet_id_hidden');
+        const clienteHidden = document.getElementById('cliente_id_hidden');
         const value = input.value;
 
-        hiddenInput.value = '';
+        petHidden.value = '';
+        clienteHidden.value = '';
 
         for (let option of datalist.options) {
             if (option.value === value) {
-                hiddenInput.value = option.dataset.id;
+                petHidden.value = option.dataset.id;
+                clienteHidden.value = option.dataset.cliente;
                 break;
             }
         }
     }
+
 </script>
 {% endblock %}

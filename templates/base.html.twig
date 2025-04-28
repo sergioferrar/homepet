@@ -377,6 +377,36 @@
                     <i class="bi bi-kanban"></i><span>Quadro de Banho & Tosa</span>
                 </a>
             </li>
+
+{#             <!-- Código para adicionar o link da Clínica Veterinária na sidebar -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#clinica" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-hospital"></i><span>Clínica Veterinária</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="clinica" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a href="{{ path('clinica_index') }}">
+                            <i class="bi bi-circle"></i><span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ path('clinica_atendimentos') }}">
+                            <i class="bi bi-circle"></i><span>Atendimentos</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ path('clinica_internacoes') }}">
+                            <i class="bi bi-circle"></i><span>Internações</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ path('clinica_procedimentos') }}">
+                            <i class="bi bi-circle"></i><span>Procedimentos</span>
+                        </a>
+                    </li>
+                </ul>
+            </li> #}
+
             <li class="nav-item">
                 <a class="nav-link collapsed" data-bs-target="#clinica-veterinaria" data-bs-toggle="collapse" href="#">
                     <i class="bi bi-hospital"></i><span>Clínica Veterinária</span><i class="bi bi-chevron-down ms-auto"></i>

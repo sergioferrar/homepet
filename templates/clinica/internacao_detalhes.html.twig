@@ -1,0 +1,251 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detalhes da Internação - Clínica Veterinária{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .detail-container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-section {
+            margin-bottom: 30px;
+        }
+        
+        .detail-section-title {
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+        
+        .pet-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .pet-avatar {
+            background-color: #e74a3b;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            height: 60px;
+            margin-right: 15px;
+            width: 60px;
+        }
+        
+        .status-badge {
+            border-radius: 30px;
+            padding: 5px 15px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .status-ativa {
+            background-color: #e74a3b;
+            color: white;
+        }
+        
+        .status-finalizada {
+            background-color: #1cc88a;
+            color: white;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline-item {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: -30px;
+            top: 0;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+        }
+        
+        .timeline-content {
+            background-color: #f8f9fc;
+            border-radius: 5px;
+            padding: 15px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 text-gray-800">Detalhes da Internação</h1>
+            <div>
+                <a href="{{ path('clinica_internacoes') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+                
+                {% if internacao.status == 'ativa' %}
+                    <a href="{{ path('clinica_internacao_finalizar', {'id': internacao.id}) }}" class="btn btn-success">
+                        <i class="fas fa-check"></i> Finalizar Internação
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="detail-container">
+                    <div class="detail-section">
+                        <div class="pet-info">
+                            <div class="pet-avatar">
+                                <i class="fas fa-paw"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">{{ internacao.pet.nome }}</h4>
+                                <p class="mb-0 text-muted">{{ internacao.pet.cliente.nome }}</p>
+                            </div>
+                            <div class="ml-auto">
+                                <span class="status-badge status-{{ internacao.status }}">
+                                    {{ internacao.status|capitalize }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1">
+                                    <strong>Data de Início:</strong> {{ internacao.dataInicio|date('d/m/Y') }}
+                                </p>
+                                {% if internacao.dataSaida %}
+                                    <p class="mb-1">
+                                        <strong>Data de Saída:</strong> {{ internacao.dataSaida|date('d/m/Y') }}
+                                    </p>
+                                    <p class="mb-0">
+                                        <strong>Duração:</strong> {{ internacao.diasInternado }} dias
+                                    </p>
+                                {% else %}
+                                    <p class="mb-0">
+                                        <strong>Duração até o momento:</strong> {{ internacao.diasInternado }} dias
+                                    </p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1">
+                                    <strong>Espécie:</strong> {{ internacao.pet.especie }}
+                                </p>
+                                <p class="mb-1">
+                                    <strong>Raça:</strong> {{ internacao.pet.raca }}
+                                </p>
+                                <p class="mb-0">
+                                    <strong>Idade:</strong> {{ internacao.pet.idade }} anos
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h5 class="detail-section-title text-danger">Motivo da Internação</h5>
+                        
+                        <div class="p-3 bg-light rounded">
+                            {{ internacao.motivo|nl2br }}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h5 class="detail-section-title text-danger">Observações</h5>
+                        
+                        {% if internacao.observacoes %}
+                            <div class="p-3 bg-light rounded">
+                                {{ internacao.observacoes|nl2br }}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-3">
+                                <p class="mb-0 text-muted">Nenhuma observação registrada</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if internacao.status == 'finalizada' %}
+                        <div class="detail-section">
+                            <h5 class="detail-section-title text-success">Observações de Saída</h5>
+                            
+                            {% if internacao.observacoesSaida %}
+                                <div class="p-3 bg-light rounded">
+                                    {{ internacao.observacoesSaida|nl2br }}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-3">
+                                    <p class="mb-0 text-muted">Nenhuma observação de saída registrada</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="detail-container">
+                    <h5 class="detail-section-title text-danger">Histórico de Internações</h5>
+                    
+                    {% if internacao.pet.internacoes|length > 1 %}
+                        <div class="timeline">
+                            {% for hist in internacao.pet.internacoes|filter(i => i.id != internacao.id)|slice(0, 5) %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-danger"></div>
+                                    <div class="timeline-content">
+                                        <h6 class="mb-1">{{ hist.dataInicio|date('d/m/Y') }}</h6>
+                                        <p class="mb-1 small">
+                                            {{ hist.motivo|length > 50 ? hist.motivo|slice(0, 50) ~ '...' : hist.motivo }}
+                                        </p>
+                                        <p class="mb-0">
+                                            <a href="{{ path('clinica_internacao_detalhes', {'id': hist.id}) }}" class="btn btn-sm btn-outline-danger">
+                                                Ver detalhes
+                                            </a>
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-history fa-3x text-gray-300 mb-3"></i>
+                            <p class="mb-0 text-muted">Esta é a primeira internação do pet</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="detail-container">
+                    <h5 class="detail-section-title text-danger">Informações do Cliente</h5>
+                    
+                    <p class="mb-1">
+                        <i class="fas fa-user mr-2 text-danger"></i>
+                        <strong>Nome:</strong> {{ internacao.pet.cliente.nome }}
+                    </p>
+                    <p class="mb-1">
+                        <i class="fas fa-phone mr-2 text-danger"></i>
+                        <strong>Telefone:</strong> {{ internacao.pet.cliente.telefone }}
+                    </p>
+                    <p class="mb-1">
+                        <i class="fas fa-envelope mr-2 text-danger"></i>
+                        <strong>Email:</strong> {{ internacao.pet.cliente.email }}
+                    </p>
+                    <p class="mb-0">
+                        <i class="fas fa-map-marker-alt mr-2 text-danger"></i>
+                        <strong>Endereço:</strong> {{ internacao.pet.cliente.endereco }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -60,6 +60,8 @@ class AgendamentoClinicaController extends DefaultController
             'agendamentos' => $this->repo->findByDate($baseId, $data),
             'clientes'     => $this->repo->findAllClientes($baseId),
             'pets'         => $this->repo->findAllPets($baseId),
+            'atendimentos_hoje'         => '',
+            'internacoes_ativas'         => '',
             'data'         => $data,
         ]);
     }

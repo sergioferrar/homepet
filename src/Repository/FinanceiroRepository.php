@@ -181,4 +181,18 @@ class FinanceiroRepository extends ServiceEntityRepository
         return $query->fetchAll();
     }
 
+    public function verificaPagamentoExistente($baseId, $petId, $valor, $dataReferencia): bool
+    {
+        $sql = "SELECT COUNT(*) FROM u199209817_{$baseId}.financeiro
+                WHERE pet_id = :pet_id
+                  AND valor = :valor
+                  AND DATE(data) = :data_referencia
+                  AND descricao = 'Hospedagem do Pet'";
+
+        return (bool) $this->conn->fetchOne($sql, [
+            'pet_id' => $petId,
+            'valor' => $valor,
+            'data_referencia' => (new \DateTime($dataReferencia))->format('Y-m-d'),
+        ]);
+    }
 }

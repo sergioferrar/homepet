@@ -25,7 +25,9 @@ class HospedagemCaesRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function insert($baseId, HospedagemCaes_ $h): void
+
+    public function insert($baseId, HospedagemCaes $h): void
+
     {
         $sql = "INSERT INTO u199209817_{$baseId}.hospedagem_caes (cliente_id, pet_id, data_entrada, data_saida, valor, observacoes)
                 VALUES (:cliente_id, :pet_id, :data_entrada, :data_saida, :valor, :observacoes)";
@@ -39,7 +41,8 @@ class HospedagemCaesRepository extends ServiceEntityRepository
         ]);
     }
 
-    public function registrarFinanceiro($baseId, HospedagemCaes_ $h): void
+    public function registrarFinanceiro($baseId, HospedagemCaes $h): void
+
     {
         $sql = "INSERT INTO u199209817_{$baseId}.financeiro (descricao, valor, data, pet_id, pet_nome)
                 VALUES (:descricao, :valor, NOW(), :pet_id, (SELECT nome FROM u199209817_{$baseId}.pet WHERE id = :pet_id LIMIT 1))";
@@ -55,14 +58,19 @@ class HospedagemCaesRepository extends ServiceEntityRepository
         return $this->conn->fetchAllAssociative("SELECT * FROM u199209817_{$baseId}.cliente");
     }
 
-    public function getPets($baseId)
+    public function getPets($baseId): array
     {
-        $sql = "SELECT p.id, p.nome, c.nome AS dono_nome
+        $sql = "SELECT 
+                    p.id, 
+                    p.nome, 
+                    c.id AS dono_id, 
+                    c.nome AS dono_nome
                 FROM u199209817_{$baseId}.pet p
-                LEFT JOIN u199209817_{$baseId}.cliente c ON p.dono_id = c.id";
+                LEFT JOIN u199209817_{$baseId}.cliente c ON c.id = p.dono_id";
 
         return $this->conn->fetchAllAssociative($sql);
     }
+
 
 
 
@@ -90,6 +98,50 @@ class HospedagemCaesRepository extends ServiceEntityRepository
     {
         $this->conn->executeQuery("DELETE FROM u199209817_{$baseId}.hospedagem_caes WHERE id = :id", ['id' => $id]);
     }
+
+
+    public function updateHospedagem($baseId, int $id, HospedagemCaes $h): void
+    {
+        $sql = "UPDATE u199209817_{$baseId}.hospedagem_caes
+                SET cliente_id = :cliente_id,
+                    pet_id = :pet_id,
+                    data_entrada = :data_entrada,
+                    data_saida = :data_saida,
+                    valor = :valor,
+                    observacoes = :observacoes
+                WHERE id = :id";
+
+        $this->conn->executeQuery($sql, [
+            'cliente_id'    => $h->getClienteId(),
+            'pet_id'        => $h->getPetId(),
+            'data_entrada'  => $h->getDataEntrada()->format('Y-m-d H:i:s'),
+            'data_saida'    => $h->getDataSaida()->format('Y-m-d H:i:s'),
+            'valor'         => $h->getValor(),
+            'observacoes'   => $h->getObservacoes(),
+            'id'            => $id,
+        ]);
+    }
+
+    public function localizaPorData($baseId, \DateTime $data): array
+    {
+        $query = "
+            SELECT h.*, c.nome as cliente_nome, p.nome as pet_nome
+            FROM u199209817_{$baseId}.hospedagem_caes h
+            INNER JOIN u199209817_{$baseId}.cliente c ON c.id = h.cliente_id
+            INNER JOIN u199209817_{$baseId}.pet p ON p.id = h.pet_id
+            WHERE h.data_entrada <= :data AND h.data_saida >= :data
+            ORDER BY h.data_entrada ASC
+        ";
+
+        return $this->conn->fetchAllAssociative($query, [
+            'data' => $data->format('Y-m-d'),
+        ]);
+    }
+
+
+
+
+
 //    /**
 //     * @return HospedagemCaes[] Returns an array of HospedagemCaes objects
 //     */
