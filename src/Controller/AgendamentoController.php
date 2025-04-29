@@ -528,8 +528,10 @@ class AgendamentoController extends DefaultController
      */
     public function concluirPagamento(Request $request, int $id): JsonResponse
     {
+        $this->switchDB();
         $repo = $this->getRepositorio(Agendamento::class);
         $dados = $repo->listaAgendamentoPorId($this->session->get('userId'), $id);
+
 
         if (!$dados) {
             return $this->json(['status' => 'erro', 'mensagem' => 'O agendamento não foi encontrado.'], Response::HTTP_NOT_FOUND);
@@ -598,7 +600,7 @@ class AgendamentoController extends DefaultController
         $agendamento->setTaxaTaxiDog($dados['taxa_taxi_dog'] ?? null);
         $agendamento->setConcluido(true);
         $agendamento->setMetodoPagamento($metodoPagamento);
-        $agendamento->setStatus('concluido');
+        $agendamento->setStatus('finalizado');
 
         $repo->update($this->session->get('userId'), $agendamento);
 
