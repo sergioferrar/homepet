@@ -363,11 +363,16 @@
                         .then(({ status, data }) => {
                             console.log('Dados da resposta:', data); // Para depuração
                             if (status === 200 && data.status === "success") {
-                                Notify.toast(data.mensagem, "success");
-                                const modalElement = document.getElementById('modalConcluir');
-                                const modal = bootstrap.Modal.getInstance(modalElement);
-                                modal.hide();
+                            Notify.toast(data.mensagem, "success");
+
+                            const modalElement = document.getElementById('modalConcluir');
+                            const modal = bootstrap.Modal.getInstance(modalElement);
+                            modal.hide();
+
+                            setTimeout(function() {
                                 location.reload();
+                            }, 1500);
+
                             } else {
                                 // Tratar erro 400 ou outros erros
                                 const mensagemErro = data.mensagem === "Este agendamento já foi concluído anteriormente." 
