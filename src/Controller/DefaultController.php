@@ -44,8 +44,15 @@ class DefaultController extends AbstractController
     }
 
     public function switchDB():void
-    {
-        $estabelecimentoId = "u199209817_{$this->session->get('userId')}";
+    {   
+        $conexao = $this->managerRegistry->getConnection()->getParams();
+        
+        if($conexao['host'] == '127.0.0.1'){
+            $estabelecimentoId = "homepet_{$this->session->get('userId')}";
+        } else {
+            $estabelecimentoId = "u199209817_{$this->session->get('userId')}";
+        }
+
         (new DynamicConnectionManager($this->managerRegistry))->switchDatabase($estabelecimentoId, $estabelecimentoId);
     }
 

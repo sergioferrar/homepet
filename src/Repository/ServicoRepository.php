@@ -27,7 +27,7 @@ class ServicoRepository extends ServiceEntityRepository
     public function listaServicoPorId($baseId, $idServico)
     {
         $sql = "SELECT id, nome, descricao, valor 
-            FROM u199209817_{$baseId}.servico
+            FROM {$_ENV['DBNAMETENANT']}{$baseId}.servico
             WHERE id = {$idServico}";
 
         $query = $this->conn->query($sql);
@@ -36,14 +36,14 @@ class ServicoRepository extends ServiceEntityRepository
 
     public function findAllService($baseId): array
     {
-        $sql = "SELECT * FROM u199209817_{$baseId}.servico"; // Tabela com 's' minúsculo
+        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.servico"; // Tabela com 's' minúsculo
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
     }
 
     public function findService($baseId, int $id): ?Servico
     {
-        $sql = "SELECT * FROM u199209817_{$baseId}.servico WHERE id = :id"; // Tabela com 's' minúsculo
+        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.servico WHERE id = :id"; // Tabela com 's' minúsculo
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
         $servicoData = $stmt->fetchAssociative();
 
@@ -63,7 +63,7 @@ class ServicoRepository extends ServiceEntityRepository
     public function save($baseId, Servico $servico): void
     {
         // Tabela com 's' minúsculo
-        $sql = "INSERT INTO u199209817_{$baseId}.servico (nome, descricao, valor) VALUES (:nome, :descricao, :valor)";
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.servico (nome, descricao, valor) VALUES (:nome, :descricao, :valor)";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('nome', $servico->getNome());
@@ -75,7 +75,7 @@ class ServicoRepository extends ServiceEntityRepository
     public function update($baseId, Servico $servico): void
     {
         // Tabela com 's' minúsculo
-        $sql = "UPDATE u199209817_{$baseId}.servico SET nome = :nome, descricao = :descricao, valor = :valor WHERE id = :id";
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}{$baseId}.servico SET nome = :nome, descricao = :descricao, valor = :valor WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('nome', $servico->getNome());
         $stmt->bindValue('descricao', $servico->getDescricao());
@@ -87,7 +87,7 @@ class ServicoRepository extends ServiceEntityRepository
     public function delete($baseId, int $id): void
     {
         // Tabela com 's' minúsculo
-        $sql = "DELETE FROM u199209817_{$baseId}.servico WHERE id = :id"; 
+        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}{$baseId}.servico WHERE id = :id"; 
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 }

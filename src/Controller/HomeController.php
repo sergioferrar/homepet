@@ -26,6 +26,7 @@ class HomeController extends DefaultController
      */
     public function index(Request $request): Response
     {
+        
         $this->switchDB();
         $agendamento = $this->getRepositorio(Financeiro::class)->totalAgendamento($request->getSession()->get('userId'));
         $agendamentoDia = $this->getRepositorio(Financeiro::class)->totalAgendamentoDia($request->getSession()->get('userId'));

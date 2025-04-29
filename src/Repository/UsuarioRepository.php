@@ -39,7 +39,7 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
     }
 
     public function listaTodos(){
-        $sql = "SELECT u.*, e.* 
+        $sql = "SELECT u.*, e.*, u.id AS userId, e.id AS shopId
             FROM usuario u
             LEFT JOIN estabelecimento e ON (e.id = u.petshop_id) 
             ";
