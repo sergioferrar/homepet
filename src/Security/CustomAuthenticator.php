@@ -80,7 +80,7 @@ class CustomAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        dd($exception);
-        return new JsonResponse(['error' => true, 'status' => 'danger', 'message' => _($exception->getMessage())], Response::HTTP_UNAUTHORIZED);
+        //dd($exception);
+        return new JsonResponse(['error' => true, 'status' => 'danger', 'message' => 'E-mail ou senha inválidos'], Response::HTTP_UNAUTHORIZED);
     }
 }

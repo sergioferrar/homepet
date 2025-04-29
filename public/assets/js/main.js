@@ -192,16 +192,16 @@
         language: 'pt_BR',
         menubar: false,
         theme: "modern",
-        height: 200,
+        height: 210,
         skin: 'light',
         entity_encoding: "raw",
         theme_advanced_resizing: true,
         plugins: [
             "advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker",
             "searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking",
-            "save table contextmenu directionality emoticons template paste textcolor media"
+            "save table contextmenu directionality emoticons template paste textcolor media code"
         ],
-        toolbar: "styleselect | forecolor | backcolor | pastetext | removeformat |  bold | italic | underline | strikethrough | bullist | numlist |  link | unlink | fullscreen",
+        toolbar: "styleselect | forecolor | backcolor | pastetext | removeformat |  bold | italic | underline | strikethrough | bullist | numlist |  link | unlink | fullscreen | code",
         //content_css: "_css/tinyMCE.css",
         style_formats: [
             {title: 'Normal', block: 'p'},

@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Planos</h1>
+
+    <a href="{{ path('app_plano_create') }}" class="btn btn-secondary btn-sm mb-3">+ Novo Plano</a>
+
+    <table class="table table-bordered datatable">
+        <thead>
+            <tr>
+                <th>Plano</th>
+                <th>Trial</th>
+                <th>Qtd Lojas</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Plano 01</td>
+            <td class="text-center"><span class="badge text-bg-success">Não</span></td>
+            <td class="text-center"><span class="badge text-bg-secondary">16</span></td>
+            <td class="text-center"><span class="badge text-bg-success">Ativo</span></td>
+            <td class="text-center">
+                <div class="dropdown">
+                  <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Ação
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Editar</a></li>
+                    <li><a class="dropdown-item" href="#">Ver lojas</a></li>
+                    <li><a class="dropdown-item" href="#">Inativar</a></li>
+                  </ul>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

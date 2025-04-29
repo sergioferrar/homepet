@@ -288,45 +288,50 @@
 <aside id="sidebar" class="sidebar">
     <ul class="sidebar-nav" id="sidebar-nav">
         <li class="nav-item">
-            <a class="nav-link" href="{{ path('home') }}">
+            <a class="nav-link {%if app.request.attributes.get('_route') == 'home' %} {% else %} collapsed {% endif %}" href="{{ path('home') }}">
                 <i class="bi bi-grid"></i>
                 <span>Home</span>
             </a>
         </li>
+        
+        
         <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#post" data-bs-toggle="collapse" href="#">
+            <a class="nav-link {% if app.request.attributes.get('_route') == 'agendamento_novo' or app.request.attributes.get('_route') == 'agendamento_index' %} {% else %} collapsed {% endif %}" data-bs-target="#post" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-person-vcard"></i><span>Agendamento</span><i class="bi bi-chevron-down ms-auto"></i>
             </a>
-            <ul id="post" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+            <ul id="post" class="nav-content collapse {% if app.request.attributes.get('_route') == 'agendamento_novo' or app.request.attributes.get('_route') == 'agendamento_index' %} show {% endif %}" data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="{{ path('agendamento_novo') }}">
+                    <a {% if app.request.attributes.get('_route') == 'agendamento_novo' %} class="active" {% endif %} href="{{ path('agendamento_novo') }}">
                         <i class="bi bi-circle"></i><span>Novo Agendamento</span>
                     </a>
                 </li>
                 <li>
-                    <a href="{{ path('agendamento_index') }}">
+                    <a {% if app.request.attributes.get('_route') == 'agendamento_index' %} class="active" {% endif %} href="{{ path('agendamento_index') }}">
                         <i class="bi bi-circle"></i><span>Ver todos</span>
                     </a>
                 </li>
             </ul>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{{ path('cliente_index') }}">
+            <a class="nav-link {% if app.request.attributes.get('_route') == 'cliente_index' %} active {%else %} collapsed {% endif %}" href="{{ path('cliente_index') }}">
                 <i class="bi bi-person-circle"></i><span>Clientes</span>
             </a>
         </li>
+
+        
+        
         <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#pedidos" data-bs-toggle="collapse" href="#">
+            <a class="nav-link {% if app.request.attributes.get('_route') == 'pet_index' or app.request.attributes.get('_route') == 'pet_novo' %} {% else %} collapsed {% endif %}" data-bs-target="#pedidos" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-shop"></i><span>Pets</span><i class="bi bi-chevron-down ms-auto"></i>
             </a>
-            <ul id="pedidos" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+            <ul id="pedidos" class="nav-content collapse {% if app.request.attributes.get('_route') == 'pet_index' or app.request.attributes.get('_route') == 'pet_novo' %} show {% endif %}" data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="{{ path('pet_index') }}">
+                    <a {% if app.request.attributes.get('_route') == 'pet_index' %} class="active" {% endif %} href="{{ path('pet_index') }}">
                         <i class="bi bi-circle"></i><span>Pets <span class="badge badge-sm bg-danger text-white">1</span></span>
                     </a>
                 </li>
                 <li>
-                    <a href="{{ path('pet_novo') }}">
+                    <a {% if app.request.attributes.get('_route') == 'pet_novo' %} class="active" {% endif %} href="{{ path('pet_novo') }}">
                         <i class="bi bi-circle"></i><span>Cadastro de Pets</span>
                     </a>
                 </li>
@@ -334,46 +339,50 @@
         </li>
         {% if app.session.get('accessLevel') == 'Admin' or app.session.get('accessLevel') == 'Super Admin' %}
             <li class="nav-item">
-                <a class="nav-link collapsed" data-bs-target="#servico" data-bs-toggle="collapse" href="#">
+                <a class="nav-link {% if app.request.attributes.get('_route') == 'servico_index' or app.request.attributes.get('_route') == 'servico_novo' %} {% else %} collapsed {% endif %}" data-bs-target="#servico" data-bs-toggle="collapse" href="#">
                     <i class="bi bi-tools"></i><span>Serviços</span><i class="bi bi-chevron-down ms-auto"></i>
                 </a>
-                <ul id="servico" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+                <ul id="servico" class="nav-content collapse {% if app.request.attributes.get('_route') == 'servico_index' or app.request.attributes.get('_route') == 'servico_novo' %} show {% endif %}" data-bs-parent="#sidebar-nav">
                     <li>
-                        <a href="{{ path('servico_index') }}">
+                        <a {% if app.request.attributes.get('_route') == 'servico_index' %} class="active" {% endif %} href="{{ path('servico_index') }}">
                             <i class="bi bi-circle"></i><span>Serviços Cadastrados</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ path('servico_novo') }}">
+                        <a {% if app.request.attributes.get('_route') == 'servico_novo' %} class="active" {% endif %} href="{{ path('servico_novo') }}">
                             <i class="bi bi-circle"></i><span>Novo Serviço</span>
                         </a>
                     </li>
                 </ul>
             </li>
             <li class="nav-item">
-                <a class="nav-link collapsed" data-bs-target="#financeiroDropdown" data-bs-toggle="collapse" href="#">
+                <a class="nav-link {% if app.request.attributes.get('_route') == 'financeiro_index' or 
+app.request.attributes.get('_route') == 'financeiro_pendente' or 
+app.request.attributes.get('_route') == 'financeiro_relatorio' %} {% else %} collapsed {% endif %}" data-bs-target="#financeiroDropdown" data-bs-toggle="collapse" href="#">
                     <i class="bi bi-currency-dollar"></i><span>Financeiro</span><i class="bi bi-chevron-down ms-auto"></i>
                 </a>
-                <ul id="financeiroDropdown" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+                <ul id="financeiroDropdown" class="nav-content collapse {% if app.request.attributes.get('_route') == 'financeiro_index' or 
+app.request.attributes.get('_route') == 'financeiro_pendente' or 
+app.request.attributes.get('_route') == 'financeiro_relatorio' %} show {% endif %}" data-bs-parent="#sidebar-nav">
                     <li>
-                        <a href="{{ path('financeiro_index') }}">
+                        <a {% if app.request.attributes.get('_route') == 'financeiro_index' %} class="active" {% endif %} href="{{ path('financeiro_index') }}">
                             <i class="bi bi-circle"></i><span>Financeiro Diário</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ path('financeiro_pendente') }}">
+                        <a {% if app.request.attributes.get('_route') == 'financeiro_pendente' %} class="active" {% endif %} href="{{ path('financeiro_pendente') }}">
                             <i class="bi bi-circle text-danger"></i><span>Financeiro Pendente</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ path('financeiro_relatorio') }}">
+                        <a {% if app.request.attributes.get('_route') == 'financeiro_relatorio' %} class="active" {% endif %} href="{{ path('financeiro_relatorio') }}">
                             <i class="bi bi-circle"></i><span>Relatório Financeiro</span>
                         </a>
                     </li>
                 </ul>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ path('agendamento_quadro') }}">
+                <a class="nav-link {% if app.request.attributes.get('_route') == 'agendamento_quadro' %} active {% else %} collapsed {% endif %} " href="{{ path('agendamento_quadro') }}">
                     <i class="bi bi-kanban"></i><span>Quadro de Banho & Tosa</span>
                 </a>
             </li>
@@ -408,54 +417,64 @@
             </li> #}
 
             <li class="nav-item">
-                <a class="nav-link collapsed" data-bs-target="#clinica-veterinaria" data-bs-toggle="collapse" href="#">
+                <a class="nav-link {% if app.request.attributes.get('_route') == 'clinica_index' or 
+app.request.attributes.get('_route') == 'clinica_novo' or 
+app.request.attributes.get('_route') == 'vacina_index' or 
+app.request.attributes.get('_route') == 'exame_index' or 
+app.request.attributes.get('_route') == 'estoque_index' or 
+app.request.attributes.get('_route') == 'fila_espera' %} {% else %} collapsed {% endif %}" data-bs-target="#clinica-veterinaria" data-bs-toggle="collapse" href="#">
                     <i class="bi bi-hospital"></i><span>Clínica Veterinária</span><i class="bi bi-chevron-down ms-auto"></i>
                 </a>
-                <ul id="clinica-veterinaria" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+                <ul id="clinica-veterinaria" class="nav-content collapse {% if app.request.attributes.get('_route') == 'clinica_index' or 
+app.request.attributes.get('_route') == 'clinica_novo' or 
+app.request.attributes.get('_route') == 'vacina_index' or 
+app.request.attributes.get('_route') == 'exame_index' or 
+app.request.attributes.get('_route') == 'estoque_index' or 
+app.request.attributes.get('_route') == 'fila_espera' %} show {% endif %}" data-bs-parent="#sidebar-nav">
                     <li>
-                        <a href="{{ path('clinica_index') }}">
+                        <a {% if app.request.attributes.get('_route') == 'clinica_index' %} class="active" {% endif %} href="{{ path('clinica_index') }}">
                             <i class="bi bi-circle"></i><span>Agendamentos da Clínica</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ path('clinica_novo') }}">
+                        <a {% if app.request.attributes.get('_route') == 'clinica_novo' %} class="active" {% endif %} href="{{ path('clinica_novo') }}">
                             <i class="bi bi-circle"></i><span>Novo Agendamento</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ path('vacina_index') }}">
+                        <a {% if app.request.attributes.get('_route') == 'vacina_index' %} class="active" {% endif %} href="{{ path('vacina_index') }}">
                             <i class="bi bi-circle"></i><span>Vacinas</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ path('exame_index') }}">
+                        <a {% if app.request.attributes.get('_route') == 'exame_index' %} class="active" {% endif %} href="{{ path('exame_index') }}">
                             <i class="bi bi-circle"></i><span>Exames</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ path('estoque_index') }}">
+                        <a {% if app.request.attributes.get('_route') == 'estoque_index' %} class="active" {% endif %} href="{{ path('estoque_index') }}">
                             <i class="bi bi-circle"></i><span>Estoque</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ path('fila_espera') }}">
+                        <a {% if app.request.attributes.get('_route') == 'fila_espera' %} class="active" {% endif %} href="{{ path('fila_espera') }}">
                             <i class="bi bi-circle"></i><span>Fila de Espera</span>
                         </a>
                     </li>
                 </ul>
             </li>
             <li class="nav-item">
-                <a class="nav-link collapsed" data-bs-target="#matriculas" data-bs-toggle="collapse" href="#">
+                <a class="nav-link {% if app.request.attributes.get('_route') == 'hospedagem_agendar' or app.request.attributes.get('_route') == 'hospedagem_listar' %} {% else %} collapsed {% endif %}" data-bs-target="#matriculas" data-bs-toggle="collapse" href="#">
                     <i class="bi bi-journal-text"></i><span>Hospedagem de Cães</span><i class="bi bi-chevron-down ms-auto"></i>
                 </a>
-                <ul id="matriculas" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+                <ul id="matriculas" class="nav-content collapse {% if app.request.attributes.get('_route') == 'hospedagem_agendar' or app.request.attributes.get('_route') == 'hospedagem_listar' %} show {% endif %}" data-bs-parent="#sidebar-nav">
                     <li>
-                        <a href="{{ path('hospedagem_agendar') }}">
+                        <a {% if app.request.attributes.get('_route') == 'hospedagem_agendar' %} class="active" {% endif %} href="{{ path('hospedagem_agendar') }}">
                             <i class="bi bi-circle"></i><span>Novo Agendamento</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ path('hospedagem_listar') }}">
+                        <a {% if app.request.attributes.get('_route') == 'hospedagem_listar' %} class="active" {% endif %} href="{{ path('hospedagem_listar') }}">
                             <i class="bi bi-circle"></i><span>Ver Hospedagens</span>
                         </a>
                     </li>
@@ -463,12 +482,17 @@
             </li>
         {% endif %}
         <li class="nav-item">
-            <a class="nav-link" href="{{ url('app_usuario') }}">
+            <a class="nav-link {% if app.request.attributes.get('_route') != 'app_usuario' %} collapsed {% endif %}" href="{{ url('app_usuario') }}">
                 <i class="bi bi-person"></i><span>Usuários</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#">
+            <a class="nav-link {% if app.request.attributes.get('_route') != 'app_plano' %} collapsed {% endif %}" href="{{ url('app_plano') }}">
+                <i class="bi bi-exclamation-square"></i><span>Planos</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#">
                 <i class="bi bi-arrow-up-right"></i><span>Ver site</span>
             </a>
         </li>
