@@ -18,6 +18,9 @@ class HomeController extends DefaultController
     {
         $data = [];
 
+        $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome();
+        $data['planos'] = $planos;
+
         return $this->render('home/landing.html.twig', $data);
     }
 

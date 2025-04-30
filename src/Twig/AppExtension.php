@@ -41,7 +41,29 @@ class AppExtension extends AbstractExtension
             new TwigFilter('filterCnae', [$this, 'filterCnae']),
             new TwigFilter('slug', [$this, 'slug']),
             new TwigFilter('onlyNumber', [$this, 'onlyNumber']),
+            new TwigFilter('getTrial', [$this, 'getTrial']),
+            new TwigFilter('getStatus', [$this, 'getStatus']),
         ];
+    }
+
+    public function getStatus($status){
+        if($status=='Ativo'){
+            $html = '<span class="badge text-bg-success">Ativo</span>';
+        }else{
+            $html = '<span class="badge text-bg-danger">Inativo</span>';
+        }
+
+        return $html;
+    }
+
+    public function getTrial($trial){
+        if($trial){
+            $html = '<span class="badge text-bg-success">Plano com Trial</span>';
+        }else{
+            $html = '<span class="badge text-bg-info">Plano sem Trial</span>';
+        }
+
+        return $html;
     }
 
     public function getFunctions(): array

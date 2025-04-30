@@ -17,24 +17,26 @@
             </tr>
         </thead>
         <tbody>
+            {% for row in planos %}
         <tr>
-            <td>Plano 01</td>
-            <td class="text-center"><span class="badge text-bg-success">Não</span></td>
-            <td class="text-center"><span class="badge text-bg-secondary">16</span></td>
-            <td class="text-center"><span class="badge text-bg-success">Ativo</span></td>
+            <td>{{row.titulo}}</td>
+            <td class="text-center">{{row.trial|getTrial|raw}}</td>
+            <td class="text-center"><span class="badge text-bg-secondary">{{row.totalLojas}}</span></td>
+            <td class="text-center">{{row.status|getStatus|raw}}</td>
             <td class="text-center">
                 <div class="dropdown">
                   <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Ação
                   </button>
                   <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="#">Editar</a></li>
+                    <li><a class="dropdown-item" href="{{url('app_plano_editar',{'id':row.id})}}">Editar</a></li>
                     <li><a class="dropdown-item" href="#">Ver lojas</a></li>
                     <li><a class="dropdown-item" href="#">Inativar</a></li>
                   </ul>
                 </div>
             </td>
         </tr>
+            {% endfor %}
         </tbody>
     </table>
 </div>

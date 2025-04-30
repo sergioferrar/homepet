@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass=PlanoRepository::class)
+ * @ORM\Table(name="planos")
  */
 class Plano
 {
@@ -43,12 +44,12 @@ class Plano
     private $trial;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", name="dataTrial")
      */
     private $dataTrial;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", name="dataPlano")
      */
     private $dataPlano;
 
