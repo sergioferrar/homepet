@@ -24,6 +24,41 @@ class PlanoRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
+    public function listaPlanos()
+    {
+        $sql = "SELECT id, titulo, valor, status, trial, dataTrial, dataPlano,
+        (SELECT COUNT(*) FROM estabelecimento WHERE planoId = p.id) AS totalLojas
+            FROM planos AS p
+            #WHERE p.status = 'Ativo'";
+
+        $query = $this->conn->executeQuery($sql);
+
+        return $query->fetchAllAssociative();
+    }
+
+    public function listaPlanosHome()
+    {
+        $sql = "SELECT id, titulo, valor, status, trial, dataTrial, dataPlano, descricao
+            FROM planos AS p
+            WHERE p.status = 'Ativo'";
+
+        $query = $this->conn->executeQuery($sql);
+
+        return $query->fetchAllAssociative();
+    }
+
+    public function verPlano($planoId)
+    {
+        $sql = "SELECT id, titulo, valor, status, trial, dataTrial, dataPlano,descricao,
+        (SELECT COUNT(*) FROM estabelecimento WHERE planoId = p.id) AS totalLojas
+            FROM planos AS p
+            WHERE p.id = $planoId";
+
+        $query = $this->conn->executeQuery($sql);
+
+        return $query->fetchAssociative();
+    }
+
     public function add(Plano $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
@@ -32,6 +67,18 @@ class PlanoRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    public function update(Plano $entity, $planoId): void
+    {
+
+        $sql = "UPDATE planos SET titulo = '{$entity->getTitulo()}', descricao = '{$entity->getDescricao()}', 
+        valor = '{$entity->getValor()}', status = '{$entity->getStatus()}', 
+        trial = '{$entity->getTrial()}', dataPlano = '{$entity->getDataPlano()->format('Y-m-d H:i:s')}'
+            WHERE id = $planoId";
+
+        $this->conn->executeQuery($sql);
+    }
+
 
     public function remove(Plano $entity, bool $flush = false): void
     {
@@ -55,7 +102,7 @@ class PlanoRepository extends ServiceEntityRepository
     }
 
 //    /**
-//     * @return Plano[] Returns an array of Plano objects
+//     * @return Planos[] Returns an array of Planos objects
 //     */
 //    public function findByExampleField($value): array
 //    {
@@ -69,7 +116,7 @@ class PlanoRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Plano
+//    public function findOneBySomeField($value): ?Planos
 //    {
 //        return $this->createQueryBuilder('p')
 //            ->andWhere('p.exampleField = :val')

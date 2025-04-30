@@ -14,9 +14,12 @@ class PlanoController extends DefaultController
      */
     public function index(): Response
     {
-        return $this->render('plano/index.html.twig', [
-            'controller_name' => 'PlanoController',
-        ]);
+        $data = [];
+
+        $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanos();
+        $data['planos'] = $planos;
+        
+        return $this->render('plano/index.html.twig', $data);
     }
 
     /**
@@ -29,11 +32,53 @@ class PlanoController extends DefaultController
         ]);
     }
 
-    public function strore(Request $request): Response{}
-    
-    public function editar(Request $request): Response{}
-    
-    public function update(Request $request): Response{}
+    /**
+     * @Route("/plano/editar/{id}", name="app_plano_editar")
+     */
+    public function editar(Request $request): Response
+    {
+        $plano = $this->getRepositorio(\App\Entity\Plano::class)->verPlano($request->get('id'));
+        
+        $data['plano'] = $plano;
+        return $this->render('plano/editar.html.twig', $data);
+    }
+
+    /**
+     * @Route("/plano/cadastrar/novo", name="app_plano_create_new")
+     */
+    public function strore(Request $request): Response
+    {
+        $plano = new \App\Entity\Plano();
+        $plano->setTitulo($request->get('nome'));
+        $plano->setDescricao($request->get('descricao'));
+        $plano->setValor($request->get('valor'));
+        $plano->setStatus($request->get('status'));
+        $plano->setTrial(($request->get('trial')?true:false));
+        $plano->setDataPlano((new \Datetime("now")));
+        
+        $this->getRepositorio(\App\Entity\Plano::class)->add($plano,true);
+
+        return $this->redirectToRoute('app_plano');
+    }
+
+    /**
+     * @Route("/plano/editar/update/{id}", name="app_plano_update")
+     */
+    public function update(Request $request): Response
+    {
+
+        $plano = new \App\Entity\Plano();
+        $plano->setTitulo($request->get('nome'));
+        $plano->setDescricao(addslashes($request->get('descricao')));
+        $plano->setValor($request->get('valor'));
+        $plano->setStatus($request->get('status'));
+        $plano->setTrial(($request->get('trial')?true:false));
+        $plano->setDataPlano((new \Datetime("now")));
+        
+        $this->getRepositorio(\App\Entity\Plano::class)->update($plano, $request->get('id'));
+
+        return $this->redirectToRoute('app_plano');
+    }
 
     public function listarPlanosLoja(Request $request): Response{}
     public function inclurLoja(Request $request): Response{}// Incluir estabelecimento
