@@ -16,7 +16,7 @@ class ProntuarioRepository
 
     public function save($baseId, Prontuario $p): void
     {
-        $sql = "INSERT INTO u199209817_{$baseId}.prontuario (agendamento_id, observacoes, arquivos, criado_em)
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.prontuario (agendamento_id, observacoes, arquivos, criado_em)
                 VALUES (:agendamento_id, :observacoes, :arquivos, :criado_em)";
         $this->conn->executeQuery($sql, [
             'agendamento_id' => $p->getAgendamentoId(),
@@ -28,7 +28,7 @@ class ProntuarioRepository
 
     public function findByAgendamento($baseId, int $agendamentoId): array
     {
-        $sql = "SELECT * FROM u199209817_{$baseId}.prontuario WHERE agendamento_id = :id ORDER BY criado_em DESC";
+        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.prontuario WHERE agendamento_id = :id ORDER BY criado_em DESC";
         return $this->conn->fetchAllAssociative($sql, ['id' => $agendamentoId]);
     }
 }

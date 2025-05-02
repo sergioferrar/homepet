@@ -29,7 +29,7 @@ class HospedagemCaesRepository extends ServiceEntityRepository
     public function insert($baseId, HospedagemCaes $h): void
 
     {
-        $sql = "INSERT INTO u199209817_{$baseId}.hospedagem_caes (cliente_id, pet_id, data_entrada, data_saida, valor, observacoes)
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.hospedagem_caes (cliente_id, pet_id, data_entrada, data_saida, valor, observacoes)
                 VALUES (:cliente_id, :pet_id, :data_entrada, :data_saida, :valor, :observacoes)";
         $this->conn->executeQuery($sql, [
             'cliente_id' => $h->getClienteId(),
@@ -44,8 +44,8 @@ class HospedagemCaesRepository extends ServiceEntityRepository
     public function registrarFinanceiro($baseId, HospedagemCaes $h): void
 
     {
-        $sql = "INSERT INTO u199209817_{$baseId}.financeiro (descricao, valor, data, pet_id, pet_nome)
-                VALUES (:descricao, :valor, NOW(), :pet_id, (SELECT nome FROM u199209817_{$baseId}.pet WHERE id = :pet_id LIMIT 1))";
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.financeiro (descricao, valor, data, pet_id, pet_nome)
+                VALUES (:descricao, :valor, NOW(), :pet_id, (SELECT nome FROM {$_ENV['DBNAMETENANT']}{$baseId}.pet WHERE id = :pet_id LIMIT 1))";
         $this->conn->executeQuery($sql, [
             'descricao' => 'Hospedagem do Pet',
             'valor' => $h->getValor(),
@@ -55,7 +55,7 @@ class HospedagemCaesRepository extends ServiceEntityRepository
 
     public function getClientes($baseId)
     {
-        return $this->conn->fetchAllAssociative("SELECT * FROM u199209817_{$baseId}.cliente");
+        return $this->conn->fetchAllAssociative("SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.cliente");
     }
 
     public function getPets($baseId): array
@@ -65,8 +65,8 @@ class HospedagemCaesRepository extends ServiceEntityRepository
                     p.nome, 
                     c.id AS dono_id, 
                     c.nome AS dono_nome
-                FROM u199209817_{$baseId}.pet p
-                LEFT JOIN u199209817_{$baseId}.cliente c ON c.id = p.dono_id";
+                FROM {$_ENV['DBNAMETENANT']}{$baseId}.pet p
+                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.cliente c ON c.id = p.dono_id";
 
         return $this->conn->fetchAllAssociative($sql);
     }
@@ -79,9 +79,9 @@ class HospedagemCaesRepository extends ServiceEntityRepository
         $sql = "SELECT h.id, h.cliente_id, c.nome AS cliente_nome,
                        h.pet_id, p.nome AS pet_nome,
                        h.data_entrada, h.data_saida, h.valor, h.observacoes
-                FROM u199209817_{$baseId}.hospedagem_caes h
-                LEFT JOIN u199209817_{$baseId}.cliente c ON c.id = h.cliente_id
-                LEFT JOIN u199209817_{$baseId}.pet p ON p.id = h.pet_id
+                FROM {$_ENV['DBNAMETENANT']}{$baseId}.hospedagem_caes h
+                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.cliente c ON c.id = h.cliente_id
+                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.pet p ON p.id = h.pet_id
                 ORDER BY h.data_entrada DESC";
 
         return $this->conn->fetchAllAssociative($sql);
@@ -90,19 +90,19 @@ class HospedagemCaesRepository extends ServiceEntityRepository
 
     public function localizaPorId($baseId, int $id): ?array
     {
-        $sql = "SELECT * FROM u199209817_{$baseId}.hospedagem_caes WHERE id = :id";
+        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.hospedagem_caes WHERE id = :id";
         return $this->conn->fetchAssociative($sql, ['id' => $id]) ?: null;
     }
 
     public function delete($baseId, int $id): void
     {
-        $this->conn->executeQuery("DELETE FROM u199209817_{$baseId}.hospedagem_caes WHERE id = :id", ['id' => $id]);
+        $this->conn->executeQuery("DELETE FROM {$_ENV['DBNAMETENANT']}{$baseId}.hospedagem_caes WHERE id = :id", ['id' => $id]);
     }
 
 
     public function updateHospedagem($baseId, int $id, HospedagemCaes $h): void
     {
-        $sql = "UPDATE u199209817_{$baseId}.hospedagem_caes
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}{$baseId}.hospedagem_caes
                 SET cliente_id = :cliente_id,
                     pet_id = :pet_id,
                     data_entrada = :data_entrada,
@@ -126,9 +126,9 @@ class HospedagemCaesRepository extends ServiceEntityRepository
     {
         $query = "
             SELECT h.*, c.nome as cliente_nome, p.nome as pet_nome
-            FROM u199209817_{$baseId}.hospedagem_caes h
-            INNER JOIN u199209817_{$baseId}.cliente c ON c.id = h.cliente_id
-            INNER JOIN u199209817_{$baseId}.pet p ON p.id = h.pet_id
+            FROM {$_ENV['DBNAMETENANT']}{$baseId}.hospedagem_caes h
+            INNER JOIN {$_ENV['DBNAMETENANT']}{$baseId}.cliente c ON c.id = h.cliente_id
+            INNER JOIN {$_ENV['DBNAMETENANT']}{$baseId}.pet p ON p.id = h.pet_id
             WHERE h.data_entrada <= :data AND h.data_saida >= :data
             ORDER BY h.data_entrada ASC
         ";

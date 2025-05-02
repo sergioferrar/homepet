@@ -12,13 +12,13 @@ class AgendamentoClinicaRepository
 
     public function findByDate($baseId, \DateTime $data): array
     {
-        $sql = "SELECT * FROM u199209817_{$baseId}.agendamento_clinica WHERE DATE(data) = :data ORDER BY hora ASC";
+        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.agendamento_clinica WHERE DATE(data) = :data ORDER BY hora ASC";
         return $this->conn->fetchAllAssociative($sql, ['data' => $data->format('Y-m-d')]);
     }
 
     public function save($baseId, AgendamentoClinica $a): void
     {
-        $sql = "INSERT INTO u199209817_{$baseId}.agendamento_clinica (data, hora, procedimento, status, pet_id, dono_id)
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.agendamento_clinica (data, hora, procedimento, status, pet_id, dono_id)
                 VALUES (:data, :hora, :procedimento, :status, :pet_id, :dono_id)";
         $this->conn->executeQuery($sql, [
             'data' => $a->getData()->format('Y-m-d'),
@@ -32,11 +32,11 @@ class AgendamentoClinicaRepository
 
     public function findAllClientes($baseId): array
     {
-        return $this->conn->fetchAllAssociative("SELECT id, nome FROM u199209817_{$baseId}.cliente");
+        return $this->conn->fetchAllAssociative("SELECT id, nome FROM {$_ENV['DBNAMETENANT']}{$baseId}.cliente");
     }
 
     public function findAllPets($baseId): array
     {
-        return $this->conn->fetchAllAssociative("SELECT id, nome FROM u199209817_{$baseId}.pet");
+        return $this->conn->fetchAllAssociative("SELECT id, nome FROM {$_ENV['DBNAMETENANT']}{$baseId}.pet");
     }
 }
