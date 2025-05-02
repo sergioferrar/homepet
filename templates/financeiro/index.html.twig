@@ -59,12 +59,12 @@
                 const action = this.value;
 
                 if (action === 'editar') {
-                    window.location.href = `/homepet/public/financeiro/editar/${id}`;
+                    window.location.href = `/financeiro/editar/${id}`;
                 } else if (action === 'deletar') {
                     if (confirm('Tem certeza que deseja deletar?')) {
                         const form = document.createElement('form');
                         form.method = 'post';
-                        form.action = `/homepet/public/financeiro/deletar/${id}`;
+                        form.action = `/financeiro/deletar/${id}`;
                         document.body.appendChild(form);
                         form.submit();
                     } else {
