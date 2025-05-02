@@ -22,7 +22,7 @@ class FinanceiroController extends DefaultController
 {
 
     /**
-     * @Route("/", name="financeiro_index", methods={"GET"})
+     * @Route("/", name="financeiro_index")
      */
     public function index(Request $request): Response
     {
@@ -37,7 +37,7 @@ class FinanceiroController extends DefaultController
     }
 
     /**
-     * @Route("/novo", name="financeiro_novo", methods={"GET", "POST"})
+     * @Route("/novo", name="financeiro_novo")
      */
     public function novo(Request $request): Response
     {
@@ -59,7 +59,7 @@ class FinanceiroController extends DefaultController
     }
 
     /**
-     * @Route("/editar/{id}", name="financeiro_editar", methods={"GET", "POST"})
+     * @Route("/editar/{id}", name="financeiro_editar")
      */
     public function editar(Request $request, int $id): Response
     {
@@ -91,7 +91,7 @@ class FinanceiroController extends DefaultController
 
 
     /**
-     * @Route("/deletar/{id}", name="financeiro_deletar", methods={"POST"})
+     * @Route("/deletar/{id}", name="financeiro_deletar")
      */
     public function deletar(Request $request, int $id): Response
     {
@@ -108,7 +108,7 @@ class FinanceiroController extends DefaultController
 
 
     /**
-     * @Route("/relatorio", name="financeiro_relatorio", methods={"GET"})
+     * @Route("/relatorio", name="financeiro_relatorio")
      */
     public function relatorio(Request $request): Response
     {
@@ -135,7 +135,7 @@ class FinanceiroController extends DefaultController
     }
 
     /**
-     * @Route("/pendente", name="financeiro_pendente", methods={"GET"})
+     * @Route("/pendente", name="financeiro_pendente")
      */
     public function financeiroPendente(Request $request, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
     {
@@ -236,7 +236,7 @@ class FinanceiroController extends DefaultController
     }
 
     /**
-     * @Route("/relatorio/export", name="financeiro_relatorio_export", methods={"GET"})
+     * @Route("/relatorio/export", name="financeiro_relatorio_export")
      */
     public function exportRelatorioExcel(Request $request): Response
     {
