@@ -34,7 +34,7 @@ class ClinicaController extends AbstractController
         InternacaoRepository $internacaoRepository,
         AtendimentoService $atendimentoService
     ) {
-        $this->atendimentoRepository = $atendimentoRepository;
+        // $this->getRepositorio(\App\Entity\Atendimento::class) = $atendimentoRepository;
         $this->petRepository = $petRepository;
         $this->procedimentoRepository = $procedimentoRepository;
         $this->internacaoRepository = $internacaoRepository;
@@ -46,7 +46,7 @@ class ClinicaController extends AbstractController
      */
     public function index(): Response
     {
-        $atendimentosHoje = $this->atendimentoRepository->findAtendimentosHoje();
+        $atendimentosHoje = $this->getRepositorio(\App\Entity\Atendimento::class)->findAtendimentosHoje();
         $internacoesAtivas = $this->internacaoRepository->findInternacoesAtivas();
 
         return $this->render('clinica/index.html.twig', [
@@ -64,7 +64,7 @@ class ClinicaController extends AbstractController
         $dataInicio = $request->query->get('data_inicio');
         $dataFim = $request->query->get('data_fim');
 
-        $atendimentos = $this->atendimentoRepository->findByFiltro($filtro, $dataInicio, $dataFim);
+        $atendimentos = $this->getRepositorio(\App\Entity\Atendimento::class)->findByFiltro($filtro, $dataInicio, $dataFim);
 
         return $this->render('clinica/atendimentos.html.twig', [
             'atendimentos' => $atendimentos,
@@ -116,7 +116,7 @@ class ClinicaController extends AbstractController
      */
     public function detalhesAtendimento(int $id): Response
     {
-        $atendimento = $this->atendimentoRepository->find($id);
+        $atendimento = $this->getRepositorio(\App\Entity\Atendimento::class)->find($id);
         
         if (!$atendimento) {
             throw $this->createNotFoundException('Atendimento não encontrado');
@@ -132,7 +132,7 @@ class ClinicaController extends AbstractController
      */
     public function finalizarAtendimento(Request $request, int $id): Response
     {
-        $atendimento = $this->atendimentoRepository->find($id);
+        $atendimento = $this->getRepositorio(\App\Entity\Atendimento::class)->find($id);
         
         if (!$atendimento) {
             throw $this->createNotFoundException('Atendimento não encontrado');
@@ -308,11 +308,11 @@ class ClinicaController extends AbstractController
         $dados = [];
         
         if ($tipoRelatorio === 'atendimentos') {
-            $dados = $this->atendimentoRepository->gerarRelatorioAtendimentos($dataInicio, $dataFim);
+            $dados = $this->getRepositorio(\App\Entity\Atendimento::class)->gerarRelatorioAtendimentos($dataInicio, $dataFim);
         } elseif ($tipoRelatorio === 'internacoes') {
             $dados = $this->internacaoRepository->gerarRelatorioInternacoes($dataInicio, $dataFim);
         } elseif ($tipoRelatorio === 'financeiro') {
-            $dados = $this->atendimentoRepository->gerarRelatorioFinanceiro($dataInicio, $dataFim);
+            $dados = $this->getRepositorio(\App\Entity\Atendimento::class)->gerarRelatorioFinanceiro($dataInicio, $dataFim);
         }
 
         return $this->render('clinica/relatorios.html.twig', [

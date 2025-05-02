@@ -17,22 +17,22 @@ class VacinaRepository
     public function findAll($baseId): array
     {
         $sql = "SELECT v.*, CONCAT(p.nome, ' (', c.nome, ')') AS pet_nome
-                FROM u199209817_{$baseId}.vacina v
-                LEFT JOIN u199209817_{$baseId}.pet p ON p.id = v.pet_id
-                LEFT JOIN u199209817_{$baseId}.cliente c ON c.id = p.dono_id
+                FROM {$_ENV['DBNAMETENANT']}{$baseId}.vacina v
+                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.pet p ON p.id = v.pet_id
+                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.cliente c ON c.id = p.dono_id
                 ORDER BY v.data_aplicacao DESC";
         return $this->conn->fetchAllAssociative($sql);
     }
 
     public function find($baseId, $id): ?array
     {
-        $sql = "SELECT * FROM u199209817_{$baseId}.vacina WHERE id = :id";
+        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.vacina WHERE id = :id";
         return $this->conn->fetchAssociative($sql, ['id' => $id]) ?: null;
     }
 
     public function insert($baseId, Vacina $v): void
     {
-        $sql = "INSERT INTO u199209817_{$baseId}.vacina (pet_id, tipo, data_aplicacao, data_validade, lote)
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.vacina (pet_id, tipo, data_aplicacao, data_validade, lote)
                 VALUES (:pet_id, :tipo, :data_aplicacao, :data_validade, :lote)";
         $this->conn->executeQuery($sql, [
             'pet_id'         => $v->getPetId(),
@@ -45,7 +45,7 @@ class VacinaRepository
 
     public function update($baseId, int $id, Vacina $v): void
     {
-        $sql = "UPDATE u199209817_{$baseId}.vacina
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}{$baseId}.vacina
                 SET pet_id = :pet_id, tipo = :tipo, data_aplicacao = :data_aplicacao,
                     data_validade = :data_validade, lote = :lote
                 WHERE id = :id";
@@ -61,12 +61,12 @@ class VacinaRepository
 
     public function delete($baseId, int $id): void
     {
-        $this->conn->executeQuery("DELETE FROM u199209817_{$baseId}.vacina WHERE id = :id", ['id' => $id]);
+        $this->conn->executeQuery("DELETE FROM {$_ENV['DBNAMETENANT']}{$baseId}.vacina WHERE id = :id", ['id' => $id]);
     }
 
     public function findAllPets($baseId): array
     {
-        return $this->conn->fetchAllAssociative("SELECT p.id, CONCAT(p.nome, ' (', c.nome, ')') AS nome FROM u199209817_{$baseId}.pet p LEFT JOIN u199209817_{$baseId}.cliente c ON c.id = p.dono_id");
+        return $this->conn->fetchAllAssociative("SELECT p.id, CONCAT(p.nome, ' (', c.nome, ')') AS nome FROM {$_ENV['DBNAMETENANT']}{$baseId}.pet p LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.cliente c ON c.id = p.dono_id");
     }
 
     public function getVacinasSugeridas(): array
