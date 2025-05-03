@@ -19,9 +19,26 @@ class Estoque
     /** @ORM\Column(type="integer") */
     private $quantidade;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimentoId;
+
     public function getId(): ?int { return $this->id; }
     public function getProduto(): ?string { return $this->produto; }
     public function setProduto(string $produto): self { $this->produto = $produto; return $this; }
     public function getQuantidade(): ?int { return $this->quantidade; }
     public function setQuantidade(int $quantidade): self { $this->quantidade = $quantidade; return $this; }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
+
+        return $this;
+    }
 }

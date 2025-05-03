@@ -47,6 +47,11 @@ class AgendamentoClinica
      */
     private $dono_id;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimentoId;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -115,6 +120,18 @@ class AgendamentoClinica
     public function setDonoId(?int $dono_id): self
     {
         $this->dono_id = $dono_id;
+        return $this;
+    }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
+
         return $this;
     }
 }

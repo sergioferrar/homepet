@@ -58,6 +58,11 @@ class Pet
      */
     private $especie;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimentoId;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -154,6 +159,18 @@ class Pet
     public function setEspecie(string $especie): self
     {
         $this->especie = $especie;
+        return $this;
+    }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
+
         return $this;
     }
 }

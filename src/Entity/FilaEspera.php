@@ -25,6 +25,11 @@ class FilaEspera
     /** @ORM\Column(type="string") */
     private $status;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimentoId;
+
     public function getId(): ?int { return $this->id; }
     public function getPetId(): ?int { return $this->pet_id; }
     public function setPetId(int $pet_id): self { $this->pet_id = $pet_id; return $this; }
@@ -34,4 +39,16 @@ class FilaEspera
     public function setSala(string $sala): self { $this->sala = $sala; return $this; }
     public function getStatus(): ?string { return $this->status; }
     public function setStatus(string $status): self { $this->status = $status; return $this; }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
+
+        return $this;
+    }
 }

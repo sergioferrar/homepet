@@ -25,6 +25,11 @@ class Prontuario
     /** @ORM\Column(type="datetime") */
     private $criado_em;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimentoId;
+
     public function getId(): ?int { return $this->id; }
     public function getAgendamentoId(): int { return $this->agendamento_id; }
     public function setAgendamentoId(int $id): self { $this->agendamento_id = $id; return $this; }
@@ -34,4 +39,16 @@ class Prontuario
     public function setArquivos(?string $arq): self { $this->arquivos = $arq; return $this; }
     public function getCriadoEm(): \DateTimeInterface { return $this->criado_em; }
     public function setCriadoEm(\DateTimeInterface $data): self { $this->criado_em = $data; return $this; }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
+
+        return $this;
+    }
 }

@@ -46,6 +46,11 @@ class Financeiro
     private $porte;
     private $observacoes;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimentoId;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -153,6 +158,18 @@ class Financeiro
     public function setObservacoes(?string $observacoes): self
     {
         $this->observacoes = $observacoes;
+        return $this;
+    }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
+
         return $this;
     }
 }

@@ -32,6 +32,11 @@ class Servico
      */
     private $valor;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimentoId;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -73,6 +78,18 @@ class Servico
     public function setValor(float $valor): self
     {
         $this->valor = $valor;
+        return $this;
+    }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
+
         return $this;
     }
 }

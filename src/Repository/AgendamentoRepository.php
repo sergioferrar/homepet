@@ -20,8 +20,8 @@ class AgendamentoRepository extends ServiceEntityRepository
     {
         $sql = "SELECT a.id, data, concluido, pronto, horaChegada, metodo_pagamento, horaSaida, horaChegada, taxi_dog, taxa_taxi_dog
                 FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento a
-                LEFT JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento_pet_servico aps ON a.id = aps.agendamentoId
-                WHERE a.id = :id";
+                LEFT JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento_pet_servico aps ON a.id = aps.agendamentoId AND aps.estabelecimento_id=$baseId
+                WHERE a.estabelecimento_id=$baseId AND a.id = :id";
 
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
         $result = $stmt->fetchAssociative();

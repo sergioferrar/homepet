@@ -486,11 +486,18 @@ app.request.attributes.get('_route') == 'fila_espera' %} show {% endif %}" data-
                 <i class="bi bi-person"></i><span>Usuários</span>
             </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link {% if app.request.attributes.get('_route') != 'app_plano' %} collapsed {% endif %}" href="{{ url('app_plano') }}">
-                <i class="bi bi-exclamation-square"></i><span>Planos</span>
-            </a>
-        </li>
+        {% if app.session.get('accessLevel') == 'Super Admin' %}
+            <li class="nav-item">
+                <a class="nav-link {% if app.request.attributes.get('_route') != 'app_plano' %} collapsed {% endif %}" href="{{ url('app_plano') }}">
+                    <i class="bi bi-exclamation-square"></i><span>Planos</span>
+                </a>
+            </li>
+        {% endif %}
+            <li class="nav-item">
+                <a class="nav-link {% if app.request.attributes.get('_route') != 'app_estabelecimento' %} collapsed {% endif %}" href="{{ url('app_estabelecimento') }}">
+                    <i class="bi bi-shop"></i><span>Estabelecimento</span>
+                </a>
+            </li>
         <li class="nav-item">
             <a class="nav-link collapsed" href="#">
                 <i class="bi bi-arrow-up-right"></i><span>Ver site</span>

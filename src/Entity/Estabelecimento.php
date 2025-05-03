@@ -77,6 +77,26 @@ class Estabelecimento
      */
     private $dataAtualizacao;
 
+    /**
+     * @ORM\Column(type="integer", name="planoId")
+     */
+    private $planoId;
+
+    /**
+     * @ORM\Column(type="datetime", name="dataPlanoInicio")
+     */
+    private $dataPlanoInicio;
+
+    /**
+     * @ORM\Column(type="datetime", name="dataPlanoFim")
+     */
+    private $dataPlanoFim;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimentoId;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -222,6 +242,54 @@ class Estabelecimento
     public function setDataAtualizacao(?\DateTimeInterface $dataAtualizacao): self
     {
         $this->dataAtualizacao = $dataAtualizacao;
+
+        return $this;
+    }
+
+    public function getPlanoId(): ?int
+    {
+        return $this->planoId;
+    }
+
+    public function setPlanoId(int $planoId): self
+    {
+        $this->planoId = $planoId;
+
+        return $this;
+    }
+
+    public function getDataPlanoInicio(): ?\DateTimeInterface
+    {
+        return $this->dataPlanoInicio;
+    }
+
+    public function setDataPlanoInicio(\DateTimeInterface $dataPlanoInicio): self
+    {
+        $this->dataPlanoInicio = $dataPlanoInicio;
+
+        return $this;
+    }
+
+    public function getDataPlanoFim(): ?\DateTimeInterface
+    {
+        return $this->dataPlanoFim;
+    }
+
+    public function setDataPlanoFim(\DateTimeInterface $dataPlanoFim): self
+    {
+        $this->dataPlanoFim = $dataPlanoFim;
+
+        return $this;
+    }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
 
         return $this;
     }

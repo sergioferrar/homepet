@@ -80,71 +80,32 @@
                 </div>
             </section>
             
-            <section class="container my-5 vh-100" id="cta">
+            <section class="container" id="cta">
                 <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h2>Cadastre seu Estabelecimento</h2>
-                        <p>Experimente gratuitamente e veja como nosso sistema pode revolucionar seu negócio.</p>
-                        <form action="{{ url('estabelecimento_cadastrar') }}" method="POST" class="p-4 border rounded bg-light">
-                            <div class="mb-3">
-                                <label for="razaoSocial" class="form-label">Razão Social</label>
-                                <input type="text" class="form-control" id="razaoSocial" name="razaoSocial" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="cnpj" class="form-label">CNPJ</label>
-                                <input type="text" class="form-control" id="cnpj" name="cnpj" required>
-                            </div>
-                            <div class="row">
-                                <div class="mb-3 col-4">
-                                    <label for="cep" class="form-label">CEP</label>
-                                    <input type="text" class="form-control" id="cep" name="cep">
-                                </div>
-                                <div class="mb-3 col-8">
-                                    <label for="rua" class="form-label">Rua</label>
-                                    <input type="text" class="form-control" id="rua" name="rua">
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="mb-3 col-4">
-                                    <label for="numero" class="form-label">Número</label>
-                                    <input type="text" class="form-control" id="numero" name="numero">
-                                </div>
-                                <div class="mb-3 col-8">
-                                    <label for="complemento" class="form-label">Complemento</label>
-                                    <input type="text" class="form-control" id="complemento" name="complemento">
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="mb-3 col-6">
-                                    <label for="bairro" class="form-label">Bairro</label>
-                                    <input type="text" class="form-control" id="bairro" name="bairro">
-                                </div>
-                                <div class="mb-3 col-6">
-                                    <label for="cidade" class="form-label">Cidade</label>
-                                    <input type="text" class="form-control" id="cidade" name="cidade">
-                                </div>
-                            </div>
-                            <input type="hidden" class="form-control" id="pais" name="pais" value="brasil">
-                            <button type="submit" class="btn btn-primary w-100">Cadastre-se Agora</button>
-                        </form>
-                    </div>
-                    <div class="col-md-6 text-center">
+                    
+                    <div class="col-md-12 text-center">
                         <img src="{{ asset('images/petshop01.png') }}" class="img-fluid rounded" alt="Cadastro de estabelecimento">
                     </div>
                 </div>
             </section>
             <section class="bg-light py-5 text-center">
-                    <div class="col-md-8 offset-2">
-                <div class="row">
+                <div class="col-md-8 offset-2">
+                    <div class="row">
                         {% for row in planos %}
                             <div class="col-md-4">
                                 <div class="card">
-                                    <div class="card-body">
-                                        <h3 class="cart-title mt-5">{{row.titulo}}</h3>
+                                    <div class="card-header bg-success text-white">
+                                        <h3 class="cart-title mt-2">{{row.titulo}}</h3>
+                                    </div>
+                                    <div class="card-body p-0">
                                         {{ row.descricao|raw }}
-                                        
-                                        <div class="text-center mt-3">
-                                            <a href="#" class="btn btn-primary btn-sm">Adquirir plano</a>
+
+                                        <div class="text-center mt-3 mb-3 h3">
+                                            {{ row.valor|formataValorEmReal }}
+                                        </div>
+
+                                        <div class="text-center mt-3 mb-3">
+                                            <a href="{{ url('landing_cadastro', {'planoId':row.id}) }}" class="btn btn-primary">Adquirir plano</a>
                                         </div>
                                     </div>
                                 </div>
@@ -167,7 +128,7 @@
             </section>
             
             <footer class="footer text-center">
-                <p>&copy; 2025 Home Pet Shop - Todos os direitos reservados.</p>
+                <p>&copy; 2025 System Home Pet - Todos os direitos reservados.</p>
             </footer>
             <!-- Vendor JS Files -->
             <script src="../../vendors/apexcharts/apexcharts.min.js"></script>

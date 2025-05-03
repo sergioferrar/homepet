@@ -1,5 +1,6 @@
 CREATE TABLE `agendamento` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `estabelecimento_id` int DEFAULT NULL,
   `data` datetime DEFAULT NULL,
   `concluido` int DEFAULT NULL,
   `pronto` int DEFAULT NULL,
@@ -18,6 +19,7 @@ CREATE TABLE `agendamento` (
 
 CREATE TABLE `agendamento_pet_servico` (
   `agendamentoId` int NOT NULL,
+  `estabelecimento_id` int DEFAULT NULL,
   `petId` int NOT NULL,
   `servicoId` int NOT NULL,
   `id` int NOT NULL AUTO_INCREMENT,
@@ -27,6 +29,7 @@ CREATE TABLE `agendamento_pet_servico` (
 
 CREATE TABLE `cliente` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `estabelecimento_id` int DEFAULT NULL,
   `nome` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `telefone` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -42,6 +45,7 @@ CREATE TABLE `cliente` (
 
 CREATE TABLE `financeiro` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `estabelecimento_id` int DEFAULT NULL,
   `valor` decimal(10,0) DEFAULT NULL,
   `data` datetime DEFAULT NULL,
   `descricao` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -53,6 +57,7 @@ CREATE TABLE `financeiro` (
 
 CREATE TABLE `financeiropendente` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `estabelecimento_id` int DEFAULT NULL,
   `descricao` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `valor` decimal(10,2) NOT NULL,
   `data` datetime NOT NULL,
@@ -65,6 +70,7 @@ CREATE TABLE `financeiropendente` (
 
 CREATE TABLE `hospedagem_caes` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `estabelecimento_id` int DEFAULT NULL,
   `cliente_id` int DEFAULT NULL,
   `pet_id` int DEFAULT NULL,
   `data_entrada` date DEFAULT NULL,
@@ -81,6 +87,7 @@ CREATE TABLE `hospedagem_caes` (
 
 CREATE TABLE `pet` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `estabelecimento_id` int DEFAULT NULL,
   `nome` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `especie` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `idade` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -96,6 +103,7 @@ CREATE TABLE `pet` (
 
 CREATE TABLE `servico` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `estabelecimento_id` int DEFAULT NULL,
   `nome` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `descricao` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `valor` decimal(10,0) DEFAULT NULL,

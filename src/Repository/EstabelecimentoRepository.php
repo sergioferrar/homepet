@@ -41,6 +41,17 @@ class EstabelecimentoRepository extends ServiceEntityRepository
         }
     }
 
+    public function listaEstabelecimentos()
+    {
+        $sql = "SELECT estabelecimento.id, razaoSocial, cnpj, rua, numero, complemento, bairro, cidade, pais, cep, estabelecimento.status, dataCadastro, dataAtualizacao, planoId, dataPlanoInicio, dataPlanoFim, titulo
+            FROM estabelecimento
+            LEFT JOIN planos ON (planos.id = estabelecimento.planoId)";
+
+        $query = $this->conn->executeQuery($sql);
+
+        return $query->fetchAllAssociative();
+    }
+
     public function verificaDatabase($baseId)
     {
         $sql = "SELECT SCHEMA_NAME
@@ -49,6 +60,24 @@ class EstabelecimentoRepository extends ServiceEntityRepository
 
         $query = $this->conn->query($sql);
         return $query->fetch();
+    }
+
+    public function renovacao($eid, $dataInicio, $dataFim)
+    {
+        $sql = "UPDATE estabelecimento 
+            SET dataPlanoInicio = '{$dataInicio}', dataPlanoFim = '{$dataFim}'
+            WHERE id='$eid'";
+
+        $this->conn->executeQuery($sql);
+    }
+
+    public function aprovacao($eid)
+    {
+        $sql = "UPDATE estabelecimento 
+            SET status = 'Ativo'
+            WHERE id='$eid'";
+
+        $this->conn->executeQuery($sql);
     }
 
 //    /**

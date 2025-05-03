@@ -95,7 +95,7 @@
         <div class="col-md-6">
             <h2>Cadastre seu Usuário</h2>
             <p>Experimente gratuitamente e veja como nosso sistema pode revolucionar seu negócio.</p>
-            <form method="post" action="{{ url('petshop_usuario_cadastrar') }}">
+            <form method="post" action="{{ url('petshop_usuario_cadastrar') }}" class="p-4 border rounded bg-light">
                 <div class="form-group">
                     <label for="nome_usuario">Nome do usuário</label>
                     <input type="text" class="form-control" id="nome_usuario" name="nome_usuario" required>
@@ -112,7 +112,7 @@
                     <input type="hidden" name="estabelecimento" value="{{ estabelecimento }}">
                     <input type="hidden" name="access_level" value="Admin">
                 </div>
-                <button type="submit" class="btn btn-primary">Salvar</button>
+                <button type="submit" class="btn btn-primary mt-3">Finalizar Cadastro</button>
             </form>
         </div>
         <div class="col-md-6 text-center">
@@ -120,16 +120,6 @@
         </div>
     </div>
 </section>
-
-
-
-
-<section class="bg-light py-5 text-center">
-    <h2>Controle Total do seu Petshop</h2>
-    <p>Acompanhe seu faturamento, controle serviços e otimize seu tempo.</p>
-    <img src="{{ asset('images/petshop03.jpg') }}" class="img-fluid" alt="Painel administrativo">
-</section>
-
 <section class="container my-5 text-center">
     <h2>Comece Agora Mesmo!</h2>
     <p>Cadastre-se e experimente gratuitamente!</p>
