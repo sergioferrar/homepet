@@ -42,6 +42,11 @@ class Exame
      */
     private $criado_em;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimentoId;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -99,6 +104,18 @@ class Exame
     public function setCriadoEm(\DateTimeInterface $criado_em): self
     {
         $this->criado_em = $criado_em;
+        return $this;
+    }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
+
         return $this;
     }
 }

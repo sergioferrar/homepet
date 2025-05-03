@@ -25,6 +25,11 @@ class EstoqueClinica
     /** @ORM\Column(type="date") */
     private $validade;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimentoId;
+
     public function getId(): ?int { return $this->id; }
     public function getProduto(): string { return $this->produto; }
     public function setProduto(string $produto): self { $this->produto = $produto; return $this; }
@@ -34,4 +39,16 @@ class EstoqueClinica
     public function setQuantidade(int $quantidade): self { $this->quantidade = $quantidade; return $this; }
     public function getValidade(): \DateTimeInterface { return $this->validade; }
     public function setValidade(\DateTimeInterface $validade): self { $this->validade = $validade; return $this; }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
+
+        return $this;
+    }
 }

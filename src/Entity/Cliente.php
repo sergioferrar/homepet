@@ -66,7 +66,12 @@ class Cliente
     /**
      * @ORM\Column(type="integer")
      */
-    private $cep; // Nome correto da propriedade
+    private $cep;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimentoId; // Nome correto da propriedade
 
     public function getId(): ?int
     {
@@ -191,6 +196,18 @@ class Cliente
     public function setCep(int $cep): self
     {
         $this->cep = $cep;
+
+        return $this;
+    }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
 
         return $this;
     }

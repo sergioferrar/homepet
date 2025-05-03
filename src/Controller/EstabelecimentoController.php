@@ -5,9 +5,11 @@ namespace App\Controller;
 use App\Entity\Estabelecimento;
 use App\Entity\Usuario;
 use App\Service\DatabaseBkp;
+use App\Service\EmailService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class EstabelecimentoController extends DefaultController
 {
@@ -16,10 +18,25 @@ class EstabelecimentoController extends DefaultController
      */
     public function index(): Response
     {
-        $this->switchDB();
+        //$this->switchDB();
+        $estabelecimentos = $this->getRepositorio(\App\Entity\Estabelecimento::class)->listaEstabelecimentos();
+
         return $this->render('estabelecimento/index.html.twig', [
-            'controller_name' => 'EstabelecimentoController',
+            'estabelecimentos' => $estabelecimentos,
         ]);
+    }
+
+    /**
+     * @Route("/landing/cadastro", name="landing_cadastro")
+     */
+    public function cadastro(Request $request): Response
+    {
+        $data = [];
+
+        $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome();
+        $data['planoId'] = $request->get('planoId');
+
+        return $this->render('home/cadastro-estabelecimento.html.twig', $data);
     }
 
     /**
@@ -27,8 +44,9 @@ class EstabelecimentoController extends DefaultController
      */
     public function cadastrar(Request $request): Response
     {
-        $this->switchDB();
         $estabelecimento = new Estabelecimento();
+
+        $plano = $request->get('planoId');
 
         $estabelecimento->setRazaoSocial($request->get('razaoSocial'));
         $estabelecimento->setCnpj($request->get('cnpj'));
@@ -39,25 +57,34 @@ class EstabelecimentoController extends DefaultController
         $estabelecimento->setCidade($request->get('cidade'));
         $estabelecimento->setPais($request->get('pais'));
         $estabelecimento->setCep($request->get('cep'));
-        $estabelecimento->setStatus('Ativo');
+        $estabelecimento->setStatus('Inativo');
         $estabelecimento->setDataCadastro((new \DateTime('now')));
+        $estabelecimento->setPlanoId($request->get('planoId'));
         $this->getRepositorio(Estabelecimento::class)->add($estabelecimento, true);
 //        dd($estabelecimento);
 
         // Criar database apartir do estabelecimento criado
-        $database = $this->getRepositorio(Estabelecimento::class)->verificaDatabase($estabelecimento->getId());
-        if (!$database) {
+        //$database = $this->getRepositorio(Estabelecimento::class)->verificaDatabase($estabelecimento->getId());
+       // if (!$database) {
             ## Inicia a criação do diretório para "download" do dump
 //            $this->tempDirManager->init();
 
 //            $arquivoSQL = "backup_bd_modelo.sql";
 //            $diretorio = $this->tempDirManager->obterCaminho($arquivoSQL);
 
+
+
+/*
             $backupFile = dirname(__DIR__, 2) . '/instalation.sql';
             
             $this->databaseBkp->setDbName("homepet_{$estabelecimento->getId()}")
                 ->createDatabase()
                 ->importDatabase($backupFile);
+*/
+
+
+
+
 
 //            ## Quebra da string do banco para puchar suas informações
 //            $hosts = explode(':', explode('mysql://', $_SERVER['DATABASE_URL'])[1]);
@@ -78,18 +105,17 @@ class EstabelecimentoController extends DefaultController
 //
 
 //            $this->tempDirManager->deletarDiretorio();
-        }
+      //  }
 
-        return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId()]);
+        return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId(), 'planoId' => $plano]);
 
     }
 
     /**
-     * @Route("/usuario/cadastrar", name="petshop_usuario_cadastrar")
+     * @Route("/landing/usuario/cadastrar", name="petshop_usuario_cadastrar")
      */
-    public function cadastrarUsuario(Request $request): Response
+    public function cadastrarUsuario(EmailService $emailService, Request $request): Response
     {
-        $this->switchDB();
         if ($request->isMethod('POST')) {
             $usuario = new Usuario();
             $usuario->setNomeUsuario($request->get('nome_usuario'));
@@ -116,6 +142,17 @@ class EstabelecimentoController extends DefaultController
             $usuario->setPetshopId($request->get('estabelecimento'));
 
             $this->getRepositorio(Usuario::class)->add($usuario, true);
+            
+            $confirmationUrl = $this->generateUrl('confirma_cadastro', ['estabelecimento'=>$request->get('estabelecimento')], UrlGeneratorInterface::ABSOLUTE_URL);
+            $html = $this->render('estabelecimento/email.html.twig', [
+                'confirmation_link' => $confirmationUrl,
+            ]);
+
+            $emailService->sendEmail(
+                'adiliogobira@gmail.com',
+                'Confirmação de cadastro',
+                $html
+            );
             return $this->redirectToRoute('app_login');
         }
 //        $usuario = new User();
@@ -135,5 +172,39 @@ class EstabelecimentoController extends DefaultController
         return $this->render('usuario/cadastrar.html.twig', [
             'estabelecimento' => $request->get('estabelecimento'),
         ]);
+    }
+
+
+
+    /**
+     * @Route("/landing/confirmacao/cadastro/{estabelecimento}", name="confirma_cadastro")
+     */
+    public function confirmacaoCadastro(Request $request): Response
+    {
+        
+        $eid = $request->get('estabelecimento');
+        $this->getRepositorio(\App\Entity\Estabelecimento::class)->aprovacao($eid);
+        return $this->render('estabelecimento/confirmacao.html.twig', [
+            'estabelecimento' => $request->get('estabelecimento'),
+        ]);
+    }
+
+    /**
+     * @Route("/estabelecimento/renovacao/{eid}", name="petshop_renovacao")
+     */
+    public function renovaAssinatura(Request $request):Response
+    {
+        $dataAtual = new \DateTime();
+
+        // Adiciona 30 dias
+        $dataAtual->modify('+30 days');
+
+        // Converte para string no formato do banco de dados (ex: MySQL)
+        $dataFinal = $dataAtual->format('Y-m-d H:i:s'); // ou 'Y-m-d H:i:s' se precisar da hora
+
+        $this->getRepositorio(\App\Entity\Estabelecimento::class)
+        ->renovacao($request->get('eid'), (new \DateTime())->format('Y-m-d H:i:s'), $dataFinal);
+
+        return $this->redirectToRoute('app_estabelecimento');
     }
 }

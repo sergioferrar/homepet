@@ -1,63 +1,41 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Cadastro de estabelecimento!{% endblock %}
+{% block title %}Listagem de Estabelecimentos{% endblock %}
 
 {% block body %}
-    <div class="container">
+    <div class="container-fluid">
         <div class="card mt-5">
             <div class="card-header">
-                <h4>Cadastro de Estabelecimento</h4>
+                <h4>Listagem de Estabelecimentos</h4>
             </div>
             <div class="card-body">
-                <form action="salvar_estabelecimento.php" method="POST">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="razaoSocial" class="form-label">Razão Social</label>
-                            <input type="text" class="form-control" id="razaoSocial" name="razaoSocial" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="cnpj" class="form-label">CNPJ</label>
-                            <input type="text" class="form-control" id="cnpj" name="cnpj" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="rua" class="form-label">Rua</label>
-                            <input type="text" class="form-control" id="rua" name="rua">
-                        </div>
-                        <div class="col-md-2 mb-3">
-                            <label for="numero" class="form-label">Número</label>
-                            <input type="text" class="form-control" id="numero" name="numero">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="complemento" class="form-label">Complemento</label>
-                            <input type="text" class="form-control" id="complemento" name="complemento">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="bairro" class="form-label">Bairro</label>
-                            <input type="text" class="form-control" id="bairro" name="bairro">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="cidade" class="form-label">Cidade</label>
-                            <input type="text" class="form-control" id="cidade" name="cidade">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="pais" class="form-label">País</label>
-                            <input type="text" class="form-control" id="pais" name="pais">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="cep" class="form-label">CEP</label>
-                            <input type="text" class="form-control" id="cep" name="cep">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="status" class="form-label">Status</label>
-                            <select class="form-select" id="status" name="status">
-                                <option value="Ativo">Ativo</option>
-                                <option value="Suspenso">Suspenso</option>
-                                <option value="Inativo">Inativo</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                </form>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <td>Estabelecimento</td>
+                            <td>Data de Cadastro</td>
+                            <td>Status</td>
+                            <td>Plano</td>
+                            <td>Ações</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in estabelecimentos %}
+                            <tr>
+                                <td>{{ row.razaoSocial }}</td>
+                                <td>{{ row.dataCadastro|date('d/m/Y') }}</td>
+                                <td>{{ row.status }}</td>
+                                <td>{{ row.titulo }}</td>
+                                <td>
+                                    <a class="btn btn-sm btn-outline-primary" href="#" role="button">Editar</a>
+                                    {% if app.session.get('accessLevel') == 'Super Admin' %}
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ url('petshop_renovacao',{eid:row.id}) }}" role="button">Renovar assinatura</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

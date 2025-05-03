@@ -32,6 +32,11 @@ class AgendamentoPetServico
      */
     private $servicoId;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimentoId;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -69,6 +74,18 @@ class AgendamentoPetServico
     public function setServicoId(int $servicoId): self
     {
         $this->servicoId = $servicoId;
+
+        return $this;
+    }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
 
         return $this;
     }
