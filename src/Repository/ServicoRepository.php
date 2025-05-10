@@ -73,7 +73,7 @@ class ServicoRepository extends ServiceEntityRepository
         (:estabelecimento_id, :nome, :descricao, :valor)";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue('estabelecimento_id', $baseId;
+        $stmt->bindValue('estabelecimento_id', $baseId);
         $stmt->bindValue('nome', $servico->getNome());
         $stmt->bindValue('descricao', $servico->getDescricao());
         $stmt->bindValue('valor', $servico->getValor());
