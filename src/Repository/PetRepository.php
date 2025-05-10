@@ -52,7 +52,7 @@ class PetRepository extends ServiceEntityRepository
         $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.pet (estabelecimento_id, nome, especie, sexo, raca, porte, idade, observacoes, dono_id) 
                 VALUES (:estabelecimento_id, :nome, :especie, :sexo, :raca, :porte, :idade, :observacoes, :dono_id)";
         $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue('estabelecimento_id', $baseId;
+        $stmt->bindValue('estabelecimento_id', $baseId);
         $stmt->bindValue('nome', $pet->getNome());
         $stmt->bindValue('especie', $pet->getEspecie());
         $stmt->bindValue('sexo', $pet->getSexo());

@@ -101,7 +101,7 @@ class FinanceiroRepository extends ServiceEntityRepository
                 VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id)";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue('estabelecimento_id', $baseId;
+        $stmt->bindValue('estabelecimento_id', $baseId);
         $stmt->bindValue('descricao', $financeiro->getDescricao());
         $stmt->bindValue('valor', $financeiro->getValor());
         $stmt->bindValue('data', $financeiro->getData()->format('Y-m-d'));
