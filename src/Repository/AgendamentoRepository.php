@@ -18,10 +18,11 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function listaAgendamentoPorId($baseId, $id)
     {
-        $sql = "SELECT a.id, data, concluido, pronto, horaChegada, metodo_pagamento, horaSaida, horaChegada, taxi_dog, taxa_taxi_dog
-                FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento a
-                LEFT JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento_pet_servico aps ON a.id = aps.agendamentoId AND aps.estabelecimento_id=$baseId
-                WHERE a.estabelecimento_id=$baseId AND a.id = :id";
+        $sql = "SELECT a.id, data, concluido, pronto, horaChegada, metodo_pagamento, horaSaida, horaChegada, 
+                taxi_dog, taxa_taxi_dog
+                FROM `{$_ENV['DBNAMETENANT']}`.agendamento a
+                LEFT JOIN `{$_ENV['DBNAMETENANT']}`.agendamento_pet_servico aps ON (a.id = aps.agendamentoId AND aps.estabelecimento_id='{$baseId}')
+                WHERE a.estabelecimento_id='{$baseId}' AND a.id = :id";
 
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
         $result = $stmt->fetchAssociative();
@@ -39,11 +40,11 @@ class AgendamentoRepository extends ServiceEntityRepository
     public function listaApsPorId($baseId, $idAgendamento)
     {
         $sql = "SELECT aps.id, agendamentoId, petId, servicoId, p.nome AS pet_nome, c.nome AS cliente_nome, s.nome AS servico_nome, s.valor
-            FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento_pet_servico aps
-            JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.pet p ON (p.id = aps.petId)
-            JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.cliente c ON (c.id = p.dono_id)
-            JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.servico s ON (s.id = aps.servicoId)
-            WHERE agendamentoId = {$idAgendamento}";
+            FROM `{$_ENV['DBNAMETENANT']}`.agendamento_pet_servico aps
+            JOIN `{$_ENV['DBNAMETENANT']}`.pet p ON (p.id = aps.petId AND p.estabelecimento_id='{$baseId}')
+            JOIN `{$_ENV['DBNAMETENANT']}`.cliente c ON (c.id = p.dono_id AND c.estabelecimento_id='{$baseId}')
+            JOIN `{$_ENV['DBNAMETENANT']}`.servico s ON (s.id = aps.servicoId AND s.estabelecimento_id='{$baseId}')
+            WHERE agendamentoId = {$idAgendamento} AND estabelecimento_id = '{$baseId}'";
 
         $query = $this->conn->query($sql);
         return $query->fetchAll();
@@ -68,12 +69,12 @@ class AgendamentoRepository extends ServiceEntityRepository
                     c.email, c.telefone, c.rua, c.numero, c.complemento, 
                     c.bairro, c.cidade, c.whatsapp, c.cep,
                     GROUP_CONCAT(CONCAT(s.nome, ' (R$ ', s.valor, ')') ORDER BY s.nome SEPARATOR ', ') AS servico_nome
-                FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento a
-                INNER JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento_pet_servico aps ON aps.agendamentoId = a.id
-                INNER JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.pet p ON aps.petId = p.id
-                INNER JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.cliente c ON p.dono_id = c.id
-                INNER JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.servico s ON aps.servicoId = s.id
-                WHERE DATE(a.data) = :data
+                FROM `{$_ENV['DBNAMETENANT']}`.agendamento a
+                INNER JOIN `{$_ENV['DBNAMETENANT']}`.agendamento_pet_servico aps ON aps.agendamentoId = a.id
+                INNER JOIN `{$_ENV['DBNAMETENANT']}`.pet p ON (aps.petId = p.id AND estabelecimento_id = '{$baseId}')
+                INNER JOIN `{$_ENV['DBNAMETENANT']}`.cliente c ON (p.dono_id = c.id AND estabelecimento_id = '{$baseId}')
+                INNER JOIN `{$_ENV['DBNAMETENANT']}`.servico s ON (aps.servicoId = s.id AND estabelecimento_id = '{$baseId}')
+                WHERE a.estabelecimento_id='{$baseId}' AND DATE(a.data) = :data
                 GROUP BY a.id, p.id
                 ORDER BY a.horaChegada ASC, c.nome, p.nome";
 
@@ -83,27 +84,30 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function listagem($baseId, int $id)
     {
-        $sql = "SELECT * FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento WHERE id = :id";
+        $sql = "SELECT * 
+            FROM `{$_ENV['DBNAMETENANT']}`.agendamento 
+            WHERE estabelecimento_id = '{$baseId}' AND id = :id";
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
         return $stmt->fetchAssociative();
     }
 
     public function save($baseId, Agendamento $agendamento)
     {
-        $sql = "INSERT INTO `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento
-                (data, concluido, metodo_pagamento, horaChegada, horaSaida, taxi_dog, taxa_taxi_dog, status)
+        $sql = "INSERT INTO `{$_ENV['DBNAMETENANT']}`.agendamento
+                (:estabelecimento_id, data, concluido, metodo_pagamento, horaChegada, horaSaida, taxi_dog, taxa_taxi_dog, status)
                 VALUES
-                (:data, :concluido, :metodo_pagamento, :horaChegada, :horaSaida, :taxi_dog, :taxa_taxi_dog, :status)";
+                (:estabelecimento_id, :data, :concluido, :metodo_pagamento, :horaChegada, :horaSaida, :taxi_dog, :taxa_taxi_dog, :status)";
 
         $this->conn->executeQuery($sql, [
-            'data'             => $agendamento->getData()->format('Y-m-d H:i:s'),
-            'status'           => $agendamento->getStatus(),
-            'concluido'        => (int) $agendamento->isConcluido(),
+            'estabelecimento_id' => $baseId,
+            'data' => $agendamento->getData()->format('Y-m-d H:i:s'),
+            'status' => $agendamento->getStatus(),
+            'concluido' => (int) $agendamento->isConcluido(),
             'metodo_pagamento' => $agendamento->getMetodoPagamento(),
-            'horaChegada'      => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
-            'horaSaida'        => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
-            'taxi_dog'         => (int) $agendamento->getTaxiDog(),
-            'taxa_taxi_dog'    => $agendamento->getTaxaTaxiDog(),
+            'horaChegada' => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
+            'horaSaida' => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
+            'taxi_dog' => (int) $agendamento->getTaxiDog(),
+            'taxa_taxi_dog' => $agendamento->getTaxaTaxiDog(),
         ]);
 
         return $this->conn->lastInsertId();
@@ -111,19 +115,20 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function saveAgendamentoServico($baseId, \App\Entity\AgendamentoPetServico $agendamentoIdPetServico)
     {
-        $sql = "INSERT INTO `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento_pet_servico (agendamentoId, petId, servicoId)
-                VALUES (:agendamentoId, :petId, :servicoId)";
+        $sql = "INSERT INTO `{$_ENV['DBNAMETENANT']}`.agendamento_pet_servico (estabelecimento_id, agendamentoId, petId, servicoId)
+                VALUES (:estabelecimento_id, :agendamentoId, :petId, :servicoId)";
 
         $this->conn->executeQuery($sql, [
+            'estabelecimento_id' => $baseId,
             'agendamentoId' => $agendamentoIdPetServico->getAgendamentoId(),
-            'petId'         => $agendamentoIdPetServico->getPetId(),
-            'servicoId'     => $agendamentoIdPetServico->getServicoId(),
+            'petId' => $agendamentoIdPetServico->getPetId(),
+            'servicoId' => $agendamentoIdPetServico->getServicoId(),
         ]);
     }
 
     public function update($baseId, Agendamento $agendamento): void
     {
-        $sql = "UPDATE `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento
+        $sql = "UPDATE `{$_ENV['DBNAMETENANT']}`.agendamento
                 SET data = :data, 
                     concluido = :concluido,
                     metodo_pagamento = :metodo_pagamento, 
@@ -132,35 +137,35 @@ class AgendamentoRepository extends ServiceEntityRepository
                     taxi_dog = :taxi_dog, 
                     taxa_taxi_dog = :taxa_taxi_dog,
                     status = :status
-                WHERE id = :id";
+                WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $this->conn->executeQuery($sql, [
-            'data'             => $agendamento->getData()->format('Y-m-d H:i:s'),
-            'concluido'        => (int) $agendamento->isConcluido(),
+            'data' => $agendamento->getData()->format('Y-m-d H:i:s'),
+            'concluido' => (int) $agendamento->isConcluido(),
             'metodo_pagamento' => $agendamento->getMetodoPagamento(),
-            'horaChegada'      => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
-            'horaSaida'        => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
-            'taxi_dog'         => (int) $agendamento->getTaxiDog(),
-            'taxa_taxi_dog'    => $agendamento->getTaxaTaxiDog(),
-            'status'           => $agendamento->getStatus(),
-            'id'               => $agendamento->getId(),
+            'horaChegada' => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
+            'horaSaida' => $agendamento->getHoraSaida() ? $agendamento->getHoraSaida()->format('Y-m-d H:i:s') : null,
+            'taxi_dog' => (int) $agendamento->getTaxiDog(),
+            'taxa_taxi_dog' => $agendamento->getTaxaTaxiDog(),
+            'status' => $agendamento->getStatus(),
+            'id' => $agendamento->getId(),
         ]);
     }
 
     public function updateConcluido($baseId, $idAgendamento): void
     {
-        $sql = "UPDATE `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento
+        $sql = "UPDATE `{$_ENV['DBNAMETENANT']}`.agendamento
                 SET concluido = 1
-                WHERE id = :id";
+                WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $this->conn->executeQuery($sql, ['id' => $idAgendamento]);
     }
 
     public function updatePagamento($baseId, Agendamento $agendamento): void
     {
-        $sql = "UPDATE `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento
+        $sql = "UPDATE `{$_ENV['DBNAMETENANT']}`.agendamento
                 SET metodo_pagamento = :metodo_pagamento
-                WHERE id = :id";
+                WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $this->conn->executeQuery($sql, [
             'metodo_pagamento' => $agendamento->getMetodoPagamento(),
@@ -170,9 +175,9 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function updateSaida($baseId, Agendamento $agendamento): void
     {
-        $sql = "UPDATE `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento
+        $sql = "UPDATE `{$_ENV['DBNAMETENANT']}`.agendamento
                 SET horaSaida = :horaSaida
-                WHERE id = :id";
+                WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $this->conn->executeQuery($sql, [
             'horaSaida' => $agendamento->getHoraSaida()->format('Y-m-d H:i:s'),
@@ -182,7 +187,7 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function updateAgendamento($baseId, Agendamento $agendamento): void
     {
-        $sql = "UPDATE `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento
+        $sql = "UPDATE `{$_ENV['DBNAMETENANT']}`.agendamento
                 SET 
                     data = :data,
                     horaChegada = :horaChegada,
@@ -191,46 +196,54 @@ class AgendamentoRepository extends ServiceEntityRepository
                     taxi_dog = :taxi_dog,
                     taxa_taxi_dog = :taxa_taxi_dog,
                     status = :status
-                WHERE id = :id";
+                WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $this->conn->executeQuery($sql, [
-            'data'             => $agendamento->getData()->format('Y-m-d H:i:s'),
-            'horaChegada'      => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
-            'concluido'        => (int) $agendamento->isConcluido(),
+            'data' => $agendamento->getData()->format('Y-m-d H:i:s'),
+            'horaChegada' => $agendamento->getHoraChegada() ? $agendamento->getHoraChegada()->format('Y-m-d H:i:s') : null,
+            'concluido' => (int) $agendamento->isConcluido(),
             'metodo_pagamento' => $agendamento->getMetodoPagamento(),
-            'taxi_dog'         => (int) $agendamento->getTaxiDog(),
-            'taxa_taxi_dog'    => $agendamento->getTaxaTaxiDog(),
-            'status'           => $agendamento->getStatus(),
-            'id'               => $agendamento->getId(),
+            'taxi_dog' => (int) $agendamento->getTaxiDog(),
+            'taxa_taxi_dog' => $agendamento->getTaxaTaxiDog(),
+            'status' => $agendamento->getStatus(),
+            'id' => $agendamento->getId(),
         ]);
     }
 
     public function delete($baseId, int $id): void
     {
-        $sql = "DELETE FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento WHERE id = :id";
+        $sql = "DELETE FROM `{$_ENV['DBNAMETENANT']}`.agendamento 
+            WHERE estabelecimento_id = '{$baseId}' AND id = :id";
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
     public function findAllPets($baseId): array
     {
         $sql = "SELECT p.id, CONCAT(p.nome, ' - ', c.nome) AS nome, p.especie, p.idade
-                FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.pet p
-                LEFT JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.cliente c ON p.dono_id = c.id";
+                FROM `{$_ENV['DBNAMETENANT']}`.pet p
+                LEFT JOIN `{$_ENV['DBNAMETENANT']}`.cliente c ON (p.dono_id = c.id AND c.estabelecimento_id = '{$baseId}')
+                WHERE estabelecimento_id = '{$baseId}'";
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
     }
 
     public function findAllServicos($baseId): array
     {
-        $sql  = "SELECT id, CONCAT(nome, ' - ', valor) as nome FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.servico";
+        $sql  = "SELECT id, CONCAT(nome, ' - ', valor) as nome 
+            FROM `{$_ENV['DBNAMETENANT']}`.servico
+            WHERE estabelecimento_id = '{$baseId}'";
+
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
     }
 
     public function contarAgendamentosPorData($baseId, \DateTime $data): int
     {
-        $sql    = "SELECT COUNT(*) as total FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento WHERE DATE(data) = :data";
-        $stmt   = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
+        $sql = "SELECT COUNT(*) as total 
+            FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento 
+            WHERE estabelecimento_id = '{$baseId}' AND DATE(data) = :data";
+
+        $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
         $result = $stmt->fetchAssociative();
         return (int) $result['total'];
     }
@@ -238,8 +251,9 @@ class AgendamentoRepository extends ServiceEntityRepository
     public function findAllDonos($baseId): array
     {
         $sql = "SELECT DISTINCT c.id, c.nome
-                FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.cliente c
-                JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.pet p ON p.dono_id = c.id
+                FROM `{$_ENV['DBNAMETENANT']}`.cliente c
+                JOIN `{$_ENV['DBNAMETENANT']}`.pet p ON p.dono_id = c.id
+                WHERE estabelecimento_id = '{$baseId}'
                 ORDER BY c.nome ASC";
 
         $stmt = $this->conn->executeQuery($sql);
@@ -257,12 +271,12 @@ class AgendamentoRepository extends ServiceEntityRepository
                     p.nome AS pet_nome,
                     c.nome AS dono_nome,
                     s.nome AS servico_nome
-                FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento a
-                JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento_pet_servico aps ON a.id = aps.agendamentoId
-                JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.pet p ON aps.petId = p.id
-                JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.cliente c ON p.dono_id = c.id
-                JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.servico s ON aps.servicoId = s.id
-                WHERE a.status = :status
+                FROM `{$_ENV['DBNAMETENANT']}`.agendamento a
+                JOIN `{$_ENV['DBNAMETENANT']}`.agendamento_pet_servico aps ON a.id = aps.agendamentoId
+                JOIN `{$_ENV['DBNAMETENANT']}`.pet p ON aps.petId = p.id
+                JOIN `{$_ENV['DBNAMETENANT']}`.cliente c ON p.dono_id = c.id
+                JOIN `{$_ENV['DBNAMETENANT']}`.servico s ON aps.servicoId = s.id
+                WHERE a.estabelecimento_id = '{$baseId}' AND a.status = :status
                 ORDER BY a.horaChegada ASC";
 
         $stmt = $this->conn->executeQuery($sql, ['status' => $status]);
@@ -271,13 +285,13 @@ class AgendamentoRepository extends ServiceEntityRepository
 
     public function atualizarStatusPetServico(string $baseId, int $id, string $status): void
     {
-        $sql = "UPDATE `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento_pet_servico 
+        $sql = "UPDATE `{$_ENV['DBNAMETENANT']}`.agendamento_pet_servico 
                 SET status = :status 
-                WHERE id = :id";
+                WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $this->conn->executeQuery($sql, [
             'status' => $status,
-            'id'     => $id,
+            'id' => $id,
         ]);
     }
 
@@ -293,12 +307,12 @@ class AgendamentoRepository extends ServiceEntityRepository
                     p.nome AS pet_nome,
                     c.nome AS dono_nome,
                     GROUP_CONCAT(s.nome SEPARATOR ', ') AS servico_nome
-                FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento_pet_servico aps
-                JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento a ON aps.agendamentoId = a.id
-                JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.pet p ON aps.petId = p.id
-                JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.cliente c ON p.dono_id = c.id
-                JOIN `{$_ENV['DBNAMETENANT']}{$baseId}`.servico s ON aps.servicoId = s.id
-                WHERE DATE(a.data) = :data
+                FROM `{$_ENV['DBNAMETENANT']}`.agendamento_pet_servico aps
+                JOIN `{$_ENV['DBNAMETENANT']}`.agendamento a ON aps.agendamentoId = a.id
+                JOIN `{$_ENV['DBNAMETENANT']}`.pet p ON aps.petId = p.id
+                JOIN `{$_ENV['DBNAMETENANT']}`.cliente c ON p.dono_id = c.id
+                JOIN `{$_ENV['DBNAMETENANT']}`.servico s ON aps.servicoId = s.id
+                WHERE a.estabelecimento_id = '{$baseId}' AND DATE(a.data) = :data
                 GROUP BY a.id, p.id, aps.status, p.nome, c.nome
                 ORDER BY a.horaChegada ASC";
 

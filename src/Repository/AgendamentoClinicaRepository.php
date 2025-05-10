@@ -12,15 +12,20 @@ class AgendamentoClinicaRepository
 
     public function findByDate($baseId, \DateTime $data): array
     {
-        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.agendamento_clinica WHERE DATE(data) = :data ORDER BY hora ASC";
+        $sql = "SELECT * 
+            FROM {$_ENV['DBNAMETENANT']}.agendamento_clinica 
+            WHERE estabelecimento_id = '$baseId' AND  DATE(data) = :data 
+            ORDER BY hora ASC";
         return $this->conn->fetchAllAssociative($sql, ['data' => $data->format('Y-m-d')]);
     }
 
     public function save($baseId, AgendamentoClinica $a): void
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.agendamento_clinica (data, hora, procedimento, status, pet_id, dono_id)
-                VALUES (:data, :hora, :procedimento, :status, :pet_id, :dono_id)";
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.agendamento_clinica 
+                       (estabelecimento_id, data, hora, procedimento, status, pet_id, dono_id)
+                VALUES (:estabelecimento_id, :data, :hora, :procedimento, :status, :pet_id, :dono_id)";
         $this->conn->executeQuery($sql, [
+            'estabelecimento_id' => $baseId,
             'data' => $a->getData()->format('Y-m-d'),
             'hora' => $a->getHora()->format('H:i:s'),
             'procedimento' => $a->getProcedimento(),
@@ -32,11 +37,17 @@ class AgendamentoClinicaRepository
 
     public function findAllClientes($baseId): array
     {
-        return $this->conn->fetchAllAssociative("SELECT id, nome FROM {$_ENV['DBNAMETENANT']}{$baseId}.cliente");
+        $sql = "SELECT id, nome 
+            FROM {$_ENV['DBNAMETENANT']}.cliente
+            WHERE estabelecimento_id = '{$baseId}'";
+        return $this->conn->fetchAllAssociative($sql);
     }
 
     public function findAllPets($baseId): array
     {
-        return $this->conn->fetchAllAssociative("SELECT id, nome FROM {$_ENV['DBNAMETENANT']}{$baseId}.pet");
+        $sql = "SELECT id, nome 
+            FROM {$_ENV['DBNAMETENANT']}.pet
+            WHERE estabelecimento_id = '{$baseId}'";
+        return $this->conn->fetchAllAssociative($sql);
     }
 }

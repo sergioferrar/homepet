@@ -17,56 +17,58 @@ class VacinaRepository
     public function findAll($baseId): array
     {
         $sql = "SELECT v.*, CONCAT(p.nome, ' (', c.nome, ')') AS pet_nome
-                FROM {$_ENV['DBNAMETENANT']}{$baseId}.vacina v
-                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.pet p ON p.id = v.pet_id
-                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.cliente c ON c.id = p.dono_id
-                ORDER BY v.data_aplicacao DESC";
+        FROM {$_ENV['DBNAMETENANT']}.vacina v
+        LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.id = v.pet_id
+        LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id
+        WHERE v.estabelecimento_id = '{$baseId}'
+        ORDER BY v.data_aplicacao DESC";
         return $this->conn->fetchAllAssociative($sql);
     }
 
     public function find($baseId, $id): ?array
     {
-        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.vacina WHERE id = :id";
+        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}.vacina WHERE estabelecimento_id = '{$baseId}' AND id = :id";
         return $this->conn->fetchAssociative($sql, ['id' => $id]) ?: null;
     }
 
     public function insert($baseId, Vacina $v): void
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.vacina (pet_id, tipo, data_aplicacao, data_validade, lote)
-                VALUES (:pet_id, :tipo, :data_aplicacao, :data_validade, :lote)";
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.vacina (estabelecimento_id, pet_id, tipo, data_aplicacao, data_validade, lote)
+        VALUES (:estabelecimento_id, :pet_id, :tipo, :data_aplicacao, :data_validade, :lote)";
         $this->conn->executeQuery($sql, [
-            'pet_id'         => $v->getPetId(),
-            'tipo'           => $v->getTipo(),
+            'estabelecimento_id' => $baseId,
+            'pet_id' => $v->getPetId(),
+            'tipo' => $v->getTipo(),
             'data_aplicacao' => $v->getDataAplicacao()->format('Y-m-d'),
-            'data_validade'  => $v->getDataValidade()->format('Y-m-d'),
-            'lote'           => $v->getLote(),
+            'data_validade' => $v->getDataValidade()->format('Y-m-d'),
+            'lote' => $v->getLote(),
         ]);
     }
 
     public function update($baseId, int $id, Vacina $v): void
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}{$baseId}.vacina
-                SET pet_id = :pet_id, tipo = :tipo, data_aplicacao = :data_aplicacao,
-                    data_validade = :data_validade, lote = :lote
-                WHERE id = :id";
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.vacina
+        SET pet_id = :pet_id, tipo = :tipo, data_aplicacao = :data_aplicacao,
+        data_validade = :data_validade, lote = :lote
+        WHERE estabelecimento_id = '{$baseId}' AND id = :id";
         $this->conn->executeQuery($sql, [
-            'id'             => $id,
-            'pet_id'         => $v->getPetId(),
-            'tipo'           => $v->getTipo(),
+            'id' => $id,
+            'pet_id' => $v->getPetId(),
+            'tipo' => $v->getTipo(),
             'data_aplicacao' => $v->getDataAplicacao()->format('Y-m-d'),
-            'data_validade'  => $v->getDataValidade()->format('Y-m-d'),
-            'lote'           => $v->getLote(),
+            'data_validade' => $v->getDataValidade()->format('Y-m-d'),
+            'lote' => $v->getLote(),
         ]);
     }
 
     public function delete($baseId, int $id): void
     {
-        $this->conn->executeQuery("DELETE FROM {$_ENV['DBNAMETENANT']}{$baseId}.vacina WHERE id = :id", ['id' => $id]);
+        $this->conn->executeQuery("DELETE FROM {$_ENV['DBNAMETENANT']}.vacina WHERE estabelecimento_id = '{$baseId}' AND id = :id", ['id' => $id]);
     }
 
     public function findAllPets($baseId): array
     {
-        return $this->conn->fetchAllAssociative("SELECT p.id, CONCAT(p.nome, ' (', c.nome, ')') AS nome FROM {$_ENV['DBNAMETENANT']}{$baseId}.pet p LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.cliente c ON c.id = p.dono_id");
+        return $this->conn->fetchAllAssociative("SELECT p.id, CONCAT(p.nome, ' (', c.nome, ')') AS nome FROM {$_ENV['DBNAMETENANT']}.pet p LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id");
     }
 
     public function getVacinasSugeridas(): array

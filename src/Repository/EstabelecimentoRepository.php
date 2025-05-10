@@ -41,41 +41,42 @@ class EstabelecimentoRepository extends ServiceEntityRepository
         }
     }
 
-    public function listaEstabelecimentos()
+    public function listaEstabelecimentos($baseId)
     {
         $sql = "SELECT estabelecimento.id, razaoSocial, cnpj, rua, numero, complemento, bairro, cidade, pais, cep, estabelecimento.status, dataCadastro, dataAtualizacao, planoId, dataPlanoInicio, dataPlanoFim, titulo
-            FROM estabelecimento
-            LEFT JOIN planos ON (planos.id = estabelecimento.planoId)";
+            FROM {$_ENV['DBNAMETENANT']}.estabelecimento
+            LEFT JOIN planos ON (planos.id = estabelecimento.planoId)
+            WHERE estabelecimento_id = '{$baseId}'";
 
         $query = $this->conn->executeQuery($sql);
 
         return $query->fetchAllAssociative();
     }
 
-    public function verificaDatabase($baseId)
+    public function verificaDatabase()
     {
         $sql = "SELECT SCHEMA_NAME
             FROM INFORMATION_SCHEMA.SCHEMATA
-            WHERE SCHEMA_NAME ='{$_ENV['DBNAMETENANT']}{$baseId}'";
+            WHERE SCHEMA_NAME ='{$_ENV['DBNAMETENANT']}'";
 
         $query = $this->conn->query($sql);
         return $query->fetch();
     }
 
-    public function renovacao($eid, $dataInicio, $dataFim)
+    public function renovacao($baseId, $eid, $dataInicio, $dataFim)
     {
-        $sql = "UPDATE estabelecimento 
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.estabelecimento 
             SET dataPlanoInicio = '{$dataInicio}', dataPlanoFim = '{$dataFim}'
-            WHERE id='$eid'";
+            WHERE estabelecimento_id = '{$baseId}' AND id='$eid'";
 
         $this->conn->executeQuery($sql);
     }
 
-    public function aprovacao($eid)
+    public function aprovacao($baseId, $eid)
     {
-        $sql = "UPDATE estabelecimento 
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.estabelecimento 
             SET status = 'Ativo'
-            WHERE id='$eid'";
+            WHERE estabelecimento_id = '{$baseId}' AND id='$eid'";
 
         $this->conn->executeQuery($sql);
     }

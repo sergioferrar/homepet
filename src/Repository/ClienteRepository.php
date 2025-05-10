@@ -44,11 +44,11 @@ class ClienteRepository extends ServiceEntityRepository
                 a.concluido,
                 p.nome AS pet_nome,
                 s.nome AS servico_nome
-            FROM {$_ENV['DBNAMETENANT']}{$baseId}.agendamento a
-            INNER JOIN {$_ENV['DBNAMETENANT']}{$baseId}.agendamento_pet_servico aps ON aps.agendamentoId = a.id
-            INNER JOIN {$_ENV['DBNAMETENANT']}{$baseId}.pet p ON p.id = aps.petId
-            INNER JOIN {$_ENV['DBNAMETENANT']}{$baseId}.servico s ON s.id = aps.servicoId
-            WHERE p.dono_id = :clienteId
+            FROM {$_ENV['DBNAMETENANT']}.agendamento a
+            INNER JOIN {$_ENV['DBNAMETENANT']}.agendamento_pet_servico aps ON aps.agendamentoId = a.id
+            INNER JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.id = aps.petId
+            INNER JOIN {$_ENV['DBNAMETENANT']}.servico s ON s.id = aps.servicoId
+            WHERE a.estabelecimento_id = '{$baseId}' AND p.dono_id = :clienteId
             ORDER BY a.data DESC, a.horaChegada DESC";
 
         $stmt = $this->conn->executeQuery($sql, ['clienteId' => $clienteId]);
@@ -56,14 +56,18 @@ class ClienteRepository extends ServiceEntityRepository
     }
 
     public function localizaTodosClientePorID($baseId, $clienteId){
-        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.cliente WHERE id='{$clienteId}'";
+        $sql = "SELECT * 
+            FROM {$_ENV['DBNAMETENANT']}.cliente 
+            WHERE estabelecimento_id = '{$baseId}' AND id='{$clienteId}'";
 
         $query = $this->conn->query($sql);
         return $query->fetch();
     }
 
     public function localizaTodosCliente($baseId){
-        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.cliente";
+        $sql = "SELECT * 
+            FROM {$_ENV['DBNAMETENANT']}.cliente 
+            WHERE estabelecimento_id = '{$baseId}'";
 
         $query = $this->conn->query($sql);
         return $query->fetchAll();
@@ -71,8 +75,9 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function save($baseId, array $clientData): void
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.cliente (nome, email, telefone, rua, numero, complemento, bairro, cidade, whatsapp) VALUES 
-        ('{$clientData['nome']}', '{$clientData['email']}', '{$clientData['telefone']}', '{$clientData['rua']}', '{$clientData['numero']}', '{$clientData['complemento']}', '{$clientData['bairro']}', '{$clientData['cidade']}', '{$clientData['whatsapp']}')";
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.cliente
+        (estabelecimento_id, nome, email, telefone, rua, numero, complemento, bairro, cidade, whatsapp)
+        VALUES  ('{$baseId}', {$clientData['nome']}', '{$clientData['email']}', '{$clientData['telefone']}', '{$clientData['rua']}', '{$clientData['numero']}', '{$clientData['complemento']}', '{$clientData['bairro']}', '{$clientData['cidade']}', '{$clientData['whatsapp']}')";
         $stmt = $this->conn->query($sql);
         
         //return $this->conn->lastInsertId();
@@ -84,7 +89,7 @@ class ClienteRepository extends ServiceEntityRepository
     */
     public function update($baseId, array $clienteData): void
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}{$baseId}.cliente 
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.cliente 
                 SET nome = '{$clienteData['nome']}', email = '{$clienteData['email']}', telefone = '{$clienteData['telefone']}', 
                     rua = '{$clienteData['rua']}', 
                     numero = '{$clienteData['numero']}', 
@@ -92,7 +97,7 @@ class ClienteRepository extends ServiceEntityRepository
                     bairro = '{$clienteData['bairro']}', 
                     cidade = '{$clienteData['cidade']}',
                     whatsapp = '{$clienteData['whatsapp']}'
-               WHERE id = '{$clienteData['id']}'";
+               WHERE estabelecimento_id = '{$baseId}' AND id = '{$clienteData['id']}'";
 
         $stmt = $this->conn->query($sql);
         //$stmt->execute($clienteData);
@@ -100,7 +105,7 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function delete($baseId, int $id): void
     {
-        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}{$baseid}.cliente WHERE id = :id";
+        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}.cliente WHERE estabelecimento_id = '{$baseId}' AND  id = :id";
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
@@ -110,10 +115,10 @@ class ClienteRepository extends ServiceEntityRepository
         $where = '';
         if ($term && $term != null) {
             $search = ['term' => '%' . $term . '%'];
-            $where = 'WHERE nome LIKE :term OR email LIKE :term OR telefone LIKE :term OR Endereco LIKE :term';
+            $where = "WHERE estabelecimento_id = '{$baseId}' AND  nome LIKE :term OR email LIKE :term OR telefone LIKE :term OR Endereco LIKE :term";
         }
         $sql = "SELECT * 
-                FROM {$_ENV['DBNAMETENANT']}{$baseId}.cliente 
+                FROM {$_ENV['DBNAMETENANT']}.cliente 
                 $where";
         if ($term && !empty($term)) {
 
@@ -144,9 +149,9 @@ class ClienteRepository extends ServiceEntityRepository
                     c.bairro,
                     c.cidade,
                     c.cep
-                FROM homepet_{$baseId}.cliente c
-                INNER JOIN homepet_{$baseId}.pet p ON p.dono_id = c.id
-                WHERE p.id = :petId";
+                FROM {$_ENV['DBNAMETENANT']}.cliente c
+                INNER JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.dono_id = c.id
+                WHERE c.estabelecimento_id = '{$baseId}' AND  p.id = :petId";
 
         $stmt = $this->conn->executeQuery($sql, ['petId' => $petId]);
         return $stmt->fetchAssociative() ?: null;

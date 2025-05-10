@@ -20,10 +20,10 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         $sql = "SELECT f.id, 
                        CONCAT('Serviço para ', p.nome, ' - Dono: ', c.nome) AS descricao, 
                        f.valor, f.data, f.pet_id, p.nome as pet_nome, c.nome as dono_nome, f.metodo_pagamento
-                FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiropendente f
-                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.pet p ON f.pet_id = p.id
-                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.cliente c ON p.dono_id = c.id
-                WHERE DATE(f.data) = :data";
+                FROM {$_ENV['DBNAMETENANT']}.financeiropendente f
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                WHERE estabelecimento_id = '{$baseId}' AND  DATE(f.data) = :data";
 
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
         return $stmt->fetchAllAssociative();
@@ -32,7 +32,10 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function confirmarPagamento($baseId, int $id): void
     {
         // Buscar o registro pendente
-        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiropendente WHERE id = :id";
+        $sql = "SELECT * 
+            FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+            WHERE estabelecimento_id = '{$baseId}' AND id = :id";
+
         $registroPendente = $this->conn->executeQuery($sql, ['id' => $id])->fetchAssociative();
 
         if (!$registroPendente) {
@@ -40,10 +43,11 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         }
 
         // Inserir no Financeiro Diário
-        $sqlInsert = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.financeiro (descricao, valor, data, pet_id) 
-                      VALUES (:descricao, :valor, :data, :pet_id)";
+        $sqlInsert = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiro (estabelecimento_id, descricao, valor, data, pet_id) 
+                      VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id)";
         
         $this->conn->executeQuery($sqlInsert, [
+            'estabelecimento_id' => $baseId,
             'descricao' => $registroPendente['descricao'],
             'valor' => $registroPendente['valor'],
             'data' => $registroPendente['data'],
@@ -51,26 +55,36 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         ]);
 
         // Remover do Financeiropendente
-        $sqlDelete = "DELETE FROM {$_ENV['DBNAMETENANT']}{$baseId}.Financeiropendente WHERE id = :id";
+        $sqlDelete = "DELETE FROM {$_ENV['DBNAMETENANT']}.Financeiropendente 
+            WHERE estabelecimento_id = '{$baseId}' AND id = :id";
+
         $this->conn->executeQuery($sqlDelete, ['id' => $id]);
     }
 
     public function findPendenteById($baseId, int $id)
     {
-        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiropendente WHERE id = :id";
+        $sql = "SELECT * 
+            FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+            WHERE estabelecimento_id = '{$baseId}' AND id = :id";
+
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
         return $stmt->fetchAssociative();
     }
 
     public function deletePendente($baseId, int $id): void
     {
-        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiropendente WHERE id = :id";
+        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+            WHERE estabelecimento_id = '{$baseId}' AND id = :id";
+
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
 
     public function verificaServicoExistente($baseId, $agendamentoId){
-        $sql = "SELECT id FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiropendente WHERE agendamento_id = $agendamentoId";
+        $sql = "SELECT id 
+            FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+            WHERE estabelecimento_id = '{$baseId}' AND agendamento_id = $agendamentoId";
+
         $query = $this->conn->query($sql);
         return $query->fetch();
 
@@ -78,10 +92,11 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
     public function savePendente($baseId, FinanceiroPendente $financeiro): void
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.financeiropendente (descricao, valor, data, pet_id, agendamento_id) 
-                VALUES (:descricao, :valor, :data, :pet_id, :agendamento_id)";
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiropendente (estabelecimento_id, descricao, valor, data, pet_id, agendamento_id) 
+                VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id, :agendamento_id)";
 
         $this->conn->executeQuery($sql, [
+            'estabelecimento_id' => $baseId,
             'descricao' => $financeiro->getDescricao(),
             'valor' => $financeiro->getValor(),
             'data' => $financeiro->getData()->format('Y-m-d H:i:s'),
@@ -94,8 +109,8 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function findByBaseId($baseId, array $criteria): array
     {
         $sql = "SELECT id, descricao, valor, data, pet_id, metodo_pagamento, agendamento_id 
-                FROM homepet_{$baseId}.financeiropendente 
-                WHERE agendamento_id = :agendamentoId";
+                FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+                WHERE estabelecimento_id = '{$baseId}' AND agendamento_id = :agendamentoId";
         
         $stmt = $this->conn->executeQuery($sql, [
             'agendamentoId' => $criteria['agendamentoId']
@@ -106,8 +121,8 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
     public function removeByBaseId($baseId, $agendamentoId): void
     {
-        $sql = "DELETE FROM homepet_{$baseId}.financeiropendente 
-                WHERE agendamento_id = :agendamentoId";
+        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+                WHERE estabelecimento_id = '{$baseId}' AND agendamento_id = :agendamentoId";
         
         $this->conn->executeQuery($sql, [
             'agendamentoId' => $agendamentoId
