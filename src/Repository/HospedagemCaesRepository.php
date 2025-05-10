@@ -29,9 +29,10 @@ class HospedagemCaesRepository extends ServiceEntityRepository
     public function insert($baseId, HospedagemCaes $h): void
 
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.hospedagem_caes (cliente_id, pet_id, data_entrada, data_saida, valor, observacoes)
-                VALUES (:cliente_id, :pet_id, :data_entrada, :data_saida, :valor, :observacoes)";
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.hospedagem_caes (estabelecimento_id, cliente_id, pet_id, data_entrada, data_saida, valor, observacoes)
+                VALUES (:estabelecimento_id, :cliente_id, :pet_id, :data_entrada, :data_saida, :valor, :observacoes)";
         $this->conn->executeQuery($sql, [
+            'estabelecimento_id' => $baseId,
             'cliente_id' => $h->getClienteId(),
             'pet_id' => $h->getPetId(),
             'data_entrada' => $h->getDataEntrada()->format('Y-m-d H:i:s'),
@@ -44,9 +45,10 @@ class HospedagemCaesRepository extends ServiceEntityRepository
     public function registrarFinanceiro($baseId, HospedagemCaes $h): void
 
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.financeiro (descricao, valor, data, pet_id, pet_nome)
-                VALUES (:descricao, :valor, NOW(), :pet_id, (SELECT nome FROM {$_ENV['DBNAMETENANT']}{$baseId}.pet WHERE id = :pet_id LIMIT 1))";
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiro (estabelecimento_id, descricao, valor, data, pet_id, pet_nome)
+                VALUES (:estabelecimento_id, :descricao, :valor, NOW(), :pet_id, (SELECT nome FROM {$_ENV['DBNAMETENANT']}.pet WHERE estabelecimento_id = '{$baseId}' AND id = :pet_id LIMIT 1))";
         $this->conn->executeQuery($sql, [
+            'estabelecimento_id' => $baseId,
             'descricao' => 'Hospedagem do Pet',
             'valor' => $h->getValor(),
             'pet_id' => $h->getPetId(),
@@ -55,7 +57,12 @@ class HospedagemCaesRepository extends ServiceEntityRepository
 
     public function getClientes($baseId)
     {
-        return $this->conn->fetchAllAssociative("SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.cliente");
+        $sql = "SELECT * 
+        FROM {$_ENV['DBNAMETENANT']}.cliente
+        WHERE estabelecimento_id = '{$baseId}'
+        ";
+
+        return $this->conn->fetchAllAssociative("SELECT * FROM {$_ENV['DBNAMETENANT']}.cliente");
     }
 
     public function getPets($baseId): array
@@ -65,8 +72,9 @@ class HospedagemCaesRepository extends ServiceEntityRepository
                     p.nome, 
                     c.id AS dono_id, 
                     c.nome AS dono_nome
-                FROM {$_ENV['DBNAMETENANT']}{$baseId}.pet p
-                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.cliente c ON c.id = p.dono_id";
+                FROM {$_ENV['DBNAMETENANT']}.pet p
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id
+                WHERE p.estabelecimento_id = '{$baseId}'";
 
         return $this->conn->fetchAllAssociative($sql);
     }
@@ -79,9 +87,10 @@ class HospedagemCaesRepository extends ServiceEntityRepository
         $sql = "SELECT h.id, h.cliente_id, c.nome AS cliente_nome,
                        h.pet_id, p.nome AS pet_nome,
                        h.data_entrada, h.data_saida, h.valor, h.observacoes
-                FROM {$_ENV['DBNAMETENANT']}{$baseId}.hospedagem_caes h
-                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.cliente c ON c.id = h.cliente_id
-                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.pet p ON p.id = h.pet_id
+                FROM {$_ENV['DBNAMETENANT']}.hospedagem_caes h
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = h.cliente_id
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.id = h.pet_id
+                WHERE h.estabelecimento_id = '{$baseId}'
                 ORDER BY h.data_entrada DESC";
 
         return $this->conn->fetchAllAssociative($sql);
@@ -90,35 +99,38 @@ class HospedagemCaesRepository extends ServiceEntityRepository
 
     public function localizaPorId($baseId, int $id): ?array
     {
-        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.hospedagem_caes WHERE id = :id";
+        $sql = "SELECT * 
+            FROM {$_ENV['DBNAMETENANT']}.hospedagem_caes 
+            WHERE estabelecimento_id = '{$baseId}' AND id = :id";
+
         return $this->conn->fetchAssociative($sql, ['id' => $id]) ?: null;
     }
 
     public function delete($baseId, int $id): void
     {
-        $this->conn->executeQuery("DELETE FROM {$_ENV['DBNAMETENANT']}{$baseId}.hospedagem_caes WHERE id = :id", ['id' => $id]);
+        $this->conn->executeQuery("DELETE FROM {$_ENV['DBNAMETENANT']}.hospedagem_caes WHERE estabelecimento_id = '{$baseId}' AND id = :id", ['id' => $id]);
     }
 
 
     public function updateHospedagem($baseId, int $id, HospedagemCaes $h): void
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}{$baseId}.hospedagem_caes
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.hospedagem_caes
                 SET cliente_id = :cliente_id,
                     pet_id = :pet_id,
                     data_entrada = :data_entrada,
                     data_saida = :data_saida,
                     valor = :valor,
                     observacoes = :observacoes
-                WHERE id = :id";
+                WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $this->conn->executeQuery($sql, [
-            'cliente_id'    => $h->getClienteId(),
-            'pet_id'        => $h->getPetId(),
-            'data_entrada'  => $h->getDataEntrada()->format('Y-m-d H:i:s'),
-            'data_saida'    => $h->getDataSaida()->format('Y-m-d H:i:s'),
-            'valor'         => $h->getValor(),
-            'observacoes'   => $h->getObservacoes(),
-            'id'            => $id,
+            'cliente_id' => $h->getClienteId(),
+            'pet_id' => $h->getPetId(),
+            'data_entrada' => $h->getDataEntrada()->format('Y-m-d H:i:s'),
+            'data_saida' => $h->getDataSaida()->format('Y-m-d H:i:s'),
+            'valor' => $h->getValor(),
+            'observacoes' => $h->getObservacoes(),
+            'id' => $id,
         ]);
     }
 
@@ -126,10 +138,10 @@ class HospedagemCaesRepository extends ServiceEntityRepository
     {
         $query = "
             SELECT h.*, c.nome as cliente_nome, p.nome as pet_nome
-            FROM {$_ENV['DBNAMETENANT']}{$baseId}.hospedagem_caes h
-            INNER JOIN {$_ENV['DBNAMETENANT']}{$baseId}.cliente c ON c.id = h.cliente_id
-            INNER JOIN {$_ENV['DBNAMETENANT']}{$baseId}.pet p ON p.id = h.pet_id
-            WHERE h.data_entrada <= :data AND h.data_saida >= :data
+            FROM {$_ENV['DBNAMETENANT']}.hospedagem_caes h
+            INNER JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = h.cliente_id
+            INNER JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.id = h.pet_id
+            WHERE h.estabelecimento_id = '{$baseId}' AND h.estabelecimento_id = '{$baseId}' AND h.data_entrada <= :data AND h.data_saida >= :data
             ORDER BY h.data_entrada ASC
         ";
 

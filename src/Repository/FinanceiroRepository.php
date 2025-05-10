@@ -26,7 +26,10 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function findFinanceiro($baseId, int $financeiroId): ?Financeiro
     {
-        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiro WHERE id = :id";
+        $sql = "SELECT * 
+            FROM {$_ENV['DBNAMETENANT']}.financeiro 
+            WHERE estabelecimento_id = '{$baseId}' AND id = :id";
+
         $stmt = $this->conn->executeQuery($sql, ['id' => $financeiroId]);
         $dados = $stmt->fetchAssociative();
 
@@ -49,8 +52,8 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function findAllFinanceiro($baseId, $financeiroId): array
     {
         $sql = "SELECT id, descricao, valor, data, pet_id, pet_nome
-                FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiro
-                WHERE id = :id";
+                FROM {$_ENV['DBNAMETENANT']}.financeiro
+                WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $stmt = $this->conn->executeQuery($sql, ['id' => $financeiroId]);
         return $stmt->fetchAllAssociative();
@@ -64,10 +67,10 @@ class FinanceiroRepository extends ServiceEntityRepository
                     GROUP_CONCAT(DISTINCT p.nome SEPARATOR ', ') AS pets,
                     SUM(f.valor) AS total_valor,
                     DATE(f.data) AS data
-                FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiro f
-                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.pet p ON f.pet_id = p.id
-                LEFT JOIN {$_ENV['DBNAMETENANT']}{$baseId}.cliente c ON p.dono_id = c.id
-                WHERE DATE(f.data) = :data
+                FROM {$_ENV['DBNAMETENANT']}.financeiro f
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                WHERE f.estabelecimento_id = '{$baseId}' AND DATE(f.data) = :data
                 GROUP BY c.id, DATE(f.data)
                 ORDER BY c.nome";
 
@@ -75,14 +78,11 @@ class FinanceiroRepository extends ServiceEntityRepository
         return $stmt->fetchAllAssociative();
     }
 
-
-
-
     public function getRelatorioPorPeriodo($baseId, \DateTime $dataInicio, \DateTime $dataFim): array
     {
         $sql = "SELECT DATE(f.data) as data, SUM(f.valor) as total
-                FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiro f
-                WHERE f.data BETWEEN :dataInicio AND :dataFim
+                FROM {$_ENV['DBNAMETENANT']}.financeiro f
+                WHERE f.estabelecimento_id = '{$baseId}' AND f.data BETWEEN :dataInicio AND :dataFim
                 GROUP BY DATE(f.data)
                 ORDER BY DATE(f.data) DESC";
 
@@ -97,10 +97,11 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function save($baseId, Financeiro $financeiro): void
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}{$baseId}.financeiro (descricao, valor, data, pet_id) 
-                VALUES (:descricao, :valor, :data, :pet_id)";
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiro (estabelecimento_id, descricao, valor, data, pet_id) 
+                VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id)";
 
         $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('estabelecimento_id', $baseId;
         $stmt->bindValue('descricao', $financeiro->getDescricao());
         $stmt->bindValue('valor', $financeiro->getValor());
         $stmt->bindValue('data', $financeiro->getData()->format('Y-m-d'));
@@ -110,9 +111,9 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function update($baseId, Financeiro $financeiro): void
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}{$baseId}.financeiro 
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.financeiro 
                 SET descricao = :descricao, valor = :valor, data = :data, pet_id = :pet_id 
-                WHERE id = :id";
+                WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('descricao', $financeiro->getDescricao());
@@ -130,15 +131,15 @@ class FinanceiroRepository extends ServiceEntityRepository
      */
     public function delete($baseId, int $id): void
     {
-        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiro WHERE id = :id";
+        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}.financeiro WHERE estabelecimento_id = '{$baseId}' AND id = :id";
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
     public function totalAgendamento($baseId)
     {
         $sql = "SELECT COUNT(*) AS totalAgendamento
-        FROM {$_ENV['DBNAMETENANT']}{$baseId}.agendamento
-        WHERE concluido = 1";
+        FROM {$_ENV['DBNAMETENANT']}.agendamento
+        WHERE estabelecimento_id = '{$baseId}' AND concluido = 1";
 
         $query = $this->conn->executeQuery($sql);
         return $query->fetchAssociative();
@@ -147,8 +148,8 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function totalAgendamentoDia($baseId)
     {
         $sql = "SELECT COUNT(*) AS totalAgendamento
-        FROM {$_ENV['DBNAMETENANT']}{$baseId}.agendamento
-        WHERE concluido = 1 AND DATE(data) = DATE(NOW())";
+        FROM {$_ENV['DBNAMETENANT']}.agendamento
+        WHERE estabelecimento_id = '{$baseId}' AND concluido = 1 AND DATE(data) = DATE(NOW())";
 
         $query = $this->conn->executeQuery($sql);
         return $query->fetchAssociative();
@@ -157,7 +158,8 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function totalAnimais($baseId)
     {
         $sql = "SELECT COUNT(*) AS totalAnimal
-        FROM {$_ENV['DBNAMETENANT']}{$baseId}.pet";
+        FROM {$_ENV['DBNAMETENANT']}.pet
+        WHERE estabelecimento_id = '{$baseId}'";
 
         $query = $this->conn->query($sql);
         return $query->fetch();
@@ -166,7 +168,8 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function totalLucro($baseId)
     {
         $sql = "SELECT sum(valor) AS lucroTotal
-        FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiro";
+        FROM {$_ENV['DBNAMETENANT']}.financeiro
+        WHERE estabelecimento_id = '{$baseId}'";
 
         $query = $this->conn->query($sql);
         return $query->fetch();
@@ -175,7 +178,9 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function lucroDiario($baseId)
     {
         $sql = "SELECT SUM(valor) as valor, data
-        FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiro GROUP BY data";
+        FROM {$_ENV['DBNAMETENANT']}.financeiro 
+        WHERE estabelecimento_id = '{$baseId}'
+        GROUP BY data";
 
         $query = $this->conn->query($sql);
         return $query->fetchAll();
@@ -184,10 +189,11 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function verificaPagamentoExistente($baseId, $petId, $valor, $dataReferencia): bool
     {
         $sql = "SELECT COUNT(*) FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiro
-                WHERE pet_id = :pet_id
-                  AND valor = :valor
-                  AND DATE(data) = :data_referencia
-                  AND descricao = 'Hospedagem do Pet'";
+                WHERE estabelecimento_id = '{$baseId}' 
+                    AND pet_id = :pet_id
+                    AND valor = :valor
+                    AND DATE(data) = :data_referencia
+                    AND descricao = 'Hospedagem do Pet'";
 
         return (bool) $this->conn->fetchOne($sql, [
             'pet_id' => $petId,

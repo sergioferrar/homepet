@@ -19,7 +19,7 @@ class EstabelecimentoController extends DefaultController
     public function index(): Response
     {
         //$this->switchDB();
-        $estabelecimentos = $this->getRepositorio(\App\Entity\Estabelecimento::class)->listaEstabelecimentos();
+        $estabelecimentos = $this->getRepositorio(\App\Entity\Estabelecimento::class)->listaEstabelecimentos($this->session->get('userId'));
 
         return $this->render('estabelecimento/index.html.twig', [
             'estabelecimentos' => $estabelecimentos,
@@ -33,7 +33,7 @@ class EstabelecimentoController extends DefaultController
     {
         $data = [];
 
-        $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome();
+        $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome($this->session->get('userId'));
         $data['planoId'] = $request->get('planoId');
 
         return $this->render('home/cadastro-estabelecimento.html.twig', $data);
@@ -183,7 +183,7 @@ class EstabelecimentoController extends DefaultController
     {
         
         $eid = $request->get('estabelecimento');
-        $this->getRepositorio(\App\Entity\Estabelecimento::class)->aprovacao($eid);
+        $this->getRepositorio(\App\Entity\Estabelecimento::class)->aprovacao($this->session->get('userId'), $eid);
         return $this->render('estabelecimento/confirmacao.html.twig', [
             'estabelecimento' => $request->get('estabelecimento'),
         ]);
@@ -203,7 +203,7 @@ class EstabelecimentoController extends DefaultController
         $dataFinal = $dataAtual->format('Y-m-d H:i:s'); // ou 'Y-m-d H:i:s' se precisar da hora
 
         $this->getRepositorio(\App\Entity\Estabelecimento::class)
-        ->renovacao($request->get('eid'), (new \DateTime())->format('Y-m-d H:i:s'), $dataFinal);
+        ->renovacao($this->session->get('userId'), $request->get('eid'), (new \DateTime())->format('Y-m-d H:i:s'), $dataFinal);
 
         return $this->redirectToRoute('app_estabelecimento');
     }
