@@ -92,11 +92,6 @@ class Estabelecimento
      */
     private $dataPlanoFim;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
-    private $estabelecimentoId;
-
     public function getId(): ?int
     {
         return $this->id;
@@ -278,18 +273,6 @@ class Estabelecimento
     public function setDataPlanoFim(\DateTimeInterface $dataPlanoFim): self
     {
         $this->dataPlanoFim = $dataPlanoFim;
-
-        return $this;
-    }
-
-    public function getEstabelecimentoId(): ?int
-    {
-        return $this->estabelecimentoId;
-    }
-
-    public function setEstabelecimentoId(int $estabelecimentoId): self
-    {
-        $this->estabelecimentoId = $estabelecimentoId;
 
         return $this;
     }

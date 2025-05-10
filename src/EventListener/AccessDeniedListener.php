@@ -73,6 +73,7 @@ class AccessDeniedListener implements EventSubscriberInterface
         $request = $event->getRequest();
         $mensagem = '';
 
+
         if (!$request->getSession()->has('login') && !$this->security->getUser()) {
             $mensagem = '';//str_replace(' ', '-', 'Sua sessão expirou');
             $param = ($mensagem != ''?['error' => $mensagem]:[]);
@@ -100,6 +101,24 @@ class AccessDeniedListener implements EventSubscriberInterface
 
         if (!$this->security->getUser()) {
             $mensagem = 'A-sua-sessão-expirou';
+            $url = $this->router->generate('logout', ['error' => $mensagem]);
+            $event->getRequest()->getSession()->save();
+            $response = new RedirectResponse($url);
+            $event->setResponse($response);
+            $event->stopPropagation();
+            return $response;
+        }
+
+        $estabelecimento = $this->entityManager
+        ->getRepository(\App\Entity\Estabelecimento::class)
+        ->findById($this->security->getUser()->getPetshopId());
+
+        $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
+        dd($estabelecimento);
+        
+        if($validaPlano){
+
+            $mensagem = str_replace(' ', '-', $validaPlano);
             $url = $this->router->generate('logout', ['error' => $mensagem]);
             $event->getRequest()->getSession()->save();
             $response = new RedirectResponse($url);

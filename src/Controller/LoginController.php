@@ -73,6 +73,16 @@ class LoginController extends DefaultController
         $request->getSession()->set('user', $this->security->getUser()->getNomeUsuario());
         $request->getSession()->set('accessLevel', $this->security->getUser()->getAccessLevel());
         $request->getSession()->set('userId', '26');
+
+        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
+        ->findById($this->security->getUser()->getPetshopId())[0];
+
+        $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
+        
+        if($validaPlano){
+            $mensagem = str_replace(' ', '-', $validaPlano);
+            return $this->redirectToRoute('logout', ['error' => $mensagem]);
+        }
 //        dd($request->getSession()->all());
         // dd($this->security->getUser());
         return $this->redirectToRoute('home');

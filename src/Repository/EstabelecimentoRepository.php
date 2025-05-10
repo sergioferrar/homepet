@@ -44,9 +44,8 @@ class EstabelecimentoRepository extends ServiceEntityRepository
     public function listaEstabelecimentos($baseId)
     {
         $sql = "SELECT estabelecimento.id, razaoSocial, cnpj, rua, numero, complemento, bairro, cidade, pais, cep, estabelecimento.status, dataCadastro, dataAtualizacao, planoId, dataPlanoInicio, dataPlanoFim, titulo
-            FROM {$_ENV['DBNAMETENANT']}.estabelecimento
-            LEFT JOIN planos ON (planos.id = estabelecimento.planoId)
-            WHERE estabelecimento_id = '{$baseId}'";
+            FROM estabelecimento
+            LEFT JOIN planos ON (planos.id = estabelecimento.planoId)";
 
         $query = $this->conn->executeQuery($sql);
 
@@ -65,18 +64,18 @@ class EstabelecimentoRepository extends ServiceEntityRepository
 
     public function renovacao($baseId, $eid, $dataInicio, $dataFim)
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.estabelecimento 
+        $sql = "UPDATE estabelecimento 
             SET dataPlanoInicio = '{$dataInicio}', dataPlanoFim = '{$dataFim}'
-            WHERE estabelecimento_id = '{$baseId}' AND id='$eid'";
+            WHERE id='$eid'";
 
         $this->conn->executeQuery($sql);
     }
 
     public function aprovacao($baseId, $eid)
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.estabelecimento 
+        $sql = "UPDATE estabelecimento 
             SET status = 'Ativo'
-            WHERE estabelecimento_id = '{$baseId}' AND id='$eid'";
+            WHERE id='$eid'";
 
         $this->conn->executeQuery($sql);
     }
