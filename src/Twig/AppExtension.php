@@ -43,16 +43,20 @@ class AppExtension extends AbstractExtension
             new TwigFilter('onlyNumber', [$this, 'onlyNumber']),
             new TwigFilter('getTrial', [$this, 'getTrial']),
             new TwigFilter('getStatus', [$this, 'getStatus']),
-            new TwigFilter('verificarPlanoPorPeriodo', [$this, 'verificarPlanoPorPeriodo']),
+            new TwigFilter('validaPlano', [$this, 'validaPlano']),
         ];
     }
-    
 
-    public function verificarPlanoPorPeriodo($dataInicio, $dataFim)
+
+    public function validaPlano($idEstabelecimento)
     {
+        $loja = $this->entityManager->getRepository(\App\Entity\Estabelecimento::class)->find($idEstabelecimento);
+            //($loja->getDataPlanoInicio(),$loja->getDataPlanoFim())
+
+        $dataInicio = $loja->getDataPlanoInicio();
+        $dataFim = $loja->getDataPlanoFim();
         
         $hoje = new \DateTime();
-
 
         if ($hoje > $dataFim) {
             return "Seu plano expirou em " . $dataFim->format('d/m/Y') . ". Por favor, renove seu plano.";
@@ -131,32 +135,32 @@ class AppExtension extends AbstractExtension
 
         switch ($uf) {
             case 'MG':
-                $estado = 'Minas Gerais';
-                break;
+            $estado = 'Minas Gerais';
+            break;
             case 'MA':
-                $estado = 'Maranhão';
-                break;
+            $estado = 'Maranhão';
+            break;
             case 'ES':
-                $estado = 'Espirito Santo';
-                break;
+            $estado = 'Espirito Santo';
+            break;
             case 'RJ':
-                $estado = 'Rio de Janeiro';
-                break;
+            $estado = 'Rio de Janeiro';
+            break;
             case 'PI':
-                $estado = 'Piaui';
-                break;
+            $estado = 'Piaui';
+            break;
             case 'GO':
-                $estado = 'Goias';
-                break;
+            $estado = 'Goias';
+            break;
             case 'BA':
-                $estado = 'Bahia';
-                break;
+            $estado = 'Bahia';
+            break;
             case 'SP':
-                $estado = 'São Paulo';
-                break;
+            $estado = 'São Paulo';
+            break;
             default:
-                $estado = '';
-                break;
+            $estado = '';
+            break;
         }
         return $estado;
     }

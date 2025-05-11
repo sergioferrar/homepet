@@ -27,9 +27,9 @@
                                 <td>{{ row.status }}</td>
                                 <td>{{ row.titulo }}</td>
                                 <td>
-                                    <a class="btn btn-sm btn-outline-primary" href="#" role="button">Editar</a>
-                                    {% if app.session.get('accessLevel') == 'Super Admin' and validaPlano != false %}
-                                        <a class="btn btn-sm btn-outline-primary" href="{{ url('petshop_renovacao',{eid:row.id}) }}" role="button">Renovar assinatura</a>
+                                    <a class="btn btn-sm btn-outline-primary" href="{{url('petshop_edit',{eid:row.id})}}" role="button">Editar</a>
+                                    {% if app.session.get('accessLevel') == 'Super Admin' and row.id|validaPlano %}
+                                        <a class="btn btn-sm btn-outline-warning" href="{{ url('petshop_renovacao',{eid:row.id}) }}" role="button">Renovar assinatura</a>
                                     {% endif %}
                                 </td>
                             </tr>

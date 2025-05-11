@@ -18,6 +18,9 @@ class EstabelecimentoController extends DefaultController
      */
     public function index(): Response
     {
+        if($this->security->getUser()->getAccessLevel() == 'Admin'){
+            return $this->redirectToRoute('petshop_edit',['eid'=>$this->security->getUser()->getId()]);
+        }
         //$this->switchDB();
         $estabelecimentos = $this->getRepositorio(\App\Entity\Estabelecimento::class)->listaEstabelecimentos($this->session->get('userId'));
 
@@ -26,7 +29,7 @@ class EstabelecimentoController extends DefaultController
 
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
 
-        dd($estabelecimento, $validaPlano);
+        //dd($estabelecimento, $validaPlano);
         
         $data['estabelecimentos'] = $estabelecimentos;
         $data['validaPlano'] = $validaPlano;
@@ -119,9 +122,9 @@ class EstabelecimentoController extends DefaultController
 //            $this->tempDirManager->deletarDiretorio();
       //  }
 
-        return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId(), 'planoId' => $plano]);
+                return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId(), 'planoId' => $plano]);
 
-    }
+            }
 
     /**
      * @Route("/landing/usuario/cadastrar", name="petshop_usuario_cadastrar")
@@ -138,16 +141,16 @@ class EstabelecimentoController extends DefaultController
             switch ($request->get('access_level')) {
                 case 'Super Admin':
                 case 'Admin':
-                    $roles = ['ROLE_ADMIN'];
-                    break;
+                $roles = ['ROLE_ADMIN'];
+                break;
                 case 'Atendente':
                 case 'Tosador':
                 case 'Balconista':
-                    $roles = ['ROLE_ADMIN_USER'];
-                    break;
+                $roles = ['ROLE_ADMIN_USER'];
+                break;
                 default:
-                    $roles = ['ROLE_USER'];
-                    break;
+                $roles = ['ROLE_USER'];
+                break;
             }
 
             $usuario->setRoles($roles);
@@ -193,7 +196,7 @@ class EstabelecimentoController extends DefaultController
      */
     public function confirmacaoCadastro(Request $request): Response
     {
-        
+
         $eid = $request->get('estabelecimento');
         $this->getRepositorio(\App\Entity\Estabelecimento::class)->aprovacao($this->session->get('userId'), $eid);
         return $this->render('estabelecimento/confirmacao.html.twig', [
@@ -218,5 +221,16 @@ class EstabelecimentoController extends DefaultController
         ->renovacao($this->session->get('userId'), $request->get('eid'), (new \DateTime())->format('Y-m-d H:i:s'), $dataFinal);
 
         return $this->redirectToRoute('app_estabelecimento');
+    }
+
+    /**
+    * @Route("/estabelecimento/editar/{eid}", name="petshop_edit")
+    */
+    public function editar(Request $request): Response
+    {
+        $loja = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($request->get('eid'));
+        $data = [];
+        $data['loja']=$loja;
+        return $this->render('estabelecimento/edit.html.twig',$data);
     }
 }
