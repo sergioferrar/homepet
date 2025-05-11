@@ -21,9 +21,21 @@ class EstabelecimentoController extends DefaultController
         //$this->switchDB();
         $estabelecimentos = $this->getRepositorio(\App\Entity\Estabelecimento::class)->listaEstabelecimentos($this->session->get('userId'));
 
-        return $this->render('estabelecimento/index.html.twig', [
-            'estabelecimentos' => $estabelecimentos,
-        ]);
+        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
+        ->findById($this->security->getUser()->getPetshopId())[0];
+
+        $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
+
+        dd($estabelecimento, $validaPlano);
+        
+        $data['estabelecimentos'] = $estabelecimentos;
+        $data['validaPlano'] = $validaPlano;
+        /*if($validaPlano){
+            $mensagem = str_replace(' ', '-', $validaPlano);
+            return $this->redirectToRoute('logout', ['error' => $mensagem]);
+        }*/
+
+        return $this->render('estabelecimento/index.html.twig', $data);
     }
 
     /**

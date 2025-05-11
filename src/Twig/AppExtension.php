@@ -43,7 +43,22 @@ class AppExtension extends AbstractExtension
             new TwigFilter('onlyNumber', [$this, 'onlyNumber']),
             new TwigFilter('getTrial', [$this, 'getTrial']),
             new TwigFilter('getStatus', [$this, 'getStatus']),
+            new TwigFilter('verificarPlanoPorPeriodo', [$this, 'verificarPlanoPorPeriodo']),
         ];
+    }
+    
+
+    public function verificarPlanoPorPeriodo($dataInicio, $dataFim)
+    {
+        
+        $hoje = new \DateTime();
+
+
+        if ($hoje > $dataFim) {
+            return "Seu plano expirou em " . $dataFim->format('d/m/Y') . ". Por favor, renove seu plano.";
+        } 
+
+        return false;
     }
 
     public function getStatus($status){
