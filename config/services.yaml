@@ -23,6 +23,6 @@ services:
         arguments:
             $connection: '@doctrine.dbal.default_connection'
 
-    App\Repository\AgendamentoClinicaRepository:
-        arguments:
-            $conn: '@doctrine.dbal.default_connection'
+    # App\Repository\AgendamentoClinicaRepository:
+    #     arguments:
+    #         $conn: '@doctrine.dbal.default_connection'

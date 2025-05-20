@@ -30,7 +30,6 @@ class ClienteRepository extends ServiceEntityRepository
         $this->baseId = $baseId;
     }
 
-
     public function findAgendamentosByCliente($baseId, int $clienteId): array
     {
         $sql = " SELECT 
@@ -64,70 +63,83 @@ class ClienteRepository extends ServiceEntityRepository
         return $query->fetch();
     }
 
-    public function localizaTodosCliente($baseId){
-        $sql = "SELECT * 
-            FROM {$_ENV['DBNAMETENANT']}.cliente 
-            WHERE estabelecimento_id = '{$baseId}'";
+    public function localizaTodosCliente($baseId)
+    {
+        $sql = "SELECT 
+                    id,
+                    COALESCE(nome, 'Sem nome') as nome,
+                    COALESCE(email, '-') as email,
+                    COALESCE(telefone, '-') as telefone
+                FROM {$_ENV['DBNAMETENANT']}.cliente 
+                WHERE estabelecimento_id = '{$baseId}'";
 
         $query = $this->conn->query($sql);
-        return $query->fetchAll();
+        return $query->fetchAllAssociative();
     }
+
 
     public function save($baseId, array $clientData): void
     {
         $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.cliente
         (estabelecimento_id, nome, email, telefone, rua, numero, complemento, bairro, cidade, whatsapp)
-        VALUES  ('{$baseId}', {$clientData['nome']}', '{$clientData['email']}', '{$clientData['telefone']}', '{$clientData['rua']}', '{$clientData['numero']}', '{$clientData['complemento']}', '{$clientData['bairro']}', '{$clientData['cidade']}', '{$clientData['whatsapp']}')";
-        $stmt = $this->conn->query($sql);
-        
-        //return $this->conn->lastInsertId();
+        VALUES  (:estabelecimento_id, :nome, :email, :telefone, :rua, :numero, :complemento, :bairro, :cidade, :whatsapp)";
+
+        $this->conn->executeQuery($sql, [
+            'estabelecimento_id' => $baseId,
+            'nome' => $clientData['nome'],
+            'email' => $clientData['email'],
+            'telefone' => $clientData['telefone'],
+            'rua' => $clientData['rua'],
+            'numero' => $clientData['numero'],
+            'complemento' => $clientData['complemento'],
+            'bairro' => $clientData['bairro'],
+            'cidade' => $clientData['cidade'],
+            'whatsapp' => $clientData['whatsapp'],
+        ]);
     }
 
-    /**
-    Tive que fazer essa alteração de modo que não estava atualizando os dados devido o execute e o executeQuery
-    fazem de forma que o Doctrine ta ainda inccompleto, estou ainda revendo esses casos.
-    */
     public function update($baseId, array $clienteData): void
     {
         $sql = "UPDATE {$_ENV['DBNAMETENANT']}.cliente 
-                SET nome = '{$clienteData['nome']}', email = '{$clienteData['email']}', telefone = '{$clienteData['telefone']}', 
-                    rua = '{$clienteData['rua']}', 
-                    numero = '{$clienteData['numero']}', 
-                    complemento = '{$clienteData['complemento']}', 
-                    bairro = '{$clienteData['bairro']}', 
-                    cidade = '{$clienteData['cidade']}',
-                    whatsapp = '{$clienteData['whatsapp']}'
-               WHERE estabelecimento_id = '{$baseId}' AND id = '{$clienteData['id']}'";
+                SET nome = :nome, email = :email, telefone = :telefone, 
+                    rua = :rua, numero = :numero, complemento = :complemento, 
+                    bairro = :bairro, cidade = :cidade, whatsapp = :whatsapp
+                WHERE estabelecimento_id = :baseId AND id = :id";
 
-        $stmt = $this->conn->query($sql);
-        //$stmt->execute($clienteData);
+        $this->conn->executeQuery($sql, [
+            'nome' => $clienteData['nome'],
+            'email' => $clienteData['email'],
+            'telefone' => $clienteData['telefone'],
+            'rua' => $clienteData['rua'],
+            'numero' => $clienteData['numero'],
+            'complemento' => $clienteData['complemento'],
+            'bairro' => $clienteData['bairro'],
+            'cidade' => $clienteData['cidade'],
+            'whatsapp' => $clienteData['whatsapp'],
+            'baseId' => $baseId,
+            'id' => $clienteData['id']
+        ]);
     }
 
     public function delete($baseId, int $id): void
     {
         $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}.cliente WHERE estabelecimento_id = '{$baseId}' AND  id = :id";
-        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
+        $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
     public function search($baseId, string $term = null): array
     {
-        $search = '';
-        $where = '';
-        if ($term && $term != null) {
-            $search = ['term' => '%' . $term . '%'];
-            $where = "WHERE estabelecimento_id = '{$baseId}' AND  nome LIKE :term OR email LIKE :term OR telefone LIKE :term OR Endereco LIKE :term";
-        }
-        $sql = "SELECT * 
-                FROM {$_ENV['DBNAMETENANT']}.cliente 
-                $where";
-        if ($term && !empty($term)) {
+        $where = "WHERE estabelecimento_id = '{$baseId}'";
+        $params = [];
 
-            $stmt = $this->conn->executeQuery($sql, ['term' => '%' . $term . '%']);
-            return $stmt->fetchAllAssociative();
-
+        if ($term) {
+            $where .= " AND (nome LIKE :term OR email LIKE :term OR telefone LIKE :term OR rua LIKE :term)";
+            $params['term'] = "%$term%";
         }
-        $query = $this->conn->query($sql);
-        return $query->fetchAll();
+
+        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}.cliente $where";
+        $stmt = $this->conn->executeQuery($sql, $params);
+        return $stmt->fetchAllAssociative();
     }
 
     public function getLastInsertedId(): int
@@ -157,5 +169,38 @@ class ClienteRepository extends ServiceEntityRepository
         return $stmt->fetchAssociative() ?: null;
     }
 
+    public function findPetsByCliente($baseId, int $clienteId): array
+    {
+        $sql = "SELECT nome FROM {$_ENV['DBNAMETENANT']}.pet WHERE dono_id = :id AND estabelecimento_id = '{$baseId}'";
+        return $this->conn->fetchAllAssociative($sql, ['id' => $clienteId]);
+    }
 
+    public function findUltimosAgendamentos($baseId, int $clienteId): array
+    {
+        $sql = "SELECT 
+                    a.data, 
+                    s.nome as servico_nome, 
+                    s.valor as servico_valor, 
+                    p.nome as pet
+                FROM {$_ENV['DBNAMETENANT']}.agendamento a
+                INNER JOIN {$_ENV['DBNAMETENANT']}.agendamento_pet_servico aps ON aps.agendamentoId = a.id
+                INNER JOIN {$_ENV['DBNAMETENANT']}.pet p ON aps.petId = p.id
+                INNER JOIN {$_ENV['DBNAMETENANT']}.servico s ON aps.servicoId = s.id
+                WHERE p.dono_id = :id AND a.estabelecimento_id = '{$baseId}'
+                ORDER BY a.data DESC, a.horaChegada DESC
+                LIMIT 5";
+
+        return $this->conn->fetchAllAssociative($sql, ['id' => $clienteId]);
+    }
+
+
+    public function hasFinanceiroPendente($baseId, int $clienteId): bool
+    {
+        $sql = "SELECT COUNT(*) as total
+                FROM {$_ENV['DBNAMETENANT']}.financeiropendente f
+                JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
+                WHERE p.dono_id = :id AND f.estabelecimento_id = '{$baseId}'";
+        $total = $this->conn->fetchOne($sql, ['id' => $clienteId]);
+        return $total > 0;
+    }
 }

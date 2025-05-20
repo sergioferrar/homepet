@@ -51,12 +51,14 @@ class AppExtension extends AbstractExtension
     public function validaPlano($idEstabelecimento)
     {
         $loja = $this->entityManager->getRepository(\App\Entity\Estabelecimento::class)->find($idEstabelecimento);
-            //($loja->getDataPlanoInicio(),$loja->getDataPlanoFim())
 
         $dataInicio = $loja->getDataPlanoInicio();
         $dataFim = $loja->getDataPlanoFim();
-        
         $hoje = new \DateTime();
+
+        if ($dataFim === null) {
+            return "O plano ainda não foi definido.";
+        }
 
         if ($hoje > $dataFim) {
             return "Seu plano expirou em " . $dataFim->format('d/m/Y') . ". Por favor, renove seu plano.";
@@ -64,6 +66,7 @@ class AppExtension extends AbstractExtension
 
         return false;
     }
+
 
     public function getStatus($status){
         if($status=='Ativo'){

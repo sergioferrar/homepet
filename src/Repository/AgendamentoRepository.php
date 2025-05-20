@@ -44,7 +44,7 @@ class AgendamentoRepository extends ServiceEntityRepository
             JOIN `{$_ENV['DBNAMETENANT']}`.pet p ON (p.id = aps.petId AND p.estabelecimento_id='{$baseId}')
             JOIN `{$_ENV['DBNAMETENANT']}`.cliente c ON (c.id = p.dono_id AND c.estabelecimento_id='{$baseId}')
             JOIN `{$_ENV['DBNAMETENANT']}`.servico s ON (s.id = aps.servicoId AND s.estabelecimento_id='{$baseId}')
-            WHERE agendamentoId = {$idAgendamento} AND estabelecimento_id = '{$baseId}'";
+            WHERE aps.agendamentoId = {$idAgendamento} AND p.estabelecimento_id = '{$baseId}'";
 
         $query = $this->conn->query($sql);
         return $query->fetchAll();
@@ -71,9 +71,9 @@ class AgendamentoRepository extends ServiceEntityRepository
                     GROUP_CONCAT(CONCAT(s.nome, ' (R$ ', s.valor, ')') ORDER BY s.nome SEPARATOR ', ') AS servico_nome
                 FROM `{$_ENV['DBNAMETENANT']}`.agendamento a
                 INNER JOIN `{$_ENV['DBNAMETENANT']}`.agendamento_pet_servico aps ON aps.agendamentoId = a.id
-                INNER JOIN `{$_ENV['DBNAMETENANT']}`.pet p ON (aps.petId = p.id AND estabelecimento_id = '{$baseId}')
-                INNER JOIN `{$_ENV['DBNAMETENANT']}`.cliente c ON (p.dono_id = c.id AND estabelecimento_id = '{$baseId}')
-                INNER JOIN `{$_ENV['DBNAMETENANT']}`.servico s ON (aps.servicoId = s.id AND estabelecimento_id = '{$baseId}')
+                INNER JOIN `{$_ENV['DBNAMETENANT']}`.pet p ON (aps.petId = p.id )#AND estabelecimento_id = '{$baseId}')
+                INNER JOIN `{$_ENV['DBNAMETENANT']}`.cliente c ON (p.dono_id = c.id )#AND estabelecimento_id = '{$baseId}')
+                INNER JOIN `{$_ENV['DBNAMETENANT']}`.servico s ON (aps.servicoId = s.id )#AND estabelecimento_id = '{$baseId}')
                 WHERE a.estabelecimento_id='{$baseId}' AND DATE(a.data) = :data
                 GROUP BY a.id, p.id
                 ORDER BY a.horaChegada ASC, c.nome, p.nome";
@@ -94,7 +94,7 @@ class AgendamentoRepository extends ServiceEntityRepository
     public function save($baseId, Agendamento $agendamento)
     {
         $sql = "INSERT INTO `{$_ENV['DBNAMETENANT']}`.agendamento
-                (:estabelecimento_id, data, concluido, metodo_pagamento, horaChegada, horaSaida, taxi_dog, taxa_taxi_dog, status)
+                (estabelecimento_id, data, concluido, metodo_pagamento, horaChegada, horaSaida, taxi_dog, taxa_taxi_dog, status)
                 VALUES
                 (:estabelecimento_id, :data, :concluido, :metodo_pagamento, :horaChegada, :horaSaida, :taxi_dog, :taxa_taxi_dog, :status)";
 
@@ -222,7 +222,7 @@ class AgendamentoRepository extends ServiceEntityRepository
         $sql = "SELECT p.id, CONCAT(p.nome, ' - ', c.nome) AS nome, p.especie, p.idade
                 FROM `{$_ENV['DBNAMETENANT']}`.pet p
                 LEFT JOIN `{$_ENV['DBNAMETENANT']}`.cliente c ON (p.dono_id = c.id AND c.estabelecimento_id = '{$baseId}')
-                WHERE estabelecimento_id = '{$baseId}'";
+                WHERE p.estabelecimento_id = '{$baseId}'";
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
     }
@@ -230,8 +230,8 @@ class AgendamentoRepository extends ServiceEntityRepository
     public function findAllServicos($baseId): array
     {
         $sql  = "SELECT id, CONCAT(nome, ' - ', valor) as nome 
-            FROM `{$_ENV['DBNAMETENANT']}`.servico
-            WHERE estabelecimento_id = '{$baseId}'";
+            FROM `{$_ENV['DBNAMETENANT']}`.servico s
+            WHERE s.estabelecimento_id = '{$baseId}'";
 
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
@@ -240,7 +240,7 @@ class AgendamentoRepository extends ServiceEntityRepository
     public function contarAgendamentosPorData($baseId, \DateTime $data): int
     {
         $sql = "SELECT COUNT(*) as total 
-            FROM `{$_ENV['DBNAMETENANT']}{$baseId}`.agendamento 
+            FROM `{$_ENV['DBNAMETENANT']}`.agendamento 
             WHERE estabelecimento_id = '{$baseId}' AND DATE(data) = :data";
 
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
@@ -253,7 +253,7 @@ class AgendamentoRepository extends ServiceEntityRepository
         $sql = "SELECT DISTINCT c.id, c.nome
                 FROM `{$_ENV['DBNAMETENANT']}`.cliente c
                 JOIN `{$_ENV['DBNAMETENANT']}`.pet p ON p.dono_id = c.id
-                WHERE estabelecimento_id = '{$baseId}'
+                WHERE c.estabelecimento_id = '{$baseId}'
                 ORDER BY c.nome ASC";
 
         $stmt = $this->conn->executeQuery($sql);

@@ -23,7 +23,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
                 FROM {$_ENV['DBNAMETENANT']}.financeiropendente f
                 LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
                 LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
-                WHERE estabelecimento_id = '{$baseId}' AND  DATE(f.data) = :data";
+                WHERE f.estabelecimento_id = '{$baseId}' AND  DATE(f.data) = :data";
 
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
         return $stmt->fetchAllAssociative();

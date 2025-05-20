@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Cliente;
 use App\Repository\ClienteRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -14,8 +15,6 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class ClienteController extends DefaultController
 {
-
-
     /**
      * @Route("/", name="cliente_index", methods={"GET"})
      */
@@ -23,7 +22,6 @@ class ClienteController extends DefaultController
     {
         $this->switchDB();
         $search = $request->query->get('search');
-
         $clientes =  $this->getRepositorio(Cliente::class)->search($this->session->get('userId'), $search);
 
         return $this->render('cliente/index.html.twig', ['clientes' => $clientes]);
@@ -59,7 +57,6 @@ class ClienteController extends DefaultController
             ]);
             $clienteId = $this->getRepositorio(Cliente::class)->getLastInsertedId();
             return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
-
         }
 
         return $this->render('cliente/novo.html.twig');
@@ -71,7 +68,10 @@ class ClienteController extends DefaultController
     public function editar(Request $request, int $id): Response
     {
         $this->switchDB();
-        $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->session->get('userId'), $id);
+        $clientes = array_filter($clienteRepository->localizaTodosCliente($baseId), function ($c) {
+            return isset($c['id'], $c['nome'], $c['email'], $c['telefone']);
+        });
+
 
         if (!$cliente) {
             throw $this->createNotFoundException('O cliente não foi encontrado');
@@ -97,14 +97,10 @@ class ClienteController extends DefaultController
             return $this->redirectToRoute('cliente_index');
         }
 
-        // ⚠️ ISSO AQUI ESTAVA FALTANDO:
         return $this->render('cliente/editar.html.twig', [
             'cliente' => $cliente
         ]);
-
-
     }
-
 
     /**
      * @Route("/deletar/{id}", name="cliente_deletar", methods={"POST"})
@@ -118,18 +114,13 @@ class ClienteController extends DefaultController
             throw $this->createNotFoundException('O cliente não foi encontrado');
         }
 
-        // Verifica se o cliente tem pets antes de excluir
         if ($this->getRepositorio(Cliente::class)->hasPets($id)) {
             $this->addFlash('error', 'Não é possível excluir este cliente, pois ele possui pets cadastrados.');
-            $clienteId = $this->clienteRepository->getLastInsertedId();
-            return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
-
+            return $this->redirectToRoute('cliente_index');
         }
 
         $this->getRepositorio(Cliente::class)->delete($this->session->get('userId'), $id);
-        $clienteId = $this->getRepositorio(Cliente::class)->getLastInsertedId();
-        return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
-
+        return $this->redirectToRoute('cliente_index');
     }
 
     /**
@@ -154,14 +145,39 @@ class ClienteController extends DefaultController
         ]);
     }
 
-
-
     /**
-     * @Route("/cliente/cadastro", name="cadastro_cliente")
+     * @Route("/cadastro", name="cadastro_cliente")
      */
     public function cadastro(): Response
     {
         $this->switchDB();
         return $this->render('cliente/cadastro_cliente.html.twig');
     }
+
+    /**
+     * @Route("/{id}/detalhes", name="cliente_detalhes", methods={"GET"})
+     */
+    public function detalhes(Request $request, int $id): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->session->get('userId');
+        $repo = $this->getRepositorio(Cliente::class);
+
+        $cliente = $repo->localizaTodosClientePorID($baseId, $id);
+        if (!$cliente) {
+            return $this->json(['status' => 'erro', 'mensagem' => 'Cliente não encontrado.']);
+        }
+
+        $pets = $repo->findPetsByCliente($baseId, $id);
+        $temPendencia = $repo->hasFinanceiroPendente($baseId, $id);
+
+        return $this->json([
+            'status' => 'ok',
+            'cliente' => array_merge($cliente, [
+                'temFinanceiroPendente' => $temPendencia,
+                'pets' => $pets
+            ])
+        ]);
+    }
+
 }
