@@ -1,10 +1,10 @@
 /**
-* Template Name: NiceAdmin
-* Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
-* Updated: Apr 20 2024 with Bootstrap v5.3.3
-* Author: BootstrapMade.com
-* License: https://bootstrapmade.com/license/
-*/
+ * Template Name: NiceAdmin
+ * Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
+ * Updated: Apr 20 2024 with Bootstrap v5.3.3
+ * Author: BootstrapMade.com
+ * License: https://bootstrapmade.com/license/
+ */
 
 (function() {
   "use strict";
@@ -143,32 +143,24 @@
           }],
           ["bold", "italic", "underline", "strike"],
           [{
-              color: []
-            },
-            {
-              background: []
-            }
-          ],
+            color: []
+          }, {
+            background: []
+          }],
           [{
-              script: "super"
-            },
-            {
-              script: "sub"
-            }
-          ],
+            script: "super"
+          }, {
+            script: "sub"
+          }],
           [{
-              list: "ordered"
-            },
-            {
-              list: "bullet"
-            },
-            {
-              indent: "-1"
-            },
-            {
-              indent: "+1"
-            }
-          ],
+            list: "ordered"
+          }, {
+            list: "bullet"
+          }, {
+            indent: "-1"
+          }, {
+            indent: "+1"
+          }],
           ["direction", {
             align: []
           }],
@@ -189,47 +181,66 @@
 
   tinymce.init({
     selector: 'textarea.tinymce-editor',
-        language: 'pt_BR',
-        menubar: false,
-        theme: "modern",
-        height: 210,
-        skin: 'light',
-        entity_encoding: "raw",
-        theme_advanced_resizing: true,
-        plugins: [
-            "advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker",
-            "searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking",
-            "save table contextmenu directionality emoticons template paste textcolor media code"
-        ],
-        toolbar: "styleselect | forecolor | backcolor | pastetext | removeformat |  bold | italic | underline | strikethrough | bullist | numlist |  link | unlink | fullscreen | code",
-        //content_css: "_css/tinyMCE.css",
-        style_formats: [
-            {title: 'Normal', block: 'p'},
-            {title: 'Titulo 3', block: 'h3'},
-            {title: 'Titulo 4', block: 'h4'},
-            {title: 'Titulo 5', block: 'h5'},
-            {title: 'Código', block: 'pre', classes: 'brush: php;'}
-        ],
-        link_class_list: [
-            {title: 'None', value: ''},
-            {title: 'Blue CTA', value: 'btn btn_cta_blue'},
-            {title: 'Green CTA', value: 'btn btn_cta_green'},
-            {title: 'Yellow CTA', value: 'btn btn_cta_yellow'},
-            {title: 'Red CTA', value: 'btn btn_cta_red'}
-        ],
-        link_title: false,
-        target_list: false,
-        theme_advanced_blockformats: "h1,h2,h3,h4,h5,p,pre",
-        media_dimensions: false,
-        media_poster: false,
-        media_alt_source: false,
-        media_embed: false,
-        extended_valid_elements: "a[href|target=_blank|rel|class]",
-        imagemanager_insert_template: '<img src="{$url}" title="{$title}" alt="{$title}" />',
-        image_dimensions: false,
-        relative_urls: false,
-        remove_script_host: false,
-        paste_as_text: true
+    language: 'pt_BR',
+    menubar: false,
+    theme: "modern",
+    height: 210,
+    skin: 'light',
+    entity_encoding: "raw",
+    theme_advanced_resizing: true,
+    plugins: [
+      "advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker",
+      "searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking",
+      "save table contextmenu directionality emoticons template paste textcolor media code"
+    ],
+    toolbar: "styleselect | forecolor | backcolor | pastetext | removeformat |  bold | italic | underline | strikethrough | bullist | numlist |  link | unlink | fullscreen | code",
+    //content_css: "_css/tinyMCE.css",
+    style_formats: [{
+      title: 'Normal',
+      block: 'p'
+    }, {
+      title: 'Titulo 3',
+      block: 'h3'
+    }, {
+      title: 'Titulo 4',
+      block: 'h4'
+    }, {
+      title: 'Titulo 5',
+      block: 'h5'
+    }, {
+      title: 'Código',
+      block: 'pre',
+      classes: 'brush: php;'
+    }],
+    link_class_list: [{
+      title: 'None',
+      value: ''
+    }, {
+      title: 'Blue CTA',
+      value: 'btn btn_cta_blue'
+    }, {
+      title: 'Green CTA',
+      value: 'btn btn_cta_green'
+    }, {
+      title: 'Yellow CTA',
+      value: 'btn btn_cta_yellow'
+    }, {
+      title: 'Red CTA',
+      value: 'btn btn_cta_red'
+    }],
+    link_title: false,
+    target_list: false,
+    theme_advanced_blockformats: "h1,h2,h3,h4,h5,p,pre",
+    media_dimensions: false,
+    media_poster: false,
+    media_alt_source: false,
+    media_embed: false,
+    extended_valid_elements: "a[href|target=_blank|rel|class]",
+    imagemanager_insert_template: '<img src="{$url}" title="{$title}" alt="{$title}" />',
+    image_dimensions: false,
+    relative_urls: false,
+    remove_script_host: false,
+    paste_as_text: true
   });
 
   /**
@@ -252,26 +263,27 @@
   /**
    * Initiate Datatables
    */
-  const datatables = select('.datatable', true)
-  datatables.forEach(datatable => {
-    new simpleDatatables.DataTable(datatable, {
-      perPageSelect: [5, 10, 15, ["All", -1]],
-      columns: [{
+  document.addEventListener("DOMContentLoaded", () => {
+    const datatables = document.querySelectorAll('.datatable'); // Corrigido aqui
+
+    datatables.forEach((el) => {
+      new simpleDatatables.DataTable(el, {
+        perPageSelect: [5, 10, 15, ["All", -1]],
+        columns: [{
           select: 2,
           sortSequence: ["desc", "asc"]
-        },
-        {
+        }, {
           select: 3,
           sortSequence: ["desc"]
-        },
-        {
+        }, {
           select: 4,
           cellClass: "green",
           headerClass: "red"
-        }
-      ]
+        }]
+      });
     });
-  })
+  });
+
 
   /**
    * Autoresize echart charts
