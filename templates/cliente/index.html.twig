@@ -36,14 +36,19 @@
         padding: 20px;
         overflow-y: auto;
     }
-    #modalCliente .modal-body p,
-    #modalCliente .modal-body ul {
-        margin-bottom: 10px;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
-        padding-bottom: 8px;
+    .agendamento-card {
+        border-left: 5px solid #007bff;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        font-size: 0.95rem;
     }
-    #modalCliente strong {
-        color: #ffffff;
+    .agendamento-card strong {
+        color: #0056b3;
+    }
+    .agendamento-passado {
+        opacity: 0.7;
     }
 </style>
 {% endblock %}
@@ -51,16 +56,13 @@
 {% block body %}
 <div class="container mt-5">
     <h1>Clientes</h1>
-
     <form method="get" action="{{ path('cliente_index') }}" class="mb-3">
         <div class="input-group">
             <input type="text" name="search" class="form-control" placeholder="Pesquisar por nome, e-mail ou telefone" value="{{ app.request.get('search') }}">
             <button class="btn btn-primary" type="submit">Buscar</button>
         </div>
     </form>
-
     <a href="{{ path('cliente_novo') }}" class="btn btn-secondary mb-3">+ Novo Cliente</a>
-
     <table class="table table-bordered table-hover datatable">
         <thead>
             <tr>
@@ -74,77 +76,71 @@
             {% for cliente in clientes %}
                 {% if cliente.nome is defined and cliente.email is defined and cliente.telefone is defined %}
                     <tr>
-                        <td>
-                            <a href="#" class="text-primary abrir-modal-cliente"
-                               data-bs-toggle="offcanvas"
-                               data-bs-target="#offcanvasScrolling"
-                               aria-controls="offcanvasScrolling"
-                               data-id="{{ cliente.id }}">
-                               {{ cliente.nome }}
-                            </a>
-                        </td>
+                        <td><a href="#" class="text-primary abrir-modal-cliente" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling" data-id="{{ cliente.id }}">{{ cliente.nome }}</a></td>
                         <td>{{ cliente.email ?? '-' }}</td>
                         <td>{{ cliente.telefone ?? '-' }}</td>
                         <td>
                             <div class="dropdown">
-                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    Ação
-                                </button>
+                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Ação</button>
                                 <ul class="dropdown-menu">
                                     <li><a href="{{ path('cliente_agendamentos', {'id': cliente.id}) }}" class="dropdown-item">Ver Agendamentos</a></li>
                                     <li><a href="{{ path('cliente_editar', {'id': cliente.id}) }}" class="dropdown-item">Editar</a></li>
                                     <li>
                                         <form method="post" action="{{ path('cliente_deletar', {'id': cliente.id}) }}" class="d-inline">
-                                            <button type="submit" class="dropdown-item text-danger"
-                                                    onclick="return confirm('Tem certeza que deseja deletar este cliente?')">
-                                                Deletar
-                                            </button>
+                                            <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Tem certeza que deseja deletar este cliente?')">Deletar</button>
                                         </form>
                                     </li>
                                 </ul>
                             </div>
                         </td>
                     </tr>
-                {% else %}
-                    {# ignora linha quebrada #}
                 {% endif %}
             {% endfor %}
-
-
         </tbody>
     </table>
 </div>
 
-
 <div class="offcanvas offcanvas-end" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Offcanvas with body scrolling</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-  <div class="offcanvas-body">
-    
-                <p><strong>Nome:</strong> <span id="clienteNome"></span></p>
-                <p><strong>Email:</strong> <span id="clienteEmail"></span></p>
-                <p><strong>Telefone:</strong> <span id="clienteTelefone"></span></p>
-                <p><strong>Endereço:</strong> <span id="clienteEndereco"></span></p>
-                <p><strong>Bairro:</strong> <span id="clienteBairro"></span></p>
-                <p><strong>Cidade:</strong> <span id="clienteCidade"></span></p>
-                <p><strong>Pendências:</strong> <span id="clientePendencias" class="badge bg-warning text-dark"></span></p>
-                <p><strong>Pets:</strong> <span id="clientePets"></span></p>
-                <div id="clienteAgendamentosBlock">
-                    <h5 class="mt-3">🗓 Últimos Agendamentos</h5>
-                    <ul id="clienteAgendamentos"></ul>
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Dados do cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="bg-white text-dark rounded-4 p-4 shadow-sm mb-4">
+            <h5 class="mb-4 text-primary fw-bold">👤 Dados do Cliente</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div><strong>Nome:</strong> <span id="clienteNome">-</span></div>
+                    <div><strong>Email:</strong> <span id="clienteEmail">-</span></div>
+                    <div><strong>Telefone:</strong> <span id="clienteTelefone">-</span></div>
                 </div>
-  </div>
-</div>
+                <div class="col-md-6">
+                    <div><strong>Endereço:</strong> <span id="clienteEndereco">-</span></div>
+                    <div><strong>Bairro:</strong> <span id="clienteBairro">-</span></div>
+                    <div><strong>Cidade:</strong> <span id="clienteCidade">-</span></div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <strong>Pendências:</strong>
+                <span id="clientePendencias" class="badge bg-warning text-dark px-2 py-1 rounded-pill">-</span>
+            </div>
+            <div class="mt-2">
+                <strong>🐾 Pets:</strong> <span id="clientePets">Nenhum pet</span>
+            </div>
+        </div>
 
+        <div id="clienteAgendamentosBlock" class="bg-white text-dark rounded-4 p-4 shadow-sm" style="display: none;">
+            <h5 class="text-primary fw-bold mb-4">🗓 Todos os Agendamentos</h5>
+            <div id="clienteAgendamentos" class="d-flex flex-column gap-3"></div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block javascripts %}
 {{ parent() }}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Modal lateral do cliente
     document.querySelectorAll('.abrir-modal-cliente').forEach(function (el) {
         el.addEventListener('click', function (e) {
             e.preventDefault();
@@ -169,13 +165,22 @@ document.addEventListener('DOMContentLoaded', function () {
                         agendamentosList.innerHTML = '';
 
                         if (c.agendamentos && c.agendamentos.length > 0) {
+                            const hoje = new Date();
                             c.agendamentos.forEach(function (ag) {
-                                const li = document.createElement('li');
-                                li.textContent = `📅 ${ag.data} - 🐶 ${ag.pet} - 🛁 ${ag.servico}`;
-                                agendamentosList.appendChild(li);
+                                const dataAgendamento = new Date(ag.data);
+                                const card = document.createElement('div');
+                                card.className = 'agendamento-card' + (dataAgendamento < hoje ? ' agendamento-passado' : '');
+                                card.innerHTML = `
+                                    <div>
+                                        <strong>📅 Data:</strong> ${ag.data}<br>
+                                        <strong>🐶 Pet:</strong> ${ag.pet}<br>
+                                        <strong>🛁 Serviço:</strong> ${ag.servico}
+                                    </div>
+                                `;
+                                agendamentosList.appendChild(card);
                             });
                         } else {
-                            agendamentosList.innerHTML = '<li>Nenhum agendamento recente.</li>';
+                            agendamentosList.innerHTML = '<div class="text-muted">Nenhum agendamento encontrado.</div>';
                         }
 
                         document.getElementById('clienteAgendamentosBlock').style.display = 'block';
@@ -191,29 +196,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Inicialização do DataTable
     const tabelas = document.querySelectorAll(".datatable");
-
     if (!window.simpleDatatables || !window.simpleDatatables.DataTable) {
         console.error("simple-datatables não foi carregado.");
         return;
     }
-
     tabelas.forEach((el) => {
         try {
             new simpleDatatables.DataTable(el, {
-                perPageSelect: [5, 10, 15, ["Todos", -1]],
-                columns: [
-                    {
-                        select: 2,
-                        sortSequence: ["desc", "asc"]
-                    },
-                    {
-                        select: 3,
-                        cellClass: "green",
-                        headerClass: "red"
-                    }
-                ]
+                perPageSelect: [5, 10, 15, ["Todos", -1]]
             });
         } catch (e) {
             console.error("Erro ao inicializar DataTable:", e);
@@ -222,4 +213,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 {% endblock %}
-
