@@ -53,6 +53,11 @@ class Plano
      */
     private $dataPlano;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $modulos;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -138,6 +143,18 @@ class Plano
     public function setDataPlano(\DateTimeInterface $dataPlano): self
     {
         $this->dataPlano = $dataPlano;
+
+        return $this;
+    }
+
+    public function getModulos(): ?string
+    {
+        return $this->modulos;
+    }
+
+    public function setModulos(?string $modulos): self
+    {
+        $this->modulos = $modulos;
 
         return $this;
     }

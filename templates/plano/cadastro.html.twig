@@ -15,21 +15,33 @@
 					
 					<div class="card shadow-lg border-0">
 						<div class="card-body">
-							<h5 class="card-title text-uppercase">Descrição do plano</h5>
+							<h5 class="card-title text-uppercase">Módulos do plano</h5>
 							<div class="row">
 								<div class="col-md-12 mb-3">
+									<ul class="list-group">
+										{% for key,row in modulos %}
+											<li class="list-group-item">
+												<div class="form-check">
+													<input class="form-check-input" type="checkbox" name="modulos[]" id="{{key}}" value="{{key}}">
+													<label class="form-check-label" for="{{key}}">
+														{{row}}
+													</label>
+												</div>
+											</li>
+										{% endfor %}
+									</ul>
 									<textarea class="form-control tinymce-editor" rows="6" name="descricao" id="descricao">
 									<ul class="list-group">
-<li class="list-group-item">Agendamentos de Pets</li>
-<li class="list-group-item">Cadastro de Clientes</li>
-<li class="list-group-item">Cadastro de Pets</li>
-<li class="list-group-item">Serviços do petShop</li>
-<li class="list-group-item">Área de financeiro</li>
-<li class="list-group-item"><span style="text-decoration: line-through;">Quadro de Banho e Tosa</span></li>
-<li class="list-group-item"><span style="text-decoration: line-through;">Clinica Veterinária</span></li>
-<li class="list-group-item"><span style="text-decoration: line-through;">Hospedagem de Cães</span></li>
-<li class="list-group-item">Gestão de usuários</li>
-</ul>
+										<li class="list-group-item">Agendamentos de Pets</li>
+										<li class="list-group-item">Cadastro de Clientes</li>
+										<li class="list-group-item">Cadastro de Pets</li>
+										<li class="list-group-item">Serviços do petShop</li>
+										<li class="list-group-item">Área de financeiro</li>
+										<li class="list-group-item"><span style="text-decoration: line-through;">Quadro de Banho e Tosa</span></li>
+										<li class="list-group-item"><span style="text-decoration: line-through;">Clinica Veterinária</span></li>
+										<li class="list-group-item"><span style="text-decoration: line-through;">Hospedagem de Cães</span></li>
+										<li class="list-group-item">Gestão de usuários</li>
+									</ul>
 									</textarea>
 								</div>
 							</div>

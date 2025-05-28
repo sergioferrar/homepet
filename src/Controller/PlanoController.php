@@ -30,9 +30,9 @@ class PlanoController extends DefaultController
      */
     public function cadastrar(Request $request): Response
     {
-        return $this->render('plano/cadastro.html.twig', [
-            'controller_name' => 'PlanoController',
-        ]);
+        $data = [];
+        $data['modulos'] = $this->modulosSistema;
+        return $this->render('plano/cadastro.html.twig', $data);
     }
 
     /**
@@ -43,6 +43,7 @@ class PlanoController extends DefaultController
         $plano = $this->getRepositorio(\App\Entity\Plano::class)->verPlano($request->get('id'));
         
         $data['plano'] = $plano;
+        $data['modulos'] = $this->modulosSistema;
         return $this->render('plano/editar.html.twig', $data);
     }
 
@@ -51,13 +52,16 @@ class PlanoController extends DefaultController
      */
     public function strore(Request $request): Response
     {
+        
         $plano = new \App\Entity\Plano();
         $plano->setTitulo($request->get('nome'));
-        $plano->setDescricao($request->get('descricao'));
+        // $plano->setDescricao($request->get('descricao'));
+        $plano->setDescricao(json_encode($request->get('modulos')));
         $plano->setValor($request->get('valor'));
         $plano->setStatus($request->get('status'));
         $plano->setTrial(($request->get('trial')?true:false));
         $plano->setDataPlano((new \Datetime("now")));
+        $plano->setModulos(json_encode($request->get('modulos')));
         
         $this->getRepositorio(\App\Entity\Plano::class)->add($plano,true);
 
@@ -72,11 +76,13 @@ class PlanoController extends DefaultController
 
         $plano = new \App\Entity\Plano();
         $plano->setTitulo($request->get('nome'));
-        $plano->setDescricao(addslashes($request->get('descricao')));
+        // $plano->setDescricao(addslashes($request->get('descricao')));
+        $plano->setDescricao(json_encode($request->get('modulos')));
         $plano->setValor($request->get('valor'));
         $plano->setStatus($request->get('status'));
         $plano->setTrial(($request->get('trial')?true:false));
         $plano->setDataPlano((new \Datetime("now")));
+        $plano->setModulos(json_encode($request->get('modulos')));
         
         $this->getRepositorio(\App\Entity\Plano::class)->update($plano, $request->get('id'));
 
