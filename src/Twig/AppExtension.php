@@ -14,6 +14,18 @@ class AppExtension extends AbstractExtension
     private $entityManager;
     private $router;
 
+    private $modulosSistema = [
+        'agendamentosDePets' => 'Agendamentos de Pets',
+        'cadastroDeClientes' => 'Cadastro de Clientes',
+        'cadastroDePets' => 'Cadastro de Pets',
+        'serviçosDoPetshop' => 'Serviços do Petshop',
+        'áreaDeFinanceiro' => 'Área de Financeiro',
+        'gestãoDeUsuários' => 'Gestão de Usuários',
+        'banhoETosa' => 'Banho e Tosa',
+        'hospedagemDeCães' => 'Hospedagem de Cães',
+        'clínicaVeterinária' => 'Clínica Veterinária',
+    ];
+
     public function __construct(EntityManagerInterface $entityManager, RouterInterface $router)
     {
         $this->entityManager = $entityManager;
@@ -44,9 +56,41 @@ class AppExtension extends AbstractExtension
             new TwigFilter('getTrial', [$this, 'getTrial']),
             new TwigFilter('getStatus', [$this, 'getStatus']),
             new TwigFilter('validaPlano', [$this, 'validaPlano']),
+            new TwigFilter('listaPlano', [$this, 'listaPlano']),
         ];
     }
 
+
+    public function listaPlano($string)
+    {
+        $linhas = json_decode($string, true);
+        $lista = '<ul class="list-group">
+<li class="list-group-item">Agendamentos de Pets</li>
+<li class="list-group-item">Cadastro de Clientes</li>
+<li class="list-group-item">Cadastro de Pets</li>
+<li class="list-group-item">Serviços do petShop</li>
+<li class="list-group-item">Área de financeiro</li>
+<li class="list-group-item">Quadro de Banho e Tosa</li>
+<li class="list-group-item">Clinica Veterinária</li>
+<li class="list-group-item">Hospedagem de Cães</li>
+<li class="list-group-item">Gestão de usuários</li>
+</ul>';
+        $html = '<ul class="list-group">';
+        $i = 0;
+        foreach($this->modulosSistema as $key => $value){
+            if(isset($linhas[$i])){
+                $linhaTracada = null;
+            } else {
+                $linhaTracada = ' style="text-decoration: line-through;"';
+            }
+
+            $html .= '<li class="list-group-item" '.$linhaTracada.'>'.$value.'</li>';            
+
+            $i++;
+        }
+        $html .= '</ul>';
+        return $html;
+    }
 
     public function validaPlano($idEstabelecimento)
     {

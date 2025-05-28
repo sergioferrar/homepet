@@ -89,3 +89,8 @@ CREATE TABLE usuario (
   PRIMARY KEY (id),
   UNIQUE KEY nome_usuario (nome_usuario)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+ALTER TABLE `planos` 
+ADD COLUMN `modulos` VARCHAR(255) DEFAULT NULL AFTER `dataPlanoFim`;

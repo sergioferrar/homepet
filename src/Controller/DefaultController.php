@@ -29,6 +29,17 @@ class DefaultController extends AbstractController
     protected $session;
     public $tempDirManager;
     public $databaseBkp;
+    protected $modulosSistema = [
+        'agendamentosDePets' => 'Agendamentos de Pets',
+        'cadastroDeClientes' => 'Cadastro de Clientes',
+        'cadastroDePets' => 'Cadastro de Pets',
+        'serviçosDoPetshop' => 'Serviços do Petshop',
+        'áreaDeFinanceiro' => 'Área de Financeiro',
+        'gestãoDeUsuários' => 'Gestão de Usuários',
+        'banhoETosa' => 'Banho e Tosa',
+        'hospedagemDeCães' => 'Hospedagem de Cães',
+        'clínicaVeterinária' => 'Clínica Veterinária',
+    ];
 
     /**
      * @param Security $security
