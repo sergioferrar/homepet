@@ -53,51 +53,7 @@
     .offcanvas-body {
         background: linear-gradient(to bottom right, #e6f0ff, #ffffff);
     }
-    .nav-tabs .nav-link.active {
-        background-color: #004080;
-        color: white;
-        font-weight: bold;
-        border-radius: 12px 12px 0 0;
-    }
-    .nav-tabs .nav-link {
-        color: #004080;
-    }
-    .pet-card {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        background-color: #e6f0ff;
-        border: 1px solid #99ccff;
-        border-radius: 12px;
-        padding: 12px;
-        margin-bottom: 1rem;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-    .pet-card:hover {
-        background-color: #d0eaff;
-    }
-    .pet-card img {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-    .modal-pet-info {
-        background-color: #f9fbff;
-        border-radius: 12px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-    .modal-pet-info h6 {
-        margin-bottom: 0.5rem;
-        font-weight: bold;
-        color: #004080;
-    }
-    .modal-pet-info div {
-        font-size: 1rem;
-    }
+
 </style>
 {% endblock %}
 
@@ -160,9 +116,12 @@
       <li class="nav-item" role="presentation">
         <a class="nav-link active" id="dados-tab" data-bs-toggle="tab" href="#dados" role="tab">Dados do Cliente</a>
       </li>
-      <li class="nav-item" role="presentation">
-        <a class="nav-link" id="agendamentos-tab" data-bs-toggle="tab" href="#agendamentos" role="tab">Agendamentos</a>
-      </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="agendamentos-tab" data-bs-toggle="tab" href="#agendamentos" role="tab">
+            📅 Agendamentos
+          </a>
+        </li>
+
       <li class="nav-item" role="presentation">
         <a class="nav-link" id="pagamentos-tab" data-bs-toggle="tab" href="#pagamentos" role="tab">Pagamentos Pendentes</a>
       </li>
@@ -171,66 +130,64 @@
       </li>
     </ul>
 
-<!-- Modal do Pet estilizado -->
-<div class="offcanvas offcanvas-end shadow" tabindex="-1" id="offcanvasPet" aria-labelledby="offcanvasPetLabel">
-  <div class="offcanvas-header border-bottom" style="background-color: #f5faff;">
-    <h5 class="offcanvas-title fw-bold text-success" id="offcanvasPetLabel">🐾 Detalhes do Pet</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-  </div>
-  <div class="offcanvas-body bg-white" style="padding: 1.5rem 1.2rem;">
-    
-    <div class="mb-4 border rounded shadow-sm p-3 bg-light">
-      <h6 class="text-muted mb-1">Nome do Pet</h6>
-      <div id="modalPetNome" class="fw-bold fs-5 text-dark">-</div>
+    <!-- Modal do Pet  -->
+    <div class="offcanvas offcanvas-end shadow" tabindex="-1" id="offcanvasPet" aria-labelledby="offcanvasPetLabel">
+      <div class="offcanvas-header border-bottom" style="background-color: #f5faff;">
+        <h5 class="offcanvas-title fw-bold text-success" id="offcanvasPetLabel">🐾 Detalhes do Pet</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+      </div>
+      <div class="offcanvas-body bg-white" style="padding: 1.5rem 1.2rem;">
+        
+        <div class="mb-4 border rounded shadow-sm p-3 bg-light">
+          <h6 class="text-muted mb-1">Nome do Pet</h6>
+          <div id="modalPetNome" class="fw-bold fs-5 text-dark">-</div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="border rounded shadow-sm p-3 bg-light mb-3">
+              <h6 class="text-muted mb-1">Espécie</h6>
+              <div id="modalPetEspecie" class="fw-bold text-dark">-</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded shadow-sm p-3 bg-light mb-3">
+              <h6 class="text-muted mb-1">Sexo</h6>
+              <div id="modalPetSexo" class="fw-bold text-dark">-</div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="border rounded shadow-sm p-3 bg-light mb-3">
+              <h6 class="text-muted mb-1">Raça</h6>
+              <div id="modalPetRaca" class="fw-bold text-dark">-</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded shadow-sm p-3 bg-light mb-3">
+              <h6 class="text-muted mb-1">Porte</h6>
+              <div id="modalPetPorte" class="fw-bold text-dark">-</div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="border rounded shadow-sm p-3 bg-light mb-3">
+              <h6 class="text-muted mb-1">Idade</h6>
+              <div id="modalPetIdade" class="fw-bold text-dark">-</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded shadow-sm p-3 bg-light mb-3">
+              <h6 class="text-muted mb-1">Observações</h6>
+              <div id="modalPetObs" class="fw-bold text-dark">-</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
 
-    <div class="row g-3">
-      <div class="col-md-6">
-        <div class="border rounded shadow-sm p-3 bg-light mb-3">
-          <h6 class="text-muted mb-1">Espécie</h6>
-          <div id="modalPetEspecie" class="fw-bold text-dark">-</div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="border rounded shadow-sm p-3 bg-light mb-3">
-          <h6 class="text-muted mb-1">Sexo</h6>
-          <div id="modalPetSexo" class="fw-bold text-dark">-</div>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="border rounded shadow-sm p-3 bg-light mb-3">
-          <h6 class="text-muted mb-1">Raça</h6>
-          <div id="modalPetRaca" class="fw-bold text-dark">-</div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="border rounded shadow-sm p-3 bg-light mb-3">
-          <h6 class="text-muted mb-1">Porte</h6>
-          <div id="modalPetPorte" class="fw-bold text-dark">-</div>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="border rounded shadow-sm p-3 bg-light mb-3">
-          <h6 class="text-muted mb-1">Idade</h6>
-          <div id="modalPetIdade" class="fw-bold text-dark">-</div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="border rounded shadow-sm p-3 bg-light mb-3">
-          <h6 class="text-muted mb-1">Observações</h6>
-          <div id="modalPetObs" class="fw-bold text-dark">-</div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-
-
-
+    <!-- Modal do Inicial  -->
     <div class="tab-content">
       <div class="tab-pane fade show active" id="dados" role="tabpanel">
         <div class="row g-3">
@@ -294,59 +251,128 @@ document.addEventListener('DOMContentLoaded', function () {
                         document.getElementById('clienteBairro').innerText = c.bairro || '-';
                         document.getElementById('clienteCidade').innerText = c.cidade || '-';
                         document.getElementById('clientePendencias').innerText = c.temFinanceiroPendente ? 'Sim' : 'Não';
-
+                        /*js parte canvas pet*/
                         const petsDiv = document.getElementById('clientePets');
                         petsDiv.innerHTML = '';
                         if (c.pets && c.pets.length > 0) {
+                            const table = document.createElement('table');
+                            table.className = 'table agendamento-tabela pets-tabela';
+
+                            const thead = document.createElement('thead');
+                            thead.innerHTML = `
+                                <tr>
+                                    <th>🐾 Nome</th>
+                                    <th>Espécie</th>
+                                    <th>Sexo</th>
+                                    <th>Raça</th>
+                                </tr>
+                            `;
+
+                            table.appendChild(thead);
+
+                            const tbody = document.createElement('tbody');
+
                             c.pets.forEach(p => {
-                                const card = document.createElement('div');
-                                card.className = 'pet-card';
-                                card.innerHTML = `🐾 <strong>${p.nome}</strong>`;
-                                card.addEventListener('click', () => {
+                                const tr = document.createElement('tr');
+
+                                // monta a linha com o link no nome
+                                tr.innerHTML = `
+                                    <td><a href="#" class="link-primary text-decoration-none pet-nome">${p.nome}</a></td>
+                                    <td>${p.especie}</td>
+                                    <td>${p.sexo}</td>
+                                    <td>${p.raca}</td>
+                                `;
+
+                                // adiciona o evento apenas ao link
+                                const link = tr.querySelector('.pet-nome');
+                                link.addEventListener('click', (e) => {
+                                    e.preventDefault(); // evita scroll pro topo
+
                                     document.getElementById('modalPetNome').innerText = p.nome || '-';
                                     document.getElementById('modalPetEspecie').innerText = p.especie || '-';
                                     document.getElementById('modalPetSexo').innerText = p.sexo || '-';
                                     document.getElementById('modalPetRaca').innerText = p.raca || '-';
                                     document.getElementById('modalPetPorte').innerText = p.porte || '-';
                                     document.getElementById('modalPetIdade').innerText = p.idade || '-';
-                                    document.getElementById('modalPetObs').innerText = p.observacoes || 'Nenhuma observacão';
+                                    document.getElementById('modalPetObs').innerText = p.observacoes || 'Nenhuma observação';
 
                                     const petModal = new bootstrap.Offcanvas(document.getElementById('offcanvasPet'));
                                     petModal.show();
                                 });
-                                petsDiv.appendChild(card);
+
+                                tbody.appendChild(tr);
                             });
+
+
+                            table.appendChild(tbody);
+                            petsDiv.appendChild(table);
                         } else {
                             petsDiv.innerHTML = '<div class="text-muted">Nenhum pet cadastrado.</div>';
                         }
 
+
+
                         const agendamentosList = document.getElementById('clienteAgendamentos');
                         agendamentosList.innerHTML = '';
                         if (c.agendamentos && c.agendamentos.length > 0) {
-                            const hoje = new Date();
-                            c.agendamentos.forEach(function (ag) {
-                                const dataAgendamento = new Date(ag.data);
-                                const card = document.createElement('div');
-                                card.className = 'agendamento-card' + (dataAgendamento < hoje ? ' agendamento-passado' : '');
-                                card.innerHTML = `<strong>📅 Data:</strong> ${ag.data}<br><strong>🐶 Pet:</strong> ${ag.pet}<br><strong>💼 Serviço:</strong> ${ag.servico}`;
-                                agendamentosList.appendChild(card);
+                            let tabela = `
+                                <table class="table agendamento-tabela">
+                                    <thead>
+                                        <tr>
+                                            <th class="icone">📅</th>
+                                            <th>Data</th>
+                                            <th>Pet</th>
+                                            <th>Serviço</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                            `;
+                            c.agendamentos.forEach(ag => {
+                                tabela += `
+                                    <tr>
+                                        <td class="icone">🐾</td>
+                                        <td>${ag.data}</td>
+                                        <td>${ag.pet}</td>
+                                        <td>${ag.servico}</td>
+                                    </tr>
+                                `;
                             });
+                            tabela += `</tbody></table>`;
+                            agendamentosList.innerHTML = tabela;
                         } else {
                             agendamentosList.innerHTML = '<div class="text-muted">Nenhum agendamento encontrado.</div>';
                         }
 
+
                         const pagamentosList = document.getElementById('clientePagamentos');
                         pagamentosList.innerHTML = '';
                         if (c.pendencias && c.pendencias.length > 0) {
-                            c.pendencias.forEach(function (pg) {
-                                const card = document.createElement('div');
-                                card.className = 'agendamento-card';
-                                card.innerHTML = `<strong>💳 Descrição:</strong> ${pg.descricao}<br><strong>R$</strong> ${parseFloat(pg.valor).toFixed(2)}<br><strong>🗓þ Data:</strong> ${pg.data}`;
-                                pagamentosList.appendChild(card);
+                            let tabela = `
+                                <table class="table agendamento-tabela pagamentos-tabela">
+                                    <thead>
+                                        <tr>
+                                            <th>💳 Descrição</th>
+                                            <th class="valor">Valor</th>
+                                            <th>🗓️ Data</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                            `;
+                            c.pendencias.forEach(pg => {
+                                tabela += `
+                                    <tr>
+                                        <td>${pg.descricao}</td>
+                                        <td class="valor">R$ ${parseFloat(pg.valor).toFixed(2)}</td>
+                                        <td>${pg.data}</td>
+                                    </tr>
+                                `;
                             });
+                            tabela += `</tbody></table>`;
+                            pagamentosList.innerHTML = tabela;
                         } else {
                             pagamentosList.innerHTML = '<div class="text-muted">Nenhuma pendência registrada.</div>';
                         }
+
                     }
                 })
                 .catch(error => {
