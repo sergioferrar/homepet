@@ -170,10 +170,20 @@ class ClienteRepository extends ServiceEntityRepository
     }
 
     public function findPetsByCliente($baseId, int $clienteId): array
-    {
-        $sql = "SELECT nome FROM {$_ENV['DBNAMETENANT']}.pet WHERE dono_id = :id AND estabelecimento_id = '{$baseId}'";
-        return $this->conn->fetchAllAssociative($sql, ['id' => $clienteId]);
-    }
+        {
+            $sql = "SELECT 
+                        id,
+                        nome,
+                        especie,
+                        sexo,
+                        raca,
+                        porte,
+                        idade,
+                        observacoes
+                    FROM {$_ENV['DBNAMETENANT']}.pet 
+                    WHERE dono_id = :id AND estabelecimento_id = '{$baseId}'";
+            return $this->conn->fetchAllAssociative($sql, ['id' => $clienteId]);
+        }
 
     public function findUltimosAgendamentos($baseId, int $clienteId): array
     {
