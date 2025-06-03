@@ -128,4 +128,39 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
             'agendamentoId' => $agendamentoId
         ]);
     }
+
+    public function findByClienteId(int $baseId, int $clienteId): array
+    {
+        $sql = "SELECT f.descricao, f.valor, f.data
+                FROM u199209817_{$baseId}.financeiropendente f
+                JOIN u199209817_{$baseId}.pet p ON f.pet_id = p.id
+                WHERE f.estabelecimento_id = :baseId AND p.dono_id = :clienteId
+                ORDER BY f.data DESC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'baseId' => $baseId,
+            'clienteId' => $clienteId
+        ]);
+    }
+
+    public function findAllPendentes(int $baseId): array
+    {
+        $sql = "SELECT f.id, 
+                   f.descricao, 
+                   f.valor, 
+                   f.data, 
+                   p.nome AS pet_nome, 
+                   c.nome AS dono_nome 
+            FROM {$_ENV['DBNAMETENANT']}.financeiropendente f
+            LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
+            LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+            WHERE f.estabelecimento_id = :baseId
+            ORDER BY f.data DESC";
+
+    return $this->conn->fetchAllAssociative($sql, [
+        'baseId' => $baseId
+    ]);
+
+    }
+
 }
