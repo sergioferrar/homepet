@@ -1,46 +1,94 @@
 {% extends 'base.html.twig' %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 6px 12px;
+            margin: 2px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            color: #007bff !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background-color: #007bff !important;
+            color: #fff !important;
+        }
+        .btn-success {
+            border-radius: 20px;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
 <div class="container mt-5">
-    <h1>Financeiro Pendente</h1>
-    
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-4">Financeiro Pendente</h1>
+
+{#     <div class="d-flex justify-content-between align-items-center mb-3">
         <a href="{{ path('financeiro_pendente', {'data': data|date_modify('-1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Anterior</a>
         <h2>{{ data|date('d/m/Y') }}</h2>
         <a href="{{ path('financeiro_pendente', {'data': data|date_modify('+1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Próximo</a>
-    </div>
+    </div> #}
 
-    <table class="table table-bordered">
-        <thead>
+    <table id="tabela-financeiro" class="table table-bordered table-hover table-striped">
+        <thead class="thead-light">
             <tr>
                 <th>Data</th>
-                <th>Descrição</th>
+                <th>Tutor</th>
                 <th>Valor</th>
                 <th>Pet</th>
                 <th>Ação</th>
             </tr>
         </thead>
         <tbody>
-        {% for financeiro in financeiros %}
-            <tr>
-                <td>{{ financeiro.data|date('d/m/Y') }}</td>
-                <td>{{ financeiro.descricao }}</td>
-                <td>R$ {{ financeiro.valor|number_format(2, ',', '.') }}</td>
-                <td>{{ financeiro.pet_nome }}</td>
-                <td>
-                    <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': financeiro.id}) }}">
-                        <button type="submit" class="btn btn-success btn-sm">Confirmar Pagamento</button>
-                    </form>
-                </td>
-
-
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="4" class="text-center">Nenhum pagamento pendente.</td>
-            </tr>
-        {% endfor %}
+            {% for financeiro in financeiros %}
+                <tr>
+                    <td>{{ financeiro.data|date('d/m/Y') }}</td>
+                    <td>{{ financeiro.dono_nome }}</td>
+                    <td>R$ {{ financeiro.valor|number_format(2, ',', '.') }}</td>
+                    <td>{{ financeiro.pet_nome }}</td>
+                    <td>
+                        <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': financeiro.id}) }}">
+                            <button type="submit" class="btn btn-success btn-sm">Confirmar Pagamento</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">Nenhum pagamento pendente.</td>
+                </tr>
+            {% endfor %}
         </tbody>
     </table>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            $('#tabela-financeiro').DataTable({
+                pageLength: 10,
+                language: {
+                    "sEmptyTable": "Nenhum registro encontrado",
+                    "sInfo": "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+                    "sInfoEmpty": "Mostrando 0 até 0 de 0 registros",
+                    "sInfoFiltered": "(Filtrados de _MAX_ registros)",
+                    "sLengthMenu": "_MENU_ resultados por página",
+                    "sLoadingRecords": "Carregando...",
+                    "sProcessing": "Processando...",
+                    "sZeroRecords": "Nenhum registro encontrado",
+                    "sSearch": "Buscar:",
+                    "oPaginate": {
+                        "sNext": "Próximo",
+                        "sPrevious": "Anterior",
+                        "sFirst": "Primeiro",
+                        "sLast": "Último"
+                    },
+                }
+            });
+        });
+    </script>
 {% endblock %}

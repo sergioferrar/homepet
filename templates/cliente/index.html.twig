@@ -261,9 +261,9 @@
         <div id="clienteAgendamentos" class="d-flex flex-column gap-3"></div>
       </div>
 
-      <div class="tab-pane fade" id="pagamentos" role="tabpanel">
-        <div class="info-box">Funcionalidade de pagamentos pendentes em desenvolvimento.</div>
-      </div>
+        <div class="tab-pane fade" id="pagamentos" role="tabpanel">
+            <div class="d-flex flex-column gap-3" id="clientePagamentos"></div>
+        </div>
 
       <div class="tab-pane fade" id="pets" role="tabpanel">
         <div class="info-box" id="clientePets">Nenhum pet</div>
@@ -309,12 +309,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                     document.getElementById('modalPetRaca').innerText = p.raca || '-';
                                     document.getElementById('modalPetPorte').innerText = p.porte || '-';
                                     document.getElementById('modalPetIdade').innerText = p.idade || '-';
-                                    document.getElementById('modalPetObs').innerText = p.observacoes || 'Nenhuma observação';
+                                    document.getElementById('modalPetObs').innerText = p.observacoes || 'Nenhuma observacão';
 
                                     const petModal = new bootstrap.Offcanvas(document.getElementById('offcanvasPet'));
                                     petModal.show();
                                 });
-
                                 petsDiv.appendChild(card);
                             });
                         } else {
@@ -329,11 +328,24 @@ document.addEventListener('DOMContentLoaded', function () {
                                 const dataAgendamento = new Date(ag.data);
                                 const card = document.createElement('div');
                                 card.className = 'agendamento-card' + (dataAgendamento < hoje ? ' agendamento-passado' : '');
-                                card.innerHTML = `<strong>📅 Data:</strong> ${ag.data}<br><strong>🐶 Pet:</strong> ${ag.pet}<br><strong>🛁 Serviço:</strong> ${ag.servico}`;
+                                card.innerHTML = `<strong>📅 Data:</strong> ${ag.data}<br><strong>🐶 Pet:</strong> ${ag.pet}<br><strong>💼 Serviço:</strong> ${ag.servico}`;
                                 agendamentosList.appendChild(card);
                             });
                         } else {
                             agendamentosList.innerHTML = '<div class="text-muted">Nenhum agendamento encontrado.</div>';
+                        }
+
+                        const pagamentosList = document.getElementById('clientePagamentos');
+                        pagamentosList.innerHTML = '';
+                        if (c.pendencias && c.pendencias.length > 0) {
+                            c.pendencias.forEach(function (pg) {
+                                const card = document.createElement('div');
+                                card.className = 'agendamento-card';
+                                card.innerHTML = `<strong>💳 Descrição:</strong> ${pg.descricao}<br><strong>R$</strong> ${parseFloat(pg.valor).toFixed(2)}<br><strong>🗓þ Data:</strong> ${pg.data}`;
+                                pagamentosList.appendChild(card);
+                            });
+                        } else {
+                            pagamentosList.innerHTML = '<div class="text-muted">Nenhuma pendência registrada.</div>';
                         }
                     }
                 })

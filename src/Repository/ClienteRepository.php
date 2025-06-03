@@ -209,8 +209,14 @@ class ClienteRepository extends ServiceEntityRepository
         $sql = "SELECT COUNT(*) as total
                 FROM {$_ENV['DBNAMETENANT']}.financeiropendente f
                 JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
-                WHERE p.dono_id = :id AND f.estabelecimento_id = '{$baseId}'";
-        $total = $this->conn->fetchOne($sql, ['id' => $clienteId]);
+                WHERE f.estabelecimento_id = :baseId AND p.dono_id = :id";
+
+        $total = $this->conn->fetchOne($sql, [
+            'baseId' => $baseId,
+            'id' => $clienteId,
+        ]);
+
         return $total > 0;
     }
+
 }

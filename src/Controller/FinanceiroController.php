@@ -141,7 +141,8 @@ class FinanceiroController extends DefaultController
     {
         $this->switchDB();
         $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
-        $financeirosPendentes = $financeiroPendenteRepository->findByDate($this->session->get('userId'), $data);
+        $financeirosPendentes = $financeiroPendenteRepository->findAllPendentes($this->session->get('userId'));
+
 
         return $this->render('financeiro/pendente.html.twig', [
             'financeiros' => $financeirosPendentes,

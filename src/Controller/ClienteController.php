@@ -161,23 +161,46 @@ class ClienteController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->session->get('userId');
-        $repo = $this->getRepositorio(Cliente::class);
 
+        $repo = $this->getRepositorio(Cliente::class);
         $cliente = $repo->localizaTodosClientePorID($baseId, $id);
+
         if (!$cliente) {
             return $this->json(['status' => 'erro', 'mensagem' => 'Cliente não encontrado.']);
         }
 
         $pets = $repo->findPetsByCliente($baseId, $id);
-        $temPendencia = $repo->hasFinanceiroPendente($baseId, $id);
+        $agendamentos = $repo->findAgendamentosByCliente($baseId, $id);
+
+        $financeiroPendenteRepo = $this->getRepositorio(\App\Entity\FinanceiroPendente::class);
+        $pendencias = $financeiroPendenteRepo->findByClienteId($baseId, $id);
+
+        $temPendencia = !empty($pendencias);
 
         return $this->json([
             'status' => 'ok',
             'cliente' => array_merge($cliente, [
                 'temFinanceiroPendente' => $temPendencia,
-                'pets' => $pets
+                'pets' => $pets,
+                'agendamentos' => array_map(function ($ag) {
+                    return [
+                        'data' => (new \DateTime($ag['data']))->format('d/m/Y'),
+                        'pet' => $ag['pet_nome'],
+                        'servico' => $ag['servico_nome']
+                    ];
+                }, $agendamentos),
+                'pendencias' => array_map(function ($p) {
+                    return [
+                        'descricao' => $p['descricao'],
+                        'valor' => number_format($p['valor'], 2, ',', '.'),
+                        'data' => (new \DateTime($p['data']))->format('d/m/Y'),
+                    ];
+                }, $pendencias)
             ])
         ]);
     }
+
+
+
 
 }
