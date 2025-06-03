@@ -3,137 +3,273 @@
 {% block stylesheets %}
 {{ parent() }}
 <style>
-    .btn-secondary {
-        background-color: #007bff;
-        border-color: #007bff;
-        font-weight: bold;
-        border-radius: 20px;
-        padding: 8px 16px;
-    }
-    .btn-secondary:hover {
-        background-color: #0056b3;
-        border-color: #0056b3;
-    }
-    .dropdown-menu {
-        border-radius: 12px;
-        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
-    }
-    #modalCliente .modal-dialog {
-        position: fixed !important;
+    body.modal-open::before {
+        content: '';
+        position: fixed;
         top: 0;
-        right: 0;
-        margin: 0;
+        left: 0;
+        width: 100vw;
         height: 100vh;
-        max-width: 500px;
-        width: 100% !important;
-        z-index: 2000 !important;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
     }
-    #modalCliente .modal-content {
-        height: 100vh;
-        border-radius: 30px 0 0 30px;
-        background-color: #007bff !important;
-        color: white !important;
-        padding: 20px;
-        overflow-y: auto;
+    .btn-primary {
+        background-color: #004080;
+        border-color: #003366;
+        font-weight: bold;
+        border-radius: 12px;
+        padding: 8px 18px;
+        color: #fff;
     }
-    .agendamento-card {
-        border-left: 5px solid #007bff;
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        padding: 15px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        font-size: 0.95rem;
+    .btn-primary:hover {
+        background-color: #003366;
     }
-    .agendamento-card strong {
-        color: #0056b3;
+    .card-client {
+        background: #f8fafd;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
     }
-    .agendamento-passado {
-        opacity: 0.7;
+    .card-title {
+        color: #004080;
+        font-weight: bold;
+    }
+    .card-table {
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .card-table th {
+        background-color: #0056b3;
+        color: white;
+        text-transform: uppercase;
+        padding: 12px;
+    }
+    .card-table td {
+        background-color: #f2f8ff;
+        padding: 12px;
+    }
+    .offcanvas-body {
+        background: linear-gradient(to bottom right, #e6f0ff, #ffffff);
+    }
+    .nav-tabs .nav-link.active {
+        background-color: #004080;
+        color: white;
+        font-weight: bold;
+        border-radius: 12px 12px 0 0;
+    }
+    .nav-tabs .nav-link {
+        color: #004080;
+    }
+    .pet-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background-color: #e6f0ff;
+        border: 1px solid #99ccff;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    .pet-card:hover {
+        background-color: #d0eaff;
+    }
+    .pet-card img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .modal-pet-info {
+        background-color: #f9fbff;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .modal-pet-info h6 {
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #004080;
+    }
+    .modal-pet-info div {
+        font-size: 1rem;
     }
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-5">
-    <h1>Clientes</h1>
-    <form method="get" action="{{ path('cliente_index') }}" class="mb-3">
-        <div class="input-group">
+    <h1 class="text-primary mb-4">Clientes</h1>
+    <form method="get" action="{{ path('cliente_index') }}" class="mb-4">
+        <div class="input-group shadow-sm rounded">
             <input type="text" name="search" class="form-control" placeholder="Pesquisar por nome, e-mail ou telefone" value="{{ app.request.get('search') }}">
             <button class="btn btn-primary" type="submit">Buscar</button>
         </div>
     </form>
     <a href="{{ path('cliente_novo') }}" class="btn btn-secondary mb-3">+ Novo Cliente</a>
-    <table class="table table-bordered table-hover datatable">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Email</th>
-                <th>Telefone</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for cliente in clientes %}
-                {% if cliente.nome is defined and cliente.email is defined and cliente.telefone is defined %}
-                    <tr>
-                        <td><a href="#" class="text-primary abrir-modal-cliente" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling" data-id="{{ cliente.id }}">{{ cliente.nome }}</a></td>
-                        <td>{{ cliente.email ?? '-' }}</td>
-                        <td>{{ cliente.telefone ?? '-' }}</td>
-                        <td>
-                            <div class="dropdown">
-                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Ação</button>
-                                <ul class="dropdown-menu">
-                                    <li><a href="{{ path('cliente_agendamentos', {'id': cliente.id}) }}" class="dropdown-item">Ver Agendamentos</a></li>
-                                    <li><a href="{{ path('cliente_editar', {'id': cliente.id}) }}" class="dropdown-item">Editar</a></li>
-                                    <li>
-                                        <form method="post" action="{{ path('cliente_deletar', {'id': cliente.id}) }}" class="d-inline">
-                                            <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Tem certeza que deseja deletar este cliente?')">Deletar</button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
-                {% endif %}
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover datatable">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Telefone</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                    {% if cliente.nome is defined and cliente.email is defined and cliente.telefone is defined %}
+                        <tr>
+                            <td><a href="#" class="text-primary abrir-modal-cliente fw-bold" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling" data-id="{{ cliente.id }}">{{ cliente.nome }}</a></td>
+                            <td>{{ cliente.email ?? '-' }}</td>
+                            <td>{{ cliente.telefone ?? '-' }}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Ação</button>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="{{ path('cliente_agendamentos', {'id': cliente.id}) }}" class="dropdown-item">Ver Agendamentos</a></li>
+                                        <li><a href="{{ path('cliente_editar', {'id': cliente.id}) }}" class="dropdown-item">Editar</a></li>
+                                        <li>
+                                            <form method="post" action="{{ path('cliente_deletar', {'id': cliente.id}) }}" class="d-inline">
+                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Tem certeza que deseja deletar este cliente?')">Deletar</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <div class="offcanvas offcanvas-end" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Dados do cliente</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-        <div class="bg-white text-dark rounded-4 p-4 shadow-sm mb-4">
-            <h5 class="mb-4 text-primary fw-bold">👤 Dados do Cliente</h5>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div><strong>Nome:</strong> <span id="clienteNome">-</span></div>
-                    <div><strong>Email:</strong> <span id="clienteEmail">-</span></div>
-                    <div><strong>Telefone:</strong> <span id="clienteTelefone">-</span></div>
-                </div>
-                <div class="col-md-6">
-                    <div><strong>Endereço:</strong> <span id="clienteEndereco">-</span></div>
-                    <div><strong>Bairro:</strong> <span id="clienteBairro">-</span></div>
-                    <div><strong>Cidade:</strong> <span id="clienteCidade">-</span></div>
-                </div>
-            </div>
-            <div class="mt-3">
-                <strong>Pendências:</strong>
-                <span id="clientePendencias" class="badge bg-warning text-dark px-2 py-1 rounded-pill">-</span>
-            </div>
-            <div class="mt-2">
-                <strong>🐾 Pets:</strong> <span id="clientePets">Nenhum pet</span>
-            </div>
-        </div>
+  <div class="offcanvas-header border-bottom">
+    <h5 class="offcanvas-title fw-bold text-primary" id="offcanvasScrollingLabel">📋 Detalhes do Cliente</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body bg-light">
+    <ul class="nav nav-tabs mb-4" id="clienteTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="dados-tab" data-bs-toggle="tab" href="#dados" role="tab">Dados do Cliente</a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="agendamentos-tab" data-bs-toggle="tab" href="#agendamentos" role="tab">Agendamentos</a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="pagamentos-tab" data-bs-toggle="tab" href="#pagamentos" role="tab">Pagamentos Pendentes</a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="pets-tab" data-bs-toggle="tab" href="#pets" role="tab">Pets</a>
+      </li>
+    </ul>
 
-        <div id="clienteAgendamentosBlock" class="bg-white text-dark rounded-4 p-4 shadow-sm" style="display: none;">
-            <h5 class="text-primary fw-bold mb-4">🗓 Todos os Agendamentos</h5>
-            <div id="clienteAgendamentos" class="d-flex flex-column gap-3"></div>
-        </div>
+<!-- Modal do Pet estilizado -->
+<div class="offcanvas offcanvas-end shadow" tabindex="-1" id="offcanvasPet" aria-labelledby="offcanvasPetLabel">
+  <div class="offcanvas-header border-bottom" style="background-color: #f5faff;">
+    <h5 class="offcanvas-title fw-bold text-success" id="offcanvasPetLabel">🐾 Detalhes do Pet</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body bg-white" style="padding: 1.5rem 1.2rem;">
+    
+    <div class="mb-4 border rounded shadow-sm p-3 bg-light">
+      <h6 class="text-muted mb-1">Nome do Pet</h6>
+      <div id="modalPetNome" class="fw-bold fs-5 text-dark">-</div>
     </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="border rounded shadow-sm p-3 bg-light mb-3">
+          <h6 class="text-muted mb-1">Espécie</h6>
+          <div id="modalPetEspecie" class="fw-bold text-dark">-</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="border rounded shadow-sm p-3 bg-light mb-3">
+          <h6 class="text-muted mb-1">Sexo</h6>
+          <div id="modalPetSexo" class="fw-bold text-dark">-</div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="border rounded shadow-sm p-3 bg-light mb-3">
+          <h6 class="text-muted mb-1">Raça</h6>
+          <div id="modalPetRaca" class="fw-bold text-dark">-</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="border rounded shadow-sm p-3 bg-light mb-3">
+          <h6 class="text-muted mb-1">Porte</h6>
+          <div id="modalPetPorte" class="fw-bold text-dark">-</div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="border rounded shadow-sm p-3 bg-light mb-3">
+          <h6 class="text-muted mb-1">Idade</h6>
+          <div id="modalPetIdade" class="fw-bold text-dark">-</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="border rounded shadow-sm p-3 bg-light mb-3">
+          <h6 class="text-muted mb-1">Observações</h6>
+          <div id="modalPetObs" class="fw-bold text-dark">-</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="dados" role="tabpanel">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <p class="mb-1 info-label">Nome:</p>
+            <div class="info-box" id="clienteNome">-</div>
+            <p class="mt-3 mb-1 info-label">Email:</p>
+            <div class="info-box" id="clienteEmail">-</div>
+            <p class="mt-3 mb-1 info-label">Telefone:</p>
+            <div class="info-box" id="clienteTelefone">-</div>
+          </div>
+          <div class="col-md-6">
+            <p class="mb-1 info-label">Endereço:</p>
+            <div class="info-box" id="clienteEndereco">-</div>
+            <p class="mt-3 mb-1 info-label">Bairro:</p>
+            <div class="info-box" id="clienteBairro">-</div>
+            <p class="mt-3 mb-1 info-label">Cidade:</p>
+            <div class="info-box" id="clienteCidade">-</div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <p class="mb-1 info-label">Pendências:</p>
+          <span class="badge bg-warning text-dark px-3 py-2 fs-6 rounded-pill" id="clientePendencias">-</span>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="agendamentos" role="tabpanel">
+        <div id="clienteAgendamentos" class="d-flex flex-column gap-3"></div>
+      </div>
+
+      <div class="tab-pane fade" id="pagamentos" role="tabpanel">
+        <div class="info-box">Funcionalidade de pagamentos pendentes em desenvolvimento.</div>
+      </div>
+
+      <div class="tab-pane fade" id="pets" role="tabpanel">
+        <div class="info-box" id="clientePets">Nenhum pet</div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -145,6 +281,7 @@ document.addEventListener('DOMContentLoaded', function () {
         el.addEventListener('click', function (e) {
             e.preventDefault();
             const clienteId = this.getAttribute('data-id');
+
             fetch('{{ path('cliente_detalhes', {'id': 'ID'}) }}'.replace('ID', clienteId))
                 .then(response => response.json())
                 .then(data => {
@@ -158,58 +295,62 @@ document.addEventListener('DOMContentLoaded', function () {
                         document.getElementById('clienteCidade').innerText = c.cidade || '-';
                         document.getElementById('clientePendencias').innerText = c.temFinanceiroPendente ? 'Sim' : 'Não';
 
-                        const pets = c.pets && c.pets.length ? c.pets.map(p => `🐶 ${p.nome}`).join(', ') : 'Nenhum pet';
-                        document.getElementById('clientePets').innerText = pets;
+                        const petsDiv = document.getElementById('clientePets');
+                        petsDiv.innerHTML = '';
+                        if (c.pets && c.pets.length > 0) {
+                            c.pets.forEach(p => {
+                                const card = document.createElement('div');
+                                card.className = 'pet-card';
+                                card.innerHTML = `🐾 <strong>${p.nome}</strong>`;
+                                card.addEventListener('click', () => {
+                                    document.getElementById('modalPetNome').innerText = p.nome || '-';
+                                    document.getElementById('modalPetEspecie').innerText = p.especie || '-';
+                                    document.getElementById('modalPetSexo').innerText = p.sexo || '-';
+                                    document.getElementById('modalPetRaca').innerText = p.raca || '-';
+                                    document.getElementById('modalPetPorte').innerText = p.porte || '-';
+                                    document.getElementById('modalPetIdade').innerText = p.idade || '-';
+                                    document.getElementById('modalPetObs').innerText = p.observacoes || 'Nenhuma observação';
+
+                                    const petModal = new bootstrap.Offcanvas(document.getElementById('offcanvasPet'));
+                                    petModal.show();
+                                });
+
+                                petsDiv.appendChild(card);
+                            });
+                        } else {
+                            petsDiv.innerHTML = '<div class="text-muted">Nenhum pet cadastrado.</div>';
+                        }
 
                         const agendamentosList = document.getElementById('clienteAgendamentos');
                         agendamentosList.innerHTML = '';
-
                         if (c.agendamentos && c.agendamentos.length > 0) {
                             const hoje = new Date();
                             c.agendamentos.forEach(function (ag) {
                                 const dataAgendamento = new Date(ag.data);
                                 const card = document.createElement('div');
                                 card.className = 'agendamento-card' + (dataAgendamento < hoje ? ' agendamento-passado' : '');
-                                card.innerHTML = `
-                                    <div>
-                                        <strong>📅 Data:</strong> ${ag.data}<br>
-                                        <strong>🐶 Pet:</strong> ${ag.pet}<br>
-                                        <strong>🛁 Serviço:</strong> ${ag.servico}
-                                    </div>
-                                `;
+                                card.innerHTML = `<strong>📅 Data:</strong> ${ag.data}<br><strong>🐶 Pet:</strong> ${ag.pet}<br><strong>🛁 Serviço:</strong> ${ag.servico}`;
                                 agendamentosList.appendChild(card);
                             });
                         } else {
                             agendamentosList.innerHTML = '<div class="text-muted">Nenhum agendamento encontrado.</div>';
                         }
-
-                        document.getElementById('clienteAgendamentosBlock').style.display = 'block';
-
-                    } else {
-                        alert('Erro: ' + data.mensagem);
                     }
                 })
                 .catch(error => {
-                    console.error('Erro ao buscar cliente:', error);
                     alert('Erro ao carregar os dados do cliente.');
+                    console.error(error);
                 });
         });
     });
 
-    const tabelas = document.querySelectorAll(".datatable");
-    if (!window.simpleDatatables || !window.simpleDatatables.DataTable) {
-        console.error("simple-datatables não foi carregado.");
-        return;
-    }
-    tabelas.forEach((el) => {
-        try {
-            new simpleDatatables.DataTable(el, {
-                perPageSelect: [5, 10, 15, ["Todos", -1]]
-            });
-        } catch (e) {
-            console.error("Erro ao inicializar DataTable:", e);
-        }
+    document.getElementById('offcanvasScrolling').addEventListener('show.bs.offcanvas', () => {
+        document.body.classList.add('modal-open');
+    });
+    document.getElementById('offcanvasScrolling').addEventListener('hidden.bs.offcanvas', () => {
+        document.body.classList.remove('modal-open');
     });
 });
 </script>
 {% endblock %}
+
