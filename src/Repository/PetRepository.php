@@ -85,8 +85,31 @@ class PetRepository extends ServiceEntityRepository
     public function delete($baseId, int $id): void
     {
         $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}.pet WHERE estabelecimento_id = '{$baseId}' AND id = :id";
+        
+        
         $stmt = $this->conn->prepare($sql);
+
         $stmt->bindValue('id', $id);
         $stmt->execute();
     }
+    public function countTotalPets($baseId): int
+    {
+        $sql = "SELECT COUNT(*) FROM {$_ENV['DBNAMETENANT']}.pet WHERE estabelecimento_id = :baseId";
+        return (int) $this->conn->fetchOne($sql, ['baseId' => $baseId]);
+    }
+
+    public function listarPetsRecentes($baseId, $limit = 5): array
+    {
+        $sql = "SELECT p.nome, p.especie, p.raca, c.nome as tutor
+                FROM {$_ENV['DBNAMETENANT']}.pet p
+                JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                WHERE p.estabelecimento_id = :baseId
+                ORDER BY p.id DESC
+                LIMIT :limit";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('limit', $limit, \PDO::PARAM_INT);
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
 }

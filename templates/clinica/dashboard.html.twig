@@ -1,0 +1,94 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard Clínica{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Dashboard</h1>
+
+    <div class="row text-center mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Total de Clientes</h5>
+                    <p class="display-4">{{ clientes|length }}</p>
+                    <i class="bi bi-people-fill fs-3 text-primary"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Total de Pets</h5>
+                    <p class="display-4">{{ total_pets }}</p>
+                    <i class="bi bi-paw fs-3 text-success"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Consultas Agendadas</h5>
+                    <p class="display-4">{{ consultas|length }}</p>
+                    <i class="bi bi-calendar-check fs-3 text-purple"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Próximas Consultas</h5>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Cliente</th>
+                                <th>Pet</th>
+                                <th>Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for consulta in consultas %}
+                                <tr>
+                                    <td>{{ consulta.data|date('d/m/Y H:i') }}</td>
+                                    <td>{{ consulta.cliente_nome }}</td>
+                                    <td>{{ consulta.pet_nome }}</td>
+                                    <td>{{ consulta.tipo }}</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="4">Nenhuma consulta agendada</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Pets Recentes</h5>
+                    {% for pet in pets_recentes %}
+                        <div class="border rounded p-2 mb-2">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <strong>{{ pet.nome }}</strong> • {{ pet.especie }} - {{ pet.raca }}<br>
+                                    <small class="text-muted">Tutor: {{ pet.tutor }}</small>
+                                </div>
+                                <i class="bi bi-heart fs-4 text-info"></i>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p>Nenhum pet cadastrado recentemente.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

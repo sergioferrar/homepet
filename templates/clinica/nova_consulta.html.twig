@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nova Consulta{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h2>Marcar Nova Consulta</h2>
+    <form method="post">
+        <div class="form-group">
+            <label for="cliente_id">Cliente</label>
+            <select id="cliente_id" name="cliente_id" class="form-control" required>
+                <option value="">Selecione</option>
+                {% for cliente in clientes %}
+                    <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group mt-3">
+            <label for="pet_id">Pet</label>
+            <select id="pet_id" name="pet_id" class="form-control" required>
+                <!-- Este select pode ser carregado via JS após escolher o cliente -->
+            </select>
+        </div>
+
+        <div class="form-group mt-3">
+            <label for="data">Data</label>
+            <input type="date" id="data" name="data" class="form-control" required>
+        </div>
+
+        <div class="form-group mt-3">
+            <label for="hora">Hora</label>
+            <input type="time" id="hora" name="hora" class="form-control" required>
+        </div>
+
+        <div class="form-group mt-3">
+            <label for="observacoes">Observações</label>
+            <textarea id="observacoes" name="observacoes" class="form-control"></textarea>
+        </div>
+
+        <button class="btn btn-success mt-3">Marcar Consulta</button>
+    </form>
+</div>
+
+<script>
+// Exemplo básico de JS para carregar pets via AJAX
+document.getElementById('cliente_id').addEventListener('change', function () {
+    fetch('/clinica/api/pets/' + this.value)
+        .then(resp => resp.json())
+        .then(data => {
+            const select = document.getElementById('pet_id');
+            select.innerHTML = '';
+            data.forEach(pet => {
+                const opt = document.createElement('option');
+                opt.value = pet.id;
+                opt.innerText = pet.nome;
+                select.appendChild(opt);
+            });
+        });
+});
+</script>
+{% endblock %}
