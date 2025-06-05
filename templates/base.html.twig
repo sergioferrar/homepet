@@ -273,6 +273,25 @@ app.request.attributes.get('_route') == 'financeiro_relatorio' %} show {% endif 
                 </a>
             </li>
 
+            {# Adiciona ao sidebar o menu da Clínica Veterinária com dashboard e consulta #}
+            <li class="nav-item">
+                <a class="nav-link {% if app.request.attributes.get('_route') starts with 'clinica_' %} {% else %} collapsed {% endif %}" data-bs-target="#clinica" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-hospital"></i><span>Clínica Veterinária</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="clinica" class="nav-content collapse {% if app.request.attributes.get('_route') starts with 'clinica_' %} show {% endif %}" data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a {% if app.request.attributes.get('_route') == 'clinica_dashboard' %} class="active" {% endif %} href="{{ path('clinica_dashboard') }}">
+                            <i class="bi bi-circle"></i><span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a {% if app.request.attributes.get('_route') == 'clinica_nova_consulta' %} class="active" {% endif %} href="{{ path('clinica_nova_consulta') }}">
+                            <i class="bi bi-circle"></i><span>Nova Consulta</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
 {#             <!-- Código para adicionar o link da Clínica Veterinária na sidebar -->
             <li class="nav-item">
                 <a class="nav-link collapsed" data-bs-target="#clinica" data-bs-toggle="collapse" href="#">

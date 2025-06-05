@@ -219,4 +219,39 @@ class ClienteRepository extends ServiceEntityRepository
         return $total > 0;
     }
 
+    public function findClientesComPet($baseId): array
+    {
+        $sql = "SELECT c.id, c.nome, c.telefone
+                FROM {$_ENV['DBNAMETENANT']}.cliente c
+                WHERE c.estabelecimento_id = :baseId
+                AND EXISTS (
+                    SELECT 1 FROM {$_ENV['DBNAMETENANT']}.pet p
+                    WHERE p.dono_id = c.id
+                )";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $result = $stmt->executeQuery();
+        $clientes = $result->fetchAllAssociative();
+
+        // Enriquecer com os pets
+        foreach ($clientes as &$cliente) {
+            $cliente['pets'] = $this->listarPetsDoCliente($baseId, $cliente['id']);
+        }
+
+        return $clientes;
+    }
+
+    public function listarPetsDoCliente($baseId, $clienteId): array
+    {
+        $sql = "SELECT id, nome, raca FROM {$_ENV['DBNAMETENANT']}.pet
+                WHERE dono_id = :clienteId AND estabelecimento_id = :baseId";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('clienteId', $clienteId);
+        $stmt->bindValue('baseId', $baseId);
+        $result = $stmt->executeQuery();
+        return $result->fetchAllAssociative();
+    }
+
 }
