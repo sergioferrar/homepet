@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editar Documento{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .doc-container {
+        max-width: 850px;
+        margin: auto;
+        background: white;
+        padding: 2rem;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .doc-editable {
+        min-height: 300px;
+        border: 1px dashed #999;
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+    }
+
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+
+        #print-area, #print-area * {
+            visibility: visible;
+        }
+
+        #print-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        #btn-imprimir, #btn-salvar {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    {% for msg in app.flashes('success') %}
+        <div class="alert alert-success">{{ msg }}</div>
+    {% endfor %}
+
+    <form method="post" id="formDocumento">
+        <div class="doc-container">
+            <div class="mb-3">
+                <label for="titulo" class="form-label">Título</label>
+                <input type="text" name="titulo" id="titulo" class="form-control" value="{{ documento.titulo }}" required>
+            </div>
+
+            <div id="print-area">
+                <textarea name="" id="" class="tinymce-editor form-control">{{ documento.conteudo|raw }}</textarea>
+                {# <div id="editor" class="doc-editable" contenteditable="true">
+                    
+                </div> #}
+            </div>
+
+            <input type="hidden" name="conteudo" id="conteudo-hidden">
+
+            <div class="mt-4 text-end">
+                <button type="button" class="btn btn-secondary" onclick="imprimirDocumento()" id="btn-imprimir">
+                    <i class="bi bi-printer"></i> Imprimir / PDF
+                </button>
+                <button type="submit" class="btn btn-success ms-2" id="btn-salvar">
+                    <i class="bi bi-save"></i> Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    function imprimirDocumento() {
+        window.print();
+    }
+
+    // Ao submeter, copiar conteúdo editável para o campo hidden
+    document.getElementById('formDocumento').addEventListener('submit', function () {
+        document.getElementById('conteudo-hidden').value = document.getElementById('editor').innerHTML;
+    });
+</script>
+{% endblock %}

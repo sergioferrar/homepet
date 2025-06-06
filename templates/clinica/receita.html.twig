@@ -1,0 +1,104 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Emitir Receita{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .receita-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 2rem;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .receita-cabecalho {
+            text-align: center;
+            border-bottom: 2px solid #004080;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .receita-cabecalho h2 {
+            color: #004080;
+            font-weight: bold;
+        }
+
+        .receita-conteudo {
+            min-height: 300px;
+            padding: 1rem;
+            border: 1px dashed #999;
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+
+        .receita-rodape {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .assinatura {
+            text-align: center;
+        }
+
+        .assinatura hr {
+            border-top: 1px solid #000;
+            width: 200px;
+            margin: 10px auto 0;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            #btn-imprimir {
+                display: none;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="text-end mb-3">
+        <button id="btn-imprimir" class="btn btn-primary" onclick="window.print()">
+            <i class="bi bi-printer"></i> Imprimir Receita
+        </button>
+    </div>
+
+    <div class="receita-container" id="print-area">
+        <div class="receita-cabecalho">
+            <h2>Dra. Jéssica Sabrina</h2>
+            <p>CRMV - Veterinária</p>
+        </div>
+
+        <div class="receita-conteudo" contenteditable="true">
+            <p><em>Digite aqui a receita médica...</em></p>
+        </div>
+
+        <div class="receita-rodape mt-4">
+            <div class="data">
+                <strong>Data:</strong> {{ "now"|date("d/m/Y") }}
+            </div>
+            <div class="assinatura">
+                <hr>
+                <small>Assinatura</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Cliente;
 use App\Entity\Consulta;
 use App\Entity\Pet;
+use App\Repository\DocumentoModeloRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -78,4 +79,68 @@ class ClinicaController extends DefaultController
             'clientes' => $clientes
         ]);
     }
+
+    /**
+     * @Route("/receita", name="clinica_receita", methods={"GET"})
+     */
+    public function receita(): Response
+    {
+        $this->switchDB();
+        return $this->render('clinica/receita.html.twig');
+    }
+
+    /**
+     * @Route("/documentos", name="clinica_documentos", methods={"GET", "POST"})
+     */
+    public function documentos(Request $request, DocumentoModeloRepository $repoDoc): Response
+    {
+        $this->switchDB();
+        $baseId = $this->session->get('userId');
+
+        if ($request->isMethod('POST')) {
+            $titulo = $request->request->get('titulo');
+            $conteudo = $request->request->get('conteudo');
+
+            $repoDoc->salvarDocumento($baseId, $titulo, $conteudo);
+            $this->addFlash('success', 'Documento criado com sucesso!');
+            return $this->redirectToRoute('clinica_documentos');
+        }
+
+        $documentos = $repoDoc->listarDocumentos($baseId);
+
+        return $this->render('clinica/documentos.html.twig', [
+            'documentos' => $documentos
+        ]);
+    }
+
+    /**
+     * @Route("/documento/{id}/editar", name="clinica_documento_editar", methods={"GET", "POST"})
+     */
+    public function editarDocumento(int $id, Request $request, DocumentoModeloRepository $repoDoc): Response
+    {
+        $this->switchDB();
+        $baseId = $this->session->get('userId');
+
+        $documento = $repoDoc->buscarPorId($baseId, $id);
+
+        if (!$documento) {
+            throw $this->createNotFoundException('Documento não encontrado.');
+        }
+
+        if ($request->isMethod('POST')) {
+            $documento->setTitulo($request->get('titulo'));
+            $documento->setConteudo($request->get('conteudo'));
+
+            $repoDoc->atualizarDocumento($baseId, $documento);
+
+            $this->addFlash('success', 'Documento atualizado com sucesso!');
+            return $this->redirectToRoute('clinica_documento_editar', ['id' => $id]);
+        }
+
+        return $this->render('clinica/documento_editar.html.twig', [
+            'documento' => $documento
+        ]);
+    }
+
+
 }

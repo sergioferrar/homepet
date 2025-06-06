@@ -1,0 +1,69 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modelos de Documentos{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .form-container {
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+    }
+    textarea {
+        min-height: 200px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+
+    <h2 class="mb-4">Modelos de Documentos</h2>
+
+    {% for msg in app.flashes('success') %}
+        <div class="alert alert-success">{{ msg }}</div>
+    {% endfor %}
+
+    {% if documentos is not empty %}
+        <div class="list-group mb-4">
+            {% for doc in documentos %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>📝 {{ doc.titulo }}</span>
+                    <a href="{{ path('clinica_documento_editar', {'id': doc.id}) }}" class="btn btn-sm btn-outline-primary">
+                        Editar
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">Nenhum documento cadastrado ainda.</p>
+    {% endif %}
+
+    <div class="form-container">
+        <h4 class="mb-3">Cadastrar Novo Documento</h4>
+        <form method="post">
+            <div class="mb-3">
+                <label for="titulo" class="form-label">Título</label>
+                <input type="text" id="titulo" name="titulo" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="conteudo" class="form-label">Conteúdo</label>
+                <textarea id="conteudo" name="conteudo" class="form-control" required></textarea>
+                <small class="text-muted">Você pode digitar texto livre ou colar conteúdo padronizado.</small>
+            </div>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-save"></i> Salvar Documento
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
