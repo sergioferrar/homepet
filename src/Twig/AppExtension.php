@@ -64,7 +64,7 @@ class AppExtension extends AbstractExtension
     public function listaPlano($string)
     {
         $linhas = json_decode($string, true);
-        $lista = '<ul class="list-group">
+        $lista = '<ul class="features-list">
 <li class="list-group-item">Agendamentos de Pets</li>
 <li class="list-group-item">Cadastro de Clientes</li>
 <li class="list-group-item">Cadastro de Pets</li>
@@ -75,7 +75,7 @@ class AppExtension extends AbstractExtension
 <li class="list-group-item">Hospedagem de Cães</li>
 <li class="list-group-item">Gestão de usuários</li>
 </ul>';
-        $html = '<ul class="list-group">';
+        $html = '<ul class="features-list">';
         $i = 0;
         foreach($this->modulosSistema as $key => $value){
             if(isset($linhas[$i])){
@@ -84,7 +84,7 @@ class AppExtension extends AbstractExtension
                 $linhaTracada = ' style="text-decoration: line-through;"';
             }
 
-            $html .= '<li class="list-group-item" '.$linhaTracada.'>'.$value.'</li>';            
+            $html .= '<li '.$linhaTracada.'><i class="bi bi-check-circle-fill"></i>'.$value.'</li>';            
 
             $i++;
         }
