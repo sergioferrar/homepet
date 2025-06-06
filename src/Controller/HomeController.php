@@ -12,7 +12,7 @@ class HomeController extends DefaultController
 {
 
     /**
-     * @Route("/landing", name="landing_home")
+     * @Route("/landing/getstarted", name="landing_home")
      */
     public function landing(Request $request): Response
     {
