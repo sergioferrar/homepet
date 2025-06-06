@@ -184,7 +184,7 @@
     language: 'pt_BR',
     menubar: false,
     theme: "modern",
-    height: 210,
+    height: 450,
     skin: 'light',
     entity_encoding: "raw",
     theme_advanced_resizing: true,
