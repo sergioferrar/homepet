@@ -41,7 +41,7 @@
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container position-relative d-flex align-items-center justify-content-between">
 
-      <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
+      <a href="{{url('landing_home')}}" class="logo d-flex align-items-center me-auto me-xl-0">
         <!-- Uncomment the line below if you also wish to use an image logo -->
         <!-- <img src="assets/img/logo.webp" alt=""> -->
         <h1 class="sitename">System Home Pet</h1><span>.</span>
@@ -61,7 +61,7 @@
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
 
-      <a class="btn-getstarted" href="#about">Vamos começar</a>
+      <a class="btn-getstarted" href="{{url('landing_home')}}">Vamos começar</a>
 
     </div>
   </header>
@@ -151,7 +151,7 @@
     <div class="container footer-top">
       <div class="row gy-4">
         <div class="col-lg-4 col-md-6 footer-about">
-          <a href="index.html" class="logo d-flex align-items-center d-none">
+          <a href="{{url('landing_home')}}" class="logo d-flex align-items-center d-none">
             <span class="sitename">System Home Pet</span>
           </a>
           {# <div class="footer-contact pt-3">
