@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Menus{% endblock %}
+
+{% block body %}
+    <h1>Menus</h1>
+<a href="{{ path('menu_index') }}">Voltar</a>
+<form method="post" action="" class="container mt-4">
+  <div class="mb-3">
+    <label for="titulo" class="form-label">Título do Módulo</label>
+    <input type="text" class="form-control" id="titulo" name="titulo" value="{{ modulo is defined ? modulo.titulo : '' }}" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="trial" class="form-label">Trial (dias)</label>
+    <input type="number" class="form-control" id="trial" name="trial" value="{{ modulo is defined ? modulo.trial : '' }}">
+  </div>
+
+  <div class="mb-3">
+    <label for="status" class="form-label">Status</label>
+    <select class="form-select" id="status" name="status">
+      <option value="">-- Selecione --</option>
+      <option value="ativo" {{ modulo is defined ? modulo.status : 'ativo' ? 'selected' : '' }}>Ativo</option>
+      <option value="inativo" {{ modulo is defined ? modulo.status : 'inativo' ? 'selected' : '' }}>Inativo</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="descricao" class="form-label">Descrição</label>
+    <textarea class="form-control" id="descricao" name="descricao" rows="4">{{ modulo is defined ? modulo.descricao : '' }}</textarea>
+  </div>
+
+  <div class="d-flex justify-content-end">
+    <button type="submit" class="btn btn-primary">Salvar</button>
+  </div>
+</form>
+
+{% endblock %}
