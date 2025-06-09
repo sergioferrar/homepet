@@ -3,65 +3,90 @@
 {% block title %}Dashboard Clínica{% endblock %}
 
 {% block stylesheets %}
-    {{ parent() }}
-    <style>
-        .dashboard-container {
-            max-width: 1100px;
-            margin: 0 auto;
+{{ parent() }}
+<style>
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .card-moderna {
+        border-radius: 20px;
+        padding: 1.5rem;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        min-height: 150px;
+        transition: all 0.3s ease;
+    }
+
+    .card-moderna:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-moderna .icone-bg {
+        position: absolute;
+        bottom: -10px;
+        right: -10px;
+        font-size: 5rem;
+        opacity: 0.2;
+    }
+
+    .card-clientes {
+        background: linear-gradient(135deg, #2196f3, #1e88e5);
+    }
+
+    .card-pets {
+        background: linear-gradient(135deg, #4caf50, #388e3c);
+    }
+
+    .card-consultas {
+        background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+    }
+
+    .card-proximas {
+        background: linear-gradient(135deg, #ff9800, #f57c00);
+        color: #fff;
+    }
+
+    .card-recentes {
+        background: linear-gradient(135deg, #00bcd4, #0097a7);
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    @media (max-width: 768px) {
+        .card-moderna {
+            margin-bottom: 1rem;
         }
-        .dashboard-title {
-            font-size: 2rem;
-            color: #004080;
-            font-weight: bold;
-        }
-        .card.shadow-sm {
-            border-radius: 16px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .card.shadow-sm:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-        .btn-nova-consulta {
-            background-color: #28a745;
-            border-color: #28a745;
-            font-weight: bold;
-            border-radius: 10px;
-            padding: 10px 20px;
-            color: white;
-        }
-        .btn-nova-consulta:hover {
-            background-color: #218838;
-            border-color: #1e7e34;
-        }
-    </style>
+    }
+
+</style>
 {% endblock %}
 
 {% block body %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary w-100">
     <div class="container-fluid">
         <a class="navbar-brand" href="#">Dashboard Clínica</a>
-
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarClinica" aria-controls="navbarClinica" aria-expanded="false" aria-label="Alternar navegação">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarClinica">
             <span class="navbar-toggler-icon"></span>
         </button>
-
         <div class="collapse navbar-collapse justify-content-end" id="navbarClinica">
-            <ul class="navbar-nav mb-2 mb-lg-0">
+            <ul class="navbar-nav">
                 <li class="nav-item me-2">
                     <a href="{{ path('clinica_nova_consulta') }}" class="btn btn-light">
                         <i class="bi bi-plus-circle"></i> Nova Consulta
                     </a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item me-2">
                     <a href="{{ path('clinica_receita') }}" class="btn btn-outline-light">Emitir Receita</a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ path('clinica_documentos') }}" class="btn btn-outline-light">
-                        Documentos
-                    </a>
+                <li class="nav-item me-2">
+                    <a href="{{ path('clinica_documentos') }}" class="btn btn-outline-light">Documentos</a>
                 </li>
-
                 <li class="nav-item">
                     <a href="#" class="btn btn-outline-light">Estoque</a>
                 </li>
@@ -70,91 +95,149 @@
     </div>
 </nav>
 
-
 <div class="container mt-4 dashboard-container">
-    <div class="row text-center mb-4 justify-content-center">
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Total de Clientes</h5>
-                    <p class="display-4">{{ clientes|length }}</p>
-                    <i class="bi bi-people-fill fs-3 text-primary"></i>
-                </div>
+    <div class="row g-4">
+        <div class="col-md-4 col-sm-6">
+            <div class="card card-clientes p-2 border border-danger bg-danger text-white">
+                <h5>Total de Clientes</h5>
+                <h2>{{ clientes|length }}</h2>
+                <div class="icone-bg"><i class="bi bi-people-fill"></i></div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Total de Pets</h5>
-                    <p class="display-4">{{ total_pets }}</p>
-                    <i class="bi bi-paw fs-3 text-success"></i>
-                </div>
+        <div class="col-md-4 col-sm-6">
+            <div class="card card-pets p-2 border border-success bg-success text-white">
+                <h5>Total de Pets</h5>
+                <h2>{{ total_pets }}</h2>
+                <div class="icone-bg"><i class="bi bi-bookmark-heart-fill"></i></div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Consultas Agendadas</h5>
-                    <p class="display-4">{{ consultas|length }}</p>
-                    <i class="bi bi-calendar-check fs-3 text-purple"></i>
-                </div>
+        <div class="col-md-4 col-sm-6">
+            <div class="card card-consultas p-2 border border-primary bg-primary text-white">
+                <h5>Consultas Agendadas</h5>
+                <h2>{{ consultas|length }}</h2>
+                <div class="icone-bg"><i class="bi bi-calendar-check"></i></div>
             </div>
         </div>
     </div>
 
-    <div class="row justify-content-center">
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Próximas Consultas</h5>
-                    <table class="table table-hover">
-                        <thead>
+
+    <div class="row mt-4 g-4">
+        <div class="col-md-6">
+            <div class="card-moderna card-proximas">
+                <h5>Próximas Consultas</h5>
+                <table class="table table-hover table-light table-sm mt-3 bg-white rounded">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Pet</th>
+                            <th>Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for consulta in consultas %}
                             <tr>
-                                <th>Data</th>
-                                <th>Cliente</th>
-                                <th>Pet</th>
-                                <th>Tipo</th>
+                                <td>{{ consulta.data|date('d/m/Y H:i') }}</td>
+                                <td>{{ consulta.cliente_nome }}</td>
+                                <td>{{ consulta.pet_nome }}</td>
+                                <td>{{ consulta.tipo }}</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {% for consulta in consultas %}
-                                <tr>
-                                    <td>{{ consulta.data|date('d/m/Y H:i') }}</td>
-                                    <td>{{ consulta.cliente_nome }}</td>
-                                    <td>{{ consulta.pet_nome }}</td>
-                                    <td>{{ consulta.tipo }}</td>
-                                </tr>
-                            {% else %}
-                                <tr>
-                                    <td colspan="4">Nenhuma consulta agendada</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                        {% else %}
+                            <tr>
+                                <td colspan="4">Nenhuma consulta agendada</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Pets Recentes</h5>
-                    {% for pet in pets_recentes %}
-                        <div class="border rounded p-2 mb-2">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
+
+        <div class="col-md-6">
+                    <div class="card-moderna card-recentes">
+                        <h5>Pets Recentes</h5>
+                        <div class="mt-3">
+                            {% for pet in pets_recentes %}
+                                <div class="bg-white text-dark p-2 rounded mb-2">
                                     <strong>{{ pet.nome }}</strong> • {{ pet.especie }} - {{ pet.raca }}<br>
                                     <small class="text-muted">Tutor: {{ pet.tutor }}</small>
                                 </div>
-                                <i class="bi bi-heart fs-4 text-info"></i>
-                            </div>
+                            {% else %}
+                                <p class="text-white">Nenhum pet cadastrado recentemente.</p>
+                            {% endfor %}
                         </div>
-                    {% else %}
-                        <p>Nenhum pet cadastrado recentemente.</p>
-                    {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+
+        <div class="row mt-5">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Consultas por Mês</h5>
+                        <canvas id="graficoConsultas"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Pets por Espécie</h5>
+                        <canvas id="graficoPets"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctxConsultas = document.getElementById('graficoConsultas').getContext('2d');
+    const graficoConsultas = new Chart(ctxConsultas, {
+        type: 'bar',
+        data: {
+            labels: {{ consultas_por_mes_keys|json_encode|raw }},
+            datasets: [{
+                label: 'Consultas',
+                data: {{ consultas_por_mes_vals|json_encode|raw }},
+                backgroundColor: 'rgba(33, 150, 243, 0.6)',
+                borderColor: 'rgba(33, 150, 243, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    const ctxPets = document.getElementById('graficoPets').getContext('2d');
+    const graficoPets = new Chart(ctxPets, {
+        type: 'doughnut',
+        data: {
+            labels: {{ pets_por_especie_keys|json_encode|raw }},
+            datasets: [{
+                label: 'Pets',
+                data: {{ pets_por_especie_vals|json_encode|raw }},
+                backgroundColor: [
+                    '#4caf50',
+                    '#2196f3',
+                    '#ff9800',
+                    '#e91e63',
+                    '#9c27b0'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '70%',
+        }
+    });
+</script>
 {% endblock %}

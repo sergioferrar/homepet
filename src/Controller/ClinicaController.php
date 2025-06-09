@@ -37,12 +37,20 @@ class ClinicaController extends DefaultController
             ? $repoPet->countTotalPets($baseId)
             : 0;
 
-        $consultas = method_exists($repoConsulta, 'listarConsultasFuturas')
-            ? $repoConsulta->listarConsultasFuturas($baseId)
+        $consultas = method_exists($repoConsulta, 'listarConsultasDoDiaEProximas')
+            ? $repoConsulta->listarConsultasDoDiaEProximas($baseId)
             : [];
 
         $petsRecentes = method_exists($repoPet, 'listarPetsRecentes')
             ? $repoPet->listarPetsRecentes($baseId)
+            : [];
+
+        $consultasPorMes = method_exists($repoConsulta, 'contarConsultasPorMes')
+            ? $repoConsulta->contarConsultasPorMes($baseId)
+            : [];
+
+        $petsPorEspecie = method_exists($repoPet, 'contarPetsPorEspecie')
+            ? $repoPet->contarPetsPorEspecie($baseId)
             : [];
 
         return $this->render('clinica/dashboard.html.twig', [
@@ -50,6 +58,10 @@ class ClinicaController extends DefaultController
             'total_pets' => $totalPets,
             'consultas' => $consultas,
             'pets_recentes' => $petsRecentes,
+            'consultas_por_mes_keys' => array_keys($consultasPorMes),
+            'consultas_por_mes_vals' => array_values($consultasPorMes),
+            'pets_por_especie_keys' => array_keys($petsPorEspecie),
+            'pets_por_especie_vals' => array_values($petsPorEspecie),
         ]);
     }
 
@@ -59,26 +71,50 @@ class ClinicaController extends DefaultController
     public function novaConsulta(Request $request): Response
     {
         $this->switchDB();
-        $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($this->session->get('userId'));
+        $baseId = $this->session->get('userId');
+
+        $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($baseId);
+        $consultas = $this->getRepositorio(Consulta::class)->listarConsultasDoDia($baseId, new \DateTime());
 
         if ($request->isMethod('POST')) {
             $consulta = new Consulta();
-            $consulta->setEstabelecimentoId($this->session->get('userId'));
+            $consulta->setEstabelecimentoId($baseId);
             $consulta->setClienteId((int) $request->get('cliente_id'));
             $consulta->setPetId((int) $request->get('pet_id'));
             $consulta->setData(new \DateTime($request->get('data')));
             $consulta->setHora(new \DateTime($request->get('hora')));
             $consulta->setObservacoes($request->get('observacoes'));
+            $consulta->setStatus('aguardando');
 
-            $this->getRepositorio(Consulta::class)->salvarConsulta($this->session->get('userId'), $consulta);
+            $this->getRepositorio(Consulta::class)->salvarConsulta($baseId, $consulta);
 
             $this->addFlash('success', 'Consulta marcada com sucesso!');
-            return $this->redirectToRoute('clinica_dashboard');
+            return $this->redirectToRoute('clinica_nova_consulta');
         }
 
         return $this->render('clinica/nova_consulta.html.twig', [
-            'clientes' => $clientes
+            'clientes' => $clientes,
+            'consultas' => $consultas,
         ]);
+    }
+
+    /**
+     * @Route("/consulta/{id}/status/{status}", name="clinica_consulta_status", methods={"POST"})
+     */
+    public function atualizarStatusConsulta(int $id, string $status): Response
+    {
+        $this->switchDB();
+        $baseId = $this->session->get('userId');
+
+        $statusPermitidos = ['aguardando', 'atendido', 'cancelado'];
+        if (!in_array($status, $statusPermitidos)) {
+            return $this->json(['erro' => 'Status inválido'], 400);
+        }
+
+        $this->getRepositorio(Consulta::class)->atualizarStatusConsulta($baseId, $id, $status);
+
+
+        return $this->json(['success' => true]);
     }
 
     /**
@@ -166,17 +202,19 @@ class ClinicaController extends DefaultController
     }
 
     /**
-     * @Route("/receita/pdf", name="clinica_receita_pdf", methods={"POST"})
+     * @Route("/api/pets/{clienteId}", name="clinica_api_pets", methods={"GET"})
      */
-    public function gerarPdfReceitaBackend(Request $request, PdfService $pdfService): Response
+    public function apiPetsPorCliente(int $clienteId): Response
     {
-        $this->switchDB(); // se necessário
+        $this->switchDB();
+        $baseId = $this->session->get('userId');
 
-        $cabecalho = $request->request->get('cabecalho', '');
-        $conteudo  = $request->request->get('conteudo', '');
-        $rodape    = $request->request->get('rodape', '');
+        $pets = $this->getRepositorio(Pet::class)->buscarPetsPorCliente($baseId, $clienteId);
 
-        return $pdfService->gerarPdfReceita($cabecalho, $conteudo, $rodape);
+        $result = array_map(function ($pet) {
+            return ['id' => $pet['id'], 'nome' => $pet['nome']];
+        }, $pets);
+
+        return $this->json($result);
     }
-
 }
