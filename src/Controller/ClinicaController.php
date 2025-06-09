@@ -6,6 +6,7 @@ use App\Entity\Cliente;
 use App\Entity\Consulta;
 use App\Entity\Pet;
 use App\Repository\DocumentoModeloRepository;
+use App\Service\PdfService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -90,6 +91,28 @@ class ClinicaController extends DefaultController
     }
 
     /**
+     * @Route("/receita/pdf", name="clinica_receita_pdf", methods={"POST"})
+     */
+    public function gerarReceitaPdf(Request $request, PdfService $pdfService): Response
+    {
+        $this->switchDB();
+
+        $cabecalho = $request->request->get('cabecalho', '');
+        $conteudo  = $request->request->get('conteudo', '');
+        $rodape    = $request->request->get('rodape', '');
+
+        return $pdfService->gerarPdf(
+            'clinica/receita_pdf_backend.html.twig',
+            [
+                'cabecalho' => $cabecalho,
+                'conteudo'  => $conteudo,
+                'rodape'    => $rodape
+            ],
+            'receita-medica.pdf'
+        );
+    }
+
+    /**
      * @Route("/documentos", name="clinica_documentos", methods={"GET", "POST"})
      */
     public function documentos(Request $request, DocumentoModeloRepository $repoDoc): Response
@@ -142,5 +165,18 @@ class ClinicaController extends DefaultController
         ]);
     }
 
+    /**
+     * @Route("/receita/pdf", name="clinica_receita_pdf", methods={"POST"})
+     */
+    public function gerarPdfReceitaBackend(Request $request, PdfService $pdfService): Response
+    {
+        $this->switchDB(); // se necessário
+
+        $cabecalho = $request->request->get('cabecalho', '');
+        $conteudo  = $request->request->get('conteudo', '');
+        $rodape    = $request->request->get('rodape', '');
+
+        return $pdfService->gerarPdfReceita($cabecalho, $conteudo, $rodape);
+    }
 
 }
