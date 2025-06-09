@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Menus{% endblock %}
+
+{% block body %}
+    <h1>Menus</h1>
+<a href="{{ path('menu_new') }}">Novo Menu</a>
+<table class="table table-sm table-striped">
+    <thead>
+    <tr>
+        <th>ID</th><th>Título</th><th>Rota</th><th>Status</th><th>Ações</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for menu in menus %}
+    <tr>
+        <td>{{ menu.id }}</td>
+        <td>{{ menu.titulo }}</td>
+        <td>{{ menu.rota }}</td>
+        <td>{{ menu.status }}</td>
+        <td><a href="{{ path('menu_edit', {'id': menu.id}) }}">Editar</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -74,6 +74,8 @@ class EstabelecimentoController extends DefaultController
         $estabelecimento->setCep($request->get('cep'));
         $estabelecimento->setStatus('Inativo');
         $estabelecimento->setDataCadastro((new \DateTime('now')));
+        $estabelecimento->setDataPlanoInicio((new \DateTime('now')));
+        $estabelecimento->setDataPlanoFim((new \DateTime(date('Y-m-d H:i:s', strtotime('+1 month')))));
         $estabelecimento->setPlanoId($request->get('planoId'));
         $this->getRepositorio(Estabelecimento::class)->add($estabelecimento, true);
 //        dd($estabelecimento);
