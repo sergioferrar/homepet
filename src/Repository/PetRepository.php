@@ -111,5 +111,44 @@ class PetRepository extends ServiceEntityRepository
         $stmt->bindValue('limit', $limit, \PDO::PARAM_INT);
         return $stmt->executeQuery()->fetchAllAssociative();
     }
+    
+    public function contarPetsPorEspecie($baseId): array
+    {
+        $sql = "SELECT especie, COUNT(*) as total
+                FROM {$_ENV['DBNAMETENANT']}.pet
+                WHERE estabelecimento_id = :baseId
+                GROUP BY especie";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $result = $stmt->executeQuery()->fetchAllAssociative();
+
+        $dados = [];
+        foreach ($result as $row) {
+            $dados[$row['especie'] ?? 'Não informado'] = (int)$row['total'];
+        }
+
+        return $dados;
+    }
+
+    public function buscarPetsPorCliente($baseId, $clienteId): array
+    {
+        $sql = "SELECT id, nome 
+                FROM {$_ENV['DBNAMETENANT']}.pet
+                WHERE estabelecimento_id = :baseId AND dono_id = :clienteId
+                ORDER BY nome";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('clienteId', $clienteId);
+        $result = $stmt->executeQuery();
+        return $result->fetchAllAssociative();
+    }
+
+
+
+
+
+
 
 }
