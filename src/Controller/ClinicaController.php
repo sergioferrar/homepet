@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Cliente;
 use App\Entity\Consulta;
 use App\Entity\Pet;
+use App\Entity\DocumentoModelo; 
 use App\Repository\DocumentoModeloRepository;
 use App\Service\PdfService;
 use Symfony\Component\HttpFoundation\Request;
@@ -113,7 +114,6 @@ class ClinicaController extends DefaultController
 
         $this->getRepositorio(Consulta::class)->atualizarStatusConsulta($baseId, $id, $status);
 
-
         return $this->json(['success' => true]);
     }
 
@@ -157,11 +157,21 @@ class ClinicaController extends DefaultController
         $baseId = $this->session->get('userId');
 
         if ($request->isMethod('POST')) {
-            $titulo = $request->request->get('titulo');
-            $conteudo = $request->request->get('conteudo');
+            $titulo    = $request->request->get('titulo');
+            $cabecalho = $request->request->get('cabecalho');
+            $conteudo  = $request->request->get('conteudo');
+            $rodape    = $request->request->get('rodape');
 
-            $repoDoc->salvarDocumento($baseId, $titulo, $conteudo);
-            $this->addFlash('success', 'Documento criado com sucesso!');
+            $doc = new DocumentoModelo();
+            $doc->setTitulo($titulo);
+            $doc->setCabecalho($cabecalho);
+            $doc->setConteudo($conteudo);
+            $doc->setRodape($rodape);
+            $doc->setCriadoEm(new \DateTime());
+
+            $repoDoc->salvarDocumentoCompleto($baseId, $doc);
+
+            $this->addFlash('success', 'Novo documento salvo com sucesso!');
             return $this->redirectToRoute('clinica_documentos');
         }
 
@@ -171,6 +181,7 @@ class ClinicaController extends DefaultController
             'documentos' => $documentos
         ]);
     }
+
 
     /**
      * @Route("/documento/{id}/editar", name="clinica_documento_editar", methods={"GET", "POST"})
@@ -188,9 +199,11 @@ class ClinicaController extends DefaultController
 
         if ($request->isMethod('POST')) {
             $documento->setTitulo($request->get('titulo'));
+            $documento->setCabecalho($request->get('cabecalho'));
             $documento->setConteudo($request->get('conteudo'));
+            $documento->setRodape($request->get('rodape'));
 
-            $repoDoc->atualizarDocumento($baseId, $documento);
+            $repoDoc->atualizarDocumentoCompleto($baseId, $documento);
 
             $this->addFlash('success', 'Documento atualizado com sucesso!');
             return $this->redirectToRoute('clinica_documento_editar', ['id' => $id]);
@@ -200,6 +213,27 @@ class ClinicaController extends DefaultController
             'documento' => $documento
         ]);
     }
+
+    /**
+     * @Route("/documento/{id}/excluir", name="clinica_documento_excluir", methods={"POST"})
+     */
+    public function excluirDocumento(int $id, Request $request, DocumentoModeloRepository $repoDoc): Response
+    {
+        $this->switchDB();
+        $baseId = $this->session->get('userId');
+
+        $documento = $repoDoc->buscarPorId($baseId, $id);
+
+        if (!$documento) {
+            $this->addFlash('danger', 'Documento não encontrado.');
+        } else {
+            $repoDoc->excluirDocumento($baseId, $id);
+            $this->addFlash('success', 'Documento excluído com sucesso!');
+        }
+
+        return $this->redirectToRoute('clinica_documentos');
+    }
+
 
     /**
      * @Route("/api/pets/{clienteId}", name="clinica_api_pets", methods={"GET"})
@@ -217,4 +251,6 @@ class ClinicaController extends DefaultController
 
         return $this->json($result);
     }
+
+
 }

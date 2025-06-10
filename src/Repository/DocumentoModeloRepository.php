@@ -19,9 +19,7 @@ class DocumentoModeloRepository
         $sql = "SELECT * FROM u199209817_{$baseId}.documento_modelo ORDER BY criado_em DESC";
         $rows = $this->conn->fetchAllAssociative($sql);
 
-        return array_map(function ($row) {
-            return $this->mapToEntity($row);
-        }, $rows);
+        return array_map(fn($row) => $this->mapToEntity($row), $rows);
     }
 
     public function buscarPorId(string $baseId, int $id): ?DocumentoModelo
@@ -32,19 +30,24 @@ class DocumentoModeloRepository
         return $row ? $this->mapToEntity($row) : null;
     }
 
-    public function salvarDocumento(string $baseId, string $titulo, string $conteudo): void
+    public function salvarDocumentoCompleto(string $baseId, DocumentoModelo $doc): void
     {
         $this->conn->insert("u199209817_{$baseId}.documento_modelo", [
-            'titulo' => $titulo,
-            'conteudo' => $conteudo,
+            'titulo'     => $doc->getTitulo(),
+            'cabecalho'  => $doc->getCabecalho(),
+            'conteudo'   => $doc->getConteudo(),
+            'rodape'     => $doc->getRodape(),
+            'criado_em'  => (new \DateTime())->format('Y-m-d H:i:s')
         ]);
     }
 
     public function atualizarDocumento(string $baseId, DocumentoModelo $doc): void
     {
         $this->conn->update("u199209817_{$baseId}.documento_modelo", [
-            'titulo' => $doc->getTitulo(),
-            'conteudo' => $doc->getConteudo(),
+            'titulo'     => $doc->getTitulo(),
+            'cabecalho'  => $doc->getCabecalho(),
+            'conteudo'   => $doc->getConteudo(),
+            'rodape'     => $doc->getRodape()
         ], [
             'id' => $doc->getId()
         ]);
@@ -55,11 +58,18 @@ class DocumentoModeloRepository
         $doc = new DocumentoModelo();
         $doc->setId($row['id']);
         $doc->setTitulo($row['titulo']);
+        $doc->setCabecalho($row['cabecalho'] ?? '');
         $doc->setConteudo($row['conteudo']);
+        $doc->setRodape($row['rodape'] ?? '');
         if (!empty($row['criado_em'])) {
             $doc->setCriadoEm(new \DateTime($row['criado_em']));
         }
-
         return $doc;
     }
+    public function excluirDocumento(string $baseId, int $id): void
+    {
+        $sql = "DELETE FROM u199209817_{$baseId}.documento_modelo WHERE id = :id";
+        $this->conn->executeStatement($sql, ['id' => $id]);
+    }
+
 }
