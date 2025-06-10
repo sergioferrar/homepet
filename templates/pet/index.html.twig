@@ -1,276 +1,114 @@
 {% extends 'base.html.twig' %}
 
 {% block stylesheets %}
+{{ parent() }}
 <style>
-    /* Estilização geral */
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
+    body {
+        background-color: #eef5ff;
+        font-family: 'Arial', sans-serif;
     }
 
-    .page-title {
-        color: #2c3e50;
-        font-weight: 700;
-        font-size: 2.2rem;
-        margin-bottom: 20px;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    .pagetitle h1 {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #004080;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.15);
     }
 
-    /* Botão Novo Pet */
-    .btn-primary {
-        background-color: #007bff;
-        border: none;
-        transition: all 0.3s ease;
-        font-size: 1rem;
-        padding: 10px 20px;
-    }
-    .btn-primary:hover {
-        background-color: #0056b3;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    .btn-success {
+        background-color: #004080;
+        border-color: #003366;
+        font-weight: bold;
+        border-radius: 12px;
+        padding: 10px 22px;
+        color: white;
     }
 
-    /* Tabela */
-    .table-container {
-        background-color: #fff;
-        border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
+    .btn-success:hover {
+        background-color: #003366;
     }
 
-    .table-responsive {
-        border-radius: 15px;
-        overflow-x: auto;
+    .card {
+        background: #f8fafd;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
     }
 
     .table {
-        margin-bottom: 0;
-        border-collapse: separate;
-        border-spacing: 0;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        overflow: hidden;
     }
 
-    .table thead th {
-        background-color: #f8f9fa;
-        color: #2c3e50;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.9rem;
-        padding: 15px;
-        border-bottom: 2px solid #dee2e6;
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    }
-
-    .table tbody tr {
-        transition: background-color 0.3s ease;
-    }
-
-    .table tbody tr:hover {
-        background-color: #f1f3f5;
-    }
+.table thead.table-dark th {
+    background-color: #000 !important;
+    color: #fff !important;
+    text-transform: uppercase;
+    padding: 12px;
+}
 
     .table tbody td {
+        background-color: #f2f8ff;
         padding: 12px;
-        vertical-align: middle;
-        font-size: 0.95rem;
-        color: #495057;
     }
 
-    .table tbody td.fw-bold {
-        color: #2c3e50;
-    }
-
-    /* Ações */
     .action-select {
         border-radius: 8px;
-        padding: 5px;
+        padding: 6px;
         font-size: 0.9rem;
         background-color: #e9ecef;
         border: 1px solid #ced4da;
-        transition: all 0.3s ease;
     }
+
     .action-select:hover {
         background-color: #dee2e6;
-        cursor: pointer;
-    }
-
-    /* Modal */
-    .modal-backdrop {
-        z-index: 1040 !important;
-    }
-
-    .modal-dialog {
-        max-width: 600px;
-        margin: 1.75rem auto;
-    }
-
-    .modal-content {
-        border-radius: 15px;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-        border: none;
-    }
-
-    .modal-header {
-        background-color: #007bff;
-        color: white;
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-        padding: 15px 20px;
-    }
-
-    .modal-title {
-        font-weight: 600;
-        font-size: 1.4rem;
-    }
-
-    .modal-body {
-        padding: 20px;
-    }
-
-    .modal-body form .form-control,
-    .modal-body form .form-select {
-        border-radius: 10px;
-        margin-bottom: 15px;
-        border: 1px solid #ced4da;
-        padding: 10px;
-        font-size: 0.95rem;
-    }
-
-    .modal-footer {
-        justify-content: flex-end;
-        padding: 15px 20px;
-        border-bottom-left-radius: 15px;
-        border-bottom-right-radius: 15px;
-    }
-
-    .btn-close {
-        filter: brightness(0) invert(1);
-    }
-
-    /* Toast */
-    .toast {
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Responsividade */
-    @media (max-width: 768px) {
-        .container {
-            padding: 15px;
-        }
-
-        .page-title {
-            font-size: 1.8rem;
-        }
-
-        .btn-primary {
-            width: 100%;
-            text-align: center;
-            padding: 12px;
-        }
-
-        .table thead {
-            display: none;
-        }
-
-        .table tbody tr {
-            display: block;
-            margin-bottom: 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
-            background-color: #fff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .table tbody td {
-            display: block;
-            text-align: left;
-            padding: 10px 15px;
-            border: none;
-            position: relative;
-            font-size: 0.9rem;
-        }
-
-        .table tbody td::before {
-            content: attr(data-label);
-            font-weight: 600;
-            color: #2c3e50;
-            display: block;
-            margin-bottom: 5px;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-        }
-
-        .table tbody td.text-center {
-            text-align: left !important;
-        }
-
-        .action-select {
-            width: 100%;
-            padding: 8px;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .modal-dialog {
-            margin: 1rem;
-            max-width: 100%;
-        }
-
-        .modal-body {
-            padding: 15px;
-        }
-
-        .modal-title {
-            font-size: 1.2rem;
-        }
     }
 </style>
 {% endblock %}
 
-{% block body %}
-<div class="container mt-5">
-    <div class="text-center mb-4">
-        <h1 class="page-title">🐾 Lista de Pets</h1>
-    </div>
 
-    <div class="d-flex justify-content-between mb-4">
-        <a href="{{ path('pet_novo') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold text-light shadow">
+{% block body %}
+<div class="pagetitle text-center mb-4">
+    <h1>🐾 Lista de Pets</h1>
+</div>
+
+<div class="card">
+    <div class="mb-3 text-end">
+        <a href="{{ path('pet_novo') }}" class="btn btn-success shadow">
             + Novo Pet
         </a>
     </div>
-
-    <div class="table-container">
-        <div class="table-responsive">
-            <table class="table table-hover table-striped table-bordered datatable">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Espécie</th>
-                        <th>Sexo</th>
-                        <th>Raça</th>
-                        <th>Porte</th>
-                        <th>Idade</th>
-                        <th>Observações</th>
-                        <th>Dono</th>
-                        <th class="text-center">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
+    <h5 class="fw-bold text-primary mb-3"></h5>
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered datatable align-middle">
+            <thead class="table-dark">
+                <tr class="table-dark">
+                    <th>Nome</th>
+                    <th>Espécie</th>
+                    <th>Sexo</th>
+                    <th>Raça</th>
+                    <th>Porte</th>
+                    <th>Idade</th>
+                    <th>Observações</th>
+                    <th>Dono</th>
+                    <th class="text-center" style="min-width: 140px;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
                 {% for pet in pets %}
                     <tr>
-                        <td class="fw-bold" data-label="Nome">{{ pet.nome }}</td>
-                        <td data-label="Espécie">{{ pet.especie }}</td>
-                        <td data-label="Sexo">{{ pet.sexo }}</td>
-                        <td data-label="Raça">{{ pet.raca }}</td>
-                        <td data-label="Porte">{{ pet.porte }}</td>
-                        <td data-label="Idade">{{ pet.idade }} anos</td>
-                        <td data-label="Observações">{{ pet.observacoes }}</td>
-                        <td class="fw-bold" data-label="Dono">{{ pet.dono_nome }}</td>
-                        <td class="text-center" data-label="Ações">
-                            <select class="form-select action-select"
+                        <td><strong>{{ pet.nome }}</strong></td>
+                        <td>{{ pet.especie }}</td>
+                        <td>{{ pet.sexo }}</td>
+                        <td>{{ pet.raca }}</td>
+                        <td>{{ pet.porte }}</td>
+                        <td>{{ pet.idade }} anos</td>
+                        <td>{{ pet.observacoes }}</td>
+                        <td>{{ pet.dono_nome }}</td>
+                        <td class="text-center">
+                            <select class="form-select action-select w-100"
                                     data-edit-url="{{ path('pet_editar', {'id': pet.id}) }}"
                                     data-id="{{ pet.id }}"
                                     onchange="handlePetAction(this)">
@@ -284,22 +122,21 @@
                         </td>
                     </tr>
                 {% endfor %}
-                </tbody>
-            </table>
-        </div>
+            </tbody>
+        </table>
     </div>
 </div>
 
-<!-- Modal de edição -->
+
+<!-- Modal para edição -->
 <div class="modal fade" id="modalEditarPet" tabindex="-1" aria-labelledby="modalEditarPetLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content p-3">
-            <div class="modal-header">
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="modalEditarPetLabel">Editar Pet</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body" id="editarPetContent">
-                <!-- Conteúdo via AJAX -->
                 <div class="text-center">Carregando...</div>
             </div>
         </div>
@@ -312,7 +149,7 @@
         <div class="toast-body">
             Pet atualizado com sucesso! 🐾
         </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
     </div>
 </div>
 {% endblock %}
@@ -321,8 +158,8 @@
 <script>
     function handlePetAction(selectElement) {
         const action = selectElement.value;
-        const id = selectElement.getAttribute('data-id');
-        const editUrl = selectElement.getAttribute('data-edit-url');
+        const id = selectElement.dataset.id;
+        const editUrl = selectElement.dataset.editUrl;
 
         if (action === 'editar') {
             const modal = new bootstrap.Modal(document.getElementById('modalEditarPet'));
@@ -342,6 +179,13 @@
         }
     }
 
+    function showToast(msg) {
+        const toastEl = document.getElementById('toastSuccess');
+        toastEl.querySelector('.toast-body').innerText = msg;
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+
     function submitEditarPet(button) {
         const form = document.getElementById('formEditarPet');
         const url = form.action;
@@ -350,9 +194,7 @@
         fetch(url, {
             method: 'POST',
             body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => {
             if (!response.ok) throw new Error('Erro ao salvar');
@@ -369,13 +211,6 @@
         .catch(() => {
             alert('Erro ao salvar o pet. Verifique os dados.');
         });
-    }
-
-    function showToast(msg) {
-        const toastEl = document.getElementById('toastSuccess');
-        toastEl.querySelector('.toast-body').innerText = msg;
-        const toast = new bootstrap.Toast(toastEl);
-        toast.show();
     }
 </script>
 {% endblock %}
