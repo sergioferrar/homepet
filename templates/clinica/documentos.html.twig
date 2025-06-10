@@ -46,33 +46,31 @@
             <i class="bi bi-arrow-left-circle"></i> Voltar
         </a>
 
-        <div>
-            <button id="btn-print" class="btn btn-success me-2">
-                <i class="bi bi-printer"></i> Imprimir
-            </button>
-            <form id="form-pdf" method="POST" action="{{ path('clinica_receita_pdf') }}" class="d-inline">
+        <div class="d-flex gap-2">
+            <select id="select-action" class="form-select">
+                <option selected disabled>Ação</option>
+                <option value="print">🖨️ Imprimir</option>
+                <option value="pdf">📄 Salvar como PDF</option>
+                <option value="save">💾 Salvar Documento</option>
+                <option value="delete">🗑️ Excluir Documento</option>
+            </select>
+
+            <form id="form-pdf" method="POST" action="{{ path('clinica_receita_pdf') }}">
                 <input type="hidden" name="cabecalho">
                 <input type="hidden" name="conteudo">
                 <input type="hidden" name="rodape">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-file-earmark-pdf"></i> Salvar como PDF
-                </button>
             </form>
-            <form id="form-salvar-doc" method="POST" action="{{ path('clinica_documentos') }}" class="d-inline">
+
+            <form id="form-salvar-doc" method="POST" action="{{ path('clinica_documentos') }}">
                 <input type="hidden" name="titulo">
                 <input type="hidden" name="cabecalho">
                 <input type="hidden" name="conteudo">
                 <input type="hidden" name="rodape">
-                <button type="submit" class="btn btn-outline-primary">
-                    <i class="bi bi-save"></i> Salvar Documento
-                </button>
             </form>
-            <form id="form-excluir-doc" method="POST" action="{{ path('clinica_documento_excluir', {'id': 0}) }}" class="d-none">
+
+            <form id="form-excluir-doc" method="POST" action="{{ path('clinica_documento_excluir', {'id': 0}) }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete_doc') }}">
             </form>
-            <button id="btn-excluir-doc" class="btn btn-outline-danger">
-                <i class="bi bi-trash"></i> Excluir Documento
-            </button>
         </div>
     </div>
 
@@ -138,6 +136,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const quillRodape    = new Quill('#editor-rodape', { theme: 'snow' });
 
     const selectDoc = document.getElementById('select-doc');
+    const selectAction = document.getElementById('select-action');
     const tituloInput = document.getElementById('titulo');
 
     selectDoc.addEventListener('change', function () {
@@ -150,52 +149,58 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    document.getElementById("btn-print").addEventListener("click", function () {
-        document.getElementById('print-cabecalho').innerHTML = quillCabecalho.root.innerHTML;
-        document.getElementById('print-conteudo').innerHTML  = quillConteudo.root.innerHTML;
-        document.getElementById('print-rodape').innerHTML    = quillRodape.root.innerHTML;
+    selectAction.addEventListener('change', function () {
+        const action = this.value;
+        const selectedDoc = selectDoc.options[selectDoc.selectedIndex];
 
-        const printContent = document.getElementById("print-area").innerHTML;
-        const win = window.open('', '_blank');
-        win.document.write(`<html><head><title>Imprimir</title><style>body{font-family:Arial;}</style></head><body>${printContent}</body></html>`);
-        win.document.close();
-        win.focus();
-        win.print();
-    });
+        switch (action) {
+            case 'print':
+                document.getElementById('print-cabecalho').innerHTML = quillCabecalho.root.innerHTML;
+                document.getElementById('print-conteudo').innerHTML  = quillConteudo.root.innerHTML;
+                document.getElementById('print-rodape').innerHTML    = quillRodape.root.innerHTML;
 
-    document.getElementById("form-pdf").addEventListener("submit", function (e) {
-        e.preventDefault();
-        this.querySelector('[name="cabecalho"]').value = quillCabecalho.root.innerHTML;
-        this.querySelector('[name="conteudo"]').value  = quillConteudo.root.innerHTML;
-        this.querySelector('[name="rodape"]').value    = quillRodape.root.innerHTML;
-        this.submit();
-    });
+                const printContent = document.getElementById("print-area").innerHTML;
+                const win = window.open('', '_blank');
+                win.document.write(`<html><head><title>Imprimir</title><style>body{font-family:Arial;}</style></head><body>${printContent}</body></html>`);
+                win.document.close(); win.focus(); win.print();
+                break;
 
-    document.getElementById("form-salvar-doc").addEventListener("submit", function (e) {
-        e.preventDefault();
-        const titulo = document.getElementById("titulo").value.trim();
-        if (!titulo) {
-            alert("Você precisa dar um título ao documento antes de salvar.");
-            return;
+            case 'pdf':
+                const formPdf = document.getElementById("form-pdf");
+                formPdf.querySelector('[name="cabecalho"]').value = quillCabecalho.root.innerHTML;
+                formPdf.querySelector('[name="conteudo"]').value  = quillConteudo.root.innerHTML;
+                formPdf.querySelector('[name="rodape"]').value    = quillRodape.root.innerHTML;
+                formPdf.submit();
+                break;
+
+            case 'save':
+                const titulo = tituloInput.value.trim();
+                if (!titulo) {
+                    alert("Você precisa dar um título ao documento antes de salvar.");
+                    return;
+                }
+                const formSalvar = document.getElementById("form-salvar-doc");
+                formSalvar.querySelector('[name="titulo"]').value    = titulo;
+                formSalvar.querySelector('[name="cabecalho"]').value = quillCabecalho.root.innerHTML;
+                formSalvar.querySelector('[name="conteudo"]').value  = quillConteudo.root.innerHTML;
+                formSalvar.querySelector('[name="rodape"]').value    = quillRodape.root.innerHTML;
+                formSalvar.submit();
+                break;
+
+            case 'delete':
+                if (!selectedDoc.value) {
+                    alert("Selecione um documento para excluir.");
+                    return;
+                }
+                if (confirm("Tem certeza que deseja excluir este documento?")) {
+                    const formExcluir = document.getElementById("form-excluir-doc");
+                    formExcluir.setAttribute("action", formExcluir.getAttribute("action").replace('/0', '/' + selectedDoc.value));
+                    formExcluir.submit();
+                }
+                break;
         }
-        this.querySelector('[name="titulo"]').value    = titulo;
-        this.querySelector('[name="cabecalho"]').value = quillCabecalho.root.innerHTML;
-        this.querySelector('[name="conteudo"]').value  = quillConteudo.root.innerHTML;
-        this.querySelector('[name="rodape"]').value    = quillRodape.root.innerHTML;
-        this.submit();
-    });
 
-    document.getElementById("btn-excluir-doc").addEventListener("click", function () {
-        const docId = document.getElementById('select-doc').value;
-        if (!docId) {
-            alert("Selecione um documento antes de excluir.");
-            return;
-        }
-        if (confirm("Tem certeza que deseja excluir este documento? Esta ação não pode ser desfeita.")) {
-            const form = document.getElementById("form-excluir-doc");
-            form.setAttribute("action", form.getAttribute("action").replace('/0', '/' + docId));
-            form.submit();
-        }
+        this.selectedIndex = 0; // Reset
     });
 });
 </script>
