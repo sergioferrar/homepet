@@ -62,19 +62,25 @@
 
 {% block body %}
 <div class="container mt-4">
-    <div class="text-end mb-3">
-        <button id="btn-print" class="btn btn-success">
-            <i class="bi bi-printer"></i> Imprimir
-        </button>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{{ path('clinica_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Voltar para o Dashboard
+        </a>
 
-        <form id="form-pdf" method="POST" action="{{ path('clinica_receita_pdf') }}" class="d-inline">
-            <input type="hidden" name="cabecalho">
-            <input type="hidden" name="conteudo">
-            <input type="hidden" name="rodape">
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-file-earmark-pdf"></i> Salvar como PDF
+        <div>
+            <button id="btn-print" class="btn btn-success me-2">
+                <i class="bi bi-printer"></i> Imprimir
             </button>
-        </form>
+
+            <form id="form-pdf" method="POST" action="{{ path('clinica_receita_pdf') }}" class="d-inline">
+                <input type="hidden" name="cabecalho">
+                <input type="hidden" name="conteudo">
+                <input type="hidden" name="rodape">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-file-earmark-pdf"></i> Salvar como PDF
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Oculta para gerar PDF e impressão -->
@@ -122,7 +128,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Conteúdo padrão
     quillCabecalho.root.innerHTML = `
-        <h2>Dra. Jéssica Sabrina</h2>
+        <h2>Dra. </h2>
         <p>CRMV - Veterinária</p>
     `;
     quillRodape.root.innerHTML = `

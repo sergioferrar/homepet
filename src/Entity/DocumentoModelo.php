@@ -7,6 +7,8 @@ class DocumentoModelo
     private ?int $id = null;
     private string $titulo;
     private string $conteudo;
+    private ?string $cabecalho = null;
+    private ?string $rodape = null;
     private ?\DateTime $criado_em = null;
 
     public function getId(): ?int
@@ -39,6 +41,28 @@ class DocumentoModelo
     public function setConteudo(string $conteudo): self
     {
         $this->conteudo = $conteudo;
+        return $this;
+    }
+
+    public function getCabecalho(): ?string
+    {
+        return $this->cabecalho;
+    }
+
+    public function setCabecalho(?string $cabecalho): self
+    {
+        $this->cabecalho = $cabecalho;
+        return $this;
+    }
+
+    public function getRodape(): ?string
+    {
+        return $this->rodape;
+    }
+
+    public function setRodape(?string $rodape): self
+    {
+        $this->rodape = $rodape;
         return $this;
     }
 
