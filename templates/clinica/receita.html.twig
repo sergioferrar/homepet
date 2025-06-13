@@ -3,102 +3,171 @@
 {% block title %}Emitir Receita{% endblock %}
 
 {% block stylesheets %}
-    {{ parent() }}
-    <style>
+<link href="{{ asset('assets/vendors/quill/quill.snow.css') }}" rel="stylesheet">
+{{ parent() }}
+<style>
+    .receita-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 2rem;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .receita-editor {
+        margin-bottom: 30px;
+    }
+
+    .assinatura hr {
+        border-top: 1px solid #000;
+        width: 200px;
+        margin: 10px auto 0;
+    }
+
+    .quill-editor-center .ql-editor {
+        text-align: center;
+    }
+
+    @media print {
+        body * {
+            visibility: hidden !important;
+        }
+
+        #print-area, #print-area * {
+            visibility: visible !important;
+        }
+
+        #print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+
+        #btn-pdf,
+        #btn-print,
+        .ql-toolbar {
+            display: none !important;
+        }
+
         .receita-container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 2rem;
-            background-color: white;
-            border: 1px solid #ccc;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: none !important;
+            border: none !important;
         }
-
-        .receita-cabecalho {
-            text-align: center;
-            border-bottom: 2px solid #004080;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .receita-cabecalho h2 {
-            color: #004080;
-            font-weight: bold;
-        }
-
-        .receita-conteudo {
-            min-height: 300px;
-            padding: 1rem;
-            border: 1px dashed #999;
-            border-radius: 8px;
-            font-size: 1.1rem;
-        }
-
-        .receita-rodape {
-            margin-top: 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
-        .assinatura {
-            text-align: center;
-        }
-
-        .assinatura hr {
-            border-top: 1px solid #000;
-            width: 200px;
-            margin: 10px auto 0;
-        }
-
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #print-area, #print-area * {
-                visibility: visible;
-            }
-            #print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-            #btn-imprimir {
-                display: none;
-            }
-        }
-    </style>
+    }
+</style>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-4">
-    <div class="text-end mb-3">
-        <button id="btn-imprimir" class="btn btn-primary" onclick="window.print()">
-            <i class="bi bi-printer"></i> Imprimir Receita
-        </button>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{{ path('clinica_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Voltar para o Dashboard
+        </a>
+
+        <div>
+            <button id="btn-print" class="btn btn-success me-2">
+                <i class="bi bi-printer"></i> Imprimir
+            </button>
+
+            <form id="form-pdf" method="POST" action="{{ path('clinica_receita_pdf') }}" class="d-inline">
+                <input type="hidden" name="cabecalho">
+                <input type="hidden" name="conteudo">
+                <input type="hidden" name="rodape">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-file-earmark-pdf"></i> Salvar como PDF
+                </button>
+            </form>
+        </div>
     </div>
 
-    <div class="receita-container" id="print-area">
-        <div class="receita-cabecalho">
-            <h2>Dra. Jéssica Sabrina</h2>
-            <p>CRMV - Veterinária</p>
-        </div>
-
-        <div class="receita-conteudo" contenteditable="true">
-            <p><em>Digite aqui a receita médica...</em></p>
-        </div>
-
-        <div class="receita-rodape mt-4">
-            <div class="data">
-                <strong>Data:</strong> {{ "now"|date("d/m/Y") }}
-            </div>
-            <div class="assinatura">
-                <hr>
+    <!-- Oculta para gerar PDF e impressão -->
+    <div id="print-area" style="display: none;">
+        <div class="receita-container">
+            <div id="print-cabecalho" style="text-align: center;"></div>
+            <div id="print-conteudo" style="margin: 40px 0;"></div>
+            <div id="print-rodape" style="text-align: center;">
+                <div id="print-rodape-content"></div>
+                <hr style="width:200px; margin:10px auto;">
                 <small>Assinatura</small>
             </div>
         </div>
     </div>
+
+    <!-- Editável -->
+    <div class="receita-container">
+        <div class="receita-editor">
+            <label><strong>🩺 Cabeçalho:</strong></label>
+            <div id="editor-cabecalho" class="quill-editor quill-editor-center" style="min-height: 80px;"></div>
+        </div>
+
+        <div class="receita-editor">
+            <label><strong>📄 Receita:</strong></label>
+            <div id="editor-conteudo" class="quill-editor" style="min-height: 300px;"></div>
+        </div>
+
+        <div class="receita-editor">
+            <label><strong>📅 Rodapé:</strong></label>
+            <div id="editor-rodape" class="quill-editor" style="min-height: 80px;"></div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="{{ asset('assets/vendors/quill/quill.js') }}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Inicializa os editores
+    const quillCabecalho = new Quill('#editor-cabecalho', { theme: 'snow' });
+    const quillConteudo  = new Quill('#editor-conteudo',  { theme: 'snow' });
+    const quillRodape    = new Quill('#editor-rodape',    { theme: 'snow' });
+
+    // Conteúdo padrão
+    quillCabecalho.root.innerHTML = `
+        <h2>Dra. </h2>
+        <p>CRMV - Veterinária</p>
+    `;
+    quillRodape.root.innerHTML = `
+        <p><strong>Data:</strong> {{ "now"|date("d/m/Y") }}</p>
+        <p><strong>Assinatura______________________________________________________</strong></p>
+    `;
+
+    // Preenche print-area com dados editados
+    function atualizarPrintArea() {
+        document.getElementById('print-cabecalho').innerHTML     = quillCabecalho.root.innerHTML;
+        document.getElementById('print-conteudo').innerHTML      = quillConteudo.root.innerHTML;
+        document.getElementById('print-rodape-content').innerHTML = quillRodape.root.innerHTML;
+    }
+
+    // Imprimir
+    document.getElementById("btn-print").addEventListener("click", function () {
+        atualizarPrintArea();
+        const areaHtml = document.getElementById("print-area").innerHTML;
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        printWindow.document.write(`<html><head><title>Imprimir Receita</title>`);
+        printWindow.document.write(`<style>body{font-family:Arial;}</style>`);
+        printWindow.document.write(`</head><body>${areaHtml}</body></html>`);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+    });
+
+    // PDF Backend
+    document.getElementById("form-pdf").addEventListener("submit", function (e) {
+        e.preventDefault();
+        atualizarPrintArea();
+
+        const form = e.target;
+        form.querySelector('[name="cabecalho"]').value = quillCabecalho.root.innerHTML;
+        form.querySelector('[name="conteudo"]').value  = quillConteudo.root.innerHTML;
+        form.querySelector('[name="rodape"]').value    = quillRodape.root.innerHTML;
+
+        form.submit();
+    });
+});
+</script>
 {% endblock %}

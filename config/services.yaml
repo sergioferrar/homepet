@@ -26,3 +26,6 @@ services:
     # App\Repository\AgendamentoClinicaRepository:
     #     arguments:
     #         $conn: '@doctrine.dbal.default_connection'
+    App\Service\PdfService:
+        arguments:
+            $twig: '@twig'
