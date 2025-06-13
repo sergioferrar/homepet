@@ -16,9 +16,12 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class MenuRepository extends ServiceEntityRepository
 {
+    private $conn;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Menu::class);
+        $this->conn = $this->getEntityManager()->getConnection();
     }
 
     public function add(Menu $entity, bool $flush = false): void
@@ -37,6 +40,15 @@ class MenuRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    public function update($data){
+      $sql = "UPDATE menu SET
+        titulo = '{$data['titulo']}', parent = '{$data['parent']}', descricao = '{$data['descricao']}', 
+        rota = '{$data['rota']}', status = '{$data['status']}', icone = '{$data['icone']}'
+        WHERE id = '{$data['id']}'";
+
+        $query = $this->conn->executeQuery($sql);
     }
 
 //    /**

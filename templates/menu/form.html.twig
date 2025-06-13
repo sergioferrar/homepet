@@ -1,49 +1,209 @@
 {% extends 'base.html.twig' %}
-
 {% block title %}Menus{% endblock %}
-
 {% block body %}
-    <h1>Menus</h1>
-<a href="{{ path('menu_index') }}">Voltar</a>
+	<div class="container">
+		<a href="{{ path('menu_index') }}">Voltar</a>
+		<div class="row mt-4">
+			<form method="post" action="{{ rota }}" class="container mt-4">
+				<div class="row">
+					<div class="col-8">
+						<div class="card">
+							<div class="card-header mb-3">
+								<h3>Cadastro de menus</h3>
+							</div>
+							<div class="card-body">
+								
+								<div class="mb-3">
+									<label for="titulo" class="form-label">Título</label>
+									<input type="text" class="form-control" id="titulo" name="titulo" value="{{ menu is defined ? menu.titulo : '' }}" required>
+								</div>
+								
+								<div class="mb-3">
+									<label for="descricao" class="form-label">Descrição</label>
+									<textarea class="form-control" id="descricao" name="descricao" rows="4">{{ menu is defined ? menu.descricao : '' }}</textarea>
+								</div>
+                                
+                                <div class="mb-3">
+                                    <label for="descricao" class="form-label">Plano</label>
+                                    {% for row in modulos %}
+                                        <span class="btn btn-sm btn-primary m-1">{{ row.titulo }}</span>
+                                    {% endfor %}
+                                </div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="col-4">
+						<div class="card">
+							<div class="card-header mb-3">Dados Adicionais</div>
+							<div class="card-body">
+								
+								<div class="mb-3">
+									<label for="parent" class="form-label">Menu Pai (ID)</label>
+                                    <select name="parent" id="parent" class="form-select">
+                                        <option value="">Selecione o menu Pai</option>
+                                        {% for row in menus %}
+                                            <option {% if menu  is defined and menu.parent == row.id %} selected {% endif %} value="{{ row.id }}">{{ row.titulo }}</option>
+                                        {% endfor %}
+                                    </select>
+								</div>
+								
+								<div class="mb-3">
+									<label for="rota" class="form-label">Rota</label>
+									<input type="text" class="form-control" id="rota" name="rota" value="{{ menu is defined ? menu.rota : '' }}" required>
+								</div>
+								<div class="mb-3">
+									<label for="status" class="form-label">Status</label>
+									<select class="form-select" id="status" name="status" required>
+										<option value="ativo" {{ menu is defined ? menu.status : 'ativo' ? 'selected' : '' }}>Ativo</option>
+										<option value="inativo" {{ menu is defined ? menu.status : 'inativo' ? 'selected' : '' }}>Inativo</option>
+									</select>
+								</div>
+								<div class="mb-3">
+									<label for="icone" class="form-label">Ícone</label>
+									<div class="input-group mb-3">
+                                        <button class="btn btn-outline-secondary select-icone" type="button" id="button-addon1">Selecione o ícone
+                                        </button>
+                                        <input type="text" id="icone" name="icone" value="{{ menu is defined ? menu.icone : '' }}" readonly class="form-control" placeholder="Ícone do menu">
+                                    </div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="d-flex justify-content-end">
+					<button type="submit" class="btn btn-primary">Salvar</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{% endblock %}
 
-<form method="post" action="" class="container mt-4">
-  <div class="mb-3">
-    <label for="titulo" class="form-label">Título</label>
-    <input type="text" class="form-control" id="titulo" name="titulo" value="{{ menu is defined ? menu.titulo : '' }}" required>
-  </div>
+{% block javascripts %}
+	<script>
+		$(function(){
+			// Função para carregar o arquivo CSS do Font Awesome
+        function loadFontAwesomeCss(callback) {
+            var fontAwesomeLink = $('link[name="fontawesome"]').attr('href');
+            
+            var $cssLink = $('<link>', {
+                rel: 'stylesheet',
+                href: fontAwesomeLink,
+                crossorigin: 'anonymous'
+            });
 
-  <div class="mb-3">
-    <label for="parent" class="form-label">Menu Pai (ID)</label>
-    <input type="number" class="form-control" id="parent" name="parent" value="{{ menu is defined ? menu.parent : '' }}">
-  </div>
+            $('head').append($cssLink);
 
-  <div class="mb-3">
-    <label for="descricao" class="form-label">Descrição</label>
-    <textarea class="form-control" id="descricao" name="descricao" rows="4">{{ menu is defined ? menu.descricao : '' }}</textarea>
-  </div>
+            if (typeof callback === 'function') {
+                $cssLink.on('load', callback);
+            }
+        }
 
-  <div class="mb-3">
-    <label for="rota" class="form-label">Rota</label>
-    <input type="text" class="form-control" id="rota" name="rota" value="{{ menu is defined ? menu.rota : '' }}" required>
-  </div>
+        // Função para extrair os nomes dos ícones do CSS (necessita estar no mesmo domínio ou CORS liberado)
+        function extractIconNamesFromCss() {
+            var iconNames = [];
 
-  <div class="mb-3">
-    <label for="status" class="form-label">Status</label>
-    <select class="form-select" id="status" name="status" required>
-      <option value="ativo" {{ menu is defined ? menu.status : 'ativo' ? 'selected' : '' }}>Ativo</option>
-      <option value="inativo" {{ menu is defined ? menu.status : 'inativo' ? 'selected' : '' }}>Inativo</option>
-    </select>
-  </div>
+            $.each(document.styleSheets, function (i, sheet) {
+                try {
+                    var rules = sheet.cssRules || sheet.rules;
 
-  <div class="mb-3">
-    <label for="icone" class="form-label">Ícone</label>
-    <input type="text" class="form-control" id="icone" name="icone" value="{{ menu is defined ? menu.icone : '' }}" placeholder="Ex: fa fa-home">
-  </div>
+                    if (!rules) return;
+                    // console.log(rules)
+                    $.each(rules, function (j, rule) {
+                        var ruleText = rule.cssText || (rule.style && rule.style.cssText) || '';
 
-  <div class="d-flex justify-content-end">
-    <button type="submit" class="btn btn-primary">Salvar</button>
-  </div>
-</form>
+                        if (ruleText.includes('content:') && rule.selectorText && rule.selectorText.includes('.bi-')) {
+                            var iconName = rule.selectorText.replace('.bi-', '').split('::')[0];
+                            if (!iconNames.includes(iconName)) {
+                                iconNames.push(iconName);
+                            }
+                        }
+                    });
+                } catch (e) {
+                    // Ignora erros de CORS
+                    console.warn('Erro ao acessar stylesheet: ', sheet.href);
+                }
+            });
+
+            return iconNames;
+        }
+
+        // Função para gerar HTML com os ícones
+        function generateIconHTML(iconNames, selectedIcon = '') {
+            var $container = $('<div>', { class: 'icon-list' });
+
+            $.each(iconNames, function (i, iconName) {
+                var $btn = $('<span>', {
+                    class: 'btn btn-block btn-outline-secondary m-1 btn-icone' + (iconName === selectedIcon ? ' active' : ''),
+                    html: '<i class="bi bi-' + iconName + '"></i> ' + iconName
+                });
+
+                $container.append($btn);
+            });
+
+            return $container;
+        }
 
 
+        let modalIcones = '';
+        $('html').on('click', '.select-icone', function () {
+            var elemesmo = $('input[name="icon"]').val();
+
+            var icones = loadFontAwesomeCss(function () {
+
+                return iconHTML;
+            });
+
+            var iconNames = extractIconNamesFromCss();
+            var iconHTML = generateIconHTML(iconNames, elemesmo);
+
+            modalIcones = Notify.modal(iconHTML[0].innerHTML, "xl", `Mensagem do sistema <input class="form-control search-icones-input" type="text" id="myInput" placeholder="Pesquisar icones">`, null, "Fechar", null, null, 'success');
+
+
+            $(`#${modalIcones.id}`).on('shown.bs.modal', function () {
+                $(this).find('#myInput').focus();
+            });
+        });
+        //Signotify.modal("Alerta", "md", "Mensagem do sistema", null, "Fechar", null, null, 'success');
+        // Carrega o arquivo CSS do Font Awesome e gera o HTML com os ícones
+
+        $('html').on('keyup', '.search-icones-input', function (e) {
+            var valor = $(this).val();
+
+            var input, filter, ul, li, a, i, txtValue;
+            var input = $(this);
+            var filter = input.val().toUpperCase();
+            var ul = $(".icon-list");
+            var span = $('.modal span')
+            // Loop through all list items, and hide those who don't match the search query
+            console.log(span)
+            for (i = 0; i < span.length; i++) {
+                let a = span[i];
+                var txtValue = $(a).text().replace(' ', '');
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    $(a).fadeIn('fast');
+                } else {
+                    $(a).fadeOut('fast');
+                }
+            }
+        });
+
+
+        $('html').on('click', '.btn-icone', function () {
+            let conteudo = $(this).text().replace(' ', '');
+
+            $('input[name="icone"]').val(conteudo)
+            $('.select-icone').html(`<i class="bi bi-${conteudo}"></i>`)
+            modalIcones.hide();
+        });
+
+        $('input[name="status"]').on('change', function () {
+            if ($(this).is(':checked')) {
+                $('.status-label').html('Ativo')
+            } else {
+                $('.status-label').html('Inativo')
+            }
+        })
+		})
+	</script>
 {% endblock %}
