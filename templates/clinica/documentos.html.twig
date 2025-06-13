@@ -3,67 +3,205 @@
 {% block title %}Modelos de Documentos{% endblock %}
 
 {% block stylesheets %}
+<link href="{{ asset('assets/vendors/quill/quill.snow.css') }}" rel="stylesheet">
 {{ parent() }}
 <style>
-    .form-container {
-        background: #fff;
+    .documento-container {
+        max-width: 1000px;
+        margin: 20px auto;
+        padding: 2rem;
+        background-color: white;
         border: 1px solid #ccc;
         border-radius: 12px;
-        padding: 1.5rem;
-        margin-top: 2rem;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
-    textarea {
-        min-height: 200px;
+    .quill-editor {
+        min-height: 100px;
+        margin-bottom: 30px;
+    }
+    @media print {
+        body * { visibility: hidden !important; }
+        #print-area, #print-area * { visibility: visible !important; }
+        #print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        #btn-pdf, #btn-print, .ql-toolbar {
+            display: none !important;
+        }
+        .documento-container {
+            box-shadow: none !important;
+            border: none !important;
+        }
     }
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{{ path('clinica_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Voltar
+        </a>
 
-    <h2 class="mb-4">Modelos de Documentos</h2>
+        <div class="d-flex gap-2">
+            <select id="select-action" class="form-select">
+                <option selected disabled>Ação</option>
+                <option value="print">🖨️ Imprimir</option>
+                <option value="pdf">📄 Salvar como PDF</option>
+                <option value="save">💾 Salvar Documento</option>
+                <option value="delete">🗑️ Excluir Documento</option>
+            </select>
 
-    {% for msg in app.flashes('success') %}
-        <div class="alert alert-success">{{ msg }}</div>
-    {% endfor %}
+            <form id="form-pdf" method="POST" action="{{ path('clinica_receita_pdf') }}">
+                <input type="hidden" name="cabecalho">
+                <input type="hidden" name="conteudo">
+                <input type="hidden" name="rodape">
+            </form>
 
-    {% if documentos is not empty %}
-        <div class="list-group mb-4">
-            {% for doc in documentos %}
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>📝 {{ doc.titulo }}</span>
-                    <a href="{{ path('clinica_documento_editar', {'id': doc.id}) }}" class="btn btn-sm btn-outline-primary">
-                        Editar
-                    </a>
-                </div>
-            {% endfor %}
+            <form id="form-salvar-doc" method="POST" action="{{ path('clinica_documentos') }}">
+                <input type="hidden" name="titulo">
+                <input type="hidden" name="cabecalho">
+                <input type="hidden" name="conteudo">
+                <input type="hidden" name="rodape">
+            </form>
+
+            <form id="form-excluir-doc" method="POST" action="{{ path('clinica_documento_excluir', {'id': 0}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_doc') }}">
+            </form>
         </div>
-    {% else %}
-        <p class="text-muted">Nenhum documento cadastrado ainda.</p>
-    {% endif %}
-
-    <div class="form-container">
-        <h4 class="mb-3">Cadastrar Novo Documento</h4>
-        <form method="post">
-            <div class="mb-3">
-                <label for="titulo" class="form-label">Título</label>
-                <input type="text" id="titulo" name="titulo" class="form-control" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="conteudo" class="form-label">Conteúdo</label>
-                <textarea id="conteudo" name="conteudo" class="form-control" required></textarea>
-                <small class="text-muted">Você pode digitar texto livre ou colar conteúdo padronizado.</small>
-            </div>
-
-            <div class="text-end">
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-save"></i> Salvar Documento
-                </button>
-            </div>
-        </form>
     </div>
 
+    <div class="row">
+        <div class="col-md-7">
+            <div class="documento-container">
+                <h4 class="mb-3">Documento</h4>
+                <select id="select-doc" class="form-select mb-3">
+                    <option value="">Selecione um documento salvo</option>
+                    {% for doc in documentos %}
+                        <option value="{{ doc.id }}"
+                                data-titulo="{{ doc.titulo }}"
+                                data-cabecalho="{{ doc.cabecalho|raw }}"
+                                data-conteudo="{{ doc.conteudo|raw }}"
+                                data-rodape="{{ doc.rodape|raw }}">
+                            {{ doc.titulo }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <div class="mb-3">
+                    <label for="titulo" class="form-label">Título</label>
+                    <input type="text" id="titulo" name="titulo" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label>🏢 Cabeçalho:</label>
+                    <div id="editor-cabecalho" class="quill-editor"></div>
+                </div>
+                <div class="mb-3">
+                    <label>📄 Conteúdo:</label>
+                    <div id="editor-conteudo" class="quill-editor"></div>
+                </div>
+                <div class="mb-3">
+                    <label>🖊️ Rodapé:</label>
+                    <div id="editor-rodape" class="quill-editor"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="documento-container">
+                <h4 class="mb-3">Visualização para impressão</h4>
+                <div id="print-area">
+                    <div class="documento-container">
+                        <div id="print-cabecalho"></div>
+                        <div id="print-conteudo" style="margin: 40px 0;"></div>
+                        <div id="print-rodape"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="{{ asset('assets/vendors/quill/quill.js') }}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const quillCabecalho = new Quill('#editor-cabecalho', { theme: 'snow' });
+    const quillConteudo  = new Quill('#editor-conteudo', { theme: 'snow' });
+    const quillRodape    = new Quill('#editor-rodape', { theme: 'snow' });
+
+    const selectDoc = document.getElementById('select-doc');
+    const selectAction = document.getElementById('select-action');
+    const tituloInput = document.getElementById('titulo');
+
+    selectDoc.addEventListener('change', function () {
+        const selected = this.options[this.selectedIndex];
+        if (selected.value) {
+            tituloInput.value = selected.dataset.titulo;
+            quillCabecalho.root.innerHTML = selected.dataset.cabecalho;
+            quillConteudo.root.innerHTML  = selected.dataset.conteudo;
+            quillRodape.root.innerHTML    = selected.dataset.rodape;
+        }
+    });
+
+    selectAction.addEventListener('change', function () {
+        const action = this.value;
+        const selectedDoc = selectDoc.options[selectDoc.selectedIndex];
+
+        switch (action) {
+            case 'print':
+                document.getElementById('print-cabecalho').innerHTML = quillCabecalho.root.innerHTML;
+                document.getElementById('print-conteudo').innerHTML  = quillConteudo.root.innerHTML;
+                document.getElementById('print-rodape').innerHTML    = quillRodape.root.innerHTML;
+
+                const printContent = document.getElementById("print-area").innerHTML;
+                const win = window.open('', '_blank');
+                win.document.write(`<html><head><title>Imprimir</title><style>body{font-family:Arial;}</style></head><body>${printContent}</body></html>`);
+                win.document.close(); win.focus(); win.print();
+                break;
+
+            case 'pdf':
+                const formPdf = document.getElementById("form-pdf");
+                formPdf.querySelector('[name="cabecalho"]').value = quillCabecalho.root.innerHTML;
+                formPdf.querySelector('[name="conteudo"]').value  = quillConteudo.root.innerHTML;
+                formPdf.querySelector('[name="rodape"]').value    = quillRodape.root.innerHTML;
+                formPdf.submit();
+                break;
+
+            case 'save':
+                const titulo = tituloInput.value.trim();
+                if (!titulo) {
+                    alert("Você precisa dar um título ao documento antes de salvar.");
+                    return;
+                }
+                const formSalvar = document.getElementById("form-salvar-doc");
+                formSalvar.querySelector('[name="titulo"]').value    = titulo;
+                formSalvar.querySelector('[name="cabecalho"]').value = quillCabecalho.root.innerHTML;
+                formSalvar.querySelector('[name="conteudo"]').value  = quillConteudo.root.innerHTML;
+                formSalvar.querySelector('[name="rodape"]').value    = quillRodape.root.innerHTML;
+                formSalvar.submit();
+                break;
+
+            case 'delete':
+                if (!selectedDoc.value) {
+                    alert("Selecione um documento para excluir.");
+                    return;
+                }
+                if (confirm("Tem certeza que deseja excluir este documento?")) {
+                    const formExcluir = document.getElementById("form-excluir-doc");
+                    formExcluir.setAttribute("action", formExcluir.getAttribute("action").replace('/0', '/' + selectedDoc.value));
+                    formExcluir.submit();
+                }
+                break;
+        }
+
+        this.selectedIndex = 0; // Reset
+    });
+});
+</script>
 {% endblock %}

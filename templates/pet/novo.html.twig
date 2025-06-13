@@ -1,87 +1,138 @@
 {% extends 'base.html.twig' %}
 
 {% block stylesheets %}
-{{ parent() }}
 <style>
+    body {
+        background-color: #eef5ff;
+        font-family: 'Arial', sans-serif;
+    }
+    .card {
+        border-radius: 15px;
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+        padding: 20px;
+    }
+    .pagetitle h1 {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #0056b3;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    .btn-success {
+        background-color: #0056b3;
+        border-color: #0056b3;
+        font-weight: bold;
+    }
+    .btn-success:hover {
+        background-color: #004494;
+        border-color: #004494;
+    }
+    .form-control {
+        border-radius: 10px;
+        padding: 10px;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .form-control:focus {
+        box-shadow: 0 4px 10px rgba(0, 86, 179, 0.2);
+    }
+    .form-label {
+        font-weight: bold;
+    }
+    .section {
+        padding: 30px;
+    }
     .autocomplete-items {
-        position: absolute !important;
+        position: absolute;
         border: 1px solid #d4d4d4;
-        border-bottom: none;
-        border-top: none;
         z-index: 99;
-        top: 100%;
-        left: 0;
-        right: 0;
         background-color: #fff;
-        cursor: pointer;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+        border-radius: 0 0 10px 10px;
     }
     .autocomplete-items .lista {
         padding: 10px;
+        border-bottom: 1px solid #eee;
         cursor: pointer;
-        border-bottom: 1px solid #d4d4d4;
-        margin-bottom: 5px;
-        width: 100% !important
     }
     .autocomplete-items .lista:hover {
-        background-color: #e9e9e9;
+        background-color: #f0f0f0;
     }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="container mt-5">
-    <div class="form-container">
-        <h1 class="mb-4">{% if pet is defined %}Editar{% else %}Novo{% endif %} Pet</h1>
-        <form method="post" action="{% if pet is defined %}{{ path('pet_editar', {'id': pet.id}) }}{% else %}{{ path('pet_novo') }}{% endif %}">
-            <div class="form-group">
-                <label for="nome">Nome</label>
-                <input type="text" class="form-control" id="nome" name="nome" value="{{ pet.nome|default('') }}" required>
-            </div>
-            <div class="form-group">
-                <label for="especie">Espécie</label>
-                <input type="text" class="form-control" id="especie" name="especie" value="{{ pet.especie|default('') }}" required>
-            </div>
-            <div class="form-group">
-                <label for="sexo">Sexo</label>
-                <select class="form-control" id="sexo" name="sexo" required>
-                    <option value="M" {% if pet.sexo is defined and pet.sexo == 'M' %}selected{% endif %}>Macho</option>
-                    <option value="F" {% if pet.sexo is defined and pet.sexo == 'F' %}selected{% endif %}>Fêmea</option>
-                </select>
-            </div>
-            <div class="form-group autocomplete">
-                <label for="raca">Raça</label>
-
-                <input type="text" class="form-control" id="raca" name="raca" value="{{ pet.raca|default('') }}" required>
-                <div id="autocomplete-list" class="autocomplete-items"></div>
-            </div>
-            <div class="form-group">
-                <label for="porte">Porte</label>
-                <select class="form-control" id="porte" name="porte" required>
-                    <option value="Pequeno" {% if pet.porte is defined and pet.porte == 'Pequeno' %}selected{% endif %}>Pequeno</option>
-                    <option value="Médio" {% if pet.porte is defined and pet.porte == 'Médio' %}selected{% endif %}>Médio</option>
-                    <option value="Grande" {% if pet.porte is defined and pet.porte == 'Grande' %}selected{% endif %}>Grande</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="idade">Idade</label>
-                <input type="number" class="form-control" id="idade" name="idade" value="{{ pet.idade|default('') }}" required>
-            </div>
-            <div class="form-group">
-                <label for="observacoes">Observações</label>
-                <textarea class="form-control" id="observacoes" name="observacoes" rows="3">{{ pet.observacoes|default('') }}</textarea>
-            </div>
-            <div class="form-group">
-                <label for="dono_id">Dono</label>
-                <select class="form-control" id="dono_id" name="dono_id" required>
-                    {% for cliente in clientes %}
-                        <option value="{{ cliente.id }}" {% if pet.dono_id is defined and cliente.id == pet.dono_id %}selected{% endif %}>{{ cliente.nome }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Salvar</button>
-        </form>
-    </div>
+<div class="pagetitle">
+    <h1 class="text-primary text-center">{% if pet is defined %}Editar Pet{% else %}Novo Pet{% endif %}</h1>
 </div>
+
+<section class="section">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-body">
+                    <form method="post" action="{% if pet is defined %}{{ path('pet_editar', {'id': pet.id}) }}{% else %}{{ path('pet_novo') }}{% endif %}">
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="nome" name="nome" value="{{ pet.nome|default('') }}" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="especie" class="form-label">Espécie</label>
+                                <input type="text" class="form-control" id="especie" name="especie" value="{{ pet.especie|default('') }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="sexo" class="form-label">Sexo</label>
+                                <select class="form-control" id="sexo" name="sexo">
+                                    <option value="">Selecionar</option>
+                                    <option value="M" {% if pet.sexo is defined and pet.sexo == 'M' %}selected{% endif %}>Macho</option>
+                                    <option value="F" {% if pet.sexo is defined and pet.sexo == 'F' %}selected{% endif %}>Fêmea</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3 autocomplete">
+                            <label for="raca" class="form-label">Raça</label>
+                            <input type="text" class="form-control" id="raca" name="raca" value="{{ pet.raca|default('') }}">
+                            <div id="autocomplete-list" class="autocomplete-items"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="porte" class="form-label">Porte</label>
+                                <select class="form-control" id="porte" name="porte">
+                                    <option value="">Selecionar</option>
+                                    <option value="Pequeno" {% if pet.porte is defined and pet.porte == 'Pequeno' %}selected{% endif %}>Pequeno</option>
+                                    <option value="Médio" {% if pet.porte is defined and pet.porte == 'Médio' %}selected{% endif %}>Médio</option>
+                                    <option value="Grande" {% if pet.porte is defined and pet.porte == 'Grande' %}selected{% endif %}>Grande</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="idade" class="form-label">Idade</label>
+                                <input type="number" class="form-control" id="idade" name="idade" value="{{ pet.idade|default('') }}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="observacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoes" name="observacoes" rows="3">{{ pet.observacoes|default('') }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="dono_id" class="form-label">Dono</label>
+                            <select class="form-control" id="dono_id" name="dono_id">
+                                <option value="">Selecionar cliente</option>
+                                {% for cliente in clientes %}
+                                    <option value="{{ cliente.id }}" {% if pet.dono_id is defined and cliente.id == pet.dono_id %}selected{% endif %}>{{ cliente.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success w-50">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -92,27 +143,22 @@ document.addEventListener("DOMContentLoaded", function () {
         var val = this.value;
         closeAllLists();
         if (!val) return false;
-        
-        var divList = document.createElement("div");
-        divList.setAttribute("id", "autocomplete-list")
 
-        divList.setAttribute("class", "autocomplete-items card p-3");
-        var cardBody = $('.autocomplete-items').append('')
+        var divList = document.createElement("div");
+        divList.setAttribute("id", "autocomplete-list");
+        divList.setAttribute("class", "autocomplete-items");
         this.parentNode.appendChild(divList);
 
         racas.forEach(function (raca) {
-            if (raca.toLowerCase().indexOf(val.toLowerCase()) !== -1) {
+            if (raca.toLowerCase().includes(val.toLowerCase())) {
                 var item = document.createElement("div");
-
-                item.setAttribute("class", "lista p-1");
+                item.setAttribute("class", "lista");
                 item.innerHTML = "<strong>" + raca.substr(0, val.length) + "</strong>" + raca.substr(val.length);
                 item.innerHTML += "<input type='hidden' value='" + raca + "'>";
-                
                 item.addEventListener("click", function () {
                     input.value = this.getElementsByTagName("input")[0].value;
                     closeAllLists();
                 });
-                
                 divList.appendChild(item);
             }
         });
