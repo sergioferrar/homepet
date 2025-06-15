@@ -47,6 +47,16 @@ class Menu
      */
     private $icone;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $ordem;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $modulo;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -120,6 +130,30 @@ class Menu
     public function setIcone(?string $icone): self
     {
         $this->icone = $icone;
+
+        return $this;
+    }
+
+    public function getOrdem(): ?int
+    {
+        return $this->ordem;
+    }
+
+    public function setOrdem(?int $ordem): self
+    {
+        $this->ordem = $ordem;
+
+        return $this;
+    }
+
+    public function getModulo(): ?int
+    {
+        return $this->modulo;
+    }
+
+    public function setModulo(?int $modulo): self
+    {
+        $this->modulo = $modulo;
 
         return $this;
     }

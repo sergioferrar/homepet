@@ -25,7 +25,7 @@ class MenuGrupoModulo
     /**
      * @ORM\Column(type="integer")
      */
-    private $idGrupÃo;
+    private $idGrupo;
 
     /**
      * @ORM\Column(type="integer")
@@ -49,14 +49,14 @@ class MenuGrupoModulo
         return $this;
     }
 
-    public function getIdGrupÃo(): ?int
+    public function getIdGrupo(): ?int
     {
         return $this->idGrupÃo;
     }
 
-    public function setIdGrupÃo(int $idGrupÃo): self
+    public function setIdGrupo(int $idGrupÃo): self
     {
-        $this->idGrupÃo = $idGrupÃo;
+        $this->idGrupÃo = $idGrupo;
 
         return $this;
     }

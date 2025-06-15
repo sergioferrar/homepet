@@ -16,9 +16,20 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ModuloRepository extends ServiceEntityRepository
 {
+    private $conn;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Modulo::class);
+        $this->conn = $this->getEntityManager()->getConnection();
+    }
+
+    public function getIdPlanoByDescricao($descricao)
+    {
+        $sql = "SELECT id, titulo";
+
+        $query = $this->conn->executeQuery($sql);
+        return $query->fetchAssociative();
     }
 
     public function add(Modulo $entity, bool $flush = false): void
