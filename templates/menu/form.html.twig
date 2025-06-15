@@ -24,10 +24,19 @@
 								</div>
                                 
                                 <div class="mb-3">
-                                    <label for="descricao" class="form-label">Plano</label>
+                                    <label for="descricao" class="form-label">Este menu pertence ao modulo:</label>
+                                    <div class="row ps-3">
+                                        
                                     {% for row in modulos %}
-                                        <span class="btn btn-sm btn-primary m-1">{{ row.titulo }}</span>
+
+                                        <div class="form-check">
+                                          <input class="form-check-input" type="radio"
+                                          {% if menu is defined and menu.modulo == row.id %} checked {% endif %}
+                                           id="{{ row.titulo }}" name="modulo" value="{{ row.id }}">
+                                          <label class="form-check-label" for="{{ row.titulo }}">{{ row.titulo }}</label>
+                                        </div>
                                     {% endfor %}
+                                    </div>
                                 </div>
 							</div>
 						</div>
@@ -52,6 +61,14 @@
 									<label for="rota" class="form-label">Rota</label>
 									<input type="text" class="form-control" id="rota" name="rota" value="{{ menu is defined ? menu.rota : '' }}" required>
 								</div>
+                                <div class="mb-3 d-none">
+                                    <label for="accessLevel" class="form-label">Que deve acessar</label>
+                                    <select class="form-select" id="accessLevel" name="accessLevel" required>
+                                        <option value="2">Admin</option>
+                                        <option value="3">Atendente</option>
+                                        <option value="4">Balconista</option>
+                                    </select>
+                                </div>
 								<div class="mb-3">
 									<label for="status" class="form-label">Status</label>
 									<select class="form-select" id="status" name="status" required>

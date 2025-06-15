@@ -43,9 +43,14 @@ class MenuRepository extends ServiceEntityRepository
     }
 
     public function update($data){
+        if($data['parent'] == null){
+            $data['parent'] = 'NULL';
+        } else{
+            $data['parent'] = "'{$data['parent']}'";
+        }
       $sql = "UPDATE menu SET
-        titulo = '{$data['titulo']}', parent = '{$data['parent']}', descricao = '{$data['descricao']}', 
-        rota = '{$data['rota']}', status = '{$data['status']}', icone = '{$data['icone']}'
+        titulo = '{$data['titulo']}', parent = {$data['parent']}, descricao = '{$data['descricao']}', 
+        rota = '{$data['rota']}', status = '{$data['status']}', icone = '{$data['icone']}', modulo = '{$data['modulo']}'
         WHERE id = '{$data['id']}'";
 
         $query = $this->conn->executeQuery($sql);
