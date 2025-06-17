@@ -188,17 +188,20 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function verificaPagamentoExistente($baseId, $petId, $valor, $dataReferencia): bool
     {
-        $sql = "SELECT COUNT(*) FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiro
-                WHERE estabelecimento_id = '{$baseId}' 
+        $sql = "SELECT COUNT(*) FROM {$_ENV['DBNAMETENANT']}.financeiro
+                WHERE estabelecimento_id = :estabelecimento_id
                     AND pet_id = :pet_id
                     AND valor = :valor
                     AND DATE(data) = :data_referencia
                     AND descricao = 'Hospedagem do Pet'";
 
-        return (bool) $this->conn->fetchOne($sql, [
+        $count = $this->conn->fetchOne($sql, [
+            'estabelecimento_id' => $baseId,
             'pet_id' => $petId,
             'valor' => $valor,
             'data_referencia' => (new \DateTime($dataReferencia))->format('Y-m-d'),
         ]);
+
+        return (bool) $count;
     }
 }
