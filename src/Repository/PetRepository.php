@@ -100,7 +100,7 @@ class PetRepository extends ServiceEntityRepository
 
     public function listarPetsRecentes($baseId, $limit = 5): array
     {
-        $sql = "SELECT p.nome, p.especie, p.raca, c.nome as tutor
+        $sql = "SELECT p.id, p.nome, p.especie, p.raca, c.nome as tutor
                 FROM {$_ENV['DBNAMETENANT']}.pet p
                 JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
                 WHERE p.estabelecimento_id = :baseId
