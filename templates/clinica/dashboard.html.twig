@@ -9,7 +9,6 @@
         max-width: 1200px;
         margin: 0 auto;
     }
-
     .card-moderna {
         border-radius: 20px;
         padding: 1.5rem;
@@ -19,12 +18,10 @@
         min-height: 150px;
         transition: all 0.3s ease;
     }
-
     .card-moderna:hover {
         transform: translateY(-5px);
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
     }
-
     .card-moderna .icone-bg {
         position: absolute;
         bottom: -10px;
@@ -32,38 +29,15 @@
         font-size: 5rem;
         opacity: 0.2;
     }
-
-    .card-clientes {
-        background: linear-gradient(135deg, #2196f3, #1e88e5);
-    }
-
-    .card-pets {
-        background: linear-gradient(135deg, #4caf50, #388e3c);
-    }
-
-    .card-consultas {
-        background: linear-gradient(135deg, #9c27b0, #7b1fa2);
-    }
-
-    .card-proximas {
-        background: linear-gradient(135deg, #ff9800, #f57c00);
-        color: #fff;
-    }
-
-    .card-recentes {
-        background: linear-gradient(135deg, #00bcd4, #0097a7);
-    }
-
-    .table-hover tbody tr:hover {
-        background-color: #f8f9fa;
-    }
-
+    .card-clientes { background: linear-gradient(135deg, #2196f3, #1e88e5); }
+    .card-pets { background: linear-gradient(135deg, #4caf50, #388e3c); }
+    .card-consultas { background: linear-gradient(135deg, #9c27b0, #7b1fa2); }
+    .card-proximas { background: linear-gradient(135deg, #ff9800, #f57c00); color: #fff; }
+    .card-recentes { background: linear-gradient(135deg, #00bcd4, #0097a7); }
+    .table-hover tbody tr:hover { background-color: #f8f9fa; }
     @media (max-width: 768px) {
-        .card-moderna {
-            margin-bottom: 1rem;
-        }
+        .card-moderna { margin-bottom: 1rem; }
     }
-
 </style>
 {% endblock %}
 
@@ -87,7 +61,7 @@
                 <li class="nav-item me-2">
                     <a href="{{ path('clinica_documentos') }}" class="btn btn-outline-light">Documentos</a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item me-2">
                     <a href="#" class="btn btn-outline-light">Estoque</a>
                 </li>
             </ul>
@@ -120,7 +94,6 @@
         </div>
     </div>
 
-
     <div class="row mt-4 g-4">
         <div class="col-md-6">
             <div class="card-moderna card-proximas">
@@ -143,52 +116,64 @@
                                 <td>{{ consulta.tipo }}</td>
                             </tr>
                         {% else %}
-                            <tr>
-                                <td colspan="4">Nenhuma consulta agendada</td>
-                            </tr>
+                            <tr><td colspan="4">Nenhuma consulta agendada</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
 
-
         <div class="col-md-6">
-                    <div class="card-moderna card-recentes">
-                        <h5>Pets Recentes</h5>
-                        <div class="mt-3">
-                            {% for pet in pets_recentes %}
-                                <div class="bg-white text-dark p-2 rounded mb-2">
-                                    <strong>{{ pet.nome }}</strong> • {{ pet.especie }} - {{ pet.raca }}<br>
-                                    <small class="text-muted">Tutor: {{ pet.tutor }}</small>
-                                </div>
-                            {% else %}
-                                <p class="text-white">Nenhum pet cadastrado recentemente.</p>
-                            {% endfor %}
+            <div class="card-moderna card-recentes">
+                <h5>Pets Recentes</h5>
+                <div class="mt-3">
+                    {% for pet in pets_recentes %}
+                        <div class="bg-white text-dark p-2 rounded mb-3">
+                            <strong>{{ pet.nome }}</strong> • {{ pet.especie }} - {{ pet.raca }}<br>
+                            <small class="text-muted">Tutor: {{ pet.tutor }}</small>
+                            <div class="mt-2">
+                                <a href="#" class="btn btn-sm btn-outline-primary" onclick="abrirProntuario({{ pet.id }})">
+                                    📝 Ver Prontuário
+                                </a>
+                            </div>
                         </div>
-                    </div>
+                    {% else %}
+                        <p class="text-white">Nenhum pet cadastrado recentemente.</p>
+                    {% endfor %}
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="row mt-5">
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">Consultas por Mês</h5>
-                        <canvas id="graficoConsultas"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">Pets por Espécie</h5>
-                        <canvas id="graficoPets"></canvas>
-                    </div>
+    <div class="row mt-5">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Consultas por Mês</h5>
+                    <canvas id="graficoConsultas"></canvas>
                 </div>
             </div>
         </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Pets por Espécie</h5>
+                    <canvas id="graficoPets"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="canvasProntuario" aria-labelledby="canvasProntuarioLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">📝 Prontuário do Pet</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div id="canvasProntuarioContent" class="offcanvas-body">
+        <!-- Conteúdo AJAX será carregado aqui -->
+    </div>
+</div>
 {% endblock %}
 
 {% block javascripts %}
@@ -196,7 +181,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const ctxConsultas = document.getElementById('graficoConsultas').getContext('2d');
-    const graficoConsultas = new Chart(ctxConsultas, {
+    new Chart(ctxConsultas, {
         type: 'bar',
         data: {
             labels: {{ consultas_por_mes_keys|json_encode|raw }},
@@ -208,36 +193,36 @@
                 borderWidth: 1
             }]
         },
-        options: {
-            responsive: true,
-            scales: {
-                y: { beginAtZero: true }
-            }
-        }
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
     });
 
     const ctxPets = document.getElementById('graficoPets').getContext('2d');
-    const graficoPets = new Chart(ctxPets, {
+    new Chart(ctxPets, {
         type: 'doughnut',
         data: {
             labels: {{ pets_por_especie_keys|json_encode|raw }},
             datasets: [{
                 label: 'Pets',
                 data: {{ pets_por_especie_vals|json_encode|raw }},
-                backgroundColor: [
-                    '#4caf50',
-                    '#2196f3',
-                    '#ff9800',
-                    '#e91e63',
-                    '#9c27b0'
-                ],
+                backgroundColor: ['#4caf50', '#2196f3', '#ff9800', '#e91e63', '#9c27b0'],
                 borderWidth: 1
             }]
         },
-        options: {
-            responsive: true,
-            cutout: '70%',
-        }
+        options: { responsive: true, cutout: '70%' }
     });
+
+    function abrirProntuario(petId) {
+        fetch('/clinica/prontuario/ajax/' + petId)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('canvasProntuarioContent').innerHTML = html;
+                const offcanvas = new bootstrap.Offcanvas(document.getElementById('canvasProntuario'));
+                offcanvas.show();
+            })
+            .catch(error => {
+                alert('Erro ao carregar o prontuário.');
+                console.error(error);
+            });
+    }
 </script>
 {% endblock %}

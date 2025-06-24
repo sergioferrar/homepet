@@ -1,0 +1,41 @@
+<div class="offcanvas-header">
+    <h5 class="offcanvas-title">📝 Prontuário do Pet</h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+</div>
+<div class="offcanvas-body">
+    <form method="post" enctype="multipart/form-data" class="mb-4" id="form-prontuario">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <select name="tipo" class="form-control" required>
+                    <option value="">Tipo</option>
+                    <option value="evolucao">Evolução</option>
+                    <option value="procedimento">Procedimento</option>
+                    <option value="exame">Exame</option>
+                    <option value="vacina">Vacina</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <input type="text" name="descricao" class="form-control" placeholder="Descrição" required>
+            </div>
+            <div class="col-md-2">
+                <input type="file" name="anexo" class="form-control">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">Salvar</button>
+            </div>
+        </div>
+    </form>
+
+    <ul class="list-group">
+        {% for r in registros %}
+            <li class="list-group-item">
+                <strong>{{ r.tipo|capitalize }}</strong> - {{ r.descricao }} ({{ r.data|date('d/m/Y H:i') }})
+                {% if r.anexo %}
+                    <a href="{{ asset('uploads/' ~ r.anexo) }}" target="_blank" class="btn btn-sm btn-outline-secondary ms-2">📎 Ver</a>
+                {% endif %}
+            </li>
+        {% else %}
+            <li class="list-group-item">Nenhum registro encontrado.</li>
+        {% endfor %}
+    </ul>
+</div>
