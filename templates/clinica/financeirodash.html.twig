@@ -1,0 +1,178 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Financeiro da Clínica{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .financeiro-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    .financeiro-table {
+        max-height: 350px;
+        overflow-y: auto;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+
+    .financeiro-table table {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        width: 100%;
+    }
+
+    .financeiro-table th {
+        position: sticky;
+        top: 0;
+        background: #f0f0f0;
+    }
+
+    .financeiro-table td {
+        background: #f9f9fc;
+        border-radius: 8px;
+        padding: 10px 15px;
+    }
+
+    .nav-tabs .nav-link.active {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Painel Financeiro</h2>
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Financeiro</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('clinica_dashboard') }}">Painel</a>
+            </li>
+        </ul>
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-success shadow p-3 mb-3 rounded text-center">
+                <h5>💸 Receita do Mês</h5>
+                <h4>R$ {{ total_receita|number_format(2, ',', '.') }}</h4>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-danger shadow p-3 mb-3 rounded text-center">
+                <h5>📉 Despesa do Mês</h5>
+                <h4>R$ {{ total_despesa|number_format(2, ',', '.') }}</h4>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-dark shadow p-3 mb-3 rounded text-center">
+                <h5>💼 Saldo Geral</h5>
+                <h4>R$ {{ saldo_geral|number_format(2, ',', '.') }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary shadow p-3 mb-3 rounded">
+                <div class="card-body text-center">
+                    <h3 class="card-title">💰</h3>
+                    <p class="card-text fs-4">
+                        R$ {{ financeiro_hoje|length > 0 ? financeiro_hoje|map(f => f.valor)|reduce((carry, v) => carry + v) : 0 }}
+                    </p>
+                    <p>Hoje</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success shadow p-3 mb-3 rounded">
+                <div class="card-body text-center">
+                    <h3 class="card-title">📅</h3>
+                    <p class="card-text fs-4">
+                        R$ {{ financeiro_semana|length > 0 ? financeiro_semana|map(f => f.valor)|reduce((carry, v) => carry + v) : 0 }}
+                    </p>
+                    <p>Últimos 7 dias</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info shadow p-3 mb-3 rounded">
+                <div class="card-body text-center">
+                    <h3 class="card-title">📁</h3>
+                    <p class="card-text fs-4">{{ financeiro_hoje|length }}</p>
+                    <p>Registros hoje</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-dark shadow p-3 mb-3 rounded">
+                <div class="card-body text-center">
+                    <h3 class="card-title">📊</h3>
+                    <p class="card-text fs-4">{{ financeiro_semana|length }}</p>
+                    <p>Registros da semana</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <h4 class="mt-4">Lançamentos de Hoje</h4>
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Descrição</th>
+                <th>Valor</th>
+                <th>Forma de Pagamento</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in financeiro_hoje %}
+            <tr>
+                <td>{{ item.descricao }}</td>
+                <td>R$ {{ item.valor|number_format(2, ',', '.') }}</td>
+                <td>{{ item.forma_pagamento|capitalize }}</td>
+                <td>{{ item.data|date('d/m/Y') }}</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4" class="text-center">Nenhum lançamento hoje.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h4 class="mt-5">Resumo da Semana</h4>
+    <table class="table table-bordered">
+        <thead class="table-secondary">
+            <tr>
+                <th>Data</th>
+                <th>Total do Dia</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% set dias = {} %}
+        {% for item in financeiro_semana %}
+            {% set data = item.data|date('d/m/Y') %}
+            {% set dias = dias|merge({(data): (dias[data]|default(0) + item.valor)}) %}
+        {% endfor %}
+
+        {% for data, total in dias %}
+            <tr>
+                <td>{{ data }}</td>
+                <td>R$ {{ total|number_format(2, ',', '.') }}</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="2" class="text-center">Nenhum dado para a semana.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

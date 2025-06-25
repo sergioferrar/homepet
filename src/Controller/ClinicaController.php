@@ -5,13 +5,14 @@ namespace App\Controller;
 use App\Entity\Cliente;
 use App\Entity\Consulta;
 use App\Entity\Pet;
-use App\Entity\DocumentoModelo; 
+use App\Entity\DocumentoModelo;
 use App\Repository\DocumentoModeloRepository;
+use App\Repository\InternacaoRepository;
+use App\Repository\FinanceiroRepository;
 use App\Service\PdfService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 /**
  * @Route("/clinica")
@@ -24,45 +25,30 @@ class ClinicaController extends DefaultController
     public function dashboard(): Response
     {
         $this->switchDB();
+        $baseId = $this->getIdBase();
 
-        $baseId = $this->session->get('userId');
-        $repoCliente = $this->getRepositorio(Cliente::class);
-        $repoPet = $this->getRepositorio(Pet::class);
-        $repoConsulta = $this->getRepositorio(Consulta::class);
+        $repoPet = $this->getRepositorio(\App\Entity\Pet::class);
+        $repoFinanceiro = $this->getRepositorio(\App\Entity\FinanceiroPendente::class);
+        $repoConsulta = $this->getRepositorio(\App\Entity\Consulta::class);
 
-        $clientes = method_exists($repoCliente, 'findClientesComPet')
-            ? $repoCliente->findClientesComPet($baseId)
-            : [];
+        $repoInternacao = new InternacaoRepository($this->managerRegistry);
+        $internacoes = $repoInternacao->listarInternacoesAtivas($baseId);
+        $totalPets = $repoPet->countTotalPets($baseId);
+        $debitosCliente = $repoFinanceiro->somarDebitosPendentes($baseId);
+        $media = $repoConsulta->calcularMediaConsultas($baseId);
+        $atendimentos = $repoConsulta->listarUltimosAtendimentos($baseId);
 
-        $totalPets = method_exists($repoPet, 'countTotalPets')
-            ? $repoPet->countTotalPets($baseId)
-            : 0;
-
-        $consultas = method_exists($repoConsulta, 'listarConsultasDoDiaEProximas')
-            ? $repoConsulta->listarConsultasDoDiaEProximas($baseId)
-            : [];
-
-        $petsRecentes = method_exists($repoPet, 'listarPetsRecentes')
-            ? $repoPet->listarPetsRecentes($baseId)
-            : [];
-
-        $consultasPorMes = method_exists($repoConsulta, 'contarConsultasPorMes')
-            ? $repoConsulta->contarConsultasPorMes($baseId)
-            : [];
-
-        $petsPorEspecie = method_exists($repoPet, 'contarPetsPorEspecie')
-            ? $repoPet->contarPetsPorEspecie($baseId)
-            : [];
+        $vacinasVencidas = method_exists($repoPet, 'listarVacinasPendentes') ? $repoPet->listarVacinasPendentes($baseId) : [];
+        $vacinasProgramadas = method_exists($repoPet, 'listarVacinasProgramadas') ? $repoPet->listarVacinasProgramadas($baseId) : [];
 
         return $this->render('clinica/dashboard.html.twig', [
-            'clientes' => $clientes,
             'total_pets' => $totalPets,
-            'consultas' => $consultas,
-            'pets_recentes' => $petsRecentes,
-            'consultas_por_mes_keys' => array_keys($consultasPorMes),
-            'consultas_por_mes_vals' => array_values($consultasPorMes),
-            'pets_por_especie_keys' => array_keys($petsPorEspecie),
-            'pets_por_especie_vals' => array_values($petsPorEspecie),
+            'debitos_cliente' => $debitosCliente,
+            'media_atendimento' => $media,
+            'atendimentos' => $atendimentos,
+            'internados' => $internacoes,
+            'vacinas_programadas' => $vacinasProgramadas,
+            'vacinas_vencidas' => $vacinasVencidas,
         ]);
     }
 
@@ -88,7 +74,6 @@ class ClinicaController extends DefaultController
             $consulta->setStatus('aguardando');
 
             $this->getRepositorio(Consulta::class)->salvarConsulta($baseId, $consulta);
-
             $this->addFlash('success', 'Consulta marcada com sucesso!');
             return $this->redirectToRoute('clinica_nova_consulta');
         }
@@ -113,7 +98,6 @@ class ClinicaController extends DefaultController
         }
 
         $this->getRepositorio(Consulta::class)->atualizarStatusConsulta($baseId, $id, $status);
-
         return $this->json(['success' => true]);
     }
 
@@ -133,16 +117,12 @@ class ClinicaController extends DefaultController
     {
         $this->switchDB();
 
-        $cabecalho = $request->request->get('cabecalho', '');
-        $conteudo  = $request->request->get('conteudo', '');
-        $rodape    = $request->request->get('rodape', '');
-
         return $pdfService->gerarPdf(
             'clinica/receita_pdf_backend.html.twig',
             [
-                'cabecalho' => $cabecalho,
-                'conteudo'  => $conteudo,
-                'rodape'    => $rodape
+                'cabecalho' => $request->get('cabecalho', ''),
+                'conteudo'  => $request->get('conteudo', ''),
+                'rodape'    => $request->get('rodape', '')
             ],
             'receita-medica.pdf'
         );
@@ -157,16 +137,11 @@ class ClinicaController extends DefaultController
         $baseId = $this->session->get('userId');
 
         if ($request->isMethod('POST')) {
-            $titulo    = $request->request->get('titulo');
-            $cabecalho = $request->request->get('cabecalho');
-            $conteudo  = $request->request->get('conteudo');
-            $rodape    = $request->request->get('rodape');
-
             $doc = new DocumentoModelo();
-            $doc->setTitulo($titulo);
-            $doc->setCabecalho($cabecalho);
-            $doc->setConteudo($conteudo);
-            $doc->setRodape($rodape);
+            $doc->setTitulo($request->get('titulo'));
+            $doc->setCabecalho($request->get('cabecalho'));
+            $doc->setConteudo($request->get('conteudo'));
+            $doc->setRodape($request->get('rodape'));
             $doc->setCriadoEm(new \DateTime());
 
             $repoDoc->salvarDocumentoCompleto($baseId, $doc);
@@ -182,7 +157,6 @@ class ClinicaController extends DefaultController
         ]);
     }
 
-
     /**
      * @Route("/documento/{id}/editar", name="clinica_documento_editar", methods={"GET", "POST"})
      */
@@ -190,7 +164,6 @@ class ClinicaController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->session->get('userId');
-
         $documento = $repoDoc->buscarPorId($baseId, $id);
 
         if (!$documento) {
@@ -234,7 +207,6 @@ class ClinicaController extends DefaultController
         return $this->redirectToRoute('clinica_documentos');
     }
 
-
     /**
      * @Route("/api/pets/{clienteId}", name="clinica_api_pets", methods={"GET"})
      */
@@ -245,12 +217,42 @@ class ClinicaController extends DefaultController
 
         $pets = $this->getRepositorio(Pet::class)->buscarPetsPorCliente($baseId, $clienteId);
 
-        $result = array_map(function ($pet) {
-            return ['id' => $pet['id'], 'nome' => $pet['nome']];
-        }, $pets);
-
-        return $this->json($result);
+        return $this->json(array_map(fn ($pet) => ['id' => $pet['id'], 'nome' => $pet['nome']], $pets));
     }
 
+    /**
+     * @Route("/financeiro", name="financeiro_dashboard", methods={"GET"})
+     */
+    public function financeirodash(Request $request): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $repoFinanceiro = new FinanceiroRepository($this->managerRegistry);
+
+        $hoje = new \DateTime();
+        $inicioMes = (clone $hoje)->modify('first day of this month')->setTime(0, 0);
+        $semanaPassada = (clone $hoje)->modify('-7 days');
+
+        $financeiroHoje = $repoFinanceiro->findByDate($baseId, $hoje);
+        $financeiroSemana = $repoFinanceiro->getRelatorioPorPeriodo($baseId, $semanaPassada, $hoje);
+        $financeiroMes = $repoFinanceiro->getRelatorioPorPeriodo($baseId, $inicioMes, $hoje);
+
+        $inicioMes = (clone $hoje)->modify('first day of this month');
+        $totalReceita = $repoFinanceiro->somarPorDescricao($baseId, 'Receita', $inicioMes, $hoje);
+        $totalDespesa = $repoFinanceiro->somarPorDescricao($baseId, 'Pagamento', $inicioMes, $hoje);
+
+
+        $totalGeral = $totalReceita - $totalDespesa;
+
+        return $this->render('clinica/financeirodash.html.twig', [
+            'financeiro_hoje' => $financeiroHoje,
+            'financeiro_semana' => $financeiroSemana,
+            'financeiro_mes' => $financeiroMes,
+            'total_receita' => $totalReceita,
+            'total_despesa' => $totalDespesa,
+            'saldo_geral' => $totalGeral,
+        ]);
+    }
 
 }

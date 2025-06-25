@@ -5,224 +5,207 @@
 {% block stylesheets %}
 {{ parent() }}
 <style>
-    .dashboard-container {
-        max-width: 1200px;
-        margin: 0 auto;
+    .scrollable-table-wrapper {
+        max-height: 300px;
+        overflow-y: auto;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
     }
-    .card-moderna {
-        border-radius: 20px;
-        padding: 1.5rem;
-        color: #fff;
-        position: relative;
-        overflow: hidden;
-        min-height: 150px;
-        transition: all 0.3s ease;
+
+    .scrollable-table-wrapper thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 10;
     }
-    .card-moderna:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+
+    .table-rounded-row tr td {
+        background-color: #f9f9fc;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 5px;
     }
-    .card-moderna .icone-bg {
-        position: absolute;
-        bottom: -10px;
-        right: -10px;
-        font-size: 5rem;
-        opacity: 0.2;
+
+    .table-rounded-row tr {
+        margin-bottom: 10px;
     }
-    .card-clientes { background: linear-gradient(135deg, #2196f3, #1e88e5); }
-    .card-pets { background: linear-gradient(135deg, #4caf50, #388e3c); }
-    .card-consultas { background: linear-gradient(135deg, #9c27b0, #7b1fa2); }
-    .card-proximas { background: linear-gradient(135deg, #ff9800, #f57c00); color: #fff; }
-    .card-recentes { background: linear-gradient(135deg, #00bcd4, #0097a7); }
-    .table-hover tbody tr:hover { background-color: #f8f9fa; }
-    @media (max-width: 768px) {
-        .card-moderna { margin-bottom: 1rem; }
+
+    .tab-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
 </style>
 {% endblock %}
 
 {% block body %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary w-100">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#">Dashboard Clínica</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarClinica">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse justify-content-end" id="navbarClinica">
-            <ul class="navbar-nav">
-                <li class="nav-item me-2">
-                    <a href="{{ path('clinica_nova_consulta') }}" class="btn btn-light">
-                        <i class="bi bi-plus-circle"></i> Nova Consulta
-                    </a>
-                </li>
-                <li class="nav-item me-2">
-                    <a href="{{ path('clinica_receita') }}" class="btn btn-outline-light">Emitir Receita</a>
-                </li>
-                <li class="nav-item me-2">
-                    <a href="{{ path('clinica_documentos') }}" class="btn btn-outline-light">Documentos</a>
-                </li>
-                <li class="nav-item me-2">
-                    <a href="#" class="btn btn-outline-light">Estoque</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<div class="container mt-4">
 
-<div class="container mt-4 dashboard-container">
-    <div class="row g-4">
-        <div class="col-md-4 col-sm-6">
-            <div class="card card-clientes p-2 border border-danger bg-danger text-white">
-                <h5>Total de Clientes</h5>
-                <h2>{{ clientes|length }}</h2>
-                <div class="icone-bg"><i class="bi bi-people-fill"></i></div>
-            </div>
-        </div>
-        <div class="col-md-4 col-sm-6">
-            <div class="card card-pets p-2 border border-success bg-success text-white">
-                <h5>Total de Pets</h5>
-                <h2>{{ total_pets }}</h2>
-                <div class="icone-bg"><i class="bi bi-bookmark-heart-fill"></i></div>
-            </div>
-        </div>
-        <div class="col-md-4 col-sm-6">
-            <div class="card card-consultas p-2 border border-primary bg-primary text-white">
-                <h5>Consultas Agendadas</h5>
-                <h2>{{ consultas|length }}</h2>
-                <div class="icone-bg"><i class="bi bi-calendar-check"></i></div>
-            </div>
-        </div>
-    </div>
+    <div class="tab-card" id="painel">
+        <h2 class="text-center mb-4">Painel da Clínica Veterinária 🐾</h2>
 
-    <div class="row mt-4 g-4">
-        <div class="col-md-6">
-            <div class="card-moderna card-proximas">
-                <h5>Próximas Consultas</h5>
-                <table class="table table-hover table-light table-sm mt-3 bg-white rounded">
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Cliente</th>
-                            <th>Pet</th>
-                            <th>Tipo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for consulta in consultas %}
-                            <tr>
-                                <td>{{ consulta.data|date('d/m/Y H:i') }}</td>
-                                <td>{{ consulta.cliente_nome }}</td>
-                                <td>{{ consulta.pet_nome }}</td>
-                                <td>{{ consulta.tipo }}</td>
-                            </tr>
-                        {% else %}
-                            <tr><td colspan="4">Nenhuma consulta agendada</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card-moderna card-recentes">
-                <h5>Pets Recentes</h5>
-                <div class="mt-3">
-                    {% for pet in pets_recentes %}
-                        <div class="bg-white text-dark p-2 rounded mb-3">
-                            <strong>{{ pet.nome }}</strong> • {{ pet.especie }} - {{ pet.raca }}<br>
-                            <small class="text-muted">Tutor: {{ pet.tutor }}</small>
-                            <div class="mt-2">
-                                <a href="#" class="btn btn-sm btn-outline-primary" onclick="abrirProntuario({{ pet.id }})">
-                                    📝 Ver Prontuário
-                                </a>
-                            </div>
+        <div class="row g-4 mb-4">
+            <!-- Cards resumo -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 p-3 text-white" style="background: linear-gradient(135deg, #6a11cb, #2575fc); border-radius: 12px;">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-paw fa-2x me-3"></i>
+                        <div>
+                            <h5>Total de Pets</h5>
+                            <h3>{{ total_pets }}</h3>
                         </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 p-3 text-white" style="background: linear-gradient(135deg, #f7971e, #ffd200); border-radius: 12px;">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-hand-holding-usd fa-2x me-3"></i>
+                        <div>
+                            <h5>Débitos Pendentes</h5>
+                            <h3>R$ {{ debitos_cliente|number_format(2, ',', '.') }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 p-3 text-white" style="background: linear-gradient(135deg, #43cea2, #185a9d); border-radius: 12px;">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-chart-line fa-2x me-3"></i>
+                        <div>
+                            <h5>Média de Consultas</h5>
+                            <h3>{{ media_atendimento }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Painel</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('financeiro_dashboard') }}">Financeiro</a>
+            </li>
+        </ul>
+        <!-- Últimos atendimentos -->
+        <h4 class="mt-4">Últimos Atendimentos 📋</h4>
+        <div class="scrollable-table-wrapper mb-4">
+            <table class="table table-rounded-row">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Pet</th>
+                        <th>Dono</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in atendimentos %}
+                        <tr>
+                            <td>{{ item.data|date('d/m') }}</td>
+                            <td>{{ item.pet }}</td>
+                            <td>{{ item.cliente }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if item.status == 'atendido' %}bg-success
+                                    {% elseif item.status == 'cancelado' %}bg-danger
+                                    {% else %}bg-warning text-dark{% endif %}">
+                                    {{ item.status|capitalize }}
+                                </span>
+                            </td>
+                        </tr>
                     {% else %}
-                        <p class="text-white">Nenhum pet cadastrado recentemente.</p>
+                        <tr><td colspan="4">Nenhum atendimento recente.</td></tr>
                     {% endfor %}
-                </div>
-            </div>
+                </tbody>
+            </table>
         </div>
-    </div>
 
-    <div class="row mt-5">
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Consultas por Mês</h5>
-                    <canvas id="graficoConsultas"></canvas>
-                </div>
-            </div>
+        <!-- Internações -->
+        <h4>Internações Ativas 🏥</h4>
+        <div class="scrollable-table-wrapper mb-4">
+            <table class="table table-rounded-row">
+                <thead>
+                    <tr>
+                        <th>Pet</th>
+                        <th>Dono</th>
+                        <th>Motivo</th>
+                        <th>Data de Início</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for internacao in internados %}
+                        <tr>
+                            <td>{{ internacao.pet_nome }}</td>
+                            <td>{{ internacao.dono_nome }}</td>
+                            <td>{{ internacao.motivo }}</td>
+                            <td>{{ internacao.data_inicio|date('d/m/Y') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4">Nenhuma internação ativa.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Pets por Espécie</h5>
-                    <canvas id="graficoPets"></canvas>
-                </div>
-            </div>
+
+        <!-- Vacinas programadas -->
+        <h4>Vacinas Programadas 💉</h4>
+        <div class="scrollable-table-wrapper mb-4">
+            <table class="table table-rounded-row">
+                <thead>
+                    <tr>
+                        <th>Pet</th>
+                        <th>Tipo</th>
+                        <th>Validade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vacina in vacinas_programadas %}
+                        <tr>
+                            <td>{{ vacina.pet_nome }}</td>
+                            <td>{{ vacina.tipo }}</td>
+                            <td>{{ vacina.data_validade|date('d/m/Y') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="3">Nenhuma vacina programada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Vacinas vencidas -->
+        <h4>Vacinas Vencidas ⚠️</h4>
+        <div class="scrollable-table-wrapper mb-4">
+            <table class="table table-rounded-row table-danger">
+                <thead>
+                    <tr>
+                        <th>Pet</th>
+                        <th>Tipo</th>
+                        <th>Validade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vacina in vacinas_vencidas %}
+                        <tr>
+                            <td>{{ vacina.pet_nome }}</td>
+                            <td>{{ vacina.tipo }}</td>
+                            <td>{{ vacina.data_validade|date('d/m/Y') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="3">Nenhuma vacina vencida.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Alertas -->
+        <h4>Alertas e Notificações 📢</h4>
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Este painel pode mostrar exames pendentes, análises ou alertas do sistema futuramente.
         </div>
     </div>
 </div>
-
-<div class="offcanvas offcanvas-end" tabindex="-1" id="canvasProntuario" aria-labelledby="canvasProntuarioLabel">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title">📝 Prontuário do Pet</h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-    </div>
-    <div id="canvasProntuarioContent" class="offcanvas-body">
-        <!-- Conteúdo AJAX será carregado aqui -->
-    </div>
-</div>
-{% endblock %}
-
-{% block javascripts %}
-{{ parent() }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const ctxConsultas = document.getElementById('graficoConsultas').getContext('2d');
-    new Chart(ctxConsultas, {
-        type: 'bar',
-        data: {
-            labels: {{ consultas_por_mes_keys|json_encode|raw }},
-            datasets: [{
-                label: 'Consultas',
-                data: {{ consultas_por_mes_vals|json_encode|raw }},
-                backgroundColor: 'rgba(33, 150, 243, 0.6)',
-                borderColor: 'rgba(33, 150, 243, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
-    });
-
-    const ctxPets = document.getElementById('graficoPets').getContext('2d');
-    new Chart(ctxPets, {
-        type: 'doughnut',
-        data: {
-            labels: {{ pets_por_especie_keys|json_encode|raw }},
-            datasets: [{
-                label: 'Pets',
-                data: {{ pets_por_especie_vals|json_encode|raw }},
-                backgroundColor: ['#4caf50', '#2196f3', '#ff9800', '#e91e63', '#9c27b0'],
-                borderWidth: 1
-            }]
-        },
-        options: { responsive: true, cutout: '70%' }
-    });
-
-    function abrirProntuario(petId) {
-        fetch('/clinica/prontuario/ajax/' + petId)
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('canvasProntuarioContent').innerHTML = html;
-                const offcanvas = new bootstrap.Offcanvas(document.getElementById('canvasProntuario'));
-                offcanvas.show();
-            })
-            .catch(error => {
-                alert('Erro ao carregar o prontuário.');
-                console.error(error);
-            });
-    }
-</script>
 {% endblock %}

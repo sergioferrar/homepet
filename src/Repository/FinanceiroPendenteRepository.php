@@ -145,12 +145,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
     public function findAllPendentes(int $baseId): array
     {
-        $sql = "SELECT f.id, 
-                   f.descricao, 
-                   f.valor, 
-                   f.data, 
-                   p.nome AS pet_nome, 
-                   c.nome AS dono_nome 
+        $sql = "SELECT f.id, f.descricao, f.valor, f.data, p.nome AS pet_nome, c.nome AS dono_nome 
             FROM {$_ENV['DBNAMETENANT']}.financeiropendente f
             LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
             LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
@@ -161,6 +156,19 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         'baseId' => $baseId
     ]);
 
+    }
+
+    public function somarDebitosPendentes($baseId): float
+    {
+        $sql = "SELECT SUM(valor) as total
+                FROM {$_ENV['DBNAMETENANT']}.financeiropendente
+                WHERE estabelecimento_id = :baseId";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $result = $stmt->executeQuery()->fetchAssociative();
+
+        return (float) ($result['total'] ?? 0);
     }
 
 }
