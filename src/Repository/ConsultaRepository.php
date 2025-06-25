@@ -134,6 +134,67 @@ class ConsultaRepository extends ServiceEntityRepository
         return $result->fetchAllAssociative();
     }
 
+    public function listarUltimosAtendimentos($baseId, $limite = 5): array
+    {
+        $sql = "SELECT c.id, c.data, c.hora, c.status,
+                       cl.nome AS cliente, p.nome AS pet
+                FROM {$_ENV['DBNAMETENANT']}.consulta c
+                JOIN {$_ENV['DBNAMETENANT']}.cliente cl ON cl.id = c.cliente_id
+                JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.id = c.pet_id
+                WHERE c.estabelecimento_id = :baseId
+                ORDER BY c.data DESC, c.hora DESC
+                LIMIT :limite";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('limite', $limite, \PDO::PARAM_INT);
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
+    public function contarConsultasPorStatus($baseId): array
+    {
+        $sql = "SELECT status, COUNT(*) as total
+                FROM {$_ENV['DBNAMETENANT']}.consulta
+                WHERE estabelecimento_id = :baseId
+                GROUP BY status";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $result = $stmt->executeQuery()->fetchAllAssociative();
+
+        $dados = [
+            'aguardando' => 0,
+            'atendido' => 0,
+            'cancelado' => 0
+        ];
+
+        foreach ($result as $row) {
+            $status = $row['status'] ?? 'desconhecido';
+            $dados[$status] = (int) $row['total'];
+        }
+
+        return $dados;
+    }
+
+    public function calcularMediaConsultas($baseId): float
+    {
+        $sql = "SELECT COUNT(*) as total, COUNT(DISTINCT DATE(data)) as dias
+                FROM {$_ENV['DBNAMETENANT']}.consulta
+                WHERE estabelecimento_id = :baseId";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $result = $stmt->executeQuery()->fetchAssociative();
+
+        $total = (int) ($result['total'] ?? 0);
+        $dias = (int) ($result['dias'] ?? 1); // Evita divisão por zero
+
+        return $dias > 0 ? round($total / $dias, 2) : 0.0;
+    }
+
+
+
+
 
 
 }

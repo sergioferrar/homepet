@@ -145,10 +145,37 @@ class PetRepository extends ServiceEntityRepository
         return $result->fetchAllAssociative();
     }
 
+    public function listarVacinasPendentes($baseId): array
+    {
+        $sql = "SELECT v.id, v.pet_id, v.tipo, v.data_aplicacao, v.data_validade,
+                       p.nome as pet_nome, c.nome as tutor
+                FROM {$_ENV['DBNAMETENANT']}.vacina v
+                JOIN {$_ENV['DBNAMETENANT']}.pet p ON v.pet_id = p.id
+                JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                WHERE v.data_validade < CURDATE()
+                  AND p.estabelecimento_id = :baseId
+                ORDER BY v.data_validade ASC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $result = $stmt->executeQuery();
+        return $result->fetchAllAssociative();
+    }
 
 
+    public function listarPetsInternados($baseId): array
+    {
+        $sql = "SELECT p.id, p.nome, p.raca, p.especie, c.nome as tutor
+                FROM {$_ENV['DBNAMETENANT']}.pet p
+                JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.cliente_id = c.id
+                WHERE p.internado = 1
+                  AND p.estabelecimento_id = :baseId
+                ORDER BY p.nome";
 
-
-
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $result = $stmt->executeQuery();
+        return $result->fetchAllAssociative();
+    }
 
 }

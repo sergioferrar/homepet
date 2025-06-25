@@ -188,7 +188,7 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function verificaPagamentoExistente($baseId, $petId, $valor, $dataReferencia): bool
     {
-        $sql = "SELECT COUNT(*) FROM {$_ENV['DBNAMETENANT']}{$baseId}.financeiro
+        $sql = "SELECT COUNT(*) FROM {$_ENV['DBNAMETENANT']}.financeiro
                 WHERE estabelecimento_id = '{$baseId}' 
                     AND pet_id = :pet_id
                     AND valor = :valor
@@ -201,4 +201,20 @@ class FinanceiroRepository extends ServiceEntityRepository
             'data_referencia' => (new \DateTime($dataReferencia))->format('Y-m-d'),
         ]);
     }
+
+    public function somarPorDescricao($baseId, $descricaoParcial, \DateTime $inicio, \DateTime $fim): float
+    {
+        $sql = "SELECT SUM(valor) FROM {$_ENV['DBNAMETENANT']}.financeiro
+                WHERE estabelecimento_id = :base_id
+                  AND descricao LIKE :descricao
+                  AND data BETWEEN :inicio AND :fim";
+
+        return (float) $this->conn->fetchOne($sql, [
+            'base_id'   => $baseId,
+            'descricao' => '%' . $descricaoParcial . '%',
+            'inicio'    => $inicio->format('Y-m-d'),
+            'fim'       => $fim->format('Y-m-d'),
+        ]);
+    }
+
 }

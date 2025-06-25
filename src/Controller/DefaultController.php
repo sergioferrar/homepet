@@ -174,4 +174,11 @@ class DefaultController extends AbstractController
 
         return false;
     }
+    /**
+     * Retorna o ID base da sessão (estabelecimento/usuário)
+     */
+    public function getIdBase(): int
+    {
+        return (int) $this->session->get('userId');
+    }
 }
