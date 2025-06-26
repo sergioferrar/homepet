@@ -37,6 +37,14 @@
                         </div>
 
                         <div class="form-group mb-3">
+                            <select class="form-select" aria-label="Default select example">
+                              <option selected>tipo</option>
+                              <option value="1">Atendimento Clínico</option>
+                              <option value="2">Vacina</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
                             <label for="observacoes">Observações</label>
                             <textarea id="observacoes" name="observacoes" class="form-control"></textarea>
                         </div>
@@ -51,9 +59,22 @@
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h5 class="mb-3">Consultas de Hoje</h5>
+                    <h5 class="mb-3" style="text-align: center;">Consultas</h5>
+
+                    <form method="get" class="row g-2 mb-3">
+                        <div class="col-7">
+                            <input type="text" name="pet_nome" class="form-control" placeholder="🔍 Nome do pet" value="{{ app.request.get('pet_nome') }}">
+                        </div>
+                        <div class="col-5">
+                            <input type="date" name="data" class="form-control" value="{{ app.request.get('data') }}">
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-outline-primary w-100" type="submit">Filtrar</button>
+                        </div>
+                    </form>
+
                     {% if consultas is not empty %}
-                        <div class="list-group">
+                        <div class="list-group" style="max-height: 400px; overflow-y: auto;">
                             {% for c in consultas %}
                                 <div class="list-group-item mb-3 rounded border status-box 
                                     {% if c.status == 'atendido' %}bg-success text-white
@@ -79,7 +100,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <p class="text-muted">Nenhuma consulta para hoje.</p>
+                        <p class="text-muted">Nenhuma consulta encontrada.</p>
                     {% endif %}
                 </div>
             </div>
