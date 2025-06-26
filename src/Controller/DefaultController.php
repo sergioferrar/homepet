@@ -65,10 +65,6 @@ class DefaultController extends AbstractController
 
     public function restauraLoginDB():void
     {   
-        $conexao = $this->managerRegistry->getConnection()->getParams();
-        
-        $estabelecimentoId = "{$_ENV['DBNAMETENANT']}";
-
         (new DynamicConnectionManager($this->managerRegistry))->restoreOriginal();
     }
 
