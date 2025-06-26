@@ -249,15 +249,19 @@ class ClinicaController extends DefaultController
 
 
         $totalGeral = $totalReceita - $totalDespesa;
+        $dataAtual = $request->query->get('data') 
+            ? new \DateTime($request->query->get('data')) 
+            : new \DateTime();
 
-        return $this->render('clinica/financeirodash.html.twig', [
-            'financeiro_hoje' => $financeiroHoje,
-            'financeiro_semana' => $financeiroSemana,
-            'financeiro_mes' => $financeiroMes,
-            'total_receita' => $totalReceita,
-            'total_despesa' => $totalDespesa,
-            'saldo_geral' => $totalGeral,
-        ]);
+
+    return $this->render('clinica/financeirodash.html.twig', [
+        'financeiro_hoje' => $financeiroHoje,
+        'total_receita' => $totalReceita,
+        'total_despesa' => $totalDespesa,
+        'saldo_geral' => $saldoGeral,
+        'dataAtual' => $dataAtual,
+    ]);
+
     }
 
 }
