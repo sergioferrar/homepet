@@ -63,6 +63,15 @@ class DefaultController extends AbstractController
         (new DynamicConnectionManager($this->managerRegistry))->switchDatabase($estabelecimentoId, $estabelecimentoId);
     }
 
+    public function restauraLoginDB():void
+    {   
+        $conexao = $this->managerRegistry->getConnection()->getParams();
+        
+        $estabelecimentoId = "{$_ENV['DBNAMETENANT']}";
+
+        (new DynamicConnectionManager($this->managerRegistry))->restoreOriginal();
+    }
+
     /**
      * @param $class
      * @return ObjectRepository
