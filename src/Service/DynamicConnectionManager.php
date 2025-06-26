@@ -27,7 +27,7 @@ class DynamicConnectionManager
 
         //$params['dbname'] = $newDbName;
         //if($params['host'] !== '127.0.0.1'){
-            //$params['user'] = $newUsername;
+            $params['user'] = $newUsername;
         //}
         // senha, host e driver permanecem os mesmos
 
