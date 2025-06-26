@@ -95,11 +95,11 @@ class MenuController extends DefaultController
 
     /**
      * @Route("/listamenu", name="leftMenu")
-     * {{ render(path('leftMenu', {activeRoute : route})) }}
     */
     public function getMenu(Request $request): Response
     {
         $this->restauraLoginDB();
+        
         $data = [];
 
         // Usuario logado
