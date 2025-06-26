@@ -25,7 +25,7 @@ class DynamicConnectionManager
         $params = $this->originalParams;
 
 
-        //$params['dbname'] = $newDbName;
+        $params['dbname'] = $newDbName;
         //if($params['host'] !== '127.0.0.1'){
             $params['user'] = $newUsername;
         //}
