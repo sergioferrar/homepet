@@ -58,7 +58,7 @@ class DefaultController extends AbstractController
     {   
         $conexao = $this->managerRegistry->getConnection()->getParams();
         
-        $estabelecimentoId = "{$_ENV['DBNAMETENANT']}{$this->session->get('userId')}";
+        $estabelecimentoId = "{$_ENV['DBNAMETENANT']}";
 
         (new DynamicConnectionManager($this->managerRegistry))->switchDatabase($estabelecimentoId, $estabelecimentoId);
     }
