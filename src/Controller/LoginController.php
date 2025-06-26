@@ -76,9 +76,9 @@ class LoginController extends DefaultController
 
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
         ->findById($this->security->getUser()->getPetshopId())[0];
-dd($estabelecimento);
+
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
-        
+        dd($validaPlano);
         if($validaPlano){
             $mensagem = str_replace(' ', '-', $validaPlano);
             return $this->redirectToRoute('logout', ['error' => $mensagem]);
