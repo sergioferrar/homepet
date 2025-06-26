@@ -98,7 +98,7 @@ class MenuController extends DefaultController
     */
     public function getMenu(Request $request): Response
     {
-        
+
         $this->restauraLoginDB();
 
         $data = [];
@@ -106,6 +106,7 @@ class MenuController extends DefaultController
         // Usuario logado
         $usuarioLogado = $this->getRepositorio(\App\Entity\Usuario::class)
             ->find($request->getSession()->get('userId'));
+            dd($usuarioLogado);
         // Pegar o estabelecimento a qual pertence o usuario loado
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
             ->find($usuarioLogado->getPetshopId());
