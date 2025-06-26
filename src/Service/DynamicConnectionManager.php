@@ -43,6 +43,7 @@ class DynamicConnectionManager
     {
         // dd($this->originalParams);
         $this->switchDatabase('u199209817_login', 'u199209817_systemhomepet');
+        dd($this->connection);
     }
 
     public function getConnection(): Connection
