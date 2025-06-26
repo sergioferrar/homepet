@@ -30,7 +30,7 @@ class DynamicConnectionManager
             $params['user'] = $newUsername;
         //}
         // senha, host e driver permanecem os mesmos
-        dd($params);
+        
         $reflection = new \ReflectionClass($this->connection);
         $property = $reflection->getProperty('params');
         $property->setAccessible(true);
@@ -40,7 +40,7 @@ class DynamicConnectionManager
     }
 
     public function restoreOriginal(): void
-    {
+    {dd($this->originalParams);
         $this->switchDatabase($this->originalParams['dbname'], $this->originalParams['user']);
     }
 
