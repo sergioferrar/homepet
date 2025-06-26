@@ -76,7 +76,7 @@ class LoginController extends DefaultController
 
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
         ->findById($this->security->getUser()->getPetshopId())[0];
-
+dd($estabelecimento);
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
         
         if($validaPlano){
