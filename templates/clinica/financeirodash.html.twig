@@ -28,6 +28,7 @@
 {% block body %}
 <div class="container mt-4">
     <h2 class="mb-4 text-center">Painel Financeiro</h2>
+
     <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
             <a class="nav-link active" aria-current="page" href="#">Financeiro</a>
@@ -39,10 +40,10 @@
 
     <div class="row mb-4">
         <div class="col-md-6">
-            <input type="text" id="pesquisarPet" class="form-control" placeholder="Pesquisar nome do pet...">
+            <input type="text" id="pesquisarPet" class="form-control" placeholder="🔎 Pesquisar nome do pet ou dono...">
         </div>
         <div class="col-md-6">
-            <input type="date" id="filtrarData" class="form-control" value="{{ "now"|date('Y-m-d') }}">
+            <input type="date" id="filtrarData" class="form-control" value="{{ dataAtual|date('Y-m-d') }}">
         </div>
     </div>
 
@@ -67,30 +68,29 @@
         </div>
     </div>
 
-    <h4 class="mt-4">Lançamentos de Hoje</h4>
+    <h4 class="mt-4">Resumo de Lançamentos do Dia</h4>
+
     <div class="financeiro-table-wrapper">
         <table class="table table-striped table-hover table-bordered financeiro-table">
             <thead>
                 <tr>
-                    <th>Pet</th>
-                    <th>Valor</th>
-                    <th>Forma de Pagamento</th>
-                    <th>Descrição</th>
+                    <th>Dono</th>
+                    <th>Pets</th>
+                    <th>Valor Total</th>
                     <th>Data</th>
                 </tr>
             </thead>
             <tbody id="tabelaFinanceiro">
                 {% for item in financeiro_hoje %}
                     <tr>
-                        <td>{{ item.pet_nome }}</td>
-                        <td>R$ {{ item.valor|number_format(2, ',', '.') }}</td>
-                        <td>{{ item.forma_pagamento }}</td>
-                        <td>{{ item.descricao }}</td>
+                        <td>{{ item.dono_nome }}</td>
+                        <td>{{ item.pets }}</td>
+                        <td>R$ {{ item.total_valor|number_format(2, ',', '.') }}</td>
                         <td>{{ item.data|date('d/m/Y') }}</td>
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="5" class="text-center">Nenhum lançamento hoje.</td>
+                        <td colspan="4" class="text-center text-muted">Nenhum lançamento encontrado para hoje.</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -102,8 +102,8 @@
     document.getElementById('pesquisarPet').addEventListener('keyup', function () {
         const filtro = this.value.toLowerCase();
         document.querySelectorAll('#tabelaFinanceiro tr').forEach(function (linha) {
-            const pet = linha.querySelector('td').innerText.toLowerCase();
-            linha.style.display = pet.includes(filtro) ? '' : 'none';
+            const texto = linha.innerText.toLowerCase();
+            linha.style.display = texto.includes(filtro) ? '' : 'none';
         });
     });
 
