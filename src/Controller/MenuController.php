@@ -98,8 +98,9 @@ class MenuController extends DefaultController
     */
     public function getMenu(Request $request): Response
     {
+        dd("testa aqui viado");
         $this->restauraLoginDB();
-        
+
         $data = [];
 
         // Usuario logado
