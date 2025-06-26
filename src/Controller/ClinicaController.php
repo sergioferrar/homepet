@@ -254,14 +254,15 @@ class ClinicaController extends DefaultController
             : new \DateTime();
 
 
-    return $this->render('clinica/financeirodash.html.twig', [
-        'financeiro_hoje' => $financeiroHoje,
-        'total_receita' => $totalReceita,
-        'total_despesa' => $totalDespesa,
-        'saldo_geral' => $saldoGeral,
-        'dataAtual' => $dataAtual,
-    ]);
-
+        return $this->render('clinica/financeirodash.html.twig', [
+            'financeiro_hoje' => $financeiroHoje,
+            'financeiro_semana' => $financeiroSemana,
+            'financeiro_mes' => $financeiroMes,
+            'total_receita' => $totalReceita,
+            'total_despesa' => $totalDespesa,
+            'saldo_geral' => $totalGeral,
+            'dataAtual' => $dataAtual,
+        ]);
     }
 
 }
