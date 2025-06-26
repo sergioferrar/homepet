@@ -93,7 +93,7 @@
                 <div class="card-body text-center">
                     <h3 class="card-title">📅</h3>
                     <p class="card-text fs-4">
-                        R$ {{ financeiro_semana|length > 0 ? financeiro_semana|map(f => f.valor)|reduce((carry, v) => carry + v) : 0 }}
+                        R$ {{ financeiro_semana|length > 0 ? financeiro_semana|map(f => f.total)|reduce((carry, v) => carry + v) : 0 }}
                     </p>
                     <p>Últimos 7 dias</p>
                 </div>
