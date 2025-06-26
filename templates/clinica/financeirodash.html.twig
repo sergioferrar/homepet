@@ -82,7 +82,7 @@
                 <div class="card-body text-center">
                     <h3 class="card-title">💰</h3>
                     <p class="card-text fs-4">
-                        R$ {{ financeiro_hoje|length > 0 ? financeiro_hoje|map(f => f.valor)|reduce((carry, v) => carry + v) : 0 }}
+                        R$ {{ financeiro_hoje|length > 0 ? financeiro_hoje|map(f => f.total_valor)|reduce((carry, v) => carry + v) : 0 }}
                     </p>
                     <p>Hoje</p>
                 </div>
