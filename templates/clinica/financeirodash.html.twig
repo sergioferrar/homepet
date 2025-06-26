@@ -159,7 +159,7 @@
         {% set dias = {} %}
         {% for item in financeiro_semana %}
             {% set data = item.data|date('d/m/Y') %}
-            {% set dias = dias|merge({(data): (dias[data]|default(0) + item.valor)}) %}
+            {% set dias = dias|merge({(data): (dias[data]|default(0) + item.total)}) %}
         {% endfor %}
 
         {% for data, total in dias %}
