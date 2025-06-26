@@ -61,7 +61,12 @@ class ClinicaController extends DefaultController
         $baseId = $this->session->get('userId');
 
         $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($baseId);
-        $consultas = $this->getRepositorio(Consulta::class)->listarConsultasDoDia($baseId, new \DateTime());
+
+        $petNome = $request->query->get('pet_nome');
+        $dataFiltro = $request->query->get('data') ?: (new \DateTime())->format('Y-m-d');
+
+        $consultas = $this->getRepositorio(Consulta::class)->listarConsultasDoDia($baseId, new \DateTime($dataFiltro), $petNome);
+
 
         if ($request->isMethod('POST')) {
             $consulta = new Consulta();

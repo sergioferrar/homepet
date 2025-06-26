@@ -32,7 +32,7 @@ CREATE TABLE `colaborador` (
   `ativo` tinyint(1) DEFAULT '1',
   `criado_em` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -69,7 +69,7 @@ CREATE TABLE `estabelecimento` (
   `dataPlanoInicio` datetime DEFAULT NULL,
   `dataPlanoFim` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -219,44 +219,3 @@ LOCK TABLES `planos` WRITE;
 INSERT INTO `planos` VALUES (1,'Plano Full Administrador','[\"agendamentosDePets\",\"cadastroDeClientes\",\"cadastroDePets\",\"servi\\u00e7osDoPetshop\",\"\\u00e1reaDeFinanceiro\",\"gest\\u00e3oDeUsu\\u00e1rios\",\"banhoETosa\",\"hospedagemDeC\\u00e3es\",\"cl\\u00ednicaVeterin\\u00e1ria\"]',0.00,'Inativo',0,NULL,'2025-04-29 22:58:35','[\"agendamentosDePets\",\"cadastroDeClientes\",\"cadastroDePets\",\"servi\\u00e7osDoPetshop\",\"\\u00e1reaDeFinanceiro\",\"gest\\u00e3oDeUsu\\u00e1rios\",\"banhoETosa\",\"hospedagemDeC\\u00e3es\",\"cl\\u00ednicaVeterin\\u00e1ria\"]'),(2,'Plano básico','[\"agendamentosDePets\",\"cadastroDeClientes\",\"cadastroDePets\",\"servi\\u00e7osDoPetshop\",\"\\u00e1reaDeFinanceiro\",\"gest\\u00e3oDeUsu\\u00e1rios\",\"banhoETosa\"]',64.90,'Ativo',0,NULL,'2025-05-03 10:17:47','[\"agendamentosDePets\",\"cadastroDeClientes\",\"cadastroDePets\",\"servi\\u00e7osDoPetshop\",\"\\u00e1reaDeFinanceiro\",\"gest\\u00e3oDeUsu\\u00e1rios\",\"banhoETosa\"]'),(3,'Plano intermediário','[\"agendamentosDePets\",\"cadastroDeClientes\",\"cadastroDePets\",\"servi\\u00e7osDoPetshop\",\"\\u00e1reaDeFinanceiro\",\"gest\\u00e3oDeUsu\\u00e1rios\",\"banhoETosa\",\"hospedagemDeC\\u00e3es\"]',85.90,'Ativo',1,NULL,'2025-05-03 10:18:03','[\"agendamentosDePets\",\"cadastroDeClientes\",\"cadastroDePets\",\"servi\\u00e7osDoPetshop\",\"\\u00e1reaDeFinanceiro\",\"gest\\u00e3oDeUsu\\u00e1rios\",\"banhoETosa\",\"hospedagemDeC\\u00e3es\"]'),(4,'Plano Avançado','[\"agendamentosDePets\",\"cadastroDeClientes\",\"cadastroDePets\",\"servi\\u00e7osDoPetshop\",\"\\u00e1reaDeFinanceiro\",\"gest\\u00e3oDeUsu\\u00e1rios\",\"banhoETosa\",\"hospedagemDeC\\u00e3es\",\"cl\\u00ednicaVeterin\\u00e1ria\"]',99.90,'Ativo',0,NULL,'2025-05-03 10:18:19','[\"agendamentosDePets\",\"cadastroDeClientes\",\"cadastroDePets\",\"servi\\u00e7osDoPetshop\",\"\\u00e1reaDeFinanceiro\",\"gest\\u00e3oDeUsu\\u00e1rios\",\"banhoETosa\",\"hospedagemDeC\\u00e3es\",\"cl\\u00ednicaVeterin\\u00e1ria\"]');
 /*!40000 ALTER TABLE `planos` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `usuario`
---
-
-DROP TABLE IF EXISTS `usuario`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `usuario` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `nome_usuario` varchar(255) NOT NULL,
-  `senha` varchar(255) NOT NULL,
-  `email` varchar(45) NOT NULL,
-  `roles` varchar(45) NOT NULL DEFAULT '["ROLE_ADMIN"]',
-  `access_level` enum('Super Admin','Admin','Atendente','Balconista') DEFAULT NULL,
-  `petshop_id` bigint NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `nome_usuario` (`nome_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `usuario`
---
-
-LOCK TABLES `usuario` WRITE;
-/*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
-INSERT INTO `usuario` VALUES (1,'admin','$2y$13$LCc51Y2fUCLcDBux3MrcT.TEYEj.SxUKowQ5VGZSx1iBx7GbJL.zy','sergioferrari150395@gmail.com','[\"ROLE_ADMIN\"]','Super Admin',1),(4,'Lucenir Monteiro','$2y$13$l5GfkqwPGB7ADHHkx3Q7BOwZBcI2YCHsXf6R085RSoGHV2rKsPC1y','lucenirmonteiro@gmail.com','[\"ROLE_ADMIN\"]','Admin',1),(6,'Adilio Gobira','$2y$13$5to5VkD9stvrya3w/NNnTeKkj0Wn4mkbQygQ.6npOy0MecNxNLraa','adiliogobira@gmail.com','[\"ROLE_ADMIN\"]','Admin',25),(7,'Andre','$2y$13$LCc51Y2fUCLcDBux3MrcT.TEYEj.SxUKowQ5VGZSx1iBx7GbJL.zy','andre.petshop@gmail.com','[\"ROLE_ADMIN\"]','Atendente',1);
-/*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2025-06-25 16:49:58

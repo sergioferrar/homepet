@@ -30,7 +30,7 @@ class DynamicConnectionManager
             $params['user'] = $newUsername;
         //}
         // senha, host e driver permanecem os mesmos
-
+        dd($params);
         $reflection = new \ReflectionClass($this->connection);
         $property = $reflection->getProperty('params');
         $property->setAccessible(true);
