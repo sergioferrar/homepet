@@ -106,7 +106,7 @@ class MenuController extends DefaultController
         // Usuario logado
         $usuarioLogado = $this->getRepositorio(\App\Entity\Usuario::class)
             ->find($request->getSession()->get('userId'));
-            dd($request->getSession()->get('userId'));
+        dd($usuarioLogado, $request->getSession()->get('userId'));
         // Pegar o estabelecimento a qual pertence o usuario loado
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
             ->find($usuarioLogado->getPetshopId());
