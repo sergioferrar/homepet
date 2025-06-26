@@ -72,7 +72,7 @@ class LoginController extends DefaultController
         $request->getSession()->set('login', true);
         $request->getSession()->set('user', $this->security->getUser()->getNomeUsuario());
         $request->getSession()->set('accessLevel', $this->security->getUser()->getAccessLevel());
-        $request->getSession()->set('userId', $this->security->getUser()->getId());
+        $request->getSession()->set('userId', $this->security->getUser()->getPetshopId());
 
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
         ->findById($this->security->getUser()->getPetshopId())[0];
