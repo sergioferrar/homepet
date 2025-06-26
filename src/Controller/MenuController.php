@@ -15,6 +15,7 @@ class MenuController extends DefaultController
      */
     public function index(Request $request): Response
     {
+        $this->restauraLoginDB();
         $repo = $this->getRepositorio(\App\Entity\Menu::class)->findAll();
         $data = [];
         $data['menus'] = $repo;
@@ -26,6 +27,7 @@ class MenuController extends DefaultController
      */
     public function new(Request $request): Response
     {
+        $this->restauraLoginDB();
         if ($request->isMethod('POST')) {
             $menu = new \App\Entity\Menu();
             $menu->setTitulo($request->request->get('titulo'));
@@ -57,6 +59,7 @@ class MenuController extends DefaultController
     public function edit(Request $request): Response
     {
 
+        $this->restauraLoginDB();
         $repositorio = $this->getRepositorio(\App\Entity\Menu::class);
         $menu = $repositorio->find($request->get('id'));
 
@@ -96,6 +99,7 @@ class MenuController extends DefaultController
     */
     public function getMenu(Request $request): Response
     {
+        $this->restauraLoginDB();
         $data = [];
 
         // Usuario logado
