@@ -25,12 +25,12 @@ class DynamicConnectionManager
         $params = $this->originalParams;
 
 
-        $params['dbname'] = $_ENV['DBNAMETENANT'];
+        //$params['dbname'] = $newDbName;
         //if($params['host'] !== '127.0.0.1'){
-            $params['user'] = $_ENV['DBNAMETENANT'];
+            //$params['user'] = $newUsername;
         //}
         // senha, host e driver permanecem os mesmos
-//dd($params);
+
         $reflection = new \ReflectionClass($this->connection);
         $property = $reflection->getProperty('params');
         $property->setAccessible(true);
