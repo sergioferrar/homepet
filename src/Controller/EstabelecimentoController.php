@@ -6,6 +6,7 @@ use App\Entity\Estabelecimento;
 use App\Entity\Usuario;
 use App\Service\DatabaseBkp;
 use App\Service\EmailService;
+use App\Service\PagSeguroService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -21,7 +22,7 @@ class EstabelecimentoController extends DefaultController
         if($this->security->getUser()->getAccessLevel() == 'Admin'){
             return $this->redirectToRoute('petshop_edit',['eid'=>$this->security->getUser()->getId()]);
         }
-        //$this->switchDB();
+        
         $estabelecimentos = $this->getRepositorio(\App\Entity\Estabelecimento::class)->listaEstabelecimentos($this->session->get('userId'));
 
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
@@ -29,14 +30,9 @@ class EstabelecimentoController extends DefaultController
 
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
 
-        //dd($estabelecimento, $validaPlano);
         
         $data['estabelecimentos'] = $estabelecimentos;
         $data['validaPlano'] = $validaPlano;
-        /*if($validaPlano){
-            $mensagem = str_replace(' ', '-', $validaPlano);
-            return $this->redirectToRoute('logout', ['error' => $mensagem]);
-        }*/
 
         return $this->render('estabelecimento/index.html.twig', $data);
     }
@@ -196,11 +192,48 @@ class EstabelecimentoController extends DefaultController
     /**
      * @Route("/landing/confirmacao/cadastro/{estabelecimento}", name="confirma_cadastro")
      */
-    public function confirmacaoCadastro(Request $request): Response
+    public function confirmacaoCadastro(Request $request, PagSeguroService $pagSeguroService): Response
     {
 
         $eid = $request->get('estabelecimento');
-        $this->getRepositorio(\App\Entity\Estabelecimento::class)->aprovacao($this->session->get('userId'), $eid);
+        $uid = $this->session->get('userId');
+
+        // Pegar dados do estabelecimiento
+        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($eid);
+        // Buscar usuario com o estabelecimento acessado
+        $usario = $this->getRepositorio(\App\Entity\Usuario::class)->findOneBy(['petshop_id' => $eid]);
+        // Buscaro plano que o estabelecimento está assinando
+        $plano = $this->getRepositorio(\App\Entity\Plano::class)->find($estabelecimento->getPlanoId());
+
+        // pra salvar o cadastro original
+        $endpoint = "https://viacep.com.br/ws/{$estabelecimento->getCep()}/json";
+        $endereco = json_decode(file_get_contents($endpoint), true);
+        
+        $comprador = [
+            'nome' => $usario->getNomeUsuario(),
+            'email' => $usario->getEmail(),
+            'rua' => $endereco['logradouro'],
+            'numero' => $estabelecimento->getNumero(),
+            'bairro' => $endereco['bairro'],
+            'cep' => $estabelecimento->getCep(),
+            'cidade' => $endereco['localidade'],
+            'estado' => $endereco['uf'], // Achei um furo no cadastro do estabelecimento, corrigir depois
+        ];
+
+        $produto = [
+            'id' => $plano->getId(),
+            'titulo' => $plano->getTitulo(),
+            'valor' => $plano->getValor(),
+        ];
+
+        // $code = $pagSeguroService->executeCheckout($comprador, $produto, $this->generateUrl('pagseguro_retorno'));
+
+        // // cria session do estabelecimento e do usuario
+
+        // $request->getSession()->set('finaliza', ['eid' => $eid, 'uid' => $uid]);
+
+        
+        return $this->redirect($pagSeguroService->gerarUrlPagamento($code));
         return $this->render('estabelecimento/confirmacao.html.twig', [
             'estabelecimento' => $request->get('estabelecimento'),
         ]);

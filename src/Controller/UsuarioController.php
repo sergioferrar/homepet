@@ -21,12 +21,12 @@ class UsuarioController extends DefaultController
         switch ($this->security->getUser()->getAccessLevel()) {
             case 'Super Admin':
                 $usuarios = $repositorio->listaTodos();
-                $pethop = $this->getRepositorio(Estabelecimento::class)->find($request->getSession()->get('userId'));
+                $pethop = $this->getRepositorio(Estabelecimento::class)->find($this->estabelecimentoId);
 
                 $data['estabelecimento'] = $pethop;
                 break;
             case 'Admin':
-                $usuarios = $repositorio->listaTodosPrivado($request->getSession()->get('userId'));
+                $usuarios = $repositorio->listaTodosPrivado($this->estabelecimentoId);
                 break;
         }
 

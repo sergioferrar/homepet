@@ -29,6 +29,7 @@ class DefaultController extends AbstractController
     protected $session;
     public $tempDirManager;
     public $databaseBkp;
+    public $estabelecimentoId;
     protected $modulosSistema = [
         'agendamentosDePets' => 'Agendamentos de Pets',
         'cadastroDeClientes' => 'Cadastro de Clientes',
@@ -52,6 +53,7 @@ class DefaultController extends AbstractController
         $this->session = $this->request->getSession();
         $this->tempDirManager = $tempDirManager;
         $this->databaseBkp = $databaseBkp;
+        $this->estabelecimentoId = $this->session->get('estabelecimentoId');
     }
 
     public function switchDB():void
