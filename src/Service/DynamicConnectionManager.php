@@ -23,11 +23,13 @@ class DynamicConnectionManager
         }
 
         $params = $this->originalParams;
+        // dd($params, $newUsername,get_current_user());
 
-
-        $params['dbname'] = $newDbName ?? 'u199209817_26';
+        $params['dbname'] = $newDbName ?? $_ENV['DBNAMETENANT'];//'u199209817_26';
+        if(get_current_user() == 'u199209817'){
+            $params['user'] = $newUsername;
+        }
         //if($params['host'] !== '127.0.0.1'){
-            $params['user'] = $newUsername ?? 'u199209817_26';
         //}
         // senha, host e driver permanecem os mesmos
 
@@ -42,8 +44,11 @@ class DynamicConnectionManager
     public function restoreOriginal(): void
     {
         // dd($this->originalParams);
-        $this->switchDatabase('u199209817_login', 'u199209817_systemhomepet');
-        dump($this->connection);
+        $databaseVariables = explode('/', $_ENV['DATABASE_URL']);
+        $databaseUser = explode(':',$databaseVariables[2]);
+        // dd(explode('/', $_ENV['DATABASE_URL']),$databaseUser[0]);
+        $this->switchDatabase($databaseVariables[3], $databaseUser[0]);
+        // dump($this->connection);
     }
 
     public function getConnection(): Connection

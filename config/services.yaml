@@ -29,3 +29,8 @@ services:
     App\Service\PdfService:
         arguments:
             $twig: '@twig'
+
+    App\Service\PagSeguroService:
+        arguments:
+            $email: '%env(PAGSEGURO_EMAIL)%'
+            $token: '%env(PAGSEGURO_TOKEN)%'

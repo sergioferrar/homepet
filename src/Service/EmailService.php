@@ -26,7 +26,7 @@ class EmailService
     public function sendEmail(string $to, string $subject, string $content, ?string $from = null): void
     {
         $email = (new Email())
-            ->from($from ?? 'suporte@systemhomepet.com')
+            ->from('suporte@systemhomepet.com')
             ->to($to)
             ->subject($subject)
             ->html($content);
