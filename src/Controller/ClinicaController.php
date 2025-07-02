@@ -53,6 +53,29 @@ class ClinicaController extends DefaultController
     }
 
     /**
+     * @Route("/clinica/pet/{id}", name="clinica_detalhes_pet")
+     */
+    public function detalhesPet(Request $request, $id): Response
+    {
+        // $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $pet = $this->getRepositorio(\App\Entity\Pet::class)->findPetById($baseId, $id);
+        $consultas = $this->getRepositorio(\App\Entity\Consulta::class)->listarConsultasPorCliente($baseId,$id);
+        $financeiro = $this->getRepositorio(\App\Entity\Financeiro::class)->findFinanceiro($baseId,$id);
+        $vacinas = $this->getRepositorio(\App\Entity\Pet::class)->findPetById($baseId,$id);
+        $internacoes = $this->getRepositorio(\App\Entity\Internacao::class)->listarInternacoesAtivas($baseId,$id);
+
+        return $this->render('clinica/detalhes_pet.html.twig', [
+            'pet' => $pet,
+            'consultas' => $consultas,
+            'financeiro' => $financeiro,
+            'vacinas' => $vacinas,
+            'internacoes' => $internacoes,
+        ]);
+    }
+
+    /**
      * @Route("/consulta/nova", name="clinica_nova_consulta", methods={"GET", "POST"})
      */
     public function novaConsulta(Request $request): Response

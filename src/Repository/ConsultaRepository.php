@@ -137,7 +137,7 @@ class ConsultaRepository extends ServiceEntityRepository
     public function listarUltimosAtendimentos($baseId, $limite = 5): array
     {
         $sql = "SELECT c.id, c.data, c.hora, c.status,
-                       cl.nome AS cliente, p.nome AS pet
+                       cl.nome AS cliente, p.nome AS pet, p.id AS pet_id
                 FROM {$_ENV['DBNAMETENANT']}.consulta c
                 JOIN {$_ENV['DBNAMETENANT']}.cliente cl ON cl.id = c.cliente_id
                 JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.id = c.pet_id

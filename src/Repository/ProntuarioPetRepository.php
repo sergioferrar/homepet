@@ -23,8 +23,8 @@ class ProntuarioPetRepository
 
     public function listarPorPet(int $baseId, int $petId): array
     {
-        return $this->conn->fetchAllAssociative("SELECT * 
-            FROM u199209817_{$baseId}.prontuariopet 
+        return $this->conn->fetchAllAssociative("SELECT p.id AS pet_id, * 
+            FROM prontuariopet 
             WHERE pet_id = ? 
             ORDER BY data DESC", [$petId]);
     }

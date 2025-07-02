@@ -24,7 +24,7 @@ class DocumentoModeloRepository
 
     public function buscarPorId(string $baseId, int $id): ?DocumentoModelo
     {
-        $sql = "SELECT * FROM u199209817_{$baseId}.documento_modelo WHERE id = ?";
+        $sql = "SELECT p.id AS pet_id, , data, hora, status, cliente, pet  FROM u199209817_{$baseId}.documento_modelo WHERE id = ?";
         $row = $this->conn->fetchAssociative($sql, [$id]);
 
         return $row ? $this->mapToEntity($row) : null;
