@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ficha do Pet{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .pet-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .pet-avatar {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid #ccc;
+    }
+    .action-button {
+        min-width: 120px;
+        margin-bottom: 15px;
+        color: white;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="pet-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>{{ pet.nome }}</h2>
+                <p>{{ pet.raca }} - {{ pet.sexo }} - {{ pet.idade }} anos</p>
+            </div>
+            <img src="{{ asset('images/pet.png') }}" alt="Pet Avatar" class="pet-avatar">
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-2">
+                <a href="{{ path('clinica_nova_consulta', {'pet_id': pet.id}) }}" class="btn btn-primary action-button">Consulta</a>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ path('clinica_documentos', {'pet_id': pet.id}) }}" class="btn btn-success action-button">Documentos</a>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ path('clinica_receita', {'pet_id': pet.id}) }}" class="btn btn-warning action-button">Receita</a>
+            </div>
+{#             <div class="col-md-2">
+                <a href="{{ path('clinica_internacao_nova', {'pet_id': pet.id}) }}" class="btn btn-danger action-button">Internar</a>
+            </div> #}
+{#             <div class="col-md-2">
+                <a href="{{ path('clinica_vacinas', {'pet_id': pet.id}) }}" class="btn btn-info action-button">Vacinas</a>
+            </div> #}
+            <div class="col-md-2">
+                <a href="{{ path('financeiro_dashboard', {'pet_id': pet.id}) }}" class="btn btn-dark action-button">Financeiro</a>
+            </div>
+        </div>
+
+        <hr>
+
+        <h4>Últimas Consultas</h4>
+        <ul>
+            {% for consulta in consultas %}
+                <li>{{ consulta.data|date('d/m/Y') }} - {{ consulta.motivo }}</li>
+            {% else %}
+                <li>Nenhuma consulta registrada.</li>
+            {% endfor %}
+        </ul>
+
+        <h4>Débitos</h4>
+        <ul>
+            {% for f in financeiro %}
+                <li>{{ f.data|date('d/m/Y') }} - {{ f.descricao }} - R$ {{ f.valor|number_format(2, ',', '.') }}</li>
+            {% else %}
+                <li>Sem débitos.</li>
+            {% endfor %}
+        </ul>
+
+{#         <h4>Internações</h4>
+        <ul>
+            {% for i in internacoes %}
+                <li>{{ i.data_inicio|date('d/m/Y') }} - {{ i.motivo }}</li>
+            {% else %}
+                <li>Nenhuma internação ativa.</li>
+            {% endfor %}
+        </ul> #}
+
+{#         <h4>Vacinas</h4>
+        <ul>
+            {% for v in vacinas %}
+                <li>{{ v.tipo }} - Válido até {{ v.data_validade|date('d/m/Y') }}</li>
+            {% else %}
+                <li>Sem vacinas registradas.</li>
+            {% endfor %}
+        </ul> #}
+    </div>
+</div>
+{% endblock %}

@@ -120,7 +120,11 @@
                     {% for item in atendimentos %}
                         <tr>
                             <td>{{ item.data|date('d/m') }}</td>
-                            <td>{{ item.pet }}</td>
+                            <td>
+                              <a href="{{ path('clinica_detalhes_pet', {'id': item.pet_id}) }}" class="fw-bold text-primary">
+                                {{ item.pet }}
+                              </a>
+                            </td>
                             <td>{{ item.cliente }}</td>
                             <td>
                                 <span class="badge 
@@ -153,7 +157,11 @@
                 <tbody>
                     {% for internacao in internados %}
                         <tr>
-                            <td>{{ internacao.pet_nome }}</td>
+                            <td>
+                              <a href="{{ path('clinica_detalhes_pet', {'id': internacao.pet.id}) }}" class="fw-bold text-primary">
+                                {{ internacao.pet_nome }}
+                              </a>
+                            </td>
                             <td>{{ internacao.dono_nome }}</td>
                             <td>{{ internacao.motivo }}</td>
                             <td>{{ internacao.data_inicio|date('d/m/Y') }}</td>
@@ -179,7 +187,12 @@
                 <tbody>
                     {% for vacina in vacinas_programadas %}
                         <tr>
-                            <td>{{ vacina.pet_nome }}</td>
+                            <td>
+                              <a href="{{ path('clinica_detalhes_pet', {'id': vacina.pet_id}) }}" class="fw-bold text-primary">
+                                {{ vacina.pet_nome }}
+                              </a>
+                            </td>
+
                             <td>{{ vacina.tipo }}</td>
                             <td>{{ vacina.data_validade|date('d/m/Y') }}</td>
                         </tr>
@@ -204,7 +217,11 @@
                 <tbody>
                     {% for vacina in vacinas_vencidas %}
                         <tr>
-                            <td>{{ vacina.pet_nome }}</td>
+                            <td>
+                              <a href="{{ path('clinica_detalhes_pet', {'id': vacina.pet_id}) }}" class="fw-bold text-primary">
+                                {{ vacina.pet_nome }}
+                              </a>
+                            </td>
                             <td>{{ vacina.tipo }}</td>
                             <td>{{ vacina.data_validade|date('d/m/Y') }}</td>
                         </tr>

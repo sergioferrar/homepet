@@ -69,7 +69,7 @@ class AccessDeniedListener implements EventSubscriberInterface
     {
         // echo "onKernelException"; exit;
         $exception = $event->getThrowable();
-        // dd($exception);
+        dd($exception);
         $request = $event->getRequest();
         $mensagem = '';
 
@@ -111,10 +111,10 @@ class AccessDeniedListener implements EventSubscriberInterface
 
         $estabelecimento = $this->entityManager
         ->getRepository(\App\Entity\Estabelecimento::class)
-        ->findById($this->security->getUser()->getPetshopId());
+        ->findOneById($this->security->getUser()->getPetshopId());
 
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
-        dd($estabelecimento);
+        // dd($estabelecimento);
         
         if($validaPlano){
 
@@ -145,6 +145,21 @@ class AccessDeniedListener implements EventSubscriberInterface
         // $event->setResponse($this->redirectToRoute('logout'), 403);
 
         // or stop propagation (prevents the next exception listeners from being called)
+    }
+
+    public function verificarPlanoPorPeriodo($dataInicio, $dataFim)
+    {
+        if($dataInicio && $dataFim){
+
+            $hoje = new \DateTime();
+
+            // dd($dataInicio, $dataFim    );
+            if ($hoje > $dataFim) {
+                return "Seu plano expirou em " . $dataFim->format('d/m/Y') . ". Por favor, renove seu plano.";
+            } 
+        }
+
+        return false;
     }
 
     /**
