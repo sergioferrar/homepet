@@ -171,6 +171,8 @@
     </nav><!-- End Icons Navigation -->
 </header><!-- End Header -->
 
+
+
 <!-- ======= Sidebar ======= -->
 <aside id="sidebar" class="sidebar">
     <ul class="sidebar-nav" id="sidebar-nav">
@@ -222,6 +224,30 @@
     </ul>
 </aside><!-- End Sidebar-->
 
+
+<!-- Botão flutuante para IA -->
+    <button id="btnChatIA" class="btn btn-primary rounded-circle" style="position: fixed; bottom: 20px; right: 20px; z-index: 1050;">
+        <i class="bi bi-robot"></i>
+    </button>
+
+    <!-- Modal da IA -->
+    <div class="modal fade" id="chatIaModal" tabindex="-1" aria-labelledby="chatIaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Dra. HomePet - Assistente IA</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="chatBoxIa" style="max-height: 400px; overflow-y: auto; background: #f7f7f7; padding: 10px; border-radius: 6px;"></div>
+                    <div class="input-group mt-3">
+                        <input type="text" id="inputPerguntaIa" class="form-control" placeholder="Digite sua dúvida clínica..." />
+                        <button class="btn btn-success" id="btnEnviarIa">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 <main id="main" class="main">
     {% block body %}{% endblock %}
 </main><!-- End #main -->
@@ -299,6 +325,36 @@
                 $('.main').removeClass('collapsed');
             }
         });
+    });
+</script>
+
+<script>
+    document.getElementById("btnChatIA").addEventListener("click", () => {
+        new bootstrap.Modal(document.getElementById('chatIaModal')).show();
+    });
+
+    document.getElementById("btnEnviarIa").addEventListener("click", async () => {
+        const pergunta = document.getElementById("inputPerguntaIa").value.trim();
+        if (!pergunta) return;
+
+        const box = document.getElementById("chatBoxIa");
+        box.innerHTML += `<div><strong>Você:</strong> ${pergunta}</div>`;
+
+        try {
+            const response = await fetch("/ia/perguntar", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pergunta })
+            });
+
+            const data = await response.json();
+            box.innerHTML += `<div><strong>Dra. HomePet:</strong> ${data.resposta}</div>`;
+            box.scrollTop = box.scrollHeight;
+        } catch (e) {
+            box.innerHTML += `<div class="text-danger"><strong>Erro:</strong> Não foi possível obter resposta agora.</div>`;
+        }
+
+        document.getElementById("inputPerguntaIa").value = '';
     });
 </script>
 
