@@ -1,101 +1,389 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Ficha do Pet{% endblock %}
+{% block title %}Ficha do Pet - {{ pet.nome }}{% endblock %}
 
 {% block stylesheets %}
-{{ parent() }}
-<style>
-    .pet-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
-    .pet-avatar {
-        width: 80px;
-        height: 80px;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 2px solid #ccc;
-    }
-    .action-button {
-        min-width: 120px;
-        margin-bottom: 15px;
-        color: white;
-        font-weight: bold;
-    }
-</style>
+    {{ parent() }}
+    {# Link para o Font Awesome para os ícones #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    {# Link para o editor de texto da Receita (Quill) #}
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .main-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+            height: 100%;
+        }
+        .info-card {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+            height: 100%;
+        }
+        .info-card h5 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .info-card p {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .pet-avatar {
+            width: 110px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid #e9ecef;
+        }
+        .debt-tag {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 500;
+            padding: 10px 15px;
+            border-top-left-radius: .5rem;
+            border-top-right-radius: .5rem;
+        }
+        .nav-tabs .nav-link.active {
+            color: #0d6efd;
+            background-color: #fff;
+            border-color: #dee2e6 #dee2e6 #fff;
+            font-weight: bold;
+        }
+        .nav-tabs {
+            border-bottom: 1px solid #dee2e6;
+        }
+        .tab-content {
+            padding-top: 1.5rem;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 35px;
+            list-style: none;
+        }
+        .timeline:before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 5px;
+            bottom: 5px;
+            width: 3px;
+            background: #e9ecef;
+            border-radius: 2px;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        .timeline-icon {
+            position: absolute;
+            left: -32px;
+            top: 0;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #e9ecef;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .timeline-content .timeline-date {
+            font-size: 0.85em;
+            color: #dc3545;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .timeline-content .timeline-text {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #343a40;
+            line-height: 1.4;
+        }
+        .action-grid .btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: white;
+            border-radius: 10px;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .action-grid .btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+        .action-grid .btn i {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        .form-view-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #343a40;
+        }
+        .form-view-container {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 1.5rem;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <div class="pet-card">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2>{{ pet.nome }}</h2>
-                <p>{{ pet.raca }} - {{ pet.sexo }} - {{ pet.idade }} anos</p>
-            </div>
-            <img src="{{ asset('images/pet.png') }}" alt="Pet Avatar" class="pet-avatar">
-        </div>
+{# Calcular o total de débitos para usar em múltiplos locais #}
+{% set total_debitos = 0 %}
+{% for f in financeiro %}
+    {% set total_debitos = total_debitos + f.valor %}
+{% endfor %}
 
-        <div class="row g-3">
-            <div class="col-md-2">
-                <a href="{{ path('clinica_nova_consulta', {'pet_id': pet.id}) }}" class="btn btn-primary action-button">Consulta</a>
-            </div>
-            <div class="col-md-2">
-                <a href="{{ path('clinica_documentos', {'pet_id': pet.id}) }}" class="btn btn-success action-button">Documentos</a>
-            </div>
-            <div class="col-md-2">
-                <a href="{{ path('clinica_receita', {'pet_id': pet.id}) }}" class="btn btn-warning action-button">Receita</a>
-            </div>
-{#             <div class="col-md-2">
-                <a href="{{ path('clinica_internacao_nova', {'pet_id': pet.id}) }}" class="btn btn-danger action-button">Internar</a>
-            </div> #}
-{#             <div class="col-md-2">
-                <a href="{{ path('clinica_vacinas', {'pet_id': pet.id}) }}" class="btn btn-info action-button">Vacinas</a>
-            </div> #}
-            <div class="col-md-2">
-                <a href="{{ path('financeiro_dashboard', {'pet_id': pet.id}) }}" class="btn btn-dark action-button">Financeiro</a>
+<div class="container-fluid my-4">
+
+    <!-- CABEÇALHO COM INFORMAÇÕES -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="info-card">
+                {% if pet.dono_nome is defined and pet.dono_nome %}
+                    <h5>{{ pet.dono_nome }} <small class="text-muted fw-normal">({{ pet.dono_id }})</small></h5>
+                    {% if pet.dono_telefone is defined %}
+                        <p class="text-muted"><i class="fas fa-mobile-alt me-2"></i>{{ pet.dono_telefone }}</p>
+                    {% endif %}
+                {% else %}
+                    <h5>Tutor não vinculado</h5>
+                {% endif %}
+                {% if total_debitos > 0 %}
+                    <span class="debt-tag">Saldo devedor de R$ {{ total_debitos|number_format(2, ',', '.') }}</span>
+                {% endif %}
             </div>
         </div>
+        <div class="col-lg-6">
+            <div class="info-card d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="d-flex align-items-center mb-2">
+                        <h5 class="mb-0 me-3">{{ pet.nome }} <small class="text-muted fw-normal">({{ pet.id }})</small></h5>
+                    </div>
+                    <p class="text-muted mb-1 fs-5">{{ pet.raca }} - {{ pet.sexo }}</p>
+                    <p class="text-muted mb-0 fs-5">{{ pet.idade }} anos</p>
+                </div>
+                <img src="{{ asset('images/pet.png') }}" alt="Avatar do Pet" class="pet-avatar">
+            </div>
+        </div>
+    </div>
 
-        <hr>
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="row">
+        <!-- COLUNA ESQUERDA: VENDAS E ORÇAMENTOS -->
+        <div class="col-lg-4 mb-4 mb-lg-0">
+            <div class="main-card sales-card">
+                <ul class="nav nav-tabs" id="salesTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="venda-tab" data-bs-toggle="tab" data-bs-target="#venda" type="button" role="tab" aria-controls="venda" aria-selected="true">Venda</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="orcamentos-tab" data-bs-toggle="tab" data-bs-target="#orcamentos" type="button" role="tab" aria-controls="orcamentos" aria-selected="false">Orçamentos</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="salesTabContent">
+                    <div class="tab-pane fade show active" id="venda" role="tabpanel" aria-labelledby="venda-tab">
+                        <div class="d-flex justify-content-end my-2">
+                            <button class="btn btn-success btn-sm"><i class="fas fa-plus me-1"></i> Adicionar</button>
+                        </div>
+                        {% for f in financeiro %}
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                                <div>
+                                    <p class="mb-0 fw-bold">{{ f.descricao }}</p>
+                                    <small class="text-muted">{{ f.data|date('d/m/Y') }}</small>
+                                </div>
+                                <p class="mb-0 fw-bold">R$ {{ f.valor|number_format(2, ',', '.') }}</p>
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center mt-3">Nenhum item na venda.</p>
+                        {% endfor %}
+                        <div class="d-flex justify-content-between mt-3">
+                            <h5 class="mb-0">Total</h5>
+                            <h5 class="mb-0">R$ {{ total_debitos|number_format(2, ',', '.') }}</h5>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="orcamentos" role="tabpanel" aria-labelledby="orcamentos-tab">
+                        <p class="text-muted text-center mt-4">Nenhum orçamento registrado.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <h4>Últimas Consultas</h4>
-        <ul>
-            {% for consulta in consultas %}
-                <li>{{ consulta.data|date('d/m/Y') }} - {{ consulta.motivo }}</li>
-            {% else %}
-                <li>Nenhuma consulta registrada.</li>
-            {% endfor %}
-        </ul>
+        <!-- COLUNA DIREITA: HISTÓRICO E AÇÕES -->
+        <div class="col-lg-8">
+            <div class="main-card">
+                <ul class="nav nav-tabs" id="main-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="historico-tab" data-bs-toggle="tab" data-bs-target="#historico" type="button" role="tab" aria-controls="historico" aria-selected="true"><i class="fas fa-history me-1"></i> Histórico</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="protocolos-tab" data-bs-toggle="tab" data-bs-target="#protocolos" type="button" role="tab" aria-controls="protocolos" aria-selected="false"><i class="fas fa-file-alt me-1"></i> Protocolos</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="agenda-tab" data-bs-toggle="tab" data-bs-target="#agenda" type="button" role="tab" aria-controls="agenda" aria-selected="false"><i class="fas fa-calendar-alt me-1"></i> Agenda</button>
+                    </li>
+                </ul>
 
-        <h4>Débitos</h4>
-        <ul>
-            {% for f in financeiro %}
-                <li>{{ f.data|date('d/m/Y') }} - {{ f.descricao }} - R$ {{ f.valor|number_format(2, ',', '.') }}</li>
-            {% else %}
-                <li>Sem débitos.</li>
-            {% endfor %}
-        </ul>
+                <div class="tab-content" id="main-tabs-content">
+                    <!-- ABA HISTÓRICO -->
+                    <div class="tab-pane fade show active" id="historico" role="tabpanel" aria-labelledby="historico-tab">
+                        <!-- GRADE DE AÇÕES (SEMPRE VISÍVEL) -->
+                        <h5 class="mb-3 mt-2">Adicionar</h5>
+                        <div class="row action-grid g-3">
+                            <div class="col-6 col-md-4 col-lg-3"><a href="#" id="btn-novo-atendimento" class="btn p-4 btn-primary w-100"><i class="bx  bxs-briefcase-alt-2 d-block fs-4"></i> Atendimento</a></div>
+                            <div class="col-6 col-md-4 col-lg-3"><a href="#" id="btn-nova-receita" class="btn p-4 w-100 text-white" style="background-color: #6610f2;"><i class="bx bxs-pencil d-block fs-4"></i> Receita</a></div>
+                            <div class="col-6 col-md-4 col-lg-3"><a href="#" class="btn w-100 p-4 text-white" style="background-color: #e85d6c;"><i class="ri ri-dashboard-2-line d-block fs-4"></i> Peso</a></div>
+                            <div class="col-6 col-md-4 col-lg-3"><a href="#" class="btn w-100 p-4 text-white" style="background-color: #6f42c1;"><i class="fas fa-microscope d-block fs-4"></i> Patologia</a></div>
+                            <div class="col-6 col-md-4 col-lg-3"><a href="#" class="btn w-100 p-4 text-white btn-success"><i class="fas fa-file-invoice d-block fs-4"></i> Documento</a></div>
+                            <div class="col-6 col-md-4 col-lg-3"><a href="#" class="btn w-100 p-4 text-white" style="background-color: #e83e8c;"><i class="fas fa-vial d-block fs-4"></i> Exame</a></div>
+                            <div class="col-6 col-md-4 col-lg-3"><a href="#" class="btn w-100 p-4 text-white" style="background-color: #17a2b8;"><i class="fas fa-camera d-block fs-4"></i> Fotos</a></div>
+                            <div class="col-6 col-md-4 col-lg-3"><a href="#" class="btn w-100 p-4 text-white" style="background-color: #ffc107; color: #343a40 !important;"><i class="fas fa-syringe d-block fs-4"></i> Vacina</a></div>
+                        </div>
+                        
+                        <hr class="my-4">
 
-{#         <h4>Internações</h4>
-        <ul>
-            {% for i in internacoes %}
-                <li>{{ i.data_inicio|date('d/m/Y') }} - {{ i.motivo }}</li>
-            {% else %}
-                <li>Nenhuma internação ativa.</li>
-            {% endfor %}
-        </ul> #}
+                        <!-- ÁREA DE CONTEÚDO DINÂMICO -->
+                        <div id="dynamic-content-area">
+                            <!-- VISÃO PADRÃO: LINHA DO TEMPO -->
+                            <div id="timeline-view">
+                                <h5 class="mb-3">Linha do Tempo</h5>
+                                <ul class="timeline">
+                                    {% for consulta in consultas %}
+                                        <li class="timeline-item">
+                                            <div class="timeline-icon">C</div>
+                                            <div class="timeline-content">
+                                                <p class="timeline-date">{{ consulta.data|date('d/m/Y \\à\\s H:i') }}</p>
+                                                <p class="timeline-text">Consulta<br><span class="text-muted">{{ consulta.motivo }}</span></p>
+                                            </div>
+                                        </li>
+                                    {% else %}
+                                        <li>Nenhuma consulta registrada.</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
 
-{#         <h4>Vacinas</h4>
-        <ul>
-            {% for v in vacinas %}
-                <li>{{ v.tipo }} - Válido até {{ v.data_validade|date('d/m/Y') }}</li>
-            {% else %}
-                <li>Sem vacinas registradas.</li>
-            {% endfor %}
-        </ul> #}
+                            <!-- VISÃO DE ATENDIMENTO (ESCONDIDA) -->
+                            <div id="atendimento-view" class="form-view-container" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 id="atendimento-title" class="form-view-header">Novo Atendimento</h5>
+                                    <button class="btn-close" id="btn-fechar-atendimento"></button>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3"><label for="tipo_atendimento" class="form-label">Tipo do atendimento*</label><select class="form-select" id="tipo_atendimento"><option selected>Consulta</option><option>Retorno</option></select></div>
+                                    <div class="col-md-6 mb-3"><label for="resumo_atendimento" class="form-label">Resumo</label><input type="text" class="form-control" id="resumo_atendimento"></div>
+                                </div>
+                                <div class="mb-3"><label for="atendimento-editor" class="form-label">Anamnese / Exame Clínico</label><div id="atendimento-editor" style="min-height: 300px;"></div></div>
+                                <div class="d-flex justify-content-end"><button class="btn btn-success"><i class="fas fa-save me-1"></i> Salvar</button></div>
+                            </div>
+
+                            <!-- VISÃO DE RECEITA (ESCONDIDA) -->
+                            <div id="receita-view" class="form-view-container" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="form-view-header">Emitir Receita</h5>
+                                    <button class="btn-close" id="btn-fechar-receita"></button>
+                                </div>
+                                <div class="mb-3"><label><strong>🩺 Cabeçalho:</strong></label><div id="editor-cabecalho" style="min-height: 80px;"></div></div>
+                                <div class="mb-3"><label><strong>📄 Receita:</strong></label><div id="editor-conteudo" style="min-height: 250px;"></div></div>
+                                <div class="mb-3"><label><strong>📅 Rodapé:</strong></label><div id="editor-rodape" style="min-height: 80px;"></div></div>
+                                <div class="d-flex justify-content-end"><button class="btn btn-primary"><i class="fas fa-print me-1"></i> Imprimir / Salvar PDF</button></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- OUTRAS ABAS -->
+                    <div class="tab-pane fade" id="protocolos" role="tabpanel" aria-labelledby="protocolos-tab"><p class="text-muted text-center mt-4">Conteúdo de Protocolos.</p></div>
+                    <div class="tab-pane fade" id="agenda" role="tabpanel" aria-labelledby="agenda-tab"><p class="text-muted text-center mt-4">Conteúdo da Agenda.</p></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {# Carrega o editor de texto Quill de um CDN #}
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos da UI
+            const dynamicContentArea = document.getElementById('dynamic-content-area');
+            const timelineView = document.getElementById('timeline-view');
+            const atendimentoView = document.getElementById('atendimento-view');
+            const receitaView = document.getElementById('receita-view');
+
+            const btnNovoAtendimento = document.getElementById('btn-novo-atendimento');
+            const btnNovaReceita = document.getElementById('btn-nova-receita');
+            
+            const btnFecharAtendimento = document.getElementById('btn-fechar-atendimento');
+            const btnFecharReceita = document.getElementById('btn-fechar-receita');
+
+            // --- Lógica para mostrar/esconder as diferentes visões ---
+            function showView(viewToShow) {
+                // Esconde todas as visões primeiro
+                timelineView.style.display = 'none';
+                atendimentoView.style.display = 'none';
+                receitaView.style.display = 'none';
+                // Mostra a visão desejada
+                viewToShow.style.display = 'block';
+            }
+
+            btnNovoAtendimento.addEventListener('click', (e) => { e.preventDefault(); showView(atendimentoView); });
+            btnNovaReceita.addEventListener('click', (e) => { e.preventDefault(); showView(receitaView); });
+            
+            btnFecharAtendimento.addEventListener('click', () => showView(timelineView));
+            btnFecharReceita.addEventListener('click', () => showView(timelineView));
+
+            // --- Inicialização dos Editores (Todos com Quill) ---
+            const quillOptions = { 
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, false] }],
+                        ['bold', 'italic', 'underline'],
+                        ['image', 'code-block']
+                    ]
+                }
+            };
+
+            // Editor de Atendimento (Quill)
+            const quillAtendimento = new Quill('#atendimento-editor', quillOptions);
+            quillAtendimento.root.innerHTML = '<p><strong>Anamnese:</strong><br>Queixa principal:</p><p><strong>Exame Clínico:</strong></p>';
+
+            // Editores de Receita (Quill)
+            const quillCabecalho = new Quill('#editor-cabecalho', quillOptions);
+            const quillConteudo  = new Quill('#editor-conteudo',  quillOptions);
+            const quillRodape    = new Quill('#editor-rodape',    quillOptions);
+
+            // Conteúdo padrão para a receita
+            quillCabecalho.root.innerHTML = `<h2>Nome do Veterinário(a)</h2><p>CRMV - Especialidade</p>`;
+            quillRodape.root.innerHTML = `<p><strong>Data:</strong> {{ "now"|date("d/m/Y") }}</p>`;
+        });
+    </script>
 {% endblock %}

@@ -34,3 +34,11 @@ services:
         arguments:
             $email: '%env(PAGSEGURO_EMAIL)%'
             $token: '%env(PAGSEGURO_TOKEN)%'
+    # App\Service\OpenAiService:
+    #     arguments:
+    #         $apiKey: '%env(OPENAI_API_KEY)%'
+
+    App\Service\IaGeminiService:
+        arguments:
+            $apiKey: '%env(GEMINI_API_KEY)%'
+
