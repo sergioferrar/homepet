@@ -74,51 +74,51 @@ class EstabelecimentoController extends DefaultController
         $estabelecimento->setDataPlanoFim((new \DateTime(date('Y-m-d H:i:s', strtotime('+1 month')))));
         $estabelecimento->setPlanoId($request->get('planoId'));
         $this->getRepositorio(Estabelecimento::class)->add($estabelecimento, true);
-//        dd($estabelecimento);
+        //dd($estabelecimento);
 
         // Criar database apartir do estabelecimento criado
         //$database = $this->getRepositorio(Estabelecimento::class)->verificaDatabase($estabelecimento->getId());
        // if (!$database) {
             ## Inicia a criação do diretório para "download" do dump
-//            $this->tempDirManager->init();
+            //$this->tempDirManager->init();
 
-//            $arquivoSQL = "backup_bd_modelo.sql";
-//            $diretorio = $this->tempDirManager->obterCaminho($arquivoSQL);
+            //$arquivoSQL = "backup_bd_modelo.sql";
+            //$diretorio = $this->tempDirManager->obterCaminho($arquivoSQL);
 
 
 
-/*
+        /*
             $backupFile = dirname(__DIR__, 2) . '/instalation.sql';
             
             $this->databaseBkp->setDbName("homepet_{$estabelecimento->getId()}")
                 ->createDatabase()
                 ->importDatabase($backupFile);
-*/
+        */
 
 
 
 
 
-//            ## Quebra da string do banco para puchar suas informações
-//            $hosts = explode(':', explode('mysql://', $_SERVER['DATABASE_URL'])[1]);
-//            $base = explode('@', $hosts[1]);
-//
-//            // Realiza o backup do banco modelo
-//
-//            $bck_bd_modelo = "mysqldump -u root -p -h " . end($base) . " --routines --set-gtid-purged=OFF --events --triggers homepet_000 | sed 's/homepet_000/homepet_{$estabelecimento->getId()}/g' > " . $diretorio;
-//            shell_exec($bck_bd_modelo);
-//
-//            // Cria o novo banco de dados
-//            $criar_bd = "mysql -u root -p -h " . end($base) . " -e \"CREATE DATABASE homepet_{$estabelecimento->getId()}\"";
-//            shell_exec($criar_bd);
-//
-//            //restaura o backup no novo banco
-//            $restaura_bd = "mysql -u root -p -h " . end($base) . " -c homepet_{$estabelecimento->getId()} < " . $diretorio;
-//            shell_exec($restaura_bd);
-//
+        //            ## Quebra da string do banco para puchar suas informações
+        //            $hosts = explode(':', explode('mysql://', $_SERVER['DATABASE_URL'])[1]);
+        //            $base = explode('@', $hosts[1]);
+        //
+        //            // Realiza o backup do banco modelo
+        //
+        //            $bck_bd_modelo = "mysqldump -u root -p -h " . end($base) . " --routines --set-gtid-purged=OFF --events --triggers homepet_000 | sed 's/homepet_000/homepet_{$estabelecimento->getId()}/g' > " . $diretorio;
+        //            shell_exec($bck_bd_modelo);
+        //
+        //            // Cria o novo banco de dados
+        //            $criar_bd = "mysql -u root -p -h " . end($base) . " -e \"CREATE DATABASE homepet_{$estabelecimento->getId()}\"";
+        //            shell_exec($criar_bd);
+        //
+        //            //restaura o backup no novo banco
+        //            $restaura_bd = "mysql -u root -p -h " . end($base) . " -c homepet_{$estabelecimento->getId()} < " . $diretorio;
+        //            shell_exec($restaura_bd);
+        //
 
-//            $this->tempDirManager->deletarDiretorio();
-      //  }
+        //            $this->tempDirManager->deletarDiretorio();
+        //  }
 
                 return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId(), 'planoId' => $plano]);
 
@@ -168,19 +168,19 @@ class EstabelecimentoController extends DefaultController
             );
             return $this->redirectToRoute('app_login');
         }
-//        $usuario = new User();
-//        $usuario->setEstabelecimento($estabelecimento); // Relaciona o usuário ao estabelecimento
-//        $form = $this->createForm(UserType::class, $usuario);
-//
-//        $form->handleRequest($request);
-//
-//        if ($form->isSubmitted() && $form->isValid()) {
-//            $entityManager->persist($usuario);
-//            $entityManager->flush();
-//
-//            $this->addFlash('success', 'Usuário cadastrado com sucesso! Faça login para acessar o sistema.');
-//
-//        }
+        //        $usuario = new User();
+        //        $usuario->setEstabelecimento($estabelecimento); // Relaciona o usuário ao estabelecimento
+        //        $form = $this->createForm(UserType::class, $usuario);
+        //
+        //        $form->handleRequest($request);
+        //
+        //        if ($form->isSubmitted() && $form->isValid()) {
+        //            $entityManager->persist($usuario);
+        //            $entityManager->flush();
+        //
+        //            $this->addFlash('success', 'Usuário cadastrado com sucesso! Faça login para acessar o sistema.');
+        //
+        //        }
 
         return $this->render('usuario/cadastrar.html.twig', [
             'estabelecimento' => $request->get('estabelecimento'),
@@ -194,7 +194,7 @@ class EstabelecimentoController extends DefaultController
      */
     public function confirmacaoCadastro(Request $request, PagSeguroService $pagSeguroService): Response
     {
-
+        try{
         $eid = $request->get('estabelecimento');
         $uid = $this->session->get('userId');
 
@@ -208,7 +208,7 @@ class EstabelecimentoController extends DefaultController
         // pra salvar o cadastro original
         $endpoint = "https://viacep.com.br/ws/{$estabelecimento->getCep()}/json";
         $endereco = json_decode(file_get_contents($endpoint), true);
-        
+
         $comprador = [
             'nome' => $usario->getNomeUsuario(),
             'email' => $usario->getEmail(),
@@ -223,20 +223,25 @@ class EstabelecimentoController extends DefaultController
         $produto = [
             'id' => $plano->getId(),
             'titulo' => $plano->getTitulo(),
-            'valor' => $plano->getValor(),
+            'qtd' => 1,
+            'valor' => '1.00',//$plano->getValor(),
         ];
+        $code = $pagSeguroService->executeCheckout($comprador, $produto);
+        
+        dd($code);
 
-        // $code = $pagSeguroService->executeCheckout($comprador, $produto, $this->generateUrl('pagseguro_retorno'));
+        // cria session do estabelecimento e do usuario
 
-        // // cria session do estabelecimento e do usuario
-
-        // $request->getSession()->set('finaliza', ['eid' => $eid, 'uid' => $uid]);
+        $request->getSession()->set('finaliza', ['eid' => $eid, 'uid' => $uid]);
 
         
-        return $this->redirect($pagSeguroService->gerarUrlPagamento($code));
-        return $this->render('estabelecimento/confirmacao.html.twig', [
-            'estabelecimento' => $request->get('estabelecimento'),
-        ]);
+        //return $this->redirect($pagSeguroService->gerarUrlPagamento($code));
+        } catch(\Exception $e){
+            dd($e);
+        }
+        // return $this->render('estabelecimento/confirmacao.html.twig', [
+        //     'estabelecimento' => $request->get('estabelecimento'),
+        // ]);
     }
 
     /**
