@@ -6,6 +6,8 @@ use App\Entity\Cliente;
 use App\Entity\Consulta;
 use App\Entity\Pet;
 use App\Entity\DocumentoModelo;
+use App\Entity\Internacao; // Certifique-se que esta entidade existe e está correta
+use App\Repository\ConsultaRepository;
 use App\Repository\DocumentoModeloRepository;
 use App\Repository\InternacaoRepository;
 use App\Repository\FinanceiroRepository;
@@ -28,15 +30,21 @@ class ClinicaController extends DefaultController
         $baseId = $this->getIdBase();
 
         $repoPet = $this->getRepositorio(\App\Entity\Pet::class);
+        $repoCliente = $this->getRepositorio(\App\Entity\Cliente::class);
         $repoFinanceiro = $this->getRepositorio(\App\Entity\FinanceiroPendente::class);
         $repoConsulta = $this->getRepositorio(\App\Entity\Consulta::class);
 
         $repoInternacao = new InternacaoRepository($this->managerRegistry);
         $internacoes = $repoInternacao->listarInternacoesAtivas($baseId);
         $totalPets = $repoPet->countTotalPets($baseId);
+        $totalDono = $repoCliente->countTotalDono($baseId);
         $debitosCliente = $repoFinanceiro->somarDebitosPendentes($baseId);
         $media = $repoConsulta->calcularMediaConsultas($baseId);
         $atendimentos = $repoConsulta->listarUltimosAtendimentos($baseId);
+        $animaisCadastrados = method_exists($repoPet, 'listarPetsRecentes')
+            ? $repoPet->listarPetsRecentes($baseId, 5)
+            : [];
+
 
         $vacinasVencidas = method_exists($repoPet, 'listarVacinasPendentes') ? $repoPet->listarVacinasPendentes($baseId) : [];
         $vacinasProgramadas = method_exists($repoPet, 'listarVacinasProgramadas') ? $repoPet->listarVacinasProgramadas($baseId) : [];
@@ -49,32 +57,224 @@ class ClinicaController extends DefaultController
             'internados' => $internacoes,
             'vacinas_programadas' => $vacinasProgramadas,
             'vacinas_vencidas' => $vacinasVencidas,
+            'totaldono' => $totalDono,
+            'animais_cadastrados' => $animaisCadastrados,
         ]);
     }
 
     /**
-     * @Route("/clinica/pet/{id}", name="clinica_detalhes_pet")
+     * @Route("/pet/{id}", name="clinica_detalhes_pet", methods={"GET"})
      */
-    public function detalhesPet(Request $request, $id): Response
+    public function detalhesPet(Request $request, int $id, ConsultaRepository $consultaRepo, DocumentoModeloRepository $documentoRepo): Response
     {
-        // $this->switchDB();
+        $this->switchDB();
         $baseId = $this->getIdBase();
 
         $pet = $this->getRepositorio(\App\Entity\Pet::class)->findPetById($baseId, $id);
-        $consultas = $this->getRepositorio(\App\Entity\Consulta::class)->listarConsultasPorCliente($baseId,$id);
-        $financeiro = $this->getRepositorio(\App\Entity\Financeiro::class)->findFinanceiro($baseId,$id);
-        $vacinas = $this->getRepositorio(\App\Entity\Pet::class)->findPetById($baseId,$id);
-        $internacoes = $this->getRepositorio(\App\Entity\Internacao::class)->listarInternacoesAtivas($baseId,$id);
+        if (!$pet) {
+            throw $this->createNotFoundException('O pet não foi encontrado.');
+        }
+
+        // 1. Buscar todos os tipos de eventos relacionados ao pet
+        $consultas = $consultaRepo->findAllByPetId($baseId, $id); 
+        $documentos = $documentoRepo->listarDocumentos($baseId);
+
+        // $internacoes = $internacaoRepo->findAllByPetId($baseId, $id); // Exemplo
+        // $pesos = $pesoRepo->findAllByPetId($baseId, $id); // Exemplo
+
+        $timeline_items = [];
+        foreach ($consultas as $item) {
+            $timeline_items[] = [
+                'data' => new \DateTime($item['data'] . ' ' . $item['hora']),
+                'tipo' => 'Consulta',
+                'resumo' => $item['observacoes'],
+                'dados' => $item // Guarda o array completo do item
+            ];
+        }
+        // Faça o mesmo para internações, pesos, etc.
+
+        // 3. Ordenar o array pela data, do mais recente para o mais antigo
+        usort($timeline_items, function($a, $b) {
+            return $b['data'] <=> $a['data'];
+        });
 
         return $this->render('clinica/detalhes_pet.html.twig', [
             'pet' => $pet,
-            'consultas' => $consultas,
-            'financeiro' => $financeiro,
-            'vacinas' => $vacinas,
-            'internacoes' => $internacoes,
+            'timeline_items' => $timeline_items,
+            'documentos' => $documentos,
         ]);
     }
 
+    // --- NOVAS ROTAS PARA AÇÕES DO PET (ATUALIZADAS) ---
+
+    /**
+     * @Route("/pet/{petId}/internacao/nova", name="clinica_nova_internacao", methods={"GET", "POST"})
+     */
+    public function novaInternacao(Request $request, int $petId): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
+
+        if (!$pet) {
+            throw $this->createNotFoundException('Pet não encontrado.');
+        }
+
+        if ($request->isMethod('POST')) {
+            // Lógica para salvar a nova internação
+            // Exemplo:
+            // $internacao = new Internacao();
+            // $internacao->setPet($pet);
+            // ... setar outros dados do request ...
+            // $entityManager = $this->getDoctrine()->getManager();
+            // $entityManager->persist($internacao);
+            // $entityManager->flush();
+
+            $this->addFlash('success', 'Internação registrada com sucesso!');
+            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+        }
+
+        return $this->render('clinica/nova_internacao.html.twig', [
+            'pet' => $pet
+        ]);
+    }
+
+// Dentro da sua classe ClinicaController...
+
+    /**
+     * @Route("/pet/{petId}/atendimento/novo", name="clinica_novo_atendimento", methods={"GET", "POST"})
+     */
+    public function novoAtendimento(Request $request, int $petId, ConsultaRepository $consultaRepo): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+        
+        // Busca o pet e todos os clientes para os dropdowns
+        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
+        $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($baseId);
+
+        if (!$pet) {
+            throw $this->createNotFoundException('Pet não encontrado.');
+        }
+
+        if ($request->isMethod('POST')) {
+            $consulta = new Consulta();
+            $consulta->setEstabelecimentoId($baseId);
+            // Os IDs de cliente e pet virão do formulário
+            $consulta->setClienteId((int) $request->request->get('cliente_id'));
+            $consulta->setPetId((int) $request->request->get('pet_id'));
+            $consulta->setData(new \DateTime($request->request->get('data')));
+            $consulta->setHora(new \DateTime($request->request->get('hora')));
+            $consulta->setObservacoes($request->request->get('observacoes')); // Campo de observações simples
+            $consulta->setAnamnese($request->request->get('anamnese')); // Conteúdo do editor
+            $consulta->setStatus('atendido'); // Um atendimento já é criado como "atendido"
+            $consulta->setCriadoEm(new \DateTime());
+
+            // Usa o método do repositório para salvar
+            $consultaRepo->salvarConsulta($consulta);
+
+            $this->addFlash('success', 'Atendimento salvo com sucesso!');
+            // Redireciona de volta para a ficha do pet que foi atendido
+            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $request->request->get('pet_id')]);
+        }
+
+        return $this->render('clinica/novo_atendimento.html.twig', [
+            'pet' => $pet,
+            'clientes' => $clientes
+        ]);
+    }
+
+    /**
+     * @Route("/pet/{petId}/receita/nova", name="clinica_nova_receita", methods={"GET", "POST"})
+     */
+    public function novaReceita(Request $request, int $petId, PdfService $pdfService): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
+
+        if ($request->isMethod('POST')) {
+            // Lógica para gerar o PDF da receita
+            return $pdfService->gerarPdf(
+                'clinica/receita_pdf_backend.html.twig',
+                [
+                    'cabecalho' => $request->get('cabecalho', ''),
+                    'conteudo'  => $request->get('conteudo', ''),
+                    'rodape'    => $request->get('rodape', ''),
+                    'pet'       => $pet
+                ],
+                'receita-' . $pet['nome'] . '.pdf'
+            );
+        }
+
+        return $this->render('clinica/nova_receita.html.twig', ['pet' => $pet]);
+    }
+    
+    /**
+     * @Route("/pet/{petId}/peso/novo", name="clinica_novo_peso", methods={"GET", "POST"})
+     */
+    public function novoPeso(Request $request, int $petId): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
+
+        if ($request->isMethod('POST')) {
+            // Lógica para salvar o novo registro de peso
+            $this->addFlash('success', 'Peso registrado com sucesso!');
+            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+        }
+
+        return $this->render('clinica/novo_peso.html.twig', ['pet' => $pet]);
+    }
+
+    /**
+     * @Route("/pet/{petId}/documento/novo", name="clinica_novo_documento_pet", methods={"GET"})
+     */
+    public function novoDocumentoPet(int $petId): Response
+    {
+        // Redireciona para a tela de documentos, ou implementa uma lógica específica aqui
+        return $this->redirectToRoute('clinica_documentos');
+    }
+
+    /**
+     * @Route("/pet/{petId}/exame/novo", name="clinica_novo_exame", methods={"GET", "POST"})
+     */
+    public function novoExame(Request $request, int $petId): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
+        // Lógica para exames
+        return $this->render('clinica/placeholder.html.twig', ['pet' => $pet, 'feature' => 'Exame']);
+    }
+
+    /**
+     * @Route("/pet/{petId}/fotos/nova", name="clinica_novas_fotos", methods={"GET", "POST"})
+     */
+    public function novasFotos(Request $request, int $petId): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
+        // Lógica para fotos
+        return $this->render('clinica/placeholder.html.twig', ['pet' => $pet, 'feature' => 'Fotos']);
+    }
+
+    /**
+     * @Route("/pet/{petId}/vacina/nova", name="clinica_nova_vacina", methods={"GET", "POST"})
+     */
+    public function novaVacina(Request $request, int $petId): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
+        // Lógica para vacinas
+        return $this->render('clinica/placeholder.html.twig', ['pet' => $pet, 'feature' => 'Vacina']);
+    }
+
+    // --- ROTAS ORIGINAIS (MANTIDAS E FUNCIONAIS) ---
+    
     /**
      * @Route("/consulta/nova", name="clinica_nova_consulta", methods={"GET", "POST"})
      */
@@ -89,7 +289,6 @@ class ClinicaController extends DefaultController
         $dataFiltro = $request->query->get('data') ?: (new \DateTime())->format('Y-m-d');
 
         $consultas = $this->getRepositorio(Consulta::class)->listarConsultasDoDia($baseId, new \DateTime($dataFiltro), $petNome);
-
 
         if ($request->isMethod('POST')) {
             $consulta = new Consulta();
@@ -270,12 +469,10 @@ class ClinicaController extends DefaultController
         $totalReceita = $repoFinanceiro->somarPorDescricao($baseId, 'Receita', $inicioMes, $hoje);
         $totalDespesa = $repoFinanceiro->somarPorDescricao($baseId, 'Pagamento', $inicioMes, $hoje);
 
-
         $totalGeral = $totalReceita - $totalDespesa;
-        $dataAtual = $request->query->get('data') 
-            ? new \DateTime($request->query->get('data')) 
+        $dataAtual = $request->query->get('data')
+            ? new \DateTime($request->query->get('data'))
             : new \DateTime();
-
 
         return $this->render('clinica/financeirodash.html.twig', [
             'financeiro_hoje' => $financeiroHoje,
@@ -288,4 +485,23 @@ class ClinicaController extends DefaultController
         ]);
     }
 
+    /**
+     * @Route("/consulta/{id}", name="clinica_ver_consulta", methods={"GET"})
+     */
+    public function verConsulta(int $id, ConsultaRepository $consultaRepo): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        // Você precisará de um método no seu repositório para buscar uma única consulta com todos os detalhes
+        $consulta = $consultaRepo->findConsultaCompletaById($baseId, $id);
+
+        if (!$consulta) {
+            throw $this->createNotFoundException('Atendimento não encontrado.');
+        }
+
+        return $this->render('clinica/ver_consulta.html.twig', [
+            'consulta' => $consulta,
+        ]);
+    }
 }

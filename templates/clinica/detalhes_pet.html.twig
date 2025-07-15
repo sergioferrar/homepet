@@ -4,321 +4,231 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# Link para o Font Awesome para os ícones #}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    {# Link para o editor de texto da Receita (Quill) #}
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet"/>
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <style>
-        body {
-            background-color: #f8f9fa;
+        body { background-color: #f8f9fa; }
+        .main-card, .info-card {
+            background: #fff; border-radius: 12px; padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #e9ecef; height: 100%;
         }
-        .main-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            border: 1px solid #e9ecef;
-            height: 100%;
-        }
-        .info-card {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            border: 1px solid #e9ecef;
-            height: 100%;
-        }
-        .info-card h5 {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-        .info-card p {
-            font-size: 1rem;
-            margin-bottom: 0.75rem;
-        }
+        .info-card { padding: 30px; }
         .pet-avatar {
-            width: 110px;
-            height: 110px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 4px solid #e9ecef;
+            width: 80px; height: 80px; object-fit: cover;
+            border-radius: 50%; border: 4px solid #e9ecef;
         }
-        .debt-tag {
-            background-color: #dc3545;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            display: inline-block;
+        
+        .history-nav {
+            max-height: 65vh;
+            overflow-y: auto;
+            padding-right: 1.5rem;
+            border-right: 1px solid #e9ecef;
         }
-        .nav-tabs .nav-link {
-            color: #6c757d;
-            font-weight: 500;
-            padding: 10px 15px;
-            border-top-left-radius: .5rem;
-            border-top-right-radius: .5rem;
+
+        .history-event {
+            padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;
+            cursor: pointer; border: 1px solid #e9ecef; border-left-width: 5px;
+            transition: all 0.2s ease; position: relative;
         }
-        .nav-tabs .nav-link.active {
-            color: #0d6efd;
-            background-color: #fff;
-            border-color: #dee2e6 #dee2e6 #fff;
-            font-weight: bold;
+        .history-event:hover { background-color: #f0f3f5; transform: translateX(4px); }
+        .history-event.active { background-color: #e9f2ff; }
+        .history-event .event-date { font-size: 0.85rem; font-weight: 500; color: #6c757d; }
+        .history-event .event-title { font-size: 1.1rem; color: #343a40; font-weight: 600; }
+        .event-avatar {
+            position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+            width: 36px; height: 36px; background-color: #dee2e6;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: #495057;
         }
-        .nav-tabs {
-            border-bottom: 1px solid #dee2e6;
-        }
-        .tab-content {
-            padding-top: 1.5rem;
-        }
-        .timeline {
-            position: relative;
-            padding-left: 35px;
-            list-style: none;
-        }
-        .timeline:before {
-            content: '';
-            position: absolute;
-            left: 12px;
-            top: 5px;
-            bottom: 5px;
-            width: 3px;
-            background: #e9ecef;
-            border-radius: 2px;
-        }
-        .timeline-item {
-            position: relative;
-            margin-bottom: 25px;
-        }
-        .timeline-icon {
-            position: absolute;
-            left: -32px;
-            top: 0;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: #fff;
-            border: 3px solid #e9ecef;
-            color: #495057;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-        .timeline-content .timeline-date {
-            font-size: 0.85em;
-            color: #dc3545;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-        .timeline-content .timeline-text {
-            font-size: 1rem;
-            font-weight: 500;
-            color: #343a40;
-            line-height: 1.4;
+
+        .history-event.consulta { border-left-color: #0d6efd; }
+        .history-event.documento, .history-event.documentos { border-left-color: #198754; }
+        .history-event.receita { border-left-color: #6610f2; }
+        .history-event.internacao { border-left-color: #dc3545; }
+        .history-event.peso { border-left-color: #e85d6c; }
+        .history-event.exame { border-left-color: #e83e8c; }
+        .history-event.vacina { border-left-color: #ffc107; }
+        .history-event.foto { border-left-color: #17a2b8; }
+        .history-event.outro { border-left-color: #6c757d; }
+
+        .content-panel { display: none; }
+        .content-panel.active { display: block; }
+        .anamnese-view, .quill-editor {
+            background-color: #f8f9fa; padding: 1rem; border-radius: 8px;
+            border: 1px solid #dee2e6; min-height: 150px;
         }
         .action-grid .btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100px;
-            font-size: 0.95rem;
-            font-weight: bold;
-            color: white;
-            border-radius: 10px;
-            border: none;
-            transition: all 0.2s ease;
+            height: 110px; font-size: 1rem; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
         }
-        .action-grid .btn:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-        }
-        .action-grid .btn i {
-            font-size: 2rem;
-            margin-bottom: 8px;
-        }
-        .form-view-header {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #343a40;
-        }
-        .form-view-container {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 1.5rem;
-        }
+        .action-grid .btn i { font-size: 2.5rem; margin-bottom: 0.5rem; }
     </style>
 {% endblock %}
 
 {% block body %}
-{# Calcular o total de débitos para usar em múltiplos locais #}
-{% set total_debitos = 0 %}
-{% for f in financeiro %}
-    {% set total_debitos = total_debitos + f.valor %}
-{% endfor %}
-
 <div class="container-fluid my-4">
-
-    <!-- CABEÇALHO COM INFORMAÇÕES -->
+    <!-- INFO CARDS -->
     <div class="row mb-4">
-        <div class="col-lg-6 mb-4 mb-lg-0">
-            <div class="info-card">
-                {% if pet.dono_nome is defined and pet.dono_nome %}
-                    <h5>{{ pet.dono_nome }} <small class="text-muted fw-normal">({{ pet.dono_id }})</small></h5>
-                    {% if pet.dono_telefone is defined %}
-                        <p class="text-muted"><i class="fas fa-mobile-alt me-2"></i>{{ pet.dono_telefone }}</p>
-                    {% endif %}
-                {% else %}
-                    <h5>Tutor não vinculado</h5>
-                {% endif %}
-                {% if total_debitos > 0 %}
-                    <span class="debt-tag">Saldo devedor de R$ {{ total_debitos|number_format(2, ',', '.') }}</span>
-                {% endif %}
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="info-card d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="d-flex align-items-center mb-2">
-                        <h5 class="mb-0 me-3">{{ pet.nome }} <small class="text-muted fw-normal">({{ pet.id }})</small></h5>
-                    </div>
-                    <p class="text-muted mb-1 fs-5">{{ pet.raca }} - {{ pet.sexo }}</p>
-                    <p class="text-muted mb-0 fs-5">{{ pet.idade }} anos</p>
-                </div>
-                <img src="{{ asset('images/pet.png') }}" alt="Avatar do Pet" class="pet-avatar">
-            </div>
-        </div>
+        <div class="col-lg-8"><div class="info-card d-flex align-items-center"><img src="{{ asset('images/pet.png') }}" alt="Avatar do Pet" class="pet-avatar me-4"><div><h4 class="mb-1">{{ pet.nome }} <small class="text-muted fw-normal">({{ pet.id }})</small></h4><p class="text-muted mb-2 fs-5">{{ pet.raca }} - {{ pet.sexo }} - {{ pet.idade }} anos</p><p class="mb-0"><strong>Tutor:</strong> {{ pet.dono_nome|default('Não vinculado') }}</p></div></div></div>
+        <div class="col-lg-4"><div class="info-card"><h5>Financeiro</h5><p class="text-muted">Nenhum débito pendente.</p></div></div>
     </div>
 
-    <!-- CONTEÚDO PRINCIPAL -->
-    <div class="row">
-        <!-- COLUNA ESQUERDA: VENDAS E ORÇAMENTOS -->
-        <div class="col-lg-4 mb-4 mb-lg-0">
-            <div class="main-card sales-card">
-                <ul class="nav nav-tabs" id="salesTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="venda-tab" data-bs-toggle="tab" data-bs-target="#venda" type="button" role="tab" aria-controls="venda" aria-selected="true">Venda</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="orcamentos-tab" data-bs-toggle="tab" data-bs-target="#orcamentos" type="button" role="tab" aria-controls="orcamentos" aria-selected="false">Orçamentos</button>
-                    </li>
-                </ul>
-                <div class="tab-content" id="salesTabContent">
-                    <div class="tab-pane fade show active" id="venda" role="tabpanel" aria-labelledby="venda-tab">
-                        <div class="d-flex justify-content-end my-2">
-                            <button class="btn btn-success btn-sm"><i class="fas fa-plus me-1"></i> Adicionar</button>
-                        </div>
-                        {% for f in financeiro %}
-                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
-                                <div>
-                                    <p class="mb-0 fw-bold">{{ f.descricao }}</p>
-                                    <small class="text-muted">{{ f.data|date('d/m/Y') }}</small>
-                                </div>
-                                <p class="mb-0 fw-bold">R$ {{ f.valor|number_format(2, ',', '.') }}</p>
-                            </div>
-                        {% else %}
-                            <p class="text-muted text-center mt-3">Nenhum item na venda.</p>
-                        {% endfor %}
-                        <div class="d-flex justify-content-between mt-3">
-                            <h5 class="mb-0">Total</h5>
-                            <h5 class="mb-0">R$ {{ total_debitos|number_format(2, ',', '.') }}</h5>
-                        </div>
+    <!-- Layout Principal -->
+    <div class="main-card">
+        <div class="row">
+            <!-- Coluna da Esquerda: Timeline -->
+            <div class="col-md-5 history-nav">
+                <h4 class="mb-3">Histórico</h4>
+                {% for item in timeline_items %}
+                    <div class="history-event {{ item.tipo|lower|replace({' ': '-'}) }}" data-target="#evento-{{ loop.index }}">
+                        <div class="event-date">{{ item.data|date('d/m/Y \\à\\s H:i') }}</div>
+                        <div class="event-title">{{ item.tipo }}</div>
+                        <div class="event-avatar">{{ item.autor|default('VV') }}</div>
                     </div>
-                    <div class="tab-pane fade" id="orcamentos" role="tabpanel" aria-labelledby="orcamentos-tab">
-                        <p class="text-muted text-center mt-4">Nenhum orçamento registrado.</p>
-                    </div>
-                </div>
+                {% else %}
+                    <p>Nenhum evento no histórico.</p>
+                {% endfor %}
             </div>
-        </div>
 
-        <!-- COLUNA DIREITA: HISTÓRICO E AÇÕES -->
-        <div class="col-lg-8">
-            <div class="main-card">
-                <ul class="nav nav-tabs" id="main-tabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="historico-tab" data-bs-toggle="tab" data-bs-target="#historico" type="button" role="tab" aria-controls="historico" aria-selected="true"><i class="fas fa-history me-1"></i> Histórico</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="protocolos-tab" data-bs-toggle="tab" data-bs-target="#protocolos" type="button" role="tab" aria-controls="protocolos" aria-selected="false"><i class="fas fa-file-alt me-1"></i> Protocolos</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="agenda-tab" data-bs-toggle="tab" data-bs-target="#agenda" type="button" role="tab" aria-controls="agenda" aria-selected="false"><i class="fas fa-calendar-alt me-1"></i> Agenda</button>
-                    </li>
-                </ul>
+            <!-- Coluna da Direita: Conteúdo Dinâmico -->
+            <div class="col-md-7">
+                <!-- PAINEL 1: Grelha de botões -->
+                <div id="action-grid-view" class="content-panel">
+                    <h5 class="mb-3">Adicionar</h5>
+                    <div class="row g-3 action-grid">
+                        <div class="col-4"><button class="btn btn-primary w-100" data-target="#atendimento-form-view"><i class="bx bxs-briefcase-alt-2"></i> Atendimento</button></div>
+                        <div class="col-4"><button class="btn text-white w-100" style="background-color: #e85d6c;" data-target="#peso-form-view"><i class="ri-dashboard-2-line"></i> Peso</button></div>
+                        <div class="col-4"><button class="btn text-white w-100" style="background-color: #884dff;" data-target="#patologia-form-view"><i class="fas fa-notes-medical"></i> Patologia</button></div>
+                        <div class="col-4"><button class="btn btn-success w-100" data-target="#documento-form-view"><i class="fas fa-file-invoice"></i> Documento</button></div>
+                        <div class="col-4"><button class="btn text-white w-100" style="background-color: #e83e8c;" data-target="#exame-form-view"><i class="fas fa-vial"></i> Exame</button></div>
+                        <div class="col-4"><button class="btn text-white w-100" style="background-color: #17a2b8;" data-target="#fotos-form-view"><i class="fas fa-camera"></i> Fotos</button></div>
+                        <div class="col-4"><button class="btn text-white w-100" style="background-color: #ffc107; color: #343a40 !important;" data-target="#vacina-form-view"><i class="fas fa-syringe"></i> Vacina</button></div>
+                        <div class="col-4"><button class="btn text-white w-100" style="background-color: #6610f2;" data-target="#receita-form-view"><i class="bx bxs-pencil"></i> Receita</button></div>
+                        <div class="col-4"><button class="btn text-white w-100" style="background-color: #6c757d;" data-target="#observacoes-form-view"><i class="fas fa-comment-dots"></i> Observações</button></div>
+                        <div class="col-4"><button class="btn text-white w-100" style="background-color: #0dcaf0;" data-target="#video-form-view"><i class="fas fa-video"></i> Vídeo</button></div>
+                        <div class="col-4"><button class="btn text-white w-100" style="background-color: #dc3545;" data-target="#internacao-form-view"><i class="bx bxs-hotel"></i> Internação</button></div>
+                    </div>
+                </div>
 
-                <div class="tab-content" id="main-tabs-content">
-                    <!-- ABA HISTÓRICO -->
-                    <div class="tab-pane fade show active" id="historico" role="tabpanel" aria-labelledby="historico-tab">
-                        <!-- GRADE DE AÇÕES (SEMPRE VISÍVEL) -->
-                        <h5 class="mb-3 mt-2">Adicionar</h5>
-                        <div class="row action-grid g-3">
-                            <div class="col-6 col-md-4 col-lg-3"><a href="#" id="btn-novo-atendimento" class="btn p-4 btn-primary w-100"><i class="bx  bxs-briefcase-alt-2 d-block fs-4"></i> Atendimento</a></div>
-                            <div class="col-6 col-md-4 col-lg-3"><a href="#" id="btn-nova-receita" class="btn p-4 w-100 text-white" style="background-color: #6610f2;"><i class="bx bxs-pencil d-block fs-4"></i> Receita</a></div>
-                            <div class="col-6 col-md-4 col-lg-3"><a href="#" class="btn w-100 p-4 text-white" style="background-color: #e85d6c;"><i class="ri ri-dashboard-2-line d-block fs-4"></i> Peso</a></div>
-                            <div class="col-6 col-md-4 col-lg-3"><a href="#" class="btn w-100 p-4 text-white" style="background-color: #6f42c1;"><i class="fas fa-microscope d-block fs-4"></i> Patologia</a></div>
-                            <div class="col-6 col-md-4 col-lg-3"><a href="#" class="btn w-100 p-4 text-white btn-success"><i class="fas fa-file-invoice d-block fs-4"></i> Documento</a></div>
-                            <div class="col-6 col-md-4 col-lg-3"><a href="#" class="btn w-100 p-4 text-white" style="background-color: #e83e8c;"><i class="fas fa-vial d-block fs-4"></i> Exame</a></div>
-                            <div class="col-6 col-md-4 col-lg-3"><a href="#" class="btn w-100 p-4 text-white" style="background-color: #17a2b8;"><i class="fas fa-camera d-block fs-4"></i> Fotos</a></div>
-                            <div class="col-6 col-md-4 col-lg-3"><a href="#" class="btn w-100 p-4 text-white" style="background-color: #ffc107; color: #343a40 !important;"><i class="fas fa-syringe d-block fs-4"></i> Vacina</a></div>
+                <!-- Detalhes do histórico -->
+                {% for item in timeline_items %}
+                    <div class="content-panel" id="evento-{{ loop.index }}">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4>{{ item.tipo }} em {{ item.data|date('d/m/Y') }}</h4>
+                            <button class="btn btn-sm btn-outline-secondary btn-back-to-grid"><i class="fas fa-arrow-left me-1"></i> Voltar</button>
                         </div>
-                        
-                        <hr class="my-4">
+                        <hr>
+                        {% if item.tipo == 'Consulta' %}
+                            <p><strong>Queixa Principal:</strong> {{ item.dados.observacoes|default('Nenhuma') }}</p>
+                            <h5>Anamnese e Exame Clínico</h5>
+                            <div class="anamnese-view">{{ item.dados.anamnese|raw }}</div>
+                        {% else %}
+                            <p>{{ item.resumo }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
 
-                        <!-- ÁREA DE CONTEÚDO DINÂMICO -->
-                        <div id="dynamic-content-area">
-                            <!-- VISÃO PADRÃO: LINHA DO TEMPO -->
-                            <div id="timeline-view">
-                                <h5 class="mb-3">Linha do Tempo</h5>
-                                <ul class="timeline">
-                                    {% for consulta in consultas %}
-                                        <li class="timeline-item">
-                                            <div class="timeline-icon">C</div>
-                                            <div class="timeline-content">
-                                                <p class="timeline-date">{{ consulta.data|date('d/m/Y \\à\\s H:i') }}</p>
-                                                <p class="timeline-text">Consulta<br><span class="text-muted">{{ consulta.motivo }}</span></p>
-                                            </div>
-                                        </li>
-                                    {% else %}
-                                        <li>Nenhuma consulta registrada.</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
+                <!-- Formulário de Atendimento -->
+                <div id="atendimento-form-view" class="content-panel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4>Novo Atendimento</h4>
+                        <button class="btn btn-sm btn-outline-secondary btn-back-to-grid"><i class="fas fa-arrow-left me-1"></i> Voltar</button>
+                    </div>
+                    <hr>
+                    {% if pet.dono_id %}
+                        <form method="post" action="{{ path('clinica_novo_atendimento', {'petId': pet.id}) }}">
+                             <input type="hidden" name="pet_id" value="{{ pet.id }}">
+                             <input type="hidden" name="cliente_id" value="{{ pet.dono_id }}">
+                             <input type="hidden" name="anamnese" id="anamnese-input">
+                             <div class="mb-3">
+                                <label class="form-label">Queixa Principal</label>
+                                <input type="text" name="observacoes" class="form-control">
+                             </div>
+                             <div class="mb-3">
+                                <label class="form-label">Anamnese / Exame Clínico</label>
+                                <div id="atendimento-editor" style="min-height: 250px;"></div>
+                             </div>
+                             <button type="submit" class="btn btn-primary">Salvar Atendimento</button>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-danger"><strong>Erro:</strong> Pet sem tutor associado.</div>
+                    {% endif %}
+                </div>
 
-                            <!-- VISÃO DE ATENDIMENTO (ESCONDIDA) -->
-                            <div id="atendimento-view" class="form-view-container" style="display: none;">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 id="atendimento-title" class="form-view-header">Novo Atendimento</h5>
-                                    <button class="btn-close" id="btn-fechar-atendimento"></button>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3"><label for="tipo_atendimento" class="form-label">Tipo do atendimento*</label><select class="form-select" id="tipo_atendimento"><option selected>Consulta</option><option>Retorno</option></select></div>
-                                    <div class="col-md-6 mb-3"><label for="resumo_atendimento" class="form-label">Resumo</label><input type="text" class="form-control" id="resumo_atendimento"></div>
-                                </div>
-                                <div class="mb-3"><label for="atendimento-editor" class="form-label">Anamnese / Exame Clínico</label><div id="atendimento-editor" style="min-height: 300px;"></div></div>
-                                <div class="d-flex justify-content-end"><button class="btn btn-success"><i class="fas fa-save me-1"></i> Salvar</button></div>
-                            </div>
-
-                            <!-- VISÃO DE RECEITA (ESCONDIDA) -->
-                            <div id="receita-view" class="form-view-container" style="display: none;">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="form-view-header">Emitir Receita</h5>
-                                    <button class="btn-close" id="btn-fechar-receita"></button>
-                                </div>
-                                <div class="mb-3"><label><strong>🩺 Cabeçalho:</strong></label><div id="editor-cabecalho" style="min-height: 80px;"></div></div>
-                                <div class="mb-3"><label><strong>📄 Receita:</strong></label><div id="editor-conteudo" style="min-height: 250px;"></div></div>
-                                <div class="mb-3"><label><strong>📅 Rodapé:</strong></label><div id="editor-rodape" style="min-height: 80px;"></div></div>
-                                <div class="d-flex justify-content-end"><button class="btn btn-primary"><i class="fas fa-print me-1"></i> Imprimir / Salvar PDF</button></div>
-                            </div>
+                <!-- Formulário de Documento -->
+                <div id="documento-form-view" class="content-panel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4>Gerar Documento</h4>
+                        <button class="btn btn-sm btn-outline-secondary btn-back-to-grid"><i class="fas fa-arrow-left me-1"></i> Voltar</button>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="flex-grow-1 me-2">
+                            <label for="select-doc-template" class="form-label">Usar modelo</label>
+                            <select id="select-doc-template" class="form-select">
+                                <option value="">Novo Documento</option>
+                                {% for doc in documentos %}
+                                    <option value="{{ doc.id }}" data-titulo="{{ doc.titulo }}" data-cabecalho="{{ doc.cabecalho|e('html_attr') }}" data-conteudo="{{ doc.conteudo|e('html_attr') }}" data-rodape="{{ doc.rodape|e('html_attr') }}">{{ doc.titulo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                             <label for="doc-actions" class="form-label">Ações</label>
+                            <select id="doc-actions" class="form-select">
+                                <option selected disabled>Ação...</option>
+                                <option value="pdf">Gerar PDF</option>
+                                <option value="save">Salvar como novo modelo</option>
+                                <option value="delete">Excluir modelo selecionado</option>
+                            </select>
                         </div>
                     </div>
-                    <!-- OUTRAS ABAS -->
-                    <div class="tab-pane fade" id="protocolos" role="tabpanel" aria-labelledby="protocolos-tab"><p class="text-muted text-center mt-4">Conteúdo de Protocolos.</p></div>
-                    <div class="tab-pane fade" id="agenda" role="tabpanel" aria-labelledby="agenda-tab"><p class="text-muted text-center mt-4">Conteúdo da Agenda.</p></div>
+                    
+                    <div class="mb-3">
+                        <label for="doc-titulo" class="form-label">Título</label>
+                        <input type="text" id="doc-titulo" class="form-control" placeholder="Título do documento">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cabeçalho</label>
+                        <div id="doc-editor-cabecalho" class="quill-editor" style="min-height: 100px;"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Conteúdo</label>
+                        <div id="doc-editor-conteudo" class="quill-editor" style="min-height: 200px;"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Rodapé</label>
+                        <div id="doc-editor-rodape" class="quill-editor" style="min-height: 100px;"></div>
+                    </div>
+                    
+                    <!-- Formulários ocultos para as ações -->
+                    <form id="form-pdf-doc" method="POST" action="{{ path('clinica_receita_pdf') }}" target="_blank" class="d-none">
+                        <input type="hidden" name="cabecalho">
+                        <input type="hidden" name="conteudo">
+                        <input type="hidden" name="rodape">
+                    </form>
+                    <form id="form-salvar-doc" method="POST" action="{{ path('clinica_documentos') }}" class="d-none">
+                        <input type="hidden" name="titulo">
+                        <input type="hidden" name="cabecalho">
+                        <input type="hidden" name="conteudo">
+                        <input type="hidden" name="rodape">
+                    </form>
+                    <form id="form-excluir-doc" method="POST" action="{{ path('clinica_documento_excluir', {'id': 0}) }}" class="d-none">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete_doc') }}">
+                    </form>
                 </div>
+
+                <!-- Painéis vazios para os outros botões -->
+                <div id="peso-form-view" class="content-panel"><div class="d-flex justify-content-between"><h4>Registrar Peso</h4><button class="btn btn-sm btn-outline-secondary btn-back-to-grid"><i class="fas fa-arrow-left me-1"></i> Voltar</button></div><hr><p>Formulário de Peso...</p></div>
+                <div id="patologia-form-view" class="content-panel"><div class="d-flex justify-content-between"><h4>Registrar Patologia</h4><button class="btn btn-sm btn-outline-secondary btn-back-to-grid"><i class="fas fa-arrow-left me-1"></i> Voltar</button></div><hr><p>Formulário de Patologia...</p></div>
+                <div id="exame-form-view" class="content-panel"><div class="d-flex justify-content-between"><h4>Registrar Exame</h4><button class="btn btn-sm btn-outline-secondary btn-back-to-grid"><i class="fas fa-arrow-left me-1"></i> Voltar</button></div><hr><p>Formulário de Exame...</p></div>
+                <div id="fotos-form-view" class="content-panel"><div class="d-flex justify-content-between"><h4>Adicionar Fotos</h4><button class="btn btn-sm btn-outline-secondary btn-back-to-grid"><i class="fas fa-arrow-left me-1"></i> Voltar</button></div><hr><p>Formulário de Fotos...</p></div>
+                <div id="vacina-form-view" class="content-panel"><div class="d-flex justify-content-between"><h4>Registrar Vacina</h4><button class="btn btn-sm btn-outline-secondary btn-back-to-grid"><i class="fas fa-arrow-left me-1"></i> Voltar</button></div><hr><p>Formulário de Vacina...</p></div>
+                <div id="receita-form-view" class="content-panel"><div class="d-flex justify-content-between"><h4>Nova Receita</h4><button class="btn btn-sm btn-outline-secondary btn-back-to-grid"><i class="fas fa-arrow-left me-1"></i> Voltar</button></div><hr><p>Formulário de Receita...</p></div>
+                <div id="observacoes-form-view" class="content-panel"><div class="d-flex justify-content-between"><h4>Adicionar Observação</h4><button class="btn btn-sm btn-outline-secondary btn-back-to-grid"><i class="fas fa-arrow-left me-1"></i> Voltar</button></div><hr><p>Formulário de Observação...</p></div>
+                <div id="video-form-view" class="content-panel"><div class="d-flex justify-content-between"><h4>Adicionar Vídeo</h4><button class="btn btn-sm btn-outline-secondary btn-back-to-grid"><i class="fas fa-arrow-left me-1"></i> Voltar</button></div><hr><p>Formulário de Vídeo...</p></div>
+                <div id="internacao-form-view" class="content-panel"><div class="d-flex justify-content-between"><h4>Nova Internação</h4><button class="btn btn-sm btn-outline-secondary btn-back-to-grid"><i class="fas fa-arrow-left me-1"></i> Voltar</button></div><hr><p>Formulário de Internação...</p></div>
             </div>
         </div>
     </div>
@@ -327,63 +237,129 @@
 
 {% block javascripts %}
     {{ parent() }}
-    {# Carrega o editor de texto Quill de um CDN #}
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-
     <script>
+        const docTemplatesData = {{ documentos|default([])|json_encode|raw }};
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Elementos da UI
-            const dynamicContentArea = document.getElementById('dynamic-content-area');
-            const timelineView = document.getElementById('timeline-view');
-            const atendimentoView = document.getElementById('atendimento-view');
-            const receitaView = document.getElementById('receita-view');
-
-            const btnNovoAtendimento = document.getElementById('btn-novo-atendimento');
-            const btnNovaReceita = document.getElementById('btn-nova-receita');
+            const contentPanels = document.querySelectorAll('.content-panel');
+            const historyEvents = document.querySelectorAll('.history-event');
+            const actionButtons = document.querySelectorAll('#action-grid-view button');
+            const backButtons = document.querySelectorAll('.btn-back-to-grid');
             
-            const btnFecharAtendimento = document.getElementById('btn-fechar-atendimento');
-            const btnFecharReceita = document.getElementById('btn-fechar-receita');
+            let quillInstances = {};
 
-            // --- Lógica para mostrar/esconder as diferentes visões ---
-            function showView(viewToShow) {
-                // Esconde todas as visões primeiro
-                timelineView.style.display = 'none';
-                atendimentoView.style.display = 'none';
-                receitaView.style.display = 'none';
-                // Mostra a visão desejada
-                viewToShow.style.display = 'block';
+            function showPanel(targetId) {
+                contentPanels.forEach(panel => panel.style.display = 'none');
+                const targetPanel = document.querySelector(targetId);
+                if (targetPanel) {
+                    targetPanel.style.display = 'block';
+
+                    if (targetId === '#atendimento-form-view' && !quillInstances.atendimento) {
+                        quillInstances.atendimento = new Quill('#atendimento-editor', { theme: 'snow' });
+                    }
+                    if (targetId === '#documento-form-view' && !quillInstances.docCabecalho) {
+                        quillInstances.docCabecalho = new Quill('#doc-editor-cabecalho', { theme: 'snow' });
+                        quillInstances.docConteudo = new Quill('#doc-editor-conteudo', { theme: 'snow' });
+                        quillInstances.docRodape = new Quill('#doc-editor-rodape', { theme: 'snow' });
+                    }
+                }
             }
 
-            btnNovoAtendimento.addEventListener('click', (e) => { e.preventDefault(); showView(atendimentoView); });
-            btnNovaReceita.addEventListener('click', (e) => { e.preventDefault(); showView(receitaView); });
-            
-            btnFecharAtendimento.addEventListener('click', () => showView(timelineView));
-            btnFecharReceita.addEventListener('click', () => showView(timelineView));
+            historyEvents.forEach(event => {
+                event.addEventListener('click', function() {
+                    historyEvents.forEach(el => el.classList.remove('active'));
+                    this.classList.add('active');
+                    const targetId = this.getAttribute('data-target');
+                    showPanel(targetId);
+                });
+            });
 
-            // --- Inicialização dos Editores (Todos com Quill) ---
-            const quillOptions = { 
-                theme: 'snow',
-                modules: {
-                    toolbar: [
-                        [{ 'header': [1, 2, false] }],
-                        ['bold', 'italic', 'underline'],
-                        ['image', 'code-block']
-                    ]
-                }
-            };
+            actionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    showPanel(targetId);
+                });
+            });
 
-            // Editor de Atendimento (Quill)
-            const quillAtendimento = new Quill('#atendimento-editor', quillOptions);
-            quillAtendimento.root.innerHTML = '<p><strong>Anamnese:</strong><br>Queixa principal:</p><p><strong>Exame Clínico:</strong></p>';
+            backButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    historyEvents.forEach(el => el.classList.remove('active'));
+                    showPanel('#action-grid-view');
+                });
+            });
 
-            // Editores de Receita (Quill)
-            const quillCabecalho = new Quill('#editor-cabecalho', quillOptions);
-            const quillConteudo  = new Quill('#editor-conteudo',  quillOptions);
-            const quillRodape    = new Quill('#editor-rodape',    quillOptions);
+            const atendimentoForm = document.querySelector('#atendimento-form-view form');
+            if(atendimentoForm) {
+                atendimentoForm.addEventListener('submit', function() {
+                    if(quillInstances.atendimento) {
+                        document.getElementById('anamnese-input').value = quillInstances.atendimento.root.innerHTML;
+                    }
+                });
+            }
 
-            // Conteúdo padrão para a receita
-            quillCabecalho.root.innerHTML = `<h2>Nome do Veterinário(a)</h2><p>CRMV - Especialidade</p>`;
-            quillRodape.root.innerHTML = `<p><strong>Data:</strong> {{ "now"|date("d/m/Y") }}</p>`;
+            const docTemplateSelect = document.getElementById('select-doc-template');
+            if(docTemplateSelect) {
+                docTemplateSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const tituloInput = document.getElementById('doc-titulo');
+                    if (selectedOption.value && quillInstances.docCabecalho) {
+                        tituloInput.value = selectedOption.dataset.titulo || '';
+                        quillInstances.docCabecalho.root.innerHTML = selectedOption.dataset.cabecalho || '';
+                        quillInstances.docConteudo.root.innerHTML = selectedOption.dataset.conteudo || '';
+                        quillInstances.docRodape.root.innerHTML = selectedOption.dataset.rodape || '';
+                    } else if (quillInstances.docCabecalho) {
+                        tituloInput.value = '';
+                        quillInstances.docCabecalho.root.innerHTML = '';
+                        quillInstances.docConteudo.root.innerHTML = '';
+                        quillInstances.docRodape.root.innerHTML = '';
+                    }
+                });
+            }
+
+            const docActionsSelect = document.getElementById('doc-actions');
+            if(docActionsSelect){
+                docActionsSelect.addEventListener('change', function(){
+                    const action = this.value;
+                    const formPDF = document.getElementById('form-pdf-doc');
+                    const formSave = document.getElementById('form-salvar-doc');
+                    const formDelete = document.getElementById('form-excluir-doc');
+                    const selectedDocOption = docTemplateSelect.options[docTemplateSelect.selectedIndex];
+
+                    const titulo = document.getElementById('doc-titulo').value.trim();
+                    const cabecalho = quillInstances.docCabecalho.root.innerHTML;
+                    const conteudo = quillInstances.docConteudo.root.innerHTML;
+                    const rodape = quillInstances.docRodape.root.innerHTML;
+
+                    if(action === 'pdf'){
+                        formPDF.querySelector('[name="cabecalho"]').value = cabecalho;
+                        formPDF.querySelector('[name="conteudo"]').value = conteudo;
+                        formPDF.querySelector('[name="rodape"]').value = rodape;
+                        formPDF.submit();
+                    } else if (action === 'save') {
+                        if(!titulo){
+                            alert('Por favor, dê um título ao modelo antes de salvar.');
+                        } else {
+                            formSave.querySelector('[name="titulo"]').value = titulo;
+                            formSave.querySelector('[name="cabecalho"]').value = cabecalho;
+                            formSave.querySelector('[name="conteudo"]').value = conteudo;
+                            formSave.querySelector('[name="rodape"]').value = rodape;
+                            formSave.submit();
+                        }
+                    } else if (action === 'delete') {
+                        if (!selectedDocOption.value) {
+                            alert("Selecione um documento para excluir.");
+                        } else if (confirm("Tem certeza que deseja excluir o modelo '" + selectedDocOption.text + "'?")) {
+                            let deleteActionUrl = formDelete.getAttribute("action").replace('/0', '/' + selectedDocOption.value);
+                            formDelete.setAttribute("action", deleteActionUrl);
+                            formDelete.submit();
+                        }
+                    }
+                    this.selectedIndex = 0;
+                });
+            }
+
+            showPanel('#action-grid-view');
         });
     </script>
 {% endblock %}

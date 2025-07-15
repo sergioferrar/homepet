@@ -1,0 +1,108 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Atendimento #{{ consulta.id }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-area, #printable-area * {
+                visibility: visible;
+            }
+            #printable-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+        .atendimento-card {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+        }
+        .atendimento-header {
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .atendimento-section {
+            margin-bottom: 1.5rem;
+        }
+        .atendimento-section h5 {
+            color: #0d6efd;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .anamnese-content {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            min-height: 100px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container my-5">
+    <div class="d-flex justify-content-end mb-3 no-print">
+        <a href="{{ path('clinica_detalhes_pet', {'id': consulta.pet_id}) }}" class="btn btn-secondary me-2">
+            <i class="fas fa-arrow-left me-1"></i> Voltar para a Ficha do Pet
+        </a>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print me-1"></i> Imprimir / Salvar PDF
+        </button>
+    </div>
+
+    <div class="card shadow-sm" id="printable-area">
+        <div class="card-body p-4 p-md-5 atendimento-card">
+            
+            <div class="atendimento-header text-center">
+                <h2>Relatório de Atendimento Clínico</h2>
+                <p class="lead">Data: {{ consulta.data|date('d/m/Y') }} às {{ consulta.hora|date('H:i') }}</p>
+            </div>
+
+            <div class="atendimento-section">
+                <h5>Dados do Paciente</h5>
+                <div class="row">
+                    <div class="col-md-6"><strong>Pet:</strong> {{ consulta.pet_nome }} (ID: {{ consulta.pet_id }})</div>
+                    <div class="col-md-6"><strong>Espécie/Raça:</strong> {{ consulta.raca }}</div>
+                    <div class="col-md-6"><strong>Sexo:</strong> {{ consulta.sexo }}</div>
+                    <div class="col-md-6"><strong>Idade:</strong> {{ consulta.idade }} anos</div>
+                </div>
+            </div>
+
+            <div class="atendimento-section">
+                <h5>Dados do Tutor</h5>
+                 <div class="row">
+                    <div class="col-md-6"><strong>Nome:</strong> {{ consulta.dono_nome }}</div>
+                    <div class="col-md-6"><strong>Telefone:</strong> {{ consulta.dono_telefone }}</div>
+                </div>
+            </div>
+
+            <div class="atendimento-section">
+                <h5>Queixa Principal / Observações</h5>
+                <p>{{ consulta.observacoes|default('Nenhuma observação rápida fornecida.') }}</p>
+            </div>
+
+            <div class="atendimento-section">
+                <h5>Anamnese e Exame Clínico</h5>
+                <div class="anamnese-content">
+                    {{ consulta.anamnese|raw }}
+                </div>
+            </div>
+
+            <div class="mt-5 text-center text-muted">
+                <small>Documento gerado pelo sistema HomePet</small>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

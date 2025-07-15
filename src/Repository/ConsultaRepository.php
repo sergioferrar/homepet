@@ -16,24 +16,32 @@ class ConsultaRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function salvarConsulta($baseId, Consulta $consulta): void
+    /**
+     * ATUALIZADO: Salva uma consulta/atendimento no banco de dados, agora incluindo o campo anamnese.
+     */
+    public function salvarConsulta(Consulta $consulta): void
     {
+        // Adicionamos a coluna 'anamnese' no SQL
         $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.consulta 
-                (estabelecimento_id, cliente_id, pet_id, data, hora, observacoes, criado_em, status)
-                VALUES (:estabelecimento_id, :cliente_id, :pet_id, :data, :hora, :observacoes, :criado_em, :status)";
+                    (estabelecimento_id, cliente_id, pet_id, data, hora, observacoes, criado_em, status, anamnese, tipo)
+                VALUES (:estabelecimento_id, :cliente_id, :pet_id, :data, :hora, :observacoes, :criado_em, :status, :anamnese, :tipo)";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue('estabelecimento_id', $baseId);
+        $stmt->bindValue('estabelecimento_id', $consulta->getEstabelecimentoId());
         $stmt->bindValue('cliente_id', $consulta->getClienteId());
         $stmt->bindValue('pet_id', $consulta->getPetId());
         $stmt->bindValue('data', $consulta->getData()->format('Y-m-d'));
         $stmt->bindValue('hora', $consulta->getHora()->format('H:i:s'));
         $stmt->bindValue('observacoes', $consulta->getObservacoes());
         $stmt->bindValue('criado_em', $consulta->getCriadoEm()->format('Y-m-d H:i:s'));
-        $stmt->bindValue('status', $consulta->getStatus() ?? 'aguardando');
-        $stmt->execute();
+        $stmt->bindValue('status', $consulta->getStatus() ?? 'atendido');
+        
+        // Adicionamos o bind para os novos valores
+        $stmt->bindValue('anamnese', $consulta->getAnamnese()); 
+        $stmt->bindValue('tipo', $consulta->getTipo()); 
+        
+        $stmt->executeStatement();
     }
-
 
     public function listarConsultasPorCliente($baseId, int $clienteId): array
     {
@@ -51,24 +59,30 @@ class ConsultaRepository extends ServiceEntityRepository
         return $result->fetchAllAssociative();
     }
 
-    public function listarConsultasDoDia($baseId, \DateTime $data): array
+    public function listarConsultasDoDia($baseId, \DateTime $data, ?string $petNome = null): array
     {
         $sql = "SELECT c.id, c.data, c.hora, c.observacoes, c.status,
                        p.nome as pet_nome, cl.nome as cliente_nome
                 FROM {$_ENV['DBNAMETENANT']}.consulta c
                 JOIN {$_ENV['DBNAMETENANT']}.pet p ON c.pet_id = p.id
                 JOIN {$_ENV['DBNAMETENANT']}.cliente cl ON c.cliente_id = cl.id
-                WHERE c.estabelecimento_id = :baseId AND c.data = :data
-                ORDER BY c.hora";
+                WHERE c.estabelecimento_id = :baseId AND c.data = :data";
+        
+        if ($petNome) {
+            $sql .= " AND p.nome LIKE :petNome";
+        }
+        
+        $sql .= " ORDER BY c.hora";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('baseId', $baseId);
         $stmt->bindValue('data', $data->format('Y-m-d'));
+        if ($petNome) {
+            $stmt->bindValue('petNome', '%' . $petNome . '%');
+        }
         $result = $stmt->executeQuery();
         return $result->fetchAllAssociative();
     }
-
-
 
     public function contarConsultasPorMes($baseId): array
     {
@@ -187,14 +201,42 @@ class ConsultaRepository extends ServiceEntityRepository
         $result = $stmt->executeQuery()->fetchAssociative();
 
         $total = (int) ($result['total'] ?? 0);
-        $dias = (int) ($result['dias'] ?? 1); // Evita divisão por zero
+        $dias = (int) ($result['dias'] ?? 1); 
 
         return $dias > 0 ? round($total / $dias, 2) : 0.0;
     }
 
+    public function findConsultaCompletaById($baseId, int $id): ?array
+    {
+        $sql = "SELECT c.*, p.nome as pet_nome, p.raca, p.sexo, p.idade, cl.nome as dono_nome, cl.telefone as dono_telefone
+                FROM {$_ENV['DBNAMETENANT']}.consulta c
+                JOIN {$_ENV['DBNAMETENANT']}.pet p ON c.pet_id = p.id
+                JOIN {$_ENV['DBNAMETENANT']}.cliente cl ON c.cliente_id = cl.id
+                WHERE c.estabelecimento_id = :baseId AND c.id = :id";
 
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('id', $id);
+        $result = $stmt->executeQuery();
 
+        $data = $result->fetchAssociative();
+        return $data ?: null;
+    }
 
+    public function findAllByPetId(int $baseId, int $petId): array
+    {
+        $sql = "SELECT c.*, p.nome as pet_nome, cl.nome as dono_nome
+                FROM {$_ENV['DBNAMETENANT']}.consulta c
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON c.pet_id = p.id
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente cl ON c.cliente_id = cl.id
+                WHERE c.estabelecimento_id = :baseId AND c.pet_id = :petId
+                ORDER BY c.data DESC, c.hora DESC";
 
-
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('petId', $petId);
+        
+        $result = $stmt->executeQuery();
+        return $result->fetchAllAssociative();
+    }
 }

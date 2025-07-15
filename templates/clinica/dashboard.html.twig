@@ -1,242 +1,265 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dashboard Clínica{% endblock %}
+{% block title %}Painel de Controle{% endblock %}
 
 {% block stylesheets %}
-{{ parent() }}
-<style>
-    .scrollable-table-wrapper {
-        max-height: 300px;
-        overflow-y: auto;
-        border-radius: 10px;
-        border: 1px solid #dee2e6;
-    }
-
-    .scrollable-table-wrapper thead th {
-        position: sticky;
-        top: 0;
-        background-color: #f8f9fa;
-        z-index: 10;
-    }
-
-    .table-rounded-row tr td {
-        background-color: #f9f9fc;
-        border-radius: 8px;
-        padding: 10px 12px;
-        margin-bottom: 5px;
-    }
-
-    .table-rounded-row tr {
-        margin-bottom: 10px;
-    }
-
-    .tab-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
-</style>
+    {{ parent() }}
+    {# Adicionando o link completo do Bootstrap 5 e Font Awesome para garantir que todas as classes funcionem #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* Estilos mínimos para cores personalizadas e ajustes finos, replicando a imagem */
+        body {
+            background-color: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .header-blue {
+            background-color: #3c8dbc !important;
+        }
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .panel-links a {
+            font-weight: 600;
+            color: #6c757d;
+        }
+        .panel-links a.active {
+            color: #3c8dbc;
+            border-bottom: 2px solid #3c8dbc;
+        }
+        .card {
+            border-radius: 0.25rem;
+            box-shadow: none;
+            border: 1px solid #dee2e6;
+        }
+        .card-header {
+            border-radius: 0;
+            border-top-left-radius: inherit;
+            border-top-right-radius: inherit;
+            padding: 0.6rem 1rem;
+            font-size: 0.95rem;
+        }
+        .list-group-item {
+            background-color: #f8f9fa;
+            padding: 0.7rem 1rem;
+            font-size: 0.9rem;
+        }
+        .list-group-item .owner {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        .badge-emergency {
+            background-color: #ffdddd;
+            color: #d9534f;
+            border: 1px solid #d9534f;
+        }
+        .badge-urgent {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #155724;
+        }
+        .vaccine-tabs .nav-link {
+            border: 1px solid #dee2e6 !important;
+            color: #6c757d;
+        }
+        .vaccine-tabs .nav-link.active {
+            background-color: #3c8dbc !important;
+            color: black !important;
+            border-color: #3c8dbc !important;
+        }
+        .summary-card .icon {
+            font-size: 2.2rem;
+        }
+        .summary-card h3 {
+            font-size: 1.8rem;
+        }
+        /* CORREÇÃO: Estilos para os cards de métrica para garantir visibilidade */
+        .metric-card {
+            background-color: #fff;
+        }
+        .metric-card .metric-label {
+            color: #6c757d;
+        }
+        .metric-card .metric-value {
+            color: #212529; /* Garante que o texto seja escuro */
+            font-weight: 600;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-<div class="container mt-4">
+<div class="container-fluid my-4">
+    <h1 class="panel-title mb-2">Painel de controle</h1>
+    <div class="panel-links pb-2 mb-4">
+        <a href="#" class="active text-decoration-none pb-1"><i class="fas fa-home me-1"></i> Principal</a>
+        <a href="#" class="text-decoration-none pb-1"><i class="fas fa-dollar-sign me-1"></i> Financeiro</a>
+    </div>
 
-    <div class="tab-card" id="painel">
-        <h2 class="text-center mb-4">Painel da Clínica Veterinária 🐾</h2>
+    <div class="row">
+        <!-- COLUNA DA ESQUERDA -->
+        <div class="col-lg-8">
+            <div class="row">
+                <!-- Painel: Últimos Atendimentos -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header header-blue text-black fw-bold">Últimos atendimentos (24h)</div>
+                        <ul class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;">
+                            {% for item in atendimentos %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{{ path('clinica_detalhes_pet', {'id': item.pet_id}) }}" class="text-decoration-none fw-bold">{{ item.pet }}</a>
+                                        <span class="owner">/ {{ item.cliente }}</span>
+                                    </div>
+                                    <small class="text-muted">{{ item.data|date('d/m H:i') }}</small>
+                                </li>
+                            {% else %}
+                                <li class="list-group-item">Nenhum atendimento recente.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
 
-        <div class="row g-4 mb-4">
-            <!-- Cards resumo -->
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0 p-3 text-white" style="background: linear-gradient(135deg, #6a11cb, #2575fc); border-radius: 12px;">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-paw fa-2x me-3"></i>
-                        <div>
-                            <h5>Total de Pets</h5>
-                            <h3>{{ total_pets }}</h3>
+                <!-- Painel: Últimos Animais Cadastrados -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header header-blue text-black fw-bold">Últimos animais cadastrados</div>
+                         <ul class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;">
+                            {% for animal in animais_cadastrados %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}" class="text-decoration-none fw-bold">{{ animal.nome }}</a>
+                                        <span class="owner">/ {{ animal.tutor }}</span>
+                                    </div>
+                                </li>
+                            {% else %}
+                                <li class="list-group-item">Nenhum animal cadastrado.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Painel: Animais Internados -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header header-blue text-black fw-bold">Animais internados</div>
+                        <ul class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;">
+                             {% for internacao in internados %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{{ path('clinica_detalhes_pet', {'id': internacao.pet_id}) }}" class="text-decoration-none fw-bold">{{ internacao.pet_nome }}</a>
+                                        <span class="owner">/ {{ internacao.dono_nome }}</span>
+                                    </div>
+                                    <span class="badge {% if 'Emergencia' in internacao.motivo %}badge-emergency{% else %}badge-urgent{% endif %}">
+                                        {% if 'Emergencia' in internacao.motivo %}Emergencia{% else %}Pouco urgente{% endif %}
+                                    </span>
+                                </li>
+                            {% else %}
+                                <li class="list-group-item">Nenhuma internação ativa.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Painel: Vacinas com Abas -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header header-blue text-black fw-bold">Vacinas</div>
+                        <nav class="vaccine-tabs nav nav-pills flex-row p-2 bg-light">
+                            <a href="#tab-vencidas" class="nav-link active small" data-bs-toggle="tab">Vencidas</a>
+                            <a href="#tab-programadas" class="nav-link small" data-bs-toggle="tab">Programadas</a>
+                        </nav>
+                        <div class="tab-content" style="max-height: 200px; overflow-y: auto;">
+                            <div class="tab-pane fade show active" id="tab-vencidas">
+                                <ul class="list-group list-group-flush">
+                                {% for vacina in vacinas_vencidas %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <a href="{{ path('clinica_detalhes_pet', {'id': vacina.pet_id}) }}" class="text-decoration-none fw-bold">{{ vacina.pet_nome }}</a>
+                                            <span class="owner">- {{ vacina.tipo }}</span>
+                                        </div>
+                                        <small class="text-danger fw-bold">{{ vacina.data_validade|date('d/m/Y') }}</small>
+                                    </li>
+                                {% else %}
+                                    <li class="list-group-item">Nenhuma vacina vencida.</li>
+                                {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="tab-pane fade" id="tab-programadas">
+                                <ul class="list-group list-group-flush">
+                                {% for vacina in vacinas_programadas %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <a href="{{ path('clinica_detalhes_pet', {'id': vacina.pet_id}) }}" class="text-decoration-none fw-bold">{{ vacina.pet_nome }}</a>
+                                            <span class="owner">- {{ vacina.tipo }}</span>
+                                        </div>
+                                        <small class="text-muted">{{ vacina.data_validade|date('d/m/Y') }}</small>
+                                    </li>
+                                {% else %}
+                                    <li class="list-group-item">Nenhuma vacina programada.</li>
+                                {% endfor %}
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0 p-3 text-white" style="background: linear-gradient(135deg, #f7971e, #ffd200); border-radius: 12px;">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-hand-holding-usd fa-2x me-3"></i>
-                        <div>
-                            <h5>Débitos Pendentes</h5>
-                            <h3>R$ {{ debitos_cliente|number_format(2, ',', '.') }}</h3>
-                        </div>
+        </div>
+
+        <!-- COLUNA DA DIREITA -->
+        <div class="col-lg-4">
+            <div class="card text-black mb-4" style="background-color: #6f42c1;">
+                <div class="card-body d-flex justify-content-between align-items-center p-3">
+                    <div class="icon">
+                        <i class="fas fa-paw fa-2x"></i>
+                    </div>
+                    <div class="content text-end">
+                        <h3 class="fw-bold mb-0">{{ total_pets }}</h3>
+                        <p class="mb-0">Animais</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0 p-3 text-white" style="background: linear-gradient(135deg, #43cea2, #185a9d); border-radius: 12px;">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-chart-line fa-2x me-3"></i>
-                        <div>
-                            <h5>Média de Consultas</h5>
-                            <h3>{{ media_atendimento }}</h3>
-                        </div>
+             <div class="card text-black mb-4" style="background-color: #583291;">
+                <div class="card-body d-flex justify-content-between align-items-center p-3">
+                    <div class="icon">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <div class="content text-end">
+                        <h3 class="fw-bold mb-0">{{ totaldono }}</h3>
+                        <p class="mb-0">Responsáveis</p>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <ul class="nav nav-tabs mb-4">
-            <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="#">Painel</a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('financeiro_dashboard') }}">Financeiro</a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('clinica_nova_consulta') }}">Consultas</a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('clinica_receita') }}">Receita</a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('clinica_documentos') }}">Termos</a>
-            </li>
-
-        </ul>
-        <!-- Últimos atendimentos -->
-        <h4 class="mt-4">Últimos Atendimentos 📋</h4>
-        <div class="scrollable-table-wrapper mb-4">
-            <table class="table table-rounded-row">
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Pet</th>
-                        <th>Dono</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in atendimentos %}
-                        <tr>
-                            <td>{{ item.data|date('d/m') }}</td>
-                            <td>
-                              <a href="{{ path('clinica_detalhes_pet', {'id': item.pet_id}) }}" class="fw-bold text-primary">
-                                {{ item.pet }}
-                              </a>
-                            </td>
-                            <td>{{ item.cliente }}</td>
-                            <td>
-                                <span class="badge 
-                                    {% if item.status == 'atendido' %}bg-success
-                                    {% elseif item.status == 'cancelado' %}bg-danger
-                                    {% else %}bg-warning text-dark{% endif %}">
-                                    {{ item.status|capitalize }}
-                                </span>
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr><td colspan="4">Nenhum atendimento recente.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Internações -->
-        <h4>Internações Ativas 🏥</h4>
-        <div class="scrollable-table-wrapper mb-4">
-            <table class="table table-rounded-row">
-                <thead>
-                    <tr>
-                        <th>Pet</th>
-                        <th>Dono</th>
-                        <th>Motivo</th>
-                        <th>Data de Início</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for internacao in internados %}
-                        <tr>
-                            <td>
-                              <a href="{{ path('clinica_detalhes_pet', {'id': internacao.pet.id}) }}" class="fw-bold text-primary">
-                                {{ internacao.pet_nome }}
-                              </a>
-                            </td>
-                            <td>{{ internacao.dono_nome }}</td>
-                            <td>{{ internacao.motivo }}</td>
-                            <td>{{ internacao.data_inicio|date('d/m/Y') }}</td>
-                        </tr>
-                    {% else %}
-                        <tr><td colspan="4">Nenhuma internação ativa.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Vacinas programadas -->
-        <h4>Vacinas Programadas 💉</h4>
-        <div class="scrollable-table-wrapper mb-4">
-            <table class="table table-rounded-row">
-                <thead>
-                    <tr>
-                        <th>Pet</th>
-                        <th>Tipo</th>
-                        <th>Validade</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for vacina in vacinas_programadas %}
-                        <tr>
-                            <td>
-                              <a href="{{ path('clinica_detalhes_pet', {'id': vacina.pet_id}) }}" class="fw-bold text-primary">
-                                {{ vacina.pet_nome }}
-                              </a>
-                            </td>
-
-                            <td>{{ vacina.tipo }}</td>
-                            <td>{{ vacina.data_validade|date('d/m/Y') }}</td>
-                        </tr>
-                    {% else %}
-                        <tr><td colspan="3">Nenhuma vacina programada.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Vacinas vencidas -->
-        <h4>Vacinas Vencidas ⚠️</h4>
-        <div class="scrollable-table-wrapper mb-4">
-            <table class="table table-rounded-row table-danger">
-                <thead>
-                    <tr>
-                        <th>Pet</th>
-                        <th>Tipo</th>
-                        <th>Validade</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for vacina in vacinas_vencidas %}
-                        <tr>
-                            <td>
-                              <a href="{{ path('clinica_detalhes_pet', {'id': vacina.pet_id}) }}" class="fw-bold text-primary">
-                                {{ vacina.pet_nome }}
-                              </a>
-                            </td>
-                            <td>{{ vacina.tipo }}</td>
-                            <td>{{ vacina.data_validade|date('d/m/Y') }}</td>
-                        </tr>
-                    {% else %}
-                        <tr><td colspan="3">Nenhuma vacina vencida.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Alertas -->
-        <h4>Alertas e Notificações 📢</h4>
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> Este painel pode mostrar exames pendentes, análises ou alertas do sistema futuramente.
+             <div class="card text-black mb-4" style="background-color: #c9302c;">
+                <div class="card-body d-flex justify-content-between align-items-center p-3">
+                    <div class="icon">
+                        <i class="fas fa-hand-holding-usd fa-2x"></i>
+                    </div>
+                    <div class="content text-end">
+                        <h3 class="fw-bold mb-0">R$ {{ debitos_cliente|number_format(2, ',', '.') }}</h3>
+                        <p class="mb-0">Débitos/clientes</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card metric-card mb-4">
+                <div class="card-body p-3 text-center">
+                    <div class="metric-label text-muted">Média espera</div>
+                    <div class="metric-value">00:00:00</div>
+                </div>
+            </div>
+            <div class="card metric-card mb-4">
+                <div class="card-body p-3 text-center">
+                    <div class="metric-label text-muted">Média atendimento</div>
+                    <div class="metric-value">{{ media_atendimento }}</div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}
