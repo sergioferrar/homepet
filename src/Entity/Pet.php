@@ -63,12 +63,6 @@ class Pet
      */
     private $estabelecimentoId;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     */
-    private $dataCadastro;
-
-
     public function getId(): ?int
     {
         return $this->id;
@@ -177,17 +171,6 @@ class Pet
     {
         $this->estabelecimentoId = $estabelecimentoId;
 
-        return $this;
-    }
-
-    public function getDataCadastro(): ?\DateTimeInterface
-    {
-        return $this->dataCadastro;
-    }
-
-    public function setDataCadastro(\DateTimeInterface $dataCadastro): self
-    {
-        $this->dataCadastro = $dataCadastro;
         return $this;
     }
 }

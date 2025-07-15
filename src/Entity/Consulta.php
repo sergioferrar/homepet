@@ -19,19 +19,19 @@ class Consulta
     private $id;
 
     /**
-     * @ORM\Column(name="estabelecimento_id", type="integer")
+     * @ORM\Column(type="integer")
      */
-    private $estabelecimentoId;
+    private $estabelecimento_id;
 
     /**
-     * @ORM\Column(name="cliente_id", type="integer")
+     * @ORM\Column(type="integer")
      */
-    private $clienteId;
+    private $cliente_id;
 
     /**
-     * @ORM\Column(name="pet_id", type="integer")
+     * @ORM\Column(type="integer")
      */
-    private $petId;
+    private $pet_id;
 
     /**
      * @ORM\Column(type="date")
@@ -44,19 +44,9 @@ class Consulta
     private $hora;
 
     /**
-     * @ORM\Column(type="string", length=100, nullable=true)
-     */
-    private $tipo;
-
-    /**
      * @ORM\Column(type="text", nullable=true)
      */
     private $observacoes;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
-    private $anamnese;
 
     /**
      * @ORM\Column(type="string", length=20, options={"default": "aguardando"})
@@ -64,35 +54,35 @@ class Consulta
     private $status = 'aguardando';
 
     /**
-     * @ORM\Column(name="criado_em", type="datetime")
+     * @ORM\Column(type="datetime")
      */
-    private $criadoEm;
+    private $criado_em;
 
     public function __construct()
     {
-        $this->criadoEm = new \DateTime();
+        $this->criado_em = new \DateTime();
     }
 
     public function getId(): ?int { return $this->id; }
 
-    public function getEstabelecimentoId(): ?int { return $this->estabelecimentoId; }
-    public function setEstabelecimentoId(int $estabelecimentoId): self
+    public function getEstabelecimentoId(): ?int { return $this->estabelecimento_id; }
+    public function setEstabelecimentoId(int $estabelecimento_id): self
     {
-        $this->estabelecimentoId = $estabelecimentoId;
+        $this->estabelecimento_id = $estabelecimento_id;
         return $this;
     }
 
-    public function getClienteId(): ?int { return $this->clienteId; }
-    public function setClienteId(int $clienteId): self
+    public function getClienteId(): ?int { return $this->cliente_id; }
+    public function setClienteId(int $cliente_id): self
     {
-        $this->clienteId = $clienteId;
+        $this->cliente_id = $cliente_id;
         return $this;
     }
 
-    public function getPetId(): ?int { return $this->petId; }
-    public function setPetId(int $petId): self
+    public function getPetId(): ?int { return $this->pet_id; }
+    public function setPetId(int $pet_id): self
     {
-        $this->petId = $petId;
+        $this->pet_id = $pet_id;
         return $this;
     }
 
@@ -110,24 +100,10 @@ class Consulta
         return $this;
     }
 
-    public function getTipo(): ?string { return $this->tipo; }
-    public function setTipo(?string $tipo): self
-    {
-        $this->tipo = $tipo;
-        return $this;
-    }
-
     public function getObservacoes(): ?string { return $this->observacoes; }
     public function setObservacoes(?string $observacoes): self
     {
         $this->observacoes = $observacoes;
-        return $this;
-    }
-
-    public function getAnamnese(): ?string { return $this->anamnese; }
-    public function setAnamnese(?string $anamnese): self
-    {
-        $this->anamnese = $anamnese;
         return $this;
     }
 
@@ -138,10 +114,10 @@ class Consulta
         return $this;
     }
 
-    public function getCriadoEm(): ?\DateTimeInterface { return $this->criadoEm; }
-    public function setCriadoEm(\DateTimeInterface $criadoEm): self
+    public function getCriadoEm(): ?\DateTimeInterface { return $this->criado_em; }
+    public function setCriadoEm(\DateTimeInterface $criado_em): self
     {
-        $this->criadoEm = $criadoEm;
+        $this->criado_em = $criado_em;
         return $this;
     }
 }
