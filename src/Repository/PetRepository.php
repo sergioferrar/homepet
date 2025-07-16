@@ -98,20 +98,27 @@ class PetRepository extends ServiceEntityRepository
         return (int) $this->conn->fetchOne($sql, ['baseId' => $baseId]);
     }
 
-    public function listarPetsRecentes($baseId, $limit = 5): array
+    public function listarPetsRecentes(int $idBase): array
     {
-        $sql = "SELECT p.id, p.nome, p.especie, p.raca, c.nome as tutor
-                FROM {$_ENV['DBNAMETENANT']}.pet p
-                JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
-                WHERE p.estabelecimento_id = :baseId
-                ORDER BY p.id DESC
-                LIMIT :limit";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue('baseId', $baseId);
-        $stmt->bindValue('limit', $limit, \PDO::PARAM_INT);
-        return $stmt->executeQuery()->fetchAllAssociative();
+        $conn = $this->getEntityManager()->getConnection();
+        $sql = "
+            SELECT 
+                p.id, p.nome, p.especie, p.raca,
+                c.nome AS tutor,
+                DATE_FORMAT(p.data_cadastro, '%d/%m') AS data
+            FROM {$_ENV['DBNAMETENANT']}.pet p
+            LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id
+            WHERE p.estabelecimento_id = :idBase
+            ORDER BY p.data_cadastro DESC
+            LIMIT 5
+        ";
+
+        $stmt = $conn->prepare($sql);
+        $resultSet = $stmt->executeQuery(['idBase' => $idBase]);
+
+        return $resultSet->fetchAllAssociative();
     }
-    
+
     public function contarPetsPorEspecie($baseId): array
     {
         $sql = "SELECT especie, COUNT(*) as total

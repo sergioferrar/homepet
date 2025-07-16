@@ -149,18 +149,8 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function findClienteByPetId($baseId, int $petId): ?array
     {
-        $sql = "SELECT 
-                    c.id,
-                    c.nome,
-                    c.email,
-                    c.telefone,
-                    c.whatsapp,
-                    c.rua,
-                    c.numero,
-                    c.complemento,
-                    c.bairro,
-                    c.cidade,
-                    c.cep
+        $sql = "SELECT c.id, c.nome, c.email, c.telefone, c.whatsapp, c.rua,
+                    c.numero, c.complemento, c.bairro, c.cidade, c.cep
                 FROM {$_ENV['DBNAMETENANT']}.cliente c
                 INNER JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.dono_id = c.id
                 WHERE c.estabelecimento_id = '{$baseId}' AND  p.id = :petId";
@@ -252,6 +242,12 @@ class ClienteRepository extends ServiceEntityRepository
         $stmt->bindValue('baseId', $baseId);
         $result = $stmt->executeQuery();
         return $result->fetchAllAssociative();
+    }
+
+    public function countTotalDono($baseId): int
+    {
+        $sql = "SELECT COUNT(*) FROM {$_ENV['DBNAMETENANT']}.cliente WHERE estabelecimento_id = :baseId";
+        return (int) $this->conn->fetchOne($sql, ['baseId' => $baseId]);
     }
 
 }

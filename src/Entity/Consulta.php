@@ -58,6 +58,18 @@ class Consulta
      */
     private $criado_em;
 
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $anamnese;
+
+    /**
+     * @ORM\Column(type="string", length=100, nullable=true)
+     */
+    private $tipo;
+
+
+
     public function __construct()
     {
         $this->criado_em = new \DateTime();
@@ -118,6 +130,28 @@ class Consulta
     public function setCriadoEm(\DateTimeInterface $criado_em): self
     {
         $this->criado_em = $criado_em;
+        return $this;
+    }
+
+    public function getAnamnese(): ?string
+    {
+        return $this->anamnese;
+    }
+
+    public function setAnamnese(?string $anamnese): self
+    {
+        $this->anamnese = $anamnese;
+        return $this;
+    }
+
+    public function getTipo(): ?string
+    {
+        return $this->tipo;
+    }
+
+    public function setTipo(?string $tipo): self
+    {
+        $this->tipo = $tipo;
         return $this;
     }
 }

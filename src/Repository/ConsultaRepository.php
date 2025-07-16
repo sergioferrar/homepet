@@ -16,22 +16,26 @@ class ConsultaRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function salvarConsulta($baseId, Consulta $consulta): void
+    public function salvarConsulta(Consulta $consulta): void // Removido $baseId, pois já está no objeto
     {
+       
         $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.consulta 
-                (estabelecimento_id, cliente_id, pet_id, data, hora, observacoes, criado_em, status)
-                VALUES (:estabelecimento_id, :cliente_id, :pet_id, :data, :hora, :observacoes, :criado_em, :status)";
+                (estabelecimento_id, cliente_id, pet_id, data, hora, observacoes, criado_em, status, anamnese)
+                VALUES (:estabelecimento_id, :cliente_id, :pet_id, :data, :hora, :observacoes, :criado_em, :status, :anamnese)";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue('estabelecimento_id', $baseId);
+        $stmt->bindValue('estabelecimento_id', $consulta->getEstabelecimentoId());
         $stmt->bindValue('cliente_id', $consulta->getClienteId());
         $stmt->bindValue('pet_id', $consulta->getPetId());
         $stmt->bindValue('data', $consulta->getData()->format('Y-m-d'));
         $stmt->bindValue('hora', $consulta->getHora()->format('H:i:s'));
         $stmt->bindValue('observacoes', $consulta->getObservacoes());
         $stmt->bindValue('criado_em', $consulta->getCriadoEm()->format('Y-m-d H:i:s'));
-        $stmt->bindValue('status', $consulta->getStatus() ?? 'aguardando');
-        $stmt->execute();
+        $stmt->bindValue('status', $consulta->getStatus() ?? 'atendido');
+
+        $stmt->bindValue('anamnese', $consulta->getAnamnese());
+        
+        $stmt->executeStatement(); 
     }
 
 
@@ -192,9 +196,21 @@ class ConsultaRepository extends ServiceEntityRepository
         return $dias > 0 ? round($total / $dias, 2) : 0.0;
     }
 
+    public function findAllByPetId($baseId, int $petId): array
+    {
+        $sql = "SELECT c.id, c.data, c.hora, c.observacoes, c.status,
+                       cl.nome AS cliente, p.nome AS pet, p.id AS pet_id
+                FROM {$_ENV['DBNAMETENANT']}.consulta c
+                JOIN {$_ENV['DBNAMETENANT']}.cliente cl ON cl.id = c.cliente_id
+                JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.id = c.pet_id
+                WHERE c.estabelecimento_id = :baseId AND c.pet_id = :petId
+                ORDER BY c.data DESC, c.hora DESC";
 
-
-
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('petId', $petId);
+        return $stmt->executeQuery()->fetchAllAssociative();  // <-- Isso retorna arrays, não objetos
+    }
 
 
 }

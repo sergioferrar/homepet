@@ -217,4 +217,19 @@ class FinanceiroRepository extends ServiceEntityRepository
         ]);
     }
 
+    public function buscarPorPet(int $baseId, int $petId): array
+    {
+        $sql = "SELECT * 
+                FROM {$_ENV['DBNAMETENANT']}.financeiro 
+                WHERE estabelecimento_id = :baseId AND pet_id = :petId
+                ORDER BY data DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('petId', $petId);
+
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
+
 }
