@@ -197,20 +197,21 @@ class ConsultaRepository extends ServiceEntityRepository
     }
 
     public function findAllByPetId($baseId, int $petId): array
-    {
-        $sql = "SELECT c.id, c.data, c.hora, c.observacoes, c.status,
-                       cl.nome AS cliente, p.nome AS pet, p.id AS pet_id
-                FROM {$_ENV['DBNAMETENANT']}.consulta c
-                JOIN {$_ENV['DBNAMETENANT']}.cliente cl ON cl.id = c.cliente_id
-                JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.id = c.pet_id
-                WHERE c.estabelecimento_id = :baseId AND c.pet_id = :petId
-                ORDER BY c.data DESC, c.hora DESC";
+        {
+        
+            $sql = "SELECT c.id, c.data, c.hora, c.observacoes, c.status, c.anamnese, c.tipo,
+                           cl.nome AS cliente, p.nome AS pet, p.id AS pet_id
+                    FROM {$_ENV['DBNAMETENANT']}.consulta c
+                    JOIN {$_ENV['DBNAMETENANT']}.cliente cl ON cl.id = c.cliente_id
+                    JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.id = c.pet_id
+                    WHERE c.estabelecimento_id = :baseId AND c.pet_id = :petId
+                    ORDER BY c.data DESC, c.hora DESC";
 
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue('baseId', $baseId);
-        $stmt->bindValue('petId', $petId);
-        return $stmt->executeQuery()->fetchAllAssociative();  // <-- Isso retorna arrays, não objetos
-    }
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindValue('baseId', $baseId);
+            $stmt->bindValue('petId', $petId);
+            return $stmt->executeQuery()->fetchAllAssociative();
+        }
 
 
 }

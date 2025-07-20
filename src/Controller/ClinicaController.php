@@ -125,7 +125,7 @@ class ClinicaController extends DefaultController
         return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
     }
 
-    /**
+/**
      * @Route("/pet/{petId}/atendimento/novo", name="clinica_novo_atendimento", methods={"POST"})
      */
     public function novoAtendimento(Request $request, int $petId, ConsultaRepository $consultaRepo): Response
@@ -138,7 +138,6 @@ class ClinicaController extends DefaultController
             throw $this->createNotFoundException('Pet não encontrado.');
         }
 
-        // Esta rota agora só processa o formulário via POST
         $consulta = new Consulta();
         $consulta->setEstabelecimentoId($baseId);
         $consulta->setClienteId((int) $request->request->get('cliente_id'));
@@ -146,8 +145,9 @@ class ClinicaController extends DefaultController
         $consulta->setData(new \DateTime($request->request->get('data')));
         $consulta->setHora(new \DateTime($request->request->get('hora')));
         $consulta->setObservacoes($request->request->get('observacoes'));
-        // O campo 'anamnese' é esperado aqui, vindo do formulário.
-        $consulta->setAnamnese($request->request->get('anamnese')); 
+        
+        $consulta->setAnamnese($request->request->get('anamnese_delta'));  
+        
         $consulta->setTipo($request->request->get('tipo'));
         $consulta->setStatus('atendido');
         $consulta->setCriadoEm(new \DateTime());

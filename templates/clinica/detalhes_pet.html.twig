@@ -4,12 +4,11 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# Usando a CDN padrão do Font Awesome. Para otimizar, considere usar um Kit do Font Awesome. #}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     
     <style>
-        /* Estilos personalizados da página. */
+        /* Estilos personalizados da página */
         body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
         .main-card, .info-card {
             background: #fff;
@@ -29,6 +28,7 @@
         .timeline:before { content: ''; position: absolute; left: 12px; top: 5px; bottom: 5px; width: 3px; background: #e9ecef; border-radius: 2px; }
         .timeline-item { position: relative; margin-bottom: 25px; }
         .timeline-icon { position: absolute; left: -32px; top: 0; width: 45px; height: 45px; border-radius: 50%; background: #fff; border: 3px solid #e9ecef; color: #495057; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; }
+        .timeline-content { transition: border-color 0.3s; }
         .timeline-content .timeline-date { font-size: 0.85em; color: #dc3545; font-weight: bold; margin-bottom: 4px; }
         a.timeline-text { font-size: 1rem; font-weight: 500; color: #343a40; text-decoration: none; display: block; }
         a.timeline-text:hover { color: #0d6efd; }
@@ -38,35 +38,59 @@
         .form-view-container { border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; background-color: #fdfdff; }
         .ql-editor { min-height: 180px; }
 
-        /* Estilos para o conteúdo da anamnese expandida */
-        .anamnese-content p { margin-bottom: 0.5rem; }
-        .anamnese-content h1, .anamnese-content h2, .anamnese-content h3 {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-top: 1rem;
-            margin-bottom: 0.5rem;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 0.25rem;
+        /* Styles for the new main service display container (the big quadro) */
+        #service-display-container {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #fdfdff;
+        }
+
+        /* Styles for individual service detail cards (each service's quadro) */
+        .service-detail-card {
+            border: 1px solid #dee2e6; /* Base border */
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px; /* Spacing between cards (if you ever show multiple) */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        /* Quill display area within service-detail-card */
+        /* This ensures the displayed Quill content looks clean */
+        .service-detail-content .ql-editor {
+            min-height: auto; /* Allow content to dictate height */
+            padding: 0; /* Remove Quill's default padding for display */
+            font-size: 1rem;
+            overflow-y: auto;
+            max-height: 400px; /* Max height before scrolling */
+            word-wrap: break-word;
+        }
+        /* Specific border colors for service types */
+        .service-detail-card.border-primary { border-left: 5px solid var(--bs-primary); } /* Consulta */
+        .service-detail-card.border-success { border-left: 5px solid var(--bs-success); } /* Retorno */
+        .service-detail-card.border-warning { border-left: 5px solid var(--bs-warning); } /* Vacina */
+        .service-detail-card.border-purple { border-left: 5px solid #6f42c1; } /* Receita (custom color) */
+        /* Add more as needed for other types like Internação, Patologia, Exame, etc. */
+
+        /* Classe customizada apenas para a cor roxa, que não é padrão no Bootstrap */
+        .border-purple {
+            --bs-border-color: #6f42c1;
         }
     </style>
 {% endblock %}
 
 {% block body %}
-{# CORREÇÃO: A variável 'total_debitos' é calculada aqui para garantir que exista. #}
-{# BOA PRÁTICA: No futuro, mova esta lógica para o seu Controller do Symfony e passe o valor já calculado. #}
 {% set total_debitos = 0 %}
 {% for f in financeiro %}{% set total_debitos = total_debitos + f.valor %}{% endfor %}
 
 <div class="container-fluid my-4">
-
     <div class="row mb-4">
         <div class="col-lg-6 mb-4 mb-lg-0">
             <div class="info-card">
                 <h5>{{ pet.dono_nome|default('Tutor não vinculado') }} {% if pet.dono_nome %}<small class="text-muted fw-normal">({{ pet.dono_id }})</small>{% endif %}</h5>
                 {% if pet.dono_telefone is defined and pet.dono_telefone %}<p class="text-muted"><i class="fas fa-mobile-alt me-2"></i>{{ pet.dono_telefone }}</p>{% endif %}
-                {% if total_debitos > 0 %}
-                    <span class="debt-tag">Saldo devedor de R$ {{ total_debitos|number_format(2, ',', '.') }}</span>
-                {% endif %}
+                {% if total_debitos > 0 %}<span class="debt-tag">Saldo devedor de R$ {{ total_debitos|number_format(2, ',', '.') }}</span>{% endif %}
             </div>
         </div>
         <div class="col-lg-6">
@@ -80,16 +104,17 @@
             </div>
         </div>
     </div>
+    <hr>
 
     <div class="row">
         <div class="col-lg-3 mb-4 mb-lg-0">
             <div class="main-card sales-card">
                 <ul class="nav nav-tabs" id="salesTab" role="tablist">
-                    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#venda">Venda</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#orcamentos">Orçamentos</button></li>
+                    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#venda" type="button" role="tab" aria-controls="venda" aria-selected="true">Venda</button></li>
+                    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#orcamentos" type="button" role="tab" aria-controls="orcamentos" aria-selected="false">Orçamentos</button></li>
                 </ul>
                 <div class="tab-content pt-4" id="salesTabContent">
-                    <div class="tab-pane fade show active" id="venda" role="tabpanel">
+                    <div class="tab-pane fade show active" id="venda" role="tabpanel" aria-labelledby="venda-tab">
                         <div class="d-flex justify-content-end my-2"><button class="btn btn-success btn-sm"><i class="fas fa-plus me-1"></i> Adicionar</button></div>
                         {% for f in financeiro %}
                             <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
@@ -107,7 +132,7 @@
                             <h5 class="mb-0">R$ {{ total_debitos|number_format(2, ',', '.') }}</h5>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="orcamentos" role="tabpanel"><p class="text-muted text-center mt-4">Nenhum orçamento registrado.</p></div>
+                    <div class="tab-pane fade" id="orcamentos" role="tabpanel" aria-labelledby="orcamentos-tab"><p class="text-muted text-center mt-4">Nenhum orçamento registrado.</p></div>
                 </div>
             </div>
         </div>
@@ -119,29 +144,40 @@
                     {% for item in timeline_items %}
                         <li class="timeline-item">
                             <div class="timeline-icon">
-                                {% if 'Consulta' in item.tipo or 'Retorno' in item.tipo %}<i class="fas fa-stethoscope"></i>{% elseif 'Vacina' in item.tipo %}<i class="fas fa-syringe"></i>{% elseif 'Receita' in item.tipo %}<i class="fas fa-file-prescription"></i>{% else %}C{% endif %}
+                                {% if 'Consulta' in item.tipo or 'Retorno' in item.tipo %}<i class="fas fa-stethoscope"></i>
+                                {% elseif 'Vacina' in item.tipo %}<i class="fas fa-syringe"></i>
+                                {% elseif 'Receita' in item.tipo %}<i class="fas fa-file-prescription"></i>
+                                {% else %}C{% endif %}
                             </div>
-                            <div class="timeline-content">
-                                <p class="timeline-date">{{ item.data|date('d/m/Y \\à\\s H:i') }}</p>
-                                
-                                {# ATUALIZADO: O link agora mostra o resumo e expande para mostrar os detalhes completos. #}
-                                <a href="#collapse-item-{{ loop.index }}" data-bs-toggle="collapse" class="timeline-text collapsed d-flex justify-content-between align-items-center">
-                                    <span>{{ item.tipo }}</span>
-                                    <small class="text-muted fst-italic me-2">{{ item.resumo }}</small>
-                                </a>
-                                <div class="collapse mt-2" id="collapse-item-{{ loop.index }}">
-                                    <div class="card card-body p-3">
-                                        <h6 class="card-title border-bottom pb-2 mb-3">Detalhes do Atendimento</h6>
-                                        {# IMPORTANTE: Para isto funcionar, o controller deve passar o conteúdo completo da anamnese na variável 'item.anamnese'. #}
-                                        {# O filtro |raw é usado para renderizar HTML. Garanta que este conteúdo seja sanitizado antes de ser salvo no banco de dados. #}
-                                        {% if item.anamnese is defined and item.anamnese %}
-                                            <div class="anamnese-content">{{ item.anamnese|raw }}</div>
-                                        {% else %}
-                                            <p class="text-muted">Nenhum detalhe adicional disponível.</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
 
+                            {% set content_classes = '' %}
+                            {% if 'Consulta' in item.tipo %}
+                                {% set content_classes = 'border-start border-5 border-primary ps-3' %}
+                            {% elseif 'Retorno' in item.tipo %}
+                                {% set content_classes = 'border-start border-5 border-success ps-3' %}
+                            {% elseif 'Vacina' in item.tipo %}
+                                {% set content_classes = 'border-start border-5 border-warning ps-3' %}
+                            {% elseif 'Receita' in item.tipo %}
+                                {% set content_classes = 'border-start border-5 border-purple ps-3' %}
+                            {% endif %}
+                            
+                            <div class="timeline-content {{ content_classes }}">
+                                <p class="timeline-date">{{ item.data|date('d/m/Y \\à\\s H:i') }}</p>
+                                <a href="#"
+                                   class="timeline-link timeline-text d-flex justify-content-between align-items-center"
+                                   data-tipo="{{ item.tipo }}"
+                                   data-data="{{ item.data|date('d/m/Y \\à\\s H:i') }}"
+                                   data-resumo="{{ item.resumo|e('html_attr') }}"
+                                   {# Pass different content based on type, ensuring it's always a JSON stringified Delta #}
+                                   data-atendimento-delta="{{ item.anamnese | json_encode | e('html_attr') }}"
+{#                                    data-receita-cabecalho-delta="{{ item.receita_cabecalho | json_encode | e('html_attr') }}"
+                                   data-receita-conteudo-delta="{{ item.receita_conteudo | json_encode | e('html_attr') }}"
+                                   data-receita-rodape-delta="{{ item.receita_rodape | json_encode | e('html_attr') }}" #}
+                                   {# Add more data attributes for other types if needed (e.g., data-vacina-details) #}
+                                   >
+                                   <span>{{ item.tipo }}</span>
+                                   <small class="text-muted fst-italic me-2">{{ item.resumo|default('Ver detalhes') }}</small>
+                                </a>
                             </div>
                         </li>
                     {% else %}
@@ -153,14 +189,15 @@
 
         <div class="col-lg-4">
             <div class="main-card">
-                <ul class="nav nav-tabs" id="main-tabs" role="tablist">
-                    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#historico"><i class="fas fa-history me-1"></i> Histórico</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#protocolos"><i class="fas fa-file-alt me-1"></i> Protocolos</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#agenda"><i class="fas fa-calendar-alt me-1"></i> Agenda</button></li>
+                 <ul class="nav nav-tabs" id="main-tabs" role="tablist">
+                    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#historico" type="button" role="tab" aria-controls="historico" aria-selected="true"><i class="fas fa-history me-1"></i> Histórico</button></li>
+                    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#protocolos" type="button" role="tab" aria-controls="protocolos" aria-selected="false"><i class="fas fa-file-alt me-1"></i> Protocolos</button></li>
+                    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#agenda" type="button" role="tab" aria-controls="agenda" aria-selected="false"><i class="fas fa-calendar-alt me-1"></i> Agenda</button></li>
                 </ul>
                 <div class="tab-content pt-4" id="main-tabs-content">
-                    <div class="tab-pane fade show active" id="historico" role="tabpanel">
+                    <div class="tab-pane fade show active" id="historico" role="tabpanel" aria-labelledby="historico-tab">
                         
+                        {# This is the initial view with buttons to add new records #}
                         <div id="action-buttons-view">
                             <h5 class="mb-3">Adicionar Novo Registro</h5>
                             <div class="row action-grid g-3">
@@ -176,6 +213,7 @@
                             </div>
                         </div>
 
+                        {# Form for new Atendimento #}
                         <div id="atendimento-view" style="display: none;">
                             <form id="form-atendimento" method="POST" action="{{ path('clinica_novo_atendimento', {'petId': pet.id}) }}">
                                 <div class="form-view-container">
@@ -184,35 +222,17 @@
                                         <button type="button" class="btn-close" id="btn-fechar-atendimento" aria-label="Fechar"></button>
                                     </div>
                                     <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Tipo*</label>
-                                            <select class="form-select" name="tipo">
-                                                <option value="Consulta" selected>Consulta</option>
-                                                <option value="Retorno">Retorno</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Resumo (Observações)</label>
-                                            <input type="text" class="form-control" name="observacoes">
-                                        </div>
+                                        <div class="col-md-6 mb-3"><label class="form-label">Tipo*</label><select class="form-select" name="tipo"><option value="Consulta" selected>Consulta</option><option value="Retorno">Retorno</option></select></div>
+                                        <div class="col-md-6 mb-3"><label class="form-label">Resumo (Observações)</label><input type="text" class="form-control" name="observacoes"></div>
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Anamnese / Exame Clínico</label>
-                                        <div id="atendimento-editor"></div>
-                                        {# OTIMIZAÇÃO: Salvar o conteúdo como JSON (Delta) é mais seguro. O backend deve ser ajustado para processar este JSON. #}
-                                        <input type="hidden" name="anamnese_delta" id="anamnese-input">
-                                    </div>
-                                    <input type="hidden" name="pet_id" value="{{ pet.id }}">
-                                    <input type="hidden" name="cliente_id" value="{{ pet.dono_id }}">
-                                    <input type="hidden" name="data" value="{{ "now"|date("Y-m-d") }}">
-                                    <input type="hidden" name="hora" value="{{ "now"|date("H:i:s") }}">
-                                    <div class="d-flex justify-content-end">
-                                        <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i> Salvar Atendimento</button>
-                                    </div>
+                                    <div class="mb-3"><label class="form-label">Anamnese / Exame Clínico</label><div id="atendimento-editor"></div><input type="hidden" name="anamnese_delta" id="anamnese-input"></div>
+                                    <input type="hidden" name="pet_id" value="{{ pet.id }}"><input type="hidden" name="cliente_id" value="{{ pet.dono_id }}"><input type="hidden" name="data" value="{{ "now"|date("Y-m-d") }}"><input type="hidden" name="hora" value="{{ "now"|date("H:i:s") }}">
+                                    <div class="d-flex justify-content-end"><button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i> Salvar Atendimento</button></div>
                                 </div>
                             </form>
                         </div>
 
+                        {# Form for new Receita #}
                         <div id="receita-view" style="display: none;">
                              <form id="form-receita" method="POST" action="{{ path('clinica_nova_receita', {'petId': pet.id}) }}">
                                 <div class="form-view-container">
@@ -223,18 +243,33 @@
                                     <div class="mb-3"><label class="form-label"><strong>🩺 Cabeçalho:</strong></label><div id="editor-cabecalho"></div></div>
                                     <div class="mb-3"><label class="form-label"><strong>📄 Receita:</strong></label><div id="editor-conteudo"></div></div>
                                     <div class="mb-3"><label class="form-label"><strong>📅 Rodapé:</strong></label><div id="editor-rodape"></div></div>
-                                    <input type="hidden" name="cabecalho_delta" id="cabecalho-input">
-                                    <input type="hidden" name="conteudo_delta" id="conteudo-input">
-                                    <input type="hidden" name="rodape_delta" id="rodape-input">
-                                    <div class="d-flex justify-content-end">
-                                        <button type="submit" class="btn btn-primary"><i class="fas fa-print me-1"></i> Imprimir / Salvar PDF</button>
-                                    </div>
+                                    <input type="hidden" name="cabecalho_delta" id="cabecalho-input"><input type="hidden" name="conteudo_delta" id="conteudo-input"><input type="hidden" name="rodape_delta" id="rodape-input">
+                                    <div class="d-flex justify-content-end"><button type="submit" class="btn btn-primary"><i class="fas fa-print me-1"></i> Imprimir / Salvar PDF</button></div>
                                 </div>
                             </form>
                         </div>
+                        
+                        {# NEW: Main container for displaying ALL service details #}
+                        <div id="service-display-container" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0" id="service-display-title">Detalhes do Registro</h5>
+                                <button type="button" class="btn-close" id="btn-fechar-service-display" aria-label="Fechar"></button>
+                            </div>
+                            
+                            {# This is where individual service detail cards will be dynamically inserted #}
+                            <div id="service-details-content">
+                                {# Example: 
+                                <div class="service-detail-card border-primary">
+                                    <h6>Consulta - Resumo do Atendimento</h6>
+                                    <div id="anamnese-content-for-this-card"></div>
+                                </div>
+                                #}
+                            </div>
+                        </div>
+
                     </div>
-                    <div class="tab-pane fade" id="protocolos" role="tabpanel"><p class="text-muted text-center mt-4">Conteúdo de Protocolos.</p></div>
-                    <div class="tab-pane fade" id="agenda" role="tabpanel"><p class="text-muted text-center mt-4">Conteúdo da Agenda.</p></div>
+                    <div class="tab-pane fade" id="protocolos" role="tabpanel" aria-labelledby="protocolos-tab"><p class="text-muted text-center mt-4">Conteúdo de Protocolos.</p></div>
+                    <div class="tab-pane fade" id="agenda" role="tabpanel" aria-labelledby="agenda-tab"><p class="text-muted text-center mt-4">Conteúdo da Agenda.</p></div>
                 </div>
             </div>
         </div>
@@ -248,38 +283,51 @@
     
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- Seletores de Elementos da UI ---
+        // --- UI Element Selectors ---
         const actionButtonsView = document.getElementById('action-buttons-view');
         const atendimentoView = document.getElementById('atendimento-view');
         const receitaView = document.getElementById('receita-view');
+        const serviceDisplayContainer = document.getElementById('service-display-container'); // The main quadro
+        const serviceDetailsContent = document.getElementById('service-details-content');   // Area inside the main quadro
 
         const btnNovoAtendimento = document.getElementById('btn-novo-atendimento');
         const btnNovaReceita = document.getElementById('btn-nova-receita');
         
         const btnFecharAtendimento = document.getElementById('btn-fechar-atendimento');
         const btnFecharReceita = document.getElementById('btn-fechar-receita');
+        const btnFecharServiceDisplay = document.getElementById('btn-fechar-service-display'); // New close button for service display
 
-        // --- Gerenciamento de Views ---
+        const historicoTabElement = document.querySelector('button[data-bs-target="#historico"]');
+        let historicoTab = null;
+        if (historicoTabElement) {
+            historicoTab = new bootstrap.Tab(historicoTabElement);
+        }
+
+        // --- View Management ---
         const showView = (viewToShow) => {
-            actionButtonsView.style.display = 'none';
-            atendimentoView.style.display = 'none';
-            receitaView.style.display = 'none';
-            if (viewToShow) {
-                viewToShow.style.display = 'block';
-            }
+            // Hide all potential views first
+            if (actionButtonsView) actionButtonsView.style.display = 'none';
+            if (atendimentoView) atendimentoView.style.display = 'none';
+            if (receitaView) receitaView.style.display = 'none';
+            if (serviceDisplayContainer) serviceDisplayContainer.style.display = 'none';
+
+            // Show the requested view
+            if (viewToShow) { viewToShow.style.display = 'block'; }
         };
 
-        btnNovoAtendimento.addEventListener('click', (e) => { e.preventDefault(); showView(atendimentoView); });
-        btnNovaReceita.addEventListener('click', (e) => { e.preventDefault(); showView(receitaView); });
-        
+        // --- Event Listeners for Buttons ---
         const returnToActionGrid = (e) => {
-            e.preventDefault();
+            if (e) e.preventDefault();
             showView(actionButtonsView);
         };
-        btnFecharAtendimento.addEventListener('click', returnToActionGrid);
-        btnFecharReceita.addEventListener('click', returnToActionGrid);
+        if (btnNovoAtendimento) btnNovoAtendimento.addEventListener('click', (e) => { e.preventDefault(); showView(atendimentoView); });
+        if (btnNovaReceita) btnNovaReceita.addEventListener('click', (e) => { e.preventDefault(); showView(receitaView); });
+        
+        if (btnFecharAtendimento) btnFecharAtendimento.addEventListener('click', returnToActionGrid);
+        if (btnFecharReceita) btnFecharReceita.addEventListener('click', returnToActionGrid);
+        if (btnFecharServiceDisplay) btnFecharServiceDisplay.addEventListener('click', returnToActionGrid); // Set up new close button
 
-        // --- Inicialização dos Editores (Quill) com Refatoração ---
+        // --- Quill Editor Initialization (for creating/editing forms) ---
         const toolbarOptions = [
             [{ 'header': [1, 2, 3, false] }],
             ['bold', 'italic', 'underline', 'strike'],
@@ -287,23 +335,19 @@
             ['link'],
             ['clean']
         ];
-
         const createQuillEditor = (selector, options = {}) => {
             const element = document.querySelector(selector);
-            if (!element) return null;
-            return new Quill(selector, {
-                theme: 'snow',
-                modules: { toolbar: toolbarOptions },
-                ...options
-            });
+            if (!element) return null; // Ensure element exists
+            return new Quill(selector, { theme: 'snow', modules: { toolbar: toolbarOptions }, ...options });
         };
-
+        
+        // Editors for creating new records
         const quillAtendimento = createQuillEditor('#atendimento-editor');
         const quillCabecalho = createQuillEditor('#editor-cabecalho');
         const quillConteudo  = createQuillEditor('#editor-conteudo');
         const quillRodape    = createQuillEditor('#editor-rodape');
-        
-        // Conteúdo inicial para os editores
+
+        // Initial content for new record forms
         if (quillAtendimento) {
             quillAtendimento.setContents([
                 { insert: 'Anamnese:', attributes: { bold: true } },
@@ -324,8 +368,141 @@
                 { insert: '{{ "now"|date("d/m/Y") }}\n' }
             ]);
         }
+        
+        // --- Timeline Logic to Display Service Details ---
+        const timelineLinks = document.querySelectorAll('.timeline-link');
+        timelineLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const tipo = this.dataset.tipo;
+                const data = this.dataset.data;
+                const resumo = this.dataset.resumo;
+                
+                // Clear previous content in the display area
+                serviceDetailsContent.innerHTML = '';
+                
+                // Update the header of the main service display container
+                document.getElementById('service-display-title').textContent = `Detalhes do Registro: ${tipo}`;
 
-        // --- LÓGICA OTIMIZADA PARA SUBMISSÃO DOS FORMULÁRIOS ---
+                let contentHtml = '';
+                let borderColorClass = '';
+                let currentQuillEditors = []; // To keep track of Quill instances created for display
+
+                // Dynamically build the content based on the service type
+                if (tipo === 'Consulta' || tipo === 'Retorno') {
+                    const anamneseDeltaString = this.dataset.atendimentoDelta;
+                    borderColorClass = (tipo === 'Consulta') ? 'border-primary' : 'border-success';
+
+                    contentHtml = `
+                        <div class="service-detail-card ${borderColorClass}">
+                            <h6 class="mb-2">${tipo} - ${resumo}</h6>
+                            <p class="text-muted mb-3"><small>Registrado em: ${data}</small></p>
+                            <label class="form-label"><strong>Anamnese / Exame Clínico:</strong></label>
+                            <div id="anamnese-display-quill" class="service-detail-content"></div>
+                        </div>
+                    `;
+                    serviceDetailsContent.innerHTML = contentHtml; // Insert the new structure
+                    
+                    // Initialize a read-only Quill editor for this specific content area
+                    const quillDisplayAnamnese = new Quill('#anamnese-display-quill', {
+                        theme: 'bubble', // A cleaner theme for display
+                        readOnly: true,
+                        modules: { toolbar: false } // No toolbar needed for display
+                    });
+                    currentQuillEditors.push(quillDisplayAnamnese); // Store reference
+                    
+                    if (anamneseDeltaString) {
+                        try {
+                            const anamneseDelta = JSON.parse(anamneseDeltaString);
+                            quillDisplayAnamnese.setContents(anamneseDelta);
+                        } catch (error) {
+                            console.error('Erro ao parsear Delta da anamnese:', error);
+                            quillDisplayAnamnese.setText('Conteúdo da anamnese não disponível ou formato inválido.');
+                        }
+                    } else {
+                        quillDisplayAnamnese.setText('Nenhuma anamnese detalhada disponível.');
+                    }
+
+                } else if (tipo === 'Receita') {
+                    const cabecalhoDeltaString = this.dataset.receitaCabecalhoDelta;
+                    const conteudoDeltaString = this.dataset.receitaConteudoDelta;
+                    const rodapeDeltaString = this.dataset.receitaRodapeDelta;
+                    borderColorClass = 'border-purple'; // Custom purple for recipes
+
+                    contentHtml = `
+                        <div class="service-detail-card ${borderColorClass}">
+                            <h6 class="mb-2">Receita Médica - ${resumo}</h6>
+                            <p class="text-muted mb-3"><small>Emitida em: ${data}</small></p>
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Cabeçalho:</strong></label>
+                                <div id="receita-cabecalho-display-quill" class="service-detail-content"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Conteúdo da Receita:</strong></label>
+                                <div id="receita-conteudo-display-quill" class="service-detail-content"></div>
+                            </div>
+                            <div>
+                                <label class="form-label"><strong>Rodapé:</strong></label>
+                                <div id="receita-rodape-display-quill" class="service-detail-content"></div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary mt-3"><i class="fas fa-print me-1"></i> Imprimir Receita</button>
+                        </div>
+                    `;
+                    serviceDetailsContent.innerHTML = contentHtml; // Insert the new structure
+
+                    // Initialize read-only Quill editors for each part of the recipe
+                    const quillDisplayReceitaCabecalho = new Quill('#receita-cabecalho-display-quill', { theme: 'bubble', readOnly: true, modules: { toolbar: false } });
+                    const quillDisplayReceitaConteudo = new Quill('#receita-conteudo-display-quill', { theme: 'bubble', readOnly: true, modules: { toolbar: false } });
+                    const quillDisplayReceitaRodape = new Quill('#receita-rodape-display-quill', { theme: 'bubble', readOnly: true, modules: { toolbar: false } });
+                    
+                    currentQuillEditors.push(quillDisplayReceitaCabecalho, quillDisplayReceitaConteudo, quillDisplayReceitaRodape); // Store references
+
+                    // Load content into recipe editors
+                    try {
+                        if (cabecalhoDeltaString) quillDisplayReceitaCabecalho.setContents(JSON.parse(cabecalhoDeltaString));
+                        if (conteudoDeltaString) quillDisplayReceitaConteudo.setContents(JSON.parse(conteudoDeltaString));
+                        if (rodapeDeltaString) quillDisplayReceitaRodape.setContents(JSON.parse(rodapeDeltaString));
+                    } catch (error) {
+                        console.error('Erro ao parsear Delta da receita:', error);
+                        // Optionally set text indicating error
+                    }
+
+                } else if (tipo === 'Vacina') {
+                    // Example for Vacina (you'll need to pass vaccine details as data attributes from your backend)
+                    const vacinaDetails = 'Detalhes da Vacina (Nome da vacina, Lote, Próxima dose: DD/MM/AAAA)'; // Replace with actual data attribute
+                    borderColorClass = 'border-warning';
+                    contentHtml = `
+                        <div class="service-detail-card ${borderColorClass}">
+                            <h6 class="mb-2">Vacina Aplicada - ${resumo}</h6>
+                            <p class="text-muted mb-3"><small>Data: ${data}</small></p>
+                            <p>${vacinaDetails}</p>
+                            <button class="btn btn-sm btn-outline-warning mt-3"><i class="fas fa-syringe me-1"></i> Registrar Próxima Vacina</button>
+                        </div>
+                    `;
+                    serviceDetailsContent.innerHTML = contentHtml;
+
+                } else {
+                    // Default for other types or if specific content is missing
+                    borderColorClass = 'border-secondary'; // A neutral color for generic types
+                    contentHtml = `
+                        <div class="service-detail-card ${borderColorClass}">
+                            <h6 class="mb-2">${tipo} - ${resumo}</h6>
+                            <p class="text-muted mb-3"><small>Data: ${data}</small></p>
+                            <p>Nenhum detalhe específico disponível para este tipo de registro no momento.</p>
+                        </div>
+                    `;
+                    serviceDetailsContent.innerHTML = contentHtml;
+                }
+                
+                // Ensure "Histórico" tab is active and then show the main service display container
+                if (historicoTab) historicoTab.show();
+                showView(serviceDisplayContainer);
+            });
+        });
+
+        // --- Form Submission Logic for Quill Content (Delta) ---
+        // This part saves the rich text content from Quill editors into hidden input fields
         const setupFormSubmission = (formId, editorsMap) => {
             const form = document.getElementById(formId);
             if (form) {
@@ -334,23 +511,20 @@
                         const input = document.getElementById(inputId);
                         const quillInstance = editorsMap[inputId];
                         if (input && quillInstance) {
-                            // Salva o conteúdo como Delta (JSON), que é um formato robusto.
+                            // Save Quill content as JSON stringified Delta
                             input.value = JSON.stringify(quillInstance.getContents());
                         }
                     }
                 });
             }
         };
-
-        setupFormSubmission('form-atendimento', {
-            'anamnese-input': quillAtendimento
-        });
-
+        setupFormSubmission('form-atendimento', {'anamnese-input': quillAtendimento});
         setupFormSubmission('form-receita', {
             'cabecalho-input': quillCabecalho,
             'conteudo-input': quillConteudo,
             'rodape-input': quillRodape
         });
+
     });
     </script>
 {% endblock %}
