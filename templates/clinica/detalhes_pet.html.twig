@@ -170,9 +170,9 @@
                                    data-resumo="{{ item.resumo|e('html_attr') }}"
                                    {# Pass different content based on type, ensuring it's always a JSON stringified Delta #}
                                    data-atendimento-delta="{{ item.anamnese | json_encode | e('html_attr') }}"
-{#                                    data-receita-cabecalho-delta="{{ item.receita_cabecalho | json_encode | e('html_attr') }}"
+                                   data-receita-cabecalho-delta="{{ item.receita_cabecalho | json_encode | e('html_attr') }}"
                                    data-receita-conteudo-delta="{{ item.receita_conteudo | json_encode | e('html_attr') }}"
-                                   data-receita-rodape-delta="{{ item.receita_rodape | json_encode | e('html_attr') }}" #}
+                                   data-receita-rodape-delta="{{ item.receita_rodape | json_encode | e('html_attr') }}"
                                    {# Add more data attributes for other types if needed (e.g., data-vacina-details) #}
                                    >
                                    <span>{{ item.tipo }}</span>
