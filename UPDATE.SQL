@@ -559,6 +559,35 @@ LOCK TABLES `veterinario` WRITE;
 /*!40000 ALTER TABLE `veterinario` DISABLE KEYS */;
 /*!40000 ALTER TABLE `veterinario` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `receita`
+--
+
+DROP TABLE IF EXISTS `receita`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `receita` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `estabelecimento_id` int NOT NULL,
+  `pet_id` int NOT NULL,
+  `data` datetime NOT NULL,
+  `cabecalho` text,
+  `conteudo` text,
+  `rodape` text,
+  `criado_em` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `receita`
+--
+
+LOCK TABLES `receita` WRITE;
+/*!40000 ALTER TABLE `receita` DISABLE KEYS */;
+/*!40000 ALTER TABLE `receita` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

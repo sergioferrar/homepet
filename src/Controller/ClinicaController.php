@@ -7,9 +7,11 @@ use App\Entity\Consulta;
 use App\Entity\Pet;
 use App\Entity\DocumentoModelo;
 use App\Entity\Internacao;
+use App\Entity\Receita;
 use App\Repository\ConsultaRepository;
 use App\Repository\DocumentoModeloRepository;
 use App\Repository\InternacaoRepository;
+use App\Repository\ReceitaRepository;
 use App\Repository\FinanceiroRepository;
 use App\Service\PdfService;
 use Symfony\Component\HttpFoundation\Request;
@@ -64,7 +66,7 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/pet/{id}", name="clinica_detalhes_pet", methods={"GET"})
      */
-    public function detalhesPet(int $id, ConsultaRepository $consultaRepo, DocumentoModeloRepository $documentoRepo, FinanceiroRepository $financeiroRepo): Response
+    public function detalhesPet(int $id, ConsultaRepository $consultaRepo, DocumentoModeloRepository $documentoRepo, FinanceiroRepository $financeiroRepo, ReceitaRepository $receitaRepo): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -77,6 +79,7 @@ class ClinicaController extends DefaultController
         $consultas = $consultaRepo->findAllByPetId($baseId, $id);
         $documentos = $documentoRepo->listarDocumentos($baseId);
         $financeiro = $financeiroRepo->buscarPorPet($baseId, $pet['id']);
+        $receitas = $receitaRepo->listarPorPet($baseId, $id);
 
         // ✅ **LÓGICA CORRIGIDA AQUI**
         $timeline_items = [];
@@ -88,6 +91,17 @@ class ClinicaController extends DefaultController
                 // **LINHA CRÍTICA CORRIGIDA:** Adiciona o conteúdo da anamnese diretamente.
                 // O template Twig agora receberá esta variável e poderá exibir os detalhes.
                 'anamnese' => $item['anamnese'] ?? null
+            ];
+        }
+
+        foreach ($receitas as $r) {
+            $timeline_items[] = [
+                'data' => new \DateTime($r['data']),
+                'tipo' => 'Receita',
+                'resumo' => 'Receita',
+                'receita_cabecalho' => $r['cabecalho'],
+                'receita_conteudo' => $r['conteudo'],
+                'receita_rodape' => $r['rodape']
             ];
         }
 
@@ -161,18 +175,33 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/pet/{petId}/receita/nova", name="clinica_nova_receita", methods={"POST"})
      */
-    public function novaReceita(Request $request, int $petId, PdfService $pdfService): Response
+    public function novaReceita(Request $request, int $petId, PdfService $pdfService, ReceitaRepository $receitaRepo): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
         $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
 
+        $receita = new Receita();
+        $receita->setEstabelecimentoId($baseId);
+        $receita->setPetId($petId);
+        $receita->setData(new \DateTime());
+        $receita->setCabecalho($request->get('cabecalho_delta'));
+        $receita->setConteudo($request->get('conteudo_delta'));
+        $receita->setRodape($request->get('rodape_delta'));
+        $receita->setCriadoEm(new \DateTime());
+
+        $receitaRepo->salvar($receita);
+
+        $cabecalhoHtml = (new \nadar\quill\Lexer($receita->getCabecalho()))->render();
+        $conteudoHtml  = (new \nadar\quill\Lexer($receita->getConteudo()))->render();
+        $rodapeHtml    = (new \nadar\quill\Lexer($receita->getRodape()))->render();
+
         return $pdfService->gerarPdf(
             'clinica/receita_pdf_backend.html.twig',
             [
-                'cabecalho' => $request->get('cabecalho', ''),
-                'conteudo'  => $request->get('conteudo', ''),
-                'rodape'    => $request->get('rodape', ''),
+                'cabecalho' => $cabecalhoHtml,
+                'conteudo'  => $conteudoHtml,
+                'rodape'    => $rodapeHtml,
                 'pet'       => $pet
             ],
             'receita-' . $pet['nome'] . '.pdf'
