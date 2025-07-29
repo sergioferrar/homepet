@@ -6,7 +6,7 @@ use App\Entity\Estabelecimento;
 use App\Entity\Usuario;
 use App\Service\DatabaseBkp;
 use App\Service\EmailService;
-use App\Service\PagSeguroService;
+use App\Service\Payment\MercadoPagoService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -192,7 +192,7 @@ class EstabelecimentoController extends DefaultController
     /**
      * @Route("/landing/confirmacao/cadastro/{estabelecimento}", name="confirma_cadastro")
      */
-    public function confirmacaoCadastro(Request $request, PagSeguroService $pagSeguroService): Response
+    public function confirmacaoCadastro(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
         try{
         $eid = $request->get('estabelecimento');
@@ -224,21 +224,28 @@ class EstabelecimentoController extends DefaultController
             'id' => $plano->getId(),
             'titulo' => $plano->getTitulo(),
             'qtd' => 1,
-            'valor' => '1.00',//$plano->getValor(),
+            'valor' => $plano->getValor(),
         ];
-        $code = $pagSeguroService->executeCheckout($comprador, $produto);
+
+        $dataPagamento = [
+            'title'=>$plano->getTitulo(),
+            'price'=>$plano->getValor(),
+            'email'=>$usario->getEmail(),
+        ];
+
+        $code = $mercadoPagoService->createPayment($dataPagamento);
+        return $this->redirect($code['init_point']);
+        // dd($code);
+
+        // // cria session do estabelecimento e do usuario
+
+        // $request->getSession()->set('finaliza', ['eid' => $eid, 'uid' => $uid]);
+
         
-        dd($code);
-
-        // cria session do estabelecimento e do usuario
-
-        $request->getSession()->set('finaliza', ['eid' => $eid, 'uid' => $uid]);
-
-        
-        //return $this->redirect($pagSeguroService->gerarUrlPagamento($code));
-        } catch(\Exception $e){
-            dd($e);
-        }
+        // //return $this->redirect($mercadoPagoService->gerarUrlPagamento($code));
+        // } catch(\Exception $e){
+        //     dd($e);
+        // }
         // return $this->render('estabelecimento/confirmacao.html.twig', [
         //     'estabelecimento' => $request->get('estabelecimento'),
         // ]);

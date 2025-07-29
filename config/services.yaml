@@ -1,5 +1,6 @@
 parameters:
     diretorio_temp: '%kernel.project_dir%/var/tmp'
+    mercado_pago_token: '%env(resolve:MERCADO_PAGO_TOKEN)%'
 
 services:
     _defaults:
@@ -42,3 +43,6 @@ services:
         arguments:
             $apiKey: '%env(GEMINI_API_KEY)%'
 
+    App\Service\Payment\MercadoPagoService:
+        arguments:
+            $mercadoPagoToken: '%mercado_pago_token%'
