@@ -64,8 +64,12 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/pet/{id}", name="clinica_detalhes_pet", methods={"GET"})
      */
-    public function detalhesPet(int $id, ConsultaRepository $consultaRepo, DocumentoModeloRepository $documentoRepo, FinanceiroRepository $financeiroRepo): Response
-    {
+    public function detalhesPet(
+        int $id,
+        ConsultaRepository $consultaRepo,
+        DocumentoModeloRepository $documentoRepo,
+        FinanceiroRepository $financeiroRepo
+    ): Response {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
@@ -77,26 +81,41 @@ class ClinicaController extends DefaultController
         $consultas = $consultaRepo->findAllByPetId($baseId, $id);
         $documentos = $documentoRepo->listarDocumentos($baseId);
         $financeiro = $financeiroRepo->buscarPorPet($baseId, $pet['id']);
+        $receitas = $this->getRepositorio(\App\Entity\Receita::class)->listarPorPet($baseId, $pet['id']);
 
-        // ✅ **LÓGICA CORRIGIDA AQUI**
         $timeline_items = [];
+
         foreach ($consultas as $item) {
             $timeline_items[] = [
                 'data' => new \DateTime($item['data'] . ' ' . $item['hora']),
                 'tipo' => $item['tipo'] ?? 'Consulta',
                 'resumo' => $item['observacoes'],
-                // **LINHA CRÍTICA CORRIGIDA:** Adiciona o conteúdo da anamnese diretamente.
-                // O template Twig agora receberá esta variável e poderá exibir os detalhes.
-                'anamnese' => $item['anamnese'] ?? null
+                'anamnese' => $item['anamnese'] ?? null,
             ];
         }
 
-        // Ordena a timeline do mais recente para o mais antigo.
-        usort($timeline_items, function($a, $b) {
-            return $b['data'] <=> $a['data'];
-        });
+        foreach ($receitas as $r) {
+            $timeline_items[] = [
+                'data' => new \DateTime($r['data']),
+                'tipo' => 'Receita',
+                'resumo' => $r['resumo'],
+                'receita_cabecalho' => $r['cabecalho'],
+                'receita_conteudo' => $r['conteudo'],
+                'receita_rodape' => $r['rodape'],
+            ];
+        }
 
-        // ✅ **BOA PRÁTICA IMPLEMENTADA:** Cálculo movido do Twig para o Controller.
+        // 🔥 Agrupa por tipo
+        $agrupado = [];
+        foreach ($timeline_items as $item) {
+            $tipo = $item['tipo'];
+            if (!isset($agrupado[$tipo])) {
+                $agrupado[$tipo] = [];
+            }
+            $agrupado[$tipo][] = $item;
+        }
+
+        // 💰 Total de débitos
         $totalDebitos = 0;
         foreach ($financeiro as $itemFinanceiro) {
             if (isset($itemFinanceiro['valor'])) {
@@ -104,16 +123,17 @@ class ClinicaController extends DefaultController
             }
         }
 
-        // ✅ **RENDERIZAÇÃO LIMPA:** Remove chaves duplicadas e adiciona total_debitos.
         return $this->render('clinica/detalhes_pet.html.twig', [
             'pet' => $pet,
             'timeline_items' => $timeline_items,
+            'timeline_agrupado' => $agrupado,
             'documentos' => $documentos,
             'financeiro' => $financeiro,
-            'consultas' => $consultas, // Mantido para outras partes da página, se necessário.
+            'consultas' => $consultas,
             'total_debitos' => $totalDebitos,
         ]);
     }
+
 
     /**
      * @Route("/pet/{petId}/internacao/nova", name="clinica_nova_internacao", methods={"GET", "POST"})
@@ -161,23 +181,32 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/pet/{petId}/receita/nova", name="clinica_nova_receita", methods={"POST"})
      */
-    public function novaReceita(Request $request, int $petId, PdfService $pdfService): Response
+    public function novaReceita(Request $request, int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
-        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
 
-        return $pdfService->gerarPdf(
-            'clinica/receita_pdf_backend.html.twig',
-            [
-                'cabecalho' => $request->get('cabecalho', ''),
-                'conteudo'  => $request->get('conteudo', ''),
-                'rodape'    => $request->get('rodape', ''),
-                'pet'       => $pet
-            ],
-            'receita-' . $pet['nome'] . '.pdf'
-        );
+        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
+        if (!$pet) {
+            throw $this->createNotFoundException('Pet não encontrado.');
+        }
+
+        $receita = new \App\Entity\Receita();
+        $receita->setEstabelecimentoId($baseId);
+        $receita->setPetId($petId);
+        $receita->setData(new \DateTime());
+        $receita->setCabecalho($request->get('cabecalho_delta'));
+        $receita->setConteudo($request->get('conteudo_delta'));
+        $receita->setRodape($request->get('rodape_delta'));
+        $receita->setResumo('Receita registrada manualmente');
+
+        $this->getRepositorio(\App\Entity\Receita::class)->salvar($receita);
+
+        $this->addFlash('success', 'Receita salva com sucesso!');
+        return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
     }
+
+
     
     /**
      * @Route("/pet/{petId}/peso/novo", name="clinica_novo_peso", methods={"GET", "POST"})
