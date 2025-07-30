@@ -3,214 +3,125 @@
 {% block stylesheets %}
 {{ parent() }}
 <style>
-    body {
-        background-color: #eef5ff;
-        font-family: 'Arial', sans-serif;
-    }
-
-    .pagetitle h1 {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #004080;
-        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.15);
-    }
-
-    .btn-success {
-        background-color: #004080;
-        border-color: #003366;
-        font-weight: bold;
-        border-radius: 12px;
-        padding: 10px 22px;
-        color: white;
-    }
-
-    .btn-success:hover {
-        background-color: #003366;
-    }
-
-    .card {
-        background: #f8fafd;
-        border-radius: 16px;
-        padding: 2rem;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    }
-
-    .table {
-        background-color: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-
-.table thead.table-dark th {
-    background-color: #000 !important;
-    color: #fff !important;
-    text-transform: uppercase;
-    padding: 12px;
-}
-
-    .table tbody td {
-        background-color: #f2f8ff;
-        padding: 12px;
-    }
-
-    .action-select {
-        border-radius: 8px;
-        padding: 6px;
-        font-size: 0.9rem;
-        background-color: #e9ecef;
-        border: 1px solid #ced4da;
-    }
-
-    .action-select:hover {
-        background-color: #dee2e6;
-    }
+    .card-title { color: #004080; font-weight: bold; }
+    .tabela-container input.form-control-md { max-width: 450px; margin-bottom: 1.5rem; }
+    .card-item { transition: box-shadow 0.2s; }
+    .card-item:hover { box-shadow: 0 0 0 4px #e5eefe; }
+    .dropdown-menu .dropdown-item.text-danger { color: #dc3545 !important; }
 </style>
 {% endblock %}
 
-
 {% block body %}
-<div class="pagetitle text-center mb-4">
-    <h1>🐾 Lista de Pets</h1>
-</div>
-
-<div class="card">
-    <div class="mb-3 text-end">
-        <a href="{{ path('pet_novo') }}" class="btn btn-success shadow">
-            + Novo Pet
-        </a>
-    </div>
-    <h5 class="fw-bold text-primary mb-3"></h5>
-    <div class="table-responsive">
-        <table class="table table-hover table-bordered datatable align-middle">
-            <thead class="table-dark">
-                <tr class="table-dark">
-                    <th>Nome</th>
-                    <th>Espécie</th>
-                    <th>Sexo</th>
-                    <th>Raça</th>
-                    <th>Porte</th>
-                    <th>Idade</th>
-                    <th>Observações</th>
-                    <th>Dono</th>
-                    <th class="text-center" style="min-width: 140px;">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for pet in pets %}
-                    <tr>
-                        <td><strong>{{ pet.nome }}</strong></td>
-                        <td>{{ pet.especie }}</td>
-                        <td>{{ pet.sexo }}</td>
-                        <td>{{ pet.raca }}</td>
-                        <td>{{ pet.porte }}</td>
-                        <td>{{ pet.idade }} anos</td>
-                        <td>{{ pet.observacoes }}</td>
-                        <td>{{ pet.dono_nome }}</td>
-                        <td class="text-center">
-                            <select class="form-select action-select w-100"
-                                    data-edit-url="{{ path('pet_editar', {'id': pet.id}) }}"
-                                    data-id="{{ pet.id }}"
-                                    onchange="handlePetAction(this)">
-                                <option selected disabled>Ações</option>
-                                <option value="editar">Editar</option>
-                                <option value="deletar">Deletar</option>
-                            </select>
-                            <form id="delete-pet-form-{{ pet.id }}" method="post"
-                                  action="{{ path('pet_deletar', {'id': pet.id}) }}"
-                                  style="display: none;"></form>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-
-<!-- Modal para edição -->
-<div class="modal fade" id="modalEditarPet" tabindex="-1" aria-labelledby="modalEditarPetLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content p-3">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalEditarPetLabel">Editar Pet</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body" id="editarPetContent">
-                <div class="text-center">Carregando...</div>
+<div class="container mt-5">
+    <h1 class="text-primary mb-4">Pets</h1>
+    <div class="tabela-container container-fluid px-2">
+        <div class="row my-3">
+            <div class="col-12">
+                <input type="text" id="searchInputPets" class="form-control form-control-md" placeholder="🔍 Pesquisar por nome, dono, raça, espécie..." />
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Toast de sucesso -->
-<div id="toastSuccess" class="toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="d-flex">
-        <div class="toast-body">
-            Pet atualizado com sucesso! 🐾
+        <div class="demo-inline-spacing mb-3">
+            <a href="{{ path('pet_novo') }}">
+                <button type="button" class="btn btn-primary">
+                    <span class="icon-base bx bx-plus icon-sm me-2"></span> Novo Pet
+                </button>
+            </a>
         </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+        <div id="cardContainerPets" class="row gy-3">
+            {% for pet in pets %}
+                <div class="col-12 card-item" data-search="{{ pet.nome }} {{ pet.dono_nome }} {{ pet.especie }} {{ pet.raca }}">
+                    <div class="card shadow-lg border-0 rounded-3">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title mb-1">
+                                        <a href="#" class="text-primary abrir-modal-pet fw-bold"
+                                           data-bs-toggle="offcanvas"
+                                           data-bs-target="#offcanvasPet"
+                                           aria-controls="offcanvasPet"
+                                           data-id="{{ pet.id }}">
+                                            {{ pet.nome }}
+                                        </a>
+                                    </h5>
+                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
+                                        <i class="bx bx-user"></i> {{ pet.dono_nome }}
+                                    </p>
+                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
+                                        <i class="bx bx-shape-circle"></i> {{ pet.especie }}
+                                        <span class="mx-2 text-secondary">|</span>
+                                        <span><b>Raça:</b> {{ pet.raca }}</span>
+                                    </p>
+                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
+                                        <i class="bx bx-male-female"></i> {{ pet.sexo }}
+                                        <span class="mx-2 text-secondary">|</span>
+                                        <span><b>Porte:</b> {{ pet.porte }}</span>
+                                        <span class="mx-2 text-secondary">|</span>
+                                        <span><b>Idade:</b> {{ pet.idade }} anos</span>
+                                    </p>
+                                    <p class="card-text text-muted d-flex align-items-center gap-1">
+                                        <i class="bx bx-comment"></i> <b>Obs:</b> {{ pet.observacoes ?: '-' }}
+                                    </p>
+                                </div>
+                                <div class="d-flex align-items-center gap-1">
+                                    <div class="dropdown">
+                                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            Ação
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a href="{{ path('pet_editar', {'id': pet.id}) }}" class="dropdown-item">
+                                                    Editar
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <form method="post" action="{{ path('pet_deletar', {'id': pet.id}) }}" class="d-inline">
+                                                    <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Tem certeza que deseja deletar este pet?')">
+                                                        Deletar
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center mb-0">Nenhum pet encontrado.</div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="row mt-4">
+            <div class="col text-center">
+                <nav aria-label="Paginação">
+                    <ul id="paginationPets" class="pagination justify-content-center mb-0"></ul>
+                </nav>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block javascripts %}
+{{ parent() }}
+<script src="{{ asset('js/TabelaDefault.js') }}"></script>
 <script>
-    function handlePetAction(selectElement) {
-        const action = selectElement.value;
-        const id = selectElement.dataset.id;
-        const editUrl = selectElement.dataset.editUrl;
+document.addEventListener('DOMContentLoaded', function () {
+    new TabelaDefault({
+        cardContainerId: 'cardContainerPets',
+        paginationId: 'paginationPets',
+        searchInputId: 'searchInputPets',
+        itemsPerPage: 5 // Troca se quiser mais/menos por página
+    });
 
-        if (action === 'editar') {
-            const modal = new bootstrap.Modal(document.getElementById('modalEditarPet'));
-            document.getElementById('editarPetContent').innerHTML = '<div class="text-center">Carregando...</div>';
-            fetch(editUrl)
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('editarPetContent').innerHTML = html;
-                });
-            modal.show();
-        } else if (action === 'deletar') {
-            if (confirm('Tem certeza que deseja deletar este pet?')) {
-                document.getElementById('delete-pet-form-' + id).submit();
-            } else {
-                selectElement.selectedIndex = 0;
-            }
-        }
-    }
-
-    function showToast(msg) {
-        const toastEl = document.getElementById('toastSuccess');
-        toastEl.querySelector('.toast-body').innerText = msg;
-        const toast = new bootstrap.Toast(toastEl);
-        toast.show();
-    }
-
-    function submitEditarPet(button) {
-        const form = document.getElementById('formEditarPet');
-        const url = form.action;
-        const formData = new FormData(form);
-
-        fetch(url, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Erro ao salvar');
-            return response.text();
-        })
-        .then(() => {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarPet'));
-            modal.hide();
-            showToast('Pet atualizado com sucesso! 🐶');
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        })
-        .catch(() => {
-            alert('Erro ao salvar o pet. Verifique os dados.');
+    // Exemplo de JS para abrir modal detalhado do pet (adapta pro seu AJAX se precisar)
+    document.querySelectorAll('.abrir-modal-pet').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            // Aqui você faz seu fetch pra detalhes do pet e preenche o modal
         });
-    }
+    });
+});
 </script>
 {% endblock %}

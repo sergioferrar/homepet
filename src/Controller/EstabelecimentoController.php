@@ -30,7 +30,6 @@ class EstabelecimentoController extends DefaultController
 
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
 
-        
         $data['estabelecimentos'] = $estabelecimentos;
         $data['validaPlano'] = $validaPlano;
 
@@ -78,51 +77,34 @@ class EstabelecimentoController extends DefaultController
 
         // Criar database apartir do estabelecimento criado
         //$database = $this->getRepositorio(Estabelecimento::class)->verificaDatabase($estabelecimento->getId());
-       // if (!$database) {
-            ## Inicia a criação do diretório para "download" do dump
-            //$this->tempDirManager->init();
-
-            //$arquivoSQL = "backup_bd_modelo.sql";
-            //$diretorio = $this->tempDirManager->obterCaminho($arquivoSQL);
-
-
-
+        // if (!$database) {
+        //     ## Inicia a criação do diretório para "download" do dump
+        //     //$this->tempDirManager->init();
+        //     //$arquivoSQL = "backup_bd_modelo.sql";
+        //     //$diretorio = $this->tempDirManager->obterCaminho($arquivoSQL);
         /*
             $backupFile = dirname(__DIR__, 2) . '/instalation.sql';
-            
             $this->databaseBkp->setDbName("homepet_{$estabelecimento->getId()}")
                 ->createDatabase()
                 ->importDatabase($backupFile);
         */
-
-
-
-
-
         //            ## Quebra da string do banco para puchar suas informações
         //            $hosts = explode(':', explode('mysql://', $_SERVER['DATABASE_URL'])[1]);
         //            $base = explode('@', $hosts[1]);
-        //
         //            // Realiza o backup do banco modelo
-        //
         //            $bck_bd_modelo = "mysqldump -u root -p -h " . end($base) . " --routines --set-gtid-purged=OFF --events --triggers homepet_000 | sed 's/homepet_000/homepet_{$estabelecimento->getId()}/g' > " . $diretorio;
         //            shell_exec($bck_bd_modelo);
-        //
         //            // Cria o novo banco de dados
         //            $criar_bd = "mysql -u root -p -h " . end($base) . " -e \"CREATE DATABASE homepet_{$estabelecimento->getId()}\"";
         //            shell_exec($criar_bd);
-        //
         //            //restaura o backup no novo banco
         //            $restaura_bd = "mysql -u root -p -h " . end($base) . " -c homepet_{$estabelecimento->getId()} < " . $diretorio;
         //            shell_exec($restaura_bd);
-        //
-
         //            $this->tempDirManager->deletarDiretorio();
         //  }
 
-                return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId(), 'planoId' => $plano]);
-
-            }
+        return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId(), 'planoId' => $plano]);
+    }
 
     /**
      * @Route("/landing/usuario/cadastrar", name="petshop_usuario_cadastrar")
@@ -139,23 +121,23 @@ class EstabelecimentoController extends DefaultController
             switch ($request->get('access_level')) {
                 case 'Super Admin':
                 case 'Admin':
-                $roles = ['ROLE_ADMIN'];
-                break;
+                    $roles = ['ROLE_ADMIN'];
+                    break;
                 case 'Atendente':
                 case 'Tosador':
                 case 'Balconista':
-                $roles = ['ROLE_ADMIN_USER'];
-                break;
+                    $roles = ['ROLE_ADMIN_USER'];
+                    break;
                 default:
-                $roles = ['ROLE_USER'];
-                break;
+                    $roles = ['ROLE_USER'];
+                    break;
             }
 
             $usuario->setRoles($roles);
             $usuario->setPetshopId($request->get('estabelecimento'));
 
             $this->getRepositorio(Usuario::class)->add($usuario, true);
-            
+
             $confirmationUrl = $this->generateUrl('confirma_cadastro', ['estabelecimento'=>$request->get('estabelecimento')], UrlGeneratorInterface::ABSOLUTE_URL);
             $html = $this->render('estabelecimento/email.html.twig', [
                 'confirmation_link' => $confirmationUrl,
@@ -168,87 +150,68 @@ class EstabelecimentoController extends DefaultController
             );
             return $this->redirectToRoute('app_login');
         }
-        //        $usuario = new User();
-        //        $usuario->setEstabelecimento($estabelecimento); // Relaciona o usuário ao estabelecimento
-        //        $form = $this->createForm(UserType::class, $usuario);
-        //
-        //        $form->handleRequest($request);
-        //
-        //        if ($form->isSubmitted() && $form->isValid()) {
-        //            $entityManager->persist($usuario);
-        //            $entityManager->flush();
-        //
-        //            $this->addFlash('success', 'Usuário cadastrado com sucesso! Faça login para acessar o sistema.');
-        //
-        //        }
 
         return $this->render('usuario/cadastrar.html.twig', [
             'estabelecimento' => $request->get('estabelecimento'),
         ]);
     }
 
-
-
     /**
      * @Route("/landing/confirmacao/cadastro/{estabelecimento}", name="confirma_cadastro")
      */
     public function confirmacaoCadastro(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
-        try{
-        $eid = $request->get('estabelecimento');
-        $uid = $this->session->get('userId');
+        try {
+            $eid = $request->get('estabelecimento');
+            $uid = $this->session->get('userId');
 
-        // Pegar dados do estabelecimiento
-        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($eid);
-        // Buscar usuario com o estabelecimento acessado
-        $usario = $this->getRepositorio(\App\Entity\Usuario::class)->findOneBy(['petshop_id' => $eid]);
-        // Buscaro plano que o estabelecimento está assinando
-        $plano = $this->getRepositorio(\App\Entity\Plano::class)->find($estabelecimento->getPlanoId());
+            // Pegar dados do estabelecimiento
+            $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($eid);
+            // Buscar usuario com o estabelecimento acessado
+            $usario = $this->getRepositorio(\App\Entity\Usuario::class)->findOneBy(['petshop_id' => $eid]);
+            // Buscar o plano que o estabelecimento está assinando
+            $plano = $this->getRepositorio(\App\Entity\Plano::class)->find($estabelecimento->getPlanoId());
 
-        // pra salvar o cadastro original
-        $endpoint = "https://viacep.com.br/ws/{$estabelecimento->getCep()}/json";
-        $endereco = json_decode(file_get_contents($endpoint), true);
+            // pra salvar o cadastro original
+            $endpoint = "https://viacep.com.br/ws/{$estabelecimento->getCep()}/json";
+            $endereco = json_decode(file_get_contents($endpoint), true);
 
-        $comprador = [
-            'nome' => $usario->getNomeUsuario(),
-            'email' => $usario->getEmail(),
-            'rua' => $endereco['logradouro'],
-            'numero' => $estabelecimento->getNumero(),
-            'bairro' => $endereco['bairro'],
-            'cep' => $estabelecimento->getCep(),
-            'cidade' => $endereco['localidade'],
-            'estado' => $endereco['uf'], // Achei um furo no cadastro do estabelecimento, corrigir depois
-        ];
+            $comprador = [
+                'nome' => $usario->getNomeUsuario(),
+                'email' => $usario->getEmail(),
+                'rua' => $endereco['logradouro'],
+                'numero' => $estabelecimento->getNumero(),
+                'bairro' => $endereco['bairro'],
+                'cep' => $estabelecimento->getCep(),
+                'cidade' => $endereco['localidade'],
+                'estado' => $endereco['uf'],
+            ];
 
-        $produto = [
-            'id' => $plano->getId(),
-            'titulo' => $plano->getTitulo(),
-            'qtd' => 1,
-            'valor' => $plano->getValor(),
-        ];
+            $produto = [
+                'id' => $plano->getId(),
+                'titulo' => $plano->getTitulo(),
+                'qtd' => 1,
+                'valor' => $plano->getValor(),
+            ];
 
-        $dataPagamento = [
-            'title'=>$plano->getTitulo(),
-            'price'=>$plano->getValor(),
-            'email'=>$usario->getEmail(),
-        ];
+            $dataPagamento = [
+                'title'=>$plano->getTitulo(),
+                'price'=>$plano->getValor(),
+                'email'=>$usario->getEmail(),
+            ];
 
-        $code = $mercadoPagoService->createPayment($dataPagamento);
-        return $this->redirect($code['init_point']);
-        // dd($code);
-
-        // // cria session do estabelecimento e do usuario
-
-        // $request->getSession()->set('finaliza', ['eid' => $eid, 'uid' => $uid]);
-
-        
-        // //return $this->redirect($mercadoPagoService->gerarUrlPagamento($code));
+            $code = $mercadoPagoService->createPayment($dataPagamento);
+            return $this->redirect($code['init_point']);
         // } catch(\Exception $e){
         //     dd($e);
         // }
         // return $this->render('estabelecimento/confirmacao.html.twig', [
         //     'estabelecimento' => $request->get('estabelecimento'),
         // ]);
+        } catch (\Exception $e) {
+            // Trate o erro conforme necessário
+            throw $e;
+        }
     }
 
     /**
@@ -271,8 +234,8 @@ class EstabelecimentoController extends DefaultController
     }
 
     /**
-    * @Route("/estabelecimento/editar/{eid}", name="petshop_edit")
-    */
+     * @Route("/estabelecimento/editar/{eid}", name="petshop_edit")
+     */
     public function editar(Request $request): Response
     {
         $loja = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($request->get('eid'));
