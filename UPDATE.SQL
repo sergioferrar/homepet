@@ -257,3 +257,24 @@ CREATE TABLE `veterinario` (
   `especialidade` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+
+
+
+
+/**/
+
+ALTER TABLE servico
+    ADD COLUMN tipo VARCHAR(20) NOT NULL DEFAULT 'clinica';
+
+
+ALTER TABLE financeiro ADD origem VARCHAR(255) DEFAULT NULL;
+ALTER TABLE financeiro ADD status VARCHAR(255) DEFAULT NULL;
+
+ALTER TABLE usuario ADD data_trial DATETIME DEFAULT NULL;
+
+
+ALTER TABLE financeiropendente ADD origem VARCHAR(255) DEFAULT NULL;
+ALTER TABLE financeiropendente ADD status VARCHAR(255) DEFAULT NULL;
+ALTER TABLE financeiropendente ADD status VARCHAR(255) DEFAULT NULL;
