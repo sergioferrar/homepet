@@ -5,20 +5,16 @@ namespace App\Controller;
 use App\Entity\Cliente;
 use App\Entity\Consulta;
 use App\Entity\Pet;
-use App\Entity\Internacao;
-use App\Service\PdfService;
 use App\Entity\DocumentoModelo;
+use App\Entity\Internacao;
 use App\Repository\ConsultaRepository;
 use App\Repository\DocumentoModeloRepository;
 use App\Repository\InternacaoRepository;
 use App\Repository\FinanceiroRepository;
-use App\Repository\FinanceiroPendenteRepository;
-use App\Entity\FinanceiroPendente;
+use App\Service\PdfService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * @Route("/clinica")
@@ -72,8 +68,7 @@ class ClinicaController extends DefaultController
         int $id,
         ConsultaRepository $consultaRepo,
         DocumentoModeloRepository $documentoRepo,
-        FinanceiroRepository $financeiroRepo,
-        FinanceiroPendenteRepository $financeiroPendenteRepo
+        FinanceiroRepository $financeiroRepo
     ): Response {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -86,13 +81,7 @@ class ClinicaController extends DefaultController
         $consultas = $consultaRepo->findAllByPetId($baseId, $id);
         $documentos = $documentoRepo->listarDocumentos($baseId);
         $financeiro = $financeiroRepo->buscarPorPet($baseId, $pet['id']);
-        $financeiroPendente = $financeiroPendenteRepo->findBy(['petId' => $id]);
         $receitas = $this->getRepositorio(\App\Entity\Receita::class)->listarPorPet($baseId, $pet['id']);
-
-        // --- BUSCA TODOS OS SERVIÇOS DA CLÍNICA ---
-        $servicosClinica = $this->getRepositorio(\App\Entity\Servico::class)->findBy([
-            'estabelecimentoId' => $baseId
-        ]);
 
         $timeline_items = [];
 
@@ -140,10 +129,8 @@ class ClinicaController extends DefaultController
             'timeline_agrupado' => $agrupado,
             'documentos' => $documentos,
             'financeiro' => $financeiro,
-            'financeiroPendente' => $financeiroPendente,
             'consultas' => $consultas,
             'total_debitos' => $totalDebitos,
-            'servicos_clinica' => $servicosClinica,   // <<<< AQUI, NÃO ESQUECE!!!
         ]);
     }
 
@@ -515,83 +502,4 @@ class ClinicaController extends DefaultController
             'consulta' => $consulta,
         ]);
     }
-
-/**
-     * @Route("/pet/{petId}/venda/concluir", name="clinica_concluir_venda", methods={"POST"})
-     */
-    public function concluirVenda(Request $request, int $petId, EntityManagerInterface $entityManager): JsonResponse
-    {
-
-        $this->switchDB(); 
-        $baseId = $this->getIdBase();
-
-        // Pegando todos os campos do POST
-        $servicoId = $request->request->get('servico_id');
-        $descricao = $request->request->get('descricao');
-        $valor     = (float) $request->request->get('valor');
-        $data      = $request->request->get('data') ? new \DateTime($request->request->get('data')) : new \DateTime();
-        $observacao = $request->request->get('observacao');
-        $metodoPagamento = $request->request->get('metodo_pagamento');
-        $desconto  = (float) $request->request->get('desconto', 0);
-
-        // --- Se vier ID do serviço, busca o valor oficial no banco (anti-gambiarra)
-        if ($servicoId) {
-            // Use o EntityManager para obter o repositório
-            $servico = $entityManager->getRepository(Servico::class)->find($servicoId);
-            if (!$servico) {
-                return $this->json(['status' => 'error', 'mensagem' => 'Serviço não encontrado!'], 404);
-            }
-            $descricao = $servico->getNome();
-            $valor = (float) $servico->getValor();
-        }
-
-        // --- Valor final nunca negativo!
-        $valorFinal = max(0, $valor - $desconto);
-
-        // --- Monta descrição final (nome + observação)
-        $descricaoFinal = trim($descricao . ($observacao ? ' - ' . $observacao : ''));
-
-        if ($metodoPagamento === 'pendente') {
-            // Vai pro Financeiro Pendente
-            $financeiroPendente = new FinanceiroPendente();
-            $financeiroPendente->setEstabelecimentoId($baseId);
-            $financeiroPendente->setPetId($petId);
-            $financeiroPendente->setDescricao($descricaoFinal);
-            $financeiroPendente->setValor($valorFinal);
-            $financeiroPendente->setData($data);
-            $financeiroPendente->setStatus('pendente');
-            $financeiroPendente->setOrigem('clinica');
-            
-            // Persistir e salvar a entidade
-            $entityManager->persist($financeiroPendente);
-            $entityManager->flush();
-
-            return $this->json([
-                'status' => 'success',
-                'mensagem' => 'Lançado como pendente.'
-            ]);
-        } else {
-            // Vai pro Financeiro "Pago"
-            $financeiro = new Financeiro();
-            $financeiro->setEstabelecimentoId($baseId);
-            $financeiro->setPetId($petId);
-            $financeiro->setDescricao($descricaoFinal);
-            $financeiro->setValor($valorFinal);
-            $financeiro->setData($data);
-            $financeiro->setOrigem('clinica');
-            $financeiro->setStatus('concluido');
-            $financeiro->setMetodoPagamento($metodoPagamento);
-            
-            // Persistir e salvar a entidade
-            $entityManager->persist($financeiro);
-            $entityManager->flush();
-
-            return $this->json([
-                'status' => 'success',
-                'mensagem' => 'Pagamento registrado no financeiro!'
-            ]);
-        }
-    }
-
-
 }

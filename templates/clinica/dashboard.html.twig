@@ -3,306 +3,255 @@
 {% block title %}Painel de Controle{% endblock %}
 
 {% block stylesheets %}
-{{ parent() }}
-<style>
-    .card-title { color: #004080; font-weight: bold; }
-    .card-listagem-scroll {
-        max-height: 416px;
-        overflow-y: auto;
-    }
-    .card-listagem-item {
-        min-height: 40px;
-        padding: 0.38rem 1rem !important;
-        display: flex;
-        align-items: center;
-        margin-bottom: 0 !important;
-        border-radius: 0.4rem;
-        background: #fff !important;
-        box-shadow: none !important;
-        border-bottom: 1px solid #ececec;
-    }
-    .col-12.p-1 {
-        padding-left: 0.4rem !important;
-        padding-right: 0.4rem !important;
-    }
-    .card-flutuante {
-        transition: transform 0.2s;
-    }
-    .card-flutuante:hover {
-        background: #f7fafd !important;
-        transform: translateY(-2px);
-        box-shadow: 0 2px 12px 0 rgba(60,140,220,.06);
-    }
-    .vaccine-tabs .nav-link {
-        border: 1px solid #dee2e6 !important;
-        color: #6c757d;
-        font-size: 0.9rem;
-    }
-    .vaccine-tabs .nav-link.active {
-        background-color: #3c8dbc !important;
-        color: white !important;
-        border-color: #3c8dbc !important;
-    }
-    .metric-container .card {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        border: 0;
-        border-radius: 0.75rem;
-        margin-bottom: 1rem;
-    }
-    .metric-container .icon-circle {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.4rem;
-        color: #fff;
-        margin-left: 0.5rem;
-    }
-    .metric-container h6 {
-        margin: 0;
-        font-size: 0.9rem;
-        color: #f8f9fa;
-    }
-    .metric-container h3 {
-        margin: 0;
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #fff;
-    }
-    .metric-container small {
-        font-size: 0.75rem;
-        color: #f8f9fa;
-    }
-    .card-body-fixo {
-        height: 500px;
-        overflow-y: 500px;
-    }
-</style>
+    {{ parent() }}
+    {# Adicionando o link completo do Bootstrap 5 e Font Awesome para garantir que todas as classes funcionem #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* Estilos mínimos para cores personalizadas e ajustes finos, replicando a imagem */
+        body {
+            background-color: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .header-blue {
+            background-color: #3c8dbc !important;
+        }
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .panel-links a {
+            font-weight: 600;
+            color: #6c757d;
+        }
+        .panel-links a.active {
+            color: #3c8dbc;
+            border-bottom: 2px solid #3c8dbc;
+        }
+        .card {
+            border-radius: 0.25rem;
+            box-shadow: none;
+            border: 1px solid #dee2e6;
+        }
+        .card-header {
+            border-radius: 0;
+            border-top-left-radius: inherit;
+            border-top-right-radius: inherit;
+            padding: 0.6rem 1rem;
+            font-size: 0.95rem;
+        }
+        .list-group-item {
+            background-color: #f8f9fa;
+            padding: 0.7rem 1rem;
+            font-size: 0.9rem;
+        }
+        .list-group-item .owner {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        .badge-emergency {
+            background-color: #ffdddd;
+            color: #d9534f;
+            border: 1px solid #d9534f;
+        }
+        .badge-urgent {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #155724;
+        }
+        .vaccine-tabs .nav-link {
+            border: 1px solid #dee2e6 !important;
+            color: #6c757d;
+        }
+        .vaccine-tabs .nav-link.active {
+            background-color: #3c8dbc !important;
+            color: white !important;
+            border-color: #3c8dbc !important;
+        }
+        .summary-card .icon {
+            font-size: 2.2rem;
+        }
+        .summary-card h3 {
+            font-size: 1.8rem;
+        }
+        /* CORREÇÃO: Estilos para os cards de métrica para garantir visibilidade */
+        .metric-card {
+            background-color: #fff;
+        }
+        .metric-card .metric-label {
+            color: #6c757d;
+        }
+        .metric-card .metric-value {
+            color: #212529; /* Garante que o texto seja escuro */
+            font-weight: 600;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <h1 class="text-primary mb-4 text-center">Painel de Controle Clinica Veterinaria</h1>
+<div class="container-fluid my-4">
+    <h1 class="panel-title mb-2">Painel de controle</h1>
+    <div class="panel-links pb-2 mb-4">
+        <a href="#" class="active text-decoration-none pb-1"><i class="fas fa-home me-1"></i> Principal</a>
+        <a href="#" class="text-decoration-none pb-1"><i class="fas fa-dollar-sign me-1"></i> Financeiro</a>
+    </div>
+
     <div class="row">
-        <!-- COLUNA ESQUERDA -->
+        <!-- COLUNA DA ESQUERDA -->
         <div class="col-lg-8">
-            <div class="row gy-2">
-                <!-- Últimos atendimentos (24h) -->
-                <div class="col-md-6 ">
-                    <div class="card shadow-lg border-0 rounded-3">
-                        <div class="card-body card-body-fixo">
-                            <h5 class="card-title mb-2">
-                                <i class="fas fa-stethoscope me-2 text-primary"></i>Últimos atendimentos (24h)
-                            </h5>
-                            <div class="card-listagem-scroll">
-                                <div class="row g-0">
-                                    {% for item in atendimentos %}
-                                        <div class="col-12 p-1 shadow">
-                                            <div class="card card-flutuante mb-1 card-listagem-item bg-white">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <a href="{{ path('clinica_detalhes_pet', {'id': item.pet_id}) }}" class="fw-bold text-info">{{ item.pet }}</a>
-                                                        <span class="ms-1 text-black">{{ item.cliente }}</span>
-                                                    </div>
-                                                    <small class="text-black">{{ item.data|date('d/m H:i') }}</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% else %}
-                                        <div class="col-12">
-                                            <div class="card p-3 shadow card-flutuante bg-light">
-                                                Nenhum atendimento recente.
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Últimos animais cadastrados -->
-                <div class="col-md-6">
-                    <div class="card shadow-lg border-0 rounded-3">
-                        <div class="card-body">
-                            <h5 class="card-title mb-2">
-                                <i class="fas fa-paw me-2 text-success"></i>Últimos animais cadastrados
-                            </h5>
-                            <div class="card-listagem-scroll">
-                                <div class="row g-0">
-                                    {% for animal in animais_cadastrados %}
-                                        <div class="col-12 p-1 shadow">
-                                            <div class="card card-flutuante mb-1 card-listagem-item bg-white">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <a href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}" class="fw-bold text-info">{{ animal.nome }}</a>
-                                                        <span class="ms-1 text-black">{{ animal.tutor }}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% else %}
-                                        <div class="col-12">
-                                            <div class="card p-3 shadow card-flutuante bg-light">
-                                                Nenhum animal cadastrado.
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Animais internados -->
-                <div class="col-md-6">
-                    <div class="card shadow-lg border-0 rounded-3">
-                        <div class="card-body">
-                            <h5 class="card-title mb-2">
-                                <i class="fas fa-procedures me-2 text-danger"></i>Animais internados
-                            </h5>
-                            <div class="card-listagem-scroll">
-                                <div class="row g-0">
-                                    {% for internacao in internados %}
-                                        <div class="col-12 p-1 shadow">
-                                            <div class="card card-flutuante mb-1 card-listagem-item bg-white">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <a href="{{ path('clinica_detalhes_pet', {'id': internacao.pet_id}) }}" class="fw-bold text-info">{{ internacao.pet_nome }}</a>
-                                                        <span class="ms-1 text-black">{{ internacao.dono_nome }}</span>
-                                                    </div>
-                                                    <span class="text-black">
-                                                        {{ 'Emergencia' in internacao.motivo ? 'Emergência' : 'Pouco urgente' }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% else %}
-                                        <div class="col-12">
-                                            <div class="card p-3 shadow card-flutuante bg-light">
-                                                Nenhuma internação ativa.
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Vacinas -->
-                <div class="col-md-6">
-                    <div class="card shadow-lg border-0 rounded-3">
-                        <div class="card-body">
-                            <h5 class="card-title mb-2">
-                                <i class="fas fa-syringe me-2 text-warning"></i>Vacinas
-                            </h5>
-                            <nav class="vaccine-tabs nav nav-pills flex-row mb-2">
-                                <a href="#tab-vencidas" class="nav-link active small" data-bs-toggle="tab">Vencidas</a>
-                                <a href="#tab-programadas" class="nav-link small" data-bs-toggle="tab">Programadas</a>
-                            </nav>
-                            <div class="tab-content card-listagem-scroll">
-                                <div class="tab-pane fade show active" id="tab-vencidas">
-                                    <div class="row g-0">
-                                    {% for vacina in vacinas_vencidas %}
-                                        <div class="col-12 p-1 shadow">
-                                            <div class="card card-flutuante mb-1 card-listagem-item bg-white">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <a href="{{ path('clinica_detalhes_pet', {'id': vacina.pet_id}) }}" class="fw-bold text-info">{{ vacina.pet_nome }}</a>
-                                                        <span class="ms-1 text-black">- {{ vacina.tipo }}</span>
-                                                    </div>
-                                                    <small class="fw-bold text-black">{{ vacina.data_validade|date('d/m/Y') }}</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% else %}
-                                        <div class="col-12">
-                                            <div class="card p-3 shadow card-flutuante bg-light">
-                                                Nenhuma vacina vencida.
-                                            </div>
-                                        </div>
-                                    {% endfor %}
+            <div class="row">
+                <!-- Painel: Últimos Atendimentos -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header header-blue text-white fw-bold">Últimos atendimentos (24h)</div>
+                        <ul class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;">
+                            {% for item in atendimentos %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{{ path('clinica_detalhes_pet', {'id': item.pet_id}) }}" class="text-decoration-none fw-bold">{{ item.pet }}</a>
+                                        <span class="owner">/ {{ item.cliente }}</span>
                                     </div>
-                                </div>
-                                <div class="tab-pane fade" id="tab-programadas">
-                                    <div class="row g-0">
-                                    {% for vacina in vacinas_programadas %}
-                                        <div class="col-12 p-1 shadow">
-                                            <div class="card card-flutuante mb-1 card-listagem-item bg-white">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <a href="{{ path('clinica_detalhes_pet', {'id': vacina.pet_id}) }}" class="fw-bold text-info">{{ vacina.pet_nome }}</a>
-                                                        <span class="ms-1 text-black">- {{ vacina.tipo }}</span>
-                                                    </div>
-                                                    <small class="text-black">{{ vacina.data_validade|date('d/m/Y') }}</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% else %}
-                                        <div class="col-12">
-                                            <div class="card p-3 shadow card-flutuante bg-light">
-                                                Nenhuma vacina programada.
-                                            </div>
-                                        </div>
-                                    {% endfor %}
+                                    <small class="text-muted">{{ item.data|date('d/m H:i') }}</small>
+                                </li>
+                            {% else %}
+                                <li class="list-group-item">Nenhum atendimento recente.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Painel: Últimos Animais Cadastrados -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header header-blue text-white fw-bold">Últimos animais cadastrados</div>
+                         <ul class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;">
+                            {% for animal in animais_cadastrados %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}" class="text-decoration-none fw-bold">{{ animal.nome }}</a>
+                                        <span class="owner">/ {{ animal.tutor }}</span>
                                     </div>
-                                </div>
+                                </li>
+                            {% else %}
+                                <li class="list-group-item">Nenhum animal cadastrado.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Painel: Animais Internados -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header header-blue text-white fw-bold">Animais internados</div>
+                        <ul class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;">
+                             {% for internacao in internados %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{{ path('clinica_detalhes_pet', {'id': internacao.pet_id}) }}" class="text-decoration-none fw-bold">{{ internacao.pet_nome }}</a>
+                                        <span class="owner">/ {{ internacao.dono_nome }}</span>
+                                    </div>
+                                    <span class="badge {% if 'Emergencia' in internacao.motivo %}badge-emergency{% else %}badge-urgent{% endif %}">
+                                        {% if 'Emergencia' in internacao.motivo %}Emergencia{% else %}Pouco urgente{% endif %}
+                                    </span>
+                                </li>
+                            {% else %}
+                                <li class="list-group-item">Nenhuma internação ativa.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Painel: Vacinas com Abas -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header header-blue text-white fw-bold">Vacinas</div>
+                        <nav class="vaccine-tabs nav nav-pills flex-row p-2 bg-light">
+                            <a href="#tab-vencidas" class="nav-link active small" data-bs-toggle="tab">Vencidas</a>
+                            <a href="#tab-programadas" class="nav-link small" data-bs-toggle="tab">Programadas</a>
+                        </nav>
+                        <div class="tab-content" style="max-height: 200px; overflow-y: auto;">
+                            <div class="tab-pane fade show active" id="tab-vencidas">
+                                <ul class="list-group list-group-flush">
+                                {% for vacina in vacinas_vencidas %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <a href="{{ path('clinica_detalhes_pet', {'id': vacina.pet_id}) }}" class="text-decoration-none fw-bold">{{ vacina.pet_nome }}</a>
+                                            <span class="owner">- {{ vacina.tipo }}</span>
+                                        </div>
+                                        <small class="text-danger fw-bold">{{ vacina.data_validade|date('d/m/Y') }}</small>
+                                    </li>
+                                {% else %}
+                                    <li class="list-group-item">Nenhuma vacina vencida.</li>
+                                {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="tab-pane fade" id="tab-programadas">
+                                <ul class="list-group list-group-flush">
+                                {% for vacina in vacinas_programadas %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <a href="{{ path('clinica_detalhes_pet', {'id': vacina.pet_id}) }}" class="text-decoration-none fw-bold">{{ vacina.pet_nome }}</a>
+                                            <span class="owner">- {{ vacina.tipo }}</span>
+                                        </div>
+                                        <small class="text-muted">{{ vacina.data_validade|date('d/m/Y') }}</small>
+                                    </li>
+                                {% else %}
+                                    <li class="list-group-item">Nenhuma vacina programada.</li>
+                                {% endfor %}
+                                </ul>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- COLUNA DIREITA (não muda) -->
-        <div class="col-lg-4 metric-container">
-            <div class="card bg-primary text-white">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6>Total de Animais</h6>
-                        <h3>{{ total_pets }}</h3>
-                        <small>Animais registrados</small>
+
+        <!-- COLUNA DA DIREITA -->
+        <div class="col-lg-4">
+            <div class="card text-white mb-4" style="background-color: #6f42c1;">
+                <div class="card-body d-flex justify-content-between align-items-center p-3">
+                    <div class="icon">
+                        <i class="fas fa-paw fa-2x"></i>
                     </div>
-                    <div class="icon-circle bg-dark"><i class="fas fa-paw"></i></div>
+                    <div class="content text-end">
+                        <h3 class="fw-bold mb-0">{{ total_pets }}</h3>
+                        <p class="mb-0">Animais</p>
+                    </div>
                 </div>
             </div>
-            <div class="card bg-success text-white">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6>Total de Responsáveis</h6>
-                        <h3>{{ totaldono }}</h3>
-                        <small>Clientes cadastrados</small>
+             <div class="card text-white mb-4" style="background-color: #583291;">
+                <div class="card-body d-flex justify-content-between align-items-center p-3">
+                    <div class="icon">
+                        <i class="fas fa-users fa-2x"></i>
                     </div>
-                    <div class="icon-circle bg-dark"><i class="fas fa-users"></i></div>
+                    <div class="content text-end">
+                        <h3 class="fw-bold mb-0">{{ totaldono }}</h3>
+                        <p class="mb-0">Responsáveis</p>
+                    </div>
                 </div>
             </div>
-            <div class="card bg-danger text-white">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6>Débitos / Clientes</h6>
-                        <h3>R$ {{ debitos_cliente|number_format(2, ',', '.') }}</h3>
-                        <small>Total em aberto</small>
+             <div class="card text-white mb-4" style="background-color: #c9302c;">
+                <div class="card-body d-flex justify-content-between align-items-center p-3">
+                    <div class="icon">
+                        <i class="fas fa-hand-holding-usd fa-2x"></i>
                     </div>
-                    <div class="icon-circle bg-dark"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div class="content text-end">
+                        <h3 class="fw-bold mb-0">R$ {{ debitos_cliente|number_format(2, ',', '.') }}</h3>
+                        <p class="mb-0">Débitos/clientes</p>
+                    </div>
                 </div>
             </div>
-            <div class="card bg-info text-white">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6>Média de Espera</h6>
-                        <h3>00:00:00</h3>
-                        <small>Tempo médio por atendimento</small>
-                    </div>
-                    <div class="icon-circle bg-dark"><i class="fas fa-clock"></i></div>
+            <div class="card metric-card mb-4">
+                <div class="card-body p-3 text-center">
+                    <div class="metric-label text-muted">Média espera</div>
+                    <div class="metric-value">00:00:00</div>
                 </div>
             </div>
-            <div class="card bg-warning text-dark">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6>Média de Atendimento</h6>
-                        <h3>{{ media_atendimento }}</h3>
-                        <small>Duração média</small>
-                    </div>
-                    <div class="icon-circle bg-dark text-white"><i class="fas fa-stopwatch"></i></div>
+            <div class="card metric-card mb-4">
+                <div class="card-body p-3 text-center">
+                    <div class="metric-label text-muted">Média atendimento</div>
+                    <div class="metric-value">{{ media_atendimento }}</div>
                 </div>
             </div>
         </div>
@@ -311,6 +260,6 @@
 {% endblock %}
 
 {% block javascripts %}
-{{ parent() }}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}

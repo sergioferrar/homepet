@@ -37,11 +37,6 @@ class Servico
      */
     private $estabelecimentoId;
 
-    /**
-     * @ORM\Column(type="string", length=20, options={"default": "clinica"})
-     */
-    private $tipo = 'clinica';
-
     public function getId(): ?int
     {
         return $this->id;
@@ -95,16 +90,6 @@ class Servico
     {
         $this->estabelecimentoId = $estabelecimentoId;
 
-        return $this;
-    }
-    public function getTipo(): string
-    {
-        return $this->tipo;
-    }
-
-    public function setTipo(string $tipo): self
-    {
-        $this->tipo = $tipo;
         return $this;
     }
 }
