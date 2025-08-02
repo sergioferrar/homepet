@@ -3,29 +3,48 @@
 namespace App\Controller;
 
 use App\Entity\Servico;
-use App\Repository\ServicoRepository;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("/servico")
+ * Esta versão da controller inclui suporte ao novo campo `tipo` (clinica ou pet_shop)
+ * e permite filtrar a listagem de serviços de acordo com esse valor. Note que
+ * você precisa atualizar o repositório para aceitar o parâmetro de tipo na
+ * busca, bem como adaptar as entidades e formulários conforme descrito no
+ * arquivo de orientações.
  */
 class ServicoController extends DefaultController
 {
     /**
-     * @Route("/", name="servico_index", methods={"GET"})
+     * @Route("/servico", name="servico_index", methods={"GET"})
      */
     public function index(Request $request): Response
     {
         $this->switchDB();
-        $servicos = $this->getRepositorio(Servico::class)->findAllService($this->session->get('userId'));
-        return $this->render('servico/index.html.twig', ['servicos' => $servicos]);
+        $userId = $this->session->get('userId');
+        $repo = $this->getRepositorio(Servico::class);
+
+        // Captura o parâmetro 'tipo' da query string para filtrar a listagem
+        $tipoFiltro = $request->query->get('tipo');
+        if ($tipoFiltro) {
+            // Ajuste findAllService para aceitar o parâmetro de filtro ou use findBy
+            $servicos = $repo->findBy([
+                'estabelecimento_id' => $userId,
+                'tipo' => $tipoFiltro
+            ]);
+        } else {
+            $servicos = $repo->findAllService($userId);
+        }
+
+        return $this->render('servico/index.html.twig', [
+            'servicos' => $servicos,
+            'tipo'     => $tipoFiltro,
+        ]);
     }
 
     /**
-     * @Route("/novo", name="servico_novo", methods={"GET", "POST"})
+     * @Route("/servico/novo", name="servico_novo", methods={"GET", "POST"})
      */
     public function novo(Request $request): Response
     {
@@ -36,6 +55,10 @@ class ServicoController extends DefaultController
             $servico->setDescricao($request->request->get('descricao'));
             $servico->setValor((float)$request->request->get('valor'));
 
+            // Lê o tipo enviado pelo formulário; padrão 'clinica' se não enviado
+            $tipo = $request->request->get('tipo', 'clinica');
+            $servico->setTipo($tipo);
+
             $this->getRepositorio(Servico::class)->save($this->session->get('userId'), $servico);
             return $this->redirectToRoute('servico_index');
         }
@@ -44,7 +67,7 @@ class ServicoController extends DefaultController
     }
 
     /**
-     * @Route("/editar/{id}", name="servico_editar", methods={"GET", "POST"})
+     * @Route("/servico/editar/{id}", name="servico_editar", methods={"GET", "POST"})
      */
     public function editar(Request $request, int $id): Response
     {
@@ -59,6 +82,9 @@ class ServicoController extends DefaultController
             $servico->setNome($request->request->get('nome'));
             $servico->setDescricao($request->request->get('descricao'));
             $servico->setValor((float)$request->request->get('valor'));
+            // Atualiza o tipo a partir do formulário
+            $tipo = $request->request->get('tipo', 'clinica');
+            $servico->setTipo($tipo);
 
             $this->getRepositorio(Servico::class)->update($this->session->get('userId'), $servico);
             return $this->redirectToRoute('servico_index');
@@ -70,7 +96,7 @@ class ServicoController extends DefaultController
     }
 
     /**
-     * @Route("/deletar/{id}", name="servico_deletar", methods={"POST"})
+     * @Route("/servico/deletar/{id}", name="servico_deletar", methods={"POST"})
      */
     public function deletar(Request $request, int $id): Response
     {
@@ -84,6 +110,4 @@ class ServicoController extends DefaultController
         $this->getRepositorio(Servico::class)->delete($this->session->get('userId'), $id);
         return $this->redirectToRoute('servico_index');
     }
-
-
 }

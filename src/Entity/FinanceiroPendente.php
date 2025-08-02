@@ -52,6 +52,18 @@ class FinanceiroPendente
      */
     private $estabelecimentoId;
 
+    // --- Novas propriedades e métodos para 'status' e 'origem' ---
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $origem;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $status;
+    // --- Fim das novas propriedades ---
+
     public function getId(): ?int
     {
         return $this->id;
@@ -131,7 +143,30 @@ class FinanceiroPendente
     public function setEstabelecimentoId(int $estabelecimentoId): self
     {
         $this->estabelecimentoId = $estabelecimentoId;
-
         return $this;
     }
+
+    // --- Novos métodos para 'status' e 'origem' ---
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?string $status): self
+    {
+        $this->status = $status;
+        return $this;
+    }
+
+    public function getOrigem(): ?string
+    {
+        return $this->origem;
+    }
+
+    public function setOrigem(?string $origem): self
+    {
+        $this->origem = $origem;
+        return $this;
+    }
+    // --- Fim dos novos métodos ---
 }

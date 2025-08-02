@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\FinanceiroRepository;
+
 /**
  * @ORM\Entity(repositoryClass=App\Repository\FinanceiroRepository::class)
  */
@@ -34,12 +35,27 @@ class Financeiro
     /**
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $petId; // Alterado de pet_id para petId para seguir convenção de métodos get/set
+    private $petId;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $petNome; // Corrigido de pet_nome para petNome
+    private $petNome;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $origem;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $status;
+    
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $metodoPagamento; // Nova propriedade
 
     private $especie;
     private $sexo;
@@ -117,6 +133,39 @@ class Financeiro
         return $this;
     }
 
+    public function getOrigem(): ?string
+    {
+        return $this->origem;
+    }
+
+    public function setOrigem(?string $origem): self
+    {
+        $this->origem = $origem;
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?string $status): self
+    {
+        $this->status = $status;
+        return $this;
+    }
+    
+    public function getMetodoPagamento(): ?string
+    {
+        return $this->metodoPagamento;
+    }
+
+    public function setMetodoPagamento(?string $metodoPagamento): self
+    {
+        $this->metodoPagamento = $metodoPagamento;
+        return $this;
+    }
+
     public function getEspecie(): ?string
     {
         return $this->especie;
@@ -169,7 +218,6 @@ class Financeiro
     public function setEstabelecimentoId(int $estabelecimentoId): self
     {
         $this->estabelecimentoId = $estabelecimentoId;
-
         return $this;
     }
 }
