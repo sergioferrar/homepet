@@ -5,6 +5,7 @@ namespace App\Service\Payment;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use App\Entity\Payment;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class MercadoPagoService
 {
@@ -31,12 +32,12 @@ class MercadoPagoService
                 'email' => $data['email'] ?? 'test@test.com'
             ],
             'back_urls' => [
-                'success' => $data['success_url'] ?? 'https://seusite.com/sucesso',
-                'failure' => $data['failure_url'] ?? 'https://seusite.com/falha',
-                'pending' => $data['pending_url'] ?? 'https://seusite.com/pendente'
+                'success' => $_ENV['PAGAMENTO_URL'] . 'pagamento/sucesso',
+                'failure' => $_ENV['PAGAMENTO_URL'] . 'pagamento/falha',
+                'pending' => $_ENV['PAGAMENTO_URL'] . 'pagamento/pendente'
             ],
-            'auto_return' => 'approved',
-            'notification_url' => $data['webhook_url'] ?? 'https://seusite.com/webhook/mercadopago'
+            'auto_return' => 'all',
+            'notification_url' => $_ENV['PAGAMENTO_URL'] . 'pagamento/retorno'
         ];
 
         $response = $this->client->request('POST', 'https://api.mercadopago.com/checkout/preferences', [
@@ -51,7 +52,6 @@ class MercadoPagoService
         // if (200 !== $response->getStatusCode()) {
         //     return ['success' => false, 'message' => 'Erro ao criar pagamento'];
         // }
-
         $content = $response->toArray();
         // dd($response->toArray());
         return ['success' => true, 'init_point' => $content['init_point']];

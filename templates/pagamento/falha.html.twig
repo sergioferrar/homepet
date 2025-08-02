@@ -1,0 +1,7 @@
+{% extends 'baseLogin.html.twig' %}
+{% block body %}
+	  <h1>❌ O Pagamento Foi Recusado</h1>
+  <p>Infelizmente, não foi possível concluir sua transação.</p>
+  <p>Verifique os dados e tente novamente ou utilize outro método de pagamento.</p>
+  <a href="{{ url('landing_home') }}">Voltar à Página Inicial</a>
+{% endblock %}

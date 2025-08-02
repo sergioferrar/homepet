@@ -7,19 +7,20 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Estabelecimento;
 
-class PagSeguroController extends DefaultController
+class PagamentoController extends DefaultController
 {
 
     /**
-     * @Route("/pagseguro/retorno", name="pagseguro_retorno")
+     * @Route("/pagamento/retorno", name="pagamento_retorno")
     */
-    public function notificacao(Request $request, EntityManagerInterface $em): Response
+    public function notificacao(Request $request): Response
     {
-        $notificationCode = $request->request->get('notificationCode');
+        $notificationCode = $request->get('notificationCode');
         if (!$notificationCode) {
             return new Response('Código de notificação ausente', 400);
         }
 
+        
         $emEstabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class);
         $emUsuario = $this->getRepositorio(\App\Entity\Usuario::class);
 
@@ -37,9 +38,35 @@ class PagSeguroController extends DefaultController
         // $estabelecimento = $em->getRepository(Estabelecimento::class)->findOneBy([...]);
         // $estabelecimento->setStatus('ativo');
         // $em->flush();
-        return $this->render('estabelecimento/confirmacao.html.twig', [
+        return $this->render('pagamento/confirmacao.html.twig', [
             'estabelecimento' => $request->getSession()->get('finaliza')['eid'],
         ]);
         // return new Response('Notificação recebida e processada', 200);
+    }
+
+    /**
+     * @Route("/pagamento/sucesso", name="pagamento_sucesso")
+    */
+    public function success(Request $request): Response
+    {
+        return $this->render('pagamento/sucesso.html.twig', []);
+    }
+
+    /**
+     * @Route("/pagamento/falha", name="pagamento_falha")
+    */
+    public function fail(Request $request): Response
+    {
+        
+        return $this->render('pagamento/falha.html.twig', []);
+    }
+
+    /**
+     * @Route("/pagamento/pendente", name="pagamento_pendente")
+    */
+    public function pendding(Request $request): Response
+    {
+        
+        return $this->render('pagamento/pendente.html.twig', []);
     }
 }

@@ -157,7 +157,7 @@ class EstabelecimentoController extends DefaultController
     }
 
     /**
-     * @Route("/landing/confirmacao/cadastro/{estabelecimento}", name="confirma_cadastro")
+     * @Route("/assinatura/confirmacao/cadastro/{estabelecimento}", name="confirma_cadastro")
      */
     public function confirmacaoCadastro(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
@@ -213,6 +213,8 @@ class EstabelecimentoController extends DefaultController
             throw $e;
         }
     }
+
+
 
     /**
      * @Route("/estabelecimento/renovacao/{eid}", name="petshop_renovacao")
