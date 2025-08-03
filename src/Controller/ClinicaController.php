@@ -155,9 +155,9 @@ class ClinicaController extends DefaultController
     public function novaInternacao(
         Request $request, 
         int $petId,
-        InternacaoRepository $internacaoRepo, // Adicionado
-        VeterinarioRepository $veterinarioRepo, // Assumindo que você tem um repositório para veterinários
-        EntityManagerInterface $entityManager // Adicionado para persistir
+        InternacaoRepository $internacaoRepo, 
+        VeterinarioRepository $veterinarioRepo, 
+        EntityManagerInterface $entityManager
     ): Response {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -167,12 +167,10 @@ class ClinicaController extends DefaultController
             throw $this->createNotFoundException('Pet não encontrado.');
         }
 
-        // Recuperar a lista de veterinários e boxes (assumindo a existência de repositórios)
-        // Se você não tem um repositório de Boxes, pode simular os dados aqui.
-        $veterinarios = $veterinarioRepo->findByEstabelecimento($baseId);
+        // Buscar a lista de veterinários para popular o select
+        $veterinarios = $veterinarioRepo->findBy(['estabelecimentoId' => $baseId]);
         
-        // Simulação de boxes caso não tenha uma entidade/repositório dedicado.
-        // Se tiver, use o repositório correspondente: $boxes = $boxRepo->findAll();
+        // Simulação de boxes (assumindo que seja um array simples)
         $boxes = [
             ['id' => 1, 'nome' => 'Box 1'],
             ['id' => 2, 'nome' => 'Box 2'],
@@ -191,9 +189,9 @@ class ClinicaController extends DefaultController
             $internacao->setPetId($petId);
             $internacao->setDonoId($donoId);
             $internacao->setEstabelecimentoId($baseId);
-            $internacao->setDataInicio(new \DateTime()); // A internação começa agora
-            $internacao->setStatus('ativa'); // Status inicial
-            $internacao->setMotivo($request->request->get('queixa')); // Mapeando a queixa para o motivo
+            $internacao->setDataInicio(new \DateTime());
+            $internacao->setStatus('ativa');
+            $internacao->setMotivo($request->request->get('queixa'));
             
             // Campos adicionais do formulário
             $internacao->setSituacao($request->request->get('situacao'));
@@ -203,15 +201,13 @@ class ClinicaController extends DefaultController
             $internacao->setAltaPrevista(new \DateTime($request->request->get('alta_prevista')));
             $internacao->setDiagnostico($request->request->get('diagnostico'));
             $internacao->setPrognostico($request->request->get('prognostico'));
-            
-            // Para as tags de alergias, você pode armazená-las como um array serializado, JSON ou em uma tabela separada.
-            // Para simplicidade, vamos apenas armazenar o texto da queixa.
             $internacao->setAnotacoes($request->request->get('alergias_marcacoes'));
 
-            // Persistir no banco de dados
-            $entityManager->persist($internacao);
-            $entityManager->flush();
-            
+            // Persistir no banco de dados usando o método do repositório
+            // Se você usar o EntityManager, a chamada seria $entityManager->persist($internacao); $entityManager->flush();
+            // Assumindo que seu repositório tem um método 'inserirInternacao' compatível
+            $internacaoRepo->inserirInternacao($baseId, $internacao);
+
             $this->addFlash('success', 'Internação registrada com sucesso!');
             return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
         }
@@ -659,5 +655,24 @@ class ClinicaController extends DefaultController
         }
     }
 
+    /**
+     * @Route("/internacao/{id}/ficha", name="clinica_ficha_internacao", methods={"GET"})
+     */
+    public function fichaInternacao(int $id, InternacaoRepository $internacaoRepo): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        // Assumindo um método no repositório que busca a internação com todos os dados associados
+        $internacao = $internacaoRepo->findInternacaoCompleta($baseId, $id);
+
+        if (!$internacao) {
+            throw $this->createNotFoundException('A ficha de internação não foi encontrada.');
+        }
+
+        return $this->render('clinica/ficha_internacao.html.twig', [
+            'internacao' => $internacao
+        ]);
+    }
 
 }
