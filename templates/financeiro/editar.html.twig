@@ -1,32 +1,42 @@
-{% extends 'base.html.twig' %}
+{# templates/financeiro/editar.html.twig #}
+{% extends 'forms/_form_base.html.twig' %}
 
-{% block body %}
-<div class="container mt-5">
-    <h1>Editar Registro Financeiro</h1>
+{% block form_page_title %}Editar Registro Financeiro{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item"><a href="{{ path('financeiro_dashboard') }}" class="text-decoration-none text-primary">Financeiro</a></li>
+    <li class="breadcrumb-item active">Editar</li>
+{% endblock %}
+
+{% block form_card_title %}
+    Editar Lançamento #{{ financeiro.id }}
+{% endblock %}
+
+{% block form_content %}
     <form method="post" action="{{ path('financeiro_editar', {'id': financeiro.id}) }}">
-        <div class="form-group">
-            <label for="descricao">Descrição</label>
+        <div class="mb-3">
+            <label for="descricao" class="form-label">Descrição</label>
             <input type="text" class="form-control" id="descricao" name="descricao" value="{{ financeiro.descricao }}" required>
         </div>
-        <div class="form-group">
-            <label for="valor">Valor</label>
+        <div class="mb-3">
+            <label for="valor" class="form-label">Valor</label>
             <input type="number" step="0.01" class="form-control" id="valor" name="valor" value="{{ financeiro.valor }}" required>
         </div>
-        <div class="form-group">
-            <label for="data">Data</label>
+        <div class="mb-3">
+            <label for="data" class="form-label">Data</label>
             <input type="date" class="form-control" id="data" name="data" value="{{ financeiro.data|date('Y-m-d') }}" required>
         </div>
-        <div class="form-group">
-            <label for="pet_id">Pet</label>
+        <div class="mb-3">
+            <label for="pet_id" class="form-label">Pet</label>
             <select class="form-control" id="pet_id" name="pet_id">
                 <option value="">Selecione um pet</option>
                 {% for pet in pets %}
                     <option value="{{ pet.id }}" {% if pet.id == financeiro.petId %}selected{% endif %}>{{ pet.nome }}</option>
-                    
                 {% endfor %}
             </select>
         </div>
-        <button type="submit" class="btn btn-primary">Salvar</button>
+        <div class="text-center">
+            <button type="submit" class="btn btn-success w-50">Salvar Alterações</button>
+        </div>
     </form>
-</div>
 {% endblock %}

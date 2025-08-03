@@ -231,5 +231,32 @@ class FinanceiroRepository extends ServiceEntityRepository
         return $stmt->executeQuery()->fetchAllAssociative();
     }
 
+    public function findTotalByDate(int $baseId, \DateTime $data): array
+    {
+        $sql = "
+            SELECT
+                f.id,
+                f.data,
+                SUM(f.valor) AS total_valor,
+                c.nome AS dono_nome,
+                GROUP_CONCAT(p.nome SEPARATOR ', ') AS pets
+            FROM financeiro f
+            LEFT JOIN pet p ON f.pet_id = p.id
+            LEFT JOIN cliente c ON p.dono_id = c.id
+            WHERE f.estabelecimento_id = :baseId
+            AND DATE(f.data) = :data
+            GROUP BY f.pet_id, f.data
+            ORDER BY f.data DESC
+        ";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('data', $data->format('Y-m-d'));
+        
+        $result = $stmt->executeQuery();
+
+        return $result->fetchAllAssociative();
+    }
+
 
 }
