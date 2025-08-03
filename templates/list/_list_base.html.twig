@@ -1,0 +1,63 @@
+{# templates/list/_list_base.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .card-title { color: #004080; font-weight: bold; }
+        .tabela-container input.form-control-md { max-width: 450px; margin-bottom: 1.5rem; }
+        .card-item { transition: box-shadow 0.2s; }
+        .card-item:hover { box-shadow: 0 0 0 4px #e5eefe; }
+        .dropdown-menu .dropdown-item.text-danger { color: #dc3545 !important; }
+        .tabela-container .pagination {
+            --bs-pagination-color: #004080;
+            --bs-pagination-hover-color: #004080;
+            --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(0, 64, 128, 0.25);
+        }
+    </style>
+    {% block list_stylesheets %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="text-primary mb-4">{% block list_title %}Título da Listagem{% endblock %}</h1>
+    <div class="tabela-container container-fluid px-2">
+        <div class="row my-3">
+            <div class="col-12 col-md-6">
+                <input type="text" id="searchInput" class="form-control form-control-md" placeholder="🔍 Pesquisar..." />
+            </div>
+            <div class="col-12 col-md-6 d-flex justify-content-end align-items-center">
+                {% block list_actions %}
+                    {# Botão "Novo..." será injetado aqui #}
+                {% endblock %}
+            </div>
+        </div>
+        
+        <div id="cardContainer" class="row gy-3">
+            {% block list_content %}
+                {# Conteúdo específico da listagem (os cards) será injetado aqui #}
+            {% endblock %}
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col text-center">
+                <nav aria-label="Paginação">
+                    <ul id="pagination" class="pagination justify-content-center mb-0"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block list_modals %}
+    {# Modais ou offcanvases específicos para a listagem serão injetados aqui #}
+{% endblock %}
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% block list_javascripts %}
+        {# Scripts específicos da listagem (como o TabelaDefault.js) serão injetados aqui #}
+    {% endblock %}
+{% endblock %}

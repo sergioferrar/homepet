@@ -1,78 +1,271 @@
-{% extends 'base.html.twig' %}
+{% extends 'list/_list_base.html.twig' %}
 
-{% block stylesheets %}
-{{ parent() }}
-<style>
-    .mr-custom {
-        margin-right: 8px;
-    }
-</style>
+{% block list_title %}Gestão Financeira{% endblock %}
+
+{% block list_actions %}
+    <a href="{{ path('financeiro_novo') }}" class="btn btn-primary">
+        <span class="icon-base bx bx-plus icon-sm me-2"></span> Novo Lançamento
+    </a>
 {% endblock %}
 
-{% block body %}
-<div class="container mt-5">
-    <h1>Financeiro Diário</h1>
+{% block list_stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+    <style>
+        .nav-tabs .nav-link {
+            font-weight: 600;
+        }
+        .nav-tabs .nav-link.active {
+            border-bottom: 3px solid #007bff;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 6px 12px;
+            margin: 2px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            color: #007bff !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background-color: #007bff !important;
+            color: #fff !important;
+        }
+    </style>
+{% endblock %}
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <a href="{{ path('financeiro_index', {'data': data|date_modify('-1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Anterior</a>
-        <h2>{{ data|date('d/m/Y') }}</h2>
-        <a href="{{ path('financeiro_index', {'data': data|date_modify('+1 day')|date('Y-m-d')}) }}" class="btn btn-secondary">Próximo</a>
+{% block list_content %}
+    <ul class="nav nav-tabs mb-4" id="financeiroTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if not app.request.query.get('aba') or app.request.query.get('aba') == 'diario' %}active{% endif %}" id="diario-tab" data-bs-toggle="tab" data-bs-target="#diario" type="button" role="tab" aria-controls="diario" aria-selected="true">
+                Diário
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if app.request.query.get('aba') == 'pendente' %}active{% endif %}" id="pendente-tab" data-bs-toggle="tab" data-bs-target="#pendente" type="button" role="tab" aria-controls="pendente" aria-selected="false">
+                Pendente
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if app.request.query.get('aba') == 'relatorio' %}active{% endif %}" id="relatorio-tab" data-bs-toggle="tab" data-bs-target="#relatorio" type="button" role="tab" aria-controls="relatorio" aria-selected="false">
+                Relatório
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content border border-top-0 p-3">
+        {# ABA DIÁRIO #}
+        <div class="tab-pane fade {% if not app.request.query.get('aba') or app.request.query.get('aba') == 'diario' %}show active{% endif %}" id="diario" role="tabpanel" aria-labelledby="diario-tab">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+                <div class="me-3">
+                    <label for="data_filtro" class="form-label fw-bold">Filtrar por Data</label>
+                    <input type="date" id="data_filtro" class="form-control" value="{{ data|date('Y-m-d') }}">
+                </div>
+                <div class="card shadow-sm border-primary">
+                    <div class="card-body p-3">
+                        {% set total_diario = 0 %}
+                        {% for item in financeiros %}{% set total_diario = total_diario + item.total_valor %}{% endfor %}
+                        <h5 class="mb-0 text-primary">Total do Dia:</h5>
+                        <h4 class="mb-0 fw-bold">R$ {{ total_diario|number_format(2, ',', '.') }}</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="cardContainerDiario" class="row gy-3">
+                {% for item in financeiros %}
+                    <div class="col-12 card-item" data-search="{{ item.dono_nome }} {{ item.pets|join(' ') }} {{ item.total_valor }}">
+                        <div class="card shadow-lg border-0 rounded-3">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <div class="flex-grow-1">
+                                        <h5 class="card-title mb-1"><a href="#" class="text-primary fw-bold">{{ item.dono_nome }}</a></h5>
+                                        <p class="card-text text-muted mb-1 d-flex align-items-center gap-1"><i class="fas fa-paw"></i> Pets: {{ item.pets|join(', ') }}</p>
+                                        <p class="card-text text-muted d-flex align-items-center gap-1"><i class="fas fa-calendar-alt"></i> Data: {{ item.data|date('d/m/Y') }}</p>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <h4 class="mb-0 me-3 fw-bold">R$ {{ item.total_valor|number_format(2, ',', '.') }}</h4>
+                                        <div class="dropdown">
+                                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Ação</button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a href="{{ path('financeiro_editar', {'id': item.id}) }}" class="dropdown-item">Editar</a></li>
+                                                <li>
+                                                    <form method="post" action="{{ path('financeiro_deletar', {'id': item.id}) }}" class="d-inline">
+                                                        <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Tem certeza que deseja deletar este lançamento?')">Deletar</button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12"><div class="alert alert-info text-center mb-0">Nenhum lançamento encontrado.</div></div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {# ABA PENDENTE #}
+        <div class="tab-pane fade {% if app.request.query.get('aba') == 'pendente' %}show active{% endif %}" id="pendente" role="tabpanel" aria-labelledby="pendente-tab">
+            <div id="cardContainerPendente" class="row gy-3">
+                {% for item in pendentes %}
+                    <div class="col-12 card-item" data-search="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.valor }}">
+                        <div class="card shadow-lg border-0 rounded-3">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <div class="flex-grow-1">
+                                        <h5 class="card-title mb-1"><span class="text-danger">Pagamento Pendente</span></h5>
+                                        <p class="card-text text-muted mb-1 d-flex align-items-center gap-1"><i class="fas fa-user"></i> Tutor: {{ item.dono_nome }}</p>
+                                        <p class="card-text text-muted mb-1 d-flex align-items-center gap-1"><i class="fas fa-paw"></i> Pet: {{ item.pet_nome }}</p>
+                                        <p class="card-text text-muted d-flex align-items-center gap-1"><i class="fas fa-calendar-alt"></i> Data: {{ item.data|date('d/m/Y') }}</p>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <h4 class="mb-0 me-3 fw-bold">R$ {{ item.valor|number_format(2, ',', '.') }}</h4>
+                                        <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': item.id}) }}">
+                                            <button type="submit" class="btn btn-success btn-sm">Confirmar Pagamento</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12"><div class="alert alert-info text-center mb-0">Nenhum pagamento pendente.</div></div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {# ABA RELATÓRIO #}
+        <div class="tab-pane fade {% if app.request.query.get('aba') == 'relatorio' %}show active{% endif %}" id="relatorio" role="tabpanel" aria-labelledby="relatorio-tab">
+            <div class="container-fluid p-0">
+                <form method="GET" action="{{ path('financeiro_index') }}" class="mb-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="mes_inicio">Data Inicial</label>
+                            <input type="month" id="mes_inicio" name="mes_inicio" class="form-control" value="{{ mes_inicio }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="mes_fim">Data Final</label>
+                            <input type="month" id="mes_fim" name="mes_fim" class="form-control" value="{{ mes_fim }}">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <input type="hidden" name="aba" value="relatorio">
+                            <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                        </div>
+                    </div>
+                </form>
+                
+                {% set total_relatorio = 0 %}
+                {% for item in relatorio %}{% set total_relatorio = total_relatorio + item.total %}{% endfor %}
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+                    <div class="me-3">
+                        <a href="{{ path('financeiro_relatorio_export', {'mes_inicio': mes_inicio, 'mes_fim': mes_fim}) }}" class="btn btn-success">
+                            Baixar Excel
+                        </a>
+                    </div>
+                    <div class="card shadow-sm border-primary">
+                        <div class="card-body p-3">
+                            <h5 class="mb-0 text-primary">Total do Período:</h5>
+                            <h4 class="mb-0 fw-bold">R$ {{ total_relatorio|number_format(2, ',', '.') }}</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="cardContainerRelatorio" class="row gy-3">
+                    {% for item in relatorio %}
+                        <div class="col-md-4 col-sm-6 col-12 card-item" data-search="{{ item.data|date('d/m/Y') }} {{ item.total }}">
+                            <div class="card shadow-sm border-0 rounded-3">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-subtitle mb-1 text-muted">Data</h6>
+                                            <h5 class="card-title mb-0 fw-bold">{{ item.data|date('d/m/Y') }}</h5>
+                                        </div>
+                                        <div>
+                                            <h6 class="card-subtitle mb-1 text-muted">Total</h6>
+                                            <h5 class="card-title mb-0 fw-bold text-primary">R$ {{ item.total|number_format(2, ',', '.') }}</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="col-12"><div class="alert alert-info text-center mb-0">Nenhum registro encontrado para este período.</div></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
+{% endblock %}
 
-    <table class="table table-bordered datatable">
-        <thead>
-            <tr>
-                <th>Dono</th>
-                <th>Pets</th>
-                <th>Data</th>
-                <th>Total (R$)</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for item in financeiros %}
-            <tr>
-                <td>{{ item.dono_nome }}</td>
-                <td>{{ item.pets }}</td>
-                <td>{{ item.data|date('d/m/Y') }}</td>
-                <td>R$ {{ item.total_valor|number_format(2, ',', '.') }}</td>
-                <td>
-                    <select class="form-select form-select-sm acao-select" data-id="{{ item.id }}">
-                        <option selected disabled>Selecionar</option>
-                        <option value="editar">Editar</option>
-                        <option value="deletar">Deletar</option>
-                    </select>
-                </td>
-            </tr>
-        {% else %}
-            <tr><td colspan="5">Nenhum lançamento encontrado.</td></tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<script>
+{% block list_javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/TabelaDefault.js') }}"></script>
+    <script>
     document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.acao-select').forEach(function (select) {
-            select.addEventListener('change', function () {
-                const id = this.dataset.id;
-                const action = this.value;
+        // Inicializa o TabelaDefault para o modo card (aba Diário)
+        new TabelaDefault({
+            cardContainerId: 'cardContainerDiario',
+            paginationId: 'pagination',
+            searchInputId: 'searchInput',
+            itemsPerPage: 5
+        });
 
-                if (action === 'editar') {
-                    window.location.href = `/financeiro/editar/${id}`;
-                } else if (action === 'deletar') {
-                    if (confirm('Tem certeza que deseja deletar?')) {
-                        const form = document.createElement('form');
-                        form.method = 'post';
-                        form.action = `/financeiro/deletar/${id}`;
-                        document.body.appendChild(form);
-                        form.submit();
-                    } else {
-                        this.value = ''; // reset
-                    }
+        // Adiciona evento para o campo de filtro de data
+        const dataFiltroInput = document.getElementById('data_filtro');
+        if (dataFiltroInput) {
+            dataFiltroInput.addEventListener('change', function() {
+                const dataSelecionada = this.value;
+                if (dataSelecionada) {
+                    window.location.href = '{{ path('financeiro_index', {'data': 'DATA_PLACEHOLDER'}) }}'.replace('DATA_PLACEHOLDER', dataSelecionada);
                 }
             });
-        });
+        }
+        
+        // Inicializa o TabelaDefault para a aba Pendente quando ela é ativada
+        const pendenteTabEl = document.getElementById('pendente-tab');
+        if (pendenteTabEl) {
+            pendenteTabEl.addEventListener('shown.bs.tab', event => {
+                new TabelaDefault({
+                    cardContainerId: 'cardContainerPendente',
+                    paginationId: 'paginationPendente',
+                    searchInputId: 'searchInputPendente',
+                    itemsPerPage: 10
+                });
+            });
+        }
+        
+        // Inicializa o TabelaDefault para a aba Relatório quando ela é ativada
+        const relatorioTabEl = document.getElementById('relatorio-tab');
+        if (relatorioTabEl) {
+            relatorioTabEl.addEventListener('shown.bs.tab', event => {
+                new TabelaDefault({
+                    cardContainerId: 'cardContainerRelatorio',
+                    paginationId: 'paginationRelatorio',
+                    searchInputId: 'searchInputRelatorio',
+                    itemsPerPage: 10
+                });
+            });
+        }
+        
+        // Ativar a aba correta se o parâmetro 'aba' estiver na URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const abaAtiva = urlParams.get('aba');
+        if (abaAtiva) {
+            const tabElement = document.getElementById(abaAtiva + '-tab');
+            if (tabElement) {
+                const tab = new bootstrap.Tab(tabElement);
+                tab.show();
+            }
+        } else {
+             // Ativar a primeira aba por padrão
+            const primeiraAba = document.getElementById('diario-tab');
+            if(primeiraAba) {
+                const tab = new bootstrap.Tab(primeiraAba);
+                tab.show();
+            }
+        }
     });
-</script>
+    </script>
 {% endblock %}

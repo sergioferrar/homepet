@@ -19,6 +19,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\VeterinarioRepository;
+use App\Repository\BoxRepository;
 
 /**
  * @Route("/clinica")
@@ -65,7 +67,7 @@ class ClinicaController extends DefaultController
         ]);
     }
 
-    /**
+ /**
      * @Route("/pet/{id}", name="clinica_detalhes_pet", methods={"GET"})
      */
     public function detalhesPet(
@@ -116,7 +118,7 @@ class ClinicaController extends DefaultController
             ];
         }
 
-        // 🔥 Agrupa por tipo
+        //  Agrupa por tipo
         $agrupado = [];
         foreach ($timeline_items as $item) {
             $tipo = $item['tipo'];
@@ -126,12 +128,11 @@ class ClinicaController extends DefaultController
             $agrupado[$tipo][] = $item;
         }
 
-        // 💰 Total de débitos
+        //  Total de débitos PENDENTES
         $totalDebitos = 0;
-        foreach ($financeiro as $itemFinanceiro) {
-            if (isset($itemFinanceiro['valor'])) {
-                $totalDebitos += $itemFinanceiro['valor'];
-            }
+        foreach ($financeiroPendente as $itemFinanceiro) {
+            // Acessa o valor com o método getter do objeto
+            $totalDebitos += $itemFinanceiro->getValor();
         }
 
         return $this->render('clinica/detalhes_pet.html.twig', [
@@ -142,8 +143,8 @@ class ClinicaController extends DefaultController
             'financeiro' => $financeiro,
             'financeiroPendente' => $financeiroPendente,
             'consultas' => $consultas,
-            'total_debitos' => $totalDebitos,
-            'servicos_clinica' => $servicosClinica,   // <<<< AQUI, NÃO ESQUECE!!!
+            'total_debitos' => $totalDebitos, // Agora este valor está correto
+            'servicos_clinica' => $servicosClinica,    
         ]);
     }
 
@@ -151,11 +152,76 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/pet/{petId}/internacao/nova", name="clinica_nova_internacao", methods={"GET", "POST"})
      */
-    public function novaInternacao(Request $request, int $petId): Response
-    {
-        // ... (lógica da internação, se necessário)
-        $this->addFlash('info', 'Funcionalidade de internação ainda não implementada.');
-        return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+    public function novaInternacao(
+        Request $request, 
+        int $petId,
+        InternacaoRepository $internacaoRepo, // Adicionado
+        VeterinarioRepository $veterinarioRepo, // Assumindo que você tem um repositório para veterinários
+        EntityManagerInterface $entityManager // Adicionado para persistir
+    ): Response {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+        
+        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
+        if (!$pet) {
+            throw $this->createNotFoundException('Pet não encontrado.');
+        }
+
+        // Recuperar a lista de veterinários e boxes (assumindo a existência de repositórios)
+        // Se você não tem um repositório de Boxes, pode simular os dados aqui.
+        $veterinarios = $veterinarioRepo->findByEstabelecimento($baseId);
+        
+        // Simulação de boxes caso não tenha uma entidade/repositório dedicado.
+        // Se tiver, use o repositório correspondente: $boxes = $boxRepo->findAll();
+        $boxes = [
+            ['id' => 1, 'nome' => 'Box 1'],
+            ['id' => 2, 'nome' => 'Box 2'],
+            ['id' => 3, 'nome' => 'Box 3'],
+        ];
+
+        // Lógica para processar o formulário POST
+        if ($request->isMethod('POST')) {
+            $internacao = new Internacao();
+            
+            // Usando o EntityManager, é mais fácil do que usar um repositório com SQL puro
+            $petEntity = $entityManager->getRepository(Pet::class)->find($petId);
+            $donoId = $pet['dono_id'] ?? null;
+            
+            // Seta as propriedades do objeto Internacao com os dados do formulário
+            $internacao->setPetId($petId);
+            $internacao->setDonoId($donoId);
+            $internacao->setEstabelecimentoId($baseId);
+            $internacao->setDataInicio(new \DateTime()); // A internação começa agora
+            $internacao->setStatus('ativa'); // Status inicial
+            $internacao->setMotivo($request->request->get('queixa')); // Mapeando a queixa para o motivo
+            
+            // Campos adicionais do formulário
+            $internacao->setSituacao($request->request->get('situacao'));
+            $internacao->setRisco($request->request->get('risco'));
+            $internacao->setVeterinarioId((int) $request->request->get('veterinario_id'));
+            $internacao->setBox($request->request->get('box'));
+            $internacao->setAltaPrevista(new \DateTime($request->request->get('alta_prevista')));
+            $internacao->setDiagnostico($request->request->get('diagnostico'));
+            $internacao->setPrognostico($request->request->get('prognostico'));
+            
+            // Para as tags de alergias, você pode armazená-las como um array serializado, JSON ou em uma tabela separada.
+            // Para simplicidade, vamos apenas armazenar o texto da queixa.
+            $internacao->setAnotacoes($request->request->get('alergias_marcacoes'));
+
+            // Persistir no banco de dados
+            $entityManager->persist($internacao);
+            $entityManager->flush();
+            
+            $this->addFlash('success', 'Internação registrada com sucesso!');
+            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+        }
+
+        // Se o método for GET, renderiza o formulário
+        return $this->render('clinica/nova_internacao.html.twig', [
+            'pet' => $pet,
+            'veterinarios' => $veterinarios,
+            'boxes' => $boxes,
+        ]);
     }
 
 /**

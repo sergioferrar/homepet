@@ -1,0 +1,86 @@
+{# templates/forms/_form_base.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        body {
+            background-color: #eef5ff;
+            font-family: 'Arial', sans-serif;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+            padding: 20px;
+        }
+        .pagetitle h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #0056b3;
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        .btn-success {
+            background-color: #0056b3;
+            border-color: #0056b3;
+            font-weight: bold;
+        }
+        .btn-success:hover {
+            background-color: #004494;
+            border-color: #004494;
+        }
+        .form-control {
+            border-radius: 10px;
+            padding: 10px;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .form-control:focus {
+            box-shadow: 0 4px 10px rgba(0, 86, 179, 0.2);
+        }
+        .form-label {
+            font-weight: bold;
+        }
+        .btn-group label {
+            border-radius: 10px !important;
+        }
+        .section {
+            padding: 30px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="pagetitle">
+        <h1 class="text-primary">{% block form_page_title %}Título do Formulário{% endblock %}</h1>
+        <nav>
+            <ol class="breadcrumb bg-light p-2 rounded">
+                <li class="breadcrumb-item"><a href="{{ path('home') }}" class="text-decoration-none text-primary">Home</a></li>
+                {% block breadcrumb_items %}
+                    {# Itens adicionais do breadcrumb podem ser adicionados aqui #}
+                {% endblock %}
+            </ol>
+        </nav>
+    </div>
+
+    <section class="section">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body">
+                        <h5 class="card-title text-center text-uppercase">{% block form_card_title %}Título do Card{% endblock %}</h5>
+                        {% block form_content %}
+                            {# O conteúdo do formulário específico será inserido aqui #}
+                        {% endblock %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% block form_javascripts %}
+        {# Scripts específicos do formulário podem ser adicionados aqui #}
+    {% endblock %}
+{% endblock %}
