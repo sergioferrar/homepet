@@ -59,7 +59,7 @@ class EstabelecimentoController extends DefaultController
         $plano = $request->get('planoId');
 
         $estabelecimento->setRazaoSocial($request->get('razaoSocial'));
-        $estabelecimento->setCnpj($request->get('cnpj'));
+        $estabelecimento->setCnpj(preg_replace('/\D/', '', $request->get('cnpj')));
         $estabelecimento->setRua($request->get('rua'));
         $estabelecimento->setNumero($request->get('numero'));
         $estabelecimento->setComplemento($request->get('complemento'));
@@ -141,14 +141,15 @@ class EstabelecimentoController extends DefaultController
             $confirmationUrl = $this->generateUrl('confirma_cadastro', ['estabelecimento'=>$request->get('estabelecimento')], UrlGeneratorInterface::ABSOLUTE_URL);
             $html = $this->render('estabelecimento/email.html.twig', [
                 'confirmation_link' => $confirmationUrl,
-            ]);
+            ])->getContent();
 
             $emailService->sendEmail(
-                'adiliogobira@gmail.com',
-                'Confirmação de cadastro',
+                $request->get('email'),
+                'Confirmação de cadastro no sistema System Home Pet',
                 $html
             );
-            return $this->redirectToRoute('app_login');
+
+            return $this->redirectToRoute('app_login', ['confirmation' => base64_encode("Foi enviado um e-mail para <b>{$request->get('email')}</b> Verifique sua caixa de entrada ou na caixa de SPAN e clique no link para concluir o seu cadastro!")]);
         }
 
         return $this->render('usuario/cadastrar.html.twig', [
@@ -177,7 +178,7 @@ class EstabelecimentoController extends DefaultController
             $endereco = json_decode(file_get_contents($endpoint), true);
 
             $comprador = [
-                'nome' => $usario->getNomeUsuario(),
+                'name' => $usario->getNomeUsuario(),
                 'email' => $usario->getEmail(),
                 'rua' => $endereco['logradouro'],
                 'numero' => $estabelecimento->getNumero(),
@@ -185,6 +186,8 @@ class EstabelecimentoController extends DefaultController
                 'cep' => $estabelecimento->getCep(),
                 'cidade' => $endereco['localidade'],
                 'estado' => $endereco['uf'],
+                'idUsuario' => $usario->getId(),
+                'cnpj' => $usario->getCNPJ(),
             ];
 
             $produto = [
@@ -195,12 +198,15 @@ class EstabelecimentoController extends DefaultController
             ];
 
             $dataPagamento = [
+                'comprador' => $comprador,
+                'planoId'=>$plano->getId(),
                 'title'=>$plano->getTitulo(),
-                'price'=>$plano->getValor(),
-                'email'=>$usario->getEmail(),
+                'price'=> 1.00,//$plano->getValor(),
+                'email'=> $usario->getEmail(),
             ];
 
             $code = $mercadoPagoService->createPayment($dataPagamento);
+            dd($code);
             return $this->redirect($code['init_point']);
         // } catch(\Exception $e){
         //     dd($e);

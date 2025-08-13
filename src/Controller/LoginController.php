@@ -35,6 +35,11 @@ class LoginController extends DefaultController
         // dd($request);
         $data = [];
 
+        if($request->get('confirmation')){
+            $this->addFlash('message', base64_decode($request->get('confirmation')));
+            return $this->redirectToRoute('app_login');
+        }
+
         $data['login'] = null;
         $data['senha'] = null;
         $data['remember_me'] = null;

@@ -57,7 +57,7 @@ class PagamentoController extends DefaultController
     */
     public function fail(Request $request): Response
     {
-        
+        dd($request);
         return $this->render('pagamento/falha.html.twig', []);
     }
 
