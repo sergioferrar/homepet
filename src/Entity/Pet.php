@@ -7,7 +7,7 @@ use App\Repository\PetRepository;
 
 /**
  * @ORM\Entity(repositoryClass=App\Repository\PetRepository::class)
- * @ORM\Table(name="Pet") 
+ * @ORM\Table(name="pet") 
  */
 class Pet
 {

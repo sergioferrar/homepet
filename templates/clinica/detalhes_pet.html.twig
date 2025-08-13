@@ -68,18 +68,9 @@
         .service-detail-card.border-warning { border-left: 5px solid var(--bs-warning); }
         .service-detail-card.border-purple { border-left: 5px solid #6f42c1; }
         .border-purple { --bs-border-color: #6f42c1; }
-        /* Estilos para a listagem de vendas */
-        .venda-item {
-            border-left: 4px solid #dee2e6;
-            border-radius: 0.25rem;
-            transition: border-left-color 0.2s ease-in-out;
-        }
-        .venda-item.status-concluido {
-            border-left-color: var(--bs-success);
-        }
-        .venda-item.status-pendente {
-            border-left-color: var(--bs-warning);
-        }
+        .venda-item { border-left: 4px solid #dee2e6; border-radius: 0.25rem; transition: border-left-color 0.2s ease-in-out; }
+        .venda-item.status-concluido { border-left-color: var(--bs-success); }
+        .venda-item.status-pendente { border-left-color: var(--bs-warning); }
     </style>
 {% endblock %}
 
@@ -102,7 +93,10 @@
                     <p class="text-muted mb-1 fs-5">{{ pet.raca }} - {{ pet.sexo }}</p>
                     <p class="text-muted mb-0 fs-5">{{ pet.idade }} anos</p>
                 </div>
-                <img src="{{ asset('images/pet.png') }}" alt="Avatar do Pet" class="pet-avatar">
+                <img src="{{ asset('images/pet.png') }}"
+                     alt="Avatar do Pet"
+                     class="pet-avatar"
+                     onerror="this.style.display='none'">
             </div>
         </div>
     </div>
@@ -111,17 +105,86 @@
     <div class="row g-3">
         <div class="col-lg-12">
             <div class="main-card">
-                <ul class="nav nav-tabs" id="consolidatedTabs" role="tablist">
-                    <li class="nav-item" role="presentation"><button class="nav-link active" id="historico-tab" data-bs-toggle="tab" data-bs-target="#historico" type="button" role="tab" aria-controls="historico" aria-selected="true"><i class="fas fa-history me-1"></i> Histórico</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab" aria-controls="timeline" aria-selected="false"><i class="fas fa-stream me-1"></i> Linha do Tempo</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#protocolos" type="button" role="tab" aria-controls="protocolos" aria-selected="false"><i class="fas fa-file-alt me-1"></i> Ficha Internação</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#venda" type="button" role="tab" aria-controls="venda" aria-selected="false"><i class="fas fa-dollar-sign me-1"></i>Venda</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#orcamentos" type="button" role="tab" aria-controls="orcamentos" aria-selected="false"><i class="fas fa-file-invoice-dollar me-1"></i>Orçamentos</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#agenda" type="button" role="tab" aria-controls="agenda" aria-selected="false"><i class="fas fa-calendar-alt me-1"></i> Agenda</button></li>
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="historico-tab" data-bs-toggle="tab" data-bs-target="#historico" type="button" role="tab" aria-controls="historico" aria-selected="true">
+                            <i class="fas fa-history me-1"></i> Histórico
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab" aria-controls="timeline" aria-selected="false">
+                            <i class="fas fa-stream me-1"></i> Linha do Tempo
+                        </button>
+                    </li>
+                    {# Decide destino principal: ativa > última > nova #}
+                    {% set href_internacao = internacao_ativa_id
+                        ? path('clinica_ficha_internacao', {'id': internacao_ativa_id})
+                        : (ultima_internacao_id
+                            ? path('clinica_ficha_internacao', {'id': ultima_internacao_id})
+                            : path('clinica_nova_internacao', {'petId': pet.id})
+                          )
+                    %}
+                    {% set texto_internacao = internacao_ativa_id
+                        ? 'Ficha de Internação (ativa)'
+                        : (ultima_internacao_id ? 'Ver última Ficha de Internação' : 'Nova Internação')
+                    %}
+                    <li class="nav-item" role="presentation">
+                      <a href="{{ href_internacao }}"
+                           id="btn-internacao-aba"
+                           class="nav-link d-flex align-items-center"
+                           title="{{ texto_internacao }}">
+                         <i class="bi bi-hospital me-1"></i>
+                         <span>{{ texto_internacao }}</span>
+                       </a>
+                    </li>
+                    <li class="nav-item dropdown" role="presentation">
+                        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false" title="Todas as internações">
+                            Histórico de internações
+                            {% if internacoes_pet is defined and internacoes_pet|length %}
+                                <span class="badge bg-secondary ms-1">{{ internacoes_pet|length }}</span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu">
+                            {% if internacoes_pet is defined and internacoes_pet|length %}
+                                {% for i in internacoes_pet %}
+                                    <li>
+                                        <a class="dropdown-item d-flex justify-content-between align-items-center"
+                                           href="{{ path('clinica_ficha_internacao', {'id': i.id}) }}">
+                                            <span>#{{ i.id }} — {{ i.status|capitalize }}</span>
+                                            <small class="text-muted">{{ i.data_inicio|date('d/m/Y H:i') }}</small>
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                                <li><hr class="dropdown-divider"></li>
+                            {% else %}
+                                <li><span class="dropdown-item-text text-muted">Nenhuma internação anterior</span></li>
+                                <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li>
+                                <a class="dropdown-item" href="{{ path('clinica_nova_internacao', {'petId': pet.id}) }}">
+                                    <i class="bi bi-plus-circle me-1"></i> Nova Internação
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#venda" type="button" role="tab" aria-controls="venda" aria-selected="false">
+                            <i class="fas fa-dollar-sign me-1"></i> Venda
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#orcamentos" type="button" role="tab" aria-controls="orcamentos" aria-selected="false">
+                            <i class="fas fa-file-invoice-dollar me-1"></i> Orçamentos
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#agenda" type="button" role="tab" aria-controls="agenda" aria-selected="false">
+                            <i class="fas fa-calendar-alt me-1"></i> Agenda
+                        </button>
+                    </li>
                 </ul>
-
                 <div class="tab-content pt-4" id="consolidatedTabsContent">
-                    {# ABA 1: HISTÓRICO (Padrão) - com os botões de ação #}
+                    {# HISTÓRICO + AÇÕES #}
                     <div class="tab-pane fade show active" id="historico" role="tabpanel" aria-labelledby="historico-tab">
                         <div id="action-buttons-view" class="card shadow-lg p-4">
                             <h5 class="card-title mb-3">Adicionar Novo Registro</h5>
@@ -145,37 +208,39 @@
                                     </a>
                                 </div>
                                 <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="#" class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white" style="background-color: #e85d6c;">
+                                    <a href="#" id="btn-novo-peso" class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white" style="background-color: #e85d6c;">
                                         <i class="bi bi-rulers fs-2 mb-2"></i>
                                         <span>Peso</span>
                                     </a>
                                 </div>
                                 <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="#" class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white" style="background-color: #e83e8c;">
+                                    <a href="#" id="btn-novo-exame" class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white" style="background-color: #e83e8c;">
                                         <i class="bi bi-eyedropper fs-2 mb-2"></i>
                                         <span>Exame</span>
                                     </a>
                                 </div>
                                 <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="#" class="btn btn-success btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white">
+                                    <a href="#" id="btn-novo-documento" class="btn btn-success btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white">
                                         <i class="bi bi-file-earmark-text fs-2 mb-2"></i>
                                         <span>Documento</span>
                                     </a>
                                 </div>
                                 <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="#" class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white" style="background-color: #17a2b8;">
+                                    <a href="#" id="btn-novas-fotos" class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white" style="background-color: #17a2b8;">
                                         <i class="bi bi-camera fs-2 mb-2"></i>
                                         <span>Fotos</span>
                                     </a>
                                 </div>
                                 <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="#" class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center" style="background-color: #ffc107; color: #212529 !important;">
+                                    <a href="#" id="btn-nova-vacina" class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center" style="background-color: #ffc107; color: #212529 !important;">
                                         <i class="bi bi-capsule fs-2 mb-2"></i>
                                         <span>Vacina</span>
                                     </a>
                                 </div>
                             </div>
                         </div>
+
+                        {# FORM ATENDIMENTO #}
                         <div id="atendimento-view" style="display: none;">
                             <form id="form-atendimento" method="POST" action="{{ path('clinica_novo_atendimento', {'petId': pet.id}) }}">
                                 <div class="form-view-container">
@@ -193,6 +258,8 @@
                                 </div>
                             </form>
                         </div>
+
+                        {# FORM RECEITA #}
                         <div id="receita-view" style="display: none;">
                             <form id="form-receita" method="POST" action="{{ path('clinica_nova_receita', {'petId': pet.id}) }}">
                                 <div class="form-view-container">
@@ -206,6 +273,8 @@
                                 </div>
                             </form>
                         </div>
+
+                        {# VISUALIZAÇÃO DETALHES #}
                         <div id="service-display-container" class="card border border-dark bg-white rounded-4 shadow-lg mt-4" style="display: none;">
                             <div class="card-body p-4">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -217,7 +286,7 @@
                         </div>
                     </div>
                     
-                    {# ABA 2: VENDAS #}
+                    {# VENDAS #}
                     <div class="tab-pane fade" id="venda" role="tabpanel" aria-labelledby="venda-tab">
                         <div class="d-flex justify-content-end my-2">
                             <button class="btn btn-success btn-sm" id="btn-adicionar-servico">
@@ -256,12 +325,12 @@
                         </div>
                     </div>
                     
-                    {# ABA 3: ORÇAMENTOS #}
+                    {# ORÇAMENTOS #}
                     <div class="tab-pane fade" id="orcamentos" role="tabpanel" aria-labelledby="orcamentos-tab">
                         <p class="text-muted text-center mt-4">Nenhum orçamento registrado.</p>
                     </div>
                     
-                    {# ABA 4: LINHA DO TEMPO #}
+                    {# LINHA DO TEMPO #}
                     <div class="tab-pane fade" id="timeline" role="tabpanel" aria-labelledby="timeline-tab">
                         <ul class="timeline" style="max-height: 440px; overflow-y: auto;">
                             {% for item in timeline_items %}
@@ -269,10 +338,10 @@
                                     <div class="card shadow-sm mb-3 rounded-4 bg-light border" style="border-width: 1.5px; border-radius: 15px !important;">
                                         <div class="timeline-content rounded-start
                                         {{ 'Consulta' in item.tipo ? 'border-start border-5 border-primary ps-3' :
-                                           'Retorno' in item.tipo ? 'border-start border-5 border-success ps-3' :
-                                           'Vacina' in item.tipo ? 'border-start border-5 border-warning ps-3' :
-                                           'Receita' in item.tipo ? 'border-start border-5 ps-3' : 
-                                           'border-start border-5 border-dark ps-3'
+                                            'Retorno' in item.tipo ? 'border-start border-5 border-success ps-3' :
+                                            'Vacina' in item.tipo ? 'border-start border-5 border-warning ps-3' :
+                                            'Receita' in item.tipo ? 'border-start border-5 ps-3' : 
+                                            'border-start border-5 border-dark ps-3'
                                         }}"
                                         {% if 'Receita' in item.tipo %}style="border-left: 5px solid #6f42c1 !important;"{% endif %}>
                                             <p class="timeline-date">{{ item.data|date('d/m/Y \\à\\s H:i') }}</p>
@@ -280,14 +349,14 @@
                                                class="timeline-link timeline-text d-flex justify-content-between align-items-center"
                                                data-tipo="{{ item.tipo }}"
                                                data-data="{{ item.data|date('d/m/Y \\à\\s H:i') }}"
-                                               data-resumo="{{ item.resumo|e('html_attr') }}"
+                                               data-resumo="{{ item.resumo|default('Ver detalhes')|e('html_attr') }}"
                                                {% if item.anamnese is defined %}
-                                                 data-atendimento-delta="{{ item.anamnese|e('html_attr') }}"
+                                                   data-atendimento-delta="{{ item.anamnese|e('html_attr') }}"
                                                {% endif %}
                                                {% if item.receita_cabecalho is defined %}
-                                                 data-receita-cabecalho-delta="{{ item.receita_cabecalho|e('html_attr') }}"
-                                                 data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}"
-                                                 data-receita-rodape-delta="{{ item.receita_rodape|e('html_attr') }}"
+                                                   data-receita-cabecalho-delta="{{ item.receita_cabecalho|e('html_attr') }}"
+                                                   data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}"
+                                                   data-receita-rodape-delta="{{ item.receita_rodape|e('html_attr') }}"
                                                {% endif %}
                                             >
                                                 <span>{{ item.tipo }}</span>
@@ -302,10 +371,7 @@
                         </ul>
                     </div>
                     
-                    {# ABA 5: PROTOCOLOS #}
                     <div class="tab-pane fade" id="protocolos" role="tabpanel" aria-labelledby="protocolos-tab"><p class="text-muted text-center mt-4">Conteúdo de Protocolos.</p></div>
-                    
-                    {# ABA 6: AGENDA #}
                     <div class="tab-pane fade" id="agenda" role="tabpanel" aria-labelledby="agenda-tab"><p class="text-muted text-center mt-4">Conteúdo da Agenda.</p></div>
                 </div>
             </div>
@@ -313,6 +379,7 @@
     </div>
 </div>
 
+{# MODAL ADICIONAR SERVIÇO #}
 <div class="modal fade" id="modalAdicionarServico" tabindex="-1" aria-labelledby="modalAdicionarServicoLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <form class="modal-content" id="form-novo-servico" method="post" action="{{ path('clinica_concluir_venda', {'petId': pet.id}) }}">
@@ -375,25 +442,21 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // --- UI Element Selectors ---
+            // === PEGAR ELEMENTOS ===
             const actionButtonsView = document.getElementById('action-buttons-view');
             const atendimentoView = document.getElementById('atendimento-view');
             const receitaView = document.getElementById('receita-view');
             const serviceDisplayContainer = document.getElementById('service-display-container');
             const serviceDetailsContent = document.getElementById('service-details-content');
+
             const btnNovoAtendimento = document.getElementById('btn-novo-atendimento');
             const btnNovaReceita = document.getElementById('btn-nova-receita');
-            const btnNovaInternacao = document.getElementById('btn-nova-internacao');
-            const btnNovoPeso = document.getElementById('btn-novo-peso');
-            const btnNovaPatologia = document.getElementById('btn-nova-patologia');
-            const btnNovoExame = document.getElementById('btn-novo-exame');
-            const btnNovoDocumento = document.getElementById('btn-novo-documento');
-            const btnNovasFotos = document.getElementById('btn-novas-fotos');
-            const btnNovaVacina = document.getElementById('btn-nova-vacina');
+
             const btnFecharAtendimento = document.getElementById('btn-fechar-atendimento');
             const btnFecharReceita = document.getElementById('btn-fechar-receita');
             const btnFecharServiceDisplay = document.getElementById('btn-fechar-service-display');
             const btnAdicionarServico = document.getElementById('btn-adicionar-servico');
+
             const historicoTabElement = document.querySelector('button[data-bs-target="#historico"]');
             let historicoTab = historicoTabElement ? new bootstrap.Tab(historicoTabElement) : null;
 
@@ -418,25 +481,29 @@
                 showView(actionButtonsView);
             };
 
-            // Event Listeners para botões da grade de ações
+            // === LISTENERS BÁSICOS ===
             if (btnNovoAtendimento) btnNovoAtendimento.addEventListener('click', (e) => { e.preventDefault(); showView(atendimentoView); });
             if (btnNovaReceita) btnNovaReceita.addEventListener('click', (e) => { e.preventDefault(); showView(receitaView); });
-            // CORRIGIDO: O botão de internação agora navega diretamente sem alerta
-            if (btnNovaInternacao) btnNovaInternacao.addEventListener('click', (e) => {
-                 e.preventDefault();
-                 window.location.href = e.currentTarget.href;
+            
+            // Adicionado alerta para os botões não implementados
+            const notImplementedButtons = [
+                'btn-novo-peso', 'btn-novo-exame', 'btn-novo-documento', 'btn-novas-fotos', 'btn-nova-vacina'
+            ];
+            notImplementedButtons.forEach(id => {
+                const button = document.getElementById(id);
+                if (button) {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        alert(`A funcionalidade de "${e.currentTarget.textContent.trim()}" não está implementada ainda.`);
+                    });
+                }
             });
-            if (btnNovoPeso) btnNovoPeso.addEventListener('click', (e) => { e.preventDefault(); alert('Funcionalidade de Peso não implementada ainda.'); });
-            if (btnNovaPatologia) btnNovaPatologia.addEventListener('click', (e) => { e.preventDefault(); alert('Funcionalidade de Patologia não implementada ainda.'); });
-            if (btnNovoExame) btnNovoExame.addEventListener('click', (e) => { e.preventDefault(); alert('Funcionalidade de Exame não implementada ainda.'); });
-            if (btnNovoDocumento) btnNovoDocumento.addEventListener('click', (e) => { e.preventDefault(); alert('Funcionalidade de Documento não implementada ainda.'); });
-            if (btnNovasFotos) btnNovasFotos.addEventListener('click', (e) => { e.preventDefault(); alert('Funcionalidade de Fotos não implementada ainda.'); });
-            if (btnNovaVacina) btnNovaVacina.addEventListener('click', (e) => { e.preventDefault(); alert('Funcionalidade de Vacina não implementada ainda.'); });
 
             if (btnFecharAtendimento) btnFecharAtendimento.addEventListener('click', returnToActionGrid);
             if (btnFecharReceita) btnFecharReceita.addEventListener('click', returnToActionGrid);
             if (btnFecharServiceDisplay) btnFecharServiceDisplay.addEventListener('click', returnToActionGrid);
 
+            // === QUILL EDITORS ===
             const toolbarOptions = [
                 [{ 'header': [1, 2, 3, false] }],
                 ['bold', 'italic', 'underline', 'strike'],
@@ -444,12 +511,10 @@
                 ['link'],
                 ['clean']
             ];
-
             const createQuillEditor = (selector, options = {}) => {
-                const element = document.querySelector(selector);
-                return element ? new Quill(selector, { theme: 'snow', modules: { toolbar: toolbarOptions }, ...options }) : null;
+                const el = document.querySelector(selector);
+                return el ? new Quill(selector, { theme: 'snow', modules: { toolbar: toolbarOptions }, ...options }) : null;
             };
-
             const quillAtendimento = createQuillEditor('#atendimento-editor');
             const quillCabecalho = createQuillEditor('#editor-cabecalho');
             const quillConteudo = createQuillEditor('#editor-conteudo');
@@ -476,6 +541,7 @@
                 ]);
             }
 
+            // === TIMELINE (abre visualização) ===
             const timelineLinks = document.querySelectorAll('.timeline-link');
             timelineLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
@@ -510,12 +576,8 @@
                         if (contentDeltaString) {
                             const quillDisplay = new Quill(contentDiv, { theme: 'bubble', readOnly: true, modules: { toolbar: false } });
                             window.currentQuillDisplayEditors.push(quillDisplay);
-                            try {
-                                const delta = JSON.parse(contentDeltaString);
-                                quillDisplay.setContents(delta);
-                            } catch (error) {
-                                quillDisplay.setText('Conteúdo não disponível ou formato inválido.');
-                            }
+                            try { quillDisplay.setContents(JSON.parse(contentDeltaString)); }
+                            catch { quillDisplay.setText('Conteúdo não disponível ou formato inválido.'); }
                         } else {
                             contentDiv.innerHTML = '<p>Nenhum detalhe disponível.</p>';
                         }
@@ -548,18 +610,6 @@
                             printButtonDiv.innerHTML = `<button class="btn btn-primary"><i class="fas fa-print me-1"></i> Imprimir Receita</button>`;
                             serviceDetailsContent.appendChild(printButtonDiv);
                         }
-                    } else if (tipo === 'Vacina') {
-                        const vacinaDetails = '<p>Nome da vacina: V8 Anual</p><p>Lote: L00123</p><p>Próxima dose: 22/07/2026</p>';
-                        const borderColorClass = 'border-warning';
-                        const cardDiv = document.createElement('div');
-                        cardDiv.className = `service-detail-card ${borderColorClass}`;
-                        cardDiv.innerHTML = `
-                            <h6 class="mb-2">Vacina Aplicada: ${resumo}</h6>
-                            <p class="text-muted mb-3"><small>Data: ${data}</small></p>
-                            <div class="service-detail-content">${vacinaDetails}</div>
-                            <button class="btn btn-sm btn-outline-warning mt-3"><i class="fas fa-syringe me-1"></i> Registrar Próxima Vacina</button>
-                        `;
-                        serviceDetailsContent.appendChild(cardDiv);
                     } else {
                         const borderColorClass = 'border-secondary';
                         const cardDiv = document.createElement('div');
@@ -576,6 +626,7 @@
                 });
             });
 
+            // === SUBMIT DOS FORMULÁRIOS (captura Deltas Quill) ===
             const setupFormSubmission = (formId, editorsMap) => {
                 const form = document.getElementById(formId);
                 if (form) {
@@ -590,7 +641,6 @@
                     });
                 }
             };
-
             setupFormSubmission('form-atendimento', {'anamnese-input': quillAtendimento});
             setupFormSubmission('form-receita', {
                 'cabecalho-input': quillCabecalho,
@@ -598,8 +648,15 @@
                 'rodape-input': quillRodape
             });
 
-            // === FORMULÁRIO DE ADICIONAR SERVIÇO (AJAX)
+            // === MODAL ADICIONAR SERVIÇO ===
             const formNovoServico = document.getElementById('form-novo-servico');
+            const selectServico = document.getElementById('servico-descricao');
+            const inputValor = document.getElementById('servico-valor');
+            const servicosMap = {};
+            {% for servico in servicos_clinica %}
+                servicosMap["{{ servico.nome|e('js') }}"] = {{ servico.valor|number_format(2, '.', '') }};
+            {% endfor %}
+
             if (formNovoServico) {
                 formNovoServico.addEventListener('submit', function(e) {
                     e.preventDefault();
@@ -607,21 +664,47 @@
                         method: "POST",
                         body: new FormData(formNovoServico)
                     })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            Notify.toast(data.mensagem, "success");
-                            bootstrap.Modal.getInstance(document.getElementById('modalAdicionarServico')).hide();
-                            setTimeout(() => location.reload(), 1000);
+                    .then(response => {
+                        // Verifica se a resposta é um JSON válido
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.indexOf("application/json") !== -1) {
+                            return response.json();
                         } else {
-                            Notify.toast(data.mensagem || "Erro ao registrar serviço.", "danger");
+                            // Se não for JSON, retorna o texto do erro do servidor
+                            return response.text().then(text => {
+                                throw new Error(text);
+                            });
                         }
                     })
-                    .catch(err => Notify.toast("Erro ao registrar serviço: " + err, "danger"));
+                    .then(data => {
+                        if (data.status === 'success') {
+                            if (window.Notify && Notify.toast) {
+                                Notify.toast(data.mensagem, "success");
+                            }
+                            bootstrap.Modal.getInstance(document.getElementById('modalAdicionarServico')).hide();
+                            setTimeout(() => location.reload(), 800);
+                        } else {
+                            if (window.Notify && Notify.toast) {
+                                Notify.toast(data.mensagem || "Erro ao registrar serviço.", "danger");
+                            } else {
+                                alert(data.mensagem || "Erro ao registrar serviço.");
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        if (window.Notify && Notify.toast) {
+                            // O erro agora pode ser o HTML, então pegamos apenas o primeiro erro
+                            const errorMessage = (err.message.indexOf('<') === 0) ? "Erro no servidor (verifique logs do backend)." : err.message;
+                            Notify.toast(`Erro ao registrar serviço: ${errorMessage}`, "danger");
+                        } else {
+                            const errorMessage = (err.message.indexOf('<') === 0) ? "Erro no servidor (verifique logs do backend)." : err.message;
+                            alert(`Erro ao registrar serviço: ${errorMessage}`);
+                        }
+                    });
                 });
             }
 
-            // Botão para abrir modal
+            // Abrir modal
             if (btnAdicionarServico) {
                 btnAdicionarServico.addEventListener('click', function() {
                     if (selectServico) selectServico.selectedIndex = 0;
@@ -631,21 +714,11 @@
                 });
             }
 
-            // Inicializar select de serviço
-            const selectServico = document.getElementById('servico-descricao');
-            const inputValor = document.getElementById('servico-valor');
+            // Select de serviço -> preenche valor
             if (selectServico && inputValor) {
-                const servicosMap = {};
-                {% for servico in servicos_clinica %}
-                    servicosMap["{{ servico.nome|e('js') }}"] = {{ servico.valor|number_format(2, '.', '') }};
-                {% endfor %}
                 selectServico.addEventListener('change', function() {
                     const nomeServico = this.value;
-                    if (nomeServico && servicosMap.hasOwnProperty(nomeServico)) {
-                        inputValor.value = servicosMap[nomeServico];
-                    } else {
-                        inputValor.value = '';
-                    }
+                    inputValor.value = servicosMap.hasOwnProperty(nomeServico) ? servicosMap[nomeServico] : '';
                     inputValor.readOnly = false;
                 });
             }

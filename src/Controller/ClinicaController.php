@@ -21,6 +21,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\VeterinarioRepository;
 use App\Repository\BoxRepository;
+use App\Entity\Financeiro;
+use App\Entity\Servico;
 
 /**
  * @Route("/clinica")
@@ -67,7 +69,7 @@ class ClinicaController extends DefaultController
         ]);
     }
 
- /**
+    /**
      * @Route("/pet/{id}", name="clinica_detalhes_pet", methods={"GET"})
      */
     public function detalhesPet(
@@ -75,7 +77,8 @@ class ClinicaController extends DefaultController
         ConsultaRepository $consultaRepo,
         DocumentoModeloRepository $documentoRepo,
         FinanceiroRepository $financeiroRepo,
-        FinanceiroPendenteRepository $financeiroPendenteRepo
+        FinanceiroPendenteRepository $financeiroPendenteRepo,
+        InternacaoRepository $internacaoRepo
     ): Response {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -90,6 +93,10 @@ class ClinicaController extends DefaultController
         $financeiro = $financeiroRepo->buscarPorPet($baseId, $pet['id']);
         $financeiroPendente = $financeiroPendenteRepo->findBy(['petId' => $id]);
         $receitas = $this->getRepositorio(\App\Entity\Receita::class)->listarPorPet($baseId, $pet['id']);
+        $internacaoAtivaId = $internacaoRepo->findAtivaIdByPet($baseId, $pet['id']);
+        $ultimaInternacaoId  = $internacaoRepo->findUltimaIdByPet($baseId, $pet['id']);
+        $internacoesPet = $internacaoRepo->listarInternacoesPorPet($baseId, $pet['id']);
+
 
         // --- BUSCA TODOS OS SERVIÇOS DA CLÍNICA ---
         $servicosClinica = $this->getRepositorio(\App\Entity\Servico::class)->findBy([
@@ -102,7 +109,7 @@ class ClinicaController extends DefaultController
             $timeline_items[] = [
                 'data' => new \DateTime($item['data'] . ' ' . $item['hora']),
                 'tipo' => $item['tipo'] ?? 'Consulta',
-                'resumo' => $item['observacoes'],
+                'observacoes' => $item['observacoes'],
                 'anamnese' => $item['anamnese'] ?? null,
             ];
         }
@@ -143,8 +150,11 @@ class ClinicaController extends DefaultController
             'financeiro' => $financeiro,
             'financeiroPendente' => $financeiroPendente,
             'consultas' => $consultas,
-            'total_debitos' => $totalDebitos, // Agora este valor está correto
-            'servicos_clinica' => $servicosClinica,    
+            'total_debitos' => $totalDebitos,
+            'servicos_clinica' => $servicosClinica,
+            'internacao_ativa_id' => $internacaoAtivaId,
+            'ultima_internacao_id' => $ultimaInternacaoId,
+            'internacoes_pet' => $internacoesPet,
         ]);
     }
 
@@ -153,10 +163,10 @@ class ClinicaController extends DefaultController
      * @Route("/pet/{petId}/internacao/nova", name="clinica_nova_internacao", methods={"GET", "POST"})
      */
     public function novaInternacao(
-        Request $request, 
+        Request $request,
         int $petId,
-        InternacaoRepository $internacaoRepo, 
-        VeterinarioRepository $veterinarioRepo, 
+        InternacaoRepository $internacaoRepo,
+        VeterinarioRepository $veterinarioRepo,
         EntityManagerInterface $entityManager
     ): Response {
         $this->switchDB();
@@ -167,52 +177,72 @@ class ClinicaController extends DefaultController
             throw $this->createNotFoundException('Pet não encontrado.');
         }
 
-        // Buscar a lista de veterinários para popular o select
+        // lista para o formulário
         $veterinarios = $veterinarioRepo->findBy(['estabelecimentoId' => $baseId]);
-        
-        // Simulação de boxes (assumindo que seja um array simples)
         $boxes = [
             ['id' => 1, 'nome' => 'Box 1'],
             ['id' => 2, 'nome' => 'Box 2'],
             ['id' => 3, 'nome' => 'Box 3'],
         ];
 
-        // Lógica para processar o formulário POST
+        // POST: salva e redireciona para a ficha criada
         if ($request->isMethod('POST')) {
             $internacao = new Internacao();
-            
-            // Usando o EntityManager, é mais fácil do que usar um repositório com SQL puro
-            $petEntity = $entityManager->getRepository(Pet::class)->find($petId);
+
             $donoId = $pet['dono_id'] ?? null;
-            
-            // Seta as propriedades do objeto Internacao com os dados do formulário
+
             $internacao->setPetId($petId);
             $internacao->setDonoId($donoId);
             $internacao->setEstabelecimentoId($baseId);
             $internacao->setDataInicio(new \DateTime());
             $internacao->setStatus('ativa');
-            $internacao->setMotivo($request->request->get('queixa'));
-            
-            // Campos adicionais do formulário
-            $internacao->setSituacao($request->request->get('situacao'));
-            $internacao->setRisco($request->request->get('risco'));
-            $internacao->setVeterinarioId((int) $request->request->get('veterinario_id'));
-            $internacao->setBox($request->request->get('box'));
-            $internacao->setAltaPrevista(new \DateTime($request->request->get('alta_prevista')));
-            $internacao->setDiagnostico($request->request->get('diagnostico'));
-            $internacao->setPrognostico($request->request->get('prognostico'));
-            $internacao->setAnotacoes($request->request->get('alergias_marcacoes'));
+            $internacao->setMotivo((string) $request->request->get('queixa'));
 
-            // Persistir no banco de dados usando o método do repositório
-            // Se você usar o EntityManager, a chamada seria $entityManager->persist($internacao); $entityManager->flush();
-            // Assumindo que seu repositório tem um método 'inserirInternacao' compatível
-            $internacaoRepo->inserirInternacao($baseId, $internacao);
+            // Campos adicionais
+            $internacao->setSituacao((string) $request->request->get('situacao'));
+            $internacao->setRisco((string) $request->request->get('risco'));
+            $internacao->setVeterinarioId((int) $request->request->get('veterinario_id'));
+            $internacao->setBox((string) $request->request->get('box'));
+
+            // Alta prevista (opcional)
+            $altaPrevistaStr = trim((string) $request->request->get('alta_prevista'));
+            if ($altaPrevistaStr !== '') {
+                try {
+                    $internacao->setAltaPrevista(new \DateTime($altaPrevistaStr));
+                } catch (\Exception $e) {
+                    $internacao->setAltaPrevista(null);
+                }
+            }
+
+            $internacao->setDiagnostico((string) $request->request->get('diagnostico'));
+            $internacao->setPrognostico((string) $request->request->get('prognostico'));
+            $internacao->setAnotacoes((string) $request->request->get('alergias_marcacoes'));
+
+            // Salva e obtém o ID gerado
+            $novoId = $internacaoRepo->inserirInternacao($baseId, $internacao);
+
+            // Cria um evento inicial na timeline da internação
+            $internacaoRepo->inserirEvento(
+                $baseId,
+                $novoId,
+                $petId,
+                'Internação',
+                'Internação iniciada',
+                sprintf(
+                    'Motivo: %s | Situação: %s | Risco: %s | Box: %s',
+                    (string) $internacao->getMotivo(),
+                    (string) $internacao->getSituacao(),
+                    (string) $internacao->getRisco(),
+                    (string) $internacao->getBox()
+                ),
+                new \DateTime()
+            );
 
             $this->addFlash('success', 'Internação registrada com sucesso!');
-            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+            return $this->redirectToRoute('clinica_ficha_internacao', ['id' => $novoId]);
         }
 
-        // Se o método for GET, renderiza o formulário
+        // GET: exibe o formulário
         return $this->render('clinica/nova_internacao.html.twig', [
             'pet' => $pet,
             'veterinarios' => $veterinarios,
@@ -220,7 +250,8 @@ class ClinicaController extends DefaultController
         ]);
     }
 
-/**
+
+    /**
      * @Route("/pet/{petId}/atendimento/novo", name="clinica_novo_atendimento", methods={"POST"})
      */
     public function novoAtendimento(Request $request, int $petId, ConsultaRepository $consultaRepo): Response
@@ -241,7 +272,7 @@ class ClinicaController extends DefaultController
         $consulta->setHora(new \DateTime($request->request->get('hora')));
         $consulta->setObservacoes($request->request->get('observacoes'));
         
-        $consulta->setAnamnese($request->request->get('anamnese_delta'));  
+        $consulta->setAnamnese($request->request->get('anamnese_delta'));
         
         $consulta->setTipo($request->request->get('tipo'));
         $consulta->setStatus('atendido');
@@ -578,13 +609,13 @@ class ClinicaController extends DefaultController
         ]);
     }
 
-/**
+    /**
      * @Route("/pet/{petId}/venda/concluir", name="clinica_concluir_venda", methods={"POST"})
      */
     public function concluirVenda(Request $request, int $petId, EntityManagerInterface $entityManager): JsonResponse
     {
 
-        $this->switchDB(); 
+        $this->switchDB();
         $baseId = $this->getIdBase();
 
         // Pegando todos os campos do POST
@@ -623,6 +654,7 @@ class ClinicaController extends DefaultController
             $financeiroPendente->setData($data);
             $financeiroPendente->setStatus('pendente');
             $financeiroPendente->setOrigem('clinica');
+            $financeiroPendente->setMetodoPagamento($metodoPagamento);
             
             // Persistir e salvar a entidade
             $entityManager->persist($financeiroPendente);
@@ -642,7 +674,8 @@ class ClinicaController extends DefaultController
             $financeiro->setData($data);
             $financeiro->setOrigem('clinica');
             $financeiro->setStatus('concluido');
-            $financeiro->setMetodoPagamento($metodoPagamento);
+            // Linha removida, pois a tabela 'financeiro' não tem a coluna 'metodo_pagamento'.
+            // $financeiro->setMetodoPagamento($metodoPagamento);
             
             // Persistir e salvar a entidade
             $entityManager->persist($financeiro);
@@ -663,16 +696,73 @@ class ClinicaController extends DefaultController
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        // Assumindo um método no repositório que busca a internação com todos os dados associados
         $internacao = $internacaoRepo->findInternacaoCompleta($baseId, $id);
-
         if (!$internacao) {
             throw $this->createNotFoundException('A ficha de internação não foi encontrada.');
         }
 
+        // <<< SOMENTE EVENTOS DA INTERNAÇÃO >>>
+        $rows = $internacaoRepo->listarEventosPorInternacao($baseId, $id);
+
+        // Normaliza p/ o Twig
+        $timeline = array_map(function(array $r) {
+            try {
+                $r['data_hora'] = !empty($r['data_hora']) ? new \DateTime($r['data_hora']) : new \DateTime();
+            } catch (\Exception $e) {
+                $r['data_hora'] = new \DateTime();
+            }
+            $r['tipo']      = (string)($r['tipo'] ?? 'internacao');
+            $r['titulo']    = $r['titulo'] ?? '—';
+            $r['descricao'] = $r['descricao'] ?? '';
+            return $r;
+        }, $rows);
+
+        // Ordem desc por data/hora (e id já vem ordenado no repo)
+        usort($timeline, fn($a,$b) => $b['data_hora'] <=> $a['data_hora']);
+
         return $this->render('clinica/ficha_internacao.html.twig', [
-            'internacao' => $internacao
+            'internacao' => $internacao,
+            'timeline'   => $timeline,
         ]);
     }
 
+
+
+
+    /**
+     * @Route("/internacao/{id}/alta", name="clinica_internacao_alta", methods={"POST"})
+     */
+    public function altaInternacao(int $id, Request $request, InternacaoRepository $internacaoRepo): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        // (Opcional) validar CSRF
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('alta_internacao_'.$id, $token)) {
+            return $this->json(['ok' => false, 'msg' => 'Token inválido.'], 400);
+        }
+
+        // Busca dados da internação para registrar evento
+        $internacao = $internacaoRepo->buscarPorId($baseId, $id);
+        if (!$internacao) {
+            return $this->json(['ok' => false, 'msg' => 'Internação não encontrada.'], 404);
+        }
+
+        // Finaliza
+        $internacaoRepo->finalizarInternacao($baseId, $id);
+
+        // Evento de alta na timeline
+        $internacaoRepo->inserirEvento(
+            $baseId,
+            $id,
+            (int)$internacao['pet_id'],
+            'Alta',
+            'Alta concedida',
+            'Internação finalizada pelo sistema',
+            new \DateTime()
+        );
+
+        return $this->json(['ok' => true]);
+    }
 }

@@ -18,6 +18,7 @@ CREATE TABLE `agendamento` (
 ) ENGINE=InnoDB AUTO_INCREMENT=616 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+
 CREATE TABLE `agendamento_clinica` (
   `id` int NOT NULL AUTO_INCREMENT,
   `estabelecimento_id` int NOT NULL,
@@ -29,7 +30,7 @@ CREATE TABLE `agendamento_clinica` (
   `pet_id` int DEFAULT NULL,
   `dono_id` int DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `agendamento_pet_servico` (
@@ -40,7 +41,7 @@ CREATE TABLE `agendamento_pet_servico` (
   `estabelecimento_id` int NOT NULL,
   `status` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=120 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=120 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `cliente` (
@@ -59,7 +60,6 @@ CREATE TABLE `cliente` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=362 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE `colaborador` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nome` varchar(255) NOT NULL,
@@ -70,9 +70,7 @@ CREATE TABLE `colaborador` (
   `ativo` tinyint(1) DEFAULT '1',
   `criado_em` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `consulta` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -89,7 +87,7 @@ CREATE TABLE `consulta` (
   PRIMARY KEY (`id`),
   KEY `idx_consulta_estabelecimento` (`estabelecimento_id`),
   KEY `idx_consulta_data` (`data`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `documento_modelo` (
@@ -100,7 +98,7 @@ CREATE TABLE `documento_modelo` (
   `cabecalho` text,
   `rodape` text,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `exame` (
@@ -112,7 +110,7 @@ CREATE TABLE `exame` (
   `arquivo` text,
   `criado_em` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `financeiro` (
@@ -123,8 +121,11 @@ CREATE TABLE `financeiro` (
   `descricao` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `pet_id` int DEFAULT NULL,
   `pet_nome` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `origem` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `metodo_pagamento` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=488 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=505 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 CREATE TABLE `financeiropendente` (
@@ -136,8 +137,10 @@ CREATE TABLE `financeiropendente` (
   `pet_id` int DEFAULT NULL,
   `metodo_pagamento` enum('dinheiro','pix','credito','debito','pendente') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pendente',
   `agendamento_id` int DEFAULT NULL,
+  `origem` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=80 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 CREATE TABLE `hospedagem_caes` (
@@ -154,23 +157,47 @@ CREATE TABLE `hospedagem_caes` (
   KEY `pet_id` (`pet_id`),
   CONSTRAINT `hospedagem_caes_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `cliente` (`id`),
   CONSTRAINT `hospedagem_caes_ibfk_2` FOREIGN KEY (`pet_id`) REFERENCES `pet` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `internacao` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `data_inicio` date NOT NULL,
-  `motivo` varchar(255) NOT NULL,
-  `status` enum('ativa','finalizada') NOT NULL DEFAULT 'ativa',
+  `data_inicio` datetime NOT NULL,
+  `motivo` text,
+  `status` varchar(255) NOT NULL,
+  `situacao` varchar(255) DEFAULT NULL,
+  `risco` varchar(255) DEFAULT NULL,
+  `box` varchar(255) DEFAULT NULL,
+  `alta_prevista` date DEFAULT NULL,
+  `diagnostico` text,
+  `prognostico` text,
+  `anotacoes` text,
   `pet_id` int NOT NULL,
-  `dono_id` int NOT NULL,
+  `dono_id` int DEFAULT NULL,
+  `veterinario_id` int DEFAULT NULL,
   `estabelecimento_id` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `pet_id` (`pet_id`),
   KEY `dono_id` (`dono_id`),
-  CONSTRAINT `internacao_ibfk_1` FOREIGN KEY (`pet_id`) REFERENCES `pet` (`id`),
-  CONSTRAINT `internacao_ibfk_2` FOREIGN KEY (`dono_id`) REFERENCES `cliente` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `veterinario_id` (`veterinario_id`),
+  CONSTRAINT `internacao_ibfk_1` FOREIGN KEY (`pet_id`) REFERENCES `pet` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `internacao_ibfk_2` FOREIGN KEY (`dono_id`) REFERENCES `cliente` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `internacao_ibfk_3` FOREIGN KEY (`veterinario_id`) REFERENCES `veterinario` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE `internacao_evento` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `estabelecimento_id` int NOT NULL,
+  `internacao_id` int NOT NULL,
+  `pet_id` int NOT NULL,
+  `tipo` varchar(50) NOT NULL,
+  `titulo` varchar(255) NOT NULL,
+  `descricao` text,
+  `data_hora` datetime NOT NULL,
+  `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `pet` (
@@ -190,6 +217,7 @@ CREATE TABLE `pet` (
 ) ENGINE=InnoDB AUTO_INCREMENT=409 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+
 CREATE TABLE `prontuario` (
   `id` int NOT NULL AUTO_INCREMENT,
   `estabelecimento_id` int NOT NULL,
@@ -198,7 +226,8 @@ CREATE TABLE `prontuario` (
   `arquivos` text,
   `criado_em` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 
 CREATE TABLE `prontuariopet` (
@@ -210,7 +239,8 @@ CREATE TABLE `prontuariopet` (
   `anexo` varchar(255) DEFAULT NULL,
   `criado_em` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 
 CREATE TABLE `receita` (
@@ -224,7 +254,8 @@ CREATE TABLE `receita` (
   `rodape` longtext,
   `criado_em` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 
 CREATE TABLE `servico` (
@@ -233,8 +264,10 @@ CREATE TABLE `servico` (
   `nome` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `descricao` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `valor` decimal(10,0) DEFAULT NULL,
+  `tipo` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'clinica',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 
 CREATE TABLE `vacina` (
@@ -246,7 +279,8 @@ CREATE TABLE `vacina` (
   `data_validade` date DEFAULT NULL,
   `lote` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 
 CREATE TABLE `veterinario` (
@@ -255,26 +289,8 @@ CREATE TABLE `veterinario` (
   `email` varchar(255) DEFAULT NULL,
   `telefone` varchar(20) DEFAULT NULL,
   `especialidade` varchar(255) DEFAULT NULL,
+  `estabelecimento_id` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
-
-
-
-
-/**/
-
-ALTER TABLE servico
-    ADD COLUMN tipo VARCHAR(20) NOT NULL DEFAULT 'clinica';
-
-
-ALTER TABLE financeiro ADD origem VARCHAR(255) DEFAULT NULL;
-ALTER TABLE financeiro ADD status VARCHAR(255) DEFAULT NULL;
-
-ALTER TABLE usuario ADD data_trial DATETIME DEFAULT NULL;
-
-
-ALTER TABLE financeiropendente ADD origem VARCHAR(255) DEFAULT NULL;
-ALTER TABLE financeiropendente ADD status VARCHAR(255) DEFAULT NULL;
-ALTER TABLE financeiropendente ADD status VARCHAR(255) DEFAULT NULL;
