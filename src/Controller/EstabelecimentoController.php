@@ -183,11 +183,11 @@ class EstabelecimentoController extends DefaultController
                 'rua' => $endereco['logradouro'],
                 'numero' => $estabelecimento->getNumero(),
                 'bairro' => $endereco['bairro'],
-                'cep' => $estabelecimento->getCep(),
                 'cidade' => $endereco['localidade'],
                 'estado' => $endereco['uf'],
                 'idUsuario' => $usario->getId(),
-                'cnpj' => $usario->getCNPJ(),
+                'cnpj' => $estabelecimento->getCNPJ(),
+                'cep' => $endereco['cep'],
             ];
 
             $produto = [
@@ -206,7 +206,7 @@ class EstabelecimentoController extends DefaultController
             ];
 
             $code = $mercadoPagoService->createPayment($dataPagamento);
-            dd($code);
+            // dd($code);
             return $this->redirect($code['init_point']);
         // } catch(\Exception $e){
         //     dd($e);

@@ -12,6 +12,7 @@ class MercadoPagoService
     private $client;
     private $em;
     private $accessToken;
+    private $oathData;
 
     public function __construct(HttpClientInterface $client, EntityManagerInterface $em, string $mercadoPagoToken)
     {
@@ -20,50 +21,84 @@ class MercadoPagoService
         $this->accessToken = $mercadoPagoToken;
     }
 
-    public function createPayment(array $data)
+    private function oauthMP()
     {
-        $body = [
-            'items' => [[
-                'id' => $data['planoId'] ?? 'Produto',
-                'title' => $data['title'] ?? 'Produto',
-                'quantity' => $data['quantity'] ?? 1,
-                'unit_price' => (float) ($data['price'] ?? 0)
-            ]],
-            'payer' => [
-                'email' => $data['email'] ?? 'test@test.com',
-                'name' => $data['comprador']['name'],
-                'address' => $data['comprador']['name'],
-                'identification' => ['number' => $data['comprador']['idUsuario'],'type'=>'INT'],
-                'address' => [
-                    'zip_code'=>$data['comprador']['cep'],
-                    'street_name'=>$data['comprador']['rua'],
-                    'street_number'=>$data['comprador']['numero']
-                ],
-            ],
-            'back_urls' => [
-                'success' => $_ENV['PAGAMENTO_URL'] . 'pagamento/sucesso',
-                'failure' => $_ENV['PAGAMENTO_URL'] . 'pagamento/falha',
-                'pending' => $_ENV['PAGAMENTO_URL'] . 'pagamento/pendente'
-            ],
-            'redirect_urls' => [
-                'success' => $_ENV['PAGAMENTO_URL'] . 'pagamento/sucesso',
-                'failure' => $_ENV['PAGAMENTO_URL'] . 'pagamento/falha',
-                'pending' => $_ENV['PAGAMENTO_URL'] . 'pagamento/pendente'
-            ],
-            'external_reference' => $data['planoId'],
-            'auto_return' => 'approved',
-            'additional_info' => 'Aquisição de plano de serviços de sistma de gestão de Pet shops e Clinicas veterinárias.',
-            'notification_url' => $_ENV['PAGAMENTO_URL'] . 'pagamento/retorno'
-        ];
+        $data = [];
+        $data["client_secret"] = $_ENV['MERCADO_PAGO_CLIENT_SECRET'];
+        $data["client_id"] = $_ENV['MERCADO_PAGO_CLIENT_ID'];
+        $data["grant_type"] = "client_credentials";
+        $data["code"] = "TG-XXXXXXXX-241983636";
+        $data["code_verifier"] = "47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU";
+        $data["redirect_uri"] = "https://www.mercadopago.com.br/developers/example/redirect-url";
+        $data["refresh_token"] = "TG-XXXXXXXX-241983636";
+        $data["test_token"] = "false";
+        
+        if($_ENV['MERCADO_PAGO_ENV'] == 'sandbox'){
+            $data["test_token"] = "true";
+        }
 
-
-        // return $this->handleWebhook($body);
-        $response = $this->client->request('POST', 'https://api.mercadopago.com/checkout/preferences', [
+        $response = $this->client->request('POST', 'https://api.mercadopago.com/oauth/token', [
             'headers' => [
-                'Authorization' => 'Bearer ' . $this->accessToken,
                 'Content-Type' => 'application/json'
             ],
-            'json' => $body
+            'json' => $data
+        ])->toArray();
+
+        return $response;
+    }
+
+    public function createPayment(array $data)
+    {
+        $autentication = $this->oauthMP();
+        
+
+        $payload = [];
+
+        $payload['additional_info']['items'][0]['id'] = $data['planoId'];
+        $payload['additional_info']['items'][0]['title'] = $data['title'];
+        $payload['additional_info']['items'][0]['quantity'] = 1;
+        $payload['additional_info']['items'][0]['unit_price'] = $data['price'];
+        $payload['additional_info']['items'][0]['type'] = "signature";
+        $payload['additional_info']['items'][0]['warranty'] = false;
+        $payload['additional_info']['items'][0]['category_descriptor']['passenger'] = new \stdClass();
+        $payload['additional_info']['items'][0]['category_descriptor']['route'] = new \stdClass();
+
+        $payload['additional_info']['payer']['first_name'] = $data['comprador']['name'];
+        $payload['additional_info']['payer']['last_name'] = '';
+        $payload['additional_info']['payer']['phone']['area_code'] = 11;
+        $payload['additional_info']['payer']['phone']['number'] = "987654321";
+        $payload['additional_info']['payer']['address']['zip_code'] = "12312-123";
+        $payload['additional_info']['payer']['address']['street_name'] = "Av das Nacoes Unidas";
+        $payload['additional_info']['payer']['address']['street_number'] = 3003;
+
+        $payload['application_fee'] = null;
+        $payload['binary_mode'] = false;
+        $payload['campaign_id'] = null;
+        $payload['capture'] = true;
+        $payload['coupon_amount'] = null;
+        $payload['description'] = "Pagamento do plano {$data['title']}";
+        $payload['differential_pricing_id'] = null;
+        $payload['external_reference'] = $data['planoId'];
+        $payload['installments'] = 1;
+        $payload['metadata'] = null;
+
+        $payload['payer']['entity_type'] = "individual";
+        $payload['payer']['type'] = "customer";
+        $payload['payer']['id'] = null;
+        $payload['payer']['email'] = $data['email'];
+        $payload['payer']['identification']['type'] = null;
+        $payload['payer']['identification']['number'] = null;
+
+        $payload['payment_method_id'] = "pix";
+        $payload['transaction_amount'] = 1;
+
+        $response = $this->client->request('POST', 'https://api.mercadopago.com/v1/payments', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $autentication['access_token'],
+                'Content-Type' => 'application/json',
+                'X-Idempotency-Key' => '0d5020ed-1af6-469c-ae06-c3bec19954bb',
+            ],
+            'json' => $payload
         ]);
 
         // die($response->getContent());
@@ -72,34 +107,9 @@ class MercadoPagoService
         //     return ['success' => false, 'message' => 'Erro ao criar pagamento'];
         // }
         $content = $response->toArray();
+        // dd($response->toArray());
 
-        $data = [
-        "description"=>$content['additional_info'],
-        "installments"=>1,
-        "payer"=>[
-        "email"=>$data['email'],
-        "identification"=>[
-            "type"=>$content['payer']['identification']['type'],
-            "number"=>$content['payer']['identification']['number']
-        ]
-        ],
-       // "issuer_id"=>$content['issuer_id'],
-        "payment_method_id"=>'master',
-        "token"=>'bdc208cdb2555840cd3ddf918d842013',
-        "transaction_amount"=>1
-      ];
-
-      $response = $this->client->request('POST', 'https://api.mercadopago.com/v1/payments', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->accessToken,
-                'Content-Type' => 'application/json'
-            ],
-            'json' => $data
-        ]);
-
-      //   dd($content, $response->toArray());
-        dd($content, $data);
-        // return ['success' => true, 'init_point' => $content['init_point']];
+        return ['init_point' => $content['point_of_interaction']['transaction_data']['ticket_url']];
     }
 
     public function handleWebhook(array $data)
