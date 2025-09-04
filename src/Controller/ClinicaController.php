@@ -305,11 +305,24 @@ class ClinicaController extends DefaultController
         $receita->setConteudo($request->get('conteudo_delta'));
         $receita->setRodape($request->get('rodape_delta'));
         $receita->setResumo('Receita registrada manualmente');
-
+        $conteudo = json_decode($request->get('cabecalho_delta'));
+        // dd($conteudo->ops[0]->insert);
         $this->getRepositorio(\App\Entity\Receita::class)->salvar($receita);
 
-        $this->addFlash('success', 'Receita salva com sucesso!');
-        return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+        $gerarPDF = new \App\Service\GeradorpdfService($this->tempDirManager, $this->requestStack);
+
+        $gerarPDF->configuracaoPagina('A4', 10, 10, 35, 6, 5, 3);##$orientacao, $margEsquerda, $margDireita, $margTop do conteudo, $margBottom, $margCabecalho, $margRodape
+        $gerarPDF->setNomeArquivo('Receita_manual');
+        $gerarPDF->setRodape("Gerado em: {DATE j/m/Y H:i}   Receita Manual - System Home Pet: Seu CRM para clínicas e pet shops");
+
+        $gerarPDF->montaCabecalhoPadrao('Receita Veterinária');
+        $gerarPDF->addPagina('P');
+        $gerarPDF->conteudo($conteudo->ops[0]->insert);
+        $gerarPDF->gerar();
+
+        // $this->addFlash('success', 'Receita salva com sucesso!');
+
+        // return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
     }
 
 

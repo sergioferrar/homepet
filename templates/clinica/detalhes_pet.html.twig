@@ -77,7 +77,7 @@
 {% block body %}
 {% set total_debitos = total_debitos|default(0) %}
 
-<div class="container-fluid my-4">
+<div class="container-fluid bg-white p-3 my-4">
     <div class="row mb-4">
         <div class="col-lg-6 mb-4 mb-lg-0">
             <div class="info-card">
@@ -523,21 +523,59 @@
             if (quillAtendimento) {
                 quillAtendimento.setContents([
                     { insert: 'Anamnese:', attributes: { bold: true } },
-                    { insert: '\nQueixa principal:\n\n' },
+                    { insert: '<br>Queixa principal:<br><br>' },
                     { insert: 'Exame Clínico:', attributes: { bold: true } },
-                    { insert: '\n' }
+                    { insert: '<br>' }
                 ]);
             }
             if (quillCabecalho) {
                 quillCabecalho.setContents([
                     { insert: 'Nome do Veterinário(a)', attributes: { header: 2 } },
-                    { insert: '\nCRMV - Especialidade\n' }
+                    { insert: `Clínica/Consultório Veterinário<br>
+Nome da Clínica: ___________________________<br>
+Endereço: __________________________________<br>
+Telefone/WhatsApp: __________________________<br>
+CRMV Responsável Técnico: _________________<br>
+<br>
+Receita Veterinária<br>
+<br>
+Paciente (Animal): ______________________________<br>
+Espécie: __________________<br>
+Raça: __________________<br>
+Idade: ___________<br>
+Peso: ___________ kg<br>
+<br>
+Tutor (Proprietário): ____________________________<br>
+CPF/CNPJ: __________________<br>
+<br>
+Prescrição<br>
+<br>
+Medicamento: ___________________________<br>
+<br>
+Dosagem: ______________________________<br>
+<br>
+Via de Administração: ___________________<br>
+<br>
+Frequência: ____________________________<br>
+<br>
+Duração do Tratamento: _________________<br>
+<br>
+( ) Substituição Permitida<br>
+( ) Substituição Não Permitida<br>
+<br>
+Observações do Veterinário:<br>
+<br>
+Local/Data: ___________________________<br>
+<br>
+Assinatura e Carimbo do Médico Veterinário<br>
+Nome: ____________________________________<br>
+CRMV: ____________________________________<br><br>` }
                 ]);
             }
             if (quillRodape) {
                 quillRodape.setContents([
                     { insert: 'Data: ', attributes: { bold: true } },
-                    { insert: '{{ "now"|date("d/m/Y") }}\n' }
+                    { insert: '{{ "now"|date("d/m/Y") }}<br>' }
                 ]);
             }
 

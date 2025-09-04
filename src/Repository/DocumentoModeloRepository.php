@@ -16,7 +16,7 @@ class DocumentoModeloRepository
 
     public function listarDocumentos(string $baseId): array
     {
-        $sql = "SELECT * FROM u199209817_{$baseId}.documento_modelo ORDER BY criado_em DESC";
+        $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}.documento_modelo ORDER BY criado_em DESC";
         $rows = $this->conn->fetchAllAssociative($sql);
 
         return array_map(fn($row) => $this->mapToEntity($row), $rows);
@@ -24,7 +24,7 @@ class DocumentoModeloRepository
 
     public function buscarPorId(string $baseId, int $id): ?DocumentoModelo
     {
-        $sql = "SELECT p.id AS pet_id, , data, hora, status, cliente, pet  FROM u199209817_{$baseId}.documento_modelo WHERE id = ?";
+        $sql = "SELECT p.id AS pet_id, , data, hora, status, cliente, pet  FROM {$_ENV['DBNAMETENANT']}.documento_modelo WHERE id = ?";
         $row = $this->conn->fetchAssociative($sql, [$id]);
 
         return $row ? $this->mapToEntity($row) : null;
@@ -32,7 +32,7 @@ class DocumentoModeloRepository
 
     public function salvarDocumentoCompleto(string $baseId, DocumentoModelo $doc): void
     {
-        $this->conn->insert("u199209817_{$baseId}.documento_modelo", [
+        $this->conn->insert("{$_ENV['DBNAMETENANT']}.documento_modelo", [
             'titulo'     => $doc->getTitulo(),
             'cabecalho'  => $doc->getCabecalho(),
             'conteudo'   => $doc->getConteudo(),
@@ -43,7 +43,7 @@ class DocumentoModeloRepository
 
     public function atualizarDocumento(string $baseId, DocumentoModelo $doc): void
     {
-        $this->conn->update("u199209817_{$baseId}.documento_modelo", [
+        $this->conn->update("{$_ENV['DBNAMETENANT']}.documento_modelo", [
             'titulo'     => $doc->getTitulo(),
             'cabecalho'  => $doc->getCabecalho(),
             'conteudo'   => $doc->getConteudo(),
@@ -68,7 +68,7 @@ class DocumentoModeloRepository
     }
     public function excluirDocumento(string $baseId, int $id): void
     {
-        $sql = "DELETE FROM u199209817_{$baseId}.documento_modelo WHERE id = :id";
+        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}.documento_modelo WHERE id = :id";
         $this->conn->executeStatement($sql, ['id' => $id]);
     }
 

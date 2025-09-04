@@ -25,6 +25,7 @@ class DefaultController extends AbstractController
     protected $rule = 'IS_AUTHENTICATED';
     protected $cnpj = '##.###.###/####-##';
     protected $cpf = '###.###.###-##';
+    protected $requestStack;
     protected $request;
     protected $session;
     public $tempDirManager;
@@ -49,6 +50,7 @@ class DefaultController extends AbstractController
     {
         $this->security = $security;
         $this->managerRegistry = $managerRegistry;
+        $this->requestStack = $request;
         $this->request = $request->getCurrentRequest();
         $this->session = $this->request->getSession();
         $this->tempDirManager = $tempDirManager;
