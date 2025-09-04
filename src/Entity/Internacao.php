@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass=InternacaoRepository::class)
+ * @ORM\Table(name="internacao")
  */
 class Internacao
 {
@@ -18,12 +19,12 @@ class Internacao
     private $id;
 
     /**
-     * @ORM\Column(type="date")
+     * @ORM\Column(type="datetime")
      */
     private $data_inicio;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     private $motivo;
 
@@ -33,23 +34,6 @@ class Internacao
     private $status;
 
     /**
-     * @ORM\Column(type="integer")
-     */
-    private $pet_id;
-
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
-    private $dono_id;
-
-    /**
-     * @ORM\Column(type="integer")
-     */
-    private $estabelecimento_id;
-    
-    // NOVOS CAMPOS PARA A FICHA DE INTERNAÇÃO
-    
-    /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $situacao;
@@ -58,11 +42,6 @@ class Internacao
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $risco;
-
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
-    private $veterinario_id;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -88,6 +67,30 @@ class Internacao
      * @ORM\Column(type="text", nullable=true)
      */
     private $anotacoes;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $pet_id;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $dono_id;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $veterinario_id;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $estabelecimento_id;
+
+    // =======================
+    // GETTERS & SETTERS
+    // =======================
 
     public function getId(): ?int
     {
@@ -127,41 +130,6 @@ class Internacao
         return $this;
     }
 
-    public function getPetId(): ?int
-    {
-        return $this->pet_id;
-    }
-
-    public function setPetId(int $pet_id): self
-    {
-        $this->pet_id = $pet_id;
-        return $this;
-    }
-
-    public function getDonoId(): ?int
-    {
-        return $this->dono_id;
-    }
-
-    public function setDonoId(?int $dono_id): self
-    {
-        $this->dono_id = $dono_id;
-        return $this;
-    }
-
-    public function getEstabelecimentoId(): ?int
-    {
-        return $this->estabelecimento_id;
-    }
-
-    public function setEstabelecimentoId(int $estabelecimento_id): self
-    {
-        $this->estabelecimento_id = $estabelecimento_id;
-        return $this;
-    }
-    
-    // NOVOS GETTERS E SETTERS
-    
     public function getSituacao(): ?string
     {
         return $this->situacao;
@@ -181,17 +149,6 @@ class Internacao
     public function setRisco(?string $risco): self
     {
         $this->risco = $risco;
-        return $this;
-    }
-
-    public function getVeterinarioId(): ?int
-    {
-        return $this->veterinario_id;
-    }
-
-    public function setVeterinarioId(?int $veterinario_id): self
-    {
-        $this->veterinario_id = $veterinario_id;
         return $this;
     }
 
@@ -247,6 +204,50 @@ class Internacao
     public function setAnotacoes(?string $anotacoes): self
     {
         $this->anotacoes = $anotacoes;
+        return $this;
+    }
+
+    public function getPetId(): ?int
+    {
+        return $this->pet_id;
+    }
+
+    public function setPetId(int $pet_id): self
+    {
+        $this->pet_id = $pet_id;
+        return $this;
+    }
+
+    public function getDonoId(): ?int
+    {
+        return $this->dono_id;
+    }
+
+    public function setDonoId(?int $dono_id): self
+    {
+        $this->dono_id = $dono_id;
+        return $this;
+    }
+
+    public function getVeterinarioId(): ?int
+    {
+        return $this->veterinario_id;
+    }
+
+    public function setVeterinarioId(?int $veterinario_id): self
+    {
+        $this->veterinario_id = $veterinario_id;
+        return $this;
+    }
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimento_id;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimento_id): self
+    {
+        $this->estabelecimento_id = $estabelecimento_id;
         return $this;
     }
 }

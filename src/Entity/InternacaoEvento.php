@@ -2,31 +2,34 @@
 
 namespace App\Entity;
 
+use App\Repository\InternacaoEventoRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repository\InternacaoEventoRepository")
+ * @ORM\Entity(repositoryClass=InternacaoEventoRepository::class)
  * @ORM\Table(name="internacao_evento")
  */
 class InternacaoEvento
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+    /** 
+     * @ORM\Id 
+     * @ORM\GeneratedValue 
+     * @ORM\Column(type="integer") 
      */
     private $id;
 
-    /** @ORM\Column(type="integer") */
+    /** @ORM\Column(name="estabelecimento_id", type="integer") */
     private $estabelecimentoId;
 
-    /** @ORM\Column(type="integer") */
+    /** @ORM\Column(name="internacao_id", type="integer") */
     private $internacaoId;
 
-    /** @ORM\Column(type="integer") */
+    /** @ORM\Column(name="pet_id", type="integer") */
     private $petId;
 
-    /** @ORM\Column(type="string", length=50) */
+    /** 
+     * @ORM\Column(type="string", columnDefinition="ENUM('internacao','alta','ocorrencia','peso','prescricao','medicacao_exec')") 
+     */
     private $tipo;
 
     /** @ORM\Column(type="string", length=255) */
@@ -35,14 +38,13 @@ class InternacaoEvento
     /** @ORM\Column(type="text", nullable=true) */
     private $descricao;
 
-    /** @ORM\Column(type="datetime") */
+    /** @ORM\Column(name="data_hora", type="datetime") */
     private $dataHora;
 
-    /** @ORM\Column(type="datetime") */
+    /** @ORM\Column(name="criado_em", type="datetime") */
     private $criadoEm;
 
-    // ---- GETTERS & SETTERS ----
-
+    // --- GETTERS & SETTERS ---
     public function getId(): ?int { return $this->id; }
 
     public function getEstabelecimentoId(): ?int { return $this->estabelecimentoId; }
@@ -67,5 +69,5 @@ class InternacaoEvento
     public function setDataHora(\DateTimeInterface $dataHora): self { $this->dataHora = $dataHora; return $this; }
 
     public function getCriadoEm(): ?\DateTimeInterface { return $this->criadoEm; }
-    public function setCriadoEm(\DateTimeInterface $criadoEm): self { $this->criadoEm = $criadoEm; return $this; }
+    public function setCriadoEm(\DateTimeInterface $criado): self { $this->criadoEm = $criado; return $this; }
 }

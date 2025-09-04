@@ -23,6 +23,9 @@ use App\Repository\VeterinarioRepository;
 use App\Repository\BoxRepository;
 use App\Entity\Financeiro;
 use App\Entity\Servico;
+use App\Entity\Medicamento;
+use App\Entity\InternacaoPrescricao;
+use App\Entity\InternacaoExecucao;
 
 /**
  * @Route("/clinica")
@@ -146,9 +149,9 @@ class ClinicaController extends DefaultController
             'pet' => $pet,
             'timeline_items' => $timeline_items,
             'timeline_agrupado' => $agrupado,
-            'documentos' => $documentos,
-            'financeiro' => $financeiro,
-            'financeiroPendente' => $financeiroPendente,
+            'documentos' => $documentoRepo->listarDocumentos($baseId),
+            'financeiro' => $financeiroRepo->buscarPorPet($baseId, $pet['id']),
+            'financeiroPendente' => $financeiroPendenteRepo->findBy(['petId' => $id]),
             'consultas' => $consultas,
             'total_debitos' => $totalDebitos,
             'servicos_clinica' => $servicosClinica,
@@ -634,8 +637,8 @@ class ClinicaController extends DefaultController
         // Pegando todos os campos do POST
         $servicoId = $request->request->get('servico_id');
         $descricao = $request->request->get('descricao');
-        $valor     = (float) $request->request->get('valor');
-        $data      = $request->request->get('data') ? new \DateTime($request->request->get('data')) : new \DateTime();
+        $valor   = (float) $request->request->get('valor');
+        $data    = $request->request->get('data') ? new \DateTime($request->request->get('data')) : new \DateTime();
         $observacao = $request->request->get('observacao');
         $metodoPagamento = $request->request->get('metodo_pagamento');
         $desconto  = (float) $request->request->get('desconto', 0);
@@ -701,10 +704,10 @@ class ClinicaController extends DefaultController
         }
     }
 
-    /**
+/**
      * @Route("/internacao/{id}/ficha", name="clinica_ficha_internacao", methods={"GET"})
      */
-    public function fichaInternacao(int $id, InternacaoRepository $internacaoRepo): Response
+    public function fichaInternacao(int $id, InternacaoRepository $internacaoRepo, EntityManagerInterface $em): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -714,32 +717,36 @@ class ClinicaController extends DefaultController
             throw $this->createNotFoundException('A ficha de internação não foi encontrada.');
         }
 
-        // <<< SOMENTE EVENTOS DA INTERNAÇÃO >>>
+        // Busca todos os eventos da timeline
         $rows = $internacaoRepo->listarEventosPorInternacao($baseId, $id);
 
-        // Normaliza p/ o Twig
         $timeline = array_map(function(array $r) {
             try {
                 $r['data_hora'] = !empty($r['data_hora']) ? new \DateTime($r['data_hora']) : new \DateTime();
             } catch (\Exception $e) {
                 $r['data_hora'] = new \DateTime();
             }
-            $r['tipo']      = (string)($r['tipo'] ?? 'internacao');
-            $r['titulo']    = $r['titulo'] ?? '—';
-            $r['descricao'] = $r['descricao'] ?? '';
+            $r['tipo']       = (string)($r['tipo'] ?? 'internacao');
+            $r['titulo']     = $r['titulo'] ?? '—';
+            $r['descricao']  = $r['descricao'] ?? '';
             return $r;
         }, $rows);
 
-        // Ordem desc por data/hora (e id já vem ordenado no repo)
         usort($timeline, fn($a,$b) => $b['data_hora'] <=> $a['data_hora']);
 
+        // Busca todos os medicamentos para o modal de prescrição
+        $medicamentos = $em->getRepository(Medicamento::class)->findAll();
+        
+        // CORREÇÃO: Busca as prescrições como objetos completos
+        $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findBy(['internacaoId' => $id]);
+
         return $this->render('clinica/ficha_internacao.html.twig', [
-            'internacao' => $internacao,
-            'timeline'   => $timeline,
+            'internacao'    => $internacao,
+            'timeline'      => $timeline,
+            'medicamentos'  => $medicamentos,
+            'prescricoes'   => $prescricoes,
         ]);
     }
-
-
 
 
     /**
@@ -778,4 +785,202 @@ class ClinicaController extends DefaultController
 
         return $this->json(['ok' => true]);
     }
+
+   /**
+ * @Route("/internacao/{id}/prescricao/nova", name="clinica_internacao_prescricao_nova", methods={"POST"})
+ */
+public function novaPrescricao(int $id, Request $request, EntityManagerInterface $em, InternacaoRepository $internacaoRepo): JsonResponse
+{
+    $this->switchDB();
+    $baseId = $this->getIdBase();
+
+    try {
+        $internacao = $em->getRepository(Internacao::class)->find($id);
+        if (!$internacao) {
+            return $this->json(['ok' => false, 'msg' => 'Internação não encontrada.'], 404);
+        }
+
+        $medicamentoId = (int) $request->request->get('medicamento_id');
+        $dose = trim((string) $request->request->get('dose'));
+        $frequenciaHoras = (int) $request->request->get('frequencia_horas');
+        $duracaoDias = (int) $request->request->get('duracao_dias');
+        $dataHoraPrimeiraDose = $request->request->get('data_hora_primeira_dose');
+
+        if (!$medicamentoId || empty($dose) || $frequenciaHoras <= 0 || $duracaoDias <= 0 || empty($dataHoraPrimeiraDose)) {
+            return $this->json(['ok' => false, 'msg' => 'Campos obrigatórios faltando.'], 400);
+        }
+
+        $medicamento = $em->getRepository(Medicamento::class)->find($medicamentoId);
+        if (!$medicamento) {
+            return $this->json(['ok' => false, 'msg' => 'Medicamento não encontrado.'], 404);
+        }
+        
+        $prescricao = new InternacaoPrescricao();
+        $prescricao->setInternacaoId($internacao->getId());
+        $prescricao->setMedicamento($medicamento);
+        $prescricao->setDescricao($medicamento->getNome());
+        $prescricao->setDose($dose);
+        $prescricao->setFrequencia(sprintf('a cada %d horas por %d dias', $frequenciaHoras, $duracaoDias));
+        $prescricao->setDataHora(new \DateTime($dataHoraPrimeiraDose));
+        $prescricao->setCriadoEm(new \DateTime());
+        
+        $em->persist($prescricao);
+        $em->flush();
+
+        $numDoses = ($duracaoDias * 24) / $frequenciaHoras;
+        for ($i = 0; $i < $numDoses; $i++) {
+            $dataDose = (new \DateTime($dataHoraPrimeiraDose))->modify('+' . ($i * $frequenciaHoras) . ' hours');
+            
+            $descricaoEvento = sprintf(
+                "Medicamento: %s | Dose: %s | Frequência: %s",
+                $medicamento->getNome(),
+                $dose,
+                $prescricao->getFrequencia()
+            );
+            
+            $internacaoRepo->inserirEvento(
+                $baseId,
+                $id,
+                $internacao->getPetId(),
+                'medicacao',
+                'Dose de medicação agendada',
+                $descricaoEvento,
+                $dataDose
+            );
+        }
+        
+        // Retorna sucesso
+        return $this->json(['ok' => true, 'msg' => 'Prescrição salva com sucesso!']);
+
+    } catch (\Exception $e) {
+        // Loga o erro exato para depuração
+        // $this->logger->error('Erro ao salvar prescrição: ' . $e->getMessage());
+        return $this->json(['ok' => false, 'msg' => 'Falha interna do servidor.'], 500);
+    }
+}
+    
+    /**
+     * @Route("/internacao/prescricao/{eventoId}/executar", name="clinica_internacao_prescricao_executar", methods={"POST"})
+     */
+    public function executarPrescricao(int $eventoId, Request $request, EntityManagerInterface $em, InternacaoRepository $internacaoRepo): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        // Apenas marca o evento de agendamento como executado
+        try {
+            $internacaoRepo->marcarMedicacaoComoExecutada($baseId, $eventoId);
+        } catch (\Exception $e) {
+            return $this->json(['ok' => false, 'msg' => 'Erro ao registrar a administração: ' . $e->getMessage()]);
+        }
+
+        return $this->json(['ok' => true, 'msg' => 'Medicação registrada com sucesso!']);
+    }
+
+    /**
+     * @Route("/medicamentos", name="clinica_medicamentos", methods={"GET","POST"})
+     */
+    public function medicamentos(Request $request, EntityManagerInterface $em): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        // Cadastro de novo medicamento
+        if ($request->isMethod('POST')) {
+            $medicamento = new Medicamento();
+            $medicamento->setNome($request->get('nome'));
+            $medicamento->setVia($request->get('via'));
+            $medicamento->setConcentracao($request->get('concentracao'));
+
+            $em->persist($medicamento);
+            $em->flush();
+
+            $this->addFlash('success', 'Medicamento cadastrado com sucesso!');
+            return $this->redirectToRoute('clinica_medicamentos');
+        }
+
+        // Listagem de medicamentos
+        $medicamentos = $em->getRepository(Medicamento::class)->findAll();
+
+        return $this->render('clinica/medicamentos.html.twig', [
+            'medicamentos' => $medicamentos
+        ]);
+    }
+
+    /**
+     * @Route("/medicamentos/{id}/editar", name="clinica_medicamento_editar", methods={"GET","POST"})
+     */
+    public function editarMedicamento(int $id, Request $request, EntityManagerInterface $em): Response
+    {
+        $this->switchDB();
+
+        $medicamento = $em->getRepository(Medicamento::class)->find($id);
+        if (!$medicamento) {
+            throw $this->createNotFoundException('Medicamento não encontrado.');
+        }
+
+        if ($request->isMethod('POST')) {
+            $medicamento->setNome($request->get('nome'));
+            $medicamento->setVia($request->get('via'));
+            $medicamento->setConcentracao($request->get('concentracao'));
+
+            $em->flush();
+
+            $this->addFlash('success', 'Medicamento atualizado!');
+            return $this->redirectToRoute('clinica_medicamentos');
+        }
+
+        return $this->render('clinica/medicamento_editar.html.twig', [
+            'medicamento' => $medicamento
+        ]);
+    }
+
+    /**
+     * @Route("/medicamentos/{id}/excluir", name="clinica_medicamento_excluir", methods={"POST"})
+     */
+    public function excluirMedicamento(int $id, EntityManagerInterface $em): Response
+    {
+        $this->switchDB();
+
+        $medicamento = $em->getRepository(Medicamento::class)->find($id);
+        if ($medicamento) {
+            $em->remove($medicamento);
+            $em->flush();
+            $this->addFlash('success', 'Medicamento excluído.');
+        }
+
+        return $this->redirectToRoute('clinica_medicamentos');
+    }
+
+    /**
+     * @Route("/internacao/medicamento/novo", name="clinica_internacao_medicamento_novo", methods={"POST"})
+     */
+    public function novoMedicamentoViaInternacao(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $nome = trim((string) $request->request->get('nome'));
+        $via = trim((string) $request->request->get('via'));
+        $concentracao = trim((string) $request->request->get('concentracao'));
+
+        if (empty($nome)) {
+            return $this->json(['ok' => false, 'msg' => 'O nome do medicamento é obrigatório.']);
+        }
+
+        try {
+            $medicamento = new Medicamento();
+            $medicamento->setNome($nome);
+            $medicamento->setVia($via);
+            $medicamento->setConcentracao($concentracao);
+
+            $em->persist($medicamento);
+            $em->flush();
+        } catch (\Exception $e) {
+            return $this->json(['ok' => false, 'msg' => 'Erro ao salvar o medicamento: ' . $e->getMessage()]);
+        }
+
+        return $this->json(['ok' => true, 'msg' => 'Medicamento cadastrado com sucesso!']);
+    }
+
 }

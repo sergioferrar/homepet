@@ -73,12 +73,7 @@ class InternacaoRepository extends ServiceEntityRepository
     }
 
 
-    public function inserirEvento(
-        int $baseId,
-        int $internacaoId,
-        int $petId,
-        string $tipo,
-        string $titulo,
+    public function inserirEvento(int $baseId, int $internacaoId, int $petId, string $tipo, string $titulo,
         ?string $descricao,
         ?\DateTimeInterface $dataHora = null
     ): int {
@@ -318,5 +313,16 @@ class InternacaoRepository extends ServiceEntityRepository
         ]);
     }
 
+    public function marcarMedicacaoComoExecutada(int $baseId, int $eventoId): void
+    {
+        $sql = "UPDATE " . $_ENV['DBNAMETENANT'] . ".internacao_evento
+                SET tipo = 'medicacao_exec'
+                WHERE estabelecimento_id = :baseId AND id = :eventoId";
+
+        $this->conn->executeQuery($sql, [
+            'baseId' => $baseId,
+            'eventoId' => $eventoId,
+        ]);
+    }
 
 }
