@@ -58,7 +58,7 @@ class GeradorpdfService
         //$this->pdf->allow_charset_conversion = true;
         //$this->pdf->charset_in = 'UTF-8';
         $this->pdf->list_indent_first_level = 1;
-        $this->css = file_get_contents($folderPath . 'assets/css/style.css'); ## caminho para o css
+        $this->css = '';//file_get_contents($folderPath . 'assets/css/style.css'); ## caminho para o css
         $this->nomeArquivo = date('d/m/Y') . 'pdf';
     }
 
