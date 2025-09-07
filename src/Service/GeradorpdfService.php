@@ -10,6 +10,7 @@ namespace App\Service;
 
 use App\Service\TempDirManager;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Mpdf\Mpdf;
 
 class GeradorpdfService
 {
