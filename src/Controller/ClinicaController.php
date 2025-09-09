@@ -885,7 +885,7 @@ class ClinicaController extends DefaultController
         Request $request,
         EntityManagerInterface $em,
         InternacaoRepository $internacaoRepo
-    ): JsonResponse|Response {
+    ): Response {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
@@ -959,7 +959,7 @@ class ClinicaController extends DefaultController
                     }
                 } catch (\Exception $e) {
                     // Loga mas não quebra a resposta
-                    $this->logger?->error('Erro ao inserir eventos da prescrição', [
+                    $this->logger->error('Erro ao inserir eventos da prescrição', [
                         'exception' => $e,
                         'internacao_id' => $id,
                         'pet_id' => $petId
