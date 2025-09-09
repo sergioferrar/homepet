@@ -7,7 +7,7 @@ use App\Repository\ClienteRepository;
 
 /**
  * @ORM\Entity(repositoryClass=ClienteRepository::class)
- * @ORM\Table(name="Cliente") 
+ * @ORM\Table(name="cliente") 
  */
 class Cliente
 {

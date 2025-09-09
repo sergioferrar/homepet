@@ -20,6 +20,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\VeterinarioRepository;
+use App\Entity\Veterinario;
 use App\Repository\BoxRepository;
 use App\Entity\Financeiro;
 use App\Entity\Servico;
@@ -122,7 +123,7 @@ class ClinicaController extends DefaultController
                 'data' => new \DateTime($r['data']),
                 'tipo' => 'Receita',
                 'resumo' => $r['resumo'],
-                'receita_cabecalho' => $r['cabecalho'],
+                'receita_cabecalho' => $r['cabecalho'], 
                 'receita_conteudo' => $r['conteudo'],
                 'receita_rodape' => $r['rodape'],
             ];
@@ -288,9 +289,9 @@ class ClinicaController extends DefaultController
     }
 
     /**
-     * @Route("/pet/{petId}/receita/nova", name="clinica_nova_receita", methods={"POST"})
+     * @Route("/pet/{petId}/receita", name="clinica_nova_receita", methods={"GET","POST"})
      */
-    public function novaReceita(Request $request, int $petId): Response
+    public function receita(Request $request, int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -300,34 +301,129 @@ class ClinicaController extends DefaultController
             throw $this->createNotFoundException('Pet não encontrado.');
         }
 
-        $receita = new \App\Entity\Receita();
-        $receita->setEstabelecimentoId($baseId);
-        $receita->setPetId($petId);
-        $receita->setData(new \DateTime());
-        $receita->setCabecalho($request->get('cabecalho_delta'));
-        $receita->setConteudo($request->get('conteudo_delta'));
-        $receita->setRodape($request->get('rodape_delta'));
-        $receita->setResumo('Receita registrada manualmente');
-        $conteudo = json_decode($request->get('cabecalho_delta'));
-        // dd($conteudo->ops[0]->insert);
-        $this->getRepositorio(\App\Entity\Receita::class)->salvar($receita);
+        $cliente = $this->getRepositorio(Cliente::class)->find($pet['dono_id']);
 
-        $gerarPDF = new \App\Service\GeradorpdfService($this->tempDirManager, $this->requestStack);
+        $clinica = $this->getRepositorio(\App\Entity\Estabelecimento::class)->buscarGlobalPorId($baseId);
 
-        $gerarPDF->configuracaoPagina('A4', 10, 10, 35, 6, 5, 3);##$orientacao, $margEsquerda, $margDireita, $margTop do conteudo, $margBottom, $margCabecalho, $margRodape
-        $gerarPDF->setNomeArquivo('Receita_manual');
-        $gerarPDF->setRodape("Gerado em: {DATE j/m/Y H:i}   Receita Manual - System Home Pet: Seu CRM para clínicas e pet shops");
+        if (!$clinica) {
+            throw $this->createNotFoundException('Clínica não encontrada.');
+        }
 
-        $gerarPDF->montaCabecalhoPadrao('Receita Veterinária');
-        $gerarPDF->addPagina('P');
-        $gerarPDF->conteudo($conteudo->ops[0]->insert);
-        $gerarPDF->gerar();
 
-        // $this->addFlash('success', 'Receita salva com sucesso!');
 
-        // return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+        // Busca o veterinário
+        $vet = $this->getRepositorio(Veterinario::class)->findOneBy(['estabelecimentoId' => $baseId]);
+        if (!$vet) {
+            // Tratar caso em que o veterinário não é encontrado
+            throw $this->createNotFoundException('Veterinário não encontrado.');
+        }
+
+        if ($request->isMethod('POST')) {
+            $conteudoDelta = $request->get('conteudo');
+            $resumo = $request->get('resumo');
+
+            $conteudoHtml = $this->quillDeltaToHtml($conteudoDelta);
+
+            $cabecalhoHtml = "
+                <div style='text-align:center; font-size:14px; font-weight:bold;'>
+                    ".($clinica['razaoSocial'] ?? 'Clínica Veterinária')." <br>
+                    CNPJ: ".($clinica['cnpj'] ?? '')." <br>
+                    {$clinica['rua']}, {$clinica['numero']} - {$clinica['bairro']}, {$clinica['cidade']} - CEP: {$clinica['cep']}
+                </div>
+                <hr>
+                <div style='font-size:12px;'>
+                    <strong>Tutor:</strong> {$cliente->getNome()} <br>
+                    <strong>Pet:</strong> {$pet['nome']} ({$pet['especie']} - {$pet['raca']}, {$pet['idade']} anos) <br>
+                    <strong>Sexo:</strong> {$pet['sexo']}
+                </div>
+                <hr>
+            ";
+
+            // --- NOVO: Cria o rodapé HTML fixo diretamente no PHP ---
+            $rodapeHtml = "
+                <div style='text-align:center; font-size:12px; margin-top: 20px;'>
+                    <hr style='border: 1px dashed black; width: 50%; margin: 10px auto;'>
+                    <p>Assinatura do Veterinário</p>
+                    <p>
+                        <strong>{$vet->getNome()}</strong> <br>
+                        <strong>CRMV:</strong> {$vet->getCrmv()}
+                    </p>
+                </div>
+                <div style='text-align:center; font-size:10px; margin-top: 10px;'>
+                    <span>Documento emitido em: ".date('d/m/Y H:i:s')."</span>
+                </div>
+            ";
+
+            $receita = new \App\Entity\Receita();
+            $receita->setEstabelecimentoId($baseId);
+            $receita->setPetId($petId);
+            $receita->setData(new \DateTime());
+            $receita->setCabecalho($cabecalhoHtml);
+            $receita->setConteudo($conteudoDelta);
+            $receita->setRodape($rodapeHtml); // <-- Agora salva o HTML fixo, não o delta do formulário
+            $receita->setResumo($resumo);
+
+            $this->getRepositorio(\App\Entity\Receita::class)->salvar($receita);
+
+            $gerarPDF = new \App\Service\GeradorpdfService($this->tempDirManager, $this->requestStack);
+            $gerarPDF->configuracaoPagina('A4', 10, 10, 50, 6, 10, 3);
+            $gerarPDF->setNomeArquivo('Receita_'.$pet['nome'].'_'.date('YmdHis'));
+            $gerarPDF->setRodape($rodapeHtml); // Usa o novo rodapé fixo
+            $gerarPDF->montaCabecalhoPadrao($cabecalhoHtml);
+            $gerarPDF->addPagina('P');
+            $gerarPDF->conteudo($conteudoHtml);
+
+            $this->addFlash('success', 'Receita registrada e PDF gerado com sucesso!');
+            return $gerarPDF->gerar();
+        }
+
+        return $this->render('clinica/detalhes_pet.html.twig', [
+            'pet' => $pet,
+            'clinica' => $clinica,
+            'veterinario' => $vet, 
+        ]);
     }
 
+    private function quillDeltaToHtml(?string $deltaJson): string
+    {
+        if (!$deltaJson) {
+            return '';
+        }
+
+        $delta = json_decode($deltaJson, true);
+        if (!$delta || !isset($delta['ops'])) {
+            return '';
+        }
+
+        $html = '';
+        foreach ($delta['ops'] as $op) {
+            $insert = $op['insert'] ?? '';
+            $attributes = $op['attributes'] ?? [];
+
+            if (isset($attributes['bold'])) {
+                $insert = "<strong>{$insert}</strong>";
+            }
+            if (isset($attributes['italic'])) {
+                $insert = "<em>{$insert}</em>";
+            }
+            if (isset($attributes['underline'])) {
+                $insert = "<u>{$insert}</u>";
+            }
+            if (isset($attributes['header'])) {
+                $level = $attributes['header'];
+                $insert = "<h{$level}>{$insert}</h{$level}>";
+            }
+            if (isset($attributes['list'])) {
+                $listType = $attributes['list'] === 'ordered' ? 'ol' : 'ul';
+                $insert = "<li>{$insert}</li>";
+                $html .= "<{$listType}>{$insert}</{$listType}>";
+                continue;
+            }
+            $html .= nl2br($insert);
+        }
+
+        return $html;
+    }
 
     
     /**
@@ -448,32 +544,32 @@ class ClinicaController extends DefaultController
         return $this->json(['success' => true]);
     }
 
-    /**
-     * @Route("/receita", name="clinica_receita", methods={"GET"})
-     */
-    public function receita(): Response
-    {
-        $this->switchDB();
-        return $this->render('clinica/receita.html.twig');
-    }
+    // /**
+    //  * @Route("/receita", name="clinica_receita", methods={"GET"})
+    //  */
+    // public function receita(): Response
+    // {
+    //     $this->switchDB();
+    //     return $this->render('clinica/receita.html.twig');
+    // }
 
-    /**
-     * @Route("/receita/pdf", name="clinica_receita_pdf", methods={"POST"})
-     */
-    public function gerarReceitaPdf(Request $request, PdfService $pdfService): Response
-    {
-        $this->switchDB();
+    // /**
+    //  * @Route("/receita/pdf", name="clinica_receita_pdf", methods={"POST"})
+    //  */
+    // public function gerarReceitaPdf(Request $request, PdfService $pdfService): Response
+    // {
+    //     $this->switchDB();
 
-        return $pdfService->gerarPdf(
-            'clinica/receita_pdf_backend.html.twig',
-            [
-                'cabecalho' => $request->get('cabecalho', ''),
-                'conteudo'  => $request->get('conteudo', ''),
-                'rodape'    => $request->get('rodape', '')
-            ],
-            'receita-medica.pdf'
-        );
-    }
+    //     return $pdfService->gerarPdf(
+    //         'clinica/receita_pdf_backend.html.twig',
+    //         [
+    //             'cabecalho' => $request->get('cabecalho', ''),
+    //             'conteudo'  => $request->get('conteudo', ''),
+    //             'rodape'    => $request->get('rodape', '')
+    //         ],
+    //         'receita-medica.pdf'
+    //     );
+    // }
 
     /**
      * @Route("/documentos", name="clinica_documentos", methods={"GET", "POST"})
@@ -786,78 +882,106 @@ class ClinicaController extends DefaultController
         return $this->json(['ok' => true]);
     }
 
-   /**
- * @Route("/internacao/{id}/prescricao/nova", name="clinica_internacao_prescricao_nova", methods={"POST"})
- */
-public function novaPrescricao(int $id, Request $request, EntityManagerInterface $em, InternacaoRepository $internacaoRepo): JsonResponse
-{
-    $this->switchDB();
-    $baseId = $this->getIdBase();
+    /**
+     * @Route("/internacao/{id}/prescricao/nova", name="clinica_internacao_prescricao_nova", methods={"GET","POST"})
+     */
+    public function novaPrescricao(
+        int $id,
+        Request $request,
+        EntityManagerInterface $em,
+        InternacaoRepository $internacaoRepo
+    ): JsonResponse|Response {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
 
-    try {
-        $internacao = $em->getRepository(Internacao::class)->find($id);
-        if (!$internacao) {
-            return $this->json(['ok' => false, 'msg' => 'Internação não encontrada.'], 404);
+        // 🚑 Se alguém abrir a rota direto no navegador (GET), redireciona pra ficha
+        if ($request->isMethod('GET')) {
+            return $this->redirectToRoute('clinica_ficha_internacao', ['id' => $id]);
         }
 
-        $medicamentoId = (int) $request->request->get('medicamento_id');
-        $dose = trim((string) $request->request->get('dose'));
-        $frequenciaHoras = (int) $request->request->get('frequencia_horas');
-        $duracaoDias = (int) $request->request->get('duracao_dias');
-        $dataHoraPrimeiraDose = $request->request->get('data_hora_primeira_dose');
+        try {
+            $internacao = $em->getRepository(Internacao::class)->find($id);
+            if (!$internacao) {
+                return $this->json(['ok' => false, 'msg' => 'Internação não encontrada.'], 404);
+            }
 
-        if (!$medicamentoId || empty($dose) || $frequenciaHoras <= 0 || $duracaoDias <= 0 || empty($dataHoraPrimeiraDose)) {
-            return $this->json(['ok' => false, 'msg' => 'Campos obrigatórios faltando.'], 400);
+            $medicamentoId = (int) $request->request->get('medicamento_id');
+            $dose = trim((string) $request->request->get('dose'));
+            $frequenciaHoras = (int) $request->request->get('frequencia_horas');
+            $duracaoDias = (int) $request->request->get('duracao_dias');
+            $dataHoraPrimeiraDose = $request->request->get('data_hora_primeira_dose');
+
+            if (!$medicamentoId || empty($dose) || $frequenciaHoras <= 0 || $duracaoDias <= 0 || empty($dataHoraPrimeiraDose)) {
+                return $this->json(['ok' => false, 'msg' => 'Campos obrigatórios faltando.'], 400);
+            }
+
+            $medicamento = $em->getRepository(Medicamento::class)->find($medicamentoId);
+            if (!$medicamento) {
+                return $this->json(['ok' => false, 'msg' => 'Medicamento não encontrado.'], 404);
+            }
+
+            // --- Cria a prescrição ---
+            $prescricao = new InternacaoPrescricao();
+            $prescricao->setInternacaoId($internacao->getId());
+            $prescricao->setMedicamento($medicamento);
+            $prescricao->setDescricao($medicamento->getNome());
+            $prescricao->setDose($dose);
+            $prescricao->setFrequencia(sprintf('a cada %d horas por %d dias', $frequenciaHoras, $duracaoDias));
+            $prescricao->setDataHora(new \DateTime($dataHoraPrimeiraDose));
+            $prescricao->setCriadoEm(new \DateTime());
+
+            $em->persist($prescricao);
+            $em->flush();
+
+            // --- Gera eventos na timeline (mas sem quebrar se falhar) ---
+            $petId = method_exists($internacao, 'getPetId')
+                ? $internacao->getPetId()
+                : ($internacao->getPet() ? $internacao->getPet()->getId() : null);
+
+            if ($petId) {
+                try {
+                    $numDoses = ($duracaoDias * 24) / $frequenciaHoras;
+
+                    for ($i = 0; $i < $numDoses; $i++) {
+                        $dataDose = (new \DateTime($dataHoraPrimeiraDose))->modify('+' . ($i * $frequenciaHoras) . ' hours');
+
+                        $descricaoEvento = sprintf(
+                            "Medicamento: %s | Dose: %s | Frequência: %s",
+                            $medicamento->getNome(),
+                            $dose,
+                            $prescricao->getFrequencia()
+                        );
+
+                        $internacaoRepo->inserirEvento(
+                            $baseId,
+                            $id,
+                            $petId,
+                            'medicacao',
+                            'Dose de medicação agendada',
+                            $descricaoEvento,
+                            $dataDose
+                        );
+                    }
+                } catch (\Exception $e) {
+                    // Loga mas não quebra a resposta
+                    $this->logger?->error('Erro ao inserir eventos da prescrição', [
+                        'exception' => $e,
+                        'internacao_id' => $id,
+                        'pet_id' => $petId
+                    ]);
+                }
+            }
+
+            return $this->json(['ok' => true, 'msg' => 'Prescrição salva com sucesso!']);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                'ok' => false,
+                'msg' => 'Erro interno: '.$e->getMessage()
+            ], 500);
         }
-
-        $medicamento = $em->getRepository(Medicamento::class)->find($medicamentoId);
-        if (!$medicamento) {
-            return $this->json(['ok' => false, 'msg' => 'Medicamento não encontrado.'], 404);
-        }
-        
-        $prescricao = new InternacaoPrescricao();
-        $prescricao->setInternacaoId($internacao->getId());
-        $prescricao->setMedicamento($medicamento);
-        $prescricao->setDescricao($medicamento->getNome());
-        $prescricao->setDose($dose);
-        $prescricao->setFrequencia(sprintf('a cada %d horas por %d dias', $frequenciaHoras, $duracaoDias));
-        $prescricao->setDataHora(new \DateTime($dataHoraPrimeiraDose));
-        $prescricao->setCriadoEm(new \DateTime());
-        
-        $em->persist($prescricao);
-        $em->flush();
-
-        $numDoses = ($duracaoDias * 24) / $frequenciaHoras;
-        for ($i = 0; $i < $numDoses; $i++) {
-            $dataDose = (new \DateTime($dataHoraPrimeiraDose))->modify('+' . ($i * $frequenciaHoras) . ' hours');
-            
-            $descricaoEvento = sprintf(
-                "Medicamento: %s | Dose: %s | Frequência: %s",
-                $medicamento->getNome(),
-                $dose,
-                $prescricao->getFrequencia()
-            );
-            
-            $internacaoRepo->inserirEvento(
-                $baseId,
-                $id,
-                $internacao->getPetId(),
-                'medicacao',
-                'Dose de medicação agendada',
-                $descricaoEvento,
-                $dataDose
-            );
-        }
-        
-        // Retorna sucesso
-        return $this->json(['ok' => true, 'msg' => 'Prescrição salva com sucesso!']);
-
-    } catch (\Exception $e) {
-        // Loga o erro exato para depuração
-        // $this->logger->error('Erro ao salvar prescrição: ' . $e->getMessage());
-        return $this->json(['ok' => false, 'msg' => 'Falha interna do servidor.'], 500);
     }
-}
+
     
     /**
      * @Route("/internacao/prescricao/{eventoId}/executar", name="clinica_internacao_prescricao_executar", methods={"POST"})

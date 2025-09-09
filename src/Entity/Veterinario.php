@@ -38,11 +38,14 @@ class Veterinario
     private $especialidade;
 
     /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $crmv;
+
+    /**
      * @ORM\Column(type="integer")
      */
     private $estabelecimentoId;
-
-    // Getters e Setters
 
     public function getEstabelecimentoId(): ?int
     {
@@ -52,7 +55,6 @@ class Veterinario
     public function setEstabelecimentoId(int $estabelecimentoId): self
     {
         $this->estabelecimentoId = $estabelecimentoId;
-
         return $this;
     }
 
@@ -69,7 +71,6 @@ class Veterinario
     public function setNome(string $nome): self
     {
         $this->nome = $nome;
-
         return $this;
     }
 
@@ -81,7 +82,6 @@ class Veterinario
     public function setEmail(string $email): self
     {
         $this->email = $email;
-
         return $this;
     }
 
@@ -93,7 +93,6 @@ class Veterinario
     public function setTelefone(string $telefone): self
     {
         $this->telefone = $telefone;
-
         return $this;
     }
 
@@ -105,7 +104,17 @@ class Veterinario
     public function setEspecialidade(string $especialidade): self
     {
         $this->especialidade = $especialidade;
+        return $this;
+    }
+    
+    public function getCrmv(): ?string
+    {
+        return $this->crmv;
+    }
 
+    public function setCrmv(?string $crmv): self
+    {
+        $this->crmv = $crmv;
         return $this;
     }
 }
