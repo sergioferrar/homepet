@@ -103,8 +103,8 @@ class EstabelecimentoController extends DefaultController
         //            $this->tempDirManager->deletarDiretorio();
         //  }
 
-        return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId(), 'planoId' => $plano]);
-    }
+                return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId(), 'planoId' => $plano]);
+            }
 
     /**
      * @Route("/landing/usuario/cadastrar", name="petshop_usuario_cadastrar")
@@ -121,16 +121,16 @@ class EstabelecimentoController extends DefaultController
             switch ($request->get('access_level')) {
                 case 'Super Admin':
                 case 'Admin':
-                    $roles = ['ROLE_ADMIN'];
-                    break;
+                $roles = ['ROLE_ADMIN'];
+                break;
                 case 'Atendente':
                 case 'Tosador':
                 case 'Balconista':
-                    $roles = ['ROLE_ADMIN_USER'];
-                    break;
+                $roles = ['ROLE_ADMIN_USER'];
+                break;
                 default:
-                    $roles = ['ROLE_USER'];
-                    break;
+                $roles = ['ROLE_USER'];
+                break;
             }
 
             $usuario->setRoles($roles);
@@ -205,9 +205,11 @@ class EstabelecimentoController extends DefaultController
                 'email'=> $usario->getEmail(),
             ];
 
-            $code = $mercadoPagoService->createPayment($dataPagamento);
+            return $this->render('pagamento/pagamento.html.twig', $dataPagamento);
+            // $code = $mercadoPagoService->createPayment($dataPagamento);
+            // $code = $mercadoPagoService->createPreference($dataPagamento);
             // dd($code);
-            return $this->redirect($code['init_point']);
+            // return $this->redirect($code['init_point']);
         // } catch(\Exception $e){
         //     dd($e);
         // }

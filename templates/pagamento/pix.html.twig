@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="UTF-8">
+		<title>Checkout - Pagamento</title>
+		<script src="//sdk.mercadopago.com/js/v2"></script>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				background: #f9f9f9;
+				display: flex;
+				justify-content: center;
+				align-items: flex-start;
+				padding: 30px;
+			}
+			.checkout-container {
+				background: #fff;
+				border-radius: 16px;
+				box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+				width: 450px;
+				padding: 25px;
+				transition: all 0.3s ease-in-out;
+			}
+			h2 {
+				margin-bottom: 20px;
+				color: #333;
+				text-align: center;
+			}
+			select {
+				width: 100%;
+				padding: 10px;
+				margin-bottom: 20px;
+				border-radius: 8px;
+				border: 1px solid #ccc;
+			}
+			.payment-method {
+				display: block;
+				margin-top: 15px;
+			}
+			.loading {
+				text-align: center;
+				padding: 20px;
+			}
+			.success {
+				text-align: center;
+				color: green;
+				font-weight: bold;
+				padding: 20px;
+			}
+			.error {
+				text-align: center;
+				color: red;
+				padding: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="checkout-container">
+			<h2>Finalizar Pagamento</h2>
+			<label for="paymentType">Selecione a forma de pagamento:</label>
+			<select id="paymentType">
+				<option value="">-- Escolha --</option>
+				<option value="card">Cartão de Crédito</option>
+				<option selected value="pix">PIX</option>
+			</select>
+			<!-- Área dinâmica -->
+			
+		<div id="payment-form" class="payment-method">
+			<img width="150" src="data:image/jpeg;base64,{{ pix_entities.transaction_data.qr_code_base64 }}"/>
+			<p>{{ valor|formataValorEmReal }}</p>
+			<p><code>{{ pix_entities.transaction_data.qr_code }}</code></p>
+			<a href="{{ pix_entities.transaction_data.ticket_url }}" target="_blank">Ir para o Mercado Pago</a>
+		</div>
+		<div id="status"></div>
+	</div>
+</body>
+</html>

@@ -1,136 +1,181 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-	<meta charset="UTF-8">
-	<title>Checkout - Pagamento</title>
-	<script src="//sdk.mercadopago.com/js/v2"></script>
-	<style>
-		body {
-			font-family: Arial, sans-serif;
-			background: #f9f9f9;
-			display: flex;
-			justify-content: center;
-			align-items: flex-start;
-			padding: 30px;
-		}
-		.checkout-container {
-			background: #fff;
-			border-radius: 16px;
-			box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-			width: 450px;
-			padding: 25px;
-			transition: all 0.3s ease-in-out;
-		}
-		h2 {
-			margin-bottom: 20px;
-			color: #333;
-			text-align: center;
-		}
-		select {
-			width: 100%;
-			padding: 10px;
-			margin-bottom: 20px;
-			border-radius: 8px;
-			border: 1px solid #ccc;
-		}
-		.payment-method {
-			display: none;
-			margin-top: 15px;
-		}
-		.loading {
-			text-align: center;
-			padding: 20px;
-		}
-		.success {
-			text-align: center;
-			color: green;
-			font-weight: bold;
-			padding: 20px;
-		}
-		.error {
-			text-align: center;
-			color: red;
-			padding: 20px;
-		}
-	</style>
-</head>
-<body>
-	<div class="checkout-container">
-		<h2>Finalizar Pagamento</h2>
-		<label for="paymentType">Selecione a forma de pagamento:</label>
-		<select id="paymentType">
-			<option value="">-- Escolha --</option>
-			<option value="card">Cartão de Crédito</option>
-			<option value="pix">PIX</option>
-		</select>
-
-		<!-- Área dinâmica -->
+	<head>
+		<meta charset="UTF-8">
+		<title>Checkout - Pagamento</title>
+		<script src="//sdk.mercadopago.com/js/v2"></script>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				background: #f9f9f9;
+				display: flex;
+				justify-content: center;
+				align-items: flex-start;
+				padding: 30px;
+			}
+			.checkout-container {
+				background: #fff;
+				border-radius: 16px;
+				box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+				width: 450px;
+				padding: 25px;
+				transition: all 0.3s ease-in-out;
+			}
+			h2 {
+				margin-bottom: 20px;
+				color: #333;
+				text-align: center;
+			}
+			select, input[type='text'] {
+				width: 100%;
+				padding: 10px;
+				margin-bottom: 20px;
+				border-radius: 8px;
+				border: 1px solid #ccc;
+			}
+			.payment-method {
+				display: none;
+				margin-top: 15px;
+			}
+			.loading {
+				text-align: center;
+				padding: 20px;
+			}
+			.success {
+				text-align: center;
+				color: green;
+				font-weight: bold;
+				padding: 20px;
+			}
+			.error {
+				text-align: center;
+				color: red;
+				padding: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="checkout-container">
+			<h2>Finalizar Pagamento</h2>
+			<label for="paymentType">Selecione a forma de pagamento:</label>
+			<select id="paymentType">
+				<option value="">-- Escolha --</option>
+				<option value="card">Cartão de Crédito</option>
+				<option value="pix">PIX</option>
+			</select>
+			<!-- Área dinâmica -->
+			<div class="area-pix" style="display: none;">
+				<form id="form-checkout" action="{{ url('pagar_com_pix') }}" method="post">
+					<div>
+						<div>
+							<label for="payerFirstName">Name</label>
+							<input id="form-checkout__payerFirstName" name="payerFirstName" type="text">
+						</div>
+						<div>
+							<label for="payerLastName">Surname</label>
+							<input id="form-checkout__payerLastName" name="payerLastName" type="text">
+						</div>
+						<div>
+							<label for="email">Email</label>
+							<input id="form-checkout__email" name="email" type="text">
+						</div>
+						<div>
+							<label for="identificationType">Document type</label>
+						<select id="form-checkout__identificationType" name="identificationType" type="text">
+							<option value="cpf">CPF</option>
+							<option value="cnpj">CNPJ</option>
+						</select>
+					</div>
+					<div>
+						<label for="identificationNumber">Document number</label>
+						<input id="form-checkout__identificationNumber" name="identificationNumber" type="text">
+					</div>
+				</div>
+				<div>
+					<div>
+						<input type="hidden" name="transactionAmount" id="transactionAmount" value="{{price}}">
+						<input type="hidden" name="description" id="description" value="{{title}}">
+						<br>
+						<button type="submit">Pay</button>
+					</div>
+				</div>
+			</form>
+		</div>
 		<div id="payment-form" class="payment-method"></div>
 		<div id="status"></div>
 	</div>
-
 	<script type="module">
 		const mp = new MercadoPago("TEST-f9dcb738-f6dd-4eb2-a42f-dac0ea45143d", {
 			locale: 'pt-BR'
 		});
-
 		const paymentType = document.getElementById("paymentType");
 		const formContainer = document.getElementById("payment-form");
 		const statusDiv = document.getElementById("status");
-
 		paymentType.addEventListener("change", async function () {
 			formContainer.innerHTML = "";
 			statusDiv.innerHTML = "";
 			formContainer.style.display = "block";
-
 			if (this.value === "card") {
-				  // Renderiza o Brick de Cartão
-				  const cardForm = mp.bricks();
-				  cardForm.create("cardPayment", "payment-form", {
-				    initialization: {
-				      amount: 100.00, // valor do pagamento
-				    },
-				    callbacks: {
-				      onReady: () => {
-				        console.log("✅ Formulário de cartão pronto!");
-				      },
-				      onSubmit: (formData) => {
-				        statusDiv.innerHTML = `<div class="loading">Processando pagamento...</div>`;
-				        // Aqui você envia formData ao seu backend
-				        console.log("Dados do Cartão:", formData);
-				        setTimeout(() => {
-				          statusDiv.innerHTML = `<div class="success">✅ Pagamento aprovado!</div>`;
-				        }, 2000);
-				      },
-				      onError: (error) => {
-				        statusDiv.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
-				      }
-				    }
-				  });
-				}
-
-			if (this.value === "pix") {
-				// Renderiza o Brick de Pix
-				const pixForm = mp.bricks();
-				console.log(pixForm);
-				pixForm.create("pix", "payment-form", {
+				// Renderiza o Brick de Cartão
+				const cardForm = mp.bricks();
+				cardForm.create("cardPayment", "payment-form", {
 					initialization: {
-						amount: 100.00,
-					},
-					callbacks: {
-						onReady: () => {
-							statusDiv.innerHTML = `<div class="loading">Escaneie o QR Code para pagar</div>`;
-						},
-						onSubmit: (formData) => {
-							console.log("Dados do PIX:", formData);
-						},
-						onError: (error) => {
-							statusDiv.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
-						}
-					}
-				});
+				amount: 100.00, // valor do pagamento
+			},
+			callbacks: {
+				onReady: () => {
+					console.log("✅ Formulário de cartão pronto!");
+				},
+				onSubmit: (formData) => {
+					statusDiv.innerHTML = `<div class="loading">Processando pagamento...</div>`;
+				// Aqui você envia formData ao seu backend
+					console.log("Dados do Cartão:", formData);
+					setTimeout(() => {
+						statusDiv.innerHTML = `<div class="success">✅ Pagamento aprovado!</div>`;
+					}, 2000);
+				},
+				onError: (error) => {
+					statusDiv.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
+				}
 			}
 		});
+		}
+		if (this.value === "pix") {
+			document.querySelector('.payment-method').innerHTML = document.querySelector('.area-pix').innerHTML;
+			// Renderiza o Brick de Pix
+			(async function getIdentificationTypes() {
+				try {
+					const identificationTypes = await mp.getIdentificationTypes();
+					const identificationTypeElement = document.getElementById('form-checkout__identificationType');
+
+					createSelectOptions(identificationTypeElement, identificationTypes);
+				} catch (e) {
+					return console.error('Error getting identificationTypes: ', e);
+				}
+			})();
+
+			function createSelectOptions(elem, options, labelsAndKeys = { label: "name", value: "id" }) {
+				const { label, value } = labelsAndKeys;
+
+				elem.options.length = 0;
+
+				const tempOptions = document.createDocumentFragment();
+
+				options.forEach(option => {
+					const optValue = option[value];
+					const optLabel = option[label];
+
+					const opt = document.createElement('option');
+					opt.value = optValue;
+					opt.textContent = optLabel;
+
+					tempOptions.appendChild(opt);
+				});
+
+				elem.appendChild(tempOptions);
+			}
+		}
+	});
 	</script>
 </body>
 </html>
