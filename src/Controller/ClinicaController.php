@@ -303,8 +303,10 @@ class ClinicaController extends DefaultController
 
         $cliente = $this->getRepositorio(Cliente::class)->find($pet['dono_id']);
 
-        $clinica = $this->getRepositorio(\App\Entity\Estabelecimento::class)->buscarPorId($baseId);
+        $this->restauraLoginDB();
+        $clinica = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($baseId);
 
+        $this->switchDB();
         // Busca o veterinário
         $vet = $this->getRepositorio(Veterinario::class)->findOneBy(['estabelecimentoId' => $baseId]);
         if (!$vet) {
@@ -320,9 +322,9 @@ class ClinicaController extends DefaultController
 
             $cabecalhoHtml = "
                 <div style='text-align:center; font-size:14px; font-weight:bold;'>
-                    ".($clinica['razaoSocial'] ?? 'Clínica Veterinária')." <br>
-                    CNPJ: ".($clinica['cnpj'] ?? '')." <br>
-                    {$clinica['rua']}, {$clinica['numero']} - {$clinica['bairro']}, {$clinica['cidade']} - CEP: {$clinica['cep']}
+                    ".($clinica->getRazaoSocial() ?? 'Clínica Veterinária')." <br>
+                    CNPJ: ".($clinica->getCnpj() ?? '')." <br>
+                    {$clinica->getRua()}, {$clinica->getNumero()} - {$clinica->getBairro()}, {$clinica->getCidade()} - CEP: {$clinica->getCep()}
                 </div>
                 <hr>
                 <div style='font-size:12px;'>

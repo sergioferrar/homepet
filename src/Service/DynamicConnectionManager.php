@@ -47,7 +47,7 @@ class DynamicConnectionManager
         $databaseVariables = explode('/', $_ENV['DATABASE_URL']);
         $databaseUser = explode(':',$databaseVariables[2]);
         // dd(explode('/', $_ENV['DATABASE_URL']),$databaseUser[0]);
-        $this->switchDatabase($databaseVariables[3], $databaseUser[0]);
+        $this->switchDatabase(explode('?', $databaseVariables[3])[0], $databaseUser[0]);
         // dump($this->connection);
     }
 

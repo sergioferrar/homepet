@@ -104,15 +104,12 @@ class MenuController extends DefaultController
         $data = [];
 
         // Usuario logado
-        $usuarioLogado = $this->getRepositorio(\App\Entity\Usuario::class)
-            ->find($request->getSession()->get('userId'));
+        $usuarioLogado = $this->getRepositorio(\App\Entity\Usuario::class)->find($request->getSession()->get('userId'));
         // dd($usuarioLogado, $request->getSession()->get('userId'));
         // Pegar o estabelecimento a qual pertence o usuario loado
-        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
-            ->find($usuarioLogado->getPetshopId());
+        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($usuarioLogado->getPetshopId());
         // Pegar o plano que o estabelecimento do usuario logado pertence
-        $getPlanoLogado = $this->getRepositorio(\App\Entity\Plano::class)
-            ->find($estabelecimento->getPlanoId());
+        $getPlanoLogado = $this->getRepositorio(\App\Entity\Plano::class)->find($estabelecimento->getPlanoId());
 
         $plano = json_decode($getPlanoLogado->getDescricao(), true);
         $modulo = [];
