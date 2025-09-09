@@ -303,9 +303,13 @@ class ClinicaController extends DefaultController
 
         $cliente = $this->getRepositorio(Cliente::class)->find($pet['dono_id']);
 
-        $conn = $this->getDoctrine()->getConnection();
-        $sql = "SELECT * FROM u199209817_login.estabelecimento WHERE id = :id";
-        $clinica = $conn->fetchAssociative($sql, ['id' => $baseId]);
+        $clinica = $this->getRepositorio(\App\Entity\Estabelecimento::class)->buscarGlobalPorId($baseId);
+
+        if (!$clinica) {
+            throw $this->createNotFoundException('Clínica não encontrada.');
+        }
+
+
 
         // Busca o veterinário
         $vet = $this->getRepositorio(Veterinario::class)->findOneBy(['estabelecimentoId' => $baseId]);
