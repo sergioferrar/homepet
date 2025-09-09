@@ -73,15 +73,19 @@ class GeradorpdfService
         return $this->config;
     }
 
-    public function configuracaoPagina($orientacao, $margEsquerda, $margDireita, $margTop, $margBottom, $margCabecalho, $margRodape)
+ public function configuracaoPagina($orientacao, $margEsquerda, $margDireita, $margTop, $margBottom, $margCabecalho, $margRodape)
     {
+        // Use a propriedade tMargin e bMargin para definir a margem do conteúdo
+        $this->pdf->tMargin = $margTop;
+        $this->pdf->bMargin = $margBottom;
+
+        // Use a propriedade margin_header e margin_footer para definir a margem do cabeçalho e rodapé
         $this->pdf->margin_header = $margCabecalho;
         $this->pdf->margin_footer = $margRodape;
+
         $this->pdf->DefOrientation = $orientacao;
         $this->pdf->DeflMargin = $margEsquerda;
         $this->pdf->DefrMargin = $margDireita;
-        $this->pdf->tMargin = $margTop;
-        $this->pdf->bMargin = $margBottom;
     }
 
     public function montaCabecalhoPadrao($cabecalho)
