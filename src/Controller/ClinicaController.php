@@ -303,8 +303,7 @@ class ClinicaController extends DefaultController
 
         $cliente = $this->getRepositorio(Cliente::class)->find($pet['dono_id']);
 
-        $clinica = $this->getRepositorio(\App\Repository\EstabelecimentoRepository::class)
-            ->buscarPorId($baseId);
+        $clinica = $this->getRepositorio(\App\Entity\Estabelecimento::class)->buscarPorId($baseId);
 
         // Busca o veterinário
         $vet = $this->getRepositorio(Veterinario::class)->findOneBy(['estabelecimentoId' => $baseId]);

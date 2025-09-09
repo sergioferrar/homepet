@@ -62,6 +62,21 @@ class EstabelecimentoRepository extends ServiceEntityRepository
         return $query->fetch();
     }
 
+    public function buscarPorId($id): ?array
+    {
+        $sql = "SELECT e.id, e.razaoSocial, e.cnpj, e.rua, e.numero, e.complemento, 
+                       e.bairro, e.cidade, e.pais, e.cep, e.status, 
+                       e.dataCadastro, e.dataAtualizacao, e.planoId, 
+                       e.dataPlanoInicio, e.dataPlanoFim
+                FROM u199209817_login.estabelecimento e
+                LEFT JOIN u199209817_login.planos p ON p.id = e.planoId
+                WHERE e.id = :id";
+
+        $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
+        return $stmt->fetchAssociative() ?: null;
+    }
+
+
 
     public function renovacao($baseId, $eid, $dataInicio, $dataFim)
     {
