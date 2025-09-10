@@ -90,28 +90,11 @@ class PagamentoController extends DefaultController
 				"email" => $request->get('email'),
 			]
 		], $autentication['access_token']);
-
+		// dd($payment);
 		$data = [];
 		$data['pix_entities'] = $payment['point_of_interaction'];
 		$data['valor'] = (float) $request->get('transactionAmount');
 		// dd($data);
 		return $this->render('pagamento/pix.html.twig', $data);
-		dd($payment);
-
-		MercadoPagoConfig::setAccessToken($autentication['access_token']);
-
-		$client = new PaymentClient();
-		$request_options = new RequestOptions();
-		$request_options->setCustomHeaders(["X-Idempotency-Key: 0d5020ed-1af6-469c-ae06-c3bec19954bb"]);
-
-		$payment = $client->create([
-			"transaction_amount" => (float) $request->get('transactionAmount'),
-			"payment_method_id" => 'pix',
-			"payer" => [
-				"email" => $request->get('email')
-			]
-		], $request_options);
-
-		dd($payment);
 	}
 }
