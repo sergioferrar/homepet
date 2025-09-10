@@ -73,7 +73,7 @@
                                                 {% set clienteNome = attribute(item, 'nome_cliente')|default(attribute(item, 'cliente')|default('')) %}
                                                 {% set dataAt      = attribute(item, 'data_inicio')|default(attribute(item, 'data')) %}
                                                 <li class="list-group-item fs-6">
-                                                    <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info">{{ petNome }}</a>
+                                                    <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info consulta">{{ petNome }}</a>
                                                     <small class="ms-1 text-black">{{ clienteNome }}</small>                                                    
                                                     <div class="badge text-bg-primary">{{ dataAt|date('d/m H:i') }}</div>
                                                 </li>
@@ -106,7 +106,7 @@
                                             <div class="card card-flutuante mb-1 card-listagem-item bg-white">
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <div>
-                                                        <a href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}" class="fw-bold text-info">{{ animal.nome }}</a>
+                                                        <a href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}" class="fw-bold text-info consulta">{{ animal.nome }}</a>
                                                         <span class="ms-1 text-black">{{ animal.tutor }}</span>
                                                     </div>
                                                 </div>
@@ -146,7 +146,7 @@
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <div>
                                                         {% if petId is not null %}
-                                                            <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info">{{ petNome }}</a>
+                                                            <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info consulta">{{ petNome }}</a>
                                                         {% else %}
                                                             <span class="fw-bold text-info">{{ petNome }}</span>
                                                         {% endif %}
@@ -196,7 +196,7 @@
                                                     <div class="d-flex justify-content-between align-items-center">
                                                         <div>
                                                             {% if petId is not null %}
-                                                                <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info">{{ petNome }}</a>
+                                                                <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info consulta">{{ petNome }}</a>
                                                             {% else %}
                                                                 <span class="fw-bold text-info">{{ petNome }}</span>
                                                             {% endif %}
@@ -220,7 +220,7 @@
                                                     <div class="d-flex justify-content-between align-items-center">
                                                         <div>
                                                             {% if petId is not null %}
-                                                                <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info">{{ petNome }}</a>
+                                                                <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info consulta">{{ petNome }}</a>
                                                             {% else %}
                                                                 <span class="fw-bold text-info">{{ petNome }}</span>
                                                             {% endif %}
@@ -303,6 +303,18 @@
 </div>
 {% endblock %}
 {% block javascripts %}
-{{ parent() }}
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(function(){
+        
+        var largura = screen.width;
+        var altura = screen.height;
+        $('.consulta').on('click', function(){
+            var pagina = $(this).attr('href');
+            window.open(pagina, "", "location=center,directories=no,toolbar=no,scrollbars=yes,status=no,dialog=yes,resizable=no,minimaze=no,fullscreen=no,width="+largura+",height="+altura+",top=100,left=200");
+            return false;
+        })
+    });
+</script>
 {% endblock %}
