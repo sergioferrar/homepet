@@ -33,10 +33,10 @@ use App\Entity\InternacaoExecucao;
  */
 class ClinicaController extends DefaultController
 {
-    /**
+   /**
      * @Route("/dashboard", name="clinica_dashboard", methods={"GET"})
      */
-    public function dashboard(): Response
+    public function dashboard(Request $request): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -57,8 +57,19 @@ class ClinicaController extends DefaultController
             ? $repoPet->listarPetsRecentes($baseId, 5)
             : [];
 
-        $vacinasVencidas = method_exists($repoPet, 'listarVacinasPendentes') ? $repoPet->listarVacinasPendentes($baseId) : [];
-        $vacinasProgramadas = method_exists($repoPet, 'listarVacinasProgramadas') ? $repoPet->listarVacinasProgramadas($baseId) : [];
+        $vacinasVencidas = method_exists($repoPet, 'listarVacinasPendentes')
+            ? $repoPet->listarVacinasPendentes($baseId)
+            : [];
+        $vacinasProgramadas = method_exists($repoPet, 'listarVacinasProgramadas')
+            ? $repoPet->listarVacinasProgramadas($baseId)
+            : [];
+
+        // 🔍 pesquisa
+        $termo = $request->query->get('q');
+        $pets = [];
+        if ($termo) {
+            $pets = $repoPet->pesquisarPetsOuTutor($baseId, $termo);
+        }
 
         return $this->render('clinica/dashboard.html.twig', [
             'total_pets' => $totalPets,
@@ -70,8 +81,11 @@ class ClinicaController extends DefaultController
             'vacinas_vencidas' => $vacinasVencidas,
             'totaldono' => $totalDono,
             'animais_cadastrados' => $animaisCadastrados,
+            'pets' => $pets,
+            'termo' => $termo,
         ]);
     }
+
 
     /**
      * @Route("/pet/{id}", name="clinica_detalhes_pet", methods={"GET"})

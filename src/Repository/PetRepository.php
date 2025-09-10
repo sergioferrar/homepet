@@ -27,13 +27,17 @@ class PetRepository extends ServiceEntityRepository
 
     public function findPetById($baseId, $petId): array
     {
-        $sql = "SELECT p.id, p.nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.observacoes, c.nome as dono_nome, c.id AS dono_id
+        $sql = "SELECT p.id, p.nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.observacoes,
+                       p.peso, p.castrado,
+                       c.nome as dono_nome, c.id AS dono_id
                 FROM {$_ENV['DBNAMETENANT']}.pet p
                 JOIN {$_ENV['DBNAMETENANT']}.cliente c ON (p.dono_id = c.id)
-                WHERE p.estabelecimento_id = '{$baseId}' AND p.id = {$petId}";
+                WHERE p.estabelecimento_id = :baseId AND p.id = :petId";
 
-        $stmt = $this->conn->executeQuery($sql);
-        return $stmt->fetchAssociative();
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('petId', $petId);
+        return $stmt->executeQuery()->fetchAssociative();
     }
 
     public function findAllPets($baseId): array
@@ -47,10 +51,29 @@ class PetRepository extends ServiceEntityRepository
         return $stmt->fetchAllAssociative();
     }
 
+    public function pesquisarPetsOuTutor($baseId, string $termo): array
+    {
+        $sql = "SELECT p.id, p.nome, p.especie, p.raca, c.nome AS dono_nome
+                FROM {$_ENV['DBNAMETENANT']}.pet p
+                JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                WHERE p.estabelecimento_id = :baseId
+                  AND (p.nome LIKE :termo OR c.nome LIKE :termo)
+                ORDER BY p.nome ASC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('termo', "%{$termo}%");
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
+
+
     public function save($baseId, Pet $pet): void
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.pet (estabelecimento_id, nome, especie, sexo, raca, porte, idade, observacoes, dono_id) 
-                VALUES (:estabelecimento_id, :nome, :especie, :sexo, :raca, :porte, :idade, :observacoes, :dono_id)";
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.pet 
+                (estabelecimento_id, nome, especie, sexo, raca, porte, idade, observacoes, dono_id, peso, castrado) 
+                VALUES (:estabelecimento_id, :nome, :especie, :sexo, :raca, :porte, :idade, :observacoes, :dono_id, :peso, :castrado)";
+        
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('estabelecimento_id', $baseId);
         $stmt->bindValue('nome', $pet->getNome());
@@ -61,13 +84,20 @@ class PetRepository extends ServiceEntityRepository
         $stmt->bindValue('idade', $pet->getIdade());
         $stmt->bindValue('observacoes', $pet->getObservacoes());
         $stmt->bindValue('dono_id', $pet->getDono_Id());
+        $stmt->bindValue('peso', $pet->getPeso());
+        $stmt->bindValue('castrado', $pet->getCastrado());
         $stmt->execute();
     }
 
+
     public function update($baseId, Pet $pet): void
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.pet SET nome = :nome, especie = :especie, sexo = :sexo, raca = :raca, porte = :porte, 
-                idade = :idade, observacoes = :observacoes, dono_id = :dono_id WHERE estabelecimento_id = '{$baseId}' AND id = :id";
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.pet 
+                SET nome = :nome, especie = :especie, sexo = :sexo, raca = :raca, porte = :porte, 
+                    idade = :idade, observacoes = :observacoes, dono_id = :dono_id, 
+                    peso = :peso, castrado = :castrado
+                WHERE estabelecimento_id = :baseId AND id = :id";
+
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('nome', $pet->getNome());
         $stmt->bindValue('especie', $pet->getEspecie());
@@ -77,9 +107,13 @@ class PetRepository extends ServiceEntityRepository
         $stmt->bindValue('idade', $pet->getIdade());
         $stmt->bindValue('observacoes', $pet->getObservacoes());
         $stmt->bindValue('dono_id', $pet->getDono_Id());
+        $stmt->bindValue('peso', $pet->getPeso());
+        $stmt->bindValue('castrado', $pet->getCastrado());
+        $stmt->bindValue('baseId', $baseId);
         $stmt->bindValue('id', $pet->getId());
         $stmt->execute();
     }
+
 
 
     public function delete($baseId, int $id): void

@@ -1,85 +1,100 @@
 {% extends 'base.html.twig' %}
 {% block title %}Painel de Controle{% endblock %}
+
 {% block stylesheets %}
-    
-    <style>
-    {# .card-title { color: #004080; font-weight: bold; } #}
-    .card-listagem-scroll {
-    max-height: 416px;
-    overflow-y: auto;
-    }
-    
-    .card-body-fixo {
-    height: 500px;
-    overflow-y: 500px;
-    }
-    </style>
+<style>
+.card-listagem-scroll { max-height: 416px; overflow-y: auto; }
+.card-body-fixo { height: 500px; overflow-y: 500px; }
+</style>
 {% endblock %}
+
 {% block body %}
-    <div class="container">
-        <h1 class="text-primary mb-4 text-center">Painel de Controle Clinica Veterinaria</h1>
-        <div class="rows">
-            
-            <div class="row">
-                <div class="col-6 col-md-3">
-                    <div class="card bg-primary text-white">
-                        <div class="card-header text-bg-primary"><h6>Total de Animais</h6></div>
-                        <div class="card-body text-center pt-2">
-                            
-                            <h3>{{ total_pets }}</h3>
-                            <small>Animais registrados</small>
-                            
-                            <div class="icon-circle bg-dark"><i class="fas fa-paw"></i></div>
+
+<!-- 🔍 Pesquisa -->
+<div class="container-fluid mt-5">
+    <h3 class="text-primary mb-4">Pesquisar Pet ou Tutor</h3>
+    <form method="get" action="{{ path('clinica_dashboard') }}" class="row mb-3">
+        <div class="col-10">
+            <input type="text" name="q" value="{{ termo }}" class="form-control form-control-md"
+                   placeholder="🔍 Pesquisar por nome ou tutor..." />
+        </div>
+        <div class="col-2">
+            <button type="submit" class="btn btn-primary w-100">Buscar</button>
+        </div>
+    </form>
+
+    {% if termo %}
+        <div class="row gy-3">
+            {% for pet in pets %}
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5>
+                                <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}" class="text-primary">
+                                    {{ pet.nome }}
+                                </a>
+                            </h5>
+                            <p class="mb-1"><i class="bx bx-user"></i> {{ pet.dono_nome }}</p>
+                            <p class="mb-0"><i class="bx bx-shape-circle"></i> {{ pet.especie }} | <b>Raça:</b> {{ pet.raca }}</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-6 col-md-3">
-                    
-                    <div class="card bg-success text-white">
-                        <div class="card-header text-bg-success"><h6>Total de Responsáveis</h6></div>
-                        <div class="card-body text-center pt-2">
-                            <div>
-                                
-                                <h3>{{ totaldono }}</h3>
-                                <small>Clientes cadastrados</small>
-                            </div>
-                            <div class="icon-circle bg-dark"><i class="fas fa-users"></i></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    
-                    <div class="card bg-danger text-white">
-                        <div class="card-header text-bg-danger"><h6>Débitos / Clientes</h6></div>
-                        <div class="card-body text-center pt-2">
-                            <div>
-                                
-                                <h3>R$ {{ debitos_cliente|number_format(2, ',', '.') }}</h3>
-                                <small>Total em aberto</small>
-                            </div>
-                            <div class="icon-circle bg-dark"><i class="fas fa-hand-holding-usd"></i></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-6 col-md-3">
-                    
-                    <div class="card bg-warning text-dark">
-                        <div class="card-header text-bg-warning"><h6>Média de Atendimento</h6></div>
-                        <div class="card-body text-center pt-2">
-                            <div>
-                                
-                                <h3>{{ media_atendimento }}</h3>
-                                <small>Duração média</small>
-                            </div>
-                            <div class="icon-circle bg-dark text-white"><i class="fas fa-stopwatch"></i></div>
-                        </div>
+            {% else %}
+                <div class="alert alert-info">Nenhum resultado encontrado para "{{ termo }}".</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- 📊 Dashboard antigo -->
+<div class="container">
+    <h1 class="text-primary mb-4 text-center">Painel de Controle Clinica Veterinaria</h1>
+    <div class="rows">
+        <div class="row">
+            <div class="col-6 col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-header text-bg-primary"><h6>Total de Animais</h6></div>
+                    <div class="card-body text-center pt-2">
+                        <h3>{{ total_pets }}</h3>
+                        <small>Animais registrados</small>
+                        <div class="icon-circle bg-dark"><i class="fas fa-paw"></i></div>
                     </div>
                 </div>
             </div>
-            
+            <div class="col-6 col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-header text-bg-success"><h6>Total de Responsáveis</h6></div>
+                    <div class="card-body text-center pt-2">
+                        <h3>{{ totaldono }}</h3>
+                        <small>Clientes cadastrados</small>
+                        <div class="icon-circle bg-dark"><i class="fas fa-users"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-header text-bg-danger"><h6>Débitos / Clientes</h6></div>
+                    <div class="card-body text-center pt-2">
+                        <h3>R$ {{ debitos_cliente|number_format(2, ',', '.') }}</h3>
+                        <small>Total em aberto</small>
+                        <div class="icon-circle bg-dark"><i class="fas fa-hand-holding-usd"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-header text-bg-warning"><h6>Média de Atendimento</h6></div>
+                    <div class="card-body text-center pt-2">
+                        <h3>{{ media_atendimento }}</h3>
+                        <small>Duração média</small>
+                        <div class="icon-circle bg-dark text-white"><i class="fas fa-stopwatch"></i></div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="container-fluid mt-4">
+    </div>
+
+    <div class="container-fluid mt-4">
             
             <!-- COLUNA ESQUERDA -->
             <div class="col-lg-12">
@@ -273,20 +288,21 @@
             <!-- COLUNA DIREITA (não muda) -->
             
         </div>
-    </div>
+</div>
+
 {% endblock %}
+
 {% block javascripts %}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    $(function(){
-    
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$(function(){
     var largura = screen.width;
     var altura = screen.height;
     $('.consulta').on('click', function(){
-    var pagina = $(this).attr('href');
-    window.open(pagina, "", "location=center,directories=no,toolbar=no,scrollbars=yes,status=no,dialog=yes,resizable=no,minimaze=no,fullscreen=no,width="+largura+",height="+altura+",top=100,left=200");
-    return false;
+        var pagina = $(this).attr('href');
+        window.open(pagina, "", "location=center,toolbar=no,scrollbars=yes,status=no,dialog=yes,resizable=no,minimaze=no,fullscreen=no,width="+largura+",height="+altura+",top=100,left=200");
+        return false;
     })
-    });
-    </script>
+});
+</script>
 {% endblock %}

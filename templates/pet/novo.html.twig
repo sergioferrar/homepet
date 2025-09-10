@@ -57,6 +57,20 @@
             <label for="observacoes" class="form-label">Observações</label>
             <textarea class="form-control" id="observacoes" name="observacoes" rows="3">{{ pet.observacoes|default('') }}</textarea>
         </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="peso" class="form-label">Peso (kg)</label>
+                <input type="number" step="0.01" class="form-control" id="peso" name="peso"
+                       value="{{ pet.peso|default('') }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="castrado" class="form-label">Castrado</label>
+                <select class="form-control" id="castrado" name="castrado">
+                    <option value="0" {% if pet.castrado is defined and pet.castrado == 0 %}selected{% endif %}>Não</option>
+                    <option value="1" {% if pet.castrado is defined and pet.castrado == 1 %}selected{% endif %}>Sim</option>
+                </select>
+            </div>
+        </div>
         <div class="mb-3">
             <label for="dono_id" class="form-label">Dono</label>
             <select class="form-control" id="dono_id" name="dono_id">
