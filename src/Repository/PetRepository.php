@@ -113,7 +113,7 @@ class PetRepository extends ServiceEntityRepository
             LIMIT 5
         ";
 
-        $stmt = $conn->prepare($sql);
+        $stmt = $this->conn->prepare($sql);
         $resultSet = $stmt->executeQuery(['idBase' => $idBase]);
 
         return $resultSet->fetchAllAssociative();
