@@ -95,11 +95,29 @@
       </div>
       <div class="col-lg-6">
         <div class="info-card d-flex justify-content-between align-items-center">
-          <div>
-            <h5 class="mb-2 me-3">{{ pet.nome }} <small class="text-muted fw-normal">({{ pet.id }})</small></h5>
-            <p class="text-muted mb-1 fs-5">{{ pet.raca }} - {{ pet.sexo }}</p>
-            <p class="text-muted mb-0 fs-5">{{ pet.idade }} anos</p>
-          </div>
+          <h5 class="mb-2 me-3">
+            {{ pet.nome }} 
+            <small class="text-muted fw-normal">({{ pet.id }})</small>
+          </h5>
+
+          <p class="fs-5 bg-light p-2 rounded">Raça: {{ pet.raca }}</p>
+          <p class="fs-5 bg-info text-white p-2 rounded">Sexo: {{ pet.sexo }}</p>
+          <p class="fs-5 bg-warning p-2 rounded">Idade: {{ pet.idade }} anos</p>
+
+          <p class="fs-5 text-white p-2 rounded" style="background-color: #e85d6c;">
+            Peso: {{ pet.peso }} KG
+          </p>
+
+          <p class="fs-5 p-2 rounded 
+            {% if pet.castrado == 1 %} bg-success text-white 
+            {% else %} bg-danger text-white {% endif %}">
+            {% if pet.castrado == 1 %}
+              Castrado
+            {% else %}
+              Não é Castrado
+            {% endif %}
+          </p>
+
           <img src="{{ asset('images/pet.png') }}"
             alt="Avatar do Pet"
             class="pet-avatar"

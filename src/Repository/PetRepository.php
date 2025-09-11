@@ -85,7 +85,7 @@ class PetRepository extends ServiceEntityRepository
         $stmt->bindValue('observacoes', $pet->getObservacoes());
         $stmt->bindValue('dono_id', $pet->getDono_Id());
         $stmt->bindValue('peso', $pet->getPeso());
-        $stmt->bindValue('castrado', $pet->getCastrado());
+        $stmt->bindValue('castrado', $pet->getCastrado() === '' ? 0 : (int)$pet->getCastrado());
         $stmt->execute();
     }
 
@@ -108,11 +108,12 @@ class PetRepository extends ServiceEntityRepository
         $stmt->bindValue('observacoes', $pet->getObservacoes());
         $stmt->bindValue('dono_id', $pet->getDono_Id());
         $stmt->bindValue('peso', $pet->getPeso());
-        $stmt->bindValue('castrado', $pet->getCastrado());
+        $stmt->bindValue('castrado', $pet->getCastrado() === '' ? 0 : (int)$pet->getCastrado());
         $stmt->bindValue('baseId', $baseId);
         $stmt->bindValue('id', $pet->getId());
         $stmt->execute();
     }
+
 
 
 
