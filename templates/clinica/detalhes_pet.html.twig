@@ -316,45 +316,49 @@
                             <div class="vendas-lista-scroll" style="max-height: 480px; overflow-y: auto;">
                                 {% set todos_financeiros = (financeiro|merge(financeiroPendente is defined ? financeiroPendente : []))|sort((a, b) => b.data|date('U') <=> a.data|date('U')) %}
                                 {% for f in todos_financeiros %}
-                                    {% set status = f.status is defined ? f.status : (f.metodo_pagamento is defined and f.metodo_pagamento == 'pendente' ? 'pendente' : 'concluido') %}
-                                    <div class="card shadow-sm mb-2 rounded-4 border-start border-5
-                                        {% if status == 'concluido' %}
-                                          border-success
-                                        {% elseif status == 'pendente' %}
-                                          border-warning
-                                        {% else %}
-                                          border-success
-                                        {% endif %}">
-                                        <div class="card-body py-2">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <p class="mb-0 fw-bold">{{ f.descricao }}</p>
-                                                    <small class="text-muted">{{ f.data|date('d/m/Y') }}</small>
-                                                </div>
-                                                <div class="text-end">
-                                                    <p class="mb-0 fw-bold">R$ {{ f.valor|number_format(2, ',', '.') }}</p>
-                                                    <div class="btn-group mt-1">
-                                                        <button type="button" class="btn btn-sm btn-primary btn-editar-venda"
-                                                            data-id="{{ f.id }}"
-                                                            data-descricao="{{ f.descricao }}"
-                                                            data-valor="{{ f.valor }}"
-                                                            data-metodo="{{ f.metodo_pagamento is defined ? f.metodo_pagamento : '' }}"
-                                                            data-data="{{ f.data|date('Y-m-d') }}"
-                                                            data-observacao="{{ f.observacao|default('')|e('html_attr') }}">
-                                                            <i class="fas fa-edit"></i> Editar
-                                                        </button>
-                                                        <form method="post" action="{{ path('clinica_inativar_venda', {'petId': pet.id, 'id': f.id}) }}" onsubmit="return confirm('Tem certeza que deseja inativar esta venda?');">
-                                                            <button type="submit" class="btn btn-sm btn-danger">
-                                                                <i class="fas fa-ban"></i> Inativar
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                  {% set status = f.status is defined ? f.status : (f.metodo_pagamento is defined and f.metodo_pagamento == 'pendente' ? 'pendente' : 'concluido') %}
+                                  <div class="card shadow-sm mb-2 rounded-4 border-start border-5
+                                    {% if status == 'concluido' %}
+                                      border-success
+                                    {% elseif status == 'pendente' %}
+                                      border-warning
+                                    {% else %}
+                                      border-success
+                                    {% endif %}">
+                                    <div class="card-body py-2">
+                                      <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                          <p class="mb-0 fw-bold">{{ f.descricao }}</p>
+                                          <small class="text-muted">{{ f.data|date('d/m/Y') }}</small>
                                         </div>
+                                        <div class="text-end">
+                                          <p class="mb-0 fw-bold">R$ {{ f.valor|number_format(2, ',', '.') }}</p>
+                                          
+                                          {# 🔹 Botões Editar e Inativar #}
+                                          <div class="d-flex justify-content-end mt-1">
+                                            {# Formulário de editar #}
+                                            <form method="POST" action="{{ path('clinica_editar_venda', {petId: pet.id, id: f.id}) }}" class="me-1">
+                                              <input type="hidden" name="descricao" value="{{ f.descricao }}">
+                                              <input type="hidden" name="valor" value="{{ f.valor }}">
+                                              <input type="hidden" name="data" value="{{ f.data|date('Y-m-d') }}">
+                                              <button type="submit" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i> Editar
+                                              </button>
+                                            </form>
+
+                                            {# Formulário de inativar #}
+                                            <form method="POST" action="{{ path('clinica_inativar_venda', {petId: pet.id, id: f.id}) }}">
+                                              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja inativar esta venda?')">
+                                                <i class="fas fa-ban"></i> Inativar
+                                              </button>
+                                            </form>
+                                          </div>
+                                        </div>
+                                      </div>
                                     </div>
+                                  </div>
                                 {% else %}
-                                    <p class="text-muted text-center mt-3">Nenhum item na venda.</p>
+                                  <p class="text-muted text-center mt-3">Nenhum item na venda.</p>
                                 {% endfor %}
                             </div>
 
