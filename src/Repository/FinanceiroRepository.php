@@ -258,5 +258,17 @@ class FinanceiroRepository extends ServiceEntityRepository
         return $result->fetchAllAssociative();
     }
 
+    public function inativar($baseId, int $id): void
+    {
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.financeiro 
+                SET status = 'inativo'
+                WHERE estabelecimento_id = :baseId AND id = :id";
+
+        $this->conn->executeQuery($sql, [
+            'baseId' => $baseId,
+            'id' => $id
+        ]);
+    }
+
 
 }

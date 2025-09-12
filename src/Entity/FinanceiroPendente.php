@@ -62,6 +62,12 @@ class FinanceiroPendente
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $status;
+
+    /**
+     * @ORM\Column(type="boolean", options={"default": 0})
+     */
+    private $inativar = false;
+
     // --- Fim das novas propriedades ---
 
     public function getId(): ?int
@@ -166,6 +172,17 @@ class FinanceiroPendente
     public function setOrigem(?string $origem): self
     {
         $this->origem = $origem;
+        return $this;
+    }
+    
+    public function isInativar(): bool
+    {
+        return $this->inativar;
+    }
+
+    public function setInativar(bool $inativar): self
+    {
+        $this->inativar = $inativar;
         return $this;
     }
     // --- Fim dos novos métodos ---

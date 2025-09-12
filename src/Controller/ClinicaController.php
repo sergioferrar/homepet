@@ -1117,4 +1117,54 @@ class ClinicaController extends DefaultController
         return $this->json(['ok' => true, 'msg' => 'Medicamento cadastrado com sucesso!']);
     }
 
+        /**
+     * @Route("/pet/{petId}/venda/{id}/editar", name="clinica_editar_venda", methods={"POST"})
+     */
+    public function editarVenda(
+        Request $request,
+        int $petId,
+        int $id,
+        FinanceiroRepository $financeiroRepo
+    ): Response {
+        $this->switchDB();
+        $baseId = $this->session->get('userId');
+
+        $financeiro = $financeiroRepo->findFinanceiro($baseId, $id);
+        if (!$financeiro) {
+            throw $this->createNotFoundException('Venda não encontrada.');
+        }
+
+        $financeiro->setDescricao($request->request->get('descricao', $financeiro->getDescricao()));
+        $financeiro->setValor((float) $request->request->get('valor', $financeiro->getValor()));
+        $financeiro->setData(new \DateTime($request->request->get('data', $financeiro->getData()->format('Y-m-d'))));
+
+        $financeiroRepo->update($baseId, $financeiro);
+
+        $this->addFlash('success', 'Venda editada com sucesso!');
+        return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+    }
+
+    /**
+     * @Route("/pet/{petId}/venda/{id}/inativar", name="clinica_inativar_venda", methods={"POST"})
+     */
+    public function inativarVenda(
+        int $petId,
+        int $id,
+        FinanceiroRepository $financeiroRepo
+    ): Response {
+        $this->switchDB();
+        $baseId = $this->session->get('userId');
+
+        $financeiro = $financeiroRepo->findFinanceiro($baseId, $id);
+        if (!$financeiro) {
+            throw $this->createNotFoundException('Venda não encontrada.');
+        }
+
+        $financeiroRepo->inativar($baseId, $id);
+
+        $this->addFlash('success', 'Venda inativada com sucesso!');
+        return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+    }
+
+
 }

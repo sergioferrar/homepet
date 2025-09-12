@@ -67,6 +67,11 @@ class Financeiro
      */
     private $estabelecimentoId;
 
+    /**
+     * @ORM\Column(type="boolean", options={"default": 0})
+     */
+    private $inativar = false;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -218,6 +223,17 @@ class Financeiro
     public function setEstabelecimentoId(int $estabelecimentoId): self
     {
         $this->estabelecimentoId = $estabelecimentoId;
+        return $this;
+    }
+
+    public function isInativar(): bool
+    {
+        return $this->inativar;
+    }
+
+    public function setInativar(bool $inativar): self
+    {
+        $this->inativar = $inativar;
         return $this;
     }
 }
