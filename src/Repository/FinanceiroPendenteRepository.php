@@ -174,14 +174,61 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function inativar($baseId, int $id): void
     {
         $sql = "UPDATE {$_ENV['DBNAMETENANT']}.financeiropendente 
-                SET status = 'inativo'
+                SET status = 'inativo', inativar = 1
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
         $this->conn->executeQuery($sql, [
             'baseId' => $baseId,
-            'id' => $id
+            'id'     => $id
         ]);
     }
+
+
+    public function findInativos(int $baseId, int $petId): array
+    {
+        $sql = "SELECT * 
+                FROM {$_ENV['DBNAMETENANT']}.financeiropendente
+                WHERE estabelecimento_id = :baseId
+                  AND pet_id = :petId
+                  AND status = 'inativo'
+                ORDER BY data DESC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'baseId' => $baseId,
+            'petId' => $petId
+        ]);
+    }
+
+    public function findAtivosPorPet(int $baseId, int $petId): array
+    {
+        $sql = "SELECT * 
+                FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+                WHERE estabelecimento_id = :baseId 
+                  AND pet_id = :petId
+                  AND (status IS NULL OR status != 'inativo')
+                ORDER BY data DESC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'baseId' => $baseId,
+            'petId' => $petId
+        ]);
+    }
+
+    public function findInativosPorPet(int $baseId, int $petId): array
+    {
+        $sql = "SELECT * 
+                FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+                WHERE estabelecimento_id = :baseId 
+                  AND pet_id = :petId
+                  AND status = 'inativo'
+                ORDER BY data DESC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'baseId' => $baseId,
+            'petId' => $petId
+        ]);
+    }
+
 
 
 }

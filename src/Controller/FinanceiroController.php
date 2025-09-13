@@ -25,32 +25,35 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/", name="financeiro_index")
      */
-    public function index(Request $request, FinanceiroRepository $financeiroRepo, FinanceiroPendenteRepository $financeiroPendenteRepo): Response
-    {
+    public function index(Request $request, FinanceiroRepository $financeiroRepo, FinanceiroPendenteRepository $financeiroPendenteRepo): Response {
         $this->switchDB();
         $baseId = $this->session->get('userId');
 
-        // --- Lógica para a Aba DIÁRIO ---
+        // --- Aba Diário ---
         $dataDiario = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
         $financeirosDiarios = $financeiroRepo->findTotalByDate($baseId, $dataDiario);
         
-        // --- Lógica para a Aba PENDENTE ---
+        // --- Aba Pendente ---
         $financeirosPendentes = $financeiroPendenteRepo->findAllPendentes($baseId);
         
-        // --- Lógica para a Aba RELATÓRIO ---
+        // --- Aba Relatório ---
         $mesInicio = $request->query->get('mes_inicio', (new \DateTime('first day of this month'))->format('Y-m'));
         $mesFim = $request->query->get('mes_fim', (new \DateTime('last day of this month'))->format('Y-m'));
         $dataInicio = new \DateTime($mesInicio . '-01');
         $dataFim = (new \DateTime($mesFim . '-01'))->modify('last day of this month');
         $relatorioData = $financeiroRepo->getRelatorioPorPeriodo($baseId, $dataInicio, $dataFim);
 
+        // --- Aba Inativos ---
+        $financeirosInativos = $financeiroRepo->findInativos($baseId);
+
         return $this->render('financeiro/index.html.twig', [
             'financeiros' => $financeirosDiarios,
-            'data' => $dataDiario,
-            'pendentes' => $financeirosPendentes,
-            'mes_inicio' => $mesInicio,
-            'mes_fim' => $mesFim,
-            'relatorio' => $relatorioData,
+            'data'        => $dataDiario,
+            'pendentes'   => $financeirosPendentes,
+            'mes_inicio'  => $mesInicio,
+            'mes_fim'     => $mesFim,
+            'relatorio'   => $relatorioData,
+            'inativos'    => $financeirosInativos,
         ]);
     }
 
@@ -70,7 +73,6 @@ class FinanceiroController extends DefaultController
             $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int)$request->request->get('pet_id') : null);
             $financeiro->setEstabelecimentoId($baseId);
 
-            // CORREÇÃO: Passando $baseId como primeiro argumento
             $financeiroRepo->save($baseId, $financeiro);
             return $this->redirectToRoute('financeiro_index');
         }
@@ -99,14 +101,13 @@ class FinanceiroController extends DefaultController
             $financeiro->setData(new \DateTime($request->request->get('data')));
             $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int) $request->request->get('pet_id') : null);
 
-            // CORREÇÃO: Passando $baseId como primeiro argumento
             $financeiroRepo->update($baseId, $financeiro);
             return $this->redirectToRoute('financeiro_index');
         }
 
         return $this->render('financeiro/editar.html.twig', [
             'financeiro' => $financeiro,
-            'pets' => $petRepo->findAllPets($baseId)
+            'pets'       => $petRepo->findAllPets($baseId)
         ]);
     }
 
@@ -131,7 +132,7 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/pendente/confirmar/{id}", name="financeiro_confirmar_pagamento", methods={"POST"})
      */
-    public function confirmarPagamento(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository, FinanceiroRepository $financeiroRepo): Response
+    public function confirmarPagamento(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository, FinanceiroRepository $financeiroRepo): Response 
     {
         $this->switchDB();
         $baseId = $this->session->get('userId');
@@ -149,7 +150,6 @@ class FinanceiroController extends DefaultController
         $financeiro->setData(new \DateTime());
         $financeiro->setPetId($financeiroPendente['pet_id']);
         
-        // CORREÇÃO: Passando $baseId como primeiro argumento
         $financeiroRepo->save($baseId, $financeiro);
         
         $financeiroPendenteRepository->deletePendente($baseId, $id);
@@ -176,7 +176,7 @@ class FinanceiroController extends DefaultController
 
         $relatorio = $financeiroRepo->getRelatorioPorPeriodo($baseId, $dataInicio, $dataFim);
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
         $sheet->setCellValue('A1', 'Data');
@@ -190,7 +190,7 @@ class FinanceiroController extends DefaultController
             $row++;
         }
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
         $fileName = 'relatorio_financeiro.xlsx';
         $temp_file = tempnam(sys_get_temp_dir(), $fileName);
         $writer->save($temp_file);

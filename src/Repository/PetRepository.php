@@ -25,7 +25,7 @@ class PetRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function findPetById($baseId, $petId): array
+    public function findPetById($baseId, $petId): ?array
     {
         $sql = "SELECT p.id, p.nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.observacoes,
                        p.peso, p.castrado,
@@ -37,8 +37,12 @@ class PetRepository extends ServiceEntityRepository
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('baseId', $baseId);
         $stmt->bindValue('petId', $petId);
-        return $stmt->executeQuery()->fetchAssociative();
+
+        $dados = $stmt->executeQuery()->fetchAssociative();
+
+        return $dados ?: null; // se não achar retorna null
     }
+
 
     public function findAllPets($baseId): array
     {

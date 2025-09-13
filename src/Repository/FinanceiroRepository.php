@@ -70,35 +70,42 @@ class FinanceiroRepository extends ServiceEntityRepository
                 FROM {$_ENV['DBNAMETENANT']}.financeiro f
                 LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
                 LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
-                WHERE f.estabelecimento_id = '{$baseId}' AND DATE(f.data) = :data
+                WHERE f.estabelecimento_id = :baseId 
+                  AND DATE(f.data) = :data
+                  AND (f.status IS NULL OR f.status != 'inativo')
                 GROUP BY c.id, DATE(f.data)
                 ORDER BY c.nome";
 
-        $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
+        $stmt = $this->conn->executeQuery($sql, [
+            'baseId' => $baseId,
+            'data' => $data->format('Y-m-d')
+        ]);
         return $stmt->fetchAllAssociative();
     }
 
-    public function getRelatorioPorPeriodo($baseId, \DateTime $dataInicio, \DateTime $dataFim): array
+
+   public function getRelatorioPorPeriodo($baseId, \DateTime $dataInicio, \DateTime $dataFim): array
     {
         $sql = "SELECT DATE(f.data) as data, SUM(f.valor) as total
                 FROM {$_ENV['DBNAMETENANT']}.financeiro f
-                WHERE f.estabelecimento_id = '{$baseId}' AND f.data BETWEEN :dataInicio AND :dataFim
+                WHERE f.estabelecimento_id = :baseId 
+                  AND f.data BETWEEN :dataInicio AND :dataFim
+                  AND (f.status IS NULL OR f.status != 'inativo')
                 GROUP BY DATE(f.data)
                 ORDER BY DATE(f.data) DESC";
 
-        $stmt = $this->conn->executeQuery($sql, [
+        return $this->conn->fetchAllAssociative($sql, [
+            'baseId'     => $baseId,
             'dataInicio' => $dataInicio->format('Y-m-d'),
-            'dataFim' => $dataFim->format('Y-m-d')
+            'dataFim'    => $dataFim->format('Y-m-d'),
         ]);
-
-        return $stmt->fetchAllAssociative();
     }
 
-
-    public function save($baseId, Financeiro $financeiro): void
+    public function save($baseId, Financeiro $financeiro, bool $inativo = false): void
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiro (estabelecimento_id, descricao, valor, data, pet_id) 
-                VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id)";
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiro 
+                (estabelecimento_id, descricao, valor, data, pet_id, status, inativar) 
+                VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id, :status, :inativar)";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('estabelecimento_id', $baseId);
@@ -106,6 +113,8 @@ class FinanceiroRepository extends ServiceEntityRepository
         $stmt->bindValue('valor', $financeiro->getValor());
         $stmt->bindValue('data', $financeiro->getData()->format('Y-m-d'));
         $stmt->bindValue('pet_id', $financeiro->getPetId() ?? null);
+        $stmt->bindValue('status', $inativo ? 'inativo' : ($financeiro->getStatus() ?? null));
+        $stmt->bindValue('inativar', $inativo ? 1 : 0);
         $stmt->execute();
     }
 
@@ -207,7 +216,8 @@ class FinanceiroRepository extends ServiceEntityRepository
         $sql = "SELECT SUM(valor) FROM {$_ENV['DBNAMETENANT']}.financeiro
                 WHERE estabelecimento_id = :base_id
                   AND descricao LIKE :descricao
-                  AND data BETWEEN :inicio AND :fim";
+                  AND data BETWEEN :inicio AND :fim
+                  AND (status IS NULL OR status != 'inativo')";
 
         return (float) $this->conn->fetchOne($sql, [
             'base_id'   => $baseId,
@@ -216,7 +226,7 @@ class FinanceiroRepository extends ServiceEntityRepository
             'fim'       => $fim->format('Y-m-d'),
         ]);
     }
-
+    
     public function buscarPorPet(int $baseId, int $petId): array
     {
         $sql = "SELECT * 
@@ -240,11 +250,12 @@ class FinanceiroRepository extends ServiceEntityRepository
                 SUM(f.valor) AS total_valor,
                 c.nome AS dono_nome,
                 GROUP_CONCAT(p.nome SEPARATOR ', ') AS pets
-            FROM financeiro f
-            LEFT JOIN pet p ON f.pet_id = p.id
-            LEFT JOIN cliente c ON p.dono_id = c.id
+            FROM {$_ENV['DBNAMETENANT']}.financeiro f
+            LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
+            LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
             WHERE f.estabelecimento_id = :baseId
             AND DATE(f.data) = :data
+            AND (f.status IS NULL OR f.status != 'inativo')
             GROUP BY f.pet_id, f.data
             ORDER BY f.data DESC
         ";
@@ -258,10 +269,11 @@ class FinanceiroRepository extends ServiceEntityRepository
         return $result->fetchAllAssociative();
     }
 
-    public function inativar($baseId, int $id): void
+
+public function inativar($baseId, int $id): void
     {
         $sql = "UPDATE {$_ENV['DBNAMETENANT']}.financeiro 
-                SET status = 'inativo'
+                SET status = 'inativo', inativar = 1
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
         $this->conn->executeQuery($sql, [
@@ -269,6 +281,46 @@ class FinanceiroRepository extends ServiceEntityRepository
             'id' => $id
         ]);
     }
+
+
+    public function findInativos(int $baseId, ?int $petId = null): array
+    {
+        $sql = "SELECT f.id, f.descricao, f.valor, f.data, f.pet_id, 
+                       p.nome AS pet_nome, c.nome AS dono_nome
+                  FROM {$_ENV['DBNAMETENANT']}.financeiro f
+             LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
+             LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                 WHERE f.estabelecimento_id = :baseId
+                   AND (f.status = 'inativo' OR f.inativar = 1)"; // 🔥 aceita os dois
+
+        $params = ['baseId' => $baseId];
+
+        if ($petId) {
+            $sql .= " AND f.pet_id = :petId";
+            $params['petId'] = $petId;
+        }
+
+        $sql .= " ORDER BY f.data DESC";
+
+        return $this->conn->fetchAllAssociative($sql, $params);
+    }
+
+
+    public function buscarAtivosPorPet(int $baseId, int $petId): array
+    {
+        $sql = "SELECT * 
+                FROM {$_ENV['DBNAMETENANT']}.financeiro 
+                WHERE estabelecimento_id = :baseId 
+                  AND pet_id = :petId
+                  AND (status IS NULL OR status != 'inativo')
+                ORDER BY data DESC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'baseId' => $baseId,
+            'petId' => $petId
+        ]);
+    }
+
 
 
 }

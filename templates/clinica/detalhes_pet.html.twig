@@ -304,69 +304,111 @@
                                 {% endfor %}
                             </ul>
                         </div>
-                        
                         {# VENDAS #}
                         <div class="tab-pane fade" id="venda" role="tabpanel" aria-labelledby="venda-tab">
-                            <div class="d-flex justify-content-end my-2">
-                                <button class="btn btn-success btn-sm" id="btn-adicionar-servico">
-                                    <i class="fas fa-plus me-1"></i> Adicionar
-                                </button>
-                            </div>
+                          <div class="d-flex justify-content-end my-2">
+                            <button class="btn btn-success btn-sm" id="btn-adicionar-servico">
+                              <i class="fas fa-plus me-1"></i> Adicionar
+                            </button>
+                          </div>
 
-                            <div class="vendas-lista-scroll" style="max-height: 480px; overflow-y: auto;">
-                                {% set todos_financeiros = (financeiro|merge(financeiroPendente is defined ? financeiroPendente : []))|sort((a, b) => b.data|date('U') <=> a.data|date('U')) %}
-                                {% for f in todos_financeiros %}
-                                  {% set status = f.status is defined ? f.status : (f.metodo_pagamento is defined and f.metodo_pagamento == 'pendente' ? 'pendente' : 'concluido') %}
-                                  <div class="card shadow-sm mb-2 rounded-4 border-start border-5
-                                    {% if status == 'concluido' %}
-                                      border-success
-                                    {% elseif status == 'pendente' %}
-                                      border-warning
-                                    {% else %}
-                                      border-success
-                                    {% endif %}">
-                                    <div class="card-body py-2">
-                                      <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                          <p class="mb-0 fw-bold">{{ f.descricao }}</p>
-                                          <small class="text-muted">{{ f.data|date('d/m/Y') }}</small>
-                                        </div>
-                                        <div class="text-end">
-                                          <p class="mb-0 fw-bold">R$ {{ f.valor|number_format(2, ',', '.') }}</p>
-                                          
-                                          {# 🔹 Botões Editar e Inativar #}
-                                          <div class="d-flex justify-content-end mt-1">
-                                            {# Formulário de editar #}
-                                            <form method="POST" action="{{ path('clinica_editar_venda', {petId: pet.id, id: f.id}) }}" class="me-1">
-                                              <input type="hidden" name="descricao" value="{{ f.descricao }}">
-                                              <input type="hidden" name="valor" value="{{ f.valor }}">
-                                              <input type="hidden" name="data" value="{{ f.data|date('Y-m-d') }}">
-                                              <button type="submit" class="btn btn-sm btn-primary">
-                                                <i class="fas fa-edit"></i> Editar
-                                              </button>
-                                            </form>
+                          <div class="vendas-lista-scroll" style="max-height: 480px; overflow-y: auto;">
+                            {% set todos_financeiros = (financeiro|merge(financeiroPendente is defined ? financeiroPendente : []))|sort((a, b) => b.data|date('U') <=> a.data|date('U')) %}
+                            {% for f in todos_financeiros %}
+                              {% set status = f.status is defined ? f.status : (f.metodo_pagamento is defined and f.metodo_pagamento == 'pendente' ? 'pendente' : 'concluido') %}
+                              <div class="card shadow-sm mb-2 rounded-4 border-start border-5
+                                {% if status == 'concluido' %}
+                                  border-success
+                                {% elseif status == 'pendente' %}
+                                  border-warning
+                                {% else %}
+                                  border-success
+                                {% endif %}">
+                                <div class="card-body py-2">
+                                  <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                      <p class="mb-0 fw-bold">{{ f.descricao }}</p>
+                                      <small class="text-muted">{{ f.data|date('d/m/Y') }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                      <p class="mb-0 fw-bold">R$ {{ f.valor|number_format(2, ',', '.') }}</p>
 
-                                            {# Formulário de inativar #}
-                                            <form method="POST" action="{{ path('clinica_inativar_venda', {petId: pet.id, id: f.id}) }}">
-                                              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja inativar esta venda?')">
-                                                <i class="fas fa-ban"></i> Inativar
-                                              </button>
-                                            </form>
-                                          </div>
-                                        </div>
+                                      <div class="d-flex justify-content-end mt-1">
+                                        {# Botão Editar abre modal único #}
+                                        <button type="button"
+                                                class="btn btn-sm btn-primary btn-editar-venda me-1"
+                                                data-id="{{ f.id }}"
+                                                data-descricao="{{ f.descricao }}"
+                                                data-valor="{{ f.valor }}"
+                                                data-data="{{ f.data|date('Y-m-d') }}"
+                                                data-metodo="{{ f.metodo_pagamento|default('') }}"
+                                                data-observacao="{{ f.observacoes|default('') }}"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalEditarVenda">
+                                          <i class="fas fa-edit"></i> Editar
+                                        </button>
+
+                                        {# Botão Inativar #}
+                                      <form method="POST" action="{{ path('clinica_inativar_venda', {petId: pet.id, id: f.id}) }}">
+                                          <button type="submit" class="btn btn-sm btn-danger">
+                                              <i class="fas fa-ban"></i> Inativar
+                                          </button>
+                                      </form>
                                       </div>
                                     </div>
                                   </div>
-                                {% else %}
-                                  <p class="text-muted text-center mt-3">Nenhum item na venda.</p>
-                                {% endfor %}
-                            </div>
+                                </div>
+                              </div>
+                            {% else %}
+                              <p class="text-muted text-center mt-3">Nenhum item na venda.</p>
+                            {% endfor %}
+                          </div>
 
-                            <div class="d-flex justify-content-between mt-3">
-                                <h5 class="mb-0">Total</h5>
-                                <h5 class="mb-0">R$ {{ total_debitos|number_format(2, ',', '.') }}</h5>
-                            </div>
+                          <div class="d-flex justify-content-between mt-3">
+                            <h5 class="mb-0">Total</h5>
+                            <h5 class="mb-0">R$ {{ total_debitos|number_format(2, ',', '.') }}</h5>
+                          </div>
                         </div>
+
+                        {# 🔹 MODAL ÚNICO DE EDIÇÃO DE VENDA #}
+                        <div class="modal fade" id="modalEditarVenda" tabindex="-1" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <form id="form-editar-venda" method="POST" class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title">Editar Venda</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                              </div>
+                              <div class="modal-body">
+                                <input type="hidden" id="editar-id" name="id">
+                                <div class="mb-2">
+                                  <label class="form-label">Descrição</label>
+                                  <input type="text" id="editar-descricao" name="descricao" class="form-control">
+                                </div>
+                                <div class="mb-2">
+                                  <label class="form-label">Valor</label>
+                                  <input type="number" step="0.01" id="editar-valor" name="valor" class="form-control">
+                                </div>
+                                <div class="mb-2">
+                                  <label class="form-label">Data</label>
+                                  <input type="date" id="editar-data" name="data" class="form-control">
+                                </div>
+                                <div class="mb-2">
+                                  <label class="form-label">Método de Pagamento</label>
+                                  <input type="text" id="editar-metodo" name="metodo_pagamento" class="form-control">
+                                </div>
+                                <div class="mb-2">
+                                  <label class="form-label">Observação</label>
+                                  <textarea id="editar-observacao" name="observacao" class="form-control"></textarea>
+                                </div>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">Salvar</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+
 
                         {# ORÇAMENTOS #}
                         <div class="tab-pane fade" id="orcamentos" role="tabpanel" aria-labelledby="orcamentos-tab">
@@ -440,50 +482,8 @@
         </div>
     </div>
 
-    {# MODAL EDITAR VENDA #}
-    <div class="modal fade" id="modalEditarVenda" tabindex="-1" aria-labelledby="modalEditarVendaLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <form class="modal-content" id="form-editar-venda" method="post">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalEditarVendaLabel">Editar Venda</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="editar-id" name="id">
-                    <div class="mb-3">
-                        <label for="editar-descricao" class="form-label">Descrição</label>
-                        <input type="text" class="form-control" id="editar-descricao" name="descricao" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editar-valor" class="form-label">Valor (R$)</label>
-                        <input type="number" step="0.01" class="form-control" id="editar-valor" name="valor" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editar-metodo" class="form-label">Método de Pagamento</label>
-                        <select name="metodo_pagamento" id="editar-metodo" class="form-control" required>
-                            <option value="dinheiro">Dinheiro</option>
-                            <option value="pix">Pix</option>
-                            <option value="credito">Cartão de Crédito</option>
-                            <option value="debito">Cartão de Débito</option>
-                            <option value="pendente">Pagamento Pendente</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editar-data" class="form-label">Data</label>
-                        <input type="date" class="form-control" id="editar-data" name="data" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editar-observacao" class="form-label">Observação</label>
-                        <textarea class="form-control" id="editar-observacao" name="observacao" rows="2"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer d-flex justify-content-between">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
@@ -743,17 +743,45 @@
             }
 
             // === MODAL EDITAR VENDA ===
-            document.querySelectorAll(".btn-editar-venda").forEach(btn => {
-                btn.addEventListener("click", () => {
-                    document.getElementById("editar-id").value = btn.dataset.id;
-                    document.getElementById("editar-descricao").value = btn.dataset.descricao;
-                    document.getElementById("editar-valor").value = btn.dataset.valor;
-                    document.getElementById("editar-metodo").value = btn.dataset.metodo;
-                    document.getElementById("editar-data").value = btn.dataset.data;
-                    document.getElementById("editar-observacao").value = btn.dataset.observacao;
 
-                    document.getElementById("form-editar-venda").action = `/clinica/pet/{{ pet.id }}/venda/${btn.dataset.id}/editar`;
-                    modalEditarVenda.show();
+          document.querySelectorAll(".btn-editar-venda").forEach(btn => {
+              btn.addEventListener("click", () => {
+                  document.getElementById("editar-id").value = btn.dataset.id;
+                  document.getElementById("editar-descricao").value = btn.dataset.descricao;
+                  document.getElementById("editar-valor").value = btn.dataset.valor;
+                  document.getElementById("editar-metodo").value = btn.dataset.metodo;
+                  document.getElementById("editar-data").value = btn.dataset.data;
+                  document.getElementById("editar-observacao").value = btn.dataset.observacao;
+
+                  // ✅ monta a action da rota Symfony
+                 document.getElementById("form-editar-venda").action =
+    "{{ path('clinica_editar_venda', {petId: pet.id, id: 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', btn.dataset.id);
+
+
+
+                  modalEditarVenda.show();
+              });
+          });
+
+
+
+          // === INATIVAR VENDA ===
+            document.querySelectorAll(".btn-inativar-venda").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    if (!confirm("Tem certeza que deseja inativar esta venda?")) return;
+
+                    fetch(`/clinica/pet/{{ pet.id }}/venda/${btn.dataset.id}/inativar`, {
+                        method: "POST"
+                    })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.status === "success") {
+                            location.reload();
+                        } else {
+                            alert(d.mensagem || "Erro ao inativar venda.");
+                        }
+                    })
+                    .catch(() => alert("Erro ao inativar venda."));
                 });
             });
 

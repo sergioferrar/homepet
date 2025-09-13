@@ -108,13 +108,19 @@ class ClinicaController extends DefaultController
 
         $consultas = $consultaRepo->findAllByPetId($baseId, $id);
         $documentos = $documentoRepo->listarDocumentos($baseId);
-        $financeiro = $financeiroRepo->buscarPorPet($baseId, $pet['id']);
-        $financeiroPendente = $financeiroPendenteRepo->findBy(['petId' => $id]);
+
+        // 🔹 só pega ativos agora
+        $financeiro = $financeiroRepo->buscarAtivosPorPet($baseId, $pet['id']);
+        $financeiroPendente = $financeiroPendenteRepo->findAtivosPorPet($baseId, $id);
+
+        // 🔹 lista inativos separados (pra usar em outra aba se quiser)
+        $financeiroInativos = $financeiroRepo->findInativos($baseId, $pet['id']);
+        $financeiroPendenteInativos = $financeiroPendenteRepo->findInativosPorPet($baseId, $id);
+
         $receitas = $this->getRepositorio(\App\Entity\Receita::class)->listarPorPet($baseId, $pet['id']);
         $internacaoAtivaId = $internacaoRepo->findAtivaIdByPet($baseId, $pet['id']);
         $ultimaInternacaoId  = $internacaoRepo->findUltimaIdByPet($baseId, $pet['id']);
         $internacoesPet = $internacaoRepo->listarInternacoesPorPet($baseId, $pet['id']);
-
 
         // --- BUSCA TODOS OS SERVIÇOS DA CLÍNICA ---
         $servicosClinica = $this->getRepositorio(\App\Entity\Servico::class)->findBy([
@@ -143,7 +149,7 @@ class ClinicaController extends DefaultController
             ];
         }
 
-        //  Agrupa por tipo
+        // Agrupa por tipo
         $agrupado = [];
         foreach ($timeline_items as $item) {
             $tipo = $item['tipo'];
@@ -153,20 +159,21 @@ class ClinicaController extends DefaultController
             $agrupado[$tipo][] = $item;
         }
 
-        //  Total de débitos PENDENTES
+        //  Total de débitos PENDENTES (só ativos contam aqui)
         $totalDebitos = 0;
         foreach ($financeiroPendente as $itemFinanceiro) {
-            // Acessa o valor com o método getter do objeto
-            $totalDebitos += $itemFinanceiro->getValor();
+             $totalDebitos += $itemFinanceiro['valor'];
         }
 
         return $this->render('clinica/detalhes_pet.html.twig', [
             'pet' => $pet,
             'timeline_items' => $timeline_items,
             'timeline_agrupado' => $agrupado,
-            'documentos' => $documentoRepo->listarDocumentos($baseId),
-            'financeiro' => $financeiroRepo->buscarPorPet($baseId, $pet['id']),
-            'financeiroPendente' => $financeiroPendenteRepo->findBy(['petId' => $id]),
+            'documentos' => $documentos,
+            'financeiro' => $financeiro,
+            'financeiroPendente' => $financeiroPendente,
+            'financeiroInativos' => $financeiroInativos,
+            'financeiroPendenteInativos' => $financeiroPendenteInativos,
             'consultas' => $consultas,
             'total_debitos' => $totalDebitos,
             'servicos_clinica' => $servicosClinica,
@@ -1117,53 +1124,61 @@ class ClinicaController extends DefaultController
         return $this->json(['ok' => true, 'msg' => 'Medicamento cadastrado com sucesso!']);
     }
 
-        /**
-     * @Route("/pet/{petId}/venda/{id}/editar", name="clinica_editar_venda", methods={"POST"})
+    /**
+     * @Route("/clinica/pet/{petId}/venda/{id}/editar", name="clinica_editar_venda", methods={"POST"})
      */
-    public function editarVenda(
-        Request $request,
-        int $petId,
-        int $id,
-        FinanceiroRepository $financeiroRepo
-    ): Response {
-        $this->switchDB();
-        $baseId = $this->session->get('userId');
+    public function editarVenda( Request $request, int $petId, int $id, FinanceiroRepository $financeiroRepository): JsonResponse {
+        try {
+            $baseId = $this->getUser()->getPetshopId(); 
+            $financeiro = $financeiroRepository->findFinanceiro($baseId, $id);
+            if (!$financeiro) {
+                return new JsonResponse(['status' => 'error', 'mensagem' => 'Venda não encontrada.'], 404);
+            }
 
-        $financeiro = $financeiroRepo->findFinanceiro($baseId, $id);
-        if (!$financeiro) {
-            throw $this->createNotFoundException('Venda não encontrada.');
+            $financeiro->setDescricao($request->request->get('descricao'));
+            $financeiro->setValor((float) $request->request->get('valor'));
+
+            $data = $request->request->get('data');
+            if ($data) {
+                $financeiro->setData(new \DateTime($data));
+            }
+
+            $metodo = $request->request->get('metodo_pagamento') ?: 'pendente';
+            $financeiro->setMetodoPagamento($metodo);
+
+            $financeiro->setObservacoes($request->request->get('observacao'));
+
+            $financeiroRepository->update($baseId, $financeiro);
+
+            return new JsonResponse(['status' => 'success', 'mensagem' => 'Venda atualizada com sucesso.']);
+        } catch (\Throwable $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'mensagem' => 'Erro ao editar venda: ' . $e->getMessage()
+            ], 500);
         }
-
-        $financeiro->setDescricao($request->request->get('descricao', $financeiro->getDescricao()));
-        $financeiro->setValor((float) $request->request->get('valor', $financeiro->getValor()));
-        $financeiro->setData(new \DateTime($request->request->get('data', $financeiro->getData()->format('Y-m-d'))));
-
-        $financeiroRepo->update($baseId, $financeiro);
-
-        $this->addFlash('success', 'Venda editada com sucesso!');
-        return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
     }
 
     /**
      * @Route("/pet/{petId}/venda/{id}/inativar", name="clinica_inativar_venda", methods={"POST"})
      */
-    public function inativarVenda(
-        int $petId,
-        int $id,
-        FinanceiroRepository $financeiroRepo
-    ): Response {
-        $this->switchDB();
-        $baseId = $this->session->get('userId');
+    public function inativarVenda(Request $request, FinanceiroRepository $financeiroRepository, FinanceiroPendenteRepository $pendenteRepository, int $petId,
+        int $id): Response 
+    {
+        $baseId = $this->getUser()->getPetshopId();
 
-        $financeiro = $financeiroRepo->findFinanceiro($baseId, $id);
-        if (!$financeiro) {
-            throw $this->createNotFoundException('Venda não encontrada.');
+        try {
+            $financeiroRepository->inativar($baseId, $id);
+
+            $pendenteRepository->inativar($baseId, $id);
+
+            $this->addFlash('success', 'Venda inativada com sucesso.');
+            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+
+        } catch (\Exception $e) {
+            $this->addFlash('danger', 'Erro ao inativar venda: ' . $e->getMessage());
+            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
         }
-
-        $financeiroRepo->inativar($baseId, $id);
-
-        $this->addFlash('success', 'Venda inativada com sucesso!');
-        return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
     }
 
 
