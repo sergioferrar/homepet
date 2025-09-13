@@ -1,552 +1,392 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Ficha do Pet - {{ pet.nome }}{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Inter', sans-serif;
-        }
+{% extends 'baseClinica.html.twig' %}
 
-        .main-card, .info-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e9ecef;
-            height: 100%;
-        }
+{% block title %}Ficha de Internação - {{ internacao.pet_nome }}{% endblock %}
 
-        .info-card {
-            padding: 30px;
-        }
 
-        .info-card h5 {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
+{% block body %}
+    {% set total_debitos = total_debitos|default(0) %}
 
-        .pet-avatar {
-            width: 110px;
-            height: 110px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 4px solid #e9ecef;
-        }
-
-        .debt-tag {
-            background-color: #dc3545;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        .nav-tabs .nav-link {
-            color: #6c757d;
-            font-weight: 500;
-            border: none;
-            border-bottom: 3px solid transparent;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: #0d6efd;
-            background-color: #fff;
-            border-color: #dee2e6 #dee2e6 #0d6efd;
-            font-weight: bold;
-        }
-
-        .timeline {
-            position: relative;
-            padding-left: 35px;
-            list-style: none;
-        }
-
-        .timeline:before {
-            content: '';
-            position: absolute;
-            left: 12px;
-            top: 5px;
-            bottom: 5px;
-            width: 3px;
-            background: #e9ecef;
-            border-radius: 2px;
-        }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 25px;
-        }
-
-        .timeline-icon {
-            position: absolute;
-            left: -32px;
-            top: 0;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: #fff;
-            border: 3px solid #e9ecef;
-            color: #495057;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .timeline-content {
-            transition: border-color 0.3s;
-        }
-
-        .timeline-content .timeline-date {
-            font-size: 0.85em;
-            color: #dc3545;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-
-        a.timeline-text {
-            font-size: 1rem;
-            font-weight: 500;
-            color: #343a40;
-            text-decoration: none;
-            display: block;
-        }
-
-        a.timeline-text:hover {
-            color: #0d6efd;
-        }
-
-        .action-grid .btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: white;
-            border-radius: 10px;
-            border: none;
-            transition: all 0.2s ease;
-        }
-
-        .action-grid .btn:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-        }
-
-        .action-grid .btn i {
-            font-size: 2rem;
-            margin-bottom: 8px;
-        }
-
-        .form-view-container {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 20px;
-            background-color: #fdfdff;
-        }
-
-        .ql-editor {
-            min-height: 180px;
-        }
-
-        #service-display-container {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 20px;
-            background-color: #fdfdff;
-        }
-
-        .service-detail-card {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        .service-detail-content {
-            background-color: #fff;
-            padding: 0;
-            border-radius: 4px;
-        }
-
-        .service-detail-content .ql-editor {
-            min-height: auto;
-            padding: 0;
-            font-size: 1rem;
-            overflow-y: auto;
-            max-height: 400px;
-            word-wrap: break-word;
-        }
-
-        .service-detail-card.border-primary {
-            border-left: 5px solid var(--bs-primary);
-        }
-
-        .service-detail-card.border-success {
-            border-left: 5px solid var(--bs-success);
-        }
-
-        .service-detail-card.border-warning {
-            border-left: 5px solid var(--bs-warning);
-        }
-
-        .service-detail-card.border-purple {
-            border-left: 5px solid #6f42c1;
-        }
-
-        .border-purple {
-            --bs-border-color: #6f42c1;
-        }
-
-        .venda-item {
-            border-left: 4px solid #dee2e6;
-            border-radius: 0.25rem;
-            transition: border-left-color 0.2s ease-in-out;
-        }
-
-        .venda-item.status-concluido {
-            border-left-color: var(--bs-success);
-        }
-
-        .venda-item.status-pendente {
-            border-left-color: var(--bs-warning);
-        }
-
-        .btn-group .btn {
-            margin-left: 4px;
-        }
-    </style>
-</head>
-<body>
-{% set total_debitos = total_debitos|default(0) %}
-
-<div class="container-fluid bg-white p-3 my-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <a href="{{ path('clinica_dashboard') }}" class="btn btn-outline-secondary voltar-dash">
-            <i class="fas fa-arrow-left"></i> Voltar para o Dashboard
-        </a>
-        <img src="{{ asset('images/pet.png') }}" alt="Avatar do Pet" class="pet-avatar" onerror="this.style.display='none'">
-        <span class="lead-5">Ficha do Pet: {{ pet.nome }}</span>
-    </div>
-    <hr>
-    <div class="row mb-4">
-        <div class="col-lg-6 mb-4 mb-lg-0">
-            <div class="info-card">
-                <h5>{{ pet.dono_nome|default('Tutor não vinculado') }} {% if pet.dono_nome %}<small
-                            class="text-muted fw-normal">({{ pet.dono_id }})</small>{% endif %}</h5>
-                {% if pet.dono_telefone is defined and pet.dono_telefone %}<p class="text-muted"><i
-                        class="fas fa-mobile-alt me-2"></i>{{ pet.dono_telefone }}</p>{% endif %}
-                {% if total_debitos > 0 %}<span class="debt-tag">Saldo devedor de
-                    R$ {{ total_debitos|number_format(2, ',', '.') }}</span>{% endif %}
+    <div class="container-fluid bg-white p-3 my-4">
+        <div class="row">
+            <div class="col-8">
+                <a href="{{ path('clinica_dashboard') }}" class="btn btn-outline-secondary voltar-dash">
+                    <i class="fas fa-arrow-left"></i> Voltar para o Dashboard
+                </a>
+            </div>
+            <div class="col-4">
+                <div class="row">
+                    <img width="" src="{{ asset('images/pet.jpeg') }}" alt="Avatar do Pet"
+                         class="pet-avatar img-responsive border float-start me-4" onerror="this.style.display='none'">
+                    <span class="lead-5 float-end">Ficha do Pet: {{ pet.nome }}</span>
+                </div>
             </div>
         </div>
-        <div class="col-lg-6">
-            <div class="info-card d-flex justify-content-between align-items-center">
-                <table class="table table-sm" width="100%">
-                    <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Raça</th>
-                        <th>Sexo</th>
-                        <th>Idade</th>
-                        <th>Peso</th>
-                        <th>Castração</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>{{ pet.nome }}
-                            <small class="text-muted fw-normal">({{ pet.id }})</small></td>
-                        <td>{{ pet.raca }}</td>
-                        <td>{{ pet.sexo }}</td>
-                        <td>{{ pet.idade }} anos</td>
-                        <td>{{ pet.peso }} KG</td>
-                        <td>
+        <div class="d-flex justify-content-between align-items-center mb-3 d-none">
+
+
+        </div>
+        <hr>
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <div class="info-card">
+                    <h5>{{ pet.dono_nome|default('Tutor não vinculado') }} {% if pet.dono_nome %}<small
+                                class="text-muted fw-normal">({{ pet.dono_id }})</small>{% endif %}</h5>
+                    {% if pet.dono_telefone is defined and pet.dono_telefone %}<p class="text-muted"><i
+                            class="fas fa-mobile-alt me-2"></i>{{ pet.dono_telefone }}</p>{% endif %}
+                    {% if total_debitos > 0 %}<span class="debt-tag">Saldo devedor de
+                        R$ {{ total_debitos|number_format(2, ',', '.') }}</span>{% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="info-card d-flex justify-content-between align-items-center">
+                    <table class="table table-sm" width="100%">
+                        <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Raça</th>
+                            <th>Sexo</th>
+                            <th>Idade</th>
+                            <th>Peso</th>
+                            <th>Castração</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>{{ pet.nome }}
+                                <small class="text-muted fw-normal">({{ pet.id }})</small></td>
+                            <td>{{ pet.raca }}</td>
+                            <td>{{ pet.sexo }}</td>
+                            <td>{{ pet.idade }} anos</td>
+                            <td>{{ pet.peso }} KG</td>
+                            <td>
                             <span class="p-2 badge {% if pet.castrado == 1 %} text-bg-success {% else %} text-bg-danger {% endif %}">
                                 {% if pet.castrado == 1 %} Castrado {% else %} Não é Castrado {% endif %}
                             </span>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-{#                <h5 class="mb-2 me-3">#}
-{#                    {{ pet.nome }}#}
-{#                    <small class="text-muted fw-normal">({{ pet.id }})</small>#}
-{#                </h5>#}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    {#                <h5 class="mb-2 me-3"> #}
+                    {#                    {{ pet.nome }} #}
+                    {#                    <small class="text-muted fw-normal">({{ pet.id }})</small> #}
+                    {#                </h5> #}
 
-{#                <p class="fs-5 bg-light p-2 rounded">Raça: {{ pet.raca }}</p>#}
-{#                <p class="fs-5 bg-info text-white p-2 rounded">Sexo: {{ pet.sexo }}</p>#}
-{#                <p class="fs-5 bg-warning p-2 rounded">Idade: {{ pet.idade }} anos</p>#}
-{#                <p class="fs-5 text-white p-2 rounded" style="background-color: #e85d6c;">Peso: {{ pet.peso }} KG</p>#}
-{#                <p class="fs-5 p-2 rounded {% if pet.castrado == 1 %} bg-success text-white {% else %} bg-danger text-white {% endif %}">#}
-{#                    {% if pet.castrado == 1 %} Castrado {% else %} Não é Castrado {% endif %}#}
-{#                </p>#}
+                    {#                <p class="fs-5 bg-light p-2 rounded">Raça: {{ pet.raca }}</p> #}
+                    {#                <p class="fs-5 bg-info text-white p-2 rounded">Sexo: {{ pet.sexo }}</p> #}
+                    {#                <p class="fs-5 bg-warning p-2 rounded">Idade: {{ pet.idade }} anos</p> #}
+                    {#                <p class="fs-5 text-white p-2 rounded" style="background-color: #e85d6c;">Peso: {{ pet.peso }} KG</p> #}
+                    {#                <p class="fs-5 p-2 rounded {% if pet.castrado == 1 %} bg-success text-white {% else %} bg-danger text-white {% endif %}"> #}
+                    {#                    {% if pet.castrado == 1 %} Castrado {% else %} Não é Castrado {% endif %} #}
+                    {#                </p> #}
 
 
+                </div>
             </div>
         </div>
-    </div>
-    <hr>
+        <hr>
 
-    <div class="row g-3">
-        <div class="col-lg-12">
-            <div class="main-card">
-                <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="historico-tab" data-bs-toggle="tab"
-                                data-bs-target="#historico" type="button" role="tab" aria-controls="historico"
-                                aria-selected="true">
-                            <i class="fas fa-history me-1"></i> Histórico
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline"
-                                type="button" role="tab" aria-controls="timeline" aria-selected="false">
-                            <i class="fas fa-stream me-1"></i> Linha do Tempo
-                        </button>
-                    </li>
-                    {# Decide destino principal: ativa > última > nova #}
-                    {% set href_internacao = internacao_ativa_id
-                        ? path('clinica_ficha_internacao', {'id': internacao_ativa_id})
-                        : (ultima_internacao_id
-                        ? path('clinica_ficha_internacao', {'id': ultima_internacao_id})
-                        : path('clinica_nova_internacao', {'petId': pet.id})
-                        ) %}
-                    {% set texto_internacao = internacao_ativa_id
-                        ? 'Ficha de Internação (ativa)'
-                        : (ultima_internacao_id ? 'Ver última Ficha de Internação' : 'Nova Internação') %}
-                    <li class="nav-item" role="presentation">
-                        <a href="{{ href_internacao }}" id="btn-internacao-aba"
-                           class="nav-link d-flex align-items-center" title="{{ texto_internacao }}">
-                            <i class="bi bi-hospital me-1"></i>
-                            <span>{{ texto_internacao }}</span>
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown" role="presentation">
-                        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
-                           aria-expanded="false" title="Todas as internações">
-                            Histórico de internações
-                            {% if internacoes_pet is defined and internacoes_pet|length %}
-                                <span class="badge bg-secondary ms-1">{{ internacoes_pet|length }}</span>
-                            {% endif %}
-                        </a>
-                        <ul class="dropdown-menu">
-                            {% if internacoes_pet is defined and internacoes_pet|length %}
-                                {% for i in internacoes_pet %}
+        <div class="row g-3">
+            <div class="col-lg-12">
+                <div class="main-card">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="historico-tab" data-bs-toggle="tab"
+                                    data-bs-target="#historico" type="button" role="tab" aria-controls="historico"
+                                    aria-selected="true">
+                                <i class="fas fa-history me-1"></i> Histórico
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline"
+                                    type="button" role="tab" aria-controls="timeline" aria-selected="false">
+                                <i class="fas fa-stream me-1"></i> Linha do Tempo
+                            </button>
+                        </li>
+                        {# Decide destino principal: ativa > última > nova #}
+                        {% set href_internacao = internacao_ativa_id
+                            ? path('clinica_ficha_internacao', {'id': internacao_ativa_id})
+                            : (ultima_internacao_id
+                            ? path('clinica_ficha_internacao', {'id': ultima_internacao_id})
+                            : path('clinica_nova_internacao', {'petId': pet.id})
+                            ) %}
+                        {% set texto_internacao = internacao_ativa_id
+                            ? 'Ficha de Internação (ativa)'
+                            : (ultima_internacao_id ? 'Ver última Ficha de Internação' : 'Nova Internação') %}
+                        <li class="nav-item" role="presentation">
+                            <a href="{{ href_internacao }}" id="btn-internacao-aba"
+                               class="nav-link d-flex align-items-center" title="{{ texto_internacao }}">
+                                <i class="bi bi-hospital me-1"></i>
+                                <span>{{ texto_internacao }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown" role="presentation">
+                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                               aria-expanded="false" title="Todas as internações">
+                                Histórico de internações
+                                {% if internacoes_pet is defined and internacoes_pet|length %}
+                                    <span class="badge bg-secondary ms-1">{{ internacoes_pet|length }}</span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu">
+                                {% if internacoes_pet is defined and internacoes_pet|length %}
+                                    {% for i in internacoes_pet %}
+                                        <li>
+                                            <a class="dropdown-item d-flex justify-content-between align-items-center"
+                                               href="{{ path('clinica_ficha_internacao', {'id': i.id}) }}">
+                                                <span>#{{ i.id }} — {{ i.status|capitalize }}</span>
+                                                <small class="text-muted">{{ i.data_inicio|date('d/m/Y H:i') }}</small>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
                                     <li>
-                                        <a class="dropdown-item d-flex justify-content-between align-items-center"
-                                           href="{{ path('clinica_ficha_internacao', {'id': i.id}) }}">
-                                            <span>#{{ i.id }} — {{ i.status|capitalize }}</span>
-                                            <small class="text-muted">{{ i.data_inicio|date('d/m/Y H:i') }}</small>
-                                        </a>
+                                        <hr class="dropdown-divider">
                                     </li>
-                                {% endfor %}
+                                {% else %}
+                                    <li><span class="dropdown-item-text text-muted">Nenhuma internação anterior</span>
+                                    </li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                {% endif %}
                                 <li>
-                                    <hr class="dropdown-divider">
+                                    <a class="dropdown-item"
+                                       href="{{ path('clinica_nova_internacao', {'petId': pet.id}) }}">
+                                        <i class="bi bi-plus-circle me-1"></i> Nova Internação
+                                    </a>
                                 </li>
-                            {% else %}
-                                <li><span class="dropdown-item-text text-muted">Nenhuma internação anterior</span></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                            {% endif %}
-                            <li>
-                                <a class="dropdown-item"
-                                   href="{{ path('clinica_nova_internacao', {'petId': pet.id}) }}">
-                                    <i class="bi bi-plus-circle me-1"></i> Nova Internação
-                                </a>
-                            </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="venda-tab" data-bs-toggle="tab" data-bs-target="#venda"
+                                    type="button" role="tab" aria-controls="venda" aria-selected="false">
+                                <i class="fas fa-dollar-sign me-1"></i> Venda
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="orcamentos-tab" data-bs-toggle="tab"
+                                    data-bs-target="#orcamentos"
+                                    type="button" role="tab" aria-controls="orcamentos" aria-selected="false">
+                                <i class="fas fa-file-invoice-dollar me-1"></i> Orçamentos
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="agenda-tab" data-bs-toggle="tab" data-bs-target="#agenda"
+                                    type="button" role="tab" aria-controls="agenda" aria-selected="false">
+                                <i class="fas fa-calendar-alt me-1"></i> Agenda
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content pt-4" id="consolidatedTabsContent">
+                        {# HISTÓRICO + AÇÕES #}
+                        <div class="tab-pane fade show active" id="historico" role="tabpanel"
+                             aria-labelledby="historico-tab">
+                            <div id="action-buttons-view" class=" p-4">
+                                <h5 class="card-title mb-3">Adicionar Novo Registro</h5>
+                                <div class="row action-grid g-3">
+                                    <div class="col-6 col-md-4 col-lg-3">
+                                        <a href="#" id="btn-novo-atendimento"
+                                           class="btn btn-primary btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white p-3">
+                                            <i class="bi bi-heart-pulse fs-2 mb-2"></i>
+                                            <span>Atendimento</span>
+                                        </a>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-lg-3">
+                                        <a href="#" id="btn-nova-receita"
+                                           class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
+                                           style="background-color: #6f42c1;">
+                                            <i class="bi bi-file-earmark-text fs-2 mb-2"></i>
+                                            <span>Receita</span>
+                                        </a>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-lg-3">
+                                        <a href="{{ path('clinica_nova_internacao', {'petId': pet.id}) }}"
+                                           id="btn-nova-internacao"
+                                           class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
+                                           style="background-color: #20c997;">
+                                            <i class="bi bi-hospital fs-2 mb-2"></i>
+                                            <span>Internação</span>
+                                        </a>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-lg-3">
+                                        <a href="#" id="btn-novo-peso"
+                                           class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
+                                           style="background-color: #e85d6c;">
+                                            <i class="bi bi-rulers fs-2 mb-2"></i>
+                                            <span>Peso</span>
+                                        </a>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-lg-3">
+                                        <a href="#" id="btn-novo-exame"
+                                           class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
+                                           style="background-color: #e83e8c;">
+                                            <i class="bi bi-eyedropper fs-2 mb-2"></i>
+                                            <span>Exame</span>
+                                        </a>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-lg-3">
+                                        <a href="#" id="btn-novo-documento"
+                                           class="btn btn-success btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white">
+                                            <i class="bi bi-file-earmark-text fs-2 mb-2"></i>
+                                            <span>Documento</span>
+                                        </a>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-lg-3">
+                                        <a href="#" id="btn-novas-fotos"
+                                           class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
+                                           style="background-color: #17a2b8;">
+                                            <i class="bi bi-camera fs-2 mb-2"></i>
+                                            <span>Fotos</span>
+                                        </a>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-lg-3">
+                                        <a href="#" id="btn-nova-vacina"
+                                           class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center"
+                                           style="background-color: #ffc107; color: #212529 !important;">
+                                            <i class="bi bi-capsule fs-2 mb-2"></i>
+                                            <span>Vacina</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {# FORM ATENDIMENTO #}
+                            <div id="atendimento-view" style="display: none;">
+                                <form id="form-atendimento" method="POST"
+                                      action="{{ path('clinica_novo_atendimento', {'petId': pet.id}) }}">
+                                    <div class="form-view-container">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="form-view-header">Novo Atendimento</h5>
+                                            <button type="button" class="btn-close" id="btn-fechar-atendimento"
+                                                    aria-label="Fechar"></button>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3"><label class="form-label">Tipo*</label><select
+                                                        class="form-select" name="tipo">
+                                                    <option value="Consulta" selected>Consulta</option>
+                                                    <option value="Retorno">Retorno</option>
+                                                </select></div>
+                                            <div class="col-md-6 mb-3"><label class="form-label">Resumo
+                                                    (Observações)</label><input type="text" class="form-control"
+                                                                                name="observacoes"></div>
+                                        </div>
+                                        <div class="mb-3"><label class="form-label">Anamnese / Exame Clínico</label>
+                                            <div id="atendimento-editor"></div>
+                                            <input type="hidden" name="anamnese_delta" id="anamnese-input"></div>
+                                        <input type="hidden" name="pet_id" value="{{ pet.id }}">
+                                        <input type="hidden" name="cliente_id" value="{{ pet.dono_id }}">
+                                        <input type="hidden" name="data" value="{{ "now"|date("Y-m-d") }}">
+                                        <input type="hidden" name="hora" value="{{ "now"|date("H:i:s") }}">
+                                        <div class="d-flex justify-content-end">
+                                            <button type="submit" class="btn btn-success"><i
+                                                        class="fas fa-save me-1"></i>
+                                                Salvar Atendimento
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                            {# FORM RECEITA #}
+                            <div id="receita-view" style="display: none;">
+                                <form id="form-receita" method="POST"
+                                      action="{{ path('clinica_nova_receita', {'petId': pet.id}) }}">
+                                    <div class="form-view-container">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="form-view-header">Emitir Receita</h5>
+                                            <button type="button" class="btn-close" id="btn-fechar-receita"
+                                                    aria-label="Fechar"></button>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Conteúdo da Receita</label>
+                                            <div id="editor-conteudo"></div>
+                                            <input type="hidden" name="conteudo" id="conteudo-input">
+                                        </div>
+                                        <div class="d-flex justify-content-end">
+                                            <button type="submit" class="btn btn-primary"><i
+                                                        class="fas fa-print me-1"></i>
+                                                Gerar PDF e Salvar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                            {# VISUALIZAÇÃO DETALHES #}
+                            <div id="service-display-container"
+                                 class="card border border-dark bg-white rounded-4  mt-4" style="display: none;">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="card-title mb-0" id="service-display-title">Detalhes do Registro</h5>
+                                        <button type="button" class="btn-close" id="btn-fechar-service-display"
+                                                aria-label="Fechar"></button>
+                                    </div>
+                                    <div id="service-details-content"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# LINHA DO TEMPO #}
+                        <div class="tab-pane fade" id="timeline" role="tabpanel" aria-labelledby="timeline-tab"
+                             style="max-height: 440px; overflow-y: auto;">
+                            <ul class="timeline">
+                                {% set linha = '' %}
+                                {% for item in timeline_items %}
+                                {% set linha = (loop.index is odd) ? '' : 'timeline-inverted' %}
+                                <li class="{{ linha }} ">
+                                    <div class="timeline-badge"><i class="bi calendar2-check"></i></div>
+                                    <div class="timeline-panel border
+                                                {{ 'Consulta' in item.tipo ? 'border-start border-5 border-primary ps-3' :
+                                    'Retorno' in item.tipo ? 'border-start border-5 border-success ps-3' :
+                                    'Vacina' in item.tipo ? 'border-start border-5 border-warning ps-3' :
+                                    'Receita' in item.tipo ? 'border-start border-5 ps-3' :
+                                    'border-start border-5 border-dark ps-3' }}"
+                                         {% if 'Receita' in item.tipo %}style="border-left: 5px solid #6f42c1 !important;"{% endif %}
+                                    ">
+                                    <div class="timeline-heading">
+                                        <h4 class="timeline-title">
+                                            <a href="#"
+                                               class="timeline-link timeline-text d-flex justify-content-between align-items-center"
+                                               data-tipo="{{ item.tipo }}"
+                                               data-data="{{ item.data|date('d/m/Y \\à\\s H:i') }}"
+                                               data-resumo="{{ item.resumo|default('Ver detalhes')|e('html_attr') }}"
+                                                    {% if item.anamnese is defined %} data-atendimento-delta="{{ item.anamnese|e('html_attr') }}" {% endif %}
+                                                    {% if item.receita_cabecalho is defined %} data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}" {% endif %}
+                                                    {% if item.receita_conteudo is defined %} data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}" {% endif %}
+                                                    {% if item.receita_rodape is defined %} data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}" {% endif %}>
+                                                <span>{{ item.tipo }}</span>
+                                            </a>
+                                        </h4>
+                                        <p><small class="text-muted"><i
+                                                        class="bi smartwatch"></i> {{ item.data|date('d/m/Y \\à\\s H:i') }}
+                                            </small></p>
+                                    </div>
+                                    <div class="timeline-body">
+                                        <a href="#"
+                                           class="timeline-link timeline-text d-flex justify-content-between align-items-center"
+                                           data-tipo="{{ item.tipo }}"
+                                           data-data="{{ item.data|date('d/m/Y \\à\\s H:i') }}"
+                                           data-resumo="{{ item.resumo|default('Ver detalhes')|e('html_attr') }}"
+                                                {% if item.anamnese is defined %} data-atendimento-delta="{{ item.anamnese|e('html_attr') }}" {% endif %}
+                                                {% if item.receita_cabecalho is defined %} data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}" {% endif %}
+                                                {% if item.receita_conteudo is defined %} data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}" {% endif %}
+                                                {% if item.receita_rodape is defined %} data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}" {% endif %}>
+                                            <span>{{ item.tipo }}</span>
+                                        </a>
+                                        <small class="text-muted float-end fst-italic me-2">{{ item.resumo|default('Ver detalhes') }}</small>
+                                    </div>
+                        </div>
+                        </li>
+                        {% endfor %}
                         </ul>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="venda-tab" data-bs-toggle="tab" data-bs-target="#venda"
-                                type="button" role="tab" aria-controls="venda" aria-selected="false">
-                            <i class="fas fa-dollar-sign me-1"></i> Venda
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="orcamentos-tab" data-bs-toggle="tab" data-bs-target="#orcamentos"
-                                type="button" role="tab" aria-controls="orcamentos" aria-selected="false">
-                            <i class="fas fa-file-invoice-dollar me-1"></i> Orçamentos
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="agenda-tab" data-bs-toggle="tab" data-bs-target="#agenda"
-                                type="button" role="tab" aria-controls="agenda" aria-selected="false">
-                            <i class="fas fa-calendar-alt me-1"></i> Agenda
-                        </button>
-                    </li>
-                </ul>
-                <div class="tab-content pt-4" id="consolidatedTabsContent">
-                    {# HISTÓRICO + AÇÕES #}
-                    <div class="tab-pane fade show active" id="historico" role="tabpanel"
-                         aria-labelledby="historico-tab">
-                        <div id="action-buttons-view" class="card shadow-lg p-4">
-                            <h5 class="card-title mb-3">Adicionar Novo Registro</h5>
-                            <div class="row action-grid g-3">
-                                <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="#" id="btn-novo-atendimento"
-                                       class="btn btn-primary btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white p-3">
-                                        <i class="bi bi-heart-pulse fs-2 mb-2"></i>
-                                        <span>Atendimento</span>
-                                    </a>
-                                </div>
-                                <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="#" id="btn-nova-receita"
-                                       class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
-                                       style="background-color: #6f42c1;">
-                                        <i class="bi bi-file-earmark-text fs-2 mb-2"></i>
-                                        <span>Receita</span>
-                                    </a>
-                                </div>
-                                <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="{{ path('clinica_nova_internacao', {'petId': pet.id}) }}"
-                                       id="btn-nova-internacao"
-                                       class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
-                                       style="background-color: #20c997;">
-                                        <i class="bi bi-hospital fs-2 mb-2"></i>
-                                        <span>Internação</span>
-                                    </a>
-                                </div>
-                                <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="#" id="btn-novo-peso"
-                                       class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
-                                       style="background-color: #e85d6c;">
-                                        <i class="bi bi-rulers fs-2 mb-2"></i>
-                                        <span>Peso</span>
-                                    </a>
-                                </div>
-                                <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="#" id="btn-novo-exame"
-                                       class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
-                                       style="background-color: #e83e8c;">
-                                        <i class="bi bi-eyedropper fs-2 mb-2"></i>
-                                        <span>Exame</span>
-                                    </a>
-                                </div>
-                                <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="#" id="btn-novo-documento"
-                                       class="btn btn-success btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white">
-                                        <i class="bi bi-file-earmark-text fs-2 mb-2"></i>
-                                        <span>Documento</span>
-                                    </a>
-                                </div>
-                                <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="#" id="btn-novas-fotos"
-                                       class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
-                                       style="background-color: #17a2b8;">
-                                        <i class="bi bi-camera fs-2 mb-2"></i>
-                                        <span>Fotos</span>
-                                    </a>
-                                </div>
-                                <div class="col-6 col-md-4 col-lg-3">
-                                    <a href="#" id="btn-nova-vacina"
-                                       class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center"
-                                       style="background-color: #ffc107; color: #212529 !important;">
-                                        <i class="bi bi-capsule fs-2 mb-2"></i>
-                                        <span>Vacina</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        {# FORM ATENDIMENTO #}
-                        <div id="atendimento-view" style="display: none;">
-                            <form id="form-atendimento" method="POST"
-                                  action="{{ path('clinica_novo_atendimento', {'petId': pet.id}) }}">
-                                <div class="form-view-container">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5 class="form-view-header">Novo Atendimento</h5>
-                                        <button type="button" class="btn-close" id="btn-fechar-atendimento"
-                                                aria-label="Fechar"></button>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3"><label class="form-label">Tipo*</label><select
-                                                    class="form-select" name="tipo">
-                                                <option value="Consulta" selected>Consulta</option>
-                                                <option value="Retorno">Retorno</option>
-                                            </select></div>
-                                        <div class="col-md-6 mb-3"><label class="form-label">Resumo
-                                                (Observações)</label><input type="text" class="form-control"
-                                                                            name="observacoes"></div>
-                                    </div>
-                                    <div class="mb-3"><label class="form-label">Anamnese / Exame Clínico</label>
-                                        <div id="atendimento-editor"></div>
-                                        <input type="hidden" name="anamnese_delta" id="anamnese-input"></div>
-                                    <input type="hidden" name="pet_id" value="{{ pet.id }}">
-                                    <input type="hidden" name="cliente_id" value="{{ pet.dono_id }}">
-                                    <input type="hidden" name="data" value="{{ "now"|date("Y-m-d") }}">
-                                    <input type="hidden" name="hora" value="{{ "now"|date("H:i:s") }}">
-                                    <div class="d-flex justify-content-end">
-                                        <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>
-                                            Salvar Atendimento
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-
-                        {# FORM RECEITA #}
-                        <div id="receita-view" style="display: none;">
-                            <form id="form-receita" method="POST"
-                                  action="{{ path('clinica_nova_receita', {'petId': pet.id}) }}">
-                                <div class="form-view-container">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5 class="form-view-header">Emitir Receita</h5>
-                                        <button type="button" class="btn-close" id="btn-fechar-receita"
-                                                aria-label="Fechar"></button>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Conteúdo da Receita</label>
-                                        <div id="editor-conteudo"></div>
-                                        <input type="hidden" name="conteudo" id="conteudo-input">
-                                    </div>
-                                    <div class="d-flex justify-content-end">
-                                        <button type="submit" class="btn btn-primary"><i class="fas fa-print me-1"></i>
-                                            Gerar PDF e Salvar
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-
-                        {# VISUALIZAÇÃO DETALHES #}
-                        <div id="service-display-container"
-                             class="card border border-dark bg-white rounded-4 shadow-lg mt-4" style="display: none;">
-                            <div class="card-body p-4">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="card-title mb-0" id="service-display-title">Detalhes do Registro</h5>
-                                    <button type="button" class="btn-close" id="btn-fechar-service-display"
-                                            aria-label="Fechar"></button>
-                                </div>
-                                <div id="service-details-content"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {# LINHA DO TEMPO #}
-                    <div class="tab-pane fade" id="timeline" role="tabpanel" aria-labelledby="timeline-tab">
-                        <ul class="timeline" style="max-height: 440px; overflow-y: auto;">
-                            {% for item in timeline_items %}
+                        <ul class="timelines d-none" style="max-height: 440px; overflow-y: auto;">
+                            {% set linha = '' %}
+                            {% for key,item in timeline_items %}
+                                {% set linha = key%2? '': 'timeline-inverted' %}
                                 <li class="timeline-item" style="list-style: none;">
+
                                     <div class="card shadow-sm mb-3 rounded-4 bg-light border"
                                          style="border-width: 1.5px; border-radius: 15px !important;">
-                                        <div class="timeline-content rounded-start
+                                        <div class="border
                                                 {{ 'Consulta' in item.tipo ? 'border-start border-5 border-primary ps-3' :
                                         'Retorno' in item.tipo ? 'border-start border-5 border-success ps-3' :
                                         'Vacina' in item.tipo ? 'border-start border-5 border-warning ps-3' :
@@ -698,367 +538,364 @@
             </div>
         </div>
     </div>
-</div>
-
-{# MODAL ADICIONAR SERVIÇO #}
-<div class="modal fade" id="modalAdicionarServico" tabindex="-1" aria-labelledby="modalAdicionarServicoLabel"
-     aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <form class="modal-content" id="form-novo-servico" method="post"
-              action="{{ path('clinica_concluir_venda', {'petId': pet.id}) }}">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalAdicionarServicoLabel">Adicionar Serviço / Lançamento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="servico-descricao" class="form-label">Descrição do Serviço*</label>
-                    <select class="form-select" id="servico-descricao" name="descricao" required>
-                        <option value="">Selecione um serviço...</option>
-                        {% for servico in servicos_clinica %}
-                            <option value="{{ servico.nome }}" data-valor="{{ servico.valor }}">
-                                {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="servico-valor" class="form-label">Valor (R$)*</label>
-                    <input type="number" step="0.01" class="form-control" id="servico-valor" name="valor" required>
-                </div>
-                <div class="mb-3">
-                    <label for="servico-desconto" class="form-label">Desconto (R$)</label>
-                    <input type="number" step="0.01" class="form-control" id="servico-desconto" name="desconto"
-                           value="0">
-                </div>
-                <div class="mb-3">
-                    <label for="servico-metodo" class="form-label">Método de Pagamento*</label>
-                    <select name="metodo_pagamento" id="servico-metodo" class="form-control" required>
-                        <option value="dinheiro">Dinheiro</option>
-                        <option value="pix">Pix</option>
-                        <option value="credito">Cartão de Crédito</option>
-                        <option value="debito">Cartão de Débito</option>
-                        <option value="pendente">Pagamento Pendente</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="servico-data" class="form-label">Data</label>
-                    <input type="date" class="form-control" id="servico-data" name="data"
-                           value="{{ "now"|date("Y-m-d") }}">
-                </div>
-                <div class="mb-3">
-                    <label for="servico-observacao" class="form-label">Observação</label>
-                    <textarea class="form-control" id="servico-observacao" name="observacao" rows="2"></textarea>
-                </div>
-                <input type="hidden" name="origem" value="clinica">
-                <input type="hidden" name="pet_id" value="{{ pet.id }}">
-            </div>
-            <div class="modal-footer d-flex justify-content-between">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-success">Concluir / Salvar</button>
-            </div>
-        </form>
     </div>
-</div>
+    {# MODAL ADICIONAR SERVIÇO #}
+    <div class="modal fade" id="modalAdicionarServico" tabindex="-1" aria-labelledby="modalAdicionarServicoLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" id="form-novo-servico" method="post"
+                  action="{{ path('clinica_concluir_venda', {'petId': pet.id}) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAdicionarServicoLabel">Adicionar Serviço / Lançamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="servico-descricao" class="form-label">Descrição do Serviço*</label>
+                        <select class="form-select" id="servico-descricao" name="descricao" required>
+                            <option value="">Selecione um serviço...</option>
+                            {% for servico in servicos_clinica %}
+                                <option value="{{ servico.nome }}" data-valor="{{ servico.valor }}">
+                                    {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="servico-valor" class="form-label">Valor (R$)*</label>
+                        <input type="number" step="0.01" class="form-control" id="servico-valor" name="valor" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="servico-desconto" class="form-label">Desconto (R$)</label>
+                        <input type="number" step="0.01" class="form-control" id="servico-desconto" name="desconto"
+                               value="0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="servico-metodo" class="form-label">Método de Pagamento*</label>
+                        <select name="metodo_pagamento" id="servico-metodo" class="form-control" required>
+                            <option value="dinheiro">Dinheiro</option>
+                            <option value="pix">Pix</option>
+                            <option value="credito">Cartão de Crédito</option>
+                            <option value="debito">Cartão de Débito</option>
+                            <option value="pendente">Pagamento Pendente</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="servico-data" class="form-label">Data</label>
+                        <input type="date" class="form-control" id="servico-data" name="data"
+                               value="{{ "now"|date("Y-m-d") }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="servico-observacao" class="form-label">Observação</label>
+                        <textarea class="form-control" id="servico-observacao" name="observacao" rows="2"></textarea>
+                    </div>
+                    <input type="hidden" name="origem" value="clinica">
+                    <input type="hidden" name="pet_id" value="{{ pet.id }}">
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Concluir / Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-<script src="{{ asset('js/plugins/jquery/jquery.min.js') }}"></script>
-<script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-<script src="{{ asset('js/Notify.js') }}"></script>
-<script>
-    $(document).ready(function () {
-        // === PEGAR ELEMENTOS ===
-        const $actionButtonsView = $('#action-buttons-view');
-        const $atendimentoView = $('#atendimento-view');
-        const $receitaView = $('#receita-view');
-        const $serviceDisplayContainer = $('#service-display-container');
-        const $serviceDetailsContent = $('#service-details-content');
+{% endblock %}
+{% block javascripts %}
+    <script src="{{ asset('js/Notify.js') }}"></script>
+    <script>
+        $(document).ready(function () {
+            // === PEGAR ELEMENTOS ===
+            const $actionButtonsView = $('#action-buttons-view');
+            const $atendimentoView = $('#atendimento-view');
+            const $receitaView = $('#receita-view');
+            const $serviceDisplayContainer = $('#service-display-container');
+            const $serviceDetailsContent = $('#service-details-content');
 
-        const $btnNovoAtendimento = $('#btn-novo-atendimento');
-        const $btnNovaReceita = $('#btn-nova-receita');
-        const $btnFecharAtendimento = $('#btn-fechar-atendimento');
-        const $btnFecharReceita = $('#btn-fechar-receita');
-        const $btnFecharServiceDisplay = $('#btn-fechar-service-display');
-        const $btnAdicionarServico = $('#btn-adicionar-servico');
+            const $btnNovoAtendimento = $('#btn-novo-atendimento');
+            const $btnNovaReceita = $('#btn-nova-receita');
+            const $btnFecharAtendimento = $('#btn-fechar-atendimento');
+            const $btnFecharReceita = $('#btn-fechar-receita');
+            const $btnFecharServiceDisplay = $('#btn-fechar-service-display');
+            const $btnAdicionarServico = $('#btn-adicionar-servico');
 
-        const historicoTabElement = $('button[data-bs-target="#historico"]')[0];
-        let historicoTab = historicoTabElement ? new bootstrap.Tab(historicoTabElement) : null;
+            const historicoTabElement = $('button[data-bs-target="#historico"]')[0];
+            let historicoTab = historicoTabElement ? new bootstrap.Tab(historicoTabElement) : null;
 
-        const modalAdicionarServico = new bootstrap.Modal($('#modalAdicionarServico')[0]);
-        const modalEditarVenda = new bootstrap.Modal($('#modalEditarVenda')[0]);
+            const modalAdicionarServico = new bootstrap.Modal($('#modalAdicionarServico')[0]);
+            const modalEditarVenda = new bootstrap.Modal($('#modalEditarVenda')[0]);
 
-        window.currentQuillDisplayEditors = [];
-
-        const showView = (viewToShow) => {
-            $actionButtonsView.hide();
-            $atendimentoView.hide();
-            $receitaView.hide();
-            $serviceDisplayContainer.hide();
-            if (viewToShow) $(viewToShow).show();
-        };
-
-        const returnToActionGrid = (e) => {
-            if (e) e.preventDefault();
-            window.currentQuillDisplayEditors.forEach(editor => {
-                if (editor.container && editor.container.parentNode) {
-                    editor.container.parentNode.removeChild(editor.container);
-                }
-            });
-            window.currentQuillDisplayEditors = [];
-            showView($actionButtonsView);
-        };
-
-        // fechar janela
-        $('.voltar-dash').on('click', function () {
-            window.close();
-            return false;
-        });
-
-        // === LISTENERS BÁSICOS ===
-        $btnNovoAtendimento.on('click', function (e) {
-            e.preventDefault();
-            showView($atendimentoView);
-        });
-        $btnNovaReceita.on('click', function (e) {
-            e.preventDefault();
-            showView($receitaView);
-        });
-
-        const notImplementedButtons = ['btn-novo-peso', 'btn-novo-exame', 'btn-novo-documento', 'btn-novas-fotos', 'btn-nova-vacina'];
-        notImplementedButtons.forEach(id => {
-            $(`#${id}`).on('click', function (e) {
-                e.preventDefault();
-                alert(`A funcionalidade de "${$(this).text().trim()}" não está implementada ainda.`);
-            });
-        });
-
-        $btnFecharAtendimento.on('click', returnToActionGrid);
-        $btnFecharReceita.on('click', returnToActionGrid);
-        $btnFecharServiceDisplay.on('click', returnToActionGrid);
-
-        // === QUILL EDITORS ===
-        const toolbarOptions = [
-            [{'header': [1, 2, 3, false]}],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{'list': 'ordered'}, {'list': 'bullet'}],
-            ['link'],
-            ['clean']
-        ];
-        const createQuillEditor = (selector, options = {}) => {
-            const el = $(selector)[0];
-            return el ? new Quill(selector, { theme: 'snow', modules: { toolbar: toolbarOptions }, ...options }) : null;
-        };
-        const quillAtendimento = createQuillEditor('#atendimento-editor');
-        const quillConteudo = createQuillEditor('#editor-conteudo');
-
-        // === TIMELINE (abre visualização) ===
-        $('.timeline-link').on('click', function (e) {
-            e.preventDefault();
-            const tipo = $(this).data('tipo');
-            const data = $(this).data('data');
-            const resumo = $(this).data('resumo');
-            $serviceDetailsContent.html('');
-
-            window.currentQuillDisplayEditors.forEach(editor => {
-                if (editor.container && editor.container.parentNode) {
-                    editor.container.parentNode.removeChild(editor.container);
-                }
-            });
             window.currentQuillDisplayEditors = [];
 
-            $('#service-display-title').text(`Detalhes do Registro: ${tipo}`);
-
-            const appendServiceDetailCard = (cardTitle, contentData, typeClass, isHtml = false) => {
-                const $cardDiv = $('<div>').addClass(`service-detail-card ${typeClass}`);
-                $('<h6>').addClass('mb-2').text(cardTitle).appendTo($cardDiv);
-                $('<p>').addClass('text-muted mb-3').html(`<small>Registrado em: ${data}</small>`).appendTo($cardDiv);
-                const $contentDiv = $('<div>').addClass('service-detail-content').appendTo($cardDiv);
-                $serviceDetailsContent.append($cardDiv);
-
-                if (contentData) {
-                    if (isHtml) {
-                        $contentDiv.html(contentData);
-                    } else {
-                        const quillDisplay = new Quill($contentDiv[0], {
-                            theme: 'bubble',
-                            readOnly: true,
-                            modules: { toolbar: false }
-                        });
-                        window.currentQuillDisplayEditors.push(quillDisplay);
-                        try {
-                            quillDisplay.setContents(JSON.parse(contentData));
-                        } catch {
-                            quillDisplay.setText('Conteúdo não disponível ou formato inválido.');
-                        }
-                    }
-                } else {
-                    $contentDiv.html('<p>Nenhum detalhe disponível.</p>');
-                }
+            const showView = (viewToShow) => {
+                $actionButtonsView.hide();
+                $atendimentoView.hide();
+                $receitaView.hide();
+                $serviceDisplayContainer.hide();
+                if (viewToShow) $(viewToShow).show();
             };
 
-            if (tipo === 'Consulta' || tipo === 'Retorno') {
-                const anamneseDeltaString = $(this).data('atendimentoDelta');
-                const borderColorClass = (tipo === 'Consulta') ? 'border-primary' : 'border-success';
-                appendServiceDetailCard(`Atendimento: ${resumo}`, anamneseDeltaString, borderColorClass);
-            } else if (tipo === 'Receita') {
-                const cabecalhoHtmlString = $(this).data('receitaCabecalhoHtml');
-                const conteudoDeltaString = $(this).data('receitaConteudoDelta');
-                const rodapeHtmlString = $(this).data('receitaRodapeHtml');
-                const borderColorClass = 'border-purple';
+            const returnToActionGrid = (e) => {
+                if (e) e.preventDefault();
+                window.currentQuillDisplayEditors.forEach(editor => {
+                    if (editor.container && editor.container.parentNode) {
+                        editor.container.parentNode.removeChild(editor.container);
+                    }
+                });
+                window.currentQuillDisplayEditors = [];
+                showView($actionButtonsView);
+            };
 
-                if (cabecalhoHtmlString) appendServiceDetailCard('🩺', cabecalhoHtmlString, borderColorClass, true);
-                if (conteudoDeltaString) appendServiceDetailCard('📄 ', conteudoDeltaString, borderColorClass);
-                if (rodapeHtmlString) appendServiceDetailCard('📅 ', rodapeHtmlString, borderColorClass, true);
+            // fechar janela
+            $('.voltar-dash').on('click', function () {
+                window.close();
+                return false;
+            });
 
-                if (!cabecalhoHtmlString && !conteudoDeltaString && !rodapeHtmlString) {
-                    $serviceDetailsContent.append(`
+            // === LISTENERS BÁSICOS ===
+            $btnNovoAtendimento.on('click', function (e) {
+                e.preventDefault();
+                showView($atendimentoView);
+            });
+            $btnNovaReceita.on('click', function (e) {
+                e.preventDefault();
+                showView($receitaView);
+            });
+
+            const notImplementedButtons = ['btn-novo-peso', 'btn-novo-exame', 'btn-novo-documento', 'btn-novas-fotos', 'btn-nova-vacina'];
+            notImplementedButtons.forEach(id => {
+                $(`#${id}`).on('click', function (e) {
+                    e.preventDefault();
+                    alert(`A funcionalidade de "${$(this).text().trim()}" não está implementada ainda.`);
+                });
+            });
+
+            $btnFecharAtendimento.on('click', returnToActionGrid);
+            $btnFecharReceita.on('click', returnToActionGrid);
+            $btnFecharServiceDisplay.on('click', returnToActionGrid);
+
+            // === QUILL EDITORS ===
+            const toolbarOptions = [
+                [{'header': [1, 2, 3, false]}],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{'list': 'ordered'}, {'list': 'bullet'}],
+                ['link'],
+                ['clean']
+            ];
+            const createQuillEditor = (selector, options = {}) => {
+                const el = $(selector)[0];
+                return el ? new Quill(selector, {theme: 'snow', modules: {toolbar: toolbarOptions}, ...options}) : null;
+            };
+            const quillAtendimento = createQuillEditor('#atendimento-editor');
+            const quillConteudo = createQuillEditor('#editor-conteudo');
+
+            // === TIMELINE (abre visualização) ===
+            $('.timeline-link').on('click', function (e) {
+                e.preventDefault();
+                const tipo = $(this).data('tipo');
+                const data = $(this).data('data');
+                const resumo = $(this).data('resumo');
+                $serviceDetailsContent.html('');
+
+                window.currentQuillDisplayEditors.forEach(editor => {
+                    if (editor.container && editor.container.parentNode) {
+                        editor.container.parentNode.removeChild(editor.container);
+                    }
+                });
+                window.currentQuillDisplayEditors = [];
+
+                $('#service-display-title').text(`Detalhes do Registro: ${tipo}`);
+
+                const appendServiceDetailCard = (cardTitle, contentData, typeClass, isHtml = false) => {
+                    const $cardDiv = $('<div>').addClass(`service-detail-card ${typeClass}`);
+                    $('<h6>').addClass('mb-2').text(cardTitle).appendTo($cardDiv);
+                    $('<p>').addClass('text-muted mb-3').html(`<small>Registrado em: ${data}</small>`).appendTo($cardDiv);
+                    const $contentDiv = $('<div>').addClass('service-detail-content').appendTo($cardDiv);
+                    $serviceDetailsContent.append($cardDiv);
+
+                    if (contentData) {
+                        if (isHtml) {
+                            $contentDiv.html(contentData);
+                        } else {
+                            const quillDisplay = new Quill($contentDiv[0], {
+                                theme: 'bubble',
+                                readOnly: true,
+                                modules: {toolbar: false}
+                            });
+                            window.currentQuillDisplayEditors.push(quillDisplay);
+                            try {
+                                quillDisplay.setContents(JSON.parse(contentData));
+                            } catch {
+                                quillDisplay.setText('Conteúdo não disponível ou formato inválido.');
+                            }
+                        }
+                    } else {
+                        $contentDiv.html('<p>Nenhum detalhe disponível.</p>');
+                    }
+                };
+
+                if (tipo === 'Consulta' || tipo === 'Retorno') {
+                    const anamneseDeltaString = $(this).data('atendimentoDelta');
+                    const borderColorClass = (tipo === 'Consulta') ? 'border-primary' : 'border-success';
+                    appendServiceDetailCard(`Atendimento: ${resumo}`, anamneseDeltaString, borderColorClass);
+                } else if (tipo === 'Receita') {
+                    const cabecalhoHtmlString = $(this).data('receitaCabecalhoHtml');
+                    const conteudoDeltaString = $(this).data('receitaConteudoDelta');
+                    const rodapeHtmlString = $(this).data('receitaRodapeHtml');
+                    const borderColorClass = 'border-purple';
+
+                    if (cabecalhoHtmlString) appendServiceDetailCard('🩺', cabecalhoHtmlString, borderColorClass, true);
+                    if (conteudoDeltaString) appendServiceDetailCard('📄 ', conteudoDeltaString, borderColorClass);
+                    if (rodapeHtmlString) appendServiceDetailCard('📅 ', rodapeHtmlString, borderColorClass, true);
+
+                    if (!cabecalhoHtmlString && !conteudoDeltaString && !rodapeHtmlString) {
+                        $serviceDetailsContent.append(`
                     <div class="service-detail-card ${borderColorClass}">
                         <h6 class="mb-2">Receita Médica - ${resumo}</h6>
                         <p class="text-muted mb-3"><small>Emitida em: ${data}</small></p>
                         <p>Nenhum detalhe de receita disponível.</p>
                     </div>
                 `);
-                } else {
-                    $serviceDetailsContent.append(`
+                    } else {
+                        $serviceDetailsContent.append(`
                     <div class="text-end mt-3">
                         <button class="btn btn-primary"><i class="fas fa-print me-1"></i> Imprimir Receita</button>
                     </div>
                 `);
-                }
-            } else {
-                const borderColorClass = 'border-secondary';
-                $serviceDetailsContent.append(`
+                    }
+                } else {
+                    const borderColorClass = 'border-secondary';
+                    $serviceDetailsContent.append(`
                 <div class="service-detail-card ${borderColorClass}">
                     <h6 class="mb-2">${tipo} - ${resumo}</h6>
                     <p class="text-muted mb-3"><small>Data: ${data}</small></p>
                     <p>Nenhum detalhe específico disponível para este tipo de registro no momento.</p>
                 </div>
             `);
-            }
+                }
 
-            if (historicoTab) historicoTab.show();
-            showView($serviceDisplayContainer);
-        });
-
-        // === SUBMIT DOS FORMULÁRIOS (captura Deltas Quill) ===
-        const setupFormSubmission = (formId, editorsMap) => {
-            $(`#${formId}`).on('submit', function () {
-                $.each(editorsMap, (inputId, quillInstance) => {
-                    const $input = $(`#${inputId}`);
-                    if ($input.length && quillInstance) {
-                        $input.val(JSON.stringify(quillInstance.getContents()));
-                    }
-                });
+                if (historicoTab) historicoTab.show();
+                showView($serviceDisplayContainer);
             });
-        };
-        setupFormSubmission('form-atendimento', { 'anamnese-input': quillAtendimento });
-        setupFormSubmission('form-receita', { 'conteudo-input': quillConteudo });
 
-        // === MODAL ADICIONAR SERVIÇO ===
-        const $formNovoServico = $('#form-novo-servico');
-        const $selectServico = $('#servico-descricao');
-        const $inputValor = $('#servico-valor');
-        const servicosMap = {};
-        {% for servico in servicos_clinica %}
-        servicosMap["{{ servico.nome|e('js') }}"] = {{ servico.valor|number_format(2, '.', '') }};
-        {% endfor %}
-
-        $formNovoServico.on('submit', function (e) {
-            e.preventDefault();
-            fetch(this.action, {
-                method: "POST",
-                body: new FormData(this)
-            })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        if (window.Notify && Notify.toast) {
-                            Notify.toast(data.mensagem, "success");
+            // === SUBMIT DOS FORMULÁRIOS (captura Deltas Quill) ===
+            const setupFormSubmission = (formId, editorsMap) => {
+                $(`#${formId}`).on('submit', function () {
+                    $.each(editorsMap, (inputId, quillInstance) => {
+                        const $input = $(`#${inputId}`);
+                        if ($input.length && quillInstance) {
+                            $input.val(JSON.stringify(quillInstance.getContents()));
                         }
-                        modalAdicionarServico.hide();
-                        setTimeout(() => location.reload(), 800);
-                    } else {
-                        if (window.Notify && Notify.toast) {
-                            Notify.toast(data.mensagem || "Erro ao registrar serviço.", "danger");
-                        } else {
-                            alert(data.mensagem || "Erro ao registrar serviço.");
-                        }
-                    }
-                })
-                .catch(err => {
-                    const errorMessage = (err.message.indexOf('<') === 0) ? "Erro no servidor (verifique logs do backend)." : err.message;
-                    if (window.Notify && Notify.toast) {
-                        Notify.toast(`Erro ao registrar serviço: ${errorMessage}`, "danger");
-                    } else {
-                        alert(`Erro ao registrar serviço: ${errorMessage}`);
-                    }
+                    });
                 });
-        });
+            };
+            setupFormSubmission('form-atendimento', {'anamnese-input': quillAtendimento});
+            setupFormSubmission('form-receita', {'conteudo-input': quillConteudo});
 
-        $btnAdicionarServico.on('click', function () {
-            $selectServico.prop('selectedIndex', 0);
-            $inputValor.val('');
-            modalAdicionarServico.show();
-        });
+            // === MODAL ADICIONAR SERVIÇO ===
+            const $formNovoServico = $('#form-novo-servico');
+            const $selectServico = $('#servico-descricao');
+            const $inputValor = $('#servico-valor');
+            const servicosMap = {};
+            {% for servico in servicos_clinica %}
+            servicosMap["{{ servico.nome|e('js') }}"] = {{ servico.valor|number_format(2, '.', '') }};
+            {% endfor %}
 
-        $selectServico.on('change', function () {
-            const nomeServico = $(this).val();
-            $inputValor.val(servicosMap.hasOwnProperty(nomeServico) ? servicosMap[nomeServico] : '').prop('readonly', false);
-        });
-
-        // === MODAL EDITAR VENDA ===
-        $(".btn-editar-venda").on("click", function () {
-            $("#editar-id").val($(this).data("id"));
-            $("#editar-descricao").val($(this).data("descricao"));
-            $("#editar-valor").val($(this).data("valor"));
-            $("#editar-metodo").val($(this).data("metodo"));
-            $("#editar-data").val($(this).data("data"));
-            $("#editar-observacao").val($(this).data("observacao"));
-
-            $("#form-editar-venda").attr("action",
-                "{{ path('clinica_editar_venda', {petId: pet.id, id: 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', $(this).data("id"))
-            );
-
-            modalEditarVenda.show();
-        });
-
-        // === INATIVAR VENDA ===
-        $(".btn-inativar-venda").on("click", function () {
-            if (!confirm("Tem certeza que deseja inativar esta venda?")) return;
-
-            fetch(`/clinica/pet/{{ pet.id }}/venda/${$(this).data("id")}/inativar`, {
-                method: "POST"
-            })
-                .then(r => r.json())
-                .then(d => {
-                    if (d.status === "success") {
-                        location.reload();
-                    } else {
-                        alert(d.mensagem || "Erro ao inativar venda.");
-                    }
+            $formNovoServico.on('submit', function (e) {
+                e.preventDefault();
+                fetch(this.action, {
+                    method: "POST",
+                    body: new FormData(this)
                 })
-                .catch(() => alert("Erro ao inativar venda."));
-        });
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            if (window.Notify && Notify.toast) {
+                                Notify.toast(data.mensagem, "success");
+                            }
+                            modalAdicionarServico.hide();
+                            setTimeout(() => location.reload(), 800);
+                        } else {
+                            if (window.Notify && Notify.toast) {
+                                Notify.toast(data.mensagem || "Erro ao registrar serviço.", "danger");
+                            } else {
+                                alert(data.mensagem || "Erro ao registrar serviço.");
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        const errorMessage = (err.message.indexOf('<') === 0) ? "Erro no servidor (verifique logs do backend)." : err.message;
+                        if (window.Notify && Notify.toast) {
+                            Notify.toast(`Erro ao registrar serviço: ${errorMessage}`, "danger");
+                        } else {
+                            alert(`Erro ao registrar serviço: ${errorMessage}`);
+                        }
+                    });
+            });
 
-        $("#form-editar-venda").on("submit", function (e) {
-            e.preventDefault();
-            fetch(this.action, {
-                method: "POST",
-                body: new FormData(this)
-            })
-                .then(r => r.json())
-                .then(d => {
-                    if (d.status === "success") {
-                        modalEditarVenda.hide();
-                        location.reload();
-                    } else {
-                        alert(d.mensagem);
-                    }
+            $btnAdicionarServico.on('click', function () {
+                $selectServico.prop('selectedIndex', 0);
+                $inputValor.val('');
+                modalAdicionarServico.show();
+            });
+
+            $selectServico.on('change', function () {
+                const nomeServico = $(this).val();
+                $inputValor.val(servicosMap.hasOwnProperty(nomeServico) ? servicosMap[nomeServico] : '').prop('readonly', false);
+            });
+
+            // === MODAL EDITAR VENDA ===
+            $(".btn-editar-venda").on("click", function () {
+                $("#editar-id").val($(this).data("id"));
+                $("#editar-descricao").val($(this).data("descricao"));
+                $("#editar-valor").val($(this).data("valor"));
+                $("#editar-metodo").val($(this).data("metodo"));
+                $("#editar-data").val($(this).data("data"));
+                $("#editar-observacao").val($(this).data("observacao"));
+
+                $("#form-editar-venda").attr("action",
+                    "{{ path('clinica_editar_venda', {petId: pet.id, id: 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', $(this).data("id"))
+                );
+
+                modalEditarVenda.show();
+            });
+
+            // === INATIVAR VENDA ===
+            $(".btn-inativar-venda").on("click", function () {
+                if (!confirm("Tem certeza que deseja inativar esta venda?")) return;
+
+                fetch(`/clinica/pet/{{ pet.id }}/venda/${$(this).data("id")}/inativar`, {
+                    method: "POST"
                 })
-                .catch(() => alert("Erro ao editar venda."));
-        });
-    });
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.status === "success") {
+                            location.reload();
+                        } else {
+                            alert(d.mensagem || "Erro ao inativar venda.");
+                        }
+                    })
+                    .catch(() => alert("Erro ao inativar venda."));
+            });
 
-</script>
-</body>
-</html>
+            $("#form-editar-venda").on("submit", function (e) {
+                e.preventDefault();
+                fetch(this.action, {
+                    method: "POST",
+                    body: new FormData(this)
+                })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.status === "success") {
+                            modalEditarVenda.hide();
+                            location.reload();
+                        } else {
+                            alert(d.mensagem);
+                        }
+                    })
+                    .catch(() => alert("Erro ao editar venda."));
+            });
+        });
+
+    </script>
+{% endblock %}
