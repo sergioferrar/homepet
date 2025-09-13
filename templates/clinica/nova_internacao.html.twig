@@ -1,17 +1,17 @@
-{% extends 'base.html.twig' %}
+{% extends 'baseLogin.html.twig' %}
 
 {% block title %}Nova Internação{% endblock %}
 
 {% block body %}
-<div class="container-fluid my-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+<div class="container-fluid">
+    <div class="card shadow-sm w-100">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center mb-4">
             <h4>Adicionar Internação</h4>
             <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}" class="btn btn-light">
                 <i class="fas fa-arrow-left me-2"></i>Voltar
             </a>
         </div>
-        <div class="card-body">
+        <div class="card-body mb-4">
             <h5 class="mb-2">
                 {{ pet.nome }} ({{ pet.id }})
                 <small class="text-muted fw-normal">{{ pet.raca }} - {{ pet.sexo }} - {{ pet.idade }} anos</small>
@@ -21,7 +21,7 @@
             <form action="{{ path('clinica_nova_internacao', {'petId': pet.id}) }}" method="post">
                 <div class="row g-3 mb-4">
                     <div class="col-md-3">
-                        <label for="situacao" class="form-label">Situação*</label>
+                        <label for="situacao" class="form-label text-danger">Situação*</label>
                         <select id="situacao" name="situacao" class="form-select" required>
                             <option value="">Selecione...</option>
                             <option value="nao_urgente">Não urgente</option>
@@ -32,7 +32,7 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label for="risco" class="form-label">Risco*</label>
+                        <label for="risco" class="form-label text-danger">Risco*</label>
                         <select id="risco" name="risco" class="form-select" required>
                             <option value="">Selecione...</option>
                             {# Adicione as opções de risco aqui #}
@@ -42,7 +42,7 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label for="veterinario" class="form-label">Veterinário*</label>
+                        <label for="veterinario" class="form-label text-danger">Veterinário*</label>
                         <select id="veterinario" name="veterinario_id" class="form-select" required>
                             <option value="">Selecione...</option>
                             {% for veterinario in veterinarios %}
@@ -81,7 +81,7 @@
                     <div class="tab-pane fade show active" id="info-medicas" role="tabpanel" aria-labelledby="info-medicas-tab">
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <label for="queixa" class="form-label">Queixa*</label>
+                                <label for="queixa" class="form-label text-danger">Queixa*</label>
                                 <textarea id="queixa" name="queixa" class="form-control" rows="5" required></textarea>
                             </div>
                             <div class="col-md-4">

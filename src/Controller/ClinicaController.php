@@ -33,7 +33,7 @@ use App\Entity\InternacaoExecucao;
  */
 class ClinicaController extends DefaultController
 {
-   /**
+    /**
      * @Route("/dashboard", name="clinica_dashboard", methods={"GET"})
      */
     public function dashboard(Request $request): Response
@@ -91,13 +91,14 @@ class ClinicaController extends DefaultController
      * @Route("/pet/{id}", name="clinica_detalhes_pet", methods={"GET"})
      */
     public function detalhesPet(
-        int $id,
-        ConsultaRepository $consultaRepo,
-        DocumentoModeloRepository $documentoRepo,
-        FinanceiroRepository $financeiroRepo,
+        int                          $id,
+        ConsultaRepository           $consultaRepo,
+        DocumentoModeloRepository    $documentoRepo,
+        FinanceiroRepository         $financeiroRepo,
         FinanceiroPendenteRepository $financeiroPendenteRepo,
-        InternacaoRepository $internacaoRepo
-    ): Response {
+        InternacaoRepository         $internacaoRepo
+    ): Response
+    {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
@@ -119,7 +120,7 @@ class ClinicaController extends DefaultController
 
         $receitas = $this->getRepositorio(\App\Entity\Receita::class)->listarPorPet($baseId, $pet['id']);
         $internacaoAtivaId = $internacaoRepo->findAtivaIdByPet($baseId, $pet['id']);
-        $ultimaInternacaoId  = $internacaoRepo->findUltimaIdByPet($baseId, $pet['id']);
+        $ultimaInternacaoId = $internacaoRepo->findUltimaIdByPet($baseId, $pet['id']);
         $internacoesPet = $internacaoRepo->listarInternacoesPorPet($baseId, $pet['id']);
 
         // --- BUSCA TODOS OS SERVIÇOS DA CLÍNICA ---
@@ -143,7 +144,7 @@ class ClinicaController extends DefaultController
                 'data' => new \DateTime($r['data']),
                 'tipo' => 'Receita',
                 'resumo' => $r['resumo'],
-                'receita_cabecalho' => $r['cabecalho'], 
+                'receita_cabecalho' => $r['cabecalho'],
                 'receita_conteudo' => $r['conteudo'],
                 'receita_rodape' => $r['rodape'],
             ];
@@ -162,7 +163,7 @@ class ClinicaController extends DefaultController
         //  Total de débitos PENDENTES (só ativos contam aqui)
         $totalDebitos = 0;
         foreach ($financeiroPendente as $itemFinanceiro) {
-             $totalDebitos += $itemFinanceiro['valor'];
+            $totalDebitos += $itemFinanceiro['valor'];
         }
 
         return $this->render('clinica/detalhes_pet.html.twig', [
@@ -188,15 +189,16 @@ class ClinicaController extends DefaultController
      * @Route("/pet/{petId}/internacao/nova", name="clinica_nova_internacao", methods={"GET", "POST"})
      */
     public function novaInternacao(
-        Request $request,
-        int $petId,
-        InternacaoRepository $internacaoRepo,
-        VeterinarioRepository $veterinarioRepo,
+        Request                $request,
+        int                    $petId,
+        InternacaoRepository   $internacaoRepo,
+        VeterinarioRepository  $veterinarioRepo,
         EntityManagerInterface $entityManager
-    ): Response {
+    ): Response
+    {
         $this->switchDB();
         $baseId = $this->getIdBase();
-        
+
         $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
         if (!$pet) {
             throw $this->createNotFoundException('Pet não encontrado.');
@@ -221,16 +223,16 @@ class ClinicaController extends DefaultController
             $internacao->setEstabelecimentoId($baseId);
             $internacao->setDataInicio(new \DateTime());
             $internacao->setStatus('ativa');
-            $internacao->setMotivo((string) $request->request->get('queixa'));
+            $internacao->setMotivo((string)$request->request->get('queixa'));
 
             // Campos adicionais
-            $internacao->setSituacao((string) $request->request->get('situacao'));
-            $internacao->setRisco((string) $request->request->get('risco'));
-            $internacao->setVeterinarioId((int) $request->request->get('veterinario_id'));
-            $internacao->setBox((string) $request->request->get('box'));
+            $internacao->setSituacao((string)$request->request->get('situacao'));
+            $internacao->setRisco((string)$request->request->get('risco'));
+            $internacao->setVeterinarioId((int)$request->request->get('veterinario_id'));
+            $internacao->setBox((string)$request->request->get('box'));
 
             // Alta prevista (opcional)
-            $altaPrevistaStr = trim((string) $request->request->get('alta_prevista'));
+            $altaPrevistaStr = trim((string)$request->request->get('alta_prevista'));
             if ($altaPrevistaStr !== '') {
                 try {
                     $internacao->setAltaPrevista(new \DateTime($altaPrevistaStr));
@@ -239,9 +241,9 @@ class ClinicaController extends DefaultController
                 }
             }
 
-            $internacao->setDiagnostico((string) $request->request->get('diagnostico'));
-            $internacao->setPrognostico((string) $request->request->get('prognostico'));
-            $internacao->setAnotacoes((string) $request->request->get('alergias_marcacoes'));
+            $internacao->setDiagnostico((string)$request->request->get('diagnostico'));
+            $internacao->setPrognostico((string)$request->request->get('prognostico'));
+            $internacao->setAnotacoes((string)$request->request->get('alergias_marcacoes'));
 
             // Salva e obtém o ID gerado
             $novoId = $internacaoRepo->inserirInternacao($baseId, $internacao);
@@ -255,10 +257,10 @@ class ClinicaController extends DefaultController
                 'Internação iniciada',
                 sprintf(
                     'Motivo: %s | Situação: %s | Risco: %s | Box: %s',
-                    (string) $internacao->getMotivo(),
-                    (string) $internacao->getSituacao(),
-                    (string) $internacao->getRisco(),
-                    (string) $internacao->getBox()
+                    (string)$internacao->getMotivo(),
+                    (string)$internacao->getSituacao(),
+                    (string)$internacao->getRisco(),
+                    (string)$internacao->getBox()
                 ),
                 new \DateTime()
             );
@@ -283,7 +285,7 @@ class ClinicaController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
-        
+
         $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
         if (!$pet) {
             throw $this->createNotFoundException('Pet não encontrado.');
@@ -291,14 +293,14 @@ class ClinicaController extends DefaultController
 
         $consulta = new Consulta();
         $consulta->setEstabelecimentoId($baseId);
-        $consulta->setClienteId((int) $request->request->get('cliente_id'));
+        $consulta->setClienteId((int)$request->request->get('cliente_id'));
         $consulta->setPetId($petId);
         $consulta->setData(new \DateTime($request->request->get('data')));
         $consulta->setHora(new \DateTime($request->request->get('hora')));
         $consulta->setObservacoes($request->request->get('observacoes'));
-        
+
         $consulta->setAnamnese($request->request->get('anamnese_delta'));
-        
+
         $consulta->setTipo($request->request->get('tipo'));
         $consulta->setStatus('atendido');
         $consulta->setCriadoEm(new \DateTime());
@@ -343,8 +345,8 @@ class ClinicaController extends DefaultController
 
             $cabecalhoHtml = "
                 <div style='text-align:center; font-size:14px; font-weight:bold;'>
-                    ".($clinica->getRazaoSocial() ?? 'Clínica Veterinária')." <br>
-                    CNPJ: ".($clinica->getCnpj() ?? '')." <br>
+                    " . ($clinica->getRazaoSocial() ?? 'Clínica Veterinária') . " <br>
+                    CNPJ: " . ($clinica->getCnpj() ?? '') . " <br>
                     {$clinica->getRua()}, {$clinica->getNumero()} - {$clinica->getBairro()}, {$clinica->getCidade()} - CEP: {$clinica->getCep()}
                 </div>
                 <hr>
@@ -367,7 +369,7 @@ class ClinicaController extends DefaultController
                     </p>
                 </div>
                 <div style='text-align:center; font-size:10px; margin-top: 10px;'>
-                    <span>Documento emitido em: ".date('d/m/Y H:i:s')."</span>
+                    <span>Documento emitido em: " . date('d/m/Y H:i:s') . "</span>
                 </div>
             ";
 
@@ -384,7 +386,7 @@ class ClinicaController extends DefaultController
 
             $gerarPDF = new \App\Service\GeradorpdfService($this->tempDirManager, $this->requestStack);
             $gerarPDF->configuracaoPagina('A4', 10, 10, 50, 6, 10, 3);
-            $gerarPDF->setNomeArquivo('Receita_'.$pet['nome'].'_'.date('YmdHis'));
+            $gerarPDF->setNomeArquivo('Receita_' . $pet['nome'] . '_' . date('YmdHis'));
             $gerarPDF->setRodape($rodapeHtml); // Usa o novo rodapé fixo
             $gerarPDF->montaCabecalhoPadrao($cabecalhoHtml);
             $gerarPDF->addPagina('P');
@@ -397,7 +399,7 @@ class ClinicaController extends DefaultController
         return $this->render('clinica/detalhes_pet.html.twig', [
             'pet' => $pet,
             'clinica' => $clinica,
-            'veterinario' => $vet, 
+            'veterinario' => $vet,
         ]);
     }
 
@@ -442,7 +444,7 @@ class ClinicaController extends DefaultController
         return $html;
     }
 
-    
+
     /**
      * @Route("/pet/{petId}/peso/novo", name="clinica_novo_peso", methods={"GET", "POST"})
      */
@@ -507,7 +509,7 @@ class ClinicaController extends DefaultController
     }
 
     // --- ROTAS ORIGINAIS (MANTIDAS E FUNCIONAIS) ---
-    
+
     /**
      * @Route("/consulta/nova", name="clinica_nova_consulta", methods={"GET", "POST"})
      */
@@ -526,8 +528,8 @@ class ClinicaController extends DefaultController
         if ($request->isMethod('POST')) {
             $consulta = new Consulta();
             $consulta->setEstabelecimentoId($baseId);
-            $consulta->setClienteId((int) $request->get('cliente_id'));
-            $consulta->setPetId((int) $request->get('pet_id'));
+            $consulta->setClienteId((int)$request->get('cliente_id'));
+            $consulta->setPetId((int)$request->get('pet_id'));
             $consulta->setData(new \DateTime($request->get('data')));
             $consulta->setHora(new \DateTime($request->get('hora')));
             $consulta->setObservacoes($request->get('observacoes'));
@@ -677,7 +679,7 @@ class ClinicaController extends DefaultController
 
         $pets = $this->getRepositorio(Pet::class)->buscarPetsPorCliente($baseId, $clienteId);
 
-        return $this->json(array_map(fn ($pet) => ['id' => $pet['id'], 'nome' => $pet['nome']], $pets));
+        return $this->json(array_map(fn($pet) => ['id' => $pet['id'], 'nome' => $pet['nome']], $pets));
     }
 
     /**
@@ -750,11 +752,11 @@ class ClinicaController extends DefaultController
         // Pegando todos os campos do POST
         $servicoId = $request->request->get('servico_id');
         $descricao = $request->request->get('descricao');
-        $valor   = (float) $request->request->get('valor');
-        $data    = $request->request->get('data') ? new \DateTime($request->request->get('data')) : new \DateTime();
+        $valor = (float)$request->request->get('valor');
+        $data = $request->request->get('data') ? new \DateTime($request->request->get('data')) : new \DateTime();
         $observacao = $request->request->get('observacao');
         $metodoPagamento = $request->request->get('metodo_pagamento');
-        $desconto  = (float) $request->request->get('desconto', 0);
+        $desconto = (float)$request->request->get('desconto', 0);
 
         // --- Se vier ID do serviço, busca o valor oficial no banco (anti-gambiarra)
         if ($servicoId) {
@@ -764,7 +766,7 @@ class ClinicaController extends DefaultController
                 return $this->json(['status' => 'error', 'mensagem' => 'Serviço não encontrado!'], 404);
             }
             $descricao = $servico->getNome();
-            $valor = (float) $servico->getValor();
+            $valor = (float)$servico->getValor();
         }
 
         // --- Valor final nunca negativo!
@@ -784,7 +786,7 @@ class ClinicaController extends DefaultController
             $financeiroPendente->setStatus('pendente');
             $financeiroPendente->setOrigem('clinica');
             $financeiroPendente->setMetodoPagamento($metodoPagamento);
-            
+
             // Persistir e salvar a entidade
             $entityManager->persist($financeiroPendente);
             $entityManager->flush();
@@ -805,7 +807,7 @@ class ClinicaController extends DefaultController
             $financeiro->setStatus('concluido');
             // Linha removida, pois a tabela 'financeiro' não tem a coluna 'metodo_pagamento'.
             // $financeiro->setMetodoPagamento($metodoPagamento);
-            
+
             // Persistir e salvar a entidade
             $entityManager->persist($financeiro);
             $entityManager->flush();
@@ -817,7 +819,7 @@ class ClinicaController extends DefaultController
         }
     }
 
-/**
+    /**
      * @Route("/internacao/{id}/ficha", name="clinica_ficha_internacao", methods={"GET"})
      */
     public function fichaInternacao(int $id, InternacaoRepository $internacaoRepo, EntityManagerInterface $em): Response
@@ -833,31 +835,31 @@ class ClinicaController extends DefaultController
         // Busca todos os eventos da timeline
         $rows = $internacaoRepo->listarEventosPorInternacao($baseId, $id);
 
-        $timeline = array_map(function(array $r) {
+        $timeline = array_map(function (array $r) {
             try {
                 $r['data_hora'] = !empty($r['data_hora']) ? new \DateTime($r['data_hora']) : new \DateTime();
             } catch (\Exception $e) {
                 $r['data_hora'] = new \DateTime();
             }
-            $r['tipo']       = (string)($r['tipo'] ?? 'internacao');
-            $r['titulo']     = $r['titulo'] ?? '—';
-            $r['descricao']  = $r['descricao'] ?? '';
+            $r['tipo'] = (string)($r['tipo'] ?? 'internacao');
+            $r['titulo'] = $r['titulo'] ?? '—';
+            $r['descricao'] = $r['descricao'] ?? '';
             return $r;
         }, $rows);
 
-        usort($timeline, fn($a,$b) => $b['data_hora'] <=> $a['data_hora']);
+        usort($timeline, fn($a, $b) => $b['data_hora'] <=> $a['data_hora']);
 
         // Busca todos os medicamentos para o modal de prescrição
         $medicamentos = $em->getRepository(Medicamento::class)->findAll();
-        
+
         // CORREÇÃO: Busca as prescrições como objetos completos
         $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findBy(['internacaoId' => $id]);
 
         return $this->render('clinica/ficha_internacao.html.twig', [
-            'internacao'    => $internacao,
-            'timeline'      => $timeline,
-            'medicamentos'  => $medicamentos,
-            'prescricoes'   => $prescricoes,
+            'internacao' => $internacao,
+            'timeline' => $timeline,
+            'medicamentos' => $medicamentos,
+            'prescricoes' => $prescricoes,
         ]);
     }
 
@@ -872,7 +874,7 @@ class ClinicaController extends DefaultController
 
         // (Opcional) validar CSRF
         $token = $request->request->get('_token');
-        if (!$this->isCsrfTokenValid('alta_internacao_'.$id, $token)) {
+        if (!$this->isCsrfTokenValid('alta_internacao_' . $id, $token)) {
             return $this->json(['ok' => false, 'msg' => 'Token inválido.'], 400);
         }
 
@@ -903,11 +905,12 @@ class ClinicaController extends DefaultController
      * @Route("/internacao/{id}/prescricao/nova", name="clinica_internacao_prescricao_nova", methods={"GET","POST"})
      */
     public function novaPrescricao(
-        int $id,
-        Request $request,
+        int                    $id,
+        Request                $request,
         EntityManagerInterface $em,
-        InternacaoRepository $internacaoRepo
-    ): Response {
+        InternacaoRepository   $internacaoRepo
+    ): Response
+    {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
@@ -922,10 +925,10 @@ class ClinicaController extends DefaultController
                 return $this->json(['ok' => false, 'msg' => 'Internação não encontrada.'], 404);
             }
 
-            $medicamentoId = (int) $request->request->get('medicamento_id');
-            $dose = trim((string) $request->request->get('dose'));
-            $frequenciaHoras = (int) $request->request->get('frequencia_horas');
-            $duracaoDias = (int) $request->request->get('duracao_dias');
+            $medicamentoId = (int)$request->request->get('medicamento_id');
+            $dose = trim((string)$request->request->get('dose'));
+            $frequenciaHoras = (int)$request->request->get('frequencia_horas');
+            $duracaoDias = (int)$request->request->get('duracao_dias');
             $dataHoraPrimeiraDose = $request->request->get('data_hora_primeira_dose');
 
             if (!$medicamentoId || empty($dose) || $frequenciaHoras <= 0 || $duracaoDias <= 0 || empty($dataHoraPrimeiraDose)) {
@@ -994,12 +997,12 @@ class ClinicaController extends DefaultController
         } catch (\Exception $e) {
             return $this->json([
                 'ok' => false,
-                'msg' => 'Erro interno: '.$e->getMessage()
+                'msg' => 'Erro interno: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    
+
     /**
      * @Route("/internacao/prescricao/{eventoId}/executar", name="clinica_internacao_prescricao_executar", methods={"POST"})
      */
@@ -1101,9 +1104,9 @@ class ClinicaController extends DefaultController
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        $nome = trim((string) $request->request->get('nome'));
-        $via = trim((string) $request->request->get('via'));
-        $concentracao = trim((string) $request->request->get('concentracao'));
+        $nome = trim((string)$request->request->get('nome'));
+        $via = trim((string)$request->request->get('via'));
+        $concentracao = trim((string)$request->request->get('concentracao'));
 
         if (empty($nome)) {
             return $this->json(['ok' => false, 'msg' => 'O nome do medicamento é obrigatório.']);
@@ -1127,16 +1130,17 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/clinica/pet/{petId}/venda/{id}/editar", name="clinica_editar_venda", methods={"POST"})
      */
-    public function editarVenda( Request $request, int $petId, int $id, FinanceiroRepository $financeiroRepository): JsonResponse {
+    public function editarVenda(Request $request, int $petId, int $id, FinanceiroRepository $financeiroRepository): JsonResponse
+    {
         try {
-            $baseId = $this->getUser()->getPetshopId(); 
+            $baseId = $this->getUser()->getPetshopId();
             $financeiro = $financeiroRepository->findFinanceiro($baseId, $id);
             if (!$financeiro) {
                 return new JsonResponse(['status' => 'error', 'mensagem' => 'Venda não encontrada.'], 404);
             }
 
             $financeiro->setDescricao($request->request->get('descricao'));
-            $financeiro->setValor((float) $request->request->get('valor'));
+            $financeiro->setValor((float)$request->request->get('valor'));
 
             $data = $request->request->get('data');
             if ($data) {
@@ -1163,7 +1167,7 @@ class ClinicaController extends DefaultController
      * @Route("/pet/{petId}/venda/{id}/inativar", name="clinica_inativar_venda", methods={"POST"})
      */
     public function inativarVenda(Request $request, FinanceiroRepository $financeiroRepository, FinanceiroPendenteRepository $pendenteRepository, int $petId,
-        int $id): Response 
+                                  int     $id): Response
     {
         $baseId = $this->getUser()->getPetshopId();
 
