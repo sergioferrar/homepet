@@ -752,13 +752,11 @@ class ClinicaController extends DefaultController
         // Pegando todos os campos do POST
         $servicoId = $request->request->get('servico_id');
         $descricao = $request->request->get('descricao');
-        $valor = (float)$request->request->get('valor');
+        // $valor = (float)$request->request->get('valor');
         $data = $request->request->get('data') ? new \DateTime($request->request->get('data')) : new \DateTime();
         $observacao = $request->request->get('observacao');
         $metodoPagamento = $request->request->get('metodo_pagamento');
-        $desconto = (float)$request->request->get('desconto', 0);
-
-        // dd($request);
+        // $desconto = (float)$request->request->get('desconto', 0);
 
         // --- Se vier ID do serviço, busca o valor oficial no banco (anti-gambiarra)
         if ($servicoId) {
@@ -772,18 +770,34 @@ class ClinicaController extends DefaultController
         }
 
         // --- Valor final nunca negativo!
-        $valorFinal = max(0, $valor - $desconto);
+        // $valorFinal = max(0, $valor - $desconto);
 
         // --- Monta descrição final (nome + observação)
-        $descricaoFinal = trim($descricao . ($observacao ? ' - ' . $observacao : ''));
+        // $descricaoFinal = trim($descricao . ($observacao ? ' - ' . $observacao : ''));
+
+                
+        $valorFinal = 0;
+        $descontoFinal = 0;
+        $descricaoFinal = '';
 
         if ($metodoPagamento === 'pendente') {
             // Vai pro Financeiro Pendente
+
+
             $financeiroPendente = new FinanceiroPendente();
             $financeiroPendente->setEstabelecimentoId($baseId);
             $financeiroPendente->setPetId($petId);
+
+            foreach($request->get('descricao') as $key => $val){
+                $servico = $this->getRepositorio(\App\Entity\Servico::class)->listaServicoPorId($baseId, $val);
+                $valorFinal +=$servico['valor'];
+                $descontoFinal +=$request->get('desconto')[$key];
+                $descricaoFinal .=$servico['descricao']." + ";
+            }
+            
+            $financeiroPendente->setValor($valorFinal - $descontoFinal);
             $financeiroPendente->setDescricao($descricaoFinal);
-            $financeiroPendente->setValor($valorFinal);
+
             $financeiroPendente->setData($data);
             $financeiroPendente->setStatus('pendente');
             $financeiroPendente->setOrigem('clinica');
@@ -802,8 +816,17 @@ class ClinicaController extends DefaultController
             $financeiro = new Financeiro();
             $financeiro->setEstabelecimentoId($baseId);
             $financeiro->setPetId($petId);
+
+            foreach($request->get('descricao') as $key => $val){
+                $servico = $this->getRepositorio(\App\Entity\Servico::class)->listaServicoPorId($baseId, $val);
+                $valorFinal +=$servico['valor'];
+                $descontoFinal +=$request->get('desconto')[$key];
+                $descricaoFinal .=$servico['descricao']." + ";
+            }
+            
+            $financeiro->setValor($valorFinal - $descontoFinal);
             $financeiro->setDescricao($descricaoFinal);
-            $financeiro->setValor($valorFinal);
+
             $financeiro->setData($data);
             $financeiro->setOrigem('clinica');
             $financeiro->setStatus('concluido');

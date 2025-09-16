@@ -601,16 +601,13 @@
                         <select class="form-select" id="servico-descricao" name="descricao[]" required>
                             <option value="">Selecione um serviço...</option>
                             {% for servico in servicos_clinica %}
-                                <option value="{{ servico.nome }}" data-valor="{{ servico.valor }}">
+                                <option value="{{ servico.id }}" data-valor="{{ servico.valor }}">
                                     {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="servico-valor" class="form-label">Valor (R$)*</label>
-                        <input type="number" step="0.01" class="form-control" id="servico-valor" name="valor[]" required>
-                    </div>
+                    
                     <div class="mb-3">
                         <label for="servico-desconto" class="form-label">Desconto (R$)</label>
                         <input type="number" step="0.01" class="form-control" id="servico-desconto" name="desconto[]"
@@ -893,7 +890,9 @@
                 console.log($(this))
                 // console.log($(this).find('option:selected').data('valor'))
                 const nomeServico = $(this).val();
-                $inputValor.val(servicosMap.hasOwnProperty(nomeServico) ? servicosMap[nomeServico] : '').prop('readonly', false);
+                
+                $(document).next('input[name="valor[]"]').val($(this).find('option:selected').data('valor')); 
+                // $inputValor.val(servicosMap.hasOwnProperty(nomeServico) ? servicosMap[nomeServico] : '').prop('readonly', false);
             });
 
             // === MODAL EDITAR VENDA ===
@@ -961,15 +960,11 @@
                         <select class="form-select" id="servico-descricao" name="descricao[]" required>
                             <option value="">Selecione um serviço...</option>
                             {% for servico in servicos_clinica %}
-                                <option value="{{ servico.nome }}" data-valor="{{ servico.valor }}">
+                                <option value="{{ servico.id }}" data-valor="{{ servico.valor }}">
                                     {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
                                 </option>
                             {% endfor %}
                         </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="servico-valor" class="form-label">Valor (R$)*</label>
-                        <input type="number" step="0.01" class="form-control" id="servico-valor" name="valor[]" required>
                     </div>
                     <div class="mb-3">
                         <label for="servico-desconto" class="form-label">Desconto (R$)</label>
