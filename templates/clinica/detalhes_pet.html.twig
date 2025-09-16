@@ -527,7 +527,7 @@
                     </div>
 
                     {# 🔹 MODAL ÚNICO DE EDIÇÃO DE VENDA #}
-                    <div class="modal fade" id="modalEditarVenda" tabindex="-1" aria-hidden="true">
+                    <div class="modal fade" id="modalEditarVenda" tabindex="-1" aria-hidden="false">
                         <div class="modal-dialog">
                             <form id="form-editar-venda" method="POST" class="modal-content">
                                 <div class="modal-header">
@@ -586,18 +586,19 @@
     </div>
     {# MODAL ADICIONAR SERVIÇO #}
     <div class="modal fade" id="modalAdicionarServico" tabindex="-1" aria-labelledby="modalAdicionarServicoLabel"
-         aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+         aria-hidden="false">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <form class="modal-content" id="form-novo-servico" method="post"
                   action="{{ path('clinica_concluir_venda', {'petId': pet.id}) }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalAdicionarServicoLabel">Adicionar Serviço / Lançamento</h5>
+                    <span class="btn btn-sm btn-primary ms-3 add-servico">+ serviço</span>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="servico-descricao" class="form-label">Descrição do Serviço*</label>
-                        <select class="form-select" id="servico-descricao" name="descricao" required>
+                        <select class="form-select" id="servico-descricao" name="descricao[]" required>
                             <option value="">Selecione um serviço...</option>
                             {% for servico in servicos_clinica %}
                                 <option value="{{ servico.nome }}" data-valor="{{ servico.valor }}">
@@ -608,16 +609,19 @@
                     </div>
                     <div class="mb-3">
                         <label for="servico-valor" class="form-label">Valor (R$)*</label>
-                        <input type="number" step="0.01" class="form-control" id="servico-valor" name="valor" required>
+                        <input type="number" step="0.01" class="form-control" id="servico-valor" name="valor[]" required>
                     </div>
                     <div class="mb-3">
                         <label for="servico-desconto" class="form-label">Desconto (R$)</label>
-                        <input type="number" step="0.01" class="form-control" id="servico-desconto" name="desconto"
+                        <input type="number" step="0.01" class="form-control" id="servico-desconto" name="desconto[]"
                                value="0">
                     </div>
+                    
+                    <div id="servicos-container"></div>
+
                     <div class="mb-3">
                         <label for="servico-metodo" class="form-label">Método de Pagamento*</label>
-                        <select name="metodo_pagamento" id="servico-metodo" class="form-control" required>
+                        <select name="metodo_pagamento" id="servico-metodo" class="form-select" required>
                             <option value="dinheiro">Dinheiro</option>
                             <option value="pix">Pix</option>
                             <option value="credito">Cartão de Crédito</option>
@@ -638,7 +642,7 @@
                     <input type="hidden" name="pet_id" value="{{ pet.id }}">
                 </div>
                 <div class="modal-footer d-flex justify-content-between">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-success">Concluir / Salvar</button>
                 </div>
             </form>
@@ -885,7 +889,9 @@
                 modalAdicionarServico.show();
             });
 
-            $selectServico.on('change', function () {
+            $(document).on('change', '#servico-descricao', function () {
+                console.log($(this))
+                // console.log($(this).find('option:selected').data('valor'))
                 const nomeServico = $(this).val();
                 $inputValor.val(servicosMap.hasOwnProperty(nomeServico) ? servicosMap[nomeServico] : '').prop('readonly', false);
             });
@@ -941,7 +947,51 @@
                     })
                     .catch(() => alert("Erro ao editar venda."));
             });
+            // Adicionar serviço ao pet correspondente
+       
+        });
+        $(document).on("click", ".add-servico", function () {
+            let petIndex = $(this).data("pet-index");
+
+            let servicoHtml = `
+                <div class="mb-3 servico-item">
+                    <hr>
+                    <div class="mb-3">
+                        <label for="servico-descricao" class="form-label">Descrição do Serviço*</label>
+                        <select class="form-select" id="servico-descricao" name="descricao[]" required>
+                            <option value="">Selecione um serviço...</option>
+                            {% for servico in servicos_clinica %}
+                                <option value="{{ servico.nome }}" data-valor="{{ servico.valor }}">
+                                    {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="servico-valor" class="form-label">Valor (R$)*</label>
+                        <input type="number" step="0.01" class="form-control" id="servico-valor" name="valor[]" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="servico-desconto" class="form-label">Desconto (R$)</label>
+                        <input type="number" step="0.01" class="form-control" id="servico-desconto" name="desconto[]"
+                               value="0">
+                    </div>
+                    <button type="button" class="btn btn-danger remove-servico mt-2">
+                        <i class="bx bx-trash"></i> Remover Serviço
+                    </button>
+                </div>
+            `;
+
+            $(`#servicos-container`).append(servicoHtml);
         });
 
+        // Remover serviço
+        $(document).on("click", ".remove-servico", function () {
+            $(this).closest(".servico-item").remove();
+        });
+
+$('.modal').on('hidden.modal.bs', function(){
+    $('.modal-backdrop').remove()
+})
     </script>
 {% endblock %}

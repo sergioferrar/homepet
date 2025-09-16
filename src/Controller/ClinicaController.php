@@ -758,6 +758,8 @@ class ClinicaController extends DefaultController
         $metodoPagamento = $request->request->get('metodo_pagamento');
         $desconto = (float)$request->request->get('desconto', 0);
 
+        // dd($request);
+
         // --- Se vier ID do serviço, busca o valor oficial no banco (anti-gambiarra)
         if ($servicoId) {
             // Use o EntityManager para obter o repositório
