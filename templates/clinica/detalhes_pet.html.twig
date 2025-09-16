@@ -54,7 +54,7 @@
                     </table>
 
                     {% if total_debitos > 0 %}
-                        <span class="debt-tag">
+                        <span class="badge text-bg-danger">
                             Saldo devedor de R$ {{ total_debitos|number_format(2, ',', '.') }}
                         </span>
                     {% endif %}
