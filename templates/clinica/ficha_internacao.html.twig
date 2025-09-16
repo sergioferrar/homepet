@@ -157,18 +157,60 @@
                             Histórico
                         </button>
                     </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link"
-                                id="prescricao-tab"
-                                data-bs-toggle="tab"
-                                data-bs-target="#prescricao-content"
-                                type="button"
-                                role="tab"
-                                aria-controls="prescricao-content"
-                                aria-selected="false">
-                            Prescrição Médica
-                        </button>
-                    </li>
+                    <div class="tab-pane fade" id="prescricao-content" role="tabpanel" aria-labelledby="prescricao-tab">
+                        <div class="d-flex justify-content-end mb-3">
+                            <button class="btn btn-sm btn-info me-2" data-bs-toggle="modal"
+                                    data-bs-target="#modalNovoMedicamento">
+                                <i class="fas fa-plus me-1"></i> Adicionar Medicamento
+                            </button>
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#modalPrescricao">
+                                <i class="fas fa-plus me-1"></i> Nova Prescrição
+                            </button>
+                        </div>
+
+                        <table class="table table-bordered table-striped align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Medicamento</th>
+                                <th>Dose</th>
+                                <th>Frequência</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for p in prescricoes %}
+                                <tr>
+                                    <td>
+                                        {{ p.medicamento.nome }}
+                                        <p class="text-muted small mb-0">
+                                            Criado em: {{ p.criadoEm|date('d/m/Y H:i') }}
+                                        </p>
+                                    </td>
+                                    <td>{{ p.dose }}</td>
+                                    <td>{{ p.frequencia }}</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-success btn-executar-prescricao"
+                                                data-id="{{ p.id }}" title="Administrar Agora">
+                                            <i class="fas fa-syringe me-1"></i> Administrar
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        Nenhuma prescrição registrada.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <hr>
+                        <h5 class="mb-3">Calendário de Medicações</h5>
+                        <div id="calendar-pet"></div>
+                    </div>
+
                 </ul>
 
 
@@ -186,7 +228,7 @@
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="#">Ocorrência</a></li>
                                     <li><a class="dropdown-item" href="#">Enviar Mensagem</a></li>
-                                    <li><a class="dropdown-item" href="#">Peso</a></li>
+                                    <li><a class="dropdown-item" href="">Peso</a></li>
                                     <li><a class="dropdown-item" href="#">Relatório Médico</a></li>
                                 </ul>
                             </div>
@@ -376,6 +418,7 @@
 {% endblock %}
 
 {% block javascripts %}
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script>
         // Lógica para o botão de alta, etc. (mantida sem alteração)
         document.addEventListener('click', async (e) => {
@@ -473,5 +516,23 @@
                 }
             });
         });
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+              let calendarEl = document.getElementById('calendar-pet');
+              if (!calendarEl) return;
+
+              let calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridDay',
+                slotMinTime: "00:00:00",
+                slotMaxTime: "24:00:00",
+                allDaySlot: false,
+                locale: 'pt-br',
+                height: 650,
+                events: {{ calendario_prescricoes|json_encode|raw }}
+              });
+              calendar.render();
+            });
     </script>
 {% endblock %}
+

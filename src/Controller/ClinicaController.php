@@ -847,8 +847,7 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/internacao/{id}/ficha", name="clinica_ficha_internacao", methods={"GET"})
      */
-    public function fichaInternacao(int $id, InternacaoRepository $internacaoRepo, EntityManagerInterface $em): Response
-    {
+    public function fichaInternacao(int $id, InternacaoRepository $internacaoRepo, EntityManagerInterface $em): Response {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
@@ -857,9 +856,8 @@ class ClinicaController extends DefaultController
             throw $this->createNotFoundException('A ficha de internação não foi encontrada.');
         }
 
-        // Busca todos os eventos da timeline
+        // --- TIMELINE ---
         $rows = $internacaoRepo->listarEventosPorInternacao($baseId, $id);
-
         $timeline = array_map(function (array $r) {
             $agora = new \DateTime();
             try {
@@ -867,17 +865,16 @@ class ClinicaController extends DefaultController
             } catch (\Exception $e) {
                 $r['data_hora'] = new \DateTime();
             }
+
             $r['titulo'] = $r['titulo'] ?? '—';
             $r['descricao'] = $r['descricao'] ?? '';
             $r['aplicada'] = 'success';
 
+            // Calcula próximo horário baseado no "status" (se tiver número de horas)
             $intervaloHoras = (int) filter_var($r['status'], FILTER_SANITIZE_NUMBER_INT);
-
-            // pegar última aplicação dessa prescrição
             $ultimaExec = $r['data_hora'];
             $proxima    = (clone $ultimaExec)->modify("+{$intervaloHoras} hours");
-
-            $diffMin = ($proxima->getTimestamp() - $agora->getTimestamp()) / 60;
+            $diffMin = ($proxima->getTimestamp() - (new \DateTime())->getTimestamp()) / 60;
 
             if ($diffMin <= 0) {
                 $statusCor = 'danger'; // atrasada
@@ -886,33 +883,54 @@ class ClinicaController extends DefaultController
             } else {
                 $statusCor = 'primary'; // dentro do prazo
             }
-//            if($r['tipo'] != 'prescricao' || $r['tipo'] != 'medicacao'){
-//                $statusCor = 'border-secondary';
-//            }
 
             $r['tipo'] = (string)($r['tipo'] ?? 'internacao');
-
             $r['status'] = $statusCor;
 
             return $r;
         }, $rows);
 
+        // Ordena por data/hora decrescente
         usort($timeline, fn($a, $b) => $b['data_hora'] <=> $a['data_hora']);
 
-        // Busca todos os medicamentos para o modal de prescrição
+        // --- MODAIS ---
         $medicamentos = $em->getRepository(Medicamento::class)->findAll();
-
-        // CORREÇÃO: Busca as prescrições como objetos completos
         $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findBy(['internacaoId' => $id]);
 
+        // --- CALENDÁRIO ---
+        $eventos = [];
+        foreach ($prescricoes as $p) {
+            if (!$p->getDataHora()) {
+                continue;
+            }
+
+            $primeira = $p->getDataHora();
+            $freq = (int) filter_var($p->getFrequencia(), FILTER_SANITIZE_NUMBER_INT);
+            $dias = (int) $p->getDuracaoDias();
+            $numDoses = ($dias * 24) / $freq;
+
+            for ($i = 0; $i < $numDoses; $i++) {
+                $horas = $i * $freq;
+                $doseTime = (clone $primeira)->modify("+{$horas} hours");
+
+                $eventos[] = [
+                    'title' => $p->getMedicamento()->getNome() . " - " . $p->getDose(),
+                    'start' => $doseTime->format('Y-m-d H:i:s'),
+                    'end'   => $doseTime->modify('+30 minutes')->format('Y-m-d H:i:s'),
+                    'color' => '#0d6efd'
+                ];
+            }
+        }
+
+        // Renderiza view
         return $this->render('clinica/ficha_internacao.html.twig', [
             'internacao' => $internacao,
             'timeline' => $timeline,
             'medicamentos' => $medicamentos,
             'prescricoes' => $prescricoes,
+            'calendario_prescricoes' => $eventos,
         ]);
     }
-
 
     /**
      * @Route("/internacao/{id}/alta", name="clinica_internacao_alta", methods={"POST"})
@@ -1235,5 +1253,55 @@ class ClinicaController extends DefaultController
         }
     }
 
+    /**
+     * @Route("/calendario/geral", name="clinica_calendario_geral", methods={"GET"})
+     */
+    public function calendarioGeral(EntityManagerInterface $em): Response
+    {
+        $this->switchDB();
+        $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findAll();
+
+        $eventos = [];
+        foreach ($prescricoes as $p) {
+            if (!$p->getDataHora()) {
+                continue;
+            }
+
+            $primeira = $p->getDataHora();
+
+            // Extrai só os dígitos da string "frequencia"
+            $freq = (int) filter_var($p->getFrequencia(), FILTER_SANITIZE_NUMBER_INT);
+            $dias = (int) $p->getDuracaoDias();
+            if ($freq <= 0 || $dias <= 0) {
+                continue;
+            }
+
+            $numDoses = ($dias * 24) / $freq;
+
+            for ($i = 0; $i < $numDoses; $i++) {
+                $horas = $i * $freq;
+                $doseTime = (clone $primeira)->modify("+{$horas} hours");
+
+                // Busca a internação e depois o pet
+                $internacao = $em->getRepository(Internacao::class)->find($p->getInternacaoId());
+                $petNome = 'Pet';
+                if ($internacao) {
+                    $pet = $em->getRepository(Pet::class)->find($internacao->getPetId());
+                    $petNome = $pet ? $pet->getNome() : 'Pet';
+                }
+
+                $eventos[] = [
+                    'title' => $p->getMedicamento()->getNome() . " - " . $p->getDose() . " ({$petNome})",
+                    'start' => $doseTime->format('Y-m-d H:i:s'),
+                    'end'   => $doseTime->modify('+30 minutes')->format('Y-m-d H:i:s'),
+                    'color' => '#dc3545'
+                ];
+            }
+        }
+
+        return $this->render('clinica/calendario_geral.html.twig', [
+            'eventos' => $eventos,
+        ]);
+    }
 
 }

@@ -41,6 +41,11 @@ class InternacaoPrescricao
      */
     private $frequencia;
 
+    /**
+     * @ORM\Column(type="integer", name="duracao_dias")
+     */
+    private $duracaoDias = 1;
+
     // --- GETTERS & SETTERS ---
     public function getId(): ?int { return $this->id; }
 
@@ -78,6 +83,16 @@ class InternacaoPrescricao
     public function setFrequencia(?string $frequencia): self
     {
         $this->frequencia = $frequencia;
+        return $this;
+    }
+    public function getDuracaoDias(): int
+    {
+        return $this->duracaoDias;
+    }
+
+    public function setDuracaoDias(int $duracaoDias): self
+    {
+        $this->duracaoDias = $duracaoDias;
         return $this;
     }
 }
