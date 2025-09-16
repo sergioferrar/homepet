@@ -710,7 +710,9 @@
             notImplementedButtons.forEach(id => {
                 $(`#${id}`).on('click', function (e) {
                     e.preventDefault();
-                    alert(`A funcionalidade de "${$(this).text().trim()}" não está implementada ainda.`);
+                    var modal = Notify.modal(`A funcionalidade de "${$(this).text().trim()}" não está implementada ainda.`, 'md', 'mensagem do sistema')
+                    $(`#${modal.id}`).find('.modal-header').addClass('text-bg-warning')
+                    // alert();
                 });
             });
 
