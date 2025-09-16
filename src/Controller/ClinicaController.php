@@ -54,15 +54,15 @@ class ClinicaController extends DefaultController
         $media = $repoConsulta->calcularMediaConsultas($baseId);
         $atendimentos = $repoConsulta->listarUltimosAtendimentos($baseId);
         $animaisCadastrados = method_exists($repoPet, 'listarPetsRecentes')
-            ? $repoPet->listarPetsRecentes($baseId, 5)
-            : [];
+        ? $repoPet->listarPetsRecentes($baseId, 5)
+        : [];
 
         $vacinasVencidas = method_exists($repoPet, 'listarVacinasPendentes')
-            ? $repoPet->listarVacinasPendentes($baseId)
-            : [];
+        ? $repoPet->listarVacinasPendentes($baseId)
+        : [];
         $vacinasProgramadas = method_exists($repoPet, 'listarVacinasProgramadas')
-            ? $repoPet->listarVacinasProgramadas($baseId)
-            : [];
+        ? $repoPet->listarVacinasProgramadas($baseId)
+        : [];
 
         // 🔍 pesquisa
         $termo = $request->query->get('q');
@@ -344,33 +344,33 @@ class ClinicaController extends DefaultController
             $conteudoHtml = $this->quillDeltaToHtml($conteudoDelta);
 
             $cabecalhoHtml = "
-                <div style='text-align:center; font-size:14px; font-weight:bold;'>
-                    " . ($clinica->getRazaoSocial() ?? 'Clínica Veterinária') . " <br>
-                    CNPJ: " . ($clinica->getCnpj() ?? '') . " <br>
-                    {$clinica->getRua()}, {$clinica->getNumero()} - {$clinica->getBairro()}, {$clinica->getCidade()} - CEP: {$clinica->getCep()}
-                </div>
-                <hr>
-                <div style='font-size:12px;'>
-                    <strong>Tutor:</strong> {$cliente->getNome()} <br>
-                    <strong>Pet:</strong> {$pet['nome']} ({$pet['especie']} - {$pet['raca']}, {$pet['idade']} anos) <br>
-                    <strong>Sexo:</strong> {$pet['sexo']}
-                </div>
-                <hr>
+            <div style='text-align:center; font-size:14px; font-weight:bold;'>
+            " . ($clinica->getRazaoSocial() ?? 'Clínica Veterinária') . " <br>
+            CNPJ: " . ($clinica->getCnpj() ?? '') . " <br>
+            {$clinica->getRua()}, {$clinica->getNumero()} - {$clinica->getBairro()}, {$clinica->getCidade()} - CEP: {$clinica->getCep()}
+            </div>
+            <hr>
+            <div style='font-size:12px;'>
+            <strong>Tutor:</strong> {$cliente->getNome()} <br>
+            <strong>Pet:</strong> {$pet['nome']} ({$pet['especie']} - {$pet['raca']}, {$pet['idade']} anos) <br>
+            <strong>Sexo:</strong> {$pet['sexo']}
+            </div>
+            <hr>
             ";
 
             // --- NOVO: Cria o rodapé HTML fixo diretamente no PHP ---
             $rodapeHtml = "
-                <div style='text-align:center; font-size:12px; margin-top: 20px;'>
-                    <hr style='border: 1px dashed black; width: 50%; margin: 10px auto;'>
-                    <p>Assinatura do Veterinário</p>
-                    <p>
-                        <strong>{$vet->getNome()}</strong> <br>
-                        <strong>CRMV:</strong> {$vet->getCrmv()}
-                    </p>
-                </div>
-                <div style='text-align:center; font-size:10px; margin-top: 10px;'>
-                    <span>Documento emitido em: " . date('d/m/Y H:i:s') . "</span>
-                </div>
+            <div style='text-align:center; font-size:12px; margin-top: 20px;'>
+            <hr style='border: 1px dashed black; width: 50%; margin: 10px auto;'>
+            <p>Assinatura do Veterinário</p>
+            <p>
+            <strong>{$vet->getNome()}</strong> <br>
+            <strong>CRMV:</strong> {$vet->getCrmv()}
+            </p>
+            </div>
+            <div style='text-align:center; font-size:10px; margin-top: 10px;'>
+            <span>Documento emitido em: " . date('d/m/Y H:i:s') . "</span>
+            </div>
             ";
 
             $receita = new \App\Entity\Receita();
@@ -706,8 +706,8 @@ class ClinicaController extends DefaultController
 
         $totalGeral = $totalReceita - $totalDespesa;
         $dataAtual = $request->query->get('data')
-            ? new \DateTime($request->query->get('data'))
-            : new \DateTime();
+        ? new \DateTime($request->query->get('data'))
+        : new \DateTime();
 
         return $this->render('clinica/financeirodash.html.twig', [
             'financeiro_hoje' => $financeiroHoje,
@@ -980,8 +980,8 @@ class ClinicaController extends DefaultController
 
             // --- Gera eventos na timeline (mas sem quebrar se falhar) ---
             $petId = method_exists($internacao, 'getPetId')
-                ? $internacao->getPetId()
-                : ($internacao->getPet() ? $internacao->getPet()->getId() : null);
+            ? $internacao->getPetId()
+            : ($internacao->getPet() ? $internacao->getPet()->getId() : null);
 
             if ($petId) {
                 try {
@@ -1192,7 +1192,7 @@ class ClinicaController extends DefaultController
      * @Route("/pet/{petId}/venda/{id}/inativar", name="clinica_inativar_venda", methods={"POST"})
      */
     public function inativarVenda(Request $request, FinanceiroRepository $financeiroRepository, FinanceiroPendenteRepository $pendenteRepository, int $petId,
-                                  int     $id): Response
+      int     $id): Response
     {
         $baseId = $this->getUser()->getPetshopId();
 
