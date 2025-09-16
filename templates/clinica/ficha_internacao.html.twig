@@ -214,7 +214,7 @@
                                     {% endif %}
                                     <li>
                                         <div class="timeline-badge {{ badge }}"><i class="fas {{ icone }}"></i></div>
-                                        <div class="timeline-panel">
+                                        <div class="timeline-panel border-{{ ev.status }}">
                                             <div class="timeline-heading">
                                                 <h4 class="timeline-title">{{ ev.titulo
                                                     ?? (tipo in ['consulta','retorno'] ? 'Atendimento - ' ~ (tipo|capitalize) : '—') }}</h4>

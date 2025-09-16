@@ -836,14 +836,39 @@ class ClinicaController extends DefaultController
         $rows = $internacaoRepo->listarEventosPorInternacao($baseId, $id);
 
         $timeline = array_map(function (array $r) {
+            $agora = new \DateTime();
             try {
                 $r['data_hora'] = !empty($r['data_hora']) ? new \DateTime($r['data_hora']) : new \DateTime();
             } catch (\Exception $e) {
                 $r['data_hora'] = new \DateTime();
             }
-            $r['tipo'] = (string)($r['tipo'] ?? 'internacao');
             $r['titulo'] = $r['titulo'] ?? '—';
             $r['descricao'] = $r['descricao'] ?? '';
+            $r['aplicada'] = 'success';
+
+            $intervaloHoras = (int) filter_var($r['status'], FILTER_SANITIZE_NUMBER_INT);
+
+            // pegar última aplicação dessa prescrição
+            $ultimaExec = $r['data_hora'];
+            $proxima    = (clone $ultimaExec)->modify("+{$intervaloHoras} hours");
+
+            $diffMin = ($proxima->getTimestamp() - $agora->getTimestamp()) / 60;
+
+            if ($diffMin <= 0) {
+                $statusCor = 'danger'; // atrasada
+            } elseif ($diffMin <= 30) {
+                $statusCor = 'warning'; // dentro de 30 minutos
+            } else {
+                $statusCor = 'primary'; // dentro do prazo
+            }
+//            if($r['tipo'] != 'prescricao' || $r['tipo'] != 'medicacao'){
+//                $statusCor = 'border-secondary';
+//            }
+
+            $r['tipo'] = (string)($r['tipo'] ?? 'internacao');
+
+            $r['status'] = $statusCor;
+
             return $r;
         }, $rows);
 

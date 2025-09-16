@@ -60,7 +60,7 @@ class InternacaoRepository extends ServiceEntityRepository
     public function listarEventosPorInternacao(int $baseId, int $internacaoId): array
     {
         $sql = "
-            SELECT id, estabelecimento_id, internacao_id, pet_id, tipo, titulo, descricao, data_hora, criado_em
+            SELECT id, estabelecimento_id, internacao_id, pet_id, tipo, titulo, descricao, data_hora, criado_em, status
             FROM " . $_ENV['DBNAMETENANT'] . ".internacao_evento
             WHERE estabelecimento_id = :baseId AND internacao_id = :internacaoId
             ORDER BY data_hora DESC, id DESC

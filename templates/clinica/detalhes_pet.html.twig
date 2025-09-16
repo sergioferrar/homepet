@@ -331,8 +331,53 @@
                             <ul class="timeline">
                                 {% set linha = '' %}
                                 {% for item in timeline_items %}
-                                {% set linha = (loop.index is odd) ? '' : 'timeline-inverted' %}
-                                <li class="{{ linha }} ">
+
+                                <li>
+                                    <div class="timeline-badge "><i class="fas fa-calendar"></i></div>
+                                    <div class="timeline-panel border  {{ 'Consulta' in item.tipo ? 'border-start border-5 border-primary ps-3' :
+                                        'Retorno' in item.tipo ? 'border-start border-5 border-success ps-3' :
+                                        'Vacina' in item.tipo ? 'border-start border-5 border-warning ps-3' :
+                                        'Receita' in item.tipo ? 'border-start border-5 ps-3' :
+                                        'border-start border-5 border-dark ps-3' }}"
+                                         {% if 'Receita' in item.tipo %}style="border-left: 5px solid #6f42c1 !important;"{% endif %}>
+                                        <div class="timeline-heading">
+                                            <h4 class="timeline-title">
+                                                <a href="#"
+                                                   class="timeline-link timeline-text d-flex justify-content-between align-items-center"
+                                                   data-tipo="{{ item.tipo }}"
+                                                   data-data="{{ item.data|date('d/m/Y \\à\\s H:i') }}"
+                                                   data-resumo="{{ item.resumo|default('Ver detalhes')|e('html_attr') }}"
+                                                        {% if item.anamnese is defined %} data-atendimento-delta="{{ item.anamnese|e('html_attr') }}" {% endif %}
+                                                        {% if item.receita_cabecalho is defined %} data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}" {% endif %}
+                                                        {% if item.receita_conteudo is defined %} data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}" {% endif %}
+                                                        {% if item.receita_rodape is defined %} data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}" {% endif %}>
+                                                    <span>{{ item.tipo }}</span>
+                                                </a>
+                                            </h4>
+                                            <p>
+                                                <small class="text-muted">
+                                                    {{ item.data|date('d/m/Y \\à\\s H:i') }}
+                                                </small>
+                                            </p>
+
+                                        </div>
+                                        <div class="timeline-body">
+                                            <a href="#"
+                                               class="timeline-link timeline-text d-flex justify-content-between align-items-center"
+                                               data-tipo="{{ item.tipo }}"
+                                               data-data="{{ item.data|date('d/m/Y \\à\\s H:i') }}"
+                                               data-resumo="{{ item.resumo|default('Ver detalhes')|e('html_attr') }}"
+                                                    {% if item.anamnese is defined %} data-atendimento-delta="{{ item.anamnese|e('html_attr') }}" {% endif %}
+                                                    {% if item.receita_cabecalho is defined %} data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}" {% endif %}
+                                                    {% if item.receita_conteudo is defined %} data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}" {% endif %}
+                                                    {% if item.receita_rodape is defined %} data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}" {% endif %}>
+                                                <span>{{ item.tipo }}</span>
+                                            </a>
+                                            <p class="text-muted">{{ item.resumo|default('Ver detalhes') }}</p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="{{ linha }} d-none ">
                                     <div class="timeline-badge"><i class="bi calendar2-check"></i></div>
                                     <div class="timeline-panel border
                                                 {{ 'Consulta' in item.tipo ? 'border-start border-5 border-primary ps-3' :
