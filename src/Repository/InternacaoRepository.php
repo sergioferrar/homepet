@@ -99,14 +99,23 @@ class InternacaoRepository extends ServiceEntityRepository
     public function listarInternacoesAtivas(int $baseId): array
     {
         $sql = "
-            SELECT  i.id, i.data_inicio, i.motivo, i.status, p.nome AS nome_pet, c.nome AS nome_cliente
-                FROM " . $_ENV['DBNAMETENANT'] . ".internacao i
-                LEFT JOIN " . $_ENV['DBNAMETENANT'] . ".pet p ON p.id = i.pet_id
-                LEFT JOIN " . $_ENV['DBNAMETENANT'] . ".cliente c ON c.id = i.dono_id
-                WHERE i.estabelecimento_id = :baseId
-                  AND i.status = 'ativa'
-                ORDER BY i.data_inicio DESC
-            ";
+            SELECT  
+                i.id,
+                i.pet_id,
+                i.data_inicio,
+                i.motivo,
+                i.status,
+                p.nome AS pet_nome,
+                c.nome AS dono_nome
+            FROM " . $_ENV['DBNAMETENANT'] . ".internacao i
+            LEFT JOIN " . $_ENV['DBNAMETENANT'] . ".pet p ON p.id = i.pet_id
+            LEFT JOIN " . $_ENV['DBNAMETENANT'] . ".cliente c ON c.id = i.dono_id
+            WHERE i.estabelecimento_id = :baseId
+              AND i.status = 'ativa'
+              AND i.pet_id IS NOT NULL
+              AND i.pet_id > 0
+            ORDER BY i.data_inicio DESC
+        ";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('baseId', $baseId);
@@ -114,6 +123,7 @@ class InternacaoRepository extends ServiceEntityRepository
 
         return $result->fetchAllAssociative();
     }
+
 
     public function inserirInternacao(int $baseId, Internacao $i): int
     {
