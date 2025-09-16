@@ -29,14 +29,38 @@
         <div class="row mb-4">
             <div class="col-lg-6 mb-4 mb-lg-0">
                 <div class="info-card">
-                    <h5>{{ pet.dono_nome|default('Tutor não vinculado') }} {% if pet.dono_nome %}<small
-                                class="text-muted fw-normal">({{ pet.dono_id }})</small>{% endif %}</h5>
-                    {% if pet.dono_telefone is defined and pet.dono_telefone %}<p class="text-muted"><i
-                            class="fas fa-mobile-alt me-2"></i>{{ pet.dono_telefone }}</p>{% endif %}
-                    {% if total_debitos > 0 %}<span class="debt-tag">Saldo devedor de
-                        R$ {{ total_debitos|number_format(2, ',', '.') }}</span>{% endif %}
+                    <h5>
+                        {{ pet.dono_nome|default('Tutor não vinculado') }}
+                        {% if pet.dono_nome %}
+                            <small class="text-muted fw-normal">({{ pet.dono_id }})</small>
+                        {% endif %}
+                    </h5>
+
+                    <table class="table table-sm mb-2">
+                        <tbody>
+                            <tr>
+                                <th>Telefone:</th>
+                                <td>{{ pet.dono_telefone|default('-') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td>{{ pet.dono_email|default('-') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Endereço:</th>
+                                <td>{{ pet.dono_endereco|default('-') }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    {% if total_debitos > 0 %}
+                        <span class="debt-tag">
+                            Saldo devedor de R$ {{ total_debitos|number_format(2, ',', '.') }}
+                        </span>
+                    {% endif %}
                 </div>
             </div>
+
             <div class="col-lg-6">
                 <div class="info-card d-flex justify-content-between align-items-center">
                     <table class="table table-sm" width="100%">
@@ -66,20 +90,6 @@
                         </tr>
                         </tbody>
                     </table>
-                    {#                <h5 class="mb-2 me-3"> #}
-                    {#                    {{ pet.nome }} #}
-                    {#                    <small class="text-muted fw-normal">({{ pet.id }})</small> #}
-                    {#                </h5> #}
-
-                    {#                <p class="fs-5 bg-light p-2 rounded">Raça: {{ pet.raca }}</p> #}
-                    {#                <p class="fs-5 bg-info text-white p-2 rounded">Sexo: {{ pet.sexo }}</p> #}
-                    {#                <p class="fs-5 bg-warning p-2 rounded">Idade: {{ pet.idade }} anos</p> #}
-                    {#                <p class="fs-5 text-white p-2 rounded" style="background-color: #e85d6c;">Peso: {{ pet.peso }} KG</p> #}
-                    {#                <p class="fs-5 p-2 rounded {% if pet.castrado == 1 %} bg-success text-white {% else %} bg-danger text-white {% endif %}"> #}
-                    {#                    {% if pet.castrado == 1 %} Castrado {% else %} Não é Castrado {% endif %} #}
-                    {#                </p> #}
-
-
                 </div>
             </div>
         </div>

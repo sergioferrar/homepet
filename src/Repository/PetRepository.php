@@ -27,12 +27,23 @@ class PetRepository extends ServiceEntityRepository
 
     public function findPetById($baseId, $petId): ?array
     {
-        $sql = "SELECT p.id, p.nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.observacoes,
-                       p.peso, p.castrado,
-                       c.nome as dono_nome, c.id AS dono_id
+        $sql = "SELECT p.id, p.nome, p.especie, p.sexo, p.raca, p.porte, p.idade, 
+                    p.observacoes, p.peso, p.castrado,
+                    c.id AS dono_id,
+                    c.nome AS dono_nome,
+                    c.telefone AS dono_telefone,
+                    c.email AS dono_email,
+                    CONCAT(
+                        COALESCE(c.rua, ''), ' ',
+                        COALESCE(c.numero, ''), ' ',
+                        COALESCE(c.complemento, ''), ', ',
+                        COALESCE(c.bairro, ''), ' - ',
+                        COALESCE(c.cidade, '')
+                    ) AS dono_endereco
                 FROM {$_ENV['DBNAMETENANT']}.pet p
-                JOIN {$_ENV['DBNAMETENANT']}.cliente c ON (p.dono_id = c.id)
-                WHERE p.estabelecimento_id = :baseId AND p.id = :petId";
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                WHERE p.estabelecimento_id = :baseId 
+                  AND p.id = :petId";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('baseId', $baseId);
@@ -40,8 +51,9 @@ class PetRepository extends ServiceEntityRepository
 
         $dados = $stmt->executeQuery()->fetchAssociative();
 
-        return $dados ?: null; // se não achar retorna null
+        return $dados ?: null;
     }
+
 
 
     public function findAllPets($baseId): array

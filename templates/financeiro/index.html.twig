@@ -114,6 +114,9 @@
                                 <p class="mb-1">Pet: {{ item.pet_nome }}</p>
                                 <p>Data: {{ item.data|date('d/m/Y') }}</p>
                                 <h4>R$ {{ item.valor|number_format(2, ',', '.') }}</h4>
+                                <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': item.id}) }}">
+                                    <button type="submit" class="btn btn-success btn-sm">Confirmar Pagamento</button>
+                                </form>
                             </div>
                         </div>
                     </div>

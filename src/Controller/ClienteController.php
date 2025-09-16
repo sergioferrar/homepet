@@ -65,13 +65,16 @@ class ClienteController extends DefaultController
     /**
      * @Route("/editar/{id}", name="cliente_editar", methods={"GET", "POST"})
      */
-    public function editar(Request $request, int $id): Response
-    {
+    public function editar(
+        Request $request,
+        int $id,
+        ClienteRepository $clienteRepository
+    ): Response {
         $this->switchDB();
-        $clientes = array_filter($clienteRepository->localizaTodosCliente($baseId), function ($c) {
-            return isset($c['id'], $c['nome'], $c['email'], $c['telefone']);
-        });
+        $baseId = $this->session->get('userId');
 
+        // Busca cliente pelo ID
+        $cliente = $clienteRepository->localizaTodosClientePorID($baseId, $id);
 
         if (!$cliente) {
             throw $this->createNotFoundException('O cliente não foi encontrado');
@@ -79,20 +82,20 @@ class ClienteController extends DefaultController
 
         if ($request->isMethod('POST')) {
             $clienteAtualizado = [
-                'id'         => $cliente['id'],
-                'nome'       => $request->get('nome'),
-                'email'      => $request->get('email'),
-                'telefone'   => $request->get('telefone'),
-                'rua'        => $request->get('rua'),
-                'numero'     => $request->get('numero'),
-                'complemento'=> $request->get('complemento'),
-                'bairro'     => $request->get('bairro'),
-                'cidade'     => $request->get('cidade'),
-                'whatsapp'   => $request->get('whatsapp') ?? '',
-                'cep'        => $request->get('cep'),
+                'id'          => $cliente['id'],
+                'nome'        => $request->get('nome'),
+                'email'       => $request->get('email'),
+                'telefone'    => $request->get('telefone'),
+                'rua'         => $request->get('rua'),
+                'numero'      => $request->get('numero'),
+                'complemento' => $request->get('complemento'),
+                'bairro'      => $request->get('bairro'),
+                'cidade'      => $request->get('cidade'),
+                'whatsapp'    => $request->get('whatsapp') ?? '',
+                'cep'         => $request->get('cep'),
             ];
 
-            $this->getRepositorio(Cliente::class)->update($this->session->get('userId'), $clienteAtualizado);
+            $clienteRepository->update($baseId, $clienteAtualizado);
 
             return $this->redirectToRoute('cliente_index');
         }
@@ -101,6 +104,7 @@ class ClienteController extends DefaultController
             'cliente' => $cliente
         ]);
     }
+
 
     /**
      * @Route("/deletar/{id}", name="cliente_deletar", methods={"POST"})
