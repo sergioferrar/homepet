@@ -844,93 +844,81 @@ class ClinicaController extends DefaultController
         }
     }
 
-    /**
-     * @Route("/internacao/{id}/ficha", name="clinica_ficha_internacao", methods={"GET"})
-     */
-    public function fichaInternacao(int $id, InternacaoRepository $internacaoRepo, EntityManagerInterface $em): Response {
-        $this->switchDB();
-        $baseId = $this->getIdBase();
 
-        $internacao = $internacaoRepo->findInternacaoCompleta($baseId, $id);
-        if (!$internacao) {
-            throw $this->createNotFoundException('A ficha de internação não foi encontrada.');
-        }
+/**
+ * @Route("/internacao/{id}/ficha", name="clinica_ficha_internacao", methods={"GET"})
+ */
+public function fichaInternacao(int $id, InternacaoRepository $internacaoRepo, EntityManagerInterface $em): Response
+{
+    $this->switchDB();
+    $baseId = $this->getIdBase();
 
-        // --- TIMELINE ---
-        $rows = $internacaoRepo->listarEventosPorInternacao($baseId, $id);
-        $timeline = array_map(function (array $r) {
-            $agora = new \DateTime();
-            try {
-                $r['data_hora'] = !empty($r['data_hora']) ? new \DateTime($r['data_hora']) : new \DateTime();
-            } catch (\Exception $e) {
-                $r['data_hora'] = new \DateTime();
-            }
-
-            $r['titulo'] = $r['titulo'] ?? '—';
-            $r['descricao'] = $r['descricao'] ?? '';
-            $r['aplicada'] = 'success';
-
-            // Calcula próximo horário baseado no "status" (se tiver número de horas)
-            $intervaloHoras = (int) filter_var($r['status'], FILTER_SANITIZE_NUMBER_INT);
-            $ultimaExec = $r['data_hora'];
-            $proxima    = (clone $ultimaExec)->modify("+{$intervaloHoras} hours");
-            $diffMin = ($proxima->getTimestamp() - (new \DateTime())->getTimestamp()) / 60;
-
-            if ($diffMin <= 0) {
-                $statusCor = 'danger'; // atrasada
-            } elseif ($diffMin <= 30) {
-                $statusCor = 'warning'; // dentro de 30 minutos
-            } else {
-                $statusCor = 'primary'; // dentro do prazo
-            }
-
-            $r['tipo'] = (string)($r['tipo'] ?? 'internacao');
-            $r['status'] = $statusCor;
-
-            return $r;
-        }, $rows);
-
-        // Ordena por data/hora decrescente
-        usort($timeline, fn($a, $b) => $b['data_hora'] <=> $a['data_hora']);
-
-        // --- MODAIS ---
-        $medicamentos = $em->getRepository(Medicamento::class)->findAll();
-        $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findBy(['internacaoId' => $id]);
-
-        // --- CALENDÁRIO ---
-        $eventos = [];
-        foreach ($prescricoes as $p) {
-            if (!$p->getDataHora()) {
-                continue;
-            }
-
-            $primeira = $p->getDataHora();
-            $freq = (int) filter_var($p->getFrequencia(), FILTER_SANITIZE_NUMBER_INT);
-            $dias = (int) $p->getDuracaoDias();
-            $numDoses = ($dias * 24) / $freq;
-
-            for ($i = 0; $i < $numDoses; $i++) {
-                $horas = $i * $freq;
-                $doseTime = (clone $primeira)->modify("+{$horas} hours");
-
-                $eventos[] = [
-                    'title' => $p->getMedicamento()->getNome() . " - " . $p->getDose(),
-                    'start' => $doseTime->format('Y-m-d H:i:s'),
-                    'end'   => $doseTime->modify('+30 minutes')->format('Y-m-d H:i:s'),
-                    'color' => '#0d6efd'
-                ];
-            }
-        }
-
-        // Renderiza view
-        return $this->render('clinica/ficha_internacao.html.twig', [
-            'internacao' => $internacao,
-            'timeline' => $timeline,
-            'medicamentos' => $medicamentos,
-            'prescricoes' => $prescricoes,
-            'calendario_prescricoes' => $eventos,
-        ]);
+    $internacao = $internacaoRepo->findInternacaoCompleta($baseId, $id);
+    if (!$internacao) {
+        throw $this->createNotFoundException('A ficha de internação não foi encontrada.');
     }
+
+    // --- TIMELINE ---
+    $rows = $internacaoRepo->listarEventosPorInternacao($baseId, $id);
+    $timeline = array_map(function (array $r) {
+        try {
+            $r['data_hora'] = !empty($r['data_hora']) ? new \DateTime($r['data_hora']) : new \DateTime();
+        } catch (\Exception $e) {
+            $r['data_hora'] = new \DateTime();
+        }
+
+        $r['titulo'] = $r['titulo'] ?? '—';
+        $r['descricao'] = $r['descricao'] ?? '';
+        $r['tipo'] = (string)($r['tipo'] ?? 'internacao');
+
+        return $r;
+    }, $rows);
+
+    usort($timeline, fn($a, $b) => $b['data_hora'] <=> $a['data_hora']);
+
+    // --- PRESCRIÇÕES ---
+    $medicamentos = $em->getRepository(Medicamento::class)->findAll();
+    $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findBy(['internacaoId' => $id]);
+
+    // --- CALENDÁRIO ---
+    $eventos = [];
+    foreach ($prescricoes as $p) {
+        if (!$p->getDataHora()) {
+            continue;
+        }
+
+        $primeira = $p->getDataHora();
+        $freqHoras = (int) $p->getFrequenciaHoras();
+        $duracaoDias = (int) $p->getDuracaoDias();
+
+        if ($freqHoras <= 0 || $duracaoDias <= 0) {
+            continue;
+        }
+
+        $numDoses = ($duracaoDias * 24) / $freqHoras;
+
+        for ($i = 0; $i < $numDoses; $i++) {
+            $doseTime = (clone $primeira)->modify('+' . ($i * $freqHoras) . ' hours');
+
+            $eventos[] = [
+                'title' => $p->getMedicamento()->getNome() . " - " . $p->getDose(),
+                'start' => $doseTime->format(\DateTime::ATOM), // 2025-09-17T15:20:00
+                'end'   => (clone $doseTime)->modify('+30 minutes')->format(\DateTime::ATOM),
+                'color' => '#0d6efd',
+            ];
+        }
+    }
+
+    return $this->render('clinica/ficha_internacao.html.twig', [
+        'internacao' => $internacao,
+        'timeline' => $timeline,
+        'medicamentos' => $medicamentos,
+        'prescricoes' => $prescricoes,
+        'calendario_prescricoes' => $eventos,
+    ]);
+}
+
+
 
     /**
      * @Route("/internacao/{id}/alta", name="clinica_internacao_alta", methods={"POST"})
@@ -969,106 +957,101 @@ class ClinicaController extends DefaultController
         return $this->json(['ok' => true]);
     }
 
-    /**
-     * @Route("/internacao/{id}/prescricao/nova", name="clinica_internacao_prescricao_nova", methods={"GET","POST"})
-     */
-    public function novaPrescricao(
-        int                    $id,
-        Request                $request,
-        EntityManagerInterface $em,
-        InternacaoRepository   $internacaoRepo
-    ): Response
-    {
-        $this->switchDB();
-        $baseId = $this->getIdBase();
+/**
+ * @Route("/internacao/{id}/prescricao/nova", name="clinica_internacao_prescricao_nova", methods={"GET","POST"})
+ */
+public function novaPrescricao(
+    int                    $id,
+    Request                $request,
+    EntityManagerInterface $em,
+    InternacaoRepository   $internacaoRepo
+): Response
+{
+    $this->switchDB();
+    $baseId = $this->getIdBase();
 
-        // 🚑 Se alguém abrir a rota direto no navegador (GET), redireciona pra ficha
-        if ($request->isMethod('GET')) {
-            return $this->redirectToRoute('clinica_ficha_internacao', ['id' => $id]);
+    if ($request->isMethod('GET')) {
+        return $this->redirectToRoute('clinica_ficha_internacao', ['id' => $id]);
+    }
+
+    try {
+        $internacao = $em->getRepository(Internacao::class)->find($id);
+        if (!$internacao) {
+            return $this->json(['ok' => false, 'msg' => 'Internação não encontrada.'], 404);
         }
 
-        try {
-            $internacao = $em->getRepository(Internacao::class)->find($id);
-            if (!$internacao) {
-                return $this->json(['ok' => false, 'msg' => 'Internação não encontrada.'], 404);
-            }
+        $medicamentoId = (int)$request->request->get('medicamento_id');
+        $dose = trim((string)$request->request->get('dose'));
+        $frequenciaHoras = (int)$request->request->get('frequencia_horas');
+        $duracaoDias = (int)$request->request->get('duracao_dias');
+        $dataHoraPrimeiraDose = $request->request->get('data_hora_primeira_dose');
 
-            $medicamentoId = (int)$request->request->get('medicamento_id');
-            $dose = trim((string)$request->request->get('dose'));
-            $frequenciaHoras = (int)$request->request->get('frequencia_horas');
-            $duracaoDias = (int)$request->request->get('duracao_dias');
-            $dataHoraPrimeiraDose = $request->request->get('data_hora_primeira_dose');
+        if (!$medicamentoId || empty($dose) || $frequenciaHoras <= 0 || $duracaoDias <= 0 || empty($dataHoraPrimeiraDose)) {
+            return $this->json(['ok' => false, 'msg' => 'Campos obrigatórios faltando.'], 400);
+        }
 
-            if (!$medicamentoId || empty($dose) || $frequenciaHoras <= 0 || $duracaoDias <= 0 || empty($dataHoraPrimeiraDose)) {
-                return $this->json(['ok' => false, 'msg' => 'Campos obrigatórios faltando.'], 400);
-            }
+        $medicamento = $em->getRepository(Medicamento::class)->find($medicamentoId);
+        if (!$medicamento) {
+            return $this->json(['ok' => false, 'msg' => 'Medicamento não encontrado.'], 404);
+        }
 
-            $medicamento = $em->getRepository(Medicamento::class)->find($medicamentoId);
-            if (!$medicamento) {
-                return $this->json(['ok' => false, 'msg' => 'Medicamento não encontrado.'], 404);
-            }
+        // --- Cria a prescrição ---
+        $prescricao = new InternacaoPrescricao();
+        $prescricao->setInternacaoId($internacao->getId());
+        $prescricao->setMedicamento($medicamento);
+        $prescricao->setDescricao($medicamento->getNome());
+        $prescricao->setDose($dose);
 
-            // --- Cria a prescrição ---
-            $prescricao = new InternacaoPrescricao();
-            $prescricao->setInternacaoId($internacao->getId());
-            $prescricao->setMedicamento($medicamento);
-            $prescricao->setDescricao($medicamento->getNome());
-            $prescricao->setDose($dose);
-            $prescricao->setFrequencia(sprintf('a cada %d horas por %d dias', $frequenciaHoras, $duracaoDias));
-            $prescricao->setDataHora(new \DateTime($dataHoraPrimeiraDose));
-            $prescricao->setCriadoEm(new \DateTime());
+        // Salva tanto a string "bonita" quanto os valores numéricos
+        $prescricao->setFrequencia(sprintf('a cada %d horas por %d dias', $frequenciaHoras, $duracaoDias));
+        $prescricao->setFrequenciaHoras($frequenciaHoras);
+        $prescricao->setDuracaoDias($duracaoDias);
 
-            $em->persist($prescricao);
-            $em->flush();
+        $prescricao->setDataHora(new \DateTime($dataHoraPrimeiraDose));
+        $prescricao->setCriadoEm(new \DateTime());
 
-            // --- Gera eventos na timeline (mas sem quebrar se falhar) ---
-            $petId = method_exists($internacao, 'getPetId')
+        $em->persist($prescricao);
+        $em->flush();
+
+        // --- Cria eventos da timeline ---
+        $petId = method_exists($internacao, 'getPetId')
             ? $internacao->getPetId()
             : ($internacao->getPet() ? $internacao->getPet()->getId() : null);
 
-            if ($petId) {
-                try {
-                    $numDoses = ($duracaoDias * 24) / $frequenciaHoras;
+        if ($petId) {
+            $numDoses = ($duracaoDias * 24) / $frequenciaHoras;
 
-                    for ($i = 0; $i < $numDoses; $i++) {
-                        $dataDose = (new \DateTime($dataHoraPrimeiraDose))->modify('+' . ($i * $frequenciaHoras) . ' hours');
+            for ($i = 0; $i < $numDoses; $i++) {
+                $dataDose = (new \DateTime($dataHoraPrimeiraDose))->modify('+' . ($i * $frequenciaHoras) . ' hours');
 
-                        $descricaoEvento = sprintf(
-                            "Medicamento: %s | Dose: %s | Frequência: %s",
-                            $medicamento->getNome(),
-                            $dose,
-                            $prescricao->getFrequencia()
-                        );
+                $descricaoEvento = sprintf(
+                    "Medicamento: %s | Dose: %s | Frequência: %s",
+                    $medicamento->getNome(),
+                    $dose,
+                    $prescricao->getFrequencia()
+                );
 
-                        $internacaoRepo->inserirEvento(
-                            $baseId,
-                            $id,
-                            $petId,
-                            'medicacao',
-                            'Dose de medicação agendada',
-                            $descricaoEvento,
-                            $dataDose
-                        );
-                    }
-                } catch (\Exception $e) {
-                    // Loga mas não quebra a resposta
-                    $this->logger->error('Erro ao inserir eventos da prescrição', [
-                        'exception' => $e,
-                        'internacao_id' => $id,
-                        'pet_id' => $petId
-                    ]);
-                }
+                $internacaoRepo->inserirEvento(
+                    $baseId,
+                    $id,
+                    $petId,
+                    'medicacao',
+                    'Dose de medicação agendada',
+                    $descricaoEvento,
+                    $dataDose
+                );
             }
-
-            return $this->json(['ok' => true, 'msg' => 'Prescrição salva com sucesso!']);
-
-        } catch (\Exception $e) {
-            return $this->json([
-                'ok' => false,
-                'msg' => 'Erro interno: ' . $e->getMessage()
-            ], 500);
         }
+
+        return $this->json(['ok' => true, 'msg' => 'Prescrição salva com sucesso!']);
+
+    } catch (\Exception $e) {
+        return $this->json([
+            'ok' => false,
+            'msg' => 'Erro interno: ' . $e->getMessage()
+        ], 500);
     }
+}
 
 
     /**

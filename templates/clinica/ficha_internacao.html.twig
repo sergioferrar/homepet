@@ -247,7 +247,7 @@
                                         </p>
                                     </td>
                                     <td>{{ p.dose }}</td>
-                                    <td>{{ p.frequencia }}</td>
+                                    <td>A cada {{ p.frequenciaHoras }}h por {{ p.duracaoDias }} dias</td>
                                     <td class="text-center">
                                         <button
                                           class="btn btn-sm btn-success btn-executar-prescricao"
@@ -356,168 +356,120 @@
 {% endblock %}
 
 {% block javascripts %}
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Seu código original para alta, prescrição e medicamento (mantido)
-            document.body.addEventListener('click', async (e) => {
-                const btn = e.target.closest('#btn-alta');
-                if (!btn) return;
-                if (!confirm('Confirmar alta desta internação?')) return;
-                const url = btn.dataset.url;
-                const token = btn.dataset.token;
-                try {
-                    const resp = await fetch(url, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
-                        body: new URLSearchParams({_token: token})
-                    });
-                    const data = await resp.json();
-                    if (data.ok) {
-                        alert('Internação finalizada com sucesso!');
-                        window.location.href = "{{ path('clinica_ficha_internacao', {id: internacao.id}) }}";
-                    } else {
-                        alert(data.msg || 'Não foi possível finalizar.');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert('Falha na requisição.');
-                }
-            });
-
-            const form = document.querySelector('#formPrescricao');
-            if (form) {
-                form.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    try {
-                        const resp = await fetch(form.action, { method: 'POST', body: new FormData(form) });
-                        if (!resp.ok) { const errorText = await resp.text(); throw new Error(`Erro do servidor: ${resp.status} - ${errorText}`); }
-                        const data = await resp.json();
-                        if (data.ok) {
-                            const modalEl = document.getElementById('modalPrescricao');
-                            const modal = bootstrap.Modal.getInstance(modalEl);
-                            if (modal) modal.hide();
-                            location.reload();
-                        } else {
-                            alert(data.msg || 'Erro ao salvar prescrição');
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        alert('Falha na requisição ao salvar prescrição. Verifique o console para mais detalhes.');
-                    }
-                });
-            }
-
-            const formNovoMed = document.querySelector('#formNovoMedicamento');
-            if (formNovoMed) {
-                formNovoMed.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    try {
-                        const resp = await fetch(formNovoMed.action, { method: 'POST', body: new FormData(formNovoMed) });
-                        if (!resp.ok) { const errorText = await resp.text(); throw new Error(`Erro do servidor: ${resp.status} - ${errorText}`); }
-                        const data = await resp.json();
-                        if (data.ok) {
-                            const modalEl = document.getElementById('modalNovoMedicamento');
-                            const modal = bootstrap.Modal.getInstance(modalEl);
-                            if (modal) modal.hide();
-                            location.reload();
-                        } else {
-                            alert(data.msg || 'Erro ao salvar o medicamento');
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        alert('Falha na requisição ao salvar o medicamento. Verifique o console para mais detalhes.');
-                    }
-                });
-            }
-
-            // --- CÓDIGO DO CALENDÁRIO COM A LÓGICA DE REPETIÇÃO ---
-            const calendarEl = document.getElementById('calendar-pet');
-            if (calendarEl) {
-                // Pega os eventos iniciais que vêm do controller
-                const eventosIniciais = {{ calendario_prescricoes|json_encode|raw }};
-                
-                // Função para gerar todas as ocorrências de eventos
-                function gerarEventosRecorrentes(prescricoes) {
-                    const todosEventos = [];
-                    
-                    prescricoes.forEach(prescricao => {
-                        // Se não tiver dados de recorrência, adiciona o evento como está e para
-                        if (!prescricao.extendedProps || !prescricao.extendedProps.frequenciaHoras || !prescricao.extendedProps.duracaoDias) {
-                            todosEventos.push(prescricao);
-                            return;
-                        }
-
-                        const dataInicio = new Date(prescricao.start);
-                        const frequenciaMs = prescricao.extendedProps.frequenciaHoras * 60 * 60 * 1000;
-                        const duracaoMs = prescricao.extendedProps.duracaoDias * 24 * 60 * 60 * 1000;
-                        const dataFimTratamento = new Date(dataInicio.getTime() + duracaoMs);
-                        
-                        let dataEventoAtual = new Date(dataInicio.getTime());
-                        
-                        // Loop para criar os eventos enquanto estiver dentro da duração do tratamento
-                        while (dataEventoAtual < dataFimTratamento) {
-                            todosEventos.push({
-                                title: prescricao.title,
-                                start: new Date(dataEventoAtual.getTime()), // Cria uma nova data para cada evento
-                                // Você pode adicionar uma duração fixa para cada evento, se desejar
-                                // end: new Date(dataEventoAtual.getTime() + (30 * 60 * 1000)), // Ex: duração de 30 min
-                                color: prescricao.color,
-                                borderColor: prescricao.borderColor
-                            });
-                            
-                            // Avança para a próxima data do evento
-                            dataEventoAtual.setTime(dataEventoAtual.getTime() + frequenciaMs);
-                        }
-                    });
-                    
-                    return todosEventos;
-                }
-                
-                // Gera a lista completa de eventos
-                const eventosFinais = gerarEventosRecorrentes(eventosIniciais);
-
-                // Inicializa o calendário com a lista completa
-                window.calendar = new FullCalendar.Calendar(calendarEl, {
-                    initialView: 'timeGridDay',
-                    slotMinTime: "00:00:00",
-                    slotMaxTime: "24:00:00",
-                    allDaySlot: false,
-                    locale: 'pt-br',
-                    height: 650,
-                    headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridDay,timeGridWeek' },
-                    events: {{ calendario_prescricoes|json_encode|raw }}
-                });
-                window.calendar.render();
-
-            }
-        });
-
-
-document.querySelectorAll('.btn-executar-prescricao').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        const url = btn.dataset.url; // já vem pronto do Twig
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Botão de Alta ---
+    document.body.addEventListener('click', async (e) => {
+        const btn = e.target.closest('#btn-alta');
+        if (!btn) return;
+        if (!confirm('Confirmar alta desta internação?')) return;
 
         try {
-            const resp = await fetch(url, { method: 'POST' });
+            const resp = await fetch(btn.dataset.url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                body: new URLSearchParams({_token: btn.dataset.token})
+            });
             const data = await resp.json();
-
             if (data.ok) {
-                alert(data.msg);
-
-                // adiciona evento ao calendário em tempo real
-                if (window.calendar && data.event) {
-                    window.calendar.addEvent(data.event);
-                }
+                alert('Internação finalizada com sucesso!');
+                window.location.href = "{{ path('clinica_ficha_internacao', {id: internacao.id}) }}";
             } else {
-                alert(data.msg || 'Erro ao executar prescrição');
+                alert(data.msg || 'Não foi possível finalizar.');
             }
         } catch (err) {
             console.error(err);
             alert('Falha na requisição.');
         }
     });
-});
 
-    </script>
+    // --- Form Prescrição ---
+    const form = document.querySelector('#formPrescricao');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const resp = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+                if (!resp.ok) { throw new Error(`Erro do servidor: ${resp.status}`); }
+                const data = await resp.json();
+                if (data.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalPrescricao')).hide();
+                    location.reload();
+                } else {
+                    alert(data.msg || 'Erro ao salvar prescrição');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Falha na requisição ao salvar prescrição.');
+            }
+        });
+    }
+
+    // --- Form Novo Medicamento ---
+    const formNovoMed = document.querySelector('#formNovoMedicamento');
+    if (formNovoMed) {
+        formNovoMed.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const resp = await fetch(formNovoMed.action, { method: 'POST', body: new FormData(formNovoMed) });
+                if (!resp.ok) { throw new Error(`Erro do servidor: ${resp.status}`); }
+                const data = await resp.json();
+                if (data.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalNovoMedicamento')).hide();
+                    location.reload();
+                } else {
+                    alert(data.msg || 'Erro ao salvar o medicamento');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Falha na requisição ao salvar o medicamento.');
+            }
+        });
+    }
+
+    // --- Calendário ---
+    const calendarEl = document.getElementById('calendar-pet');
+    if (calendarEl) {
+        const eventos = {{ calendario_prescricoes|json_encode|raw }};
+
+        window.calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            locale: 'pt-br',
+            height: 650,
+            slotMinTime: "00:00:00",
+            slotMaxTime: "24:00:00",
+            allDaySlot: false,
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridDay,timeGridWeek,dayGridMonth' },
+            events: eventos
+        });
+
+        window.calendar.render();
+    }
+
+    // --- Executar Prescrição ---
+    document.querySelectorAll('.btn-executar-prescricao').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            try {
+                const resp = await fetch(btn.dataset.url, { method: 'POST' });
+                const data = await resp.json();
+                if (data.ok) {
+                    alert(data.msg);
+                    if (window.calendar && data.event) {
+                        window.calendar.addEvent(data.event);
+                    }
+                } else {
+                    alert(data.msg || 'Erro ao executar prescrição');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Falha na requisição.');
+            }
+        });
+    });
+
+});
+</script>
 {% endblock %}
+
+
