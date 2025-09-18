@@ -76,4 +76,25 @@ class VeterinarioRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * Retorna veterinários com suas execuções recentes
+     *
+     * @param int $estabelecimentoId
+     * @param int $limite
+     * @return array
+     */
+    public function findComExecucoesRecentes(int $estabelecimentoId, int $limite = 10): array
+    {
+        return $this->createQueryBuilder('v')
+            ->leftJoin('v.internacaoExecucoes', 'ie')
+            ->addSelect('ie')
+            ->andWhere('v.estabelecimentoId = :estabelecimentoId')
+            ->setParameter('estabelecimentoId', $estabelecimentoId)
+            ->orderBy('ie.dataExecucao', 'DESC')
+            ->setMaxResults($limite)
+            ->getQuery()
+            ->getResult();
+    }
+
 }

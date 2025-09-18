@@ -3,473 +3,279 @@
 {% block title %}Ficha de Internação - {{ internacao.pet_nome }}{% endblock %}
 
 {% block stylesheets %}
-    <style>
-
-        .info-card h5 {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .nav-tabs .nav-link {
-            color: #6c757d;
-            font-weight: 500;
-            border: none;
-            border-bottom: 3px solid transparent;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: #0d6efd;
-            background-color: #fff;
-            border-color: #dee2e6 #dee2e6 #0d6efd;
-            font-weight: bold;
-        }
-
-        .timeline {
-            position: relative;
-            padding-left: 35px;
-            list-style: none;
-        }
-
-        .timeline:before {
-            content: '';
-            position: absolute;
-            left: 12px;
-            top: 5px;
-            bottom: 5px;
-            width: 3px;
-            background: #e9ecef;
-            border-radius: 2px;
-        }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 25px;
-        }
-
-        .timeline-badge { /* Alterei o nome de .timeline-icon para .timeline-badge para corresponder ao seu HTML */
-            position: absolute;
-            left: -10px;
-            top: 0;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .timeline-content {
-            transition: border-color 0.3s;
-        }
-
-        .timeline-content .timeline-date {
-            font-size: 0.85em;
-            color: #dc3545;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-
-
-        .bg-purple {
-            background-color: #6f42c1 !important;
-        }
-    </style>
+<style>
+    .info-card h5 { font-size: 1.5rem; font-weight: 600; }
+    .nav-tabs .nav-link { color: #6c757d; font-weight: 500; border: none; border-bottom: 3px solid transparent; }
+    .nav-tabs .nav-link.active { color: #0d6efd; background-color: #fff; border-color: #dee2e6 #dee2e6 #0d6efd; font-weight: bold; }
+    .timeline { position: relative; padding-left: 35px; list-style: none; }
+    .timeline:before { content: ''; position: absolute; left: 12px; top: 5px; bottom: 5px; width: 3px; background: #e9ecef; border-radius: 2px; }
+    .timeline-item { position: relative; margin-bottom: 25px; }
+    .timeline-badge { position: absolute; left: -10px; top: 0; width: 45px; height: 45px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .timeline-content { transition: border-color 0.3s; }
+    .timeline-content .timeline-date { font-size: 0.85em; color: #dc3545; font-weight: bold; margin-bottom: 4px; }
+    .bg-purple { background-color: #6f42c1 !important; }
+</style>
 {% endblock %}
 
 {% block body %}
-    <div class="container-fluid my-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">Ficha de Internação</h4>
-                <a href="{{ path('clinica_detalhes_pet', {'id': internacao.pet_id}) }}" class="btn btn-light">
-                    <i class="fas fa-arrow-left me-2"></i>Voltar
-                </a>
+<div class="container-fluid my-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Ficha de Internação</h4>
+            <a href="{{ path('clinica_detalhes_pet', {'id': internacao.pet_id}) }}" class="btn btn-light">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+
+        <div class="card-body">
+            {# Dados principais do pet #}
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="mb-0">{{ internacao.pet_nome }} ({{ internacao.pet_id }})</h5>
+                    <p class="text-muted mb-0">{{ internacao.pet_raca ?? '-' }}, {{ internacao.pet_sexo ?? '-' }}, {{ internacao.pet_idade ?? '-' }}</p>
+                    <p class="text-muted mb-0">Tutor: {{ internacao.dono_nome ?? '-' }}{% if internacao.dono_id %} ({{ internacao.dono_id }}){% endif %}</p>
+                </div>
+                <div class="text-end">
+                    {% if internacao.situacao %}<span class="badge bg-warning">{{ internacao.situacao }}</span>{% endif %}
+                    <p class="mb-0">Duração: {{ internacao.duracao ?? '-' }}</p>
+                    <p class="mb-0">Veterinário: {{ internacao.veterinario_nome ?? '-' }}</p>
+                </div>
             </div>
 
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h5 class="mb-0">{{ internacao.pet_nome }} ({{ internacao.pet_id }})</h5>
-                        <p class="text-muted mb-0">
-                            {{ internacao.pet_raca ?? '-' }}, {{ internacao.pet_sexo ?? '-' }}
-                            , {{ internacao.pet_idade ?? '-' }}
-                        </p>
-                        <p class="text-muted mb-0">
-                            Tutor: {{ internacao.dono_nome ?? '-' }}{% if internacao.dono_id %} ({{ internacao.dono_id }}){% endif %}
-                        </p>
-                    </div>
-                    <div class="text-end">
-                        {% if internacao.situacao %}<span
-                                class="badge bg-warning">{{ internacao.situacao }}</span>{% endif %}
-                        <p class="mb-0">Duração: {{ internacao.duracao ?? '-' }}</p>
-                        <p class="mb-0">Veterinário: {{ internacao.veterinario_nome ?? '-' }}</p>
-                    </div>
-                </div>
+            {# Dados clínicos #}
+            <div class="row g-3 mb-3">
+                <div class="col-md-3"><strong>Motivo:</strong> {{ internacao.motivo ?? '-' }}</div>
+                <div class="col-md-3"><strong>Risco:</strong> {{ internacao.risco ?? '-' }}</div>
+                <div class="col-md-3"><strong>Box:</strong> {{ internacao.box ?? '-' }}</div>
+                <div class="col-md-3"><strong>Prognóstico:</strong> {{ internacao.prognostico ?? '-' }}</div>
+                <div class="col-md-3"><strong>Alta prevista:</strong> {{ internacao.alta_prevista ? internacao.alta_prevista|date('d/m/Y') : '-' }}</div>
+            </div>
 
-                <div class="row g-3 mb-3">
-                    <div class="col-md-3"><strong>Motivo:</strong> {{ internacao.motivo ?? '-' }}</div>
-                    <div class="col-md-3"><strong>Risco:</strong> {{ internacao.risco ?? '-' }}</div>
-                    <div class="col-md-3"><strong>Box:</strong> {{ internacao.box ?? '-' }}</div>
-                    <div class="col-md-3"><strong>Prognóstico:</strong> {{ internacao.prognostico ?? '-' }}</div>
-                    <div class="col-md-3">
-                        <strong>Alta prevista:</strong>
-                        {{ internacao.alta_prevista ? internacao.alta_prevista|date('d/m/Y') : '-' }}
-                    </div>
-                </div>
+            <div class="mb-3"><strong>Anotações:</strong><div class="text-muted">{{ internacao.anotacoes is not empty ? internacao.anotacoes|raw : '-' }}</div></div>
 
-                <div class="mb-3">
-                    <strong>Anotações:</strong>
-                    <div class="text-muted">{{ internacao.anotacoes is not empty ? internacao.anotacoes|raw : '-' }}</div>
-                </div>
+            <hr>
 
-                <hr>
+            {# Ações #}
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn btn-sm btn-primary me-2"><i class="fas fa-edit me-1"></i> Editar</button>
+                <button class="btn btn-sm btn-success me-2" id="btn-alta"
+                    data-url="{{ path('clinica_internacao_alta', {id: internacao.id}) }}"
+                    data-token="{{ csrf_token('alta_internacao_' ~ internacao.id) }}">
+                    <i class="fas fa-check me-1"></i> Alta
+                </button>
+                <button class="btn btn-sm btn-danger me-2"><i class="fas fa-times me-1"></i> Óbito</button>
+                <button class="btn btn-sm btn-secondary me-2"><i class="fas fa-boxes me-1"></i> Box</button>
+                <button class="btn btn-sm btn-warning me-2"><i class="fas fa-ban me-1"></i> Cancelar</button>
+                <button class="btn btn-sm btn-info me-2"><i class="fas fa-print me-1"></i> Imprimir</button>
+            </div>
 
-                <div class="d-flex justify-content-end mb-3">
-                    <button class="btn btn-sm btn-primary me-2"><i class="fas fa-edit me-1"></i> Editar</button>
-                    <button
-                            class="btn btn-sm btn-success me-2"
-                            id="btn-alta"
-                            data-url="{{ path('clinica_internacao_alta', {id: internacao.id}) }}"
-                            data-token="{{ csrf_token('alta_internacao_' ~ internacao.id) }}">
-                        <i class="fas fa-check me-1"></i> Alta
-                    </button>
-                    <button class="btn btn-sm btn-danger me-2"><i class="fas fa-times me-1"></i> Óbito</button>
-                    <button class="btn btn-sm btn-secondary me-2"><i class="fas fa-boxes me-1"></i> Box</button>
-                    <button class="btn btn-sm btn-warning me-2"><i class="fas fa-ban me-1"></i> Cancelar</button>
-                    <button class="btn btn-sm btn-info me-2"><i class="fas fa-print me-1"></i> Imprimir</button>
-                </div>
+            {# Tabs #}
+            <ul class="nav nav-tabs" id="internacaoTabs" role="tablist">
+                <li class="nav-item"><button class="nav-link active" id="historico-tab" data-bs-toggle="tab" data-bs-target="#historico-content" type="button">Histórico</button></li>
+                <li class="nav-item"><button class="nav-link" id="prescricao-tab" data-bs-toggle="tab" data-bs-target="#prescricao-content" type="button">Prescrição e Calendário</button></li>
+            </ul>
 
-                <ul class="nav nav-tabs" id="internacaoTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active"
-                                id="historico-tab"
-                                data-bs-toggle="tab"
-                                data-bs-target="#historico-content"
-                                type="button"
-                                role="tab"
-                                aria-controls="historico-content"
-                                aria-selected="true">
-                            Histórico
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="prescricao-tab" data-bs-toggle="tab" data-bs-target="#prescricao-content" type="button" role="tab" aria-controls="prescricao-content" aria-selected="false">
-                            Prescrição e Calendário
-                        </button>
-                    </li>
-                </ul>
-
-                <div class="tab-content border border-top-0 p-3" id="internacaoTabContent">
-                    <div class="tab-pane fade show active" id="historico-content" role="tabpanel" aria-labelledby="historico-tab">
-                        <div class="d-flex justify-content-end mb-3">
-                            <div class="dropdown">
-                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button"
-                                        data-bs-toggle="dropdown">
-                                    <i class="fas fa-plus me-1"></i> Adicionar
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#">Ocorrência</a></li>
-                                    <li><a class="dropdown-item" href="#">Enviar Mensagem</a></li>
-                                    <li><a class="dropdown-item" href="">Peso</a></li>
-                                    <li><a class="dropdown-item" href="#">Relatório Médico</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div style="max-height: 400px; overflow-y: auto;">
-                            <ul class="timeline">
-                                {% for ev in timeline|default([]) %}
-                                    {% set tipo = (ev.tipo ?? 'internacao')|lower %}
-                                    {% set icone = 'fa-notes-medical' %}
-                                    {% set badge = 'bg-secondary' %}
-
-                                    {% if tipo in ['consulta','retorno'] %}
-                                        {% set icone = 'fa-stethoscope' %}{% set badge = 'bg-primary' %}
-                                    {% elseif tipo == 'receita' %}
-                                        {% set icone = 'fa-file-prescription' %}{% set badge = 'bg-purple' %}
-                                    {% elseif tipo in ['medicacao','medicação','medicacao_exec','execucao'] %}
-                                        {% set icone = 'fa-pills' %}{% set badge = 'bg-info' %}
-                                    {% elseif tipo == 'peso' %}
-                                        {% set icone = 'fa-weight' %}{% set badge = 'bg-warning' %}
-                                    {% elseif tipo in ['ocorrencia','ocorrência','alerta'] %}
-                                        {% set icone = 'fa-exclamation-circle' %}{% set badge = 'bg-danger' %}
-                                    {% elseif tipo in ['internacao','internação','admissao','admissão','alta'] %}
-                                        {% set icone = 'fa-hospital' %}{% set badge = 'bg-success' %}
-                                    {% endif %}
-                                    <li class="timeline-item">
-                                        <div class="timeline-badge {{ badge }}"><i class="fas {{ icone }}"></i></div>
-                                        <div class="timeline-panel">
-                                            <div class="timeline-heading">
-                                                <h5 class="timeline-title">{{ ev.titulo|default(tipo|capitalize) }}</h5>
-                                                <p><small class="text-muted">{{ ev.data_hora|date('d/m/Y H:i')|default('-') }}</small></p>
-                                            </div>
-                                            <div class="timeline-body">
-                                                {% if ev.descricao %}<p class="text-muted">{{ ev.descricao|raw }}</p>{% endif %}
-                                            </div>
-                                        </div>
-                                    </li>
-                                {% else %}
-                                    <li class="ms-2">Nenhum evento registrado.</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="tab-pane fade" id="prescricao-content" role="tabpanel" aria-labelledby="prescricao-tab">
-                        <div class="d-flex justify-content-end mb-3">
-                            <button class="btn btn-sm btn-info me-2" data-bs-toggle="modal"
-                                    data-bs-target="#modalNovoMedicamento">
-                                <i class="fas fa-plus me-1"></i> Adicionar Medicamento
-                            </button>
-                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
-                                    data-bs-target="#modalPrescricao">
-                                <i class="fas fa-plus me-1"></i> Nova Prescrição
-                            </button>
-                        </div>
-
-                        <table class="table table-bordered table-striped align-middle">
-                            <thead class="table-light">
-                            <tr>
-                                <th>Medicamento</th>
-                                <th>Dose</th>
-                                <th>Frequência</th>
-                                <th class="text-center">Ações</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for p in prescricoes %}
-                                <tr>
-                                    <td>
-                                        {{ p.medicamento.nome }}
-                                        <p class="text-muted small mb-0">
-                                            Criado em: {{ p.criadoEm|date('d/m/Y H:i') }}
-                                        </p>
-                                    </td>
-                                    <td>{{ p.dose }}</td>
-                                    <td>A cada {{ p.frequenciaHoras }}h por {{ p.duracaoDias }} dias</td>
-                                    <td class="text-center">
-                                        <button
-                                          class="btn btn-sm btn-success btn-executar-prescricao"
-                                          data-url="{{ path('clinica_internacao_prescricao_executar', {eventoId: p.id}) }}"
-                                          data-id="{{ p.id }}" >
-                                            <i class="fas fa-syringe me-1"></i> Administrar
-                                        </button>
-                                    </td>
-                                </tr>
+            <div class="tab-content border border-top-0 p-3" id="internacaoTabContent">
+                {# Histórico #}
+                <div class="tab-pane fade show active" id="historico-content">
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <ul class="timeline">
+                            {% for ev in timeline|default([]) %}
+                                {% set tipo = (ev.tipo ?? 'internacao')|lower %}
+                                {% set icone, badge = 'fa-notes-medical', 'bg-secondary' %}
+                                {% if tipo in ['consulta','retorno'] %}{% set icone, badge = 'fa-stethoscope', 'bg-primary' %}
+                                {% elseif tipo == 'receita' %}{% set icone, badge = 'fa-file-prescription', 'bg-purple' %}
+                                {% elseif tipo in ['medicacao','medicação','medicacao_exec','execucao'] %}{% set icone, badge = 'fa-pills', 'bg-info' %}
+                                {% elseif tipo == 'peso' %}{% set icone, badge = 'fa-weight', 'bg-warning' %}
+                                {% elseif tipo in ['ocorrencia','ocorrência','alerta'] %}{% set icone, badge = 'fa-exclamation-circle', 'bg-danger' %}
+                                {% elseif tipo in ['internacao','internação','admissao','admissão','alta'] %}{% set icone, badge = 'fa-hospital', 'bg-success' %}{% endif %}
+                                <li class="timeline-item">
+                                    <div class="timeline-badge {{ badge }}"><i class="fas {{ icone }}"></i></div>
+                                    <div class="timeline-panel">
+                                        <h5 class="timeline-title">{{ ev.titulo|default(tipo|capitalize) }}</h5>
+                                        <small class="text-muted">{{ ev.data_hora|date('d/m/Y H:i')|default('-') }}</small>
+                                        {% if ev.descricao %}<p class="text-muted">{{ ev.descricao|raw }}</p>{% endif %}
+                                    </div>
+                                </li>
                             {% else %}
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted">
-                                        Nenhuma prescrição registrada.
-                                    </td>
-                                </tr>
+                                <li class="ms-2">Nenhum evento registrado.</li>
                             {% endfor %}
-                            </tbody>
-                        </table>
-
-                        <hr>
-                        <h5 class="mb-3">Calendário de Medicações</h5>
-                        <div id="calendar-pet"></div>
+                        </ul>
                     </div>
+                </div>
+
+                {# Prescrições + Calendário #}
+                <div class="tab-pane fade" id="prescricao-content">
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-sm btn-info me-2" data-bs-toggle="modal" data-bs-target="#modalNovoMedicamento"><i class="fas fa-plus me-1"></i> Adicionar Medicamento</button>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalPrescricao"><i class="fas fa-plus me-1"></i> Nova Prescrição</button>
+                    </div>
+
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-light"><tr><th>Medicamento</th><th>Dose</th><th>Frequência</th></tr></thead>
+                        <tbody>
+                        {% for p in prescricoes %}
+                            <tr>
+                                <td>{{ p.medicamento.nome }}<p class="text-muted small mb-0">Criado em: {{ p.criadoEm|date('d/m/Y H:i') }}</p></td>
+                                <td>{{ p.dose }}</td>
+                                <td>A cada {{ p.frequenciaHoras }}h por {{ p.duracaoDias }} dias</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="3" class="text-center text-muted">Nenhuma prescrição registrada.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <hr>
+                    <h5 class="mb-3">Calendário de Medicações</h5>
+                    <div id="calendar-pet"></div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    {# Modals (código original mantido) #}
-    <div class="modal fade" id="modalPrescricao" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="formPrescricao" method="post" action="{{ path('clinica_internacao_prescricao_nova', {id: internacao.id}) }}">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Nova Prescrição</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Medicamento</label>
-                            <select name="medicamento_id" class="form-select" required>
-                                {% for med in medicamentos %}
-                                    <option value="{{ med.id }}">{{ med.nome }} ({{ med.via }} {{ med.concentracao }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Dose</label>
-                            <input type="text" name="dose" class="form-control" required>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Frequência (horas)</label>
-                                <input type="number" name="frequencia_horas" class="form-control" required min="1">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Duração (dias)</label>
-                                <input type="number" name="duracao_dias" class="form-control" required min="1">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Data/Hora da 1ª dose</label>
-                            <input type="datetime-local" name="data_hora_primeira_dose" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Salvar</button>
-                    </div>
-                </form>
+{# Modal Nova Prescrição #}
+<div class="modal fade" id="modalPrescricao" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form id="formPrescricao" method="post" action="{{ path('clinica_internacao_prescricao_nova', {id: internacao.id}) }}">
+            <div class="modal-header"><h5 class="modal-title">Nova Prescrição</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">Medicamento</label>
+                    <select name="medicamento_id" class="form-select" required>
+                        {% for med in medicamentos %}<option value="{{ med.id }}">{{ med.nome }} ({{ med.via }} {{ med.concentracao }})</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Dose</label><input type="text" name="dose" class="form-control" required></div>
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Frequência (horas)</label><input type="number" name="frequencia_horas" class="form-control" required min="1"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Duração (dias)</label><input type="number" name="duracao_dias" class="form-control" required min="1"></div>
+                </div>
+                <div class="mb-3"><label class="form-label">Data/Hora da 1ª dose</label><input type="datetime-local" name="data_hora_primeira_dose" class="form-control" required></div>
             </div>
-        </div>
-    </div>
+            <div class="modal-footer"><button type="submit" class="btn btn-success">Salvar</button></div>
+        </form>
+    </div></div>
+</div>
 
-    <div class="modal fade" id="modalNovoMedicamento" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="formNovoMedicamento" method="post" action="{{ path('clinica_internacao_medicamento_novo') }}">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Adicionar Novo Medicamento</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="nome" class="form-label">Nome</label>
-                            <input type="text" class="form-control" id="nome" name="nome" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="via" class="form-label">Via de Administração</label>
-                            <input type="text" class="form-control" id="via" name="via" placeholder="Ex: Oral, IV, SC">
-                        </div>
-                        <div class="mb-3">
-                            <label for="concentracao" class="form-label">Concentração</label>
-                            <input type="text" class="form-control" id="concentracao" name="concentracao"
-                                   placeholder="Ex: 5mg/ml, 100mg/comprimido">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Salvar Medicamento</button>
-                    </div>
-                </form>
+{# Modal Novo Medicamento #}
+<div class="modal fade" id="modalNovoMedicamento" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form id="formNovoMedicamento" method="post" action="{{ path('clinica_internacao_medicamento_novo') }}">
+            <div class="modal-header"><h5 class="modal-title">Adicionar Novo Medicamento</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">Nome</label><input type="text" class="form-control" name="nome" required></div>
+                <div class="mb-3"><label class="form-label">Via de Administração</label><input type="text" class="form-control" name="via" placeholder="Ex: Oral, IV, SC"></div>
+                <div class="mb-3"><label class="form-label">Concentração</label><input type="text" class="form-control" name="concentracao" placeholder="Ex: 5mg/ml"></div>
             </div>
+            <div class="modal-footer"><button type="submit" class="btn btn-success">Salvar Medicamento</button></div>
+        </form>
+    </div></div>
+</div>
+
+{# Modal Executar Prescrição #}
+<div class="modal fade" id="modalExecutarPrescricao" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <form id="formExecutarPrescricao" method="post">
+      <div class="modal-header"><h5 class="modal-title">Executar Prescrição</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="hidden" name="prescricao_id" id="exec-prescricao-id">
+        <div class="mb-3"><label class="form-label">Hora da aplicação</label><input type="datetime-local" name="hora_aplicacao" class="form-control" required></div>
+        <div class="mb-3"><label class="form-label">Veterinário responsável</label>
+            <select name="veterinario_id" class="form-select" required>
+              {% for vet in veterinarios %}<option value="{{ vet.id }}">{{ vet.nome }} ({{ vet.crmv }})</option>{% endfor %}
+            </select>
         </div>
-    </div>
-
-
+        <div class="mb-3"><label class="form-label">Observações</label><textarea name="anotacoes" class="form-control"></textarea></div>
+      </div>
+      <div class="modal-footer"><button type="submit" class="btn btn-success">Confirmar</button></div>
+    </form>
+  </div></div>
+</div>
 {% endblock %}
 
 {% block javascripts %}
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // --- Botão de Alta ---
-    document.body.addEventListener('click', async (e) => {
+    // Botão Alta
+    document.body.addEventListener('click', async e => {
         const btn = e.target.closest('#btn-alta');
-        if (!btn) return;
-        if (!confirm('Confirmar alta desta internação?')) return;
-
+        if(!btn) return;
+        if(!confirm('Confirmar alta desta internação?')) return;
         try {
-            const resp = await fetch(btn.dataset.url, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
-                body: new URLSearchParams({_token: btn.dataset.token})
-            });
+            const resp = await fetch(btn.dataset.url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'},body:new URLSearchParams({_token:btn.dataset.token})});
             const data = await resp.json();
-            if (data.ok) {
-                alert('Internação finalizada com sucesso!');
-                window.location.href = "{{ path('clinica_ficha_internacao', {id: internacao.id}) }}";
-            } else {
-                alert(data.msg || 'Não foi possível finalizar.');
-            }
-        } catch (err) {
-            console.error(err);
-            alert('Falha na requisição.');
-        }
+            if(data.ok){ alert('Internação finalizada!'); location.reload(); } else { alert(data.msg); }
+        } catch(err){ alert('Erro.'); }
     });
 
-    // --- Form Prescrição ---
-    const form = document.querySelector('#formPrescricao');
-    if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                const resp = await fetch(form.action, { method: 'POST', body: new FormData(form) });
-                if (!resp.ok) { throw new Error(`Erro do servidor: ${resp.status}`); }
-                const data = await resp.json();
-                if (data.ok) {
-                    bootstrap.Modal.getInstance(document.getElementById('modalPrescricao')).hide();
-                    location.reload();
-                } else {
-                    alert(data.msg || 'Erro ao salvar prescrição');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Falha na requisição ao salvar prescrição.');
+    // Form Nova Prescrição
+    const form=document.querySelector('#formPrescricao');
+    if(form){form.addEventListener('submit',async e=>{
+        e.preventDefault();
+        try{
+            const resp=await fetch(form.action,{method:'POST',body:new FormData(form)});
+            const data=await resp.json();
+            if(data.ok){ bootstrap.Modal.getInstance(document.getElementById('modalPrescricao')).hide(); location.reload(); }
+            else { alert(data.msg); }
+        }catch(err){ alert('Erro.'); }
+    });}
+
+    // Form Novo Medicamento
+    const formNovoMed=document.querySelector('#formNovoMedicamento');
+    if(formNovoMed){formNovoMed.addEventListener('submit',async e=>{
+        e.preventDefault();
+        try{
+            const resp=await fetch(formNovoMed.action,{method:'POST',body:new FormData(formNovoMed)});
+            const data=await resp.json();
+            if(data.ok){ bootstrap.Modal.getInstance(document.getElementById('modalNovoMedicamento')).hide(); location.reload(); }
+            else { alert(data.msg); }
+        }catch(err){ alert('Erro.'); }
+    });}
+
+    // Calendário
+    const calendarEl=document.getElementById('calendar-pet');
+    if(calendarEl){
+        const eventos={{ calendario_prescricoes|json_encode|raw }};
+        window.calendar=new FullCalendar.Calendar(calendarEl,{
+            initialView:'timeGridWeek',
+            locale:'pt-br',
+            height:650,
+            slotMinTime:"00:00:00",
+            slotMaxTime:"24:00:00",
+            allDaySlot:false,
+            headerToolbar:{left:'prev,next today',center:'title',right:'timeGridDay,timeGridWeek,dayGridMonth'},
+            events:eventos,
+
+            // clique no evento abre modal
+            eventClick:function(info){
+                const modal=document.getElementById('modalExecutarPrescricao');
+                const form=document.getElementById('formExecutarPrescricao');
+                const prescricaoId=info.event.extendedProps.prescricao_id;
+                const url="{{ path('clinica_internacao_prescricao_executar',{id: internacao.id, eventoId: 'PRESCRICAO_ID'}) }}".replace('PRESCRICAO_ID',prescricaoId);
+                form.action=url;
+                document.getElementById('exec-prescricao-id').value=prescricaoId;
+                new bootstrap.Modal(modal).show();
             }
         });
-    }
-
-    // --- Form Novo Medicamento ---
-    const formNovoMed = document.querySelector('#formNovoMedicamento');
-    if (formNovoMed) {
-        formNovoMed.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                const resp = await fetch(formNovoMed.action, { method: 'POST', body: new FormData(formNovoMed) });
-                if (!resp.ok) { throw new Error(`Erro do servidor: ${resp.status}`); }
-                const data = await resp.json();
-                if (data.ok) {
-                    bootstrap.Modal.getInstance(document.getElementById('modalNovoMedicamento')).hide();
-                    location.reload();
-                } else {
-                    alert(data.msg || 'Erro ao salvar o medicamento');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Falha na requisição ao salvar o medicamento.');
-            }
-        });
-    }
-
-    // --- Calendário ---
-    const calendarEl = document.getElementById('calendar-pet');
-    if (calendarEl) {
-        const eventos = {{ calendario_prescricoes|json_encode|raw }};
-
-        window.calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'timeGridWeek',
-            locale: 'pt-br',
-            height: 650,
-            slotMinTime: "00:00:00",
-            slotMaxTime: "24:00:00",
-            allDaySlot: false,
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridDay,timeGridWeek,dayGridMonth' },
-            events: eventos
-        });
-
         window.calendar.render();
     }
 
-    // --- Executar Prescrição ---
-    document.querySelectorAll('.btn-executar-prescricao').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            try {
-                const resp = await fetch(btn.dataset.url, { method: 'POST' });
-                const data = await resp.json();
-                if (data.ok) {
-                    alert(data.msg);
-                    if (window.calendar && data.event) {
-                        window.calendar.addEvent(data.event);
-                    }
-                } else {
-                    alert(data.msg || 'Erro ao executar prescrição');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Falha na requisição.');
-            }
-        });
-    });
-
+    // Form Executar Prescrição
+    const formExec=document.getElementById('formExecutarPrescricao');
+    if(formExec){formExec.addEventListener('submit',async e=>{
+        e.preventDefault();
+        try{
+            const resp=await fetch(formExec.action,{method:'POST',body:new FormData(formExec)});
+            const data=await resp.json();
+            if(data.ok){
+                bootstrap.Modal.getInstance(document.getElementById('modalExecutarPrescricao')).hide();
+                alert(data.msg||'Executado!');
+                if(window.calendar) window.calendar.refetchEvents();
+            } else { alert(data.msg); }
+        } catch(err){ alert('Erro.'); }
+    });}
 });
 </script>
 {% endblock %}
-
-

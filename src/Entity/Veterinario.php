@@ -3,9 +3,12 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\VeterinarioRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass=VeterinarioRepository::class)
  * @ORM\Table(name="veterinario")
  */
 class Veterinario
@@ -17,46 +20,47 @@ class Veterinario
      */
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=255)
+    /** 
+     * @ORM\Column(type="string", length=255) 
      */
     private $nome;
 
-    /**
-     * @ORM\Column(type="string", length=255)
+    /** 
+     * @ORM\Column(type="string", length=255) 
      */
     private $email;
 
-    /**
-     * @ORM\Column(type="string", length=20)
+    /** 
+     * @ORM\Column(type="string", length=20) 
      */
     private $telefone;
 
-    /**
-     * @ORM\Column(type="string", length=255)
+    /** 
+     * @ORM\Column(type="string", length=255, nullable=true) 
      */
     private $especialidade;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+    /** 
+     * @ORM\Column(type="integer") 
+     */
+    private $estabelecimentoId;
+
+    /** 
+     * @ORM\Column(type="string", length=45, nullable=true) 
      */
     private $crmv;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\OneToMany(targetEntity=InternacaoExecucao::class, mappedBy="veterinario")
      */
-    private $estabelecimentoId;
+    private $execucoes;
 
-    public function getEstabelecimentoId(): ?int
+    public function __construct()
     {
-        return $this->estabelecimentoId;
+        $this->execucoes = new ArrayCollection();
     }
 
-    public function setEstabelecimentoId(int $estabelecimentoId): self
-    {
-        $this->estabelecimentoId = $estabelecimentoId;
-        return $this;
-    }
+    // 🔹 Getters e Setters
 
     public function getId(): ?int
     {
@@ -101,12 +105,23 @@ class Veterinario
         return $this->especialidade;
     }
 
-    public function setEspecialidade(string $especialidade): self
+    public function setEspecialidade(?string $especialidade): self
     {
         $this->especialidade = $especialidade;
         return $this;
     }
-    
+
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
+
+    public function setEstabelecimentoId(int $estabelecimentoId): self
+    {
+        $this->estabelecimentoId = $estabelecimentoId;
+        return $this;
+    }
+
     public function getCrmv(): ?string
     {
         return $this->crmv;
@@ -115,6 +130,33 @@ class Veterinario
     public function setCrmv(?string $crmv): self
     {
         $this->crmv = $crmv;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, InternacaoExecucao>
+     */
+    public function getExecucoes(): Collection
+    {
+        return $this->execucoes;
+    }
+
+    public function addExecucao(InternacaoExecucao $execucao): self
+    {
+        if (!$this->execucoes->contains($execucao)) {
+            $this->execucoes[] = $execucao;
+            $execucao->setVeterinario($this);
+        }
+        return $this;
+    }
+
+    public function removeExecucao(InternacaoExecucao $execucao): self
+    {
+        if ($this->execucoes->removeElement($execucao)) {
+            if ($execucao->getVeterinario() === $this) {
+                $execucao->setVeterinario(null);
+            }
+        }
         return $this;
     }
 }

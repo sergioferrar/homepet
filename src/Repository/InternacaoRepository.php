@@ -73,13 +73,19 @@ class InternacaoRepository extends ServiceEntityRepository
     }
 
 
-    public function inserirEvento(int $baseId, int $internacaoId, int $petId, string $tipo, string $titulo,
+    public function inserirEvento(
+        int $baseId,
+        int $internacaoId,
+        int $petId,
+        string $tipo,
+        string $titulo,
         ?string $descricao,
-        ?\DateTimeInterface $dataHora = null
+        ?\DateTimeInterface $dataHora = null,
+        string $status = 'pendente'
     ): int {
         $sql = "INSERT INTO " . $_ENV['DBNAMETENANT'] . ".internacao_evento
-                (estabelecimento_id, internacao_id, pet_id, tipo, titulo, descricao, data_hora, criado_em)
-                VALUES (:baseId, :internacaoId, :petId, :tipo, :titulo, :descricao, :data_hora, :criado_em)";
+                (estabelecimento_id, internacao_id, pet_id, tipo, titulo, descricao, data_hora, criado_em, status)
+                VALUES (:baseId, :internacaoId, :petId, :tipo, :titulo, :descricao, :data_hora, :criado_em, :status)";
 
         $this->conn->executeQuery($sql, [
             'baseId'       => $baseId,
@@ -90,11 +96,11 @@ class InternacaoRepository extends ServiceEntityRepository
             'descricao'    => $descricao,
             'data_hora'    => ($dataHora ?? new \DateTime())->format('Y-m-d H:i:s'),
             'criado_em'    => (new \DateTime())->format('Y-m-d H:i:s'),
+            'status'       => $status,
         ]);
 
         return (int) $this->conn->lastInsertId();
     }
-
 
     public function listarInternacoesAtivas(int $baseId): array
     {
@@ -326,13 +332,14 @@ class InternacaoRepository extends ServiceEntityRepository
     public function marcarMedicacaoComoExecutada(int $baseId, int $eventoId): void
     {
         $sql = "UPDATE " . $_ENV['DBNAMETENANT'] . ".internacao_evento
-                SET tipo = 'medicacao_exec'
+                SET tipo = 'medicacao_exec', status = 'executado'
                 WHERE estabelecimento_id = :baseId AND id = :eventoId";
 
         $this->conn->executeQuery($sql, [
-            'baseId' => $baseId,
-            'eventoId' => $eventoId,
+            'baseId'  => $baseId,
+            'eventoId'=> $eventoId,
         ]);
     }
+
 
 }

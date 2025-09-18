@@ -845,78 +845,81 @@ class ClinicaController extends DefaultController
     }
 
 
-/**
- * @Route("/internacao/{id}/ficha", name="clinica_ficha_internacao", methods={"GET"})
- */
-public function fichaInternacao(int $id, InternacaoRepository $internacaoRepo, EntityManagerInterface $em): Response
-{
-    $this->switchDB();
-    $baseId = $this->getIdBase();
+    /**
+     * @Route("/internacao/{id}/ficha", name="clinica_ficha_internacao", methods={"GET"})
+     */
+    public function fichaInternacao(
+        int $id,
+        InternacaoRepository $internacaoRepo,
+        VeterinarioRepository $veterinarioRepo,
+        EntityManagerInterface $em
+    ): Response {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
 
-    $internacao = $internacaoRepo->findInternacaoCompleta($baseId, $id);
-    if (!$internacao) {
-        throw $this->createNotFoundException('A ficha de internação não foi encontrada.');
+        $internacao = $internacaoRepo->findInternacaoCompleta($baseId, $id);
+        if (!$internacao) {
+            throw $this->createNotFoundException('A ficha de internação não foi encontrada.');
+        }
+
+        // --- TIMELINE ---
+        $rows = $internacaoRepo->listarEventosPorInternacao($baseId, $id);
+        $timeline = array_map(function (array $r) {
+            try {
+                $r['data_hora'] = !empty($r['data_hora']) ? new \DateTime($r['data_hora']) : new \DateTime();
+            } catch (\Exception $e) {
+                $r['data_hora'] = new \DateTime();
+            }
+            $r['titulo'] = $r['titulo'] ?? '—';
+            $r['descricao'] = $r['descricao'] ?? '';
+            $r['tipo'] = (string)($r['tipo'] ?? 'internacao');
+            return $r;
+        }, $rows);
+        usort($timeline, fn($a, $b) => $b['data_hora'] <=> $a['data_hora']);
+
+        // --- PRESCRIÇÕES ---
+        $medicamentos = $em->getRepository(Medicamento::class)->findAll();
+        $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findBy(['internacaoId' => $id]);
+
+        // --- CALENDÁRIO ---
+        $eventos = [];
+        foreach ($prescricoes as $p) {
+            if (!$p->getDataHora()) {
+                continue;
+            }
+
+            $primeira = $p->getDataHora();
+            $freqHoras = (int) $p->getFrequenciaHoras();
+            $duracaoDias = (int) $p->getDuracaoDias();
+
+            if ($freqHoras <= 0 || $duracaoDias <= 0) {
+                continue;
+            }
+
+            $numDoses = ($duracaoDias * 24) / $freqHoras;
+            for ($i = 0; $i < $numDoses; $i++) {
+                $doseTime = (clone $primeira)->modify('+' . ($i * $freqHoras) . ' hours');
+                $eventos[] = [
+                    'title' => $p->getMedicamento()->getNome() . " - " . $p->getDose(),
+                    'start' => $doseTime->format(\DateTime::ATOM),
+                    'end'   => (clone $doseTime)->modify('+30 minutes')->format(\DateTime::ATOM),
+                    'color' => '#0d6efd',
+                ];
+            }
+        }
+
+        // --- VETERINÁRIOS ---
+        $veterinarios = $veterinarioRepo->findBy(['estabelecimentoId' => $baseId]);
+
+        return $this->render('clinica/ficha_internacao.html.twig', [
+            'internacao' => $internacao,
+            'timeline' => $timeline,
+            'medicamentos' => $medicamentos,
+            'prescricoes' => $prescricoes,
+            'calendario_prescricoes' => $eventos,
+            'veterinarios' => $veterinarios, 
+        ]);
     }
-
-    // --- TIMELINE ---
-    $rows = $internacaoRepo->listarEventosPorInternacao($baseId, $id);
-    $timeline = array_map(function (array $r) {
-        try {
-            $r['data_hora'] = !empty($r['data_hora']) ? new \DateTime($r['data_hora']) : new \DateTime();
-        } catch (\Exception $e) {
-            $r['data_hora'] = new \DateTime();
-        }
-
-        $r['titulo'] = $r['titulo'] ?? '—';
-        $r['descricao'] = $r['descricao'] ?? '';
-        $r['tipo'] = (string)($r['tipo'] ?? 'internacao');
-
-        return $r;
-    }, $rows);
-
-    usort($timeline, fn($a, $b) => $b['data_hora'] <=> $a['data_hora']);
-
-    // --- PRESCRIÇÕES ---
-    $medicamentos = $em->getRepository(Medicamento::class)->findAll();
-    $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findBy(['internacaoId' => $id]);
-
-    // --- CALENDÁRIO ---
-    $eventos = [];
-    foreach ($prescricoes as $p) {
-        if (!$p->getDataHora()) {
-            continue;
-        }
-
-        $primeira = $p->getDataHora();
-        $freqHoras = (int) $p->getFrequenciaHoras();
-        $duracaoDias = (int) $p->getDuracaoDias();
-
-        if ($freqHoras <= 0 || $duracaoDias <= 0) {
-            continue;
-        }
-
-        $numDoses = ($duracaoDias * 24) / $freqHoras;
-
-        for ($i = 0; $i < $numDoses; $i++) {
-            $doseTime = (clone $primeira)->modify('+' . ($i * $freqHoras) . ' hours');
-
-            $eventos[] = [
-                'title' => $p->getMedicamento()->getNome() . " - " . $p->getDose(),
-                'start' => $doseTime->format(\DateTime::ATOM), // 2025-09-17T15:20:00
-                'end'   => (clone $doseTime)->modify('+30 minutes')->format(\DateTime::ATOM),
-                'color' => '#0d6efd',
-            ];
-        }
-    }
-
-    return $this->render('clinica/ficha_internacao.html.twig', [
-        'internacao' => $internacao,
-        'timeline' => $timeline,
-        'medicamentos' => $medicamentos,
-        'prescricoes' => $prescricoes,
-        'calendario_prescricoes' => $eventos,
-    ]);
-}
 
 
 
@@ -1055,22 +1058,55 @@ public function novaPrescricao(
 
 
     /**
-     * @Route("/internacao/prescricao/{eventoId}/executar", name="clinica_internacao_prescricao_executar", methods={"POST"})
+     * @Route("/internacao/{id}/prescricao/{eventoId}/executar", name="clinica_internacao_prescricao_executar", methods={"POST"})
      */
-    public function executarPrescricao(int $eventoId, Request $request, EntityManagerInterface $em, InternacaoRepository $internacaoRepo): JsonResponse
-    {
+    public function executarPrescricao(
+        int $id,
+        int $eventoId,
+        Request $request,
+        EntityManagerInterface $em,
+        InternacaoRepository $internacaoRepo
+    ): JsonResponse {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        // Apenas marca o evento de agendamento como executado
-        try {
-            $internacaoRepo->marcarMedicacaoComoExecutada($baseId, $eventoId);
-        } catch (\Exception $e) {
-            return $this->json(['ok' => false, 'msg' => 'Erro ao registrar a administração: ' . $e->getMessage()]);
+        $horaAplicacao = $request->request->get('hora_aplicacao');
+        $veterinarioId = (int)$request->request->get('veterinario_id');
+        $anotacoes = $request->request->get('anotacoes');
+
+        if (!$horaAplicacao || !$veterinarioId) {
+            return $this->json(['ok' => false, 'msg' => 'Preencha hora e veterinário.'], 400);
         }
 
-        return $this->json(['ok' => true, 'msg' => 'Medicação registrada com sucesso!']);
+        try {
+            // Busca o veterinário
+            $veterinario = $em->getRepository(\App\Entity\Veterinario::class)->find($veterinarioId);
+            if (!$veterinario) {
+                return $this->json(['ok' => false, 'msg' => 'Veterinário não encontrado.'], 404);
+            }
+
+            // Cria entidade de execução
+            $execucao = new InternacaoExecucao();
+            $execucao->setInternacaoId($id);
+            $execucao->setPrescricaoId($eventoId);
+            $execucao->setVeterinario($veterinario);
+            $execucao->setDataExecucao(new \DateTime($horaAplicacao));
+            $execucao->setStatus('confirmado'); // marca como confirmado
+            $execucao->setAnotacoes($anotacoes);
+
+            $em->persist($execucao);
+            $em->flush();
+
+            // Opcional: marcar evento da prescrição como executado
+            $internacaoRepo->marcarMedicacaoComoExecutada($baseId, $eventoId);
+
+            return $this->json(['ok' => true, 'msg' => 'Medicação confirmada com sucesso!']);
+        } catch (\Exception $e) {
+            return $this->json(['ok' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
+        }
     }
+
+
 
     /**
      * @Route("/medicamentos", name="clinica_medicamentos", methods={"GET","POST"})
@@ -1271,11 +1307,13 @@ public function novaPrescricao(
                 }
 
                 $eventos[] = [
-                    'title' => $p->getMedicamento()->getNome() . " - " . $p->getDose() . " ({$petNome})",
+                    'title' => $p->getMedicamento()->getNome() . " - " . $p->getDose(),
                     'start' => $doseTime->format(\DateTime::ATOM),
                     'end'   => (clone $doseTime)->modify('+30 minutes')->format(\DateTime::ATOM),
-                    'color' => '#dc3545'
+                    'color' => '#0d6efd',
+                    'prescricao_id' => $p->getId(), 
                 ];
+
             }
 
         }
