@@ -1,13 +1,14 @@
-{% extends 'base.html.twig' %}
-{% block title %}Calendário Geral de Prescrições{% endblock %}
+{% extends 'baseClinica.html.twig' %}
+
+{% block title %}Calendário Global de Prescrições{% endblock %}
 
 {% block body %}
 <div class="container-fluid my-4">
     <div class="card shadow-sm border-0">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Calendário Geral de Prescrições</h4>
+            <h4 class="mb-0">Calendário Global de Medicações</h4>
             <a href="{{ path('clinica_dashboard') }}" class="btn btn-light">
-                <i class="fas fa-arrow-left me-2"></i> Voltar
+                <i class="fas fa-arrow-left me-2"></i>Voltar
             </a>
         </div>
         <div class="card-body">
@@ -21,17 +22,26 @@
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  let calendarEl = document.getElementById('calendar-geral');
-  let calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'timeGridDay',
-    slotMinTime: "00:00:00",
-    slotMaxTime: "24:00:00",
-    allDaySlot: false,
-    locale: 'pt-br',
-    height: 750,
-    events: {{ eventos|json_encode|raw }}
-  });
-  calendar.render();
+    const eventos = {{ eventos|json_encode|raw }};
+
+    const calendarEl = document.getElementById('calendar-geral');
+    if (calendarEl) {
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            locale: 'pt-br',
+            height: 650,
+            slotMinTime: "00:00:00",
+            slotMaxTime: "24:00:00",
+            allDaySlot: false,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'timeGridDay,timeGridWeek,dayGridMonth'
+            },
+            events: eventos
+        });
+        calendar.render();
+    }
 });
 </script>
 {% endblock %}

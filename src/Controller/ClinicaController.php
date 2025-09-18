@@ -1251,9 +1251,7 @@ public function novaPrescricao(
             }
 
             $primeira = $p->getDataHora();
-
-            // Extrai só os dígitos da string "frequencia"
-            $freq = (int) filter_var($p->getFrequencia(), FILTER_SANITIZE_NUMBER_INT);
+            $freq = (int) $p->getFrequenciaHoras();
             $dias = (int) $p->getDuracaoDias();
             if ($freq <= 0 || $dias <= 0) {
                 continue;
@@ -1265,7 +1263,6 @@ public function novaPrescricao(
                 $horas = $i * $freq;
                 $doseTime = (clone $primeira)->modify("+{$horas} hours");
 
-                // Busca a internação e depois o pet
                 $internacao = $em->getRepository(Internacao::class)->find($p->getInternacaoId());
                 $petNome = 'Pet';
                 if ($internacao) {
@@ -1275,16 +1272,18 @@ public function novaPrescricao(
 
                 $eventos[] = [
                     'title' => $p->getMedicamento()->getNome() . " - " . $p->getDose() . " ({$petNome})",
-                    'start' => $doseTime->format('Y-m-d H:i:s'),
-                    'end'   => $doseTime->modify('+30 minutes')->format('Y-m-d H:i:s'),
+                    'start' => $doseTime->format(\DateTime::ATOM),
+                    'end'   => (clone $doseTime)->modify('+30 minutes')->format(\DateTime::ATOM),
                     'color' => '#dc3545'
                 ];
             }
+
         }
 
         return $this->render('clinica/calendario_geral.html.twig', [
             'eventos' => $eventos,
         ]);
     }
+
 
 }
