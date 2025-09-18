@@ -46,9 +46,59 @@
     {% endif %}
 </div>
 
-<!-- 📊 Dashboard antigo -->
-<div class="container">
-    <h1 class="text-primary mb-4 text-center">Painel de Controle Clinica Veterinaria</h1>
+<!-- 📌 Cabeçalho com abas -->
+<div class="container-fluid mt-4">
+    <ul class="nav nav-tabs" role="tablist">
+        <!-- Aba Calendário -->
+        <li class="nav-item" role="presentation">
+            <a href="{{ path('clinica_calendario_geral') }}"
+               class="nav-link active d-flex align-items-center"
+               id="calendario-tab"
+               role="tab"
+               aria-controls="calendario"
+               aria-selected="true">
+                <i class="fas fa-calendar-alt me-1"></i> Prescriçoes Médicas
+            </a>
+        </li>
+
+        <!-- Aba Histórico -->
+{#         <li class="nav-item" role="presentation">
+            <button class="nav-link d-flex align-items-center" id="historico-tab"
+                    data-bs-toggle="tab" data-bs-target="#historico"
+                    type="button" role="tab" aria-controls="historico"
+                    aria-selected="false">
+                <i class="fas fa-history me-1"></i> Histórico
+            </button>
+        </li> #}
+
+        <!-- Aba Orçamentos -->
+{#         <li class="nav-item" role="presentation">
+            <button class="nav-link d-flex align-items-center" id="orcamentos-tab"
+                    data-bs-toggle="tab" data-bs-target="#orcamentos"
+                    type="button" role="tab" aria-controls="orcamentos"
+                    aria-selected="false">
+                <i class="fas fa-file-invoice-dollar me-1"></i> Orçamentos
+            </button>
+        </li> #}
+    </ul>
+
+    <!-- Conteúdo das abas -->
+    <div class="tab-content p-3 border border-top-0 rounded-bottom bg-white">
+        <div class="tab-pane fade show active" id="calendario" role="tabpanel" aria-labelledby="calendario-tab">
+            {# <p>Use o botão acima para abrir o <b>Calendário Geral</b> em página separada.</p> #}
+        </div>
+        <div class="tab-pane fade" id="historico" role="tabpanel" aria-labelledby="historico-tab">
+            {# <p>Aqui você pode exibir histórico de atendimentos, prescrições, etc.</p> #}
+        </div>
+        <div class="tab-pane fade" id="orcamentos" role="tabpanel" aria-labelledby="orcamentos-tab">
+            {# <p>Aqui você pode listar orçamentos emitidos.</p> #}
+        </div>
+    </div>
+</div>
+
+<!-- 📊 Dashboard -->
+<div class="container mt-4">
+    <h1 class="text-primary mb-4 text-center">Painel de Controle Clínica Veterinária</h1>
     <div class="rows">
         <div class="row">
             <div class="col-6 col-md-3">
@@ -94,215 +144,203 @@
         </div>
     </div>
 
+    <!-- Cards de informações -->
     <div class="container-fluid mt-4">
-            
-            <!-- COLUNA ESQUERDA -->
-            <div class="col-lg-12">
-                <div class="row gy-2">
-                    <!-- Últimos atendimentos (24h) -->
-                    <div class="col-md-6 ">
-                        <div class="card  border-0 rounded-3">
-                            <div class="card-header">
-                                <h5 class="card-title">
-                                <i class="fas fa-stethoscope me-2 text-primary"></i>Últimos atendimentos (24h)</h5>
-                            </div>
-                            <div class="card-body card-body-fixo">
-                                
-                                <div class="card-listagem-scroll">
-                                    <div class="row g-0">
-                                        <ul class="list-group list-group-flush">
-                                            {% for item in atendimentos %}
-                                                {# acessos seguros #}
-                                                {% set petId       = attribute(item, 'pet_id')|default(attribute(item, 'id')) %}
-                                                {% set petNome     = attribute(item, 'nome_pet')|default(attribute(item, 'pet')|default('Pet')) %}
-                                                {% set clienteNome = attribute(item, 'nome_cliente')|default(attribute(item, 'cliente')|default('')) %}
-                                                {% set dataAt      = attribute(item, 'data_inicio')|default(attribute(item, 'data')) %}
-                                                <li class="list-group-item fs-6">
-                                                    <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info consulta">{{ petNome }}</a>
-                                                    <small class="ms-1 text-black">{{ clienteNome }}</small>
-                                                    <div class="badge text-bg-primary">{{ dataAt|date('d/m H:i') }}</div>
-                                                </li>
-                                            {% else %}
-                                                <div class="col-12">
-                                                    <div class="card p-3 card-flutuante bg-light">Nenhum atendimento recente.</div>
-                                                </div>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
+        <div class="col-lg-12">
+            <div class="row gy-2">
+                <!-- Últimos atendimentos (24h) -->
+                <div class="col-md-6 ">
+                    <div class="card border-0 rounded-3">
+                        <div class="card-header">
+                            <h5 class="card-title">
+                                <i class="fas fa-stethoscope me-2 text-primary"></i>Últimos atendimentos (24h)
+                            </h5>
+                        </div>
+                        <div class="card-body card-body-fixo">
+                            <div class="card-listagem-scroll">
+                                <div class="row g-0">
+                                    <ul class="list-group list-group-flush">
+                                        {% for item in atendimentos %}
+                                            {% set petId       = attribute(item, 'pet_id')|default(attribute(item, 'id')) %}
+                                            {% set petNome     = attribute(item, 'nome_pet')|default(attribute(item, 'pet')|default('Pet')) %}
+                                            {% set clienteNome = attribute(item, 'nome_cliente')|default(attribute(item, 'cliente')|default('')) %}
+                                            {% set dataAt      = attribute(item, 'data_inicio')|default(attribute(item, 'data')) %}
+                                            <li class="list-group-item fs-6">
+                                                <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info consulta">{{ petNome }}</a>
+                                                <small class="ms-1 text-black">{{ clienteNome }}</small>
+                                                <div class="badge text-bg-primary">{{ dataAt|date('d/m H:i') }}</div>
+                                            </li>
+                                        {% else %}
+                                            <div class="col-12">
+                                                <div class="card p-3 card-flutuante bg-light">Nenhum atendimento recente.</div>
+                                            </div>
+                                        {% endfor %}
+                                    </ul>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Últimos animais cadastrados -->
-                    <div class="col-md-6">
-                        <div class="card  border-0 rounded-3">
-                            <div class="card-header">
-                                <h5 class="card-title mb-2">
+                </div>
+
+                <!-- Últimos animais cadastrados -->
+                <div class="col-md-6">
+                    <div class="card border-0 rounded-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-2">
                                 <i class="fas fa-paw me-2 text-success"></i>Últimos animais cadastrados
-                                </h5>
-                            </div>
-                            <div class="card-body card-body-fixo">
-                                
-                                <div class="card-listagem-scroll">
-                                    <div class="row g-0">
-                                        <ul class="list-group list-group-flush">
-                                            {% for animal in animais_cadastrados %}
-                                                <li class="list-group-item fs-6">
-                                                    <div class="card card-flutuante mb-1 card-listagem-item bg-white">
-                                                        <div class="d-flex justify-content-between align-items-center">
-                                                            <div>
-                                                                <a href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}" class="fw-bold text-info consulta">{{ animal.nome }}</a>
-                                                                <span class="ms-1 text-black">{{ animal.tutor }}</span>
-                                                            </div>
+                            </h5>
+                        </div>
+                        <div class="card-body card-body-fixo">
+                            <div class="card-listagem-scroll">
+                                <div class="row g-0">
+                                    <ul class="list-group list-group-flush">
+                                        {% for animal in animais_cadastrados %}
+                                            <li class="list-group-item fs-6">
+                                                <div class="card card-flutuante mb-1 card-listagem-item bg-white">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <a href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}" class="fw-bold text-info consulta">{{ animal.nome }}</a>
+                                                            <span class="ms-1 text-black">{{ animal.tutor }}</span>
                                                         </div>
                                                     </div>
-                                                </li>
-                                            {% else %}
-                                                <li class="list-group-item fs-6">
-                                                    <div class="card p-3 card-flutuante bg-light">
-                                                        Nenhum animal cadastrado.
-                                                    </div>
-                                                </li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
+                                                </div>
+                                            </li>
+                                        {% else %}
+                                            <li class="list-group-item fs-6">
+                                                <div class="card p-3 card-flutuante bg-light">
+                                                    Nenhum animal cadastrado.
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
                                 </div>
-
-                                <div class="text-end mb-2">
-                                  <a href="{{ path('clinica_calendario_geral') }}" 
-                                     class="btn btn-primary btn-sm" target="_blank">
-                                    <i class="fas fa-calendar-alt"></i> Ver Calendário Geral
-                                  </a>
-                                </div>
-
                             </div>
                         </div>
                     </div>
-                    <!-- Animais internados -->
-                    <div class="col-md-6">
-                        <div class="card  border-0 rounded-3">
-                            <div class="card-body">
-                                <h5 class="card-title mb-2">
+                </div>
+
+                <!-- Animais internados -->
+                <div class="col-md-6">
+                    <div class="card border-0 rounded-3">
+                        <div class="card-body">
+                            <h5 class="card-title mb-2">
                                 <i class="fas fa-procedures me-2 text-danger"></i>Animais internados
-                                </h5>
-                                <div class="card-listagem-scroll">
+                            </h5>
+                            <div class="card-listagem-scroll">
+                                <div class="row g-0">
+                                    <ul class="list-group list-group-flush">
+                                        {% for internacao in internados %}
+                                            {% set petId   = attribute(internacao, 'pet_id')|default(attribute(internacao, 'id')) %}
+                                            {% set petNome = attribute(internacao, 'pet_nome')|default(attribute(internacao, 'nome_pet')|default('Pet')) %}
+                                            {% set dono    = attribute(internacao, 'dono_nome')|default('') %}
+                                            {% set motivo  = attribute(internacao, 'motivo')|default('') %}
+                                            <li class="list-group-item fs-6">
+                                                <div class="card card-flutuante mb-1 card-listagem-item bg-white">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            {% if petId is defined and petId is not null and petId > 0 %}
+                                                                <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info consulta">{{ petNome }}</a>
+                                                            {% else %}
+                                                                <span class="fw-bold text-info">{{ petNome }}</span>
+                                                            {% endif %}
+                                                            <span class="ms-1 text-black">{{ dono }}</span>
+                                                        </div>
+                                                        <span class="text-black">
+                                                            {{ 'Emergencia' in motivo ? 'Emergência' : 'Pouco urgente' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        {% else %}
+                                            <li class="list-group-item fs-6">
+                                                Nenhuma internação ativa.
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vacinas -->
+                <div class="col-md-6">
+                    <div class="card border-0 rounded-3">
+                        <div class="card-body">
+                            <h5 class="card-title mb-2">
+                                <i class="fas fa-syringe me-2 text-warning"></i>Vacinas
+                            </h5>
+                            <nav class="vaccine-tabs nav nav-pills flex-row mb-2">
+                                <a href="#tab-vencidas" class="nav-link active small" data-bs-toggle="tab">Vencidas</a>
+                                <a href="#tab-programadas" class="nav-link small" data-bs-toggle="tab">Programadas</a>
+                            </nav>
+                            <div class="tab-content card-listagem-scroll">
+                                <div class="tab-pane fade show active" id="tab-vencidas">
                                     <div class="row g-0">
                                         <ul class="list-group list-group-flush">
-                                            {% for internacao in internados %}
-                                                {% set petId   = attribute(internacao, 'pet_id')|default(attribute(internacao, 'id')) %}
-                                                {% set petNome = attribute(internacao, 'pet_nome')|default(attribute(internacao, 'nome_pet')|default('Pet')) %}
-                                                {% set dono    = attribute(internacao, 'dono_nome')|default('') %}
-                                                {% set motivo  = attribute(internacao, 'motivo')|default('') %}
+                                            {% for vacina in vacinas_vencidas %}
+                                                {% set petId   = attribute(vacina, 'pet_id')|default(attribute(vacina, 'id')) %}
+                                                {% set petNome = attribute(vacina, 'pet_nome')|default(attribute(vacina, 'nome_pet')|default('Pet')) %}
+                                                {% set tipo    = attribute(vacina, 'tipo')|default('') %}
+                                                {% set dtVal   = attribute(vacina, 'data_validade')|default(null) %}
                                                 <li class="list-group-item fs-6">
                                                     <div class="card card-flutuante mb-1 card-listagem-item bg-white">
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <div>
-                                                                {% if petId is defined and petId is not null and petId > 0 %}
+                                                                {% if petId is not null %}
                                                                     <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info consulta">{{ petNome }}</a>
                                                                 {% else %}
                                                                     <span class="fw-bold text-info">{{ petNome }}</span>
                                                                 {% endif %}
-
-                                                                <span class="ms-1 text-black">{{ dono }}</span>
+                                                                <span class="ms-1 text-black">- {{ tipo }}</span>
                                                             </div>
-                                                            <span class="text-black">
-                                                                {{ 'Emergencia' in motivo ? 'Emergência' : 'Pouco urgente' }}
-                                                            </span>
+                                                            <small class="fw-bold text-black">{{ dtVal ? dtVal|date('d/m/Y') : '' }}</small>
                                                         </div>
                                                     </div>
                                                 </li>
                                             {% else %}
+                                                <div class="col-12">Nenhuma vacina vencida.</div>
+                                            {% endfor %}
+
+                                            {% for vacina in vacinas_programadas %}
+                                                {% set petId   = attribute(vacina, 'pet_id')|default(attribute(vacina, 'id')) %}
+                                                {% set petNome = attribute(vacina, 'pet_nome')|default(attribute(vacina, 'nome_pet')|default('Pet')) %}
+                                                {% set tipo    = attribute(vacina, 'tipo')|default('') %}
+                                                {% set dtVal   = attribute(vacina, 'data_validade')|default(null) %}
                                                 <li class="list-group-item fs-6">
-                                                    Nenhuma internação ativa.
+                                                    <div class="card card-flutuante mb-1 card-listagem-item bg-white">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                {% if petId is not null %}
+                                                                    <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info consulta">{{ petNome }}</a>
+                                                                {% else %}
+                                                                    <span class="fw-bold text-info">{{ petNome }}</span>
+                                                                {% endif %}
+                                                                <span class="ms-1 text-black">- {{ tipo }}</span>
+                                                            </div>
+                                                            <small class="text-black">{{ dtVal ? dtVal|date('d/m/Y') : '' }}</small>
+                                                        </div>
+                                                    </div>
                                                 </li>
+                                            {% else %}
+                                                <div class="col-12">Nenhuma vacina programada.</div>
                                             {% endfor %}
                                         </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Vacinas -->
-                    <div class="col-md-6">
-                        <div class="card  border-0 rounded-3">
-                            <div class="card-body">
-                                <h5 class="card-title mb-2">
-                                <i class="fas fa-syringe me-2 text-warning"></i>Vacinas
-                                </h5>
-                                <nav class="vaccine-tabs nav nav-pills flex-row mb-2">
-                                    <a href="#tab-vencidas" class="nav-link active small" data-bs-toggle="tab">Vencidas</a>
-                                    <a href="#tab-programadas" class="nav-link small" data-bs-toggle="tab">Programadas</a>
-                                </nav>
-                                <div class="tab-content card-listagem-scroll">
-                                    <div class="tab-pane fade show active" id="tab-vencidas">
-                                        <div class="row g-0">
-                                            <ul class="list-group list-group-flush">
-                                                {# vencidas #}
-                                                {% for vacina in vacinas_vencidas %}
-                                                    {% set petId   = attribute(vacina, 'pet_id')|default(attribute(vacina, 'id')) %}
-                                                    {% set petNome = attribute(vacina, 'pet_nome')|default(attribute(vacina, 'nome_pet')|default('Pet')) %}
-                                                    {% set tipo    = attribute(vacina, 'tipo')|default('') %}
-                                                    {% set dtVal   = attribute(vacina, 'data_validade')|default(null) %}
-                                                    <li class="list-group-item fs-6">
-                                                        <div class="card card-flutuante mb-1 card-listagem-item bg-white">
-                                                            <div class="d-flex justify-content-between align-items-center">
-                                                                <div>
-                                                                    {% if petId is not null %}
-                                                                        <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info consulta">{{ petNome }}</a>
-                                                                    {% else %}
-                                                                        <span class="fw-bold text-info">{{ petNome }}</span>
-                                                                    {% endif %}
-                                                                    <span class="ms-1 text-black">- {{ tipo }}</span>
-                                                                </div>
-                                                                <small class="fw-bold text-black">{{ dtVal ? dtVal|date('d/m/Y') : '' }}</small>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                {% else %}
-                                                    <div class="col-12">Nenhuma vacina vencida.</div>
-                                                {% endfor %}
-                                                {# programadas #}
-                                                {% for vacina in vacinas_programadas %}
-                                                    {% set petId   = attribute(vacina, 'pet_id')|default(attribute(vacina, 'id')) %}
-                                                    {% set petNome = attribute(vacina, 'pet_nome')|default(attribute(vacina, 'nome_pet')|default('Pet')) %}
-                                                    {% set tipo    = attribute(vacina, 'tipo')|default('') %}
-                                                    {% set dtVal   = attribute(vacina, 'data_validade')|default(null) %}
-                                                    <li class="list-group-item fs-6">
-                                                        <div class="card card-flutuante mb-1 card-listagem-item bg-white">
-                                                            <div class="d-flex justify-content-between align-items-center">
-                                                                <div>
-                                                                    {% if petId is not null %}
-                                                                        <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}" class="fw-bold text-info consulta">{{ petNome }}</a>
-                                                                    {% else %}
-                                                                        <span class="fw-bold text-info">{{ petNome }}</span>
-                                                                    {% endif %}
-                                                                    <span class="ms-1 text-black">- {{ tipo }}</span>
-                                                                </div>
-                                                                <small class="text-black">{{ dtVal ? dtVal|date('d/m/Y') : '' }}</small>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                {% else %}
-                                                    <div class="col-12">Nenhuma vacina programada.</div>
-                                                {% endfor %}
-                                            </ul>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
-            <!-- COLUNA DIREITA (não muda) -->
-            
         </div>
+    </div>
 </div>
 
 {% endblock %}
 
 {% block javascripts %}
-
 <script>
 $(function(){
     var largura = screen.width;
