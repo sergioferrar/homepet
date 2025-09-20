@@ -223,16 +223,16 @@ class ClinicaController extends DefaultController
             $internacao->setEstabelecimentoId($baseId);
             $internacao->setDataInicio(new \DateTime());
             $internacao->setStatus('ativa');
-            $internacao->setMotivo((string)$request->request->get('queixa'));
+            $internacao->setMotivo((string)$request->get('queixa'));
 
             // Campos adicionais
-            $internacao->setSituacao((string)$request->request->get('situacao'));
-            $internacao->setRisco((string)$request->request->get('risco'));
-            $internacao->setVeterinarioId((int)$request->request->get('veterinario_id'));
-            $internacao->setBox((string)$request->request->get('box'));
+            $internacao->setSituacao((string)$request->get('situacao'));
+            $internacao->setRisco((string)$request->get('risco'));
+            $internacao->setVeterinarioId((int)$request->get('veterinario_id'));
+            $internacao->setBox((string)$request->get('box'));
 
             // Alta prevista (opcional)
-            $altaPrevistaStr = trim((string)$request->request->get('alta_prevista'));
+            $altaPrevistaStr = trim((string)$request->get('alta_prevista'));
             if ($altaPrevistaStr !== '') {
                 try {
                     $internacao->setAltaPrevista(new \DateTime($altaPrevistaStr));
@@ -241,9 +241,9 @@ class ClinicaController extends DefaultController
                 }
             }
 
-            $internacao->setDiagnostico((string)$request->request->get('diagnostico'));
-            $internacao->setPrognostico((string)$request->request->get('prognostico'));
-            $internacao->setAnotacoes((string)$request->request->get('alergias_marcacoes'));
+            $internacao->setDiagnostico((string)$request->get('diagnostico'));
+            $internacao->setPrognostico((string)$request->get('prognostico'));
+            $internacao->setAnotacoes((string)$request->get('alergias_marcacoes'));
 
             // Salva e obtém o ID gerado
             $novoId = $internacaoRepo->inserirInternacao($baseId, $internacao);
@@ -293,15 +293,15 @@ class ClinicaController extends DefaultController
 
         $consulta = new Consulta();
         $consulta->setEstabelecimentoId($baseId);
-        $consulta->setClienteId((int)$request->request->get('cliente_id'));
+        $consulta->setClienteId((int)$request->get('cliente_id'));
         $consulta->setPetId($petId);
-        $consulta->setData(new \DateTime($request->request->get('data')));
-        $consulta->setHora(new \DateTime($request->request->get('hora')));
-        $consulta->setObservacoes($request->request->get('observacoes'));
+        $consulta->setData(new \DateTime($request->get('data')));
+        $consulta->setHora(new \DateTime($request->get('hora')));
+        $consulta->setObservacoes($request->get('observacoes'));
 
-        $consulta->setAnamnese($request->request->get('anamnese_delta'));
+        $consulta->setAnamnese($request->get('anamnese_delta'));
 
-        $consulta->setTipo($request->request->get('tipo'));
+        $consulta->setTipo($request->get('tipo'));
         $consulta->setStatus('atendido');
         $consulta->setCriadoEm(new \DateTime());
 
@@ -750,13 +750,13 @@ class ClinicaController extends DefaultController
         $baseId = $this->getIdBase();
 
         // Pegando todos os campos do POST
-        $servicoId = $request->request->get('servico_id');
-        $descricao = $request->request->get('descricao');
-        // $valor = (float)$request->request->get('valor');
-        $data = $request->request->get('data') ? new \DateTime($request->request->get('data')) : new \DateTime();
-        $observacao = $request->request->get('observacao');
-        $metodoPagamento = $request->request->get('metodo_pagamento');
-        // $desconto = (float)$request->request->get('desconto', 0);
+        $servicoId = $request->get('servico_id');
+        $descricao = $request->get('descricao');
+        // $valor = (float)$request->get('valor');
+        $data = $request->get('data') ? new \DateTime($request->get('data')) : new \DateTime();
+        $observacao = $request->get('observacao');
+        $metodoPagamento = $request->get('metodo_pagamento');
+        // $desconto = (float)$request->get('desconto', 0);
 
         // --- Se vier ID do serviço, busca o valor oficial no banco (anti-gambiarra)
         if ($servicoId) {
@@ -775,7 +775,7 @@ class ClinicaController extends DefaultController
         // --- Monta descrição final (nome + observação)
         // $descricaoFinal = trim($descricao . ($observacao ? ' - ' . $observacao : ''));
 
-                
+
         $valorFinal = 0;
         $descontoFinal = 0;
         $descricaoFinal = '';
@@ -932,7 +932,7 @@ class ClinicaController extends DefaultController
         $baseId = $this->getIdBase();
 
         // (Opcional) validar CSRF
-        $token = $request->request->get('_token');
+        $token = $request->get('_token');
         if (!$this->isCsrfTokenValid('alta_internacao_' . $id, $token)) {
             return $this->json(['ok' => false, 'msg' => 'Token inválido.'], 400);
         }
@@ -983,11 +983,11 @@ public function novaPrescricao(
             return $this->json(['ok' => false, 'msg' => 'Internação não encontrada.'], 404);
         }
 
-        $medicamentoId = (int)$request->request->get('medicamento_id');
-        $dose = trim((string)$request->request->get('dose'));
-        $frequenciaHoras = (int)$request->request->get('frequencia_horas');
-        $duracaoDias = (int)$request->request->get('duracao_dias');
-        $dataHoraPrimeiraDose = $request->request->get('data_hora_primeira_dose');
+        $medicamentoId = (int)$request->get('medicamentoId');
+        $dose = trim((string)$request->get('dose'));
+        $frequenciaHoras = (int)$request->get('frequencia_horas');
+        $duracaoDias = (int)$request->get('duracao_dias');
+        $dataHoraPrimeiraDose = $request->get('data_hora_primeira_dose');
 
         if (!$medicamentoId || empty($dose) || $frequenciaHoras <= 0 || $duracaoDias <= 0 || empty($dataHoraPrimeiraDose)) {
             return $this->json(['ok' => false, 'msg' => 'Campos obrigatórios faltando.'], 400);
@@ -1018,8 +1018,8 @@ public function novaPrescricao(
 
         // --- Cria eventos da timeline ---
         $petId = method_exists($internacao, 'getPetId')
-            ? $internacao->getPetId()
-            : ($internacao->getPet() ? $internacao->getPet()->getId() : null);
+        ? $internacao->getPetId()
+        : ($internacao->getPet() ? $internacao->getPet()->getId() : null);
 
         if ($petId) {
             $numDoses = ($duracaoDias * 24) / $frequenciaHoras;
@@ -1070,9 +1070,9 @@ public function novaPrescricao(
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        $horaAplicacao = $request->request->get('hora_aplicacao');
-        $veterinarioId = (int)$request->request->get('veterinario_id');
-        $anotacoes = $request->request->get('anotacoes');
+        $horaAplicacao = $request->get('hora_aplicacao');
+        $veterinarioId = (int)$request->get('veterinario_id');
+        $anotacoes = $request->get('anotacoes');
 
         if (!$horaAplicacao || !$veterinarioId) {
             return $this->json(['ok' => false, 'msg' => 'Preencha hora e veterinário.'], 400);
@@ -1191,9 +1191,9 @@ public function novaPrescricao(
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        $nome = trim((string)$request->request->get('nome'));
-        $via = trim((string)$request->request->get('via'));
-        $concentracao = trim((string)$request->request->get('concentracao'));
+        $nome = trim((string)$request->get('nome'));
+        $via = trim((string)$request->get('via'));
+        $concentracao = trim((string)$request->get('concentracao'));
 
         if (empty($nome)) {
             return $this->json(['ok' => false, 'msg' => 'O nome do medicamento é obrigatório.']);
@@ -1226,18 +1226,18 @@ public function novaPrescricao(
                 return new JsonResponse(['status' => 'error', 'mensagem' => 'Venda não encontrada.'], 404);
             }
 
-            $financeiro->setDescricao($request->request->get('descricao'));
-            $financeiro->setValor((float)$request->request->get('valor'));
+            $financeiro->setDescricao($request->get('descricao'));
+            $financeiro->setValor((float)$request->get('valor'));
 
-            $data = $request->request->get('data');
+            $data = $request->get('data');
             if ($data) {
                 $financeiro->setData(new \DateTime($data));
             }
 
-            $metodo = $request->request->get('metodo_pagamento') ?: 'pendente';
+            $metodo = $request->get('metodo_pagamento') ?: 'pendente';
             $financeiro->setMetodoPagamento($metodo);
 
-            $financeiro->setObservacoes($request->request->get('observacao'));
+            $financeiro->setObservacoes($request->get('observacao'));
 
             $financeiroRepository->update($baseId, $financeiro);
 

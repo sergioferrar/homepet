@@ -38,18 +38,18 @@
 
                     <table class="table table-sm mb-2">
                         <tbody>
-                            <tr>
-                                <th>Telefone:</th>
-                                <td>{{ pet.dono_telefone|default('-') }}</td>
-                            </tr>
-                            <tr>
-                                <th>Email:</th>
-                                <td>{{ pet.dono_email|default('-') }}</td>
-                            </tr>
-                            <tr>
-                                <th>Endereço:</th>
-                                <td>{{ pet.dono_endereco|default('-') }}</td>
-                            </tr>
+                        <tr>
+                            <th>Telefone:</th>
+                            <td>{{ pet.dono_telefone|default('-') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ pet.dono_email|default('-') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Endereço:</th>
+                            <td>{{ pet.dono_endereco|default('-') }}</td>
+                        </tr>
                         </tbody>
                     </table>
 
@@ -326,8 +326,8 @@
                                  class="card border border-dark bg-white rounded-4  mt-4" style="display: none;">
                                 <div class="card-body p-4">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5 class="card-title mb-0" id="service-display-title">Detalhes do Registro</h5>
-                                        <button type="button" class="btn-close" id="btn-fechar-service-display"
+                                        <h5 class="card-title mb-0 d-none" id="service-display-title">Detalhes do Registro</h5>
+                                        <button type="button" class="btn-close d-none" id="btn-fechar-service-display"
                                                 aria-label="Fechar"></button>
                                     </div>
                                     <div id="service-details-content"></div>
@@ -345,10 +345,10 @@
                                 <li>
                                     <div class="timeline-badge "><i class="fas fa-calendar"></i></div>
                                     <div class="timeline-panel border  {{ 'Consulta' in item.tipo ? 'border-start border-5 border-primary ps-3' :
-                                        'Retorno' in item.tipo ? 'border-start border-5 border-success ps-3' :
-                                        'Vacina' in item.tipo ? 'border-start border-5 border-warning ps-3' :
-                                        'Receita' in item.tipo ? 'border-start border-5 ps-3' :
-                                        'border-start border-5 border-dark ps-3' }}"
+                                    'Retorno' in item.tipo ? 'border-start border-5 border-success ps-3' :
+                                    'Vacina' in item.tipo ? 'border-start border-5 border-warning ps-3' :
+                                    'Receita' in item.tipo ? 'border-start border-5 ps-3' :
+                                    'border-start border-5 border-dark ps-3' }}"
                                          {% if 'Receita' in item.tipo %}style="border-left: 5px solid #6f42c1 !important;"{% endif %}>
                                         <div class="timeline-heading">
                                             <h4 class="timeline-title">
@@ -617,13 +617,13 @@
                             {% endfor %}
                         </select>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="servico-desconto" class="form-label">Desconto (R$)</label>
                         <input type="number" step="0.01" class="form-control" id="servico-desconto" name="desconto[]"
                                value="0">
                     </div>
-                    
+
                     <div id="servicos-container"></div>
 
                     <div class="mb-3">
@@ -664,8 +664,8 @@
             const $actionButtonsView = $('#action-buttons-view');
             const $atendimentoView = $('#atendimento-view');
             const $receitaView = $('#receita-view');
-            const $serviceDisplayContainer = $('#service-display-container');
-            const $serviceDetailsContent = $('#service-details-content');
+            const serviceDisplayContainer = $('#service-display-container');
+            const serviceDetailsContent = document.getElementById('service-details-content');
 
             const $btnNovoAtendimento = $('#btn-novo-atendimento');
             const $btnNovaReceita = $('#btn-nova-receita');
@@ -686,7 +686,7 @@
                 $actionButtonsView.hide();
                 $atendimentoView.hide();
                 $receitaView.hide();
-                $serviceDisplayContainer.hide();
+                serviceDisplayContainer.hide();
                 if (viewToShow) $(viewToShow).show();
             };
 
@@ -746,93 +746,95 @@
             const quillAtendimento = createQuillEditor('#atendimento-editor');
             const quillConteudo = createQuillEditor('#editor-conteudo');
 
-            // === TIMELINE (abre visualização) ===
-            $('.timeline-link').on('click', function (e) {
-                e.preventDefault();
-                const tipo = $(this).data('tipo');
-                const data = $(this).data('data');
-                const resumo = $(this).data('resumo');
-                $serviceDetailsContent.html('');
+           // === TIMELINE (abre visualização) ===
+            const timelineLinks = document.querySelectorAll('.timeline-link');
+            timelineLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tipo = this.dataset.tipo;
+                    const data = this.dataset.data;
+                    const resumo = this.dataset.resumo;
+                    serviceDetailsContent.innerHTML = '';
+                    window.currentQuillDisplayEditors.forEach(editor => {
+                        if (editor.container && editor.container.parentNode) {
+                            editor.container.parentNode.removeChild(editor.container);
+                        }
+                    });
+                    window.currentQuillDisplayEditors = [];
+                    document.getElementById('service-display-title').textContent = `Detalhes do Registro: ${tipo}`;
 
-                window.currentQuillDisplayEditors.forEach(editor => {
-                    if (editor.container && editor.container.parentNode) {
-                        editor.container.parentNode.removeChild(editor.container);
-                    }
-                });
-                window.currentQuillDisplayEditors = [];
+                    const appendServiceDetailCard = (cardTitle, contentData, typeClass, isHtml = false) => {
+                        const cardDiv = document.createElement('div');
+                        cardDiv.className = `service-detail-card ${typeClass}`;
+                        const cardHeader = document.createElement('h6');
+                        cardHeader.className = 'mb-2';
+                        cardHeader.textContent = cardTitle;
+                        cardDiv.appendChild(cardHeader);
+                        const cardDate = document.createElement('p');
+                        cardDate.className = 'text-muted mb-3';
+                        cardDate.innerHTML = `<small>Registrado em: ${data}</small>`;
+                        cardDiv.appendChild(cardDate);
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'service-detail-content';
+                        cardDiv.appendChild(contentDiv);
+                        serviceDetailsContent.appendChild(cardDiv);
 
-                $('#service-display-title').text(`Detalhes do Registro: ${tipo}`);
-
-                const appendServiceDetailCard = (cardTitle, contentData, typeClass, isHtml = false) => {
-                    const $cardDiv = $('<div>').addClass(`service-detail-card ${typeClass}`);
-                    $('<h6>').addClass('mb-2').text(cardTitle).appendTo($cardDiv);
-                    $('<p>').addClass('text-muted mb-3').html(`<small>Registrado em: ${data}</small>`).appendTo($cardDiv);
-                    const $contentDiv = $('<div>').addClass('service-detail-content').appendTo($cardDiv);
-                    $serviceDetailsContent.append($cardDiv);
-
-                    if (contentData) {
-                        if (isHtml) {
-                            $contentDiv.html(contentData);
-                        } else {
-                            const quillDisplay = new Quill($contentDiv[0], {
-                                theme: 'bubble',
-                                readOnly: true,
-                                modules: {toolbar: false}
-                            });
-                            window.currentQuillDisplayEditors.push(quillDisplay);
-                            try {
-                                quillDisplay.setContents(JSON.parse(contentData));
-                            } catch {
-                                quillDisplay.setText('Conteúdo não disponível ou formato inválido.');
+                        if (contentData) {
+                            if (isHtml) {
+                                contentDiv.innerHTML = contentData;
+                            } else {
+                                const quillDisplay = new Quill(contentDiv, { theme: 'bubble', readOnly: true, modules: { toolbar: false } });
+                                window.currentQuillDisplayEditors.push(quillDisplay);
+                                try { quillDisplay.setContents(JSON.parse(contentData)); }
+                                catch { quillDisplay.setText('Conteúdo não disponível ou formato inválido.'); }
                             }
+                        } else {
+                            contentDiv.innerHTML = '<p>Nenhum detalhe disponível.</p>';
+                        }
+                    };
+
+                    if (tipo === 'Consulta' || tipo === 'Retorno') {
+                        const anamneseDeltaString = this.dataset.atendimentoDelta;
+                        const borderColorClass = (tipo === 'Consulta') ? 'border-primary' : 'border-success';
+                        appendServiceDetailCard(`Atendimento: ${resumo}`, anamneseDeltaString, borderColorClass);
+                    } else if (tipo === 'Receita') {
+                        const cabecalhoHtmlString = this.dataset.receitaCabecalhoHtml;
+                        const conteudoDeltaString = this.dataset.receitaConteudoDelta;
+                        const rodapeHtmlString = this.dataset.receitaRodapeHtml;
+                        const borderColorClass = 'border-purple';
+                        
+                        if (cabecalhoHtmlString) appendServiceDetailCard('🩺', cabecalhoHtmlString, borderColorClass, true);
+                        if (conteudoDeltaString) appendServiceDetailCard('📄 ', conteudoDeltaString, borderColorClass);
+                        if (rodapeHtmlString) appendServiceDetailCard('📅 ', rodapeHtmlString, borderColorClass, true);
+
+                        var receita = '';
+                        receita += cabecalhoHtmlString;
+                        receita += conteudoDeltaString;
+                        receita += rodapeHtmlString;
+
+                        if (!cabecalhoHtmlString && !conteudoDeltaString && !rodapeHtmlString) {
+                            const cardDiv = document.createElement('div');
+                            cardDiv.className = `service-detail-card ${borderColorClass}`;
+                            cardDiv.innerHTML = `<h6 class="mb-2">Receita Médica - ${resumo}</h6><p class="text-muted mb-3"><small>Emitida em: ${data}</small></p><p>Nenhum detalhe de receita disponível.</p>`;
+                            serviceDetailsContent.appendChild(cardDiv);
+                        } else {
+                            const printButtonDiv = document.createElement('div');
+                            printButtonDiv.className = 'text-end mt-3';
+                            printButtonDiv.innerHTML = `<button class="btn btn-primary"><i class="fas fa-print me-1"></i> Imprimir Receita</button>`;
+                            serviceDetailsContent.appendChild(printButtonDiv);
                         }
                     } else {
-                        $contentDiv.html('<p>Nenhum detalhe disponível.</p>');
+                        const borderColorClass = 'border-secondary';
+                        const cardDiv = document.createElement('div');
+                        cardDiv.className = `service-detail-card ${borderColorClass}`;
+                        cardDiv.innerHTML = `<h6 class="mb-2">${tipo} - ${resumo}</h6><p class="text-muted mb-3"><small>Data: ${data}</small></p><p>Nenhum detalhe específico disponível para este tipo de registro no momento.</p>`;
+                        serviceDetailsContent.appendChild(cardDiv);
                     }
-                };
 
-                if (tipo === 'Consulta' || tipo === 'Retorno') {
-                    const anamneseDeltaString = $(this).data('atendimentoDelta');
-                    const borderColorClass = (tipo === 'Consulta') ? 'border-primary' : 'border-success';
-                    appendServiceDetailCard(`Atendimento: ${resumo}`, anamneseDeltaString, borderColorClass);
-                } else if (tipo === 'Receita') {
-                    const cabecalhoHtmlString = $(this).data('receitaCabecalhoHtml');
-                    const conteudoDeltaString = $(this).data('receitaConteudoDelta');
-                    const rodapeHtmlString = $(this).data('receitaRodapeHtml');
-                    const borderColorClass = 'border-purple';
-
-                    if (cabecalhoHtmlString) appendServiceDetailCard('🩺', cabecalhoHtmlString, borderColorClass, true);
-                    if (conteudoDeltaString) appendServiceDetailCard('📄 ', conteudoDeltaString, borderColorClass);
-                    if (rodapeHtmlString) appendServiceDetailCard('📅 ', rodapeHtmlString, borderColorClass, true);
-
-                    if (!cabecalhoHtmlString && !conteudoDeltaString && !rodapeHtmlString) {
-                        $serviceDetailsContent.append(`
-                    <div class="service-detail-card ${borderColorClass}">
-                        <h6 class="mb-2">Receita Médica - ${resumo}</h6>
-                        <p class="text-muted mb-3"><small>Emitida em: ${data}</small></p>
-                        <p>Nenhum detalhe de receita disponível.</p>
-                    </div>
-                `);
-                    } else {
-                        $serviceDetailsContent.append(`
-                    <div class="text-end mt-3">
-                        <button class="btn btn-primary"><i class="fas fa-print me-1"></i> Imprimir Receita</button>
-                    </div>
-                `);
-                    }
-                } else {
-                    const borderColorClass = 'border-secondary';
-                    $serviceDetailsContent.append(`
-                <div class="service-detail-card ${borderColorClass}">
-                    <h6 class="mb-2">${tipo} - ${resumo}</h6>
-                    <p class="text-muted mb-3"><small>Data: ${data}</small></p>
-                    <p>Nenhum detalhe específico disponível para este tipo de registro no momento.</p>
-                </div>
-            `);
-                }
-
-                if (historicoTab) historicoTab.show();
-                showView($serviceDisplayContainer);
+                    Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html());
+                    // if (historicoTab) historicoTab.show();
+                    // showView(serviceDisplayContainer);
+                });
             });
 
             // === SUBMIT DOS FORMULÁRIOS (captura Deltas Quill) ===
@@ -900,8 +902,8 @@
                 console.log($(this))
                 // console.log($(this).find('option:selected').data('valor'))
                 const nomeServico = $(this).val();
-                
-                $(document).next('input[name="valor[]"]').val($(this).find('option:selected').data('valor')); 
+
+                $(document).next('input[name="valor[]"]').val($(this).find('option:selected').data('valor'));
                 // $inputValor.val(servicosMap.hasOwnProperty(nomeServico) ? servicosMap[nomeServico] : '').prop('readonly', false);
             });
 
@@ -957,7 +959,7 @@
                     .catch(() => alert("Erro ao editar venda."));
             });
             // Adicionar serviço ao pet correspondente
-       
+
         });
         $(document).on("click", ".add-servico", function () {
             let petIndex = $(this).data("pet-index");
@@ -995,8 +997,8 @@
             $(this).closest(".servico-item").remove();
         });
 
-$('.modal').on('hidden.modal.bs', function(){
-    $('.modal-backdrop').remove()
-})
+        $('.modal').on('hidden.modal.bs', function () {
+            $('.modal-backdrop').remove()
+        })
     </script>
 {% endblock %}
