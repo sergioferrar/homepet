@@ -2,91 +2,10 @@
 
 {% block title %}Ficha de Internação - {{ internacao.pet_nome }}{% endblock %}
 
-{% block stylesheets %}
-
-    <style>
-        #calendar-pet {max-width: 100%; margin: 0 auto;}
-
-        .info-card h5 {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .nav-tabs .nav-link {
-            color: #6c757d;
-            font-weight: 500;
-            border: none;
-            border-bottom: 3px solid transparent;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: #0d6efd;
-            background-color: #fff;
-            border-color: #dee2e6 #dee2e6 #0d6efd;
-            font-weight: bold;
-        }
-
-        .timeline {
-            position: relative;
-            padding-left: 35px;
-            list-style: none;
-        }
-
-        .timeline:before {
-            content: '';
-            position: absolute;
-            left: 12px;
-            top: 5px;
-            bottom: 5px;
-            width: 3px;
-            background: #e9ecef;
-            border-radius: 2px;
-        }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 25px;
-        }
-
-        .timeline-badge {
-            position: absolute;
-            left: -10px;
-            top: 0;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .timeline-content {
-            transition: border-color 0.3s;
-        }
-
-        .timeline-content .timeline-date {
-            font-size: 0.85em;
-            color: #dc3545;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-
-        .bg-purple {
-            background-color: #6f42c1 !important;
-        }
-
-        a.fc-event {
-            cursor: pointer;
-        }
-    </style>
-{% endblock %}
-
 {% block body %}
     <div class="container-fluid my-4">
         <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center mb-4">
                 <h4 class="mb-0">Ficha de Internação</h4>
                 <a href="{{ path('clinica_detalhes_pet', {'id': internacao.pet_id}) }}" class="btn btn-light">
                     <i class="fas fa-arrow-left me-2"></i>Voltar
@@ -297,42 +216,33 @@
     </div>
 
     {# Modal Executar Prescrição #}
-    <div class="modal fade" id="modalExecutarPrescricao" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="formExecutarPrescricao" method="post">
-                    <div class="modal-header"><h5 class="modal-title">Executar Prescrição</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="prescricao_id" id="exec-prescricao-id">
-                        <div class="mb-3">
-                            <label class="form-label">Hora da aplicação</label>
-                            <input type="datetime-local" name="hora_aplicacao" class="form-control" required>
-                        </div>
-                        <div class="mb-3"><label class="form-label">Veterinário responsável</label>
-                            <select name="veterinario_id" class="form-select" required>
-                                {% for vet in veterinarios %}
-                                    <option value="{{ vet.id }}">{{ vet.nome }} ({{ vet.crmv }})</option>{% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Observações</label>
-                            <textarea name="anotacoes" class="form-control"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Confirmar</button>
-                    </div>
-                </form>
+    <div class="modalexecutaprescricao d-none">
+        <form id="formExecutarPrescricao" method="post">
+            <input type="hidden" name="prescricao_id" id="exec-prescricao-id">
+            <div class="mb-3">
+                <label class="form-label">Hora da aplicação</label>
+                <input type="datetime-local" name="hora_aplicacao" class="form-control" required>
             </div>
-        </div>
+            <div class="mb-3"><label class="form-label">Veterinário responsável</label>
+                <select name="veterinario_id" class="form-select" required>
+                    {% for vet in veterinarios %}
+                        <option value="{{ vet.id }}">{{ vet.nome }} ({{ vet.crmv }})</option>{% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Observações</label>
+                <textarea name="anotacoes" class="form-control"></textarea>
+            </div>
+        </form>
     </div>
+
+
 {% endblock %}
 
 {% block javascripts %}
+    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.19/locales-all.global.min.js'></script>
     <script>
-        $(function(){
+        $(function () {
             // Botão Alta
             document.body.addEventListener('click', async e => {
                 const btn = e.target.closest('#btn-alta');
@@ -432,6 +342,15 @@
             const calendarEl = document.getElementById('calendar-pet');
             var calendario = $('#calendar-pet');
             var eventos = {{ calendario_prescricoes|json_encode|raw }};
+
+            function toDateTimeLocalValue(date) {
+                const pad = n => n < 10 ? '0'+n : n;
+return date.getFullYear() + '-' +
+         pad(date.getMonth()+1) + '-' +
+         pad(date.getDate()) + 'T' +
+         pad(date.getHours()) + ':' +
+         pad(date.getMinutes());
+            }
             
             if (calendario.length) {
                 var eventos = {{ calendario_prescricoes|json_encode|raw }};
@@ -448,10 +367,48 @@
                         right: 'timeGridDay,timeGridWeek,dayGridMonth'
                     },
                     events: eventos,
+                    dateClick: function (info) {
+                        console.log(toDateTimeLocalValue(new Date(info.date)))
+                        $(document).find('input[name="data_hora_primeira_dose"]').attr('value', toDateTimeLocalValue(new Date(info.date)));
+
+                        Utils.modal($('.modalPrescricao').html(), 'secondary', function () {
+                        var divModal = $('.modal #formPrescricao');
+                        //data_hora_primeira_dose
+                        //toDateTimeLocalValue(new Date(info.date))
+                        var medicamentoId = divModal.find('select[name="medicamento_id"]').val();
+                        var dose = divModal.find('input[name="dose"]').val();
+                        var frequencia_horas = divModal.find('input[name="frequencia_horas"]').val();
+                        var duracao_dias = divModal.find('input[name="duracao_dias"]').val();
+                        var data_hora_primeira_dose = divModal.find('input[name="data_hora_primeira_dose"]').val();
+
+                        var postData = {
+                            'medicamentoId': medicamentoId,
+                            'dose': dose,
+                            'frequencia_horas': frequencia_horas,
+                            'duracao_dias': duracao_dias,
+                            'data_hora_primeira_dose': data_hora_primeira_dose,
+                        };
+
+
+                        Utils.globalPostAjax(divModal.attr('action'), postData, function (result) {
+                            console.log(result)
+                            window.location.reload()
+                        });
+
+                    }, 'lg', 'Nova Prescrição', 'Salvar', 'Cancelar', '');
+                        // editingEvent = null;
+                        // $('#eventModalLabel').text('Criar Medicação');
+                        // $title.val('');
+                        // // info.date é Date no fuso local
+                        // $date.val(toDateTimeLocalValue(new Date(info.date)));
+                        // $deleteBtn.addClass('d-none'); // esconder botão de excluir ao criar
+                        // bsModal.show();
+                    },
 
                     // clique no evento abre modal
                     eventClick: function (info) {
-                        var $modal = $("#modalExecutarPrescricao");
+                        var modalContent = $(".modalexecutaprescricao").html();
+
                         var $form = $("#formExecutarPrescricao");
                         var prescricaoId = info.event.extendedProps.prescricao_id;
 
@@ -460,35 +417,38 @@
                         $form.attr("action", url);
                         $("#exec-prescricao-id").val(prescricaoId);
 
-                        new bootstrap.Modal($modal[0]).show();
+                        Utils.modal(modalContent, 'secondary', function () {
+                            // Notify.toast('TESTE', 'success')
+                            var postData = {
+                                'hora_aplicacao': $('#formExecutarPrescricao').find('input[name="hora_aplicacao"]').val(),
+                                'veterinario_id': $('#formExecutarPrescricao').find('select[name="veterinario_id"]').val(),
+                                'anotacoes': $('#formExecutarPrescricao').find('input[name="anotacoes"]').val()
+                            };
+                            Utils.globalPostAjax(url, postData, function (result) {
+
+                                if (result.ok) {
+                                    Notify.toast(data.msg || 'Executado!', 'success')
+                                    window.calendar.refetchEvents();
+                                } else {
+                                    Utils.modal(data.msg, 'danger');
+                                }
+
+                            });
+                        }, 'md', 'Executar Prescrição', okText = "Confirmar", 'Cancelar');
+
+                        // new bootstrap.Modal($modal[0]).show();
                     }
                 });
                 window.calendar.render();
-                window.calendar.updateSize();
-                $('.fc-col-header ').attr('widgh','100%')
             }
+
+            $('#prescricao-tab').on('click', function () {
+                window.calendar.render();
+            });
 
 
             // Form Executar Prescrição
-            const formExec = document.getElementById('formExecutarPrescricao');
-            if (formExec) {
-                formExec.addEventListener('submit', async e => {
-                    e.preventDefault();
-                    try {
-                        const resp = await fetch(formExec.action, {method: 'POST', body: new FormData(formExec)});
-                        const data = await resp.json();
-                        if (data.ok) {
-                            bootstrap.Modal.getInstance(document.getElementById('modalExecutarPrescricao')).hide();
-                            alert(data.msg || 'Executado!');
-                            if (window.calendar) window.calendar.refetchEvents();
-                        } else {
-                            alert(data.msg);
-                        }
-                    } catch (err) {
-                        alert('Erro.');
-                    }
-                });
-            }
+            
         });
     </script>
 {% endblock %}

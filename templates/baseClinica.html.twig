@@ -15,6 +15,7 @@
         <link href="//fonts.gstatic.com" rel="preconnect">
         <link href="//fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
         <!-- Vendor CSS Files -->
+        <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet" />
         <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css')}}" rel="stylesheet">
         <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css')}}" rel="stylesheet">
         <link href="{{ asset('assets/vendor/boxicons/css/boxicons.min.css')}}" rel="stylesheet">
@@ -27,7 +28,6 @@
         <!-- Template Main CSS File -->
         <link href="{{ asset('assets/css/style.css')}}" rel="stylesheet">
         <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet" />
     <style>
         .main-card, .info-card {
             background: #fff;
@@ -312,7 +312,15 @@
         .btn-group .btn {
             margin-left: 4px;
         }
-        .fc-scrollgrid {max-width: 100%; margin: 0 auto;}
+        #calendar-pet .fc .fc-button {
+            background-color: #3788d8;
+            color: #fff;
+            border: none;
+        }
+
+        #calendar-pet .fc table {
+            border-collapse: collapse !important;
+        }
 
     </style>
 </head>
