@@ -345,11 +345,11 @@
 
             function toDateTimeLocalValue(date) {
                 const pad = n => n < 10 ? '0'+n : n;
-return date.getFullYear() + '-' +
-         pad(date.getMonth()+1) + '-' +
-         pad(date.getDate()) + 'T' +
-         pad(date.getHours()) + ':' +
-         pad(date.getMinutes());
+                return date.getFullYear() + '-' +
+                         pad(date.getMonth()+1) + '-' +
+                         pad(date.getDate()) + 'T' +
+                         pad(date.getHours()) + ':' +
+                         pad(date.getMinutes());
             }
             
             if (calendario.length) {
@@ -368,6 +368,7 @@ return date.getFullYear() + '-' +
                     },
                     events: eventos,
                     dateClick: function (info) {
+                        console.log(info)
                         console.log(toDateTimeLocalValue(new Date(info.date)))
                         $(document).find('input[name="data_hora_primeira_dose"]').attr('value', toDateTimeLocalValue(new Date(info.date)));
 
@@ -407,6 +408,16 @@ return date.getFullYear() + '-' +
 
                     // clique no evento abre modal
                     eventClick: function (info) {
+                        console.log(info.event)
+                        let start = info.event.start; 
+    let end = info.event.end;
+
+    // converte para o formato que o datetime-local aceita
+    let startLocal = start.toISOString().slice(0,16); 
+    
+    // $('#formExecutarPrescricao').find('input[name="hora_aplicacao"]').val(startLocal)
+                        $(document).find('input[name="hora_aplicacao"]').attr('value', toDateTimeLocalValue(new Date(startLocal)));
+                        
                         var modalContent = $(".modalexecutaprescricao").html();
 
                         var $form = $("#formExecutarPrescricao");
