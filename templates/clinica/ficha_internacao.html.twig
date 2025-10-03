@@ -49,16 +49,22 @@
 
                 {# Ações #}
                 <div class="d-flex justify-content-end mb-3">
-                    <button class="btn btn-sm btn-primary me-2"><i class="fas fa-edit me-1"></i> Editar</button>
-                    <button class="btn btn-sm btn-success me-2" id="btn-alta"
-                            data-url="{{ path('clinica_internacao_alta', {id: internacao.id}) }}"
-                            data-token="{{ csrf_token('alta_internacao_' ~ internacao.id) }}">
+                    {# <button class="btn btn-sm btn-primary me-2"><i class="fas fa-edit me-1"></i> Editar</button> #}
+                    <button class="btn btn-sm btn-success me-2 internacao-acao"
+                            data-url="{{ path('clinica_internacao_acao', {id: internacao.id, acao: 'alta'}) }}"
+                            data-token="{{ csrf_token('internacao_acao_' ~ internacao.id) }}">
                         <i class="fas fa-check me-1"></i> Alta
                     </button>
-                    <button class="btn btn-sm btn-danger me-2"><i class="fas fa-times me-1"></i> Óbito</button>
-                    <button class="btn btn-sm btn-secondary me-2"><i class="fas fa-boxes me-1"></i> Box</button>
-                    <button class="btn btn-sm btn-warning me-2"><i class="fas fa-ban me-1"></i> Cancelar</button>
-                    <button class="btn btn-sm btn-info me-2"><i class="fas fa-print me-1"></i> Imprimir</button>
+                    <button class="btn btn-sm btn-danger me-2 internacao-acao"
+                            data-url="{{ path('clinica_internacao_acao', {id: internacao.id, acao: 'obito'}) }}"
+                            data-token="{{ csrf_token('internacao_acao_' ~ internacao.id) }}">
+                        <i class="fas fa-skull me-1"></i> Óbito
+                    </button>
+                    <button class="btn btn-sm btn-warning me-2 internacao-acao"
+                            data-url="{{ path('clinica_internacao_acao', {id: internacao.id, acao: 'cancelar'}) }}"
+                            data-token="{{ csrf_token('internacao_acao_' ~ internacao.id) }}">
+                        <i class="fas fa-ban me-1"></i> Cancelar
+                    </button>
                 </div>
 
                 {# Tabs #}
@@ -88,7 +94,15 @@
                                     {% elseif tipo in ['medicacao','medicação','medicacao_exec','execucao'] %}{% set icone, badge = 'fa-pills', 'bg-info' %}
                                     {% elseif tipo == 'peso' %}{% set icone, badge = 'fa-weight', 'bg-warning' %}
                                     {% elseif tipo in ['ocorrencia','ocorrência','alerta'] %}{% set icone, badge = 'fa-exclamation-circle', 'bg-danger' %}
-                                    {% elseif tipo in ['internacao','internação','admissao','admissão','alta'] %}{% set icone, badge = 'fa-hospital', 'bg-success' %}{% endif %}
+                                    {% elseif tipo in ['alta'] %}
+                                        {% set icone, badge = 'fa-hospital', 'bg-success' %}
+                                    {% elseif tipo in ['obito'] %}
+                                        {% set icone, badge = 'fa-hospital', 'bg-danger' %}
+                                    {% elseif tipo in ['cancelar'] %}
+                                        {% set icone, badge = 'fa-hospital', 'bg-warning' %}
+                                    {% elseif tipo in ['internacao','internação','admissao','admissão'] %}
+                                        {% set icone, badge = 'fa-hospital', 'bg-primary' %}
+                                    {% endif %}
                                     <li class="timeline-item">
                                         <div class="timeline-badge {{ badge }}"><i class="fas {{ icone }}"></i></div>
                                         <div class="timeline-panel">
@@ -242,12 +256,19 @@
 {% block javascripts %}
     <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.19/locales-all.global.min.js'></script>
     <script>
-        $(function () {
-            // Botão Alta
+         $(function () {
+            // === Alterado: Botões de Ações de Internação (Alta, Óbito, Cancelar) ===
             document.body.addEventListener('click', async e => {
-                const btn = e.target.closest('#btn-alta');
+                const btn = e.target.closest('.internacao-acao');
                 if (!btn) return;
-                if (!confirm('Confirmar alta desta internação?')) return;
+
+                let confirmMsg = 'Confirmar esta ação na internação?';
+                if (btn.dataset.url.includes('alta')) confirmMsg = 'Confirmar alta desta internação?';
+                if (btn.dataset.url.includes('obito')) confirmMsg = 'Confirmar óbito desta internação?';
+                if (btn.dataset.url.includes('cancelar')) confirmMsg = 'Confirmar cancelamento desta internação?';
+
+                if (!confirm(confirmMsg)) return;
+
                 try {
                     const resp = await fetch(btn.dataset.url, {
                         method: 'POST',
@@ -256,13 +277,13 @@
                     });
                     const data = await resp.json();
                     if (data.ok) {
-                        alert('Internação finalizada!');
+                        alert('Ação registrada com sucesso!');
                         location.reload();
                     } else {
                         alert(data.msg);
                     }
                 } catch (err) {
-                    alert('Erro.');
+                    alert('Erro ao processar ação.');
                 }
             });
 

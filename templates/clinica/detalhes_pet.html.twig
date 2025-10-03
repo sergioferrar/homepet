@@ -321,6 +321,50 @@
                                 </form>
                             </div>
 
+                            {# FORM VACINA #}
+                            <div id="vacina-view" style="display: none;">
+                                <form id="formNovaVacina" method="POST" 
+                                      action="{{ path('clinica_vacina_nova', {'petId': pet.id}) }}">
+                                    <div class="form-view-container">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="form-view-header">Registrar Vacina</h5>
+                                            <button type="button" class="btn-close" id="btn-fechar-vacina" aria-label="Fechar"></button>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Tipo da Vacina*</label>
+                                                <input type="text" class="form-control" name="tipo" required>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label">Data de Aplicação*</label>
+                                                <input type="date" class="form-control" name="data_aplicacao" 
+                                                       value="{{ "now"|date("Y-m-d") }}" required>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label">Validade*</label>
+                                                <input type="date" class="form-control" name="data_validade" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Lote</label>
+                                                <input type="text" class="form-control" name="lote">
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" name="pet_id" value="{{ pet.id }}">
+
+                                        <div class="d-flex justify-content-end">
+                                            <button type="submit" class="btn btn-warning">
+                                                <i class="bi bi-capsule me-1"></i> Salvar Vacina
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+
+
+
                             {# VISUALIZAÇÃO DETALHES #}
                             <div id="service-display-container"
                                  class="card border border-dark bg-white rounded-4  mt-4" style="display: none;">
@@ -667,6 +711,10 @@
             const serviceDisplayContainer = $('#service-display-container');
             const serviceDetailsContent = document.getElementById('service-details-content');
 
+            const $vacinaView = $('#vacina-view');
+            const $btnNovaVacina = $('#btn-nova-vacina');
+            const $btnFecharVacina = $('#btn-fechar-vacina');
+
             const $btnNovoAtendimento = $('#btn-novo-atendimento');
             const $btnNovaReceita = $('#btn-nova-receita');
             const $btnFecharAtendimento = $('#btn-fechar-atendimento');
@@ -717,7 +765,7 @@
                 showView($receitaView);
             });
 
-            const notImplementedButtons = ['btn-novo-peso', 'btn-novo-exame', 'btn-novo-documento', 'btn-novas-fotos', 'btn-nova-vacina'];
+            const notImplementedButtons = ['btn-novo-peso', 'btn-novo-exame', 'btn-novo-documento', 'btn-novas-fotos'];
             notImplementedButtons.forEach(id => {
                 $(`#${id}`).on('click', function (e) {
                     e.preventDefault();
@@ -836,6 +884,40 @@
                     // showView(serviceDisplayContainer);
                 });
             });
+
+            // Mostrar formulário vacina
+            $btnNovaVacina.on('click', function (e) {
+                e.preventDefault();
+                showView($vacinaView);
+            });
+
+            // Fechar formulário vacina
+            $btnFecharVacina.on('click', returnToActionGrid);
+
+            // Submeter vacina
+            const formVac = document.querySelector('#formNovaVacina');
+            if (formVac) {
+                formVac.addEventListener('submit', async e => {
+                    e.preventDefault();
+                    try {
+                        const resp = await fetch(formVac.action, {method: 'POST', body: new FormData(formVac)});
+                        const data = await resp.json();
+                        if (data.ok) {
+                            if (window.Notify && Notify.toast) {
+                                Notify.toast(data.msg || "Vacina registrada!", "success");
+                            } else {
+                                alert(data.msg || "Vacina registrada!");
+                            }
+                            location.reload();
+                        } else {
+                            alert(data.msg || "Erro ao registrar vacina.");
+                        }
+                    } catch (err) {
+                        alert('Erro ao registrar vacina.');
+                    }
+                });
+            }
+
 
             // === SUBMIT DOS FORMULÁRIOS (captura Deltas Quill) ===
             const setupFormSubmission = (formId, editorsMap) => {

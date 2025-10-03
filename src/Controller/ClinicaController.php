@@ -92,7 +92,8 @@ class ClinicaController extends DefaultController
         DocumentoModeloRepository $documentoRepo,
         FinanceiroRepository $financeiroRepo,
         FinanceiroPendenteRepository $financeiroPendenteRepo,
-        InternacaoRepository $internacaoRepo
+        InternacaoRepository $internacaoRepo,
+        \App\Repository\VacinaRepository $vacinaRepo
     ): Response {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -118,6 +119,9 @@ class ClinicaController extends DefaultController
         $ultimaInternacaoId = $internacaoRepo->findUltimaIdByPet($baseId, $pet['id']);
         $internacoesPet = $internacaoRepo->listarInternacoesPorPet($baseId, $pet['id']);
 
+        // --- Vacinas ---
+        $vacinas = $vacinaRepo->findByPet($baseId, $id);
+
         // --- BUSCA TODOS OS SERVIÇOS DA CLÍNICA ---
         $servicosClinica = $this->getRepositorio(\App\Entity\Servico::class)->findBy([
             'estabelecimentoId' => $baseId,
@@ -142,6 +146,15 @@ class ClinicaController extends DefaultController
                 'receita_cabecalho' => $r['cabecalho'],
                 'receita_conteudo'  => $r['conteudo'],
                 'receita_rodape'    => $r['rodape'],
+            ];
+        }
+
+        foreach ($vacinas as $v) {
+            $timeline_items[] = [
+                'data'        => new \DateTime($v['dataAplicacao']),
+                'tipo'        => 'Vacina',
+                'observacoes' => 'Tipo: ' . $v['tipo'] . ' | Lote: ' . ($v['lote'] ?? '—') .
+                                 ' | Validade: ' . (new \DateTime($v['dataValidade']))->format('d/m/Y'),
             ];
         }
 
@@ -176,8 +189,10 @@ class ClinicaController extends DefaultController
             'internacao_ativa_id'        => $internacaoAtivaId,
             'ultima_internacao_id'       => $ultimaInternacaoId,
             'internacoes_pet'            => $internacoesPet,
+            'vacinas'                    => $vacinas,
         ]);
     }
+
 
     /**
      * @Route("/pet/{petId}/internacao/nova", name="clinica_nova_internacao", methods={"GET", "POST"})
@@ -911,41 +926,63 @@ class ClinicaController extends DefaultController
     }
 
     /**
-     * @Route("/internacao/{id}/alta", name="clinica_internacao_alta", methods={"POST"})
+     * @Route("/internacao/{id}/acao/{acao}", name="clinica_internacao_acao", methods={"POST"})
      */
-    public function altaInternacao(int $id, Request $request, InternacaoRepository $internacaoRepo): JsonResponse
-    {
+    public function acaoInternacao(int $id, string $acao, Request $request,
+        InternacaoRepository $internacaoRepo
+    ): JsonResponse {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        // (Opcional) validar CSRF
-        $token = $request->get('_token');
-        if (! $this->isCsrfTokenValid('alta_internacao_' . $id, $token)) {
+        // Validar CSRF token (um único nome genérico)
+        if (! $this->isCsrfTokenValid('internacao_acao_' . $id, $request->get('_token'))) {
             return $this->json(['ok' => false, 'msg' => 'Token inválido.'], 400);
         }
 
-        // Busca dados da internação para registrar evento
+        // Busca internação
         $internacao = $internacaoRepo->buscarPorId($baseId, $id);
         if (! $internacao) {
             return $this->json(['ok' => false, 'msg' => 'Internação não encontrada.'], 404);
         }
 
-        // Finaliza
-        $internacaoRepo->finalizarInternacao($baseId, $id);
+        // Normaliza a ação
+        $acoesValidas = [
+            'alta'     => ['status' => 'finalizada', 'titulo' => 'Alta concedida', 'descricao' => 'Internação finalizada pelo sistema'],
+            'obito'    => ['status' => 'obito',      'titulo' => 'Óbito registrado', 'descricao' => 'Internação encerrada por óbito'],
+            'cancelar' => ['status' => 'cancelada',  'titulo' => 'Internação cancelada', 'descricao' => 'Internação cancelada pelo sistema'],
+            'box'      => ['status' => 'ativa',      'titulo' => 'Box alterado', 'descricao' => 'Box de internação atualizado'],
+            'editar'   => ['status' => 'ativa',      'titulo' => 'Internação editada', 'descricao' => 'Dados da internação foram atualizados'],
+        ];
 
-        // Evento de alta na timeline
+        if (!isset($acoesValidas[$acao])) {
+            return $this->json(['ok' => false, 'msg' => 'Ação inválida.'], 400);
+        }
+
+        if (in_array($internacao['status'], ['alta','obito'])) {
+            return $this->json([
+                'ok' => false,
+                'msg' => 'Esta internação já foi encerrada por ' . $internacao['status'] . '.'
+            ]);
+        }
+
+        $acaoInfo = $acoesValidas[$acao];
+
+        $internacaoRepo->atualizarStatus($baseId, $id, $acaoInfo['status']);
+
+        // Cria evento na timeline
         $internacaoRepo->inserirEvento(
             $baseId,
             $id,
             (int) $internacao['pet_id'],
-            'Alta',
-            'Alta concedida',
-            'Internação finalizada pelo sistema',
+            ucfirst($acao),
+            $acaoInfo['titulo'],
+            $acaoInfo['descricao'],
             new \DateTime()
         );
 
         return $this->json(['ok' => true]);
     }
+
 
 /**
  * @Route("/internacao/{id}/prescricao/nova", name="clinica_internacao_prescricao_nova", methods={"GET","POST"})

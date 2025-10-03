@@ -341,5 +341,17 @@ class InternacaoRepository extends ServiceEntityRepository
         ]);
     }
 
+    public function atualizarStatus(int $baseId, int $id, string $status): void
+    {
+        $sql = "UPDATE " . $_ENV['DBNAMETENANT'] . ".internacao 
+                SET status = :status 
+                WHERE estabelecimento_id = :baseId AND id = :id";
+        $this->conn->executeQuery($sql, [
+            'baseId' => $baseId,
+            'id'     => $id,
+            'status' => $status,
+        ]);
+    }
+
 
 }

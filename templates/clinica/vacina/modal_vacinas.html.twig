@@ -1,0 +1,61 @@
+{# Botão para abrir o modal #}
+<button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalVacinas">
+    <i class="bi bi-syringe"></i> Vacinas aplicadas
+</button>
+
+{# Modal Vacinas #}
+<div class="modal fade" id="modalVacinas" tabindex="-1" aria-labelledby="modalVacinasLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalVacinasLabel">
+                    <i class="bi bi-syringe"></i> Vacinas aplicadas de {{ pet.nome }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+
+                {% if vacinas is not empty %}
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Lote</th>
+                                <th>Aplicação</th>
+                                <th>Validade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for v in vacinas %}
+                            <tr>
+                                <td>{{ v.tipo }}</td>
+                                <td>{{ v.lote ?: '—' }}</td>
+                                <td>{{ v.dataAplicacao ? v.dataAplicacao|date('d/m/Y') : '—' }}</td>
+                                <td>
+                                    {% if v.dataValidade %}
+                                        {% if v.dataValidade < "now"|date %}
+                                            <span class="badge bg-danger">{{ v.dataValidade|date('d/m/Y') }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ v.dataValidade|date('d/m/Y') }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="alert alert-warning mb-0">
+                        Nenhuma vacina registrada para este pet.
+                    </div>
+                {% endif %}
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
