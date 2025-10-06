@@ -1276,7 +1276,10 @@ class ClinicaController extends DefaultController
     public function editarVenda(Request $request, int $petId, int $id, FinanceiroRepository $financeiroRepository): JsonResponse
     {
         try {
-            $baseId = $this->getUser()->getPetshopId();
+            // 🔧 Troca o banco para o da clínica atual
+            $this->switchDB();
+            $baseId = $this->getIdBase();
+
             $financeiro = $financeiroRepository->findFinanceiro($baseId, $id);
             if (!$financeiro) {
                 return new JsonResponse(['status' => 'error', 'mensagem' => 'Venda não encontrada.'], 404);
@@ -1292,7 +1295,6 @@ class ClinicaController extends DefaultController
 
             $metodo = $request->get('metodo_pagamento') ?: 'pendente';
             $financeiro->setMetodoPagamento($metodo);
-
             $financeiro->setObservacoes($request->get('observacao'));
 
             $financeiroRepository->update($baseId, $financeiro);
@@ -1305,6 +1307,7 @@ class ClinicaController extends DefaultController
             ], 500);
         }
     }
+
 
     /**
      * @Route("/pet/{petId}/venda/{id}/inativar", name="clinica_inativar_venda", methods={"POST"})
