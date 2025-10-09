@@ -1312,10 +1312,11 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/pet/{petId}/venda/{id}/inativar", name="clinica_inativar_venda", methods={"POST"})
      */
-    public function inativarVenda(Request $request, FinanceiroRepository $financeiroRepository, FinanceiroPendenteRepository $pendenteRepository, int $petId,
-                                  int     $id): Response
+    public function inativarVenda(Request $request, FinanceiroRepository $financeiroRepository, FinanceiroPendenteRepository $pendenteRepository, int $petId, int $id): Response
     {
-        $baseId = $this->getUser()->getPetshopId();
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
 
         try {
             $financeiroRepository->inativar($baseId, $id);
