@@ -14,17 +14,23 @@ class Vacina
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Column(name="id", type="integer")
      */
     private $id;
 
-    /** @ORM\Column(type="integer") */
-    private $estabelecimento_id;
+    /** 
+     * @ORM\Column(name="estabelecimento_id", type="integer") 
+     */
+    private $estabelecimentoId;
 
-    /** @ORM\Column(type="integer") */
-    private $pet_id;
+    /** 
+     * @ORM\Column(name="pet_id", type="integer") 
+     */
+    private $petId;
 
-    /** @ORM\Column(type="string", length=100) */
+    /** 
+     * @ORM\Column(name="tipo", type="string", length=100) 
+     */
     private $tipo;
 
     /** 
@@ -37,27 +43,48 @@ class Vacina
      */
     private $dataValidade;
 
-    /** @ORM\Column(type="string", length=100, nullable=true) */
+    /** 
+     * @ORM\Column(name="lote", type="string", length=100, nullable=true) 
+     */
     private $lote;
 
-    // === Getters/Setters ===
+    // ===================== Getters & Setters =====================
+
     public function getId(): ?int { return $this->id; }
 
-    public function getEstabelecimentoId(): ?int { return $this->estabelecimento_id; }
-    public function setEstabelecimentoId(int $id): self { $this->estabelecimento_id = $id; return $this; }
+    public function getEstabelecimentoId(): ?int { return $this->estabelecimentoId; }
+    public function setEstabelecimentoId(int $estabelecimentoId): self {
+        $this->estabelecimentoId = $estabelecimentoId;
+        return $this;
+    }
 
-    public function getPetId(): ?int { return $this->pet_id; }
-    public function setPetId(int $id): self { $this->pet_id = $id; return $this; }
+    public function getPetId(): ?int { return $this->petId; }
+    public function setPetId(int $petId): self {
+        $this->petId = $petId;
+        return $this;
+    }
 
     public function getTipo(): ?string { return $this->tipo; }
-    public function setTipo(string $tipo): self { $this->tipo = $tipo; return $this; }
+    public function setTipo(string $tipo): self {
+        $this->tipo = $tipo;
+        return $this;
+    }
 
     public function getDataAplicacao(): ?\DateTimeInterface { return $this->dataAplicacao; }
-    public function setDataAplicacao(\DateTimeInterface $data): self { $this->dataAplicacao = $data; return $this; }
+    public function setDataAplicacao(\DateTimeInterface $dataAplicacao): self {
+        $this->dataAplicacao = $dataAplicacao;
+        return $this;
+    }
 
     public function getDataValidade(): ?\DateTimeInterface { return $this->dataValidade; }
-    public function setDataValidade(?\DateTimeInterface $data): self { $this->dataValidade = $data; return $this; }
+    public function setDataValidade(?\DateTimeInterface $dataValidade): self {
+        $this->dataValidade = $dataValidade;
+        return $this;
+    }
 
     public function getLote(): ?string { return $this->lote; }
-    public function setLote(?string $lote): self { $this->lote = $lote; return $this; }
+    public function setLote(?string $lote): self {
+        $this->lote = $lote;
+        return $this;
+    }
 }

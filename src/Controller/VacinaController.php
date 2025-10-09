@@ -37,17 +37,14 @@ class VacinaController extends DefaultController
     /**
      * @Route("/clinica/vacina/pet/{petId}/nova", name="clinica_vacina_nova", methods={"POST"})
      */
-    public function novaVacina(
-        int $petId,
-        Request $request,
-        EntityManagerInterface $em
-    ): JsonResponse {
-        $user = $this->getUser();
-        $estabelecimentoId = $user->getPetshopId();
+    public function novaVacina(int $petId, Request $request, EntityManagerInterface $em): JsonResponse {
+
+        $this->switchDB();
+        $baseId = $this->getIdBase();
 
         $vacina = new Vacina();
         $vacina->setPetId($petId);
-        $vacina->setEstabelecimentoId($estabelecimentoId);
+        $vacina->setEstabelecimentoId($baseId);
         $vacina->setTipo($request->request->get('tipo'));
         $vacina->setDataAplicacao(new \DateTime($request->request->get('data_aplicacao')));
         $vacina->setDataValidade(

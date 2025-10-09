@@ -173,6 +173,14 @@
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="vacinas-tab" data-bs-toggle="tab"
+                                    data-bs-target="#vacinas"
+                                    type="button" role="tab" aria-controls="vacinas"
+                                    aria-selected="false">
+                                <i class="fas fa-syringe me-1 text-warning"></i> Vacinas
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <button class="nav-link" id="orcamentos-tab" data-bs-toggle="tab"
                                     data-bs-target="#orcamentos"
                                     type="button" role="tab" aria-controls="orcamentos" aria-selected="false">
@@ -579,6 +587,60 @@
                             <h5 class="mb-0">R$ {{ total_debitos|number_format(2, ',', '.') }}</h5>
                         </div>
                     </div>
+
+                    {# 🧬 VACINAS #}
+                    <div class="tab-pane fade" id="vacinas" role="tabpanel" aria-labelledby="vacinas-tab">
+                        <div class="d-flex justify-content-between align-items-center my-3">
+                            <h5 class="mb-0"><i class="fas fa-syringe text-warning me-1"></i> Vacinas Aplicadas</h5>
+{#                             <a href="#" id="btn-nova-vacina" class="btn btn-warning btn-sm text-dark">
+                                <i class="bi bi-capsule me-1"></i> Registrar Nova Vacina
+                            </a> #}
+                        </div>
+
+                        {% if vacinas is defined and vacinas|length > 0 %}
+                            <div class="table-responsive">
+                                <table id="tabelaVacinas" class="table table-striped table-bordered align-middle">
+                                    <thead class="table-warning text-center">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Tipo</th>
+                                            <th>Data Aplicação</th>
+                                            <th>Validade</th>
+                                            <th>Lote</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for v in vacinas %}
+                                            <tr>
+                                                <td class="text-center">{{ loop.index }}</td>
+                                                <td>{{ v.tipo }}</td>
+                                                <td class="text-center">{{ v.dataAplicacao|date('d/m/Y') }}</td>
+                                                <td class="text-center">
+                                                    {{ v.dataValidade ? v.dataValidade|date('d/m/Y') : '—' }}
+                                                </td>
+                                                <td class="text-center">{{ v.lote ?: '—' }}</td>
+                                                <td class="text-center">
+                                                    <form method="POST"
+                                                          action="{{ path('clinica_vacina_remover', {petId: pet.id, id: v.id}) }}"
+                                                          onsubmit="return confirm('Remover esta vacina?');">
+                                                        <button type="submit" class="btn btn-sm btn-danger">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-secondary text-center mt-3">
+                                Nenhuma vacina registrada para este pet.
+                            </div>
+                        {% endif %}
+                    </div>
+
 
                     {# 🔹 MODAL ÚNICO DE EDIÇÃO DE VENDA #}
                     <div class="modal fade" id="modalEditarVenda" tabindex="-1" aria-hidden="false">
@@ -1158,5 +1220,13 @@
         $('.modal').on('hidden.modal.bs', function () {
             $('.modal-backdrop').remove()
         })
+
+
+        $(document).ready(function() {
+            $('#tabelaVacinas').DataTable({
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json' },
+                order: [[2, 'desc']]
+            });
+        });
     </script>
 {% endblock %}

@@ -16,20 +16,24 @@ class VacinaRepository extends ServiceEntityRepository
         parent::__construct($registry, Vacina::class);
     }
 
+    /**
+     * Retorna todas as vacinas de um pet em um determinado estabelecimento.
+     */
     public function findByPet(int $petId, int $estabelecimentoId): array
     {
-
         return $this->createQueryBuilder('v')
-        ->andWhere('v.pet_id = :petId')
-        ->andWhere('v.estabelecimento_id = :estabId')
-        ->setParameter('petId', $petId)
-        ->setParameter('estabId', $estabelecimentoId)
-        ->orderBy('v.dataAplicacao', 'DESC')
-        ->getQuery()
-        ->getResult();
-
+            ->andWhere('v.petId = :petId')
+            ->andWhere('v.estabelecimentoId = :estabId')
+            ->setParameter('petId', $petId)
+            ->setParameter('estabId', $estabelecimentoId)
+            ->orderBy('v.dataAplicacao', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 
+    /**
+     * Cria uma linha do tempo (timeline) das vacinas aplicadas
+     */
     public function addTimelineItems(int $petId, int $estabelecimentoId): array
     {
         $vacinas = $this->findByPet($petId, $estabelecimentoId);
