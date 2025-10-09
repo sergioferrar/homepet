@@ -46,54 +46,73 @@
     {% endif %}
 </div>
 
-<!-- 📌 Cabeçalho com abas -->
-<div class="container-fluid mt-4">
-    <ul class="nav nav-tabs" role="tablist">
-        <!-- Aba Calendário -->
-        <li class="nav-item" role="presentation">
-            <a href="{{ path('clinica_calendario_geral') }}"
-               class="nav-link active d-flex align-items-center"
-               id="calendario-tab"
-               role="tab"
-               aria-controls="calendario"
-               aria-selected="true">
-                <i class="fas fa-calendar-alt me-1"></i> Prescriçoes Médicas
-            </a>
-        </li>
+    <!-- 📌 Cabeçalho com abas -->
+    <div class="container-fluid mt-4">
+        <ul class="nav nav-tabs   " id="dashboard-tabs" role="tablist">
+            <!-- Aba Prescrições Médicas -->
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-semibold d-flex align-items-center justify-content-center"
+                        id="prescricoes-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#prescricoes"
+                        type="button"
+                        role="tab"
+                        aria-controls="prescricoes"
+                        aria-selected="true">
+                    <i class="fas fa-notes-medical me-2"></i> Prescrições Médicas
+                </button>
+            </li>
 
-        <!-- Aba Histórico -->
-{#         <li class="nav-item" role="presentation">
-            <button class="nav-link d-flex align-items-center" id="historico-tab"
-                    data-bs-toggle="tab" data-bs-target="#historico"
-                    type="button" role="tab" aria-controls="historico"
-                    aria-selected="false">
-                <i class="fas fa-history me-1"></i> Histórico
-            </button>
-        </li> #}
+            <!-- Aba Histórico -->
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-semibold d-flex align-items-center justify-content-center"
+                        id="historico-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#historico"
+                        type="button"
+                        role="tab"
+                        aria-controls="historico"
+                        aria-selected="false">
+                    <i class="fas fa-history me-2"></i> Histórico
+                </button>
+            </li>
 
-        <!-- Aba Orçamentos -->
-{#         <li class="nav-item" role="presentation">
-            <button class="nav-link d-flex align-items-center" id="orcamentos-tab"
-                    data-bs-toggle="tab" data-bs-target="#orcamentos"
-                    type="button" role="tab" aria-controls="orcamentos"
-                    aria-selected="false">
-                <i class="fas fa-file-invoice-dollar me-1"></i> Orçamentos
-            </button>
-        </li> #}
-    </ul>
+            <!-- Aba Orçamentos -->
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-semibold d-flex align-items-center justify-content-center"
+                        id="orcamentos-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#orcamentos"
+                        type="button"
+                        role="tab"
+                        aria-controls="orcamentos"
+                        aria-selected="false">
+                    <i class="fas fa-file-invoice-dollar me-2"></i> Orçamentos
+                </button>
+            </li>
+        </ul>
 
-    <!-- Conteúdo das abas -->
-    <div class="tab-content p-3 border border-top-0 rounded-bottom bg-white">
-        <div class="tab-pane fade show active" id="calendario" role="tabpanel" aria-labelledby="calendario-tab">
-            {# <p>Use o botão acima para abrir o <b>Calendário Geral</b> em página separada.</p> #}
-        </div>
-        <div class="tab-pane fade" id="historico" role="tabpanel" aria-labelledby="historico-tab">
-            {# <p>Aqui você pode exibir histórico de atendimentos, prescrições, etc.</p> #}
-        </div>
-        <div class="tab-pane fade" id="orcamentos" role="tabpanel" aria-labelledby="orcamentos-tab">
-            {# <p>Aqui você pode listar orçamentos emitidos.</p> #}
+        <!-- Conteúdo das abas -->
+        <div class="tab-content p-4 border border-top-0 rounded-bottom bg-white shadow-sm">
+            <!-- Prescrições -->
+            <div class="tab-pane fade show active" id="prescricoes" role="tabpanel" aria-labelledby="prescricoes-tab">
+                <p class="mb-0 text-muted">Selecione um paciente para visualizar as prescrições médicas.</p>
+            </div>
+
+            <!-- Histórico -->
+            <div class="tab-pane fade" id="historico" role="tabpanel" aria-labelledby="historico-tab">
+                <p class="mb-0 text-muted">Aqui você poderá visualizar o histórico de atendimentos e evoluções clínicas.</p>
+            </div>
+
+            <!-- Orçamentos -->
+            <div class="tab-pane fade" id="orcamentos" role="tabpanel" aria-labelledby="orcamentos-tab">
+                <p class="mb-0 text-muted">Acompanhe e gere novos orçamentos clínicos e de procedimentos.</p>
+            </div>
         </div>
     </div>
+
+
+
 </div>
 
 <!-- 📊 Dashboard -->
