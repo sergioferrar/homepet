@@ -989,6 +989,82 @@
                 // $inputValor.val(servicosMap.hasOwnProperty(nomeServico) ? servicosMap[nomeServico] : '').prop('readonly', false);
             });
 
+            // === SELECT2 para serviço ===
+            $('#servico-descricao').select2({
+                placeholder: "Selecione ou pesquise um serviço...",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#modalAdicionarServico'),
+                language: {
+                    noResults: function () {
+                        return "Nenhum serviço encontrado";
+                    }
+                }
+            });
+
+            // aplica também aos selects adicionados dinamicamente
+            $(document).on('focus', '.servico-item select', function () {
+                if (!$(this).data('select2')) {
+                    $(this).select2({
+                        placeholder: "Selecione ou pesquise um serviço...",
+                        allowClear: true,
+                        width: '100%',
+                        dropdownParent: $('#modalAdicionarServico'),
+                    });
+                }
+            });
+
+            // === CAMPO DE DIÁRIAS PARA INTERNAÇÃO ===
+            $(document).on('change', '#servico-descricao', function () {
+                const servicoSelecionado = $(this).find('option:selected').text().toLowerCase();
+                const valorBase = parseFloat($(this).find('option:selected').data('valor')) || 0;
+
+                // remove campo anterior
+                $('#diarias-container').remove();
+
+                if (servicoSelecionado.includes('internação')) {
+                    const htmlDiarias = `
+                        <div id="diarias-container" class="mb-3">
+                            <label for="quantidade-diarias" class="form-label">Quantidade de Diárias</label>
+                            <input type="number" class="form-control" id="quantidade-diarias" name="quantidade_diarias" min="1" value="1">
+                            <small class="text-muted">O valor total será calculado automaticamente (valor × diárias).</small>
+                        </div>
+                    `;
+                    $('#servico-desconto').closest('.mb-3').after(htmlDiarias);
+
+                    // cria campo oculto para o valor total (garante que backend receba o valor correto)
+                    if (!$('#valor-total').length) {
+                        $('<input>', {
+                            type: 'hidden',
+                            id: 'valor-total',
+                            name: 'valor[]',
+                            value: valorBase.toFixed(2)
+                        }).insertAfter('#servico-desconto');
+                    }
+
+                    // recalcula automaticamente ao digitar
+                    $(document).on('input', '#quantidade-diarias', function () {
+                        const qtd = parseInt($(this).val()) || 1;
+                        const total = valorBase * qtd;
+                        $('#valor-total').val(total.toFixed(2));
+
+                        // opcional: mostrar em tela para o usuário
+                        if (!$('#preview-total').length) {
+                            $('<div id="preview-total" class="mt-2 fw-bold text-primary"></div>')
+                                .insertAfter('#quantidade-diarias');
+                        }
+                        $('#preview-total').text(`💰 Total: R$ ${total.toFixed(2).replace('.', ',')}`);
+                    }).trigger('input');
+                } else {
+                    // se não for internação, volta valor padrão
+                    $('#valor-total').remove();
+                    $('#preview-total').remove();
+                }
+            });
+
+
+
+
             // === MODAL EDITAR VENDA ===
             $(".btn-editar-venda").on("click", function () {
                 $("#editar-id").val($(this).data("id"));

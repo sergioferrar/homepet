@@ -802,8 +802,15 @@ class ClinicaController extends DefaultController
                 $descricaoFinal .= $servico['descricao'] . " + ";
             }
 
+            $quantidadeDiarias = (int) $request->get('quantidade_diarias', 1);
+            if (stripos($descricaoFinal, 'internação') !== false && $quantidadeDiarias > 1) {
+                $valorFinal = $valorFinal * $quantidadeDiarias;
+                $descricaoFinal = trim($descricaoFinal . " ({$quantidadeDiarias} diárias)");
+            }
+
             $financeiroPendente->setValor($valorFinal - $descontoFinal);
             $financeiroPendente->setDescricao($descricaoFinal);
+
 
             $financeiroPendente->setData($data);
             $financeiroPendente->setStatus('pendente');
@@ -829,10 +836,16 @@ class ClinicaController extends DefaultController
                 $valorFinal += $servico['valor'];
                 $descontoFinal += $request->get('desconto')[$key];
                 $descricaoFinal .= $servico['descricao'] . " + ";
-            }
+                }
 
-            $financeiro->setValor($valorFinal - $descontoFinal);
-            $financeiro->setDescricao($descricaoFinal);
+                $quantidadeDiarias = (int) $request->get('quantidade_diarias', 1);
+                if (stripos($descricaoFinal, 'internação') !== false && $quantidadeDiarias > 1) {
+                    $valorFinal = $valorFinal * $quantidadeDiarias;
+                    $descricaoFinal = trim($descricaoFinal . " ({$quantidadeDiarias} diárias)");
+                }
+
+                $financeiro->setValor($valorFinal - $descontoFinal);
+                $financeiro->setDescricao($descricaoFinal);
 
             $financeiro->setData($data);
             $financeiro->setOrigem('clinica');

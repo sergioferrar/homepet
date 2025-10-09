@@ -103,20 +103,53 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function save($baseId, Financeiro $financeiro, bool $inativo = false): void
     {
+        $descricao = $financeiro->getDescricao();
+        $valor = $financeiro->getValor();
+        $data = $financeiro->getData()->format('Y-m-d');
+        $petId = $financeiro->getPetId() ?? null;
+        $status = $inativo ? 'inativo' : ($financeiro->getStatus() ?? null);
+        $inativar = $inativo ? 1 : 0;
+
+        // tenta ler quantidade de diárias do objeto ou do POST
+        $qtdDiarias = method_exists($financeiro, 'getQuantidadeDiarias')
+            ? (int) $financeiro->getQuantidadeDiarias()
+            : (int) ($_POST['quantidade_diarias'] ?? 1);
+
+        // SQL base
         $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiro 
                 (estabelecimento_id, descricao, valor, data, pet_id, status, inativar) 
                 VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id, :status, :inativar)";
 
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue('estabelecimento_id', $baseId);
-        $stmt->bindValue('descricao', $financeiro->getDescricao());
-        $stmt->bindValue('valor', $financeiro->getValor());
-        $stmt->bindValue('data', $financeiro->getData()->format('Y-m-d'));
-        $stmt->bindValue('pet_id', $financeiro->getPetId() ?? null);
-        $stmt->bindValue('status', $inativo ? 'inativo' : ($financeiro->getStatus() ?? null));
-        $stmt->bindValue('inativar', $inativo ? 1 : 0);
-        $stmt->execute();
+        // se for internação com várias diárias → cria vários registros
+        if (stripos($descricao, 'internação') !== false && $qtdDiarias > 1) {
+            for ($i = 1; $i <= $qtdDiarias; $i++) {
+                $desc = "{$descricao} (Diária {$i}/{$qtdDiarias})";
+                $this->conn->executeQuery($sql, [
+                    'estabelecimento_id' => $baseId,
+                    'descricao' => $desc,
+                    'valor' => $valor,
+                    'data' => $data,
+                    'pet_id' => $petId,
+                    'status' => $status,
+                    'inativar' => $inativar,
+                ]);
+            }
+            return; // encerra aqui
+        }
+
+        // se não for internação ou só 1 diária → grava normalmente
+        $this->conn->executeQuery($sql, [
+            'estabelecimento_id' => $baseId,
+            'descricao' => $descricao,
+            'valor' => $valor,
+            'data' => $data,
+            'pet_id' => $petId,
+            'status' => $status,
+            'inativar' => $inativar,
+        ]);
     }
+
+
 
     public function update($baseId, Financeiro $financeiro): void
     {

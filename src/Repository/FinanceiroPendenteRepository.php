@@ -92,19 +92,51 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
     public function savePendente($baseId, FinanceiroPendente $financeiro): void
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiropendente (estabelecimento_id, descricao, valor, data, pet_id, agendamento_id) 
-                VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id, :agendamento_id)";
+        $descricao = $financeiro->getDescricao();
+        $valor = $financeiro->getValor();
+        $data = $financeiro->getData()->format('Y-m-d H:i:s');
+        $petId = $financeiro->getPetId() ?? null;
+        $agendamentoId = $financeiro->getAgendamentoId() ?? null;
+        $metodo = $financeiro->getMetodoPagamento() ?? 'pendente';
 
+        $qtdDiarias = method_exists($financeiro, 'getQuantidadeDiarias')
+            ? (int) $financeiro->getQuantidadeDiarias()
+            : (int) ($_POST['quantidade_diarias'] ?? 1);
+
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiropendente 
+                (estabelecimento_id, descricao, valor, data, pet_id, metodo_pagamento, agendamento_id) 
+                VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id, :metodo_pagamento, :agendamento_id)";
+
+        // Se for internação com várias diárias → insere várias linhas
+        if (stripos($descricao, 'internação') !== false && $qtdDiarias > 1) {
+            for ($i = 1; $i <= $qtdDiarias; $i++) {
+                $desc = "{$descricao} (Diária {$i}/{$qtdDiarias})";
+                $this->conn->executeQuery($sql, [
+                    'estabelecimento_id' => $baseId,
+                    'descricao'          => $desc,
+                    'valor'              => $valor,
+                    'data'               => $data,
+                    'pet_id'             => $petId,
+                    'metodo_pagamento'   => $metodo,
+                    'agendamento_id'     => $agendamentoId,
+                ]);
+            }
+            return;
+        }
+
+        // caso contrário, insere um registro só
         $this->conn->executeQuery($sql, [
             'estabelecimento_id' => $baseId,
-            'descricao' => $financeiro->getDescricao(),
-            'valor' => $financeiro->getValor(),
-            'data' => $financeiro->getData()->format('Y-m-d H:i:s'),
-            'pet_id' => $financeiro->getPetId() ?? null,
-            'metodo_pagamento' => $financeiro->getMetodoPagamento() ?? 'pendente',
-            'agendamento_id' => $financeiro->getAgendamentoId() ?? null,
+            'descricao'          => $descricao,
+            'valor'              => $valor,
+            'data'               => $data,
+            'pet_id'             => $petId,
+            'metodo_pagamento'   => $metodo,
+            'agendamento_id'     => $agendamentoId,
         ]);
     }
+
+
 
     public function findByBaseId($baseId, array $criteria): array
     {
