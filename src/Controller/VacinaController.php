@@ -34,6 +34,7 @@ class VacinaController extends DefaultController
         return $this->render('clinica/vacina/index.html.twig', [
             'vacinas' => $vacinas,
             'pet'     => $pet,
+            'petId'   => $petId,
         ]);
     }
 
@@ -48,6 +49,8 @@ class VacinaController extends DefaultController
         $baseId = $this->getIdBase();
 
         $vacina = new Vacina();
+        $vacina->setEstabelecimentoId($baseId);
+
         $vacina->setPetId($petId);
         $vacina->setTipo($request->request->get('tipo'));
         $vacina->setDataAplicacao(new \DateTime($request->request->get('data_aplicacao')));
@@ -60,7 +63,7 @@ class VacinaController extends DefaultController
         $vacina->setVeterinarioId($request->request->get('veterinario_id'));
 
         // Usa o método SQL direto (multi-tenant)
-        $repo->inserir($baseId, $vacina);
+        $repo->save($baseId, $vacina);
 
         return new JsonResponse(['ok' => true, 'msg' => 'Vacina registrada com sucesso!']);
     }
@@ -70,27 +73,19 @@ class VacinaController extends DefaultController
      * 
      * @Route("/pet/{petId}/vacina/{id}/remover", name="clinica_vacina_remover", methods={"POST"})
      */
-    public function remover(int $petId, int $id, VacinaRepository $repo, Request $request): Response
+    public function remover(int $petId, int $id, VacinaRepository $repo, Request $request): JsonResponse
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
         $vacina = $repo->buscarPorId($baseId, $id);
         if (! $vacina) {
-            if ($request->isXmlHttpRequest()) {
-                return new JsonResponse(['ok' => false, 'msg' => 'Vacina não encontrada']);
-            }
-            $this->addFlash('danger', 'Vacina não encontrada.');
-            return $this->redirectToRoute('clinica_vacinas', ['petId' => $petId]);
+            return new JsonResponse(['ok' => false, 'msg' => 'Vacina não encontrada']);
         }
 
-        $repo->deletar($baseId, $id);
+        $repo->delete($baseId, $id);
 
-        if ($request->isXmlHttpRequest()) {
-            return new JsonResponse(['ok' => true, 'msg' => 'Vacina removida com sucesso!']);
-        }
-
-        $this->addFlash('success', 'Vacina removida com sucesso!');
-        return $this->redirectToRoute('clinica_vacinas', ['petId' => $petId]);
+        return new JsonResponse(['ok' => true, 'msg' => 'Vacina removida com sucesso!']);
     }
+
 }

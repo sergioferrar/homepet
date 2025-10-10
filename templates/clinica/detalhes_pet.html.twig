@@ -582,9 +582,14 @@
                             {% endfor %}
                         </div>
 
+                        {% set total_vendas = 0 %}
+                        {% for f in todos_financeiros %}
+                            {% set total_vendas = total_vendas + (f.valor ?? 0) %}
+                        {% endfor %}
+
                         <div class="d-flex justify-content-between mt-3">
                             <h5 class="mb-0">Total</h5>
-                            <h5 class="mb-0">R$ {{ total_debitos|number_format(2, ',', '.') }}</h5>
+                            <h5 class="mb-0 text-success fw-bold">R$ {{ total_vendas|number_format(2, ',', '.') }}</h5>
                         </div>
                     </div>
 
@@ -615,10 +620,8 @@
                                             <tr>
                                                 <td class="text-center">{{ loop.index }}</td>
                                                 <td>{{ v.tipo }}</td>
-                                                <td class="text-center">{{ v.dataAplicacao|date('d/m/Y') }}</td>
-                                                <td class="text-center">
-                                                    {{ v.dataValidade ? v.dataValidade|date('d/m/Y') : '—' }}
-                                                </td>
+                                                <td class="text-center">{{ v.data_aplicacao ? v.data_aplicacao|date('d/m/Y') : '—' }}</td>
+                                                <td class="text-center">{{ v.data_validade ? v.data_validade|date('d/m/Y') : '—' }}</td>
                                                 <td class="text-center">{{ v.lote ?: '—' }}</td>
                                                 <td class="text-center">
                                                     <form method="POST"
@@ -681,6 +684,10 @@
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar
                                     </button>
                                 </div>
+                                <button type="button" class="btn btn-primary add-servico">
+                                    <i class="fas fa-plus"></i> Adicionar novo serviço
+                                </button>
+
                             </form>
                         </div>
                     </div>
@@ -708,13 +715,12 @@
                   action="{{ path('clinica_concluir_venda', {'petId': pet.id}) }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalAdicionarServicoLabel">Adicionar Serviço / Lançamento</h5>
-                    <span class="btn btn-sm btn-primary ms-3 add-servico">+ serviço</span>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="servico-descricao" class="form-label">Descrição do Serviço*</label>
-                        <select class="form-select" id="servico-descricao" name="descricao[]" required>
+                        <select class="form-select" id="servico-descricao-1" name="descricao[]" required>
                             <option value="">Selecione um serviço...</option>
                             {% for servico in servicos_clinica %}
                                 <option value="{{ servico.id }}" data-valor="{{ servico.valor }}">
@@ -742,6 +748,23 @@
                             <option value="pendente">Pagamento Pendente</option>
                         </select>
                     </div>
+                    <div id="cartao-opcoes" class="row d-none">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Bandeira do Cartão</label>
+                            <select name="bandeira_cartao" class="form-select">
+                                <option value="">Selecione...</option>
+                                <option value="Visa">Visa</option>
+                                <option value="Mastercard">Mastercard</option>
+                                <option value="Elo">Elo</option>
+                                <option value="American Express">American Express</option>
+                                <option value="Hipercard">Hipercard</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Quantidade de Parcelas</label>
+                            <input type="number" name="parcelas" class="form-control" min="1" max="12" value="1">
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label for="servico-data" class="form-label">Data</label>
                         <input type="date" class="form-control" id="servico-data" name="data"
@@ -754,10 +777,21 @@
                     <input type="hidden" name="origem" value="clinica">
                     <input type="hidden" name="pet_id" value="{{ pet.id }}">
                 </div>
-                <div class="modal-footer d-flex justify-content-between">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success">Concluir / Salvar</button>
+                <div class="modal-footer d-flex justify-content-between align-items-center flex-wrap">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-primary add-servico">
+                            <i class="fas fa-plus"></i> Adicionar novo serviço
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Concluir / Salvar
+                        </button>
+                    </div>
                 </div>
+
             </form>
         </div>
     </div>
@@ -997,7 +1031,7 @@
 
             // === MODAL ADICIONAR SERVIÇO ===
             const $formNovoServico = $('#form-novo-servico');
-            const $selectServico = $('#servico-descricao');
+            const $selectServico = $('#servico-descricao-1');
             const $inputValor = $('#servico-valor');
             const servicosMap = {};
             {% for servico in servicos_clinica %}
@@ -1037,8 +1071,10 @@
             });
 
             $btnAdicionarServico.on('click', function () {
-                $selectServico.prop('selectedIndex', 0);
-                $inputValor.val('');
+                $('.modal').modal('hide'); 
+                $('#servico-descricao-1').val('').trigger('change');
+                $('#servicos-container').empty();
+                $('#cartao-opcoes').addClass('d-none');
                 modalAdicionarServico.show();
             });
 
@@ -1052,17 +1088,18 @@
             });
 
             // === SELECT2 para serviço ===
-            $('#servico-descricao').select2({
+            $('#servico-descricao-1').select2({
+                dropdownParent: $('#modalAdicionarServico .modal-content'),
                 placeholder: "Selecione ou pesquise um serviço...",
                 allowClear: true,
                 width: '100%',
-                dropdownParent: $('#modalAdicionarServico'),
                 language: {
                     noResults: function () {
                         return "Nenhum serviço encontrado";
                     }
                 }
             });
+
 
             // aplica também aos selects adicionados dinamicamente
             $(document).on('focus', '.servico-item select', function () {
@@ -1074,55 +1111,53 @@
                         dropdownParent: $('#modalAdicionarServico'),
                     });
                 }
-            });
+         });
 
-            // === CAMPO DE DIÁRIAS PARA INTERNAÇÃO ===
-            $(document).on('change', '#servico-descricao', function () {
-                const servicoSelecionado = $(this).find('option:selected').text().toLowerCase();
-                const valorBase = parseFloat($(this).find('option:selected').data('valor')) || 0;
+        // === CAMPO DE DIÁRIAS PARA INTERNAÇÃO ===
+        $(document).on('change', 'select[name="descricao[]"]', function () {
+            const $select = $(this);
+            const servicoSelecionado = $select.find('option:selected').text().toLowerCase();
+            const valorBase = parseFloat($select.find('option:selected').data('valor')) || 0;
 
-                // remove campo anterior
-                $('#diarias-container').remove();
+            // remove campo de diárias anterior desse serviço
+            $select.closest('.servico-item, .modal-body').find('.diarias-container').remove();
+            $select.closest('.servico-item, .modal-body').find('.preview-total').remove();
 
-                if (servicoSelecionado.includes('internação')) {
-                    const htmlDiarias = `
-                        <div id="diarias-container" class="mb-3">
-                            <label for="quantidade-diarias" class="form-label">Quantidade de Diárias</label>
-                            <input type="number" class="form-control" id="quantidade-diarias" name="quantidade_diarias" min="1" value="1">
-                            <small class="text-muted">O valor total será calculado automaticamente (valor × diárias).</small>
-                        </div>
-                    `;
-                    $('#servico-desconto').closest('.mb-3').after(htmlDiarias);
+            // cria um id único baseado no select
+            const index = $select.attr('id').replace(/\D/g, '') || '1';
 
-                    // cria campo oculto para o valor total (garante que backend receba o valor correto)
-                    if (!$('#valor-total').length) {
-                        $('<input>', {
-                            type: 'hidden',
-                            id: 'valor-total',
-                            name: 'valor[]',
-                            value: valorBase.toFixed(2)
-                        }).insertAfter('#servico-desconto');
-                    }
+            if (servicoSelecionado.includes('internação')) {
+                const htmlDiarias = `
+                    <div class="diarias-container mb-3">
+                        <label for="quantidade-diarias-${index}" class="form-label">Quantidade de Diárias</label>
+                        <input type="number" class="form-control quantidade-diarias" id="quantidade-diarias-${index}"
+                               name="quantidade_diarias[]" min="1" value="1" data-valor-base="${valorBase}">
+                        <small class="text-muted">O valor total será calculado automaticamente (valor × diárias).</small>
+                        <input type="hidden" id="valor-total-${index}" name="valor_calculado[]" value="${valorBase.toFixed(2)}">
+                        <div id="preview-total-${index}" class="preview-total mt-2 fw-bold text-primary"></div>
+                    </div>
+                `;
+                $select.closest('.mb-3').after(htmlDiarias);
+                atualizarTotal($(`#quantidade-diarias-${index}`)); // já calcula
+            }
+        });
 
-                    // recalcula automaticamente ao digitar
-                    $(document).on('input', '#quantidade-diarias', function () {
-                        const qtd = parseInt($(this).val()) || 1;
-                        const total = valorBase * qtd;
-                        $('#valor-total').val(total.toFixed(2));
+        // função para recalcular automaticamente
+        function atualizarTotal($input) {
+            const qtd = parseInt($input.val()) || 1;
+            const valorBase = parseFloat($input.data('valor-base')) || 0;
+            const total = valorBase * qtd;
+            const id = $input.attr('id').replace('quantidade-diarias-', '');
 
-                        // opcional: mostrar em tela para o usuário
-                        if (!$('#preview-total').length) {
-                            $('<div id="preview-total" class="mt-2 fw-bold text-primary"></div>')
-                                .insertAfter('#quantidade-diarias');
-                        }
-                        $('#preview-total').text(`💰 Total: R$ ${total.toFixed(2).replace('.', ',')}`);
-                    }).trigger('input');
-                } else {
-                    // se não for internação, volta valor padrão
-                    $('#valor-total').remove();
-                    $('#preview-total').remove();
-                }
-            });
+            $(`#valor-total-${id}`).val(total.toFixed(2));
+            $(`#preview-total-${id}`).text(`💰 Total: R$ ${total.toFixed(2).replace('.', ',')}`);
+        }
+
+        // escuta mudanças na quantidade de diárias
+        $(document).on('input', '.quantidade-diarias', function () {
+            atualizarTotal($(this));
+        });
+
 
 
 
@@ -1181,41 +1216,57 @@
             // Adicionar serviço ao pet correspondente
 
         });
-        $(document).on("click", ".add-servico", function () {
-            let petIndex = $(this).data("pet-index");
 
-            let servicoHtml = `
-                <div class="mb-3 servico-item">
-                    <hr>
-                    <div class="mb-3">
-                        <label for="servico-descricao" class="form-label">Descrição do Serviço*</label>
-                        <select class="form-select" id="servico-descricao" name="descricao[]" required>
-                            <option value="">Selecione um serviço...</option>
-                            {% for servico in servicos_clinica %}
-                                <option value="{{ servico.id }}" data-valor="{{ servico.valor }}">
-                                    {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="servico-desconto" class="form-label">Desconto (R$)</label>
-                        <input type="number" step="0.01" class="form-control" id="servico-desconto" name="desconto[]"
-                               value="0">
-                    </div>
-                    <button type="button" class="btn btn-danger remove-servico mt-2">
-                        <i class="bx bx-trash"></i> Remover Serviço
-                    </button>
+    $(document).on("click", ".add-servico", function () {
+        let index = $(".servico-item").length + 1;
+
+        let servicoHtml = `
+            <div class="mb-3 servico-item border rounded-3 p-3 bg-light">
+                <div class="mb-3">
+                    <label class="form-label">Descrição do Serviço*</label>
+                    <select class="form-select select-servico" name="descricao[]" required id="servico-descricao-${index}">
+                        <option value="">Selecione um serviço...</option>
+                        {% for servico in servicos_clinica %}
+                            <option value="{{ servico.id }}" data-valor="{{ servico.valor }}">
+                                {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
+                            </option>
+                        {% endfor %}
+                    </select>
                 </div>
-            `;
 
-            $(`#servicos-container`).append(servicoHtml);
-        });
+                <div class="mb-3">
+                    <label class="form-label">Desconto (R$)</label>
+                    <input type="number" step="0.01" class="form-control" name="desconto[]" value="0">
+                </div>
 
-        // Remover serviço
-        $(document).on("click", ".remove-servico", function () {
-            $(this).closest(".servico-item").remove();
+                <button type="button" class="btn btn-danger remove-servico">
+                    <i class="bx bx-trash"></i> Remover Serviço
+                </button>
+            </div>
+        `;
+
+        $('#servicos-container').append(servicoHtml);
+
+        // destrói qualquer instância antiga antes de recriar
+        const $novoSelect = $(`#servico-descricao-${index}`);
+        if ($novoSelect.data('select2')) {
+            $novoSelect.select2('destroy');
+        }
+
+        // ativa o Select2 corretamente dentro do modal
+        $novoSelect.select2({
+            dropdownParent: $('#modalAdicionarServico .modal-content'),
+            placeholder: "Selecione ou pesquise um serviço...",
+            allowClear: true,
+            width: '100%'
         });
+    });
+
+
+    // Remover serviço
+    $(document).on("click", ".remove-servico", function () {
+        $(this).closest(".servico-item").remove();
+    });
 
         $('.modal').on('hidden.modal.bs', function () {
             $('.modal-backdrop').remove()
@@ -1228,5 +1279,45 @@
                 order: [[2, 'desc']]
             });
         });
+
+        $(document).on('change', '#servico-metodo', function() {
+            const metodo = $(this).val();
+            if (metodo === 'credito' || metodo === 'debito') {
+                $('#cartao-opcoes').removeClass('d-none');
+            } else {
+                $('#cartao-opcoes').addClass('d-none');
+            }
+        });
+
+        // === REMOVER VACINA DIRETO DO DASHBOARD ===
+        $(document).on('submit', 'form[action*="vacina"][action*="remover"]', async function (e) {
+            e.preventDefault(); 
+
+            if (!confirm("Deseja remover esta vacina?")) return;
+
+            const form = this;
+            try {
+                const resp = await fetch(form.action, { method: "POST" });
+                const data = await resp.json();
+
+                if (data.ok) {
+                    const row = form.closest("tr");
+                    if (row) {
+                        $(row).fadeOut(300, () => $(row).remove());
+                    }
+
+                    if (window.Notify && Notify.toast) {
+                        Notify.toast(data.msg || "Vacina removida com sucesso!", "success");
+                    } else {
+                        alert(data.msg || "Vacina removida com sucesso!");
+                    }
+                } else {
+                    alert(data.msg || "Erro ao remover vacina.");
+                }
+            } catch (err) {
+                alert("Erro ao remover vacina: " + err.message);
+            }
+        });
+
     </script>
 {% endblock %}

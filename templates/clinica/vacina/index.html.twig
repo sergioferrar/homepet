@@ -27,11 +27,11 @@
                 {% for v in vacinas %}
                     <tr>
                         <td>{{ v.tipo }}</td>
-                        <td>{{ v.dataAplicacao|date('d/m/Y') }}</td>
-                        <td>{{ v.dataValidade|date('d/m/Y') }}</td>
+                        <td>{{ v.data_aplicacao ? v.data_aplicacao|date('d/m/Y') : '-' }}</td>
+                        <td>{{ v.data_validade ? v.data_validade|date('d/m/Y') : '-' }}</td>
                         <td>{{ v.lote ?: '-' }}</td>
                         <td>
-                            <form method="post" action="{{ path('clinica_vacina_remover', {id: v.id}) }}" class="d-inline">
+                            <form method="post" action="{{ path('clinica_vacina_remover', {petId: petId, id: v.id}) }}" class="d-inline">
                                 <button class="btn btn-sm btn-danger" onclick="return confirm('Remover vacina?')">
                                     Remover
                                 </button>
@@ -96,23 +96,57 @@
 {% block javascripts %}
 {{ parent() }}
 <script>
-const formVac = document.querySelector('#formNovaVacina');
-if (formVac) {
-    formVac.addEventListener('submit', async e => {
-        e.preventDefault();
-        try {
-            const resp = await fetch(formVac.action, {method: 'POST', body: new FormData(formVac)});
-            const data = await resp.json();
-            if (data.ok) {
-                alert(data.msg || "Vacina registrada!");
-                location.reload();
-            } else {
-                alert(data.msg || "Erro ao registrar vacina.");
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Salvar nova vacina ---
+    const formVac = document.querySelector('#formNovaVacina');
+    if (formVac) {
+        formVac.addEventListener('submit', async e => {
+            e.preventDefault();
+            try {
+                const resp = await fetch(formVac.action, {
+                    method: 'POST',
+                    body: new FormData(formVac)
+                });
+                const data = await resp.json();
+                if (data.ok) {
+                    alert(data.msg || "Vacina registrada!");
+                    location.reload();
+                } else {
+                    alert(data.msg || "Erro ao registrar vacina.");
+                }
+            } catch (err) {
+                alert('Erro ao registrar vacina.');
             }
-        } catch (err) {
-            alert('Erro ao registrar vacina.');
-        }
+        });
+    }
+
+    // --- Remover vacina via AJAX ---
+    document.querySelectorAll('form[action*="vacina"]').forEach(form => {
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            if (!confirm('Deseja remover esta vacina?')) return;
+
+            try {
+                const resp = await fetch(form.action, { method: 'POST' });
+                const data = await resp.json();
+
+                if (data.ok) {
+                    const row = form.closest('tr');
+                    if (row) {
+                        // Animação para desaparecer a linha
+                        row.style.transition = 'opacity 0.3s';
+                        row.style.opacity = '0';
+                        setTimeout(() => row.remove(), 300);
+                    }
+                } else {
+                    alert(data.msg || "Erro ao remover vacina.");
+                }
+            } catch (err) {
+                alert('Erro ao remover vacina.');
+            }
+        });
     });
-}
+});
 </script>
 {% endblock %}
+

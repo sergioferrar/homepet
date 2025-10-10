@@ -1,0 +1,26 @@
+{% extends 'baseClinica.html.twig' %}
+
+{% block title %}{{ feature }} | Doutora das Patas{% endblock %}
+
+{% block body %}
+<div class="container py-5 text-center">
+    <div class="card shadow-sm border-0 p-5">
+        <h2 class="mb-3 text-success">
+            🚧 Módulo {{ feature|capitalize }} em desenvolvimento
+        </h2>
+        <p class="text-muted mb-4">
+            Esta funcionalidade ainda não foi implementada ou está em fase de ajustes.
+        </p>
+
+        {% if pet is defined %}
+            <p class="fw-bold">
+                Pet atual: <span class="text-primary">{{ pet.nome }}</span>
+            </p>
+        {% endif %}
+
+        <a href="{{ path('clinica_dashboard') }}" class="btn btn-success mt-3">
+            <i class="bi bi-arrow-left-circle me-1"></i> Voltar ao Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

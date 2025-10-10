@@ -122,7 +122,8 @@ class ClinicaController extends DefaultController
         $internacoesPet = $internacaoRepo->listarInternacoesPorPet($baseId, $pet['id']);
 
         // --- Vacinas ---
-        $vacinas = $vacinaRepo->listarPorPet($baseId, $petId);
+        // $vacinas = $vacinaRepo->listarPorPet($baseId, $petId);
+        $vacinas = $vacinaRepo->listarPorPet($baseId, $pet['id']);
 
 
         // --- BUSCA TODOS OS SERVIÇOS DA CLÍNICA ---
@@ -154,10 +155,15 @@ class ClinicaController extends DefaultController
 
         foreach ($vacinas as $v) {
             $timeline_items[] = [
-                'data' => new \DateTime($v['dataAplicacao']),
+                'data' => isset($v['data_aplicacao']) ? new \DateTime($v['data_aplicacao']) : new \DateTime(),
                 'tipo' => 'Vacina',
-                'observacoes' => 'Tipo: ' . $v['tipo'] . ' | Lote: ' . ($v['lote'] ?? '—') .
-                    ' | Validade: ' . (new \DateTime($v['dataValidade']))->format('d/m/Y'),
+                'resumo' => sprintf(
+                    '%s — Lote: %s | Validade: %s',
+                    strtoupper($v['tipo'] ?? 'VACINA'),
+                    $v['lote'] ?? '—',
+                    isset($v['data_validade']) ? (new \DateTime($v['data_validade']))->format('d/m/Y') : '—'
+                ),
+                'cor' => '#FFD700', 
             ];
         }
 
@@ -509,14 +515,14 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/pet/{petId}/vacina/nova", name="clinica_nova_vacina", methods={"GET", "POST"})
      */
-    public function novaVacina(Request $request, int $petId): Response
-    {
-        $this->switchDB();
-        $baseId = $this->getIdBase();
-        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
-        // Lógica para vacinas
-        return $this->render('clinica/placeholder.html.twig', ['pet' => $pet, 'feature' => 'Vacina']);
-    }
+    // public function novaVacina(Request $request, int $petId): Response
+    // {
+    //     $this->switchDB();
+    //     $baseId = $this->getIdBase();
+    //     $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
+    //     // Lógica para vacinas
+    //     return $this->render('clinica/placeholder.html.twig', ['pet' => $pet, 'feature' => 'Vacina']);
+    // }
 
     // --- ROTAS ORIGINAIS (MANTIDAS E FUNCIONAIS) ---
 
@@ -751,119 +757,128 @@ class ClinicaController extends DefaultController
     }
 
     /**
-     * @Route("/pet/{petId}/venda/concluir", name="clinica_concluir_venda", methods={"POST"})
-     */
-    public function concluirVenda(Request $request, int $petId, EntityManagerInterface $entityManager): JsonResponse
-    {
+ * @Route("/pet/{petId}/venda/concluir", name="clinica_concluir_venda", methods={"POST"})
+ */
+public function concluirVenda(Request $request, int $petId, EntityManagerInterface $entityManager): JsonResponse
+{
+    $this->switchDB();
+    $baseId = $this->getIdBase();
 
-        $this->switchDB();
-        $baseId = $this->getIdBase();
+    // --- Pegando todos os campos do POST
+    $servicoId = $request->get('servico_id');
+    $descricao = $request->get('descricao');
+    $data = $request->get('data') ? new \DateTime($request->get('data')) : new \DateTime();
+    $observacao = $request->get('observacao');
+    $metodoPagamento = $request->get('metodo_pagamento');
 
-        // Pegando todos os campos do POST
-        $servicoId = $request->get('servico_id');
-        $descricao = $request->get('descricao');
-        // $valor = (float)$request->get('valor');
-        $data = $request->get('data') ? new \DateTime($request->get('data')) : new \DateTime();
-        $observacao = $request->get('observacao');
-        $metodoPagamento = $request->get('metodo_pagamento');
-        // $desconto = (float)$request->get('desconto', 0);
-
-        // --- Se vier ID do serviço, busca o valor oficial no banco (anti-gambiarra)
-        if ($servicoId) {
-            // Use o EntityManager para obter o repositório
-            $servico = $entityManager->getRepository(Servico::class)->find($servicoId);
-            if (!$servico) {
-                return $this->json(['status' => 'error', 'mensagem' => 'Serviço não encontrado!'], 404);
-            }
-            $descricao = $servico->getNome();
-            $valor = (float)$servico->getValor();
+    // --- Se vier ID do serviço, busca o valor oficial no banco (anti-gambiarra)
+    if ($servicoId) {
+        $servico = $entityManager->getRepository(Servico::class)->find($servicoId);
+        if (!$servico) {
+            return $this->json(['status' => 'error', 'mensagem' => 'Serviço não encontrado!'], 404);
         }
-
-        // --- Valor final nunca negativo!
-        // $valorFinal = max(0, $valor - $desconto);
-
-        // --- Monta descrição final (nome + observação)
-        // $descricaoFinal = trim($descricao . ($observacao ? ' - ' . $observacao : ''));
-
-        $valorFinal = 0;
-        $descontoFinal = 0;
-        $descricaoFinal = '';
-
-        if ($metodoPagamento === 'pendente') {
-            // Vai pro Financeiro Pendente
-
-            $financeiroPendente = new FinanceiroPendente();
-            $financeiroPendente->setEstabelecimentoId($baseId);
-            $financeiroPendente->setPetId($petId);
-
-            foreach ($request->get('descricao') as $key => $val) {
-                $servico = $this->getRepositorio(\App\Entity\Servico::class)->listaServicoPorId($baseId, $val);
-                $valorFinal += $servico['valor'];
-                $descontoFinal += $request->get('desconto')[$key];
-                $descricaoFinal .= $servico['descricao'] . " + ";
-            }
-
-            $quantidadeDiarias = (int) $request->get('quantidade_diarias', 1);
-            if (stripos($descricaoFinal, 'internação') !== false && $quantidadeDiarias > 1) {
-                $valorFinal = $valorFinal * $quantidadeDiarias;
-                $descricaoFinal = trim($descricaoFinal . " ({$quantidadeDiarias} diárias)");
-            }
-
-            $financeiroPendente->setValor($valorFinal - $descontoFinal);
-            $financeiroPendente->setDescricao($descricaoFinal);
-
-
-            $financeiroPendente->setData($data);
-            $financeiroPendente->setStatus('pendente');
-            $financeiroPendente->setOrigem('clinica');
-            $financeiroPendente->setMetodoPagamento($metodoPagamento);
-
-            // Persistir e salvar a entidade
-            $entityManager->persist($financeiroPendente);
-            $entityManager->flush();
-
-            return $this->json([
-                'status' => 'success',
-                'mensagem' => 'Lançado como pendente.',
-            ]);
-        } else {
-            // Vai pro Financeiro "Pago"
-            $financeiro = new Financeiro();
-            $financeiro->setEstabelecimentoId($baseId);
-            $financeiro->setPetId($petId);
-
-            foreach ($request->get('descricao') as $key => $val) {
-                $servico = $this->getRepositorio(\App\Entity\Servico::class)->listaServicoPorId($baseId, $val);
-                $valorFinal += $servico['valor'];
-                $descontoFinal += $request->get('desconto')[$key];
-                $descricaoFinal .= $servico['descricao'] . " + ";
-                }
-
-                $quantidadeDiarias = (int) $request->get('quantidade_diarias', 1);
-                if (stripos($descricaoFinal, 'internação') !== false && $quantidadeDiarias > 1) {
-                    $valorFinal = $valorFinal * $quantidadeDiarias;
-                    $descricaoFinal = trim($descricaoFinal . " ({$quantidadeDiarias} diárias)");
-                }
-
-                $financeiro->setValor($valorFinal - $descontoFinal);
-                $financeiro->setDescricao($descricaoFinal);
-
-            $financeiro->setData($data);
-            $financeiro->setOrigem('clinica');
-            $financeiro->setStatus('concluido');
-            // Linha removida, pois a tabela 'financeiro' não tem a coluna 'metodo_pagamento'.
-            // $financeiro->setMetodoPagamento($metodoPagamento);
-
-            // Persistir e salvar a entidade
-            $entityManager->persist($financeiro);
-            $entityManager->flush();
-
-            return $this->json([
-                'status' => 'success',
-                'mensagem' => 'Pagamento registrado no financeiro!',
-            ]);
-        }
+        $descricao = $servico->getNome();
+        $valor = (float)$servico->getValor();
     }
+
+
+    $valorFinal = 0;
+    $descontoFinal = 0;
+    $descricaoFinal = '';
+
+
+    $descricoes = (array) $request->get('descricao', []);
+    $descontos = (array) $request->get('desconto', []);
+    $valoresCalculados = (array) $request->get('valor_calculado', []); // vindo do JS (internações)
+    $valoresSimples = (array) $request->get('valor', []); // outros serviços
+    $quantidades = (array) $request->get('quantidade_diarias', []);
+
+    $valorFinal = 0;
+    $descontoFinal = 0;
+    $descricaoFinal = '';
+
+    foreach ($descricoes as $i => $servicoId) {
+        $servico = $this->getRepositorio(\App\Entity\Servico::class)->listaServicoPorId($baseId, $servicoId);
+        if (!$servico) continue;
+
+        $descricaoServico = $servico['descricao'] ?? 'Serviço';
+        $valorBase = (float)($servico['valor'] ?? 0);
+        $desconto = isset($descontos[$i]) ? (float)$descontos[$i] : 0;
+
+        // 🔍 Tenta achar uma quantidade ou valor calculado mesmo que o índice não coincida
+        $quantidade = 1;
+        $valorCalculado = null;
+
+        if (stripos($descricaoServico, 'internação') !== false) {
+            // Procura o primeiro valor em quantidade_diarias
+            if (!empty($quantidades)) {
+                $quantidade = (int)reset($quantidades); // pega o primeiro valor do array
+            }
+            if (!empty($valoresCalculados)) {
+                $valorCalculado = (float)reset($valoresCalculados);
+            }
+
+            // Calcula corretamente
+            if ($valorCalculado > 0) {
+                $valorBase = $valorCalculado;
+            } elseif ($quantidade > 1) {
+                $valorBase *= $quantidade;
+            }
+
+            $descricaoServico .= " ({$quantidade} diárias)";
+        }
+
+        $valorFinal += $valorBase;
+        $descontoFinal += $desconto;
+        $descricaoFinal .= $descricaoServico . ' + ';
+    }
+
+
+
+    $valorFinal = max(0, $valorFinal - $descontoFinal);
+
+    if ($metodoPagamento === 'pendente') {
+        $financeiroPendente = new FinanceiroPendente();
+        $financeiroPendente->setEstabelecimentoId($baseId);
+        $financeiroPendente->setPetId($petId);
+        $financeiroPendente->setValor($valorFinal);
+        $financeiroPendente->setDescricao(trim($descricaoFinal, ' +'));
+        $financeiroPendente->setData($data);
+        $financeiroPendente->setStatus('pendente');
+        $financeiroPendente->setOrigem('clinica');
+        $financeiroPendente->setMetodoPagamento($metodoPagamento);
+
+        $entityManager->persist($financeiroPendente);
+        $entityManager->flush();
+
+        return $this->json([
+            'status' => 'success',
+            'mensagem' => 'Lançado como pendente.',
+        ]);
+    }
+
+    else {
+        $financeiro = new Financeiro();
+        $financeiro->setEstabelecimentoId($baseId);
+        $financeiro->setPetId($petId);
+        $financeiro->setValor($valorFinal);
+        $financeiro->setDescricao(trim($descricaoFinal, ' +'));
+        $financeiro->setData($data);
+        $financeiro->setOrigem('clinica');
+        $financeiro->setStatus('concluido');
+
+        $entityManager->persist($financeiro);
+        $entityManager->flush();
+
+        return $this->json([
+            'status' => 'success',
+            'mensagem' => 'Pagamento registrado no financeiro!',
+        ]);
+    }
+
+}
+
+
 
     /**
      * @Route("/internacao/{id}/ficha", name="clinica_ficha_internacao", methods={"GET"})
