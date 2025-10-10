@@ -91,3 +91,27 @@
     });
 </script>
 {% endblock %}
+{% block javascripts %}
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+tinymce.init({
+    selector: '.tinymce-editor',
+    height: 600,
+    menubar: true,
+    plugins: [
+        'advlist autolink lists link image charmap print preview anchor',
+        'searchreplace visualblocks code fullscreen',
+        'insertdatetime media table paste code help wordcount'
+    ],
+    toolbar:
+        'undo redo | formatselect | bold italic underline forecolor backcolor | ' +
+        'alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+});
+
+// Antes de enviar o formulário, salva o conteúdo do TinyMCE no campo oculto
+document.getElementById('formDocumento').addEventListener('submit', function () {
+    document.getElementById('conteudo-hidden').value = tinymce.activeEditor.getContent();
+});
+</script>
+{% endblock %}

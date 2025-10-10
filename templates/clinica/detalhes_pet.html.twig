@@ -177,7 +177,7 @@
                                     data-bs-target="#vacinas"
                                     type="button" role="tab" aria-controls="vacinas"
                                     aria-selected="false">
-                                <i class="fas fa-syringe me-1 text-warning"></i> Vacinas
+                                <i class="fas fa-syringe me-1 "></i> Vacinas
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
@@ -242,12 +242,14 @@
                                         </a>
                                     </div>
                                     <div class="col-6 col-md-4 col-lg-3">
-                                        <a href="#" id="btn-novo-documento"
+                                        <a href="{{ path('clinica_documentos', {'petId': pet.id}) }}"
                                            class="btn btn-success btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white">
                                             <i class="bi bi-file-earmark-text fs-2 mb-2"></i>
                                             <span>Documento</span>
                                         </a>
+
                                     </div>
+
                                     <div class="col-6 col-md-4 col-lg-3">
                                         <a href="#" id="btn-novas-fotos"
                                            class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
@@ -861,7 +863,7 @@
                 showView($receitaView);
             });
 
-            const notImplementedButtons = ['btn-novo-peso', 'btn-novo-exame', 'btn-novo-documento', 'btn-novas-fotos'];
+            const notImplementedButtons = ['btn-novo-peso', 'btn-novo-exame', 'btn-novas-fotos'];
             notImplementedButtons.forEach(id => {
                 $(`#${id}`).on('click', function (e) {
                     e.preventDefault();

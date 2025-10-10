@@ -6,6 +6,7 @@ class DocumentoModelo
 {
     private ?int $id = null;
     private string $titulo;
+    private ?string $tipo = null; // ✅ novo campo
     private string $conteudo;
     private ?string $cabecalho = null;
     private ?string $rodape = null;
@@ -30,6 +31,17 @@ class DocumentoModelo
     public function setTitulo(string $titulo): self
     {
         $this->titulo = $titulo;
+        return $this;
+    }
+
+    public function getTipo(): ?string
+    {
+        return $this->tipo;
+    }
+
+    public function setTipo(?string $tipo): self
+    {
+        $this->tipo = $tipo;
         return $this;
     }
 
