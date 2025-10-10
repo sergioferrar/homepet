@@ -48,6 +48,22 @@ class Vacina
      */
     private $lote;
 
+    /** 
+     * @ORM\Column(name="fabricante", type="string", length=150, nullable=true)
+     */
+    private $fabricante;
+
+    /** 
+     * @ORM\Column(name="observacoes", type="text", nullable=true)
+     */
+    private $observacoes;
+
+    /** 
+     * @ORM\Column(name="veterinario_id", type="integer", nullable=true)
+     */
+    private $veterinarioId;
+
+
     // ===================== Getters & Setters =====================
 
     public function getId(): ?int { return $this->id; }
@@ -87,4 +103,22 @@ class Vacina
         $this->lote = $lote;
         return $this;
     }
+    public function getFabricante(): ?string { return $this->fabricante; }
+    public function setFabricante(?string $fabricante): self {
+        $this->fabricante = $fabricante;
+        return $this;
+    }
+
+    public function getObservacoes(): ?string { return $this->observacoes; }
+    public function setObservacoes(?string $observacoes): self {
+        $this->observacoes = $observacoes;
+        return $this;
+    }
+
+    public function getVeterinarioId(): ?int { return $this->veterinarioId; }
+    public function setVeterinarioId(?int $veterinarioId): self {
+        $this->veterinarioId = $veterinarioId;
+        return $this;
+    }
+
 }

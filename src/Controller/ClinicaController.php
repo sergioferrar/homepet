@@ -122,7 +122,8 @@ class ClinicaController extends DefaultController
         $internacoesPet = $internacaoRepo->listarInternacoesPorPet($baseId, $pet['id']);
 
         // --- Vacinas ---
-        $vacinas = $vacinaRepo->findByPet($baseId, $id);
+        $vacinas = $vacinaRepo->listarPorPet($baseId, $petId);
+
 
         // --- BUSCA TODOS OS SERVIÇOS DA CLÍNICA ---
         $servicosClinica = $this->getRepositorio(\App\Entity\Servico::class)->findBy([
