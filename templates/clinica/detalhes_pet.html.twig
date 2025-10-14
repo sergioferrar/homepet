@@ -411,7 +411,7 @@
                                                 <a href="#"
                                                    class="timeline-link timeline-text d-flex justify-content-between align-items-center"
                                                    data-tipo="{{ item.tipo }}"
-                                                   data-observacoes="{{ item.observacoes }}"
+                                                   data-observacoes="{{ item.observacoes|default('') }}"
                                                    data-data="{{ item.data|date('d/m/Y \\à\\s H:i') }}"
                                                    data-resumo="{{ item.resumo|raw }}"
                                                         {% if item.anamnese is defined %} data-atendimento-delta="{{ item.anamnese|e('html_attr') }}" {% endif %}
@@ -432,7 +432,7 @@
                                             <a href="#"
                                                class="timeline-link timeline-text d-flex justify-content-between align-items-center"
                                                data-tipo="{{ item.tipo }}"
-                                               data-observacoes="{{ item.observacoes }}"
+                                               data-observacoes="{{ item.observacoes|default('') }}"
                                                data-data="{{ item.data|date('d/m/Y \\à\\s H:i') }}"
                                                data-resumo="{{ item.resumo|raw }}"
                                                     {% if item.anamnese is defined %} data-atendimento-delta="{{ item.anamnese|e('html_attr') }}" {% endif %}

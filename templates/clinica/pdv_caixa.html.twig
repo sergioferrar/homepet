@@ -14,8 +14,9 @@
 
 {% block body %}
 <div class="container mt-5">
-    <h1 class="text-primary mb-4">
-        <i class="fas fa-wallet me-2"></i> Fechamento de Caixa — {{ data|date('d/m/Y') }}
+    <h1 class="text-primary mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <span><i class="fas fa-wallet me-2"></i> Fechamento de Caixa</span>
+        <input type="date" id="dataFiltro" class="form-control form-control-md" value="{{ data|date('Y-m-d') }}" style="max-width: 220px;">
     </h1>
 
     <!-- 🔹 Cards de resumo -->
@@ -26,10 +27,10 @@
                     <h6 class="card-title text-success text-uppercase fw-bold">
                         <i class="fas fa-arrow-up me-1"></i> Entradas
                     </h6>
-                    <h3 class="fw-bold text-success mt-2 mb-1">
+                    <h3 class="fw-bold text-success mt-2 mb-1" id="valorEntradas">
                         R$ {{ entradas|number_format(2, ',', '.') }}
                     </h3>
-                    <small class="text-muted">Vendas e recebimentos do dia</small>
+                    <small class="text-muted">Vendas e recebimentos</small>
                 </div>
             </div>
         </div>
@@ -39,7 +40,7 @@
                     <h6 class="card-title text-danger text-uppercase fw-bold">
                         <i class="fas fa-arrow-down me-1"></i> Saídas
                     </h6>
-                    <h3 class="fw-bold text-danger mt-2 mb-1">
+                    <h3 class="fw-bold text-danger mt-2 mb-1" id="valorSaidas">
                         - R$ {{ saidas|number_format(2, ',', '.') }}
                     </h3>
                     <small class="text-muted">Pagamentos e retiradas</small>
@@ -52,7 +53,7 @@
                     <h6 class="card-title text-dark text-uppercase fw-bold">
                         <i class="fas fa-balance-scale me-1"></i> Saldo Final
                     </h6>
-                    <h3 class="fw-bold {% if saldo < 0 %}text-danger{% else %}text-success{% endif %} mt-2 mb-1">
+                    <h3 id="valorSaldo" class="fw-bold {% if saldo < 0 %}text-danger{% else %}text-success{% endif %} mt-2 mb-1">
                         R$ {{ saldo|number_format(2, ',', '.') }}
                     </h3>
                     <small class="text-muted">Diferença entre entradas e saídas</small>
@@ -105,7 +106,7 @@
                 </div>
             {% else %}
                 <div class="col-12">
-                    <div class="alert alert-info text-center mb-0">Nenhum movimento registrado hoje.</div>
+                    <div class="alert alert-info text-center mb-0">Nenhum movimento encontrado nesta data.</div>
                 </div>
             {% endfor %}
         </div>
@@ -133,11 +134,31 @@
 <script src="{{ asset('js/TabelaDefault.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Paginação e busca
     new TabelaDefault({
         cardContainerId: 'cardContainerCaixa',
         paginationId: 'paginationCaixa',
         searchInputId: 'searchInputCaixa',
         itemsPerPage: 6
+    });
+
+    // Filtro de data (recarrega via fetch AJAX)
+    const inputData = document.getElementById('dataFiltro');
+    inputData.addEventListener('change', async () => {
+        const data = inputData.value;
+        try {
+            const res = await fetch(`{{ path('clinica_pdv_caixa') }}?data=${data}`);
+            const html = await res.text();
+
+            // Substitui o conteúdo principal pelo novo HTML filtrado
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const novoConteudo = doc.querySelector('.container').innerHTML;
+            document.querySelector('.container').innerHTML = novoConteudo;
+            showToast('📅 Caixa atualizado para ' + new Date(data).toLocaleDateString('pt-BR'), 'success');
+        } catch (e) {
+            showToast('❌ Erro ao carregar o caixa dessa data.', 'error');
+        }
     });
 });
 </script>
