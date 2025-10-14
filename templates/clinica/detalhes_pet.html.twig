@@ -984,30 +984,52 @@
                         var conteudoDaReceita = '';
                         console.log(serviceDisplayContainer);
 
-                        $(document).on('click', '.imprimir-receita', function(){
-                            var elementoParaPdf = $(this).parent().parent().find('#service-details-content');
-                            console.log(elementoParaPdf)
-                            //conteudoDaReceita = elementoParaPdf.html()
-                            console.log(html2canvas(elementoParaPdf));
+                        $(document).on('click', '.imprimir-receita', function () {
+    // Encontra a div dinâmica que você quer imprimir
+    var elementoParaImprimir = $(this).closest('.modal-content').find('#service-details-content');
+    if (!elementoParaImprimir.length) {
+        console.warn('Elemento não encontrado para impressão.');
+        return;
+    }
 
+    // Cria um iframe oculto
+    var iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
 
-                            html2canvas(elementoParaPdf[0]).then(function(canvas) {
-                                console.log(canvas)
-                                var imgData = canvas.toDataURL('image/png');
+    // Escreve o conteúdo dentro do iframe
+    var doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(`
+        <html>
+            <head>
+                <title>Impressão de Receita</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    /* estilos opcionais */
+                </style>
+            </head>
+            <body>
+                ${elementoParaImprimir.html()}
+            </body>
+        </html>
+    `);
+    doc.close();
 
-                                var doc = new jsPDF();
-                                console.log(imgData)
-                                // Calcula a largura e altura do PDF, ajustando conforme a imagem
-                                var larguraPdf = doc.internal.pageSize.getWidth();
-                                var alturaPdf = doc.internal.pageSize.getHeight();
-
-                                // Adiciona a imagem ao PDF
-                                doc.addImage(imgData, 'PNG', 0, 0, larguraPdf, alturaPdf);
-                                
-                                // Salva o arquivo PDF
-                                doc.save('receita.pdf');
-                            });
-                        })
+    // Aguarda o carregamento e imprime
+    iframe.onload = function () {
+        setTimeout(function () {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            document.body.removeChild(iframe); // remove o iframe após imprimir
+        }, 200);
+    };
+});
 
                     }else{
                         Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html());

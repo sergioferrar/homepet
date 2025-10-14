@@ -140,8 +140,19 @@ class ClinicaController extends DefaultController
             
             $anamnese = json_decode($item['anamnese'], true)['ops'];
             $resumo = '';
-            foreach($anamnese as $row){
-                $resumo .= "{$row['insert']} ";
+            foreach ($anamnese as $row) {
+                $negrito = '<b>#word#</b>'; // modelo base
+
+                if (!empty($row['insert'])) {
+                    $texto = $row['insert'];
+
+                    // verifica se precisa aplicar negrito
+                    if (!empty($row['attributes']['bold']) && $row['attributes']['bold'] === true) {
+                        $texto = str_replace('#word#', $texto, $negrito);
+                    }
+
+                    $resumo .= "{$texto} ";
+                }
             }
 
             $resumo = str_replace("\n", '', nl2br($resumo));
