@@ -430,7 +430,7 @@
                                         </div>
                                         <div class="timeline-body">
                                             <a href="#"
-                                               class="timeline-link timeline-text d-flex justify-content-between align-items-center"
+                                               class="timeline-link timeline-text btn btn-sm btn-primary"
                                                data-tipo="{{ item.tipo }}"
                                                data-observacoes="{{ item.observacoes|default('') }}"
                                                data-data="{{ item.data|date('d/m/Y \\à\\s H:i') }}"
@@ -439,9 +439,9 @@
                                                     {% if item.receita_cabecalho is defined %} data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}" {% endif %}
                                                     {% if item.receita_conteudo is defined %} data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}" {% endif %}
                                                     {% if item.receita_rodape is defined %} data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}" {% endif %}>
-                                                <span>{{ item.tipo }}</span>
+                                                <span>Ver detalhes </span>
                                             </a>
-                                            <p class="text-muted">{{ item.resumo|raw }}</p>
+                                            <p class="text-muted" style="display: none;">{{ item.resumo|raw }}</p>
                                         </div>
                                     </div>
                                 </li>
@@ -985,51 +985,73 @@
                         console.log(serviceDisplayContainer);
 
                         $(document).on('click', '.imprimir-receita', function () {
-    // Encontra a div dinâmica que você quer imprimir
-    var elementoParaImprimir = $(this).closest('.modal-content').find('#service-details-content');
-    if (!elementoParaImprimir.length) {
-        console.warn('Elemento não encontrado para impressão.');
-        return;
-    }
+                            // Encontra o conteúdo da receita
+                            var elementoParaImprimir = $(this).closest('.modal-content').find('#service-details-content');
+                            if (!elementoParaImprimir.length) {
+                                console.warn('Elemento não encontrado para impressão.');
+                                return;
+                            }
 
-    // Cria um iframe oculto
-    var iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    document.body.appendChild(iframe);
+                            // Remove qualquer iframe de impressão anterior, se existir
+                            $('#iframe-impressao-receita').remove();
 
-    // Escreve o conteúdo dentro do iframe
-    var doc = iframe.contentWindow.document;
-    doc.open();
-    doc.write(`
-        <html>
-            <head>
-                <title>Impressão de Receita</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; }
-                    /* estilos opcionais */
-                </style>
-            </head>
-            <body>
-                ${elementoParaImprimir.html()}
-            </body>
-        </html>
-    `);
-    doc.close();
+                            // Cria um novo iframe oculto
+                            var iframe = document.createElement('iframe');
+                            iframe.id = 'iframe-impressao-receita';
+                            iframe.style.position = 'fixed';
+                            iframe.style.right = '0';
+                            iframe.style.bottom = '0';
+                            iframe.style.width = '0';
+                            iframe.style.height = '0';
+                            iframe.style.border = '0';
+                            document.body.appendChild(iframe);
 
-    // Aguarda o carregamento e imprime
-    iframe.onload = function () {
-        setTimeout(function () {
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-            document.body.removeChild(iframe); // remove o iframe após imprimir
-        }, 200);
-    };
-});
+                            var doc = iframe.contentWindow.document;
+
+                            // Escreve o conteúdo no iframe
+                            doc.open();
+                            doc.write(`
+                                <html>
+                                    <head>
+                                        <title>Impressão de Receita</title>
+                                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+                                        <style>
+                                            body { font-family: Arial, sans-serif; margin: 20px; }
+                                            @media print {
+                                                body { -webkit-print-color-adjust: exact; }
+                                            }
+                                        </style>
+                                    </head>
+                                    <body>
+                                        ${elementoParaImprimir.html()}
+                                    </body>
+                                </html>
+                            `);
+                            doc.close();
+
+                            // Função para remover o iframe com segurança
+                            const removerIframe = () => {
+                                if (iframe && iframe.parentNode) {
+                                    document.body.removeChild(iframe);
+                                    console.log('🧹 Iframe de impressão removido.');
+                                }
+                            };
+
+                            // Quando carregar, imprime
+                            iframe.onload = function () {
+                                setTimeout(() => {
+                                    iframe.contentWindow.focus();
+                                    iframe.contentWindow.print();
+
+                                    // Detecta fechamento da caixa de impressão
+                                    iframe.contentWindow.onafterprint = removerIframe;
+
+                                    // Caso a impressão não seja concluída, remove depois de 10s por segurança
+                                    setTimeout(removerIframe, 10000);
+                                }, 300);
+                            };
+                        });
+
 
                     }else{
                         Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html());
