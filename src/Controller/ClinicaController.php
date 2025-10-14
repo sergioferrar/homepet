@@ -137,10 +137,20 @@ class ClinicaController extends DefaultController
         $timeline_items = [];
 
         foreach ($consultas as $item) {
+            
+            $anamnese = json_decode($item['anamnese'], true)['ops'];
+            $resumo = '';
+            foreach($anamnese as $row){
+                $resumo .= "{$row['insert']} ";
+            }
+
+            $resumo = str_replace("\n", '', nl2br($resumo));
+
             $timeline_items[] = [
                 'data' => new \DateTime($item['data'] . ' ' . $item['hora']),
                 'tipo' => $item['tipo'] ?? 'Consulta',
                 'observacoes' => $item['observacoes'],
+                'resumo' => $resumo,
                 'anamnese' => $item['anamnese'] ?? null,
             ];
         }
@@ -150,6 +160,7 @@ class ClinicaController extends DefaultController
                 'data' => new \DateTime($r['data']),
                 'tipo' => 'Receita',
                 'resumo' => $r['resumo'],
+                'observacoes' => $item['observacoes']??null,
                 'receita_cabecalho' => $r['cabecalho'],
                 'receita_conteudo' => $r['conteudo'],
                 'receita_rodape' => $r['rodape'],
@@ -171,6 +182,7 @@ class ClinicaController extends DefaultController
         }
 
         // Agrupa por tipo
+        // dd($timeline_items);
         $agrupado = [];
         foreach ($timeline_items as $item) {
             $tipo = $item['tipo'];
@@ -186,23 +198,26 @@ class ClinicaController extends DefaultController
             $totalDebitos += $itemFinanceiro['valor'];
         }
 
-        return $this->render('clinica/detalhes_pet.html.twig', [
-            'pet' => $pet,
-            'timeline_items' => $timeline_items,
-            'timeline_agrupado' => $agrupado,
-            'documentos' => $documentos,
-            'financeiro' => $financeiro,
-            'financeiroPendente' => $financeiroPendente,
-            'financeiroInativos' => $financeiroInativos,
-            'financeiroPendenteInativos' => $financeiroPendenteInativos,
-            'consultas' => $consultas,
-            'total_debitos' => $totalDebitos,
-            'servicos_clinica' => $servicosClinica,
-            'internacao_ativa_id' => $internacaoAtivaId,
-            'ultima_internacao_id' => $ultimaInternacaoId,
-            'internacoes_pet' => $internacoesPet,
-            'vacinas' => $vacinas,
-        ]);
+        $data = [];
+
+        $data['pet'] = $pet;
+        $data['timeline_items'] = $timeline_items;
+        $data['timeline_agrupado'] = $agrupado;
+        $data['documentos'] = $documentos;
+        $data['financeiro'] = $financeiro;
+        $data['financeiroPendente'] = $financeiroPendente;
+        $data['financeiroInativos'] = $financeiroInativos;
+        $data['financeiroPendenteInativos'] = $financeiroPendenteInativos;
+        $data['consultas'] = $consultas;
+        $data['total_debitos'] = $totalDebitos;
+        $data['servicos_clinica'] = $servicosClinica;
+        $data['internacao_ativa_id'] = $internacaoAtivaId;
+        $data['ultima_internacao_id'] = $ultimaInternacaoId;
+        $data['internacoes_pet'] = $internacoesPet;
+        $data['vacinas'] = $vacinas;
+        //dd($data['timeline_items']);
+
+        return $this->render('clinica/detalhes_pet.html.twig', $data);
     }
 
 
