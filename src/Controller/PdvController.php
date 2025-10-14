@@ -10,6 +10,7 @@ use App\Entity\Financeiro;
 use App\Entity\FinanceiroPendente;
 use App\Entity\EstoqueMovimento;
 use App\Entity\Cliente;
+use App\Entity\CaixaMovimento;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -79,21 +80,16 @@ class PdvController extends DefaultController
             return new JsonResponse(['ok' => false, 'msg' => 'Nenhum item informado.'], 400);
         }
 
-        // 🔹 Busca cliente pelo ID (não nome!)
+        // 🔹 Busca cliente
         $clienteRepo = $this->getRepositorio(Cliente::class);
-        $cliente = null;
-        if (!empty($dados['cliente_id'])) {
-            $cliente = $clienteRepo->findOneBy([
-                'id' => (int)$dados['cliente_id'],
-                'estabelecimentoId' => $baseId
-            ]);
-        }
+        $cliente = !empty($dados['cliente_id'])
+            ? $clienteRepo->findOneBy(['id' => (int)$dados['cliente_id'], 'estabelecimentoId' => $baseId])
+            : null;
 
-        // 🔹 Verifica estoque antes
+        // 🔹 Valida estoque
         foreach ($dados['itens'] as $item) {
-            $produtoRepo = $em->getRepository(Produto::class);
-            $produto = $produtoRepo->findOneBy(['id' => $item['id'], 'estabelecimentoId' => $baseId]);
-
+            $produto = $em->getRepository(Produto::class)
+                          ->findOneBy(['id' => $item['id'], 'estabelecimentoId' => $baseId]);
             if ($produto && ($produto->getEstoqueAtual() ?? 0) < $item['quantidade']) {
                 return new JsonResponse([
                     'ok' => false,
@@ -102,7 +98,7 @@ class PdvController extends DefaultController
             }
         }
 
-        // 🔹 Cria a venda
+        // 🔹 Cria venda
         $venda = new Venda();
         $venda->setEstabelecimentoId($baseId);
         $venda->setCliente($cliente ? $cliente->getNome() : 'Consumidor Final');
@@ -111,7 +107,7 @@ class PdvController extends DefaultController
         $venda->setData(new \DateTime());
         $em->persist($venda);
 
-        // 🔹 Adiciona itens e baixa estoque
+        // 🔹 Itens + baixa estoque
         foreach ($dados['itens'] as $item) {
             $itemVenda = new VendaItem();
             $itemVenda->setVenda($venda);
@@ -121,13 +117,11 @@ class PdvController extends DefaultController
             $itemVenda->setSubtotal($item['quantidade'] * $item['valor']);
             $em->persist($itemVenda);
 
-            // Atualiza estoque
-            $produtoRepo = $em->getRepository(Produto::class);
-            $produto = $produtoRepo->findOneBy(['id' => $item['id'], 'estabelecimentoId' => $baseId]);
-
+            // baixa estoque se for produto
+            $produto = $em->getRepository(Produto::class)
+                          ->findOneBy(['id' => $item['id'], 'estabelecimentoId' => $baseId]);
             if ($produto) {
                 $produto->setEstoqueAtual(max(0, ($produto->getEstoqueAtual() ?? 0) - $item['quantidade']));
-
                 $mov = new EstoqueMovimento();
                 $mov->setProduto($produto);
                 $mov->setEstabelecimentoId($baseId);
@@ -135,14 +129,12 @@ class PdvController extends DefaultController
                 $mov->setOrigem('Venda PDV');
                 $mov->setQuantidade($item['quantidade']);
                 $mov->setData(new \DateTime());
-
                 $em->persist($produto);
                 $em->persist($mov);
-                if ($item['tipo'] === 'Serviço') continue;
             }
         }
 
-        // 🔹 Lançamento financeiro (sem usar setCliente nem setClienteId)
+        // 🔹 Lançamento financeiro
         $descricaoCliente = $cliente ? $cliente->getNome() : 'Consumidor Final';
 
         if ($dados['metodo'] === 'pendente') {
@@ -163,6 +155,7 @@ class PdvController extends DefaultController
             $fin->setMetodoPagamento($dados['metodo']);
             $fin->setOrigem('PDV');
             $fin->setStatus('Pago');
+            $fin->setTipo('ENTRADA');
             $fin->setEstabelecimentoId($baseId);
             $em->persist($fin);
         }
@@ -179,84 +172,123 @@ class PdvController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
-
         $dados = json_decode($request->getContent(), true);
 
         if (empty($dados['descricao']) || empty($dados['valor'])) {
             return new JsonResponse(['ok' => false, 'msg' => 'Informe a descrição e o valor.']);
         }
 
-        $fin = new Financeiro();
-        $fin->setDescricao($dados['descricao']);
-        $fin->setValor($dados['valor']);
-        $fin->setData(new \DateTime());
-        $fin->setMetodoPagamento('caixa');
-        $fin->setOrigem('PDV - Saída Manual');
-        $fin->setStatus('Pago');
-        $fin->setTipo('SAIDA'); // 🔹 importante
-        $fin->setEstabelecimentoId($baseId);
+        $mov = new CaixaMovimento();
+        $mov->setDescricao($dados['descricao']);
+        $mov->setValor($dados['valor']);
+        $mov->setTipo('SAIDA');
+        $mov->setData(new \DateTime());
+        $mov->setEstabelecimentoId($baseId);
 
-        $em->persist($fin);
+        $em->persist($mov);
         $em->flush();
 
-        return new JsonResponse(['ok' => true, 'msg' => '💸 Saída registrada com sucesso!']);
+        return new JsonResponse(['ok' => true, 'msg' => '💸 Saída registrada no caixa (sem afetar o financeiro).']);
     }
 
+    
+/**
+ * @Route("/caixa", name="clinica_pdv_caixa", methods={"GET"})
+ */
+public function caixa(EntityManagerInterface $em): Response
+{
+    $this->switchDB();
+    $baseId = $this->getIdBase();
 
-    /**
-     * @Route("/caixa", name="clinica_pdv_caixa", methods={"GET"})
-     */
-    public function caixa(EntityManagerInterface $em): Response
-    {
-        $this->switchDB();
-        $baseId = $this->getIdBase();
-        $dataHoje = new \DateTime();
+    // 🔹 Define o intervalo do dia atual (00:00 até 23:59)
+    $inicioDia = (new \DateTime('today'))->setTime(0, 0, 0);
+    $fimDia = (new \DateTime('today'))->setTime(23, 59, 59);
 
-        // ✅ Pega os repositórios
-        $repoVenda = $em->getRepository(\App\Entity\Venda::class);
-        $repoFinanceiro = $em->getRepository(\App\Entity\Financeiro::class);
+    $repoVenda = $em->getRepository(\App\Entity\Venda::class);
+    $repoFinanceiro = $em->getRepository(\App\Entity\Financeiro::class);
+    $repoCaixa = $em->getRepository(\App\Entity\CaixaMovimento::class);
 
-        // ✅ Movimentos financeiros do dia (entradas e saídas)
-        $registros = $repoFinanceiro->findBy([
-            'estabelecimentoId' => $baseId
-        ]);
+    // 🔹 1. Busca todos os lançamentos do financeiro de hoje (entradas)
+    $financeiros = $repoFinanceiro->createQueryBuilder('f')
+        ->where('f.estabelecimentoId = :estab')
+        ->andWhere('f.data BETWEEN :inicio AND :fim')
+        ->setParameter('estab', $baseId)
+        ->setParameter('inicio', $inicioDia)
+        ->setParameter('fim', $fimDia)
+        ->orderBy('f.data', 'ASC')
+        ->getQuery()
+        ->getResult();
 
-        // Filtra por data (só os de hoje)
-        $registros = array_filter($registros, function ($r) use ($dataHoje) {
-            return $r->getData()->format('Y-m-d') === $dataHoje->format('Y-m-d');
-        });
-
-        // ✅ Totais
-        $entradas = 0;
-        $saidas   = 0;
-
-        foreach ($registros as $r) {
-            if ($r->getTipo() === 'SAIDA') {
-                $saidas += $r->getValor();
-            } else {
-                $entradas += $r->getValor();
-            }
-        }
-
-        $saldo = $entradas - $saidas;
-
-        // ✅ Totais por forma de pagamento (usando o VendaRepository que você já tem)
-        $totais = $repoVenda->totalPorFormaPagamento($baseId, $dataHoje);
-
-        // ✅ Total geral de vendas
-        $totalGeral = $repoVenda->totalGeralDoDia($baseId, $dataHoje);
-
-        // ✅ Retorna tudo pro Twig
-        return $this->render('clinica/pdv_caixa.html.twig', [
-            'data'       => $dataHoje,
-            'registros'  => $registros,
-            'entradas'   => $entradas,
-            'saidas'     => $saidas,
-            'saldo'      => $saldo,
-            'totais'     => $totais,
-            'totalGeral' => $totalGeral,
-        ]);
+    $entradas = 0;
+    foreach ($financeiros as $f) {
+        $entradas += floatval($f->getValor());
     }
+
+    // 🔹 2. Busca as saídas do caixa manual
+    $saidasRepo = $repoCaixa->createQueryBuilder('c')
+        ->where('c.estabelecimentoId = :estab')
+        ->andWhere('c.data BETWEEN :inicio AND :fim')
+        ->setParameter('estab', $baseId)
+        ->setParameter('inicio', $inicioDia)
+        ->setParameter('fim', $fimDia)
+        ->orderBy('c.data', 'ASC')
+        ->getQuery()
+        ->getResult();
+
+    $saidas = 0;
+    foreach ($saidasRepo as $s) {
+        $saidas += floatval($s->getValor());
+    }
+
+    // 🔹 3. Calcula saldo
+    $saldo = $entradas - $saidas;
+
+    // 🔹 4. Totais de vendas
+    $totalGeral = 0;
+    $totais = [];
+    if (method_exists($repoVenda, 'totalPorFormaPagamento')) {
+        $totais = $repoVenda->totalPorFormaPagamento($baseId, new \DateTime());
+    }
+    if (method_exists($repoVenda, 'totalGeralDoDia')) {
+        $totalGeral = $repoVenda->totalGeralDoDia($baseId, new \DateTime());
+    }
+
+    // 🔹 5. Junta todos os registros pro Twig
+    $registros = [];
+
+    foreach ($financeiros as $f) {
+        $registros[] = [
+            'data' => $f->getData(),
+            'descricao' => $f->getDescricao(),
+            'metodoPagamento' => $f->getMetodoPagamento(),
+            'valor' => $f->getValor(),
+            'tipo' => 'ENTRADA'
+        ];
+    }
+
+    foreach ($saidasRepo as $s) {
+        $registros[] = [
+            'data' => $s->getData(),
+            'descricao' => $s->getDescricao(),
+            'metodoPagamento' => 'Caixa Manual',
+            'valor' => $s->getValor(),
+            'tipo' => 'SAIDA'
+        ];
+    }
+
+    // 🔹 Ordena por data
+    usort($registros, fn($a, $b) => $a['data'] <=> $b['data']);
+
+    return $this->render('clinica/pdv_caixa.html.twig', [
+        'data'       => new \DateTime(),
+        'registros'  => $registros,
+        'entradas'   => $entradas,
+        'saidas'     => $saidas,
+        'saldo'      => $saldo,
+        'totais'     => $totais,
+        'totalGeral' => $totalGeral,
+    ]);
+}
 
 
     /**
