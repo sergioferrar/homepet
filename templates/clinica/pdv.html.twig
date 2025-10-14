@@ -1,0 +1,300 @@
+{% extends 'base.html.twig' %}
+{% block title %}PDV - Ponto de Venda{% endblock %}
+
+{% block stylesheets %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+.autocomplete-suggestions {
+    border: 1px solid #ccc;
+    background: #fff;
+    position: absolute;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100%;
+    border-radius: 6px;
+}
+.autocomplete-suggestion {
+    padding: 8px;
+    cursor: pointer;
+}
+.autocomplete-suggestion:hover {
+    background: #007bff;
+    color: #fff;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid bg-white p-4 mt-4 rounded shadow-sm">
+
+    <!-- 🔹 Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0"><i class="fas fa-cash-register me-2"></i> Ponto de Venda</h3>
+        <div class="d-flex gap-2">
+            <a href="{{ path('clinica_estoque_index') }}" class="btn btn-outline-dark">
+                <i class="fas fa-boxes"></i> Estoque
+            </a>
+            <a href="{{ path('clinica_pdv_listar') }}" class="btn btn-outline-primary">
+                <i class="fas fa-list"></i> Listagem
+            </a>
+            <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-success">
+                <i class="fas fa-wallet"></i> Caixa
+            </a>
+        </div>
+    </div>
+    <hr>
+
+    <!-- 🔹 Tutor/Cliente -->
+    <div class="mb-3 position-relative">
+        <label class="fw-bold mb-2">Tutor/Cliente:</label>
+        <input type="text" id="inputTutor" class="form-control" placeholder="Comece a digitar o nome...">
+        <div id="autocomplete-tutor" class="autocomplete-suggestions"></div>
+    </div>
+
+    <div class="row">
+        <!-- Coluna esquerda -->
+        <div class="col-md-8 position-relative">
+
+            <!-- 🔍 Campo de produto com autocomplete -->
+            <div class="d-flex mb-3">
+                <input type="text" id="inputProduto" class="form-control me-2" placeholder="Digite o nome do produto ou serviço...">
+                <button class="btn btn-primary" id="btnAddProduto"><i class="fas fa-plus"></i></button>
+            </div>
+            <div id="autocomplete-list" class="autocomplete-suggestions"></div>
+
+            <table class="table table-sm table-striped align-middle" id="tabelaItens">
+                <thead class="table-light">
+                    <tr>
+                        <th>Produto</th>
+                        <th width="90">Qtd</th>
+                        <th width="100">Preço</th>
+                        <th width="100">Subtotal</th>
+                        <th width="50"></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Coluna direita -->
+        <div class="col-md-4 border-start">
+            <h5>Resumo</h5>
+            <p>Itens: <span id="totalItens">0</span></p>
+            <p>Total: <strong id="totalVenda">R$ 0,00</strong></p>
+
+            <div class="mb-3">
+                <label>Forma de Pagamento:</label>
+                <select id="metodo" class="form-select">
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="pix">PIX</option>
+                    <option value="credito">Cartão Crédito</option>
+                    <option value="debito">Cartão Débito</option>
+                    <option value="pendente">Fiado</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label>Desconto (%):</label>
+                <input type="number" id="desconto" min="0" max="100" value="0" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label>Valor Recebido:</label>
+                <input type="number" step="0.01" id="valorRecebido" class="form-control">
+            </div>
+
+            <div class="border-top pt-2">
+                <p><strong>Total com desconto:</strong> R$ <span id="totalComDesconto">0,00</span></p>
+                <p class="fw-bold text-success">Troco: R$ <span id="valorTroco">0,00</span></p>
+            </div>
+
+            <div class="mt-3">
+                <button class="btn btn-success w-100" id="btnFinalizar">
+                    <i class="fas fa-check"></i> Finalizar Venda
+                </button>
+            </div>
+            <button class="btn btn-outline-danger w-100 mt-2" id="btnSaida">
+                <i class="fas fa-arrow-down"></i> Registrar Saída de Dinheiro
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 🔹 Modal Saída -->
+<div class="modal fade" id="modalSaida" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Registrar Saída</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label>Descrição:</label>
+        <input type="text" id="saidaDescricao" class="form-control mb-3" placeholder="Ex: Compra de café">
+        <label>Valor (R$):</label>
+        <input type="number" step="0.01" id="saidaValor" class="form-control mb-3">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-danger" id="confirmarSaida">Registrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+const produtos = {{ produtos|json_encode|raw }};
+let itens = [];
+let tutorSelecionado = null;
+
+// ==================== TOAST ====================
+function showToast(msg, tipo = 'info') {
+    const cor = tipo === 'success' ? 'alert-success' : tipo === 'error' ? 'alert-danger' : 'alert-warning';
+    const toast = document.createElement('div');
+    toast.className = `alert ${cor} position-fixed top-0 end-0 m-3 shadow`;
+    toast.innerHTML = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// ==================== TABELA ====================
+function atualizarTabela() {
+    const tbody = document.querySelector('#tabelaItens tbody');
+    tbody.innerHTML = '';
+    let total = 0;
+    itens.forEach((item, i) => {
+        const subtotal = item.quantidade * item.valor;
+        total += subtotal;
+        tbody.innerHTML += `
+            <tr>
+                <td>${item.nome}</td>
+                <td><input type="number" min="1" value="${item.quantidade}" class="form-control form-control-sm" onchange="alterarQtd(${i}, this.value)"></td>
+                <td>R$ ${item.valor.toFixed(2)}</td>
+                <td>R$ ${subtotal.toFixed(2)}</td>
+                <td><button class="btn btn-danger btn-sm" onclick="remover(${i})"><i class="fas fa-times"></i></button></td>
+            </tr>`;
+    });
+    document.getElementById('totalVenda').innerText = 'R$ ' + total.toFixed(2);
+    document.getElementById('totalItens').innerText = itens.length;
+}
+
+function alterarQtd(i, qtd) { itens[i].quantidade = parseInt(qtd); atualizarTabela(); }
+function remover(i) { itens.splice(i, 1); atualizarTabela(); }
+
+// ==================== AUTOCOMPLETE PRODUTO ====================
+const inputProduto = document.getElementById('inputProduto');
+const list = document.getElementById('autocomplete-list');
+
+inputProduto.addEventListener('input', function() {
+    const termo = this.value.toLowerCase();
+    list.innerHTML = '';
+    if (!termo) return;
+    const filtrados = produtos.filter(p => p.nome.toLowerCase().includes(termo));
+    filtrados.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'autocomplete-suggestion';
+        div.textContent = `${p.nome} — R$ ${p.valor.toFixed(2)}`;
+        div.onclick = () => { adicionarProduto(p); inputProduto.value = ''; list.innerHTML = ''; };
+        list.appendChild(div);
+    });
+});
+
+document.getElementById('btnAddProduto').addEventListener('click', () => {
+    const termo = inputProduto.value.toLowerCase();
+    const produto = produtos.find(p => p.nome.toLowerCase() === termo);
+    if (produto) { adicionarProduto(produto); inputProduto.value = ''; }
+    else showToast('Produto não encontrado!', 'error');
+});
+
+function adicionarProduto(p) {
+    const existente = itens.find(i => i.id === p.id);
+    if (existente) existente.quantidade++;
+    else itens.push({ id: p.id, nome: p.nome, valor: p.valor, quantidade: 1, tipo: p.tipo });
+    atualizarTabela();
+}
+
+// ==================== AUTOCOMPLETE TUTOR ====================
+const inputTutor = document.getElementById('inputTutor');
+const listaTutor = document.getElementById('autocomplete-tutor');
+
+inputTutor.addEventListener('input', async function() {
+    const termo = this.value.trim().toLowerCase();
+    listaTutor.innerHTML = '';
+    tutorSelecionado = null;
+    if (termo.length < 2) return;
+    try {
+        const res = await fetch('{{ path("clinica_pdv_clientes_listar") }}');
+        const data = await res.json();
+        const clientes = data.results || [];
+        const filtrados = clientes.filter(c => c.text.toLowerCase().includes(termo));
+        filtrados.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'autocomplete-suggestion';
+            div.textContent = c.text;
+            div.onclick = () => { inputTutor.value = c.text; tutorSelecionado = c.id; listaTutor.innerHTML = ''; };
+            listaTutor.appendChild(div);
+        });
+    } catch (e) { console.error('Erro ao carregar tutores:', e); }
+});
+
+document.addEventListener('click', e => { if (!listaTutor.contains(e.target) && e.target !== inputTutor) listaTutor.innerHTML = ''; });
+
+// ==================== CALCULAR TROCO ====================
+function atualizarResumo() {
+    const total = itens.reduce((s, i) => s + i.valor * i.quantidade, 0);
+    const desconto = parseFloat(document.getElementById('desconto').value || 0);
+    const totalDesc = total - (total * desconto / 100);
+    const recebido = parseFloat(document.getElementById('valorRecebido').value || 0);
+    const troco = recebido - totalDesc;
+    document.getElementById('totalComDesconto').innerText = totalDesc.toFixed(2);
+    document.getElementById('valorTroco').innerText = troco.toFixed(2);
+}
+document.getElementById('desconto').addEventListener('input', atualizarResumo);
+document.getElementById('valorRecebido').addEventListener('input', atualizarResumo);
+
+// ==================== FINALIZAR VENDA ====================
+document.getElementById('btnFinalizar').addEventListener('click', async () => {
+    if (itens.length === 0) return showToast('Nenhum item na venda.', 'warning');
+    const metodo = document.getElementById('metodo').value;
+    const cliente_id = tutorSelecionado;
+    const desconto = parseFloat(document.getElementById('desconto').value || 0);
+    const total = itens.reduce((s, i) => s + i.valor * i.quantidade, 0);
+    const totalDesc = total - (total * desconto / 100);
+    const recebido = parseFloat(document.getElementById('valorRecebido').value || 0);
+    const troco = recebido - totalDesc;
+    try {
+        const res = await fetch('{{ path("clinica_pdv_registrar") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ metodo, cliente_id, total: totalDesc, desconto, itens, troco })
+        });
+        const json = await res.json();
+        showToast(json.msg, json.ok ? 'success' : 'error');
+        if (json.ok) setTimeout(() => location.reload(), 2000);
+    } catch { showToast('Erro ao comunicar com o servidor.', 'error'); }
+});
+
+// ==================== SAÍDA DE DINHEIRO ====================
+document.getElementById('btnSaida').addEventListener('click', () => {
+    new bootstrap.Modal(document.getElementById('modalSaida')).show();
+});
+document.getElementById('confirmarSaida').addEventListener('click', async () => {
+    const descricao = document.getElementById('saidaDescricao').value.trim();
+    const valor = parseFloat(document.getElementById('saidaValor').value);
+    if (!descricao || isNaN(valor) || valor <= 0) return showToast('Preencha os campos.', 'warning');
+    try {
+        const res = await fetch('{{ path("clinica_pdv_saida") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ descricao, valor })
+        });
+        const json = await res.json();
+        showToast(json.msg, json.ok ? 'success' : 'error');
+        if (json.ok) setTimeout(() => location.reload(), 1000);
+    } catch { showToast('Erro ao registrar saída.', 'error'); }
+});
+</script>
+{% endblock %}

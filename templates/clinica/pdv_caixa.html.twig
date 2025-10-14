@@ -1,0 +1,144 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .card-title { color: #004080; font-weight: bold; }
+    .tabela-container input.form-control-md { max-width: 400px; margin-bottom: 1.5rem; }
+    .card-item { transition: box-shadow 0.2s; border-left: 4px solid transparent; }
+    .card-item:hover { box-shadow: 0 0 0 4px #e5eefe; border-left-color: #007bff; }
+    .valor-entrada { color: #28a745; font-weight: bold; }
+    .valor-saida { color: #dc3545; font-weight: bold; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="text-primary mb-4">
+        <i class="fas fa-wallet me-2"></i> Fechamento de Caixa — {{ data|date('d/m/Y') }}
+    </h1>
+
+    <!-- 🔹 Cards de resumo -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body text-center">
+                    <h6 class="card-title text-success text-uppercase fw-bold">
+                        <i class="fas fa-arrow-up me-1"></i> Entradas
+                    </h6>
+                    <h3 class="fw-bold text-success mt-2 mb-1">
+                        R$ {{ entradas|number_format(2, ',', '.') }}
+                    </h3>
+                    <small class="text-muted">Vendas e recebimentos do dia</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body text-center">
+                    <h6 class="card-title text-danger text-uppercase fw-bold">
+                        <i class="fas fa-arrow-down me-1"></i> Saídas
+                    </h6>
+                    <h3 class="fw-bold text-danger mt-2 mb-1">
+                        - R$ {{ saidas|number_format(2, ',', '.') }}
+                    </h3>
+                    <small class="text-muted">Pagamentos e retiradas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body text-center">
+                    <h6 class="card-title text-dark text-uppercase fw-bold">
+                        <i class="fas fa-balance-scale me-1"></i> Saldo Final
+                    </h6>
+                    <h3 class="fw-bold {% if saldo < 0 %}text-danger{% else %}text-success{% endif %} mt-2 mb-1">
+                        R$ {{ saldo|number_format(2, ',', '.') }}
+                    </h3>
+                    <small class="text-muted">Diferença entre entradas e saídas</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔹 Filtros e busca -->
+    <div class="tabela-container container-fluid px-2">
+        <div class="row mb-3">
+            <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <input type="text" id="searchInputCaixa" class="form-control form-control-md" placeholder="🔍 Buscar por descrição ou forma de pagamento...">
+                <div class="d-flex gap-2">
+                    <a href="{{ path('clinica_pdv_index') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-cash-register"></i> PDV
+                    </a>
+                    <a href="{{ path('clinica_pdv_listar') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list"></i> Listagem
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔹 Cards de lançamentos -->
+        <div id="cardContainerCaixa" class="row gy-3">
+            {% for r in registros %}
+                <div class="col-12 card-item" data-search="{{ r.descricao }} {{ r.metodoPagamento }}">
+                    <div class="card shadow-sm border-0 rounded-3">
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <h5 class="card-title mb-1">{{ r.descricao }}</h5>
+                                <p class="text-muted mb-1">
+                                    <i class="fas fa-clock me-1"></i>{{ r.data|date('H:i') }}
+                                    <span class="mx-2 text-secondary">|</span>
+                                    <i class="fas fa-money-bill-wave me-1"></i>{{ r.metodoPagamento|capitalize }}
+                                    <span class="mx-2 text-secondary">|</span>
+                                    <i class="fas fa-tag me-1"></i>{{ r.tipo }}
+                                </p>
+                            </div>
+                            <div>
+                                {% if r.tipo == 'SAIDA' %}
+                                    <span class="valor-saida">- R$ {{ r.valor|number_format(2, ',', '.') }}</span>
+                                {% else %}
+                                    <span class="valor-entrada">+ R$ {{ r.valor|number_format(2, ',', '.') }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center mb-0">Nenhum movimento registrado hoje.</div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- 🔹 Paginação -->
+        <div class="row mt-4">
+            <div class="col text-center">
+                <nav aria-label="Paginação">
+                    <ul id="paginationCaixa" class="pagination justify-content-center mb-0"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔹 Rodapé -->
+    <div class="mt-4 text-center text-muted small">
+        <hr>
+        <i class="fas fa-heart text-danger"></i> Sistema HomePet — Controle de Caixa Diário
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="{{ asset('js/TabelaDefault.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    new TabelaDefault({
+        cardContainerId: 'cardContainerCaixa',
+        paginationId: 'paginationCaixa',
+        searchInputId: 'searchInputCaixa',
+        itemsPerPage: 6
+    });
+});
+</script>
+{% endblock %}

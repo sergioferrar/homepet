@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+{% block title %}Estoque{% endblock %}
+
+{% block body %}
+<div class="container-fluid bg-white p-4 mt-4 rounded shadow-sm">
+
+    <!-- 🔹 Barra de navegação -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0"><i class="fas fa-boxes me-2"></i> Controle de Estoque</h3>
+        <div class="d-flex gap-2">
+            <a href="{{ path('clinica_pdv_index') }}" class="btn btn-outline-success">
+                <i class="fas fa-cash-register"></i> PDV
+            </a>
+            <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-primary">
+                <i class="fas fa-wallet"></i> Caixa
+            </a>
+        </div>
+    </div>
+    <hr>
+
+    <!-- Formulário de cadastro -->
+    <h5 class="mt-3 mb-3 text-primary">Cadastrar novo produto</h5>
+    <form method="post" action="{{ path('clinica_estoque_cadastrar') }}" class="row g-3">
+        <div class="col-md-3">
+            <input type="text" name="nome" class="form-control" placeholder="Nome do produto" required>
+        </div>
+        <div class="col-md-2">
+            <input type="number" step="0.01" name="preco_custo" class="form-control" placeholder="Preço de custo">
+        </div>
+        <div class="col-md-2">
+            <input type="number" step="0.01" name="preco_venda" class="form-control" placeholder="Preço de venda">
+        </div>
+        <div class="col-md-2">
+            <input type="number" name="estoque_atual" class="form-control" placeholder="Qtd inicial">
+        </div>
+        <div class="col-md-2">
+            <input type="text" name="unidade" class="form-control" placeholder="Unidade (ex: un, cx)">
+        </div>
+        <div class="col-md-1">
+            <button class="btn btn-success w-100"><i class="fas fa-plus"></i></button>
+        </div>
+    </form>
+
+    <hr>
+
+    <!-- Tabela de produtos -->
+    <h5 class="mt-4 mb-3 text-primary">Produtos cadastrados</h5>
+    <table class="table table-striped align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Produto</th>
+                <th>Preço Venda</th>
+                <th>Estoque Atual</th>
+                <th>Unidade</th>
+                <th width="180">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in produtos %}
+                <tr>
+                    <td>{{ p.nome }}</td>
+                    <td>R$ {{ p.precoVenda|number_format(2, ',', '.') }}</td>
+                    <td><span class="badge bg-info">{{ p.estoqueAtual }}</span></td>
+                    <td>{{ p.unidade|default('un') }}</td>
+                    <td>
+                        <form method="post" action="{{ path('clinica_estoque_entrada', {'id': p.id}) }}" class="d-flex">
+                            <input type="number" name="quantidade" class="form-control form-control-sm me-2" min="1" placeholder="+QTD">
+                            <button class="btn btn-sm btn-success"><i class="fas fa-arrow-up"></i></button>
+                        </form>
+                        <a href="{{ path('clinica_estoque_movimentos', {'id': p.id}) }}" class="btn btn-sm btn-outline-secondary mt-1 w-100">
+                            <i class="fas fa-history"></i> Mov.
+                        </a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-center text-muted">Nenhum produto cadastrado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
