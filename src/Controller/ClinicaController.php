@@ -37,8 +37,7 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/dashboard", name="clinica_dashboard", methods={"GET"})
      */
-    public function dashboard(Request $request): Response
-    {
+    public function dashboard(Request $request): Response{
         $this->switchDB();
         $baseId = $this->getIdBase();
 
@@ -55,15 +54,15 @@ class ClinicaController extends DefaultController
         $media = $repoConsulta->calcularMediaConsultas($baseId);
         $atendimentos = $repoConsulta->listarUltimosAtendimentos($baseId);
         $animaisCadastrados = method_exists($repoPet, 'listarPetsRecentes')
-            ? $repoPet->listarPetsRecentes($baseId, 5)
-            : [];
+        ? $repoPet->listarPetsRecentes($baseId, 5)
+        : [];
 
         $vacinasVencidas = method_exists($repoPet, 'listarVacinasPendentes')
-            ? $repoPet->listarVacinasPendentes($baseId)
-            : [];
+        ? $repoPet->listarVacinasPendentes($baseId)
+        : [];
         $vacinasProgramadas = method_exists($repoPet, 'listarVacinasProgramadas')
-            ? $repoPet->listarVacinasProgramadas($baseId)
-            : [];
+        ? $repoPet->listarVacinasProgramadas($baseId)
+        : [];
 
         // 🔍 pesquisa
         $termo = $request->query->get('q');
@@ -757,35 +756,35 @@ class ClinicaController extends DefaultController
 
         // 🔹 Cabeçalho fixo com dados da clínica, tutor e veterinário
         $htmlCabecalho = '
-            <div style="text-align:center; font-size:14px; border-bottom:1px solid #ccc; padding-bottom:5px;">
-                <strong>Doutora das Patas - Clínica Veterinária</strong><br>
-                CRMV-SP 32803 | Tel: (11) 99999-9999<br>
-                <small>Rua das Patinhas, 123 - Planalto, São Paulo - SP</small>
-            </div>
-            <br>
-            <div style="font-size:12px;">
-                <strong>Pet:</strong> ' . htmlspecialchars($pet->getNome()) . '<br>
-                <strong>Tutor:</strong> (não vinculado)<br>
-                <strong>Veterinário Responsável:</strong> Dra. Jéssica Sabrina - CRMV 32803
-            </div>
-            <hr>
+        <div style="text-align:center; font-size:14px; border-bottom:1px solid #ccc; padding-bottom:5px;">
+        <strong>Doutora das Patas - Clínica Veterinária</strong><br>
+        CRMV-SP 32803 | Tel: (11) 99999-9999<br>
+        <small>Rua das Patinhas, 123 - Planalto, São Paulo - SP</small>
+        </div>
+        <br>
+        <div style="font-size:12px;">
+        <strong>Pet:</strong> ' . htmlspecialchars($pet->getNome()) . '<br>
+        <strong>Tutor:</strong> (não vinculado)<br>
+        <strong>Veterinário Responsável:</strong> Dra. Jéssica Sabrina - CRMV 32803
+        </div>
+        <hr>
         ';
 
 
         // 🔸 Monta o corpo completo com formatação leve
         $htmlCompleto = '
-            <div style="font-family: Arial, sans-serif; font-size:13px; line-height:1.6; color:#333;">
-                ' . $cabecalho . '
-                <div style="margin-top:15px;">' . $conteudo . '</div>
-                <div style="margin-top:25px; font-size:12px; color:#555;">' . $rodape . '</div>
-            </div>
+        <div style="font-family: Arial, sans-serif; font-size:13px; line-height:1.6; color:#333;">
+        ' . $cabecalho . '
+        <div style="margin-top:15px;">' . $conteudo . '</div>
+        <div style="margin-top:25px; font-size:12px; color:#555;">' . $rodape . '</div>
+        </div>
         ';
 
         // 🔹 Rodapé padrão automático (igual receitas)
         $pdfRodape = '
-            <div style="text-align:center; font-size:10px; color:#777;">
-                Gerado automaticamente pelo sistema <strong>HomePet</strong> em ' . date('d/m/Y H:i') . '
-            </div>
+        <div style="text-align:center; font-size:10px; color:#777;">
+        Gerado automaticamente pelo sistema <strong>HomePet</strong> em ' . date('d/m/Y H:i') . '
+        </div>
         ';
 
         // 🔹 Configuração e geração do PDF
@@ -836,8 +835,8 @@ class ClinicaController extends DefaultController
 
         $totalGeral = $totalReceita - $totalDespesa;
         $dataAtual = $request->query->get('data')
-            ? new \DateTime($request->query->get('data'))
-            : new \DateTime();
+        ? new \DateTime($request->query->get('data'))
+        : new \DateTime();
 
         return $this->render('clinica/financeirodash.html.twig', [
             'financeiro_hoje' => $financeiroHoje,
@@ -1213,8 +1212,8 @@ class ClinicaController extends DefaultController
 
             // --- Cria eventos da timeline ---
             $petId = method_exists($internacao, 'getPetId')
-                ? $internacao->getPetId()
-                : ($internacao->getPet() ? $internacao->getPet()->getId() : null);
+            ? $internacao->getPetId()
+            : ($internacao->getPet() ? $internacao->getPet()->getId() : null);
 
             if ($petId) {
                 $numDoses = ($duracaoDias * 24) / $frequenciaHoras;

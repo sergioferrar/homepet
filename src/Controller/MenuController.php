@@ -112,6 +112,7 @@ class MenuController extends DefaultController
         $getPlanoLogado = $this->getRepositorio(\App\Entity\Plano::class)->find($estabelecimento->getPlanoId());
 
         $plano = json_decode($getPlanoLogado->getDescricao(), true);
+
         $modulo = [];
         foreach ($plano as $row) {
             $modulo[] = $this->getRepositorio(\App\Entity\Modulo::class)->findOneBy(['descricao' => $row])->getId();
@@ -136,7 +137,6 @@ class MenuController extends DefaultController
             
             }
         }
-
         return $this->render('left-menu.html.twig', ['menuLateral' => $data]);
     }
 }

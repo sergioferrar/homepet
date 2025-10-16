@@ -16,7 +16,7 @@ CREATE TABLE `estabelecimento` (
   `dataPlanoInicio` datetime NOT NULL,
   `dataPlanoFim` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `grupo` (
@@ -89,7 +89,7 @@ CREATE TABLE `usuario` (
   `data_trial` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nome_usuario` (`nome_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 
