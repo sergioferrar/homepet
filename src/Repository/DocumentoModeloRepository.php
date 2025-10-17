@@ -3,15 +3,17 @@
 namespace App\Repository;
 
 use App\Entity\DocumentoModelo;
-use Doctrine\DBAL\Connection;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 
-class DocumentoModeloRepository
+class DocumentoModeloRepository extends ServiceEntityRepository
 {
-    private Connection $conn;
+    private $conn;
 
-    public function __construct(Connection $conn)
+    public function __construct(ManagerRegistry $registry)
     {
-        $this->conn = $conn;
+        parent::__construct($registry, DocumentoModelo::class);
+        $this->conn = $this->getEntityManager()->getConnection();
     }
 
     /**

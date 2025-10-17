@@ -13,6 +13,7 @@ use App\Entity\InternacaoPrescricao;
 use App\Entity\Medicamento;
 use App\Entity\Pet;
 use App\Entity\Servico;
+use App\Entity\Vacina;
 use App\Entity\Veterinario;
 use App\Repository\ConsultaRepository;
 use App\Repository\DocumentoModeloRepository;
@@ -41,35 +42,32 @@ class ClinicaController extends DefaultController
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        $repoPet = $this->getRepositorio(\App\Entity\Pet::class);
-        $repoCliente = $this->getRepositorio(\App\Entity\Cliente::class);
-        $repoFinanceiro = $this->getRepositorio(\App\Entity\FinanceiroPendente::class);
-        $repoConsulta = $this->getRepositorio(\App\Entity\Consulta::class);
+        $repoPet = $this->getRepositorio(Pet::class);
+        $repoCliente = $this->getRepositorio(Cliente::class);
+        $repoFinanceiro = $this->getRepositorio(FinanceiroPendente::class);
+        $repoConsulta = $this->getRepositorio(Consulta::class);
+        $repoInternacao = $this->getRepositorio(Internacao::class);
 
-        $repoInternacao = new InternacaoRepository($this->managerRegistry);
+        
         $internacoes = $repoInternacao->listarInternacoesAtivas($baseId);
         $totalPets = $repoPet->countTotalPets($baseId);
         $totalDono = $repoCliente->countTotalDono($baseId);
         $debitosCliente = $repoFinanceiro->somarDebitosPendentes($baseId);
         $media = $repoConsulta->calcularMediaConsultas($baseId);
         $atendimentos = $repoConsulta->listarUltimosAtendimentos($baseId);
-        $animaisCadastrados = method_exists($repoPet, 'listarPetsRecentes')
-        ? $repoPet->listarPetsRecentes($baseId, 5)
-        : [];
 
-        $vacinasVencidas = method_exists($repoPet, 'listarVacinasPendentes')
-        ? $repoPet->listarVacinasPendentes($baseId)
-        : [];
-        $vacinasProgramadas = method_exists($repoPet, 'listarVacinasProgramadas')
-        ? $repoPet->listarVacinasProgramadas($baseId)
-        : [];
+        $animaisCadastrados = method_exists($repoPet, 'listarPetsRecentes') ? $repoPet->listarPetsRecentes($baseId, 5) : [];
+        $vacinasVencidas = method_exists($repoPet, 'listarVacinasPendentes') ? $repoPet->listarVacinasPendentes($baseId) : [];
+        $vacinasProgramadas = method_exists($repoPet, 'listarVacinasProgramadas') ? $repoPet->listarVacinasProgramadas($baseId) : [];
 
         // 🔍 pesquisa
         $termo = $request->query->get('q');
         $pets = [];
+
         if ($termo) {
             $pets = $repoPet->pesquisarPetsOuTutor($baseId, $termo);
         }
+
 
         return $this->render('clinica/dashboard.html.twig', [
             'total_pets' => $totalPets,
@@ -89,20 +87,20 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/pet/{id}", name="clinica_detalhes_pet", methods={"GET"})
      */
-    public function detalhesPet(
-        int                              $id,
-        ConsultaRepository               $consultaRepo,
-        DocumentoModeloRepository        $documentoRepo,
-        FinanceiroRepository             $financeiroRepo,
-        FinanceiroPendenteRepository     $financeiroPendenteRepo,
-        InternacaoRepository             $internacaoRepo,
-        \App\Repository\VacinaRepository $vacinaRepo
-    ): Response
+    public function detalhesPet(Request $request, int $id): Response
     {
         $this->switchDB();
+
+        $consultaRepo = $this->getRepositorio(Consulta::class);
+        $documentoRepo = $this->getRepositorio(DocumentoModelo::class);
+        $financeiroRepo = $this->getRepositorio(Financeiro::class);
+        $financeiroPendenteRepo = $this->getRepositorio(FinanceiroPendente::class);
+        $internacaoRepo = $this->getRepositorio(Internacao::class);
+        $vacinaRepo = $this->getRepositorio(Vacina::class);
+
         $baseId = $this->getIdBase();
 
-        $pet = $this->getRepositorio(\App\Entity\Pet::class)->findPetById($baseId, $id);
+        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $id);
         if (!$pet) {
             throw $this->createNotFoundException('O pet não foi encontrado.');
         }
@@ -136,7 +134,7 @@ class ClinicaController extends DefaultController
         $timeline_items = [];
 
         foreach ($consultas as $item) {
-            
+
             $anamnese = json_decode($item['anamnese'], true)['ops'];
             $resumo = '';
             foreach ($anamnese as $row) {
@@ -234,16 +232,13 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/pet/{petId}/internacao/nova", name="clinica_nova_internacao", methods={"GET", "POST"})
      */
-    public function novaInternacao(
-        Request                $request,
-        int                    $petId,
-        InternacaoRepository   $internacaoRepo,
-        VeterinarioRepository  $veterinarioRepo,
-        EntityManagerInterface $entityManager
-    ): Response
+    public function novaInternacao(Request $request, int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+
+        $internacaoRepo = $this->getRepositorio(Internacao::class);
+        $veterinarioRepo = $this->getRepositorio(Veterinario::class);
 
         $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
         if (!$pet) {
@@ -326,7 +321,7 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/pet/{petId}/atendimento/novo", name="clinica_novo_atendimento", methods={"POST"})
      */
-    public function novoAtendimento(Request $request, int $petId, ConsultaRepository $consultaRepo): Response
+    public function novoAtendimento(Request $request, int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -350,7 +345,7 @@ class ClinicaController extends DefaultController
         $consulta->setStatus('atendido');
         $consulta->setCriadoEm(new \DateTime());
 
-        $consultaRepo->salvarConsulta($consulta);
+        $this->getRepositorio(Consulta::class)->salvarConsulta($consulta);
 
         $this->addFlash('success', 'Atendimento salvo com sucesso!');
         return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
@@ -636,17 +631,15 @@ class ClinicaController extends DefaultController
     // }
 
     /**
-     * @Route("/clinica/pet/{petId}/documentos", name="clinica_documentos", methods={"GET","POST"})
+     * @Route("/pet/{petId}/documentos", name="clinica_documentos", methods={"GET","POST"})
      */
-    public function documentos(
-        int                       $petId,
-        Request                   $request,
-        DocumentoModeloRepository $repoDoc,
-        PetRepository             $petRepo
-    ): Response
+    public function documentos(Request $request, int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->session->get('userId');
+
+        $repoDoc->getRepositorio(DocumentoModelo::class);
+        $petRepo->getRepositorio(Pet::class);
 
         $pet = $petRepo->find($petId);
         if (!$pet) {
@@ -679,10 +672,12 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/documento/{id}/editar", name="clinica_documento_editar", methods={"GET", "POST"})
      */
-    public function editarDocumento(int $id, Request $request, DocumentoModeloRepository $repoDoc): Response
+    public function editarDocumento(Request $request, int $id): Response
     {
         $this->switchDB();
         $baseId = $this->session->get('userId');
+
+        $repoDoc->getRepositorio(DocumentoModelo::class);
         $documento = $repoDoc->buscarPorId($baseId, $id);
 
         if (!$documento) {

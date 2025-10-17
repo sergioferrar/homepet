@@ -2,14 +2,49 @@
 
 namespace App\Entity;
 
+use App\Repository\DocumentoModeloRepository;
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Entity(repositoryClass=DocumentoModeloRepository::class)
+ */
 class DocumentoModelo
 {
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private ?int $id = null;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private string $titulo;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private ?string $tipo = null; // ✅ novo campo
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private string $conteudo;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private ?string $cabecalho = null;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private ?string $rodape = null;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private ?\DateTime $criado_em = null;
 
     public function getId(): ?int
