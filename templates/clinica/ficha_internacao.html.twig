@@ -512,11 +512,12 @@
                                 };
                                 Utils.globalPostAjax(url, postData, function (result) {
 
-                                    if (result.ok) {
-                                        Notify.toast(data.msg || 'Executado!', 'success')
+                                    if (result.ok == true) {
+                                        Notify.toast(result.msg || 'Executado!', 'success')
                                         window.calendar.refetchEvents();
+                                        window.location.reload();
                                     } else {
-                                        Utils.modal(data.msg, 'danger');
+                                        Utils.modal(result.msg, 'danger');
                                     }
 
                                 });
