@@ -49,22 +49,26 @@
 
                 {# Ações #}
                 <div class="d-flex justify-content-end mb-3">
-                    {# <button class="btn btn-sm btn-primary me-2"><i class="fas fa-edit me-1"></i> Editar</button> #}
-                    <button class="btn btn-sm btn-success me-2 internacao-acao"
-                            data-url="{{ path('clinica_internacao_acao', {id: internacao.id, acao: 'alta'}) }}"
-                            data-token="{{ csrf_token('internacao_acao_' ~ internacao.id) }}">
-                        <i class="fas fa-check me-1"></i> Alta
-                    </button>
-                    <button class="btn btn-sm btn-danger me-2 internacao-acao"
-                            data-url="{{ path('clinica_internacao_acao', {id: internacao.id, acao: 'obito'}) }}"
-                            data-token="{{ csrf_token('internacao_acao_' ~ internacao.id) }}">
-                        <i class="fas fa-skull me-1"></i> Óbito
-                    </button>
-                    <button class="btn btn-sm btn-warning me-2 internacao-acao"
-                            data-url="{{ path('clinica_internacao_acao', {id: internacao.id, acao: 'cancelar'}) }}"
-                            data-token="{{ csrf_token('internacao_acao_' ~ internacao.id) }}">
-                        <i class="fas fa-ban me-1"></i> Cancelar
-                    </button>
+                    {% if internacao.status == 'finalizada' %}
+                        <div class="alert alert-info">Esta ficha ja foi emitida a ALTA</div>
+                    {% else %}
+                        {# <button class="btn btn-sm btn-primary me-2"><i class="fas fa-edit me-1"></i> Editar</button> #}
+                        <button class="btn btn-sm btn-success me-2 internacao-acao"
+                                data-url="{{ path('clinica_internacao_acao', {id: internacao.id, acao: 'alta'}) }}"
+                                data-token="{{ csrf_token('internacao_acao_' ~ internacao.id) }}">
+                            <i class="fas fa-check me-1"></i> Alta
+                        </button>
+                        <button class="btn btn-sm btn-danger me-2 internacao-acao"
+                                data-url="{{ path('clinica_internacao_acao', {id: internacao.id, acao: 'obito'}) }}"
+                                data-token="{{ csrf_token('internacao_acao_' ~ internacao.id) }}">
+                            <i class="fas fa-skull me-1"></i> Óbito
+                        </button>
+                        <button class="btn btn-sm btn-warning me-2 internacao-acao"
+                                data-url="{{ path('clinica_internacao_acao', {id: internacao.id, acao: 'cancelar'}) }}"
+                                data-token="{{ csrf_token('internacao_acao_' ~ internacao.id) }}">
+                            <i class="fas fa-ban me-1"></i> Cancelar
+                        </button>
+                    {% endif %}
                 </div>
 
                 {# Tabs #}
@@ -261,29 +265,39 @@
                 if (url.includes('obito')) confirmMsg = 'Confirmar óbito desta internação?';
                 if (url.includes('cancelar')) confirmMsg = 'Confirmar cancelamento desta internação?';
 
-                if (!confirm(confirmMsg)) return;
+                Utils.modal(confirmMsg, 'primary', function(){
+                        $.ajax({
+                            url: url,
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                            },
+                            data: {
+                                _token: token
+                            },
+                            success: function(resp){
+                                if (resp.ok === true) {
+                                    Utils.modal('Ação registrada com sucesso!', 'success', function(){
+                                        location.reload();
+                                    });
+                                    //alert('Ação registrada com sucesso!');
+                                    
+                                } else {
+                                    Utils.modal(resp.msg, 'danger');
+                                    //alert(resp.msg);
+                                }
+                            },
+                            error: function(x,d){
+                                Utils.modal('Erro ao processar ação.', 'danger');
+                            }
+                        });
 
-                try {
-                    const resp = await $.ajax({
-                        url: url,
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-                        },
-                        data: {
-                            _token: token
-                        }
-                    });
+                        
+                }, 'md', 'Mensagem do sistema', 'Confirmar', 'Cancelar');
 
-                    if (resp.ok) {
-                        alert('Ação registrada com sucesso!');
-                        location.reload();
-                    } else {
-                        alert(resp.msg);
-                    }
-                } catch (err) {
-                    alert('Erro ao processar ação.');
-                }
+                //if (!confirm(confirmMsg)) return;
+
+                /**/
             });
             //$('.fc-timeGridWeek-button').trigger('click')
 
