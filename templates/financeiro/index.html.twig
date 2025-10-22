@@ -131,30 +131,56 @@
         <div class="tab-pane fade {% if app.request.query.get('aba') == 'relatorio' %}show active{% endif %}" id="relatorio" role="tabpanel">
             <form method="GET" action="{{ path('financeiro_index') }}" class="mb-4">
                 <div class="row">
-                    <div class="col-md-4"><input type="month" id="mes_inicio" name="mes_inicio" class="form-control" value="{{ mes_inicio }}"></div>
-                    <div class="col-md-4"><input type="month" id="mes_fim" name="mes_fim" class="form-control" value="{{ mes_fim }}"></div>
-                    <div class="col-md-4 d-flex align-items-end"><input type="hidden" name="aba" value="relatorio"><button type="submit" class="btn btn-primary w-100">Filtrar</button></div>
+                    <div class="col-md-4">
+                        <input type="month" id="mes_inicio" name="mes_inicio" class="form-control" value="{{ mes_inicio }}">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="month" id="mes_fim" name="mes_fim" class="form-control" value="{{ mes_fim }}">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <input type="hidden" name="aba" value="relatorio">
+                        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                    </div>
                 </div>
             </form>
 
             <input type="text" id="searchInputRelatorio" class="form-control mb-3" placeholder="🔍 Buscar no relatório...">
 
-            <div id="cardContainerRelatorio" class="row gy-3">
-                {% for item in relatorio %}
-                    <div class="col-md-4 col-12 card-item" data-search="{{ item.data|date('d/m/Y') }} {{ item.total }}">
-                        <div class="card shadow-sm border-0 rounded-3">
-                            <div class="card-body">
-                                <h5>{{ item.data|date('d/m/Y') }}</h5>
-                                <h4 class="text-primary">R$ {{ item.total|number_format(2, ',', '.') }}</h4>
+            {# --- Cálculo da soma total dos dias --- #}
+            {% set somaTotal = 0 %}
+            {% for item in relatorio %}
+                {% set somaTotal = somaTotal + item.total %}
+            {% endfor %}
+
+            {% if relatorio is not empty %}
+                <!-- Card de total -->
+                <div class="card p-3 mb-4 shadow-sm border-success" style="background-color: #e8fff0;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-success fw-bold">💰 Total do Período</h5>
+                        <h4 class="mb-0 text-success fw-bold">R$ {{ somaTotal|number_format(2, ',', '.') }}</h4>
+                    </div>
+                </div>
+
+                <!-- Cards de cada dia -->
+                <div id="cardContainerRelatorio" class="row gy-3">
+                    {% for item in relatorio %}
+                        <div class="col-md-4 col-12 card-item" data-search="{{ item.data|date('d/m/Y') }} {{ item.total }}">
+                            <div class="card shadow-sm border-0 rounded-3">
+                                <div class="card-body">
+                                    <h5>{{ item.data|date('d/m/Y') }}</h5>
+                                    <h4 class="text-primary">R$ {{ item.total|number_format(2, ',', '.') }}</h4>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                {% else %}
-                    <div class="col-12"><div class="alert alert-info text-center">Nenhum registro encontrado.</div></div>
-                {% endfor %}
-            </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">Nenhum registro encontrado.</div>
+            {% endif %}
+
             <ul id="paginationRelatorio" class="pagination justify-content-center mt-3"></ul>
         </div>
+
 
         {# === ABA INATIVOS === #}
         <div class="tab-pane fade {% if app.request.query.get('aba') == 'inativos' %}show active{% endif %}" id="inativos" role="tabpanel">
