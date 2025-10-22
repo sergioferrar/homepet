@@ -638,8 +638,8 @@ class ClinicaController extends DefaultController
         $this->switchDB();
         $baseId = $this->session->get('userId');
 
-        $repoDoc->getRepositorio(DocumentoModelo::class);
-        $petRepo->getRepositorio(Pet::class);
+        $repoDoc = $this->getRepositorio(DocumentoModelo::class);
+        $petRepo = $this->getRepositorio(Pet::class);
 
         $pet = $petRepo->find($petId);
         if (!$pet) {
