@@ -70,9 +70,19 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
     }
 
     /** @deprecated since Symfony 5.3 */
-    public function loadUserByUsername(string $usernameOrEmail): ?User
+    public function loadUserByUsername(string $usernameOrEmail): ?Usuario
     {
         return $this->loadUserByIdentifier($usernameOrEmail);
+    }
+
+
+    public function localizaUsuario(string $usernameOrEmail)
+    {
+        $sql = "SELECT id, nome_usuario, email, senha, access_level, petshop_id
+            FROM usuario
+            WHERE email = '{$usernameOrEmail}'";
+        $query = $this->conn->query($sql);
+        return $query->fetch();
     }
 
     public function add(Usuario $entity, bool $flush = false): void
@@ -112,7 +122,5 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
         $this->getEntityManager()->persist($entity);
         $this->getEntityManager()->flush();
     }
-
-
 
 }

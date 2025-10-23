@@ -48,16 +48,17 @@
 										{# <h1 class="text-center">System Home Pet</h1> #}
 										<hr class="border-primary-subtle mb-4 d-none d-md-block">
 										<h2 class="h2 mb-4 d-none d-md-block">Seja bem vindo(a) ao System Home Pet</h2>
-										<p class="lead mb-5 d-none d-md-block">Para acessar é necessário informar seus dados de acesso</p>
+										<p class="lead mb-2 d-none d-md-block">Informe o seu e-mail cadastrado para a recuperação da senha.</p>
+										<p class="lead-3 mb-2 d-none d-md-block">Enviaremos um e-mail com um link autenticado para que possa ser feita a alteração da sua senha.</p>
 										<div class="text-endx d-none d-md-block">
 											{# <i class="fas fa-2x fa-file-invoice"></i> #}
 										</div>
 									</div>
 								</div>
 							</div>
-							<div class="col-12 col-md-6 col-xl-4 sessao-login border-start vh-100 bg-white">
-								<div class="card border-0 rounded-4 shadow-0">
-									<div class="card-body p-3 p-md-4 p-xl-5">
+							<div class="col-12 col-md-6 col-xl-4 border-start vh-100 bg-white">
+								<div class="panel border-0 rounded-4 shadow-0">
+									<div class="p-3 p-md-4 p-xl-5">
 										<div class="row">
 											<div class="col-12 col-xl-9 d-flex justify-content-center">
 												<img class="img-fluid rounded mb-4 d-none d-md-none d-sm-block" src="{{ asset('assets/img/logo.png')}}" width="300" alt="System Home Pet Logo">
@@ -67,46 +68,32 @@
 											
 											<div class="col-12">
 												<div class="mb-4">
-													<h3>Faça seu login</h3>
+													<h3>Recuperar senha</h3>
 												</div>
 												{# {% if confirmation is defined %}
 													<div class="alert alert-success">{{ confirmation }}</div>
 												{% endif %} #}
 												{% for message in app.flashes %}
 													{% for row in message %}
-														<div class="alert alert-success">
+														<div class="alert alert-info">
 															{{ row|raw }}
 														</div>
 													{% endfor %}
 												{% endfor %}
-
 											</div>
 										</div>
-										<form class="row g-3 user bg-transparent border-0" method="post" action="{{ url('api_login') }}">
+										<form class="row g-3 user bg-transparent border-0" method="post" action="{{ url('app_login_recover') }}">
 											<div class="col-12">
-												<label for="yourUsername" class="form-label">Login</label>
+												<label for="yourUsername" class="form-label">Informe seu e-mail</label>
 												<div class="input-group has-validation">
 													<input type="email" class="form-control form-control-user" name="username" id="email" placeholder="Seu e-mail">
 												</div>
 											</div>
 											<div class="col-12">
-												<label for="yourPassword" class="form-label">Senha</label>
-												<input type="password" class="form-control form-control-user" name="password" id="password" placeholder="Sua senha">
-											</div>
-											{#                                    <div class="col-12 d-none">#}
-												{#                                        <div class="form-check">#}
-													{#                                            <input class="form-check-input" type="checkbox" name="remember" value="true" id="rememberMe">#}
-													{#                                            <label class="form-check-label" for="rememberMe">Remember me</label>#}
-												{#                                        </div>#}
-											{#                                    </div>#}
-											<div class="col-6">
-												<button class="btn btn-primary w-100" type="submit">Entrar</button>
-											</div>
-											<div class="col-6">
-												<a href="{{ url('landing_home') }}" class="btn btn-secondary w-100">Cadastrar</a>
+												<button class="btn btn-primary w-100" type="submit">Recuperar senha</button>
 											</div>
 											<div class="col-12">
-												<a href="{{ url('app_login_recover') }}" class="btn btn-info w-100">Esqueci minha senha?</a>
+												<a href="{{ url('app_login') }}" class="btn btn-secondary w-100">Voltar ao login</a>
 											</div>
 										</form>
 									</div>
@@ -128,6 +115,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="{{ asset('js/Notify.js') }}"></script>
-<script src="{{ asset('js/login.js') }}"></script>
+{# <script src="{{ asset('js/login.js') }}"></script> #}
 </body>
 </html>

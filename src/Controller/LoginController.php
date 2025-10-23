@@ -3,9 +3,12 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Service\EmailService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class LoginController extends DefaultController
@@ -84,6 +87,7 @@ class LoginController extends DefaultController
         ->findById($this->security->getUser()->getPetshopId())[0];
 
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
+        
         //dd($validaPlano);
         if($validaPlano){
             $mensagem = str_replace(' ', '-', $validaPlano);
@@ -105,6 +109,116 @@ class LoginController extends DefaultController
     }
 
     /**
+     * @Route("/login/recupera-senha", name="app_login_recover")
+     */
+    public function recorver(EmailService $emailService, Request $request): Response
+    {
+        $data = [];
+
+        if($request->isMethod('POST')){
+            $usuario = $this->getRepositorio(\App\Entity\Usuario::class)->localizaUsuario($request->get('username'));
+            
+            if(!$usuario){
+                $error = 'O e-mail informado não foi localizado.';
+                $this->addFlash('message', $error);
+                return $this->redirectToRoute('app_login_recover');
+            }
+
+            $token = base64_encode(json_encode([
+                'username' => $request->get('username'), 
+                'email' => $request->get('username'),
+                'hash' => $usuario['senha'],
+                'petshop_id' => $usuario['petshop_id']
+            ]));
+            
+            $confirmationUrl = $this->generateUrl(
+                'app_login_altera', 
+                [
+                    'token' => $token
+                ], 
+                UrlGeneratorInterface::ABSOLUTE_URL
+            );
+            
+            $html = $this->render('login/email.html.twig', [
+                'confirmation_link' => $confirmationUrl,
+                'nome_usuario' => $usuario['nome_usuario'],
+            ])->getContent();
+
+            $emailService->sendEmail(
+                $request->get('username'),
+                'Redefinição de senha solicitada',
+                $html
+            );
+            
+            $error = 'Um e-mail com o link para redefinir sua senha foi enviado para o endereço informado.<br>
+Verifique sua caixa de entrada e siga as instruções para criar uma nova senha.<br>
+Caso não encontre o e-mail, verifique também sua pasta de spam ou lixo eletrônico.';
+                $this->addFlash('message', $error);
+                return $this->redirectToRoute('app_login_recover');
+            
+        }
+
+        return $this->render('login/recorver.html.twig', $data);
+    }
+
+    /**
+     * @Route("/login/alterar-senha/{token}", name="app_login_altera")
+     */
+    public function doRecorver(EmailService $emailService, Request $request, EntityManagerInterface $em): Response
+    {
+        $token = $request->get('token');
+        if (!$token) {
+            $this->addFlash('error', 'Esta página não pode ser acessada diretamente.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $tokenDecrypt = json_decode(base64_decode($token), true);
+
+        $usuario = $this->getRepositorio(\App\Entity\Usuario::class)->localizaUsuario($tokenDecrypt['email']);
+        if(!$usuario){
+            $this->addFlash('error', 'Esta página não pode ser acessada diretamente sem um usuário válido.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        if($usuario['senha'] != $tokenDecrypt['hash']) {
+            $this->addFlash('error', 'Esta página não pode ser acessada diretamente pois a hash não é valida.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $data['token'] = $token;
+
+        // validando post
+        if($request->isMethod('POST')){
+
+            $senha = $request->request->get('senha');
+            $confirmar = $request->request->get('confirmar');
+
+            // Validação básica
+            if (empty($senha) || empty($confirmar)) {
+                $this->addFlash('error', 'Por favor, preencha todos os campos.');
+                return $this->redirect($request->getUri());
+            }
+
+            if ($senha !== $confirmar) {
+                $this->addFlash('error', 'As senhas não coincidem.');
+                return $this->redirect($request->getUri());
+            }
+
+            $user = $this->getRepositorio(\App\Entity\Usuario::class)->findOneBy(['email' => $tokenDecrypt['email']]);
+            $hash = password_hash($senha, PASSWORD_DEFAULT, ['cost' => 10]);
+            $user->setPassword($hash);
+            $em->persist($user);
+            $em->flush();
+
+            $this->addFlash('message', 'Sua senha foi alterada com sucesso!');
+            return $this->redirectToRoute('app_login');
+        }
+
+
+        return $this->render('login/dorecover.html.twig', $data);
+    }
+
+    /**
      * @Route("/login/gerasenha/{senha}", name="app_gerasenha")
      */
     public function geraSenha(Request $request): Response
@@ -112,5 +226,3 @@ class LoginController extends DefaultController
         return $this->json(['senha' => password_hash($request->get('senha'), PASSWORD_DEFAULT, ["cost" => 10])]);
     }
 }
-
-
