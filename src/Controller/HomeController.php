@@ -35,7 +35,7 @@ class HomeController extends DefaultController
         $agendamento = $this->getRepositorio(Financeiro::class)->totalAgendamento($this->estabelecimentoId);
         $agendamentoDia = $this->getRepositorio(Financeiro::class)->totalAgendamentoDia($this->estabelecimentoId);
         $animais = $this->getRepositorio(Financeiro::class)->totalAnimais($this->estabelecimentoId);
-        $lucrototal = $this->getRepositorio(Financeiro::class)->totalLucro($this->estabelecimentoId);
+        $lucrototal = $this->getRepositorio(Financeiro::class)->totalLucroPorMes($this->estabelecimentoId);
         $valores = $this->getRepositorio(Financeiro::class)->lucroDiario($this->estabelecimentoId);
 //        dd($agendamento);
         $data = [];

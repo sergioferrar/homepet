@@ -217,6 +217,29 @@ class FinanceiroRepository extends ServiceEntityRepository
         return $query->fetch();
     }
 
+    public function totalLucroPorMes($baseId, $mes = null, $ano = null)
+    {
+        $mes = $mes ?? date('m');
+        $ano = $ano ?? date('Y');
+
+        $sql = "SELECT SUM(valor) AS lucroTotal
+                FROM {$_ENV['DBNAMETENANT']}.financeiro
+                WHERE estabelecimento_id = :baseId
+                  AND MONTH(data) = :mes
+                  AND YEAR(data) = :ano
+                  AND (status IS NULL OR status != 'inativo')";
+
+        $stmt = $this->conn->prepare($sql);
+        $result = $stmt->executeQuery([
+            'baseId' => $baseId,
+            'mes' => $mes,
+            'ano' => $ano
+        ]);
+
+        return $result->fetchAssociative();
+    }
+
+
     public function lucroDiario($baseId)
     {
         $sql = "SELECT SUM(valor) as valor, data
