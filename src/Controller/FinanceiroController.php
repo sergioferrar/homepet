@@ -46,6 +46,10 @@ class FinanceiroController extends DefaultController
         // --- Aba Inativos ---
         $financeirosInativos = $financeiroRepo->findInativos($baseId);
 
+        // --- Aba Fluxo de Caixa ---
+        $dataFluxo = $request->query->get('data_fluxo') ? new \DateTime($request->query->get('data_fluxo')) : new \DateTime();
+        $fluxoCaixa = $this->getFluxoCaixa($baseId, $dataFluxo);
+
         return $this->render('financeiro/index.html.twig', [
             'financeiros' => $financeirosDiarios,
             'data'        => $dataDiario,
@@ -54,6 +58,8 @@ class FinanceiroController extends DefaultController
             'mes_fim'     => $mesFim,
             'relatorio'   => $relatorioData,
             'inativos'    => $financeirosInativos,
+            'fluxo_caixa' => $fluxoCaixa,
+            'data_fluxo'  => $dataFluxo,
         ]);
     }
 
@@ -196,5 +202,147 @@ class FinanceiroController extends DefaultController
         $writer->save($temp_file);
 
         return $this->file($temp_file, $fileName, ResponseHeaderBag::DISPOSITION_ATTACHMENT);
+    }
+
+    /**
+     * @Route("/fluxo/debug", name="financeiro_fluxo_debug")
+     */
+    public function debugFluxo(Request $request): Response
+    {
+        $this->switchDB();
+        $baseId = $this->session->get('userId');
+        $data = new \DateTime();
+        
+        $fluxo = $this->getFluxoCaixa($baseId, $data);
+        
+        return new JsonResponse([
+            'total_entradas' => $fluxo['total_entradas'],
+            'total_saidas' => $fluxo['total_saidas'],
+            'saldo' => $fluxo['saldo'],
+            'quantidade_movimentos' => count($fluxo['movimentos']),
+            'movimentos' => $fluxo['movimentos']
+        ]);
+    }
+
+    /**
+     * Método auxiliar para buscar o fluxo de caixa consolidado
+     */
+    private function getFluxoCaixa(int $baseId, \DateTime $data): array
+    {
+        $inicioDia = (clone $data)->setTime(0, 0, 0);
+        $fimDia = (clone $data)->setTime(23, 59, 59);
+
+        $em = $this->getDoctrine()->getManager();
+
+        // 🔹 1. Busca ENTRADAS do Financeiro (tipo ENTRADA ou NULL para compatibilidade)
+        $entradasFinanceiro = $em->getRepository(Financeiro::class)
+            ->createQueryBuilder('f')
+            ->where('f.estabelecimentoId = :estab')
+            ->andWhere('f.data BETWEEN :inicio AND :fim')
+            ->andWhere('f.inativar = :inativo')
+            ->andWhere('(f.tipo = :tipo OR f.tipo IS NULL OR f.tipo = :vazio)')
+            ->setParameter('estab', $baseId)
+            ->setParameter('inicio', $inicioDia)
+            ->setParameter('fim', $fimDia)
+            ->setParameter('tipo', 'ENTRADA')
+            ->setParameter('vazio', '')
+            ->setParameter('inativo', false)
+            ->orderBy('f.data', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        // 🔹 2. Busca SAÍDAS do Financeiro (tipo SAIDA)
+        $saidasFinanceiro = $em->getRepository(Financeiro::class)
+            ->createQueryBuilder('f')
+            ->where('f.estabelecimentoId = :estab')
+            ->andWhere('f.data BETWEEN :inicio AND :fim')
+            ->andWhere('f.tipo = :tipo')
+            ->setParameter('estab', $baseId)
+            ->setParameter('inicio', $inicioDia)
+            ->setParameter('fim', $fimDia)
+            ->setParameter('tipo', 'SAIDA')
+            ->orderBy('f.data', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        // 🔹 3. Busca movimentos do Caixa (PDV) - APENAS SAÍDAS
+        // As vendas (entradas) já estão no Financeiro, então buscamos apenas saídas manuais
+        $movimentosCaixa = $em->getRepository(\App\Entity\CaixaMovimento::class)
+            ->createQueryBuilder('c')
+            ->where('c.estabelecimentoId = :estab')
+            ->andWhere('c.data BETWEEN :inicio AND :fim')
+            ->andWhere('c.tipo = :tipo')
+            ->setParameter('estab', $baseId)
+            ->setParameter('inicio', $inicioDia)
+            ->setParameter('fim', $fimDia)
+            ->setParameter('tipo', 'SAIDA')
+            ->orderBy('c.data', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        // 🔹 4. Consolida tudo em um array único
+        $movimentos = [];
+        $totalEntradas = 0;
+        $totalSaidas = 0;
+
+        // Adiciona entradas do financeiro
+        foreach ($entradasFinanceiro as $f) {
+            $valor = floatval($f->getValor());
+            if ($valor > 0) {
+                $totalEntradas += $valor;
+                $movimentos[] = [
+                    'data' => $f->getData(),
+                    'descricao' => $f->getDescricao(),
+                    'origem' => $f->getOrigem() ?? 'Financeiro',
+                    'metodo' => $f->getMetodoPagamento() ?? '-',
+                    'tipo' => 'ENTRADA',
+                    'valor' => $valor
+                ];
+            }
+        }
+
+        // Adiciona saídas do financeiro
+        foreach ($saidasFinanceiro as $f) {
+            $valor = floatval($f->getValor());
+            if ($valor > 0) {
+                $totalSaidas += $valor;
+                $movimentos[] = [
+                    'data' => $f->getData(),
+                    'descricao' => $f->getDescricao(),
+                    'origem' => $f->getOrigem() ?? 'Financeiro',
+                    'metodo' => $f->getMetodoPagamento() ?? '-',
+                    'tipo' => 'SAIDA',
+                    'valor' => $valor
+                ];
+            }
+        }
+
+        // Adiciona movimentos do caixa (PDV) - Apenas saídas manuais
+        foreach ($movimentosCaixa as $c) {
+            $valor = floatval($c->getValor());
+            if ($valor > 0) {
+                $totalSaidas += $valor;
+                $movimentos[] = [
+                    'data' => $c->getData(),
+                    'descricao' => $c->getDescricao(),
+                    'origem' => 'PDV - Saída Manual',
+                    'metodo' => 'Caixa',
+                    'tipo' => 'SAIDA',
+                    'valor' => $valor
+                ];
+            }
+        }
+
+        // 🔹 5. Ordena por data
+        usort($movimentos, function($a, $b) {
+            return $a['data'] <=> $b['data'];
+        });
+
+        return [
+            'movimentos' => $movimentos,
+            'total_entradas' => $totalEntradas,
+            'total_saidas' => $totalSaidas,
+            'saldo' => $totalEntradas - $totalSaidas
+        ];
     }
 }

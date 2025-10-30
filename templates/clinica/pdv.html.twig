@@ -38,6 +38,9 @@
             <a href="{{ path('clinica_pdv_listar') }}" class="btn btn-outline-primary">
                 <i class="fas fa-list"></i> Listagem
             </a>
+            <button class="btn btn-outline-danger" id="btnSaidaHeader">
+                <i class="fas fa-arrow-down"></i> Registrar Saída
+            </button>
             <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-success">
                 <i class="fas fa-wallet"></i> Caixa
             </a>
@@ -114,9 +117,6 @@
                     <i class="fas fa-check"></i> Finalizar Venda
                 </button>
             </div>
-            <button class="btn btn-outline-danger w-100 mt-2" id="btnSaida">
-                <i class="fas fa-arrow-down"></i> Registrar Saída de Dinheiro
-            </button>
         </div>
     </div>
 </div>
@@ -278,7 +278,7 @@ document.getElementById('btnFinalizar').addEventListener('click', async () => {
 });
 
 // ==================== SAÍDA DE DINHEIRO ====================
-document.getElementById('btnSaida').addEventListener('click', () => {
+document.getElementById('btnSaidaHeader').addEventListener('click', () => {
     new bootstrap.Modal(document.getElementById('modalSaida')).show();
 });
 document.getElementById('confirmarSaida').addEventListener('click', async () => {

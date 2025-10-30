@@ -9,6 +9,27 @@
     .card-item:hover { box-shadow: 0 0 0 4px #e5eefe; border-left-color: #007bff; }
     .valor-entrada { color: #28a745; font-weight: bold; }
     .valor-saida { color: #dc3545; font-weight: bold; }
+    
+    /* Estilos para impressão */
+    @media print {
+        .btn, #searchInputCaixa, #dataFiltro, #paginationCaixa, nav, .no-print {
+            display: none !important;
+        }
+        .card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+        body {
+            font-size: 12pt;
+        }
+        h1 {
+            font-size: 18pt;
+            margin-bottom: 20px;
+        }
+        .card-body {
+            padding: 10px !important;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -62,18 +83,25 @@
         </div>
     </div>
 
+    <!-- 🔹 Botão de voltar ao PDV -->
+    <div class="mb-3">
+        <a href="{{ path('clinica_pdv_index') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-arrow-left me-2"></i> Voltar ao PDV
+        </a>
+    </div>
+
     <!-- 🔹 Filtros e busca -->
     <div class="tabela-container container-fluid px-2">
         <div class="row mb-3">
             <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <input type="text" id="searchInputCaixa" class="form-control form-control-md" placeholder="🔍 Buscar por descrição ou forma de pagamento...">
                 <div class="d-flex gap-2">
-                    <a href="{{ path('clinica_pdv_index') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-cash-register"></i> PDV
-                    </a>
                     <a href="{{ path('clinica_pdv_listar') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-list"></i> Listagem
+                        <i class="fas fa-list"></i> Listagem de Vendas
                     </a>
+                    <button type="button" class="btn btn-success" onclick="imprimirCaixa()">
+                        <i class="fas fa-print"></i> Imprimir
+                    </button>
                 </div>
             </div>
         </div>
@@ -161,5 +189,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+// Função para imprimir o caixa
+function imprimirCaixa() {
+    window.print();
+}
 </script>
 {% endblock %}
