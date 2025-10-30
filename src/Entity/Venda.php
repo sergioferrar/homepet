@@ -45,6 +45,9 @@ class Venda
     /** @ORM\Column(type="text", nullable=true) */
     private $observacao;
 
+    /** @ORM\Column(type="integer", nullable=true, name="pet_id") */
+    private $petId;
+
     // --- Getters e Setters ---
 
     public function getId(): ?int { return $this->id; }
@@ -75,4 +78,7 @@ class Venda
 
     public function getObservacao(): ?string { return $this->observacao; }
     public function setObservacao(?string $obs): self { $this->observacao = $obs; return $this; }
+
+    public function getPetId(): ?int { return $this->petId; }
+    public function setPetId(?int $petId): self { $this->petId = $petId; return $this; }
 }

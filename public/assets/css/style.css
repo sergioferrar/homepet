@@ -1251,10 +1251,8 @@ h6 {
 
 
 .fundacat{
-  background-image: url('../../images/pataazul.jpg');
-  background-size: cover; 
-  background-repeat: no-repeat;
-  background-attachment: local;
+  background-color: #f5f7fa !important;
+  background-image: none !important;
 }
 
 .card-menu {

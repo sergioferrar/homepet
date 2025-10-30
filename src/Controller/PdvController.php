@@ -125,7 +125,7 @@ class PdvController extends DefaultController
         $venda->setMetodoPagamento($dados['metodo']);
         $venda->setData(new \DateTime());
         
-        // 🔹 Campos adicionais (troco, bandeira, parcelas, observação)
+        // 🔹 Campos adicionais (troco, bandeira, parcelas, observação, pet)
         if (!empty($dados['troco'])) {
             $venda->setTroco($dados['troco']);
         }
@@ -137,6 +137,9 @@ class PdvController extends DefaultController
         }
         if (!empty($dados['observacao'])) {
             $venda->setObservacao($dados['observacao']);
+        }
+        if (!empty($dados['pet_id'])) {
+            $venda->setPetId((int)$dados['pet_id']);
         }
 
         $em->persist($venda);
@@ -724,5 +727,84 @@ public function caixa(EntityManagerInterface $em): Response
                 'por_metodo' => $porMetodo
             ]
         ]);
+    }
+
+    /**
+     * @Route("/pet/{petId}/vendas", name="clinica_pdv_pet_vendas", methods={"GET"})
+     */
+    public function vendasPorPet(int $petId, EntityManagerInterface $em): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        try {
+            // Buscar pet
+            $pet = $em->getRepository(Pet::class)
+                ->findOneBy(['id' => $petId, 'estabelecimentoId' => $baseId]);
+
+            if (!$pet) {
+                return new JsonResponse(['ok' => false, 'msg' => 'Pet não encontrado'], 404);
+            }
+
+            // Buscar vendas do pet
+            $vendas = $em->getRepository(Venda::class)
+                ->createQueryBuilder('v')
+                ->where('v.petId = :petId')
+                ->andWhere('v.estabelecimentoId = :estab')
+                ->setParameter('petId', $petId)
+                ->setParameter('estab', $baseId)
+                ->orderBy('v.data', 'DESC')
+                ->getQuery()
+                ->getResult();
+
+            $vendasFormatadas = [];
+            $totalGasto = 0;
+
+            foreach ($vendas as $venda) {
+                $totalGasto += $venda->getTotal();
+                
+                // Buscar itens da venda
+                $itens = $em->getRepository(VendaItem::class)
+                    ->findBy(['venda' => $venda]);
+
+                $itensFormatados = [];
+                foreach ($itens as $item) {
+                    $itensFormatados[] = [
+                        'produto' => $item->getProduto(),
+                        'quantidade' => $item->getQuantidade(),
+                        'valor_unitario' => number_format($item->getValorUnitario(), 2, ',', '.'),
+                        'subtotal' => number_format($item->getSubtotal(), 2, ',', '.')
+                    ];
+                }
+
+                $vendasFormatadas[] = [
+                    'id' => $venda->getId(),
+                    'data' => $venda->getData()->format('d/m/Y H:i'),
+                    'total' => number_format($venda->getTotal(), 2, ',', '.'),
+                    'metodo_pagamento' => $venda->getMetodoPagamento(),
+                    'observacao' => $venda->getObservacao(),
+                    'itens' => $itensFormatados
+                ];
+            }
+
+            return new JsonResponse([
+                'ok' => true,
+                'pet' => [
+                    'id' => $pet->getId(),
+                    'nome' => $pet->getNome(),
+                    'especie' => $pet->getEspecie(),
+                    'raca' => $pet->getRaca()
+                ],
+                'vendas' => $vendasFormatadas,
+                'resumo' => [
+                    'total_vendas' => count($vendas),
+                    'total_gasto' => number_format($totalGasto, 2, ',', '.'),
+                    'ticket_medio' => count($vendas) > 0 ? number_format($totalGasto / count($vendas), 2, ',', '.') : '0,00'
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(['ok' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
+        }
     }
 }

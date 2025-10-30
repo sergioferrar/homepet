@@ -40,6 +40,7 @@
         
         .main {
             background-color: #f5f7fa !important;
+            transition: margin-left 0.3s ease;
         }
         
         /* Cards com fundo branco limpo */
@@ -53,12 +54,76 @@
         .sidebar {
             background-color: #ffffff;
             border-right: 1px solid #e4e7eb;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+        
+        /* Sidebar colapsada - modo mini com ícones */
+        .sidebar.collapsed {
+            width: 80px !important;
+        }
+        
+        /* Esconde apenas o texto (span), mantém os ícones (i) */
+        .sidebar.collapsed .nav-link > span {
+            display: none !important;
+        }
+        
+        .sidebar.collapsed .logo span {
+            display: none !important;
+        }
+        
+        .sidebar.collapsed .nav-link {
+            text-align: center !important;
+            padding: 15px 0 !important;
+            justify-content: center !important;
+            display: flex !important;
+        }
+        
+        /* Garante que os ícones apareçam */
+        .sidebar.collapsed .nav-link > i {
+            margin: 0 !important;
+            margin-right: 0 !important;
+            font-size: 24px !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* Esconde a seta de dropdown */
+        .sidebar.collapsed .bi-chevron-down {
+            display: none !important;
+        }
+        
+        /* Esconde submenus quando colapsado */
+        .sidebar.collapsed .nav-content {
+            display: none !important;
+        }
+        
+        /* Ajusta o logo quando colapsado */
+        .sidebar.collapsed .logo {
+            justify-content: center !important;
+            padding: 20px 0 !important;
+        }
+        
+        /* Remove padding lateral dos itens */
+        .sidebar.collapsed .nav-item {
+            padding: 0 !important;
         }
         
         /* Header limpo */
         .header {
             background-color: #ffffff;
             border-bottom: 1px solid #e4e7eb;
+            transition: left 0.3s ease;
+        }
+        
+        .header.collapsed {
+            left: 80px !important;
+        }
+        
+        /* Main expandido quando sidebar colapsada */
+        .main.collapsed {
+            margin-left: 80px !important;
         }
         
         /* Containers com fundo suave */
@@ -347,18 +412,28 @@
 <!-- Custom JS for Sidebar Toggle -->
 <script>
     $(document).ready(function() {
-        // Estado inicial: sidebar colapsada em mobile, aberta em desktop
+        // Estado inicial: sidebar aberta em desktop, colapsada em mobile
         if ($(window).width() < 992) {
             $('.sidebar').addClass('collapsed');
             $('.header').addClass('collapsed');
             $('.main').addClass('collapsed');
         }
 
-        // Toggle sidebar em qualquer resolução
+        // Toggle sidebar - modo mini com ícones
         $('.sidebar-toggle').on('click', function() {
-            $('.sidebar').toggleClass('collapsed active');
-            $('.header').toggleClass('collapsed');
-            $('.main').toggleClass('collapsed');
+            const isCollapsed = $('.sidebar').hasClass('collapsed');
+            
+            if (isCollapsed) {
+                // Expandir sidebar
+                $('.sidebar').removeClass('collapsed');
+                $('.header').removeClass('collapsed');
+                $('.main').removeClass('collapsed');
+            } else {
+                // Colapsar sidebar - modo mini
+                $('.sidebar').addClass('collapsed');
+                $('.header').addClass('collapsed');
+                $('.main').addClass('collapsed');
+            }
         });
 
         // Toggle search bar em mobile
@@ -370,7 +445,7 @@
         // Fechar sidebar ao clicar fora dela em mobile
         $(document).on('click', function(e) {
             if ($(window).width() < 992 && !$('.sidebar').hasClass('collapsed') && !$(e.target).closest('.sidebar, .sidebar-toggle').length) {
-                $('.sidebar').addClass('collapsed').removeClass('active');
+                $('.sidebar').addClass('collapsed');
                 $('.header').addClass('collapsed');
                 $('.main').addClass('collapsed');
             }
@@ -378,14 +453,13 @@
 
         // Ajustar layout ao redimensionar
         $(window).on('resize', function() {
-            if ($(window).width() < 992 && !$('.sidebar').hasClass('collapsed')) {
-                $('.sidebar').addClass('collapsed').removeClass('active');
-                $('.header').addClass('collapsed');
-                $('.main').addClass('collapsed');
-            } else if ($(window).width() >= 992 && $('.sidebar').hasClass('collapsed') && !$('.sidebar').hasClass('active')) {
-                $('.sidebar').removeClass('collapsed');
-                $('.header').removeClass('collapsed');
-                $('.main').removeClass('collapsed');
+            if ($(window).width() < 992) {
+                // Mobile: sempre colapsada
+                if (!$('.sidebar').hasClass('collapsed')) {
+                    $('.sidebar').addClass('collapsed');
+                    $('.header').addClass('collapsed');
+                    $('.main').addClass('collapsed');
+                }
             }
         });
     });
@@ -397,24 +471,51 @@
     });
 
     document.getElementById("btnEnviarIa").addEventListener("click", async () => {
-        const pergunta = document.getElementById("inputPerguntaIa").value.trim();
-        if (!pergunta) return;
+        const comando = document.getElementById("inputPerguntaIa").value.trim();
+        if (!comando) return;
 
         const box = document.getElementById("chatBoxIa");
-        box.innerHTML += `<div><strong>Você:</strong> ${pergunta}</div>`;
+        box.innerHTML += `<div class="mb-2"><strong>Você:</strong> ${comando}</div>`;
+        
+        // Mostrar loading
+        box.innerHTML += `<div class="mb-2 text-muted" id="loading"><em>🤖 Processando...</em></div>`;
+        box.scrollTop = box.scrollHeight;
 
         try {
-            const response = await fetch("/ia/perguntar", {
+            const response = await fetch("{{ path('ia_assistente_executar') }}", {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pergunta })
+                body: JSON.stringify({ comando })
             });
 
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Erro HTTP:', response.status, errorText);
+                throw new Error(`Erro ${response.status}: ${errorText.substring(0, 100)}`);
+            }
+
             const data = await response.json();
-            box.innerHTML += `<div><strong>Dra. HomePet:</strong> ${data.resposta}</div>`;
+            
+            // Remove loading
+            document.getElementById('loading')?.remove();
+            
+            if (data.success) {
+                box.innerHTML += `<div class="mb-2 alert alert-success p-2">
+                    <strong>🤖 Assistente:</strong> ${data.message}
+                    ${data.acao ? `<br><small class="text-muted">Ação: ${data.acao}</small>` : ''}
+                </div>`;
+            } else {
+                box.innerHTML += `<div class="mb-2 alert alert-warning p-2">
+                    <strong>🤖 Assistente:</strong> ${data.message}
+                </div>`;
+            }
+            
             box.scrollTop = box.scrollHeight;
         } catch (e) {
-            box.innerHTML += `<div class="text-danger"><strong>Erro:</strong> Não foi possível obter resposta agora.</div>`;
+            document.getElementById('loading')?.remove();
+            box.innerHTML += `<div class="mb-2 alert alert-danger p-2">
+                <strong>Erro:</strong> Não foi possível processar o comando.
+            </div>`;
         }
 
         document.getElementById("inputPerguntaIa").value = '';

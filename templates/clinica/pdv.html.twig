@@ -55,6 +55,14 @@
         <div id="autocomplete-tutor" class="autocomplete-suggestions"></div>
     </div>
 
+    <!-- 🐕 Pet (opcional) -->
+    <div class="mb-3">
+        <label class="fw-bold mb-2">Pet <small class="text-muted">(opcional - para aparecer na ficha)</small>:</label>
+        <select id="petSelect" class="form-select" disabled>
+            <option value="">Selecione um cliente primeiro</option>
+        </select>
+    </div>
+
     <div class="row">
         <!-- Coluna esquerda -->
         <div class="col-md-8 position-relative">
@@ -224,6 +232,12 @@ inputTutor.addEventListener('input', async function() {
     const termo = this.value.trim().toLowerCase();
     listaTutor.innerHTML = '';
     tutorSelecionado = null;
+    
+    // Limpar pets quando mudar cliente
+    const petSelect = document.getElementById('petSelect');
+    petSelect.innerHTML = '<option value="">Selecione um cliente primeiro</option>';
+    petSelect.disabled = true;
+    
     if (termo.length < 2) return;
     try {
         const res = await fetch('{{ path("clinica_pdv_clientes_listar") }}');
@@ -234,11 +248,49 @@ inputTutor.addEventListener('input', async function() {
             const div = document.createElement('div');
             div.className = 'autocomplete-suggestion';
             div.textContent = c.text;
-            div.onclick = () => { inputTutor.value = c.text; tutorSelecionado = c.id; listaTutor.innerHTML = ''; };
+            div.onclick = () => { 
+                inputTutor.value = c.text; 
+                tutorSelecionado = c.id; 
+                listaTutor.innerHTML = ''; 
+                carregarPetsDoCliente(c.id);
+            };
             listaTutor.appendChild(div);
         });
     } catch (e) { console.error('Erro ao carregar tutores:', e); }
 });
+
+// Carregar pets do cliente
+async function carregarPetsDoCliente(clienteId) {
+    const petSelect = document.getElementById('petSelect');
+    
+    if (!clienteId) {
+        petSelect.innerHTML = '<option value="">Selecione um cliente primeiro</option>';
+        petSelect.disabled = true;
+        return;
+    }
+    
+    petSelect.innerHTML = '<option value="">Carregando pets...</option>';
+    petSelect.disabled = true;
+    
+    try {
+        const res = await fetch(`/orcamento/api/cliente/${clienteId}/pets`);
+        const data = await res.json();
+        
+        if (data.success && data.pets.length > 0) {
+            petSelect.innerHTML = '<option value="">Nenhum (venda geral)</option>';
+            data.pets.forEach(pet => {
+                const info = pet.especie || pet.raca ? ` (${pet.especie || ''}${pet.especie && pet.raca ? ' - ' : ''}${pet.raca || ''})` : '';
+                petSelect.innerHTML += `<option value="${pet.id}">${pet.nome}${info}</option>`;
+            });
+            petSelect.disabled = false;
+        } else {
+            petSelect.innerHTML = '<option value="">Nenhum pet cadastrado</option>';
+        }
+    } catch (e) {
+        console.error('Erro ao carregar pets:', e);
+        petSelect.innerHTML = '<option value="">Erro ao carregar pets</option>';
+    }
+}
 
 document.addEventListener('click', e => { if (!listaTutor.contains(e.target) && e.target !== inputTutor) listaTutor.innerHTML = ''; });
 
@@ -260,6 +312,7 @@ document.getElementById('btnFinalizar').addEventListener('click', async () => {
     if (itens.length === 0) return showToast('Nenhum item na venda.', 'warning');
     const metodo = document.getElementById('metodo').value;
     const cliente_id = tutorSelecionado;
+    const pet_id = document.getElementById('petSelect').value || null;
     const desconto = parseFloat(document.getElementById('desconto').value || 0);
     const total = itens.reduce((s, i) => s + i.valor * i.quantidade, 0);
     const totalDesc = total - (total * desconto / 100);
@@ -269,7 +322,7 @@ document.getElementById('btnFinalizar').addEventListener('click', async () => {
         const res = await fetch('{{ path("clinica_pdv_registrar") }}', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ metodo, cliente_id, total: totalDesc, desconto, itens, troco })
+            body: JSON.stringify({ metodo, cliente_id, pet_id, total: totalDesc, desconto, itens, troco })
         });
         const json = await res.json();
         showToast(json.msg, json.ok ? 'success' : 'error');
