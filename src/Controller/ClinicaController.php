@@ -38,7 +38,7 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/dashboard", name="clinica_dashboard", methods={"GET"})
      */
-    public function dashboard(Request $request): Response{
+    public function dashboard(Request $request, EntityManagerInterface $em): Response{
         $this->switchDB();
         $baseId = $this->getIdBase();
 
@@ -68,6 +68,52 @@ class ClinicaController extends DefaultController
             $pets = $repoPet->pesquisarPetsOuTutor($baseId, $termo);
         }
 
+        // 🔹 BUSCA TODAS AS PRESCRIÇÕES DE TODAS AS INTERNAÇÕES ATIVAS
+        $prescricoesGerais = [];
+        $calendarioPrescricoesGeral = [];
+        
+        foreach ($internacoes as $internacao) {
+            $internacaoId = $internacao['id'] ?? null;
+            if (!$internacaoId) continue;
+
+            // Busca prescrições desta internação
+            $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findBy(['internacaoId' => $internacaoId]);
+            
+            foreach ($prescricoes as $p) {
+                $eventos = $em->getRepository(\App\Entity\InternacaoEvento::class)->findBy(['internacaoId' => $p->getId()]);
+                $primeira = $p->getDataHora();
+                $freqHoras = (int)$p->getFrequenciaHoras();
+                $duracaoDias = (int)$p->getDuracaoDias();
+
+                if ($freqHoras <= 0 || $duracaoDias <= 0 || !$primeira) {
+                    continue;
+                }
+
+                foreach ($eventos as $i => $evento) {
+                    $doseTime = (clone $primeira)->modify('+' . ($i * $freqHoras) . ' hours');
+                    $execucao = $em->getRepository(\App\Entity\InternacaoExecucao::class)->findOneBy(['prescricaoId' => $evento->getId()]);
+
+                    $cor = '#0d6efd';
+                    $status = 'pendente';
+                    if ($execucao && $execucao->getStatus() == 'confirmado') {
+                        $cor = 'green';
+                        $status = 'confirmado';
+                    }
+
+                    $calendarioPrescricoesGeral[] = [
+                        'title' => ($internacao['pet_nome'] ?? 'Pet') . ' - ' . $p->getMedicamento()->getNome() . " (" . $p->getDose() . ")",
+                        'start' => $doseTime->format(\DateTime::ATOM),
+                        'end' => (clone $doseTime)->modify('+30 minutes')->format(\DateTime::ATOM),
+                        'color' => $cor,
+                        'prescricao_id' => $evento->getId(),
+                        'internacao_id' => $internacaoId,
+                        'pet_nome' => $internacao['pet_nome'] ?? 'Pet',
+                        'dono_nome' => $internacao['dono_nome'] ?? '',
+                        'status' => $status,
+                    ];
+                }
+            }
+        }
 
         return $this->render('clinica/dashboard.html.twig', [
             'total_pets' => $totalPets,
@@ -81,6 +127,7 @@ class ClinicaController extends DefaultController
             'animais_cadastrados' => $animaisCadastrados,
             'pets' => $pets,
             'termo' => $termo,
+            'calendario_prescricoes_geral' => $calendarioPrescricoesGeral,
         ]);
     }
 

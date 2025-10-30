@@ -36,7 +36,7 @@ class Pet
     /** @ORM\Column(type="text", nullable=true) */
     private $observacoes;
 
-    /** @ORM\Column(type="integer", nullable=true) */
+    /** @ORM\Column(type="string", length=255, nullable=true) */
     private $dono_id;
 
     /** @ORM\Column(type="string", length=255, nullable=true) */
@@ -74,8 +74,8 @@ class Pet
     public function getObservacoes(): ?string { return $this->observacoes; }
     public function setObservacoes(?string $observacoes): self { $this->observacoes = $observacoes; return $this; }
 
-    public function getDono_Id(): ?int { return $this->dono_id; }
-    public function setDono_Id(?int $dono_id): self { $this->dono_id = $dono_id; return $this; }
+    public function getDono_Id(): ?string { return $this->dono_id; }
+    public function setDono_Id(?string $dono_id): self { $this->dono_id = $dono_id; return $this; }
 
     public function getEspecie(): ?string { return $this->especie; }
     public function setEspecie(?string $especie): self { $this->especie = $especie; return $this; }

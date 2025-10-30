@@ -31,6 +31,63 @@
     <link href="{{ asset('js/plugins/datatables/dataTables.bootstrap4.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
 
+    <!-- Custom Theme Colors -->
+    <style>
+        /* 🎨 Cor de fundo do sistema - Cinza claro suave */
+        body {
+            background-color: #f5f7fa !important;
+        }
+        
+        .main {
+            background-color: #f5f7fa !important;
+        }
+        
+        /* Cards com fundo branco limpo */
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #e4e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Sidebar com fundo mais escuro */
+        .sidebar {
+            background-color: #ffffff;
+            border-right: 1px solid #e4e7eb;
+        }
+        
+        /* Header limpo */
+        .header {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e4e7eb;
+        }
+        
+        /* Containers com fundo suave */
+        .container-fluid {
+            background-color: transparent;
+        }
+        
+        /* Tabelas com fundo branco */
+        .table {
+            background-color: #ffffff;
+        }
+        
+        /* Modais com fundo branco */
+        .modal-content {
+            background-color: #ffffff;
+        }
+        
+        /* Offcanvas com fundo branco */
+        .offcanvas {
+            background-color: #ffffff;
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: #ffffff;
+            border-top: 1px solid #e4e7eb;
+        }
+    </style>
+
 </head>
 
 {% if app.request.attributes.get('_route') == 'home' %}
@@ -188,6 +245,12 @@
             {% set route = app.request.attributes.get('_route')  %}
         {% endif %}
         {{ render(path('leftMenu', {activeRoute : route})) }}
+        
+        <li class="nav-item">
+            <a class="nav-link {% if app.request.attributes.get('_route') starts with 'orcamento' %} active {% else %} collapsed {% endif %}" href="{{ path('orcamento_index') }}">
+                <i class="bi bi-file-invoice-dollar"></i><span>Orçamentos</span>
+            </a>
+        </li>
         
         {% if app.session.get('accessLevel') == 'Super Admin' %}
         <li class="nav-item">
