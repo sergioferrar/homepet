@@ -54,9 +54,9 @@ class IaAssistenteController extends DefaultController
             // Verificar se há contexto de conversa ativa
             $contexto = $session->get('ia_contexto', null);
             
-            if ($contexto && isset($contexto['aguardando_resposta'])) {
+            if ($contexto && isset($contexto['aguardando'])) {
                 // Processar resposta do usuário
-                $resultado = $this->processarResposta($comando, $contexto, $baseId, $session);
+                $resultado = $this->processarRespostaFluxo($comando, $contexto, $baseId, $session);
             } else {
                 // Analisar novo comando
                 $analise = $this->analisarComando($comando);
@@ -76,18 +76,25 @@ class IaAssistenteController extends DefaultController
 
         } catch (\Exception $e) {
             error_log("IA Assistente ERRO: " . $e->getMessage());
+            error_log("IA Assistente TRACE: " . $e->getTraceAsString());
             
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Erro: ' . $e->getMessage()
-            ], 500);
+                'message' => 'Erro: ' . $e->getMessage() . "\n\nArquivo: " . $e->getFile() . ":" . $e->getLine()
+            ], 200); // Mudei para 200 para o frontend processar
         }
     }
     
-    private function processarResposta(string $resposta, array $contexto, int $baseId, $session): array
+    private function processarRespostaFluxo(string $resposta, array $contexto, int $baseId, $session): array
     {
-        $etapa = $contexto['etapa'] ?? '';
+        $aguardando = $contexto['aguardando'] ?? '';
         $dados = $contexto['dados'] ?? [];
+        
+        return $this->processarResposta($resposta, $aguardando, $dados, $baseId, $session);
+    }
+    
+    private function processarResposta(string $resposta, string $etapa, array $dados, int $baseId, $session): array
+    {
         
         switch ($etapa) {
             // Fluxo de Agendamento
@@ -189,6 +196,61 @@ class IaAssistenteController extends DefaultController
             case 'via_medicamento':
                 $dados['via'] = ucfirst(strtolower($resposta));
                 return $this->finalizarPrescricao($dados, $baseId, $session);
+            
+            // Fluxo de Atendimento/Consulta
+            case 'nome_pet_atendimento':
+                $petNome = trim($resposta);
+                
+                // Buscar pet
+                $pet = $this->em->getRepository(\App\Entity\Pet::class)
+                    ->createQueryBuilder('p')
+                    ->where('LOWER(p.nome) = :nome')
+                    ->andWhere('p.estabelecimentoId = :baseId')
+                    ->setParameter('nome', strtolower($petNome))
+                    ->setParameter('baseId', $baseId)
+                    ->setMaxResults(1)
+                    ->getQuery()
+                    ->getOneOrNullResult();
+                
+                if (!$pet) {
+                    $session->remove('ia_contexto');
+                    return ['message' => "❌ Pet **{$petNome}** não encontrado.\n\nVerifique o nome e tente novamente."];
+                }
+                
+                $dados['pet_id'] = $pet->getId();
+                $dados['pet_nome'] = $pet->getNome();
+                $dados['cliente_id'] = $pet->getDono_Id();
+                
+                $session->set('ia_contexto', [
+                    'aguardando' => 'tipo_atendimento',
+                    'dados' => $dados
+                ]);
+                
+                return [
+                    'message' => "🩺 Atendimento para **{$pet->getNome()}**\n\n📋 Qual o tipo de atendimento?\n\nExemplo: Consulta, Retorno, Emergência, Check-up",
+                    'aguardando' => true
+                ];
+            
+            case 'tipo_atendimento':
+                $dados['tipo_atendimento'] = ucfirst(strtolower($resposta));
+                return $this->perguntarObservacoesAtendimento($dados, $session);
+                
+            case 'observacoes_atendimento':
+                $dados['observacoes_atendimento'] = $resposta;
+                return $this->perguntarAnamneseAtendimento($dados, $session);
+                
+            case 'anamnese_atendimento':
+                $dados['anamnese'] = $resposta;
+                return $this->finalizarAtendimento($dados, $baseId, $session);
+            
+            // Fluxo de Receita
+            case 'conteudo_receita':
+                $dados['conteudo_receita'] = $resposta;
+                return $this->perguntarResumoReceita($dados, $session);
+                
+            case 'resumo_receita':
+                $dados['resumo_receita'] = $resposta;
+                return $this->finalizarReceita($dados, $baseId, $session);
                 
             default:
                 $session->remove('ia_contexto');
@@ -340,7 +402,14 @@ class IaAssistenteController extends DefaultController
 
     private function analisarComando(string $comando): array
     {
-        $comando = strtolower($comando);
+        $comandoOriginal = $comando;
+        $comando = mb_strtolower($comando, 'UTF-8');
+        
+        // Normalizar: remover acentos e caracteres especiais
+        $comando = $this->normalizarTexto($comando);
+        
+        // Corrigir erros comuns de digitação usando distância de Levenshtein
+        $comando = $this->corrigirErrosDigitacao($comando);
         
         // Detectar tipo de ação
         $acoes = [
@@ -349,11 +418,11 @@ class IaAssistenteController extends DefaultController
             'internar' => ['internar', 'internação', 'internacao', 'hospitalizar'],
             'alta' => ['alta', 'liberar', 'liberação', 'liberacao', 'dar alta'],
             'prescrever' => ['prescrever', 'prescrição', 'prescricao', 'receitar', 'medicar', 'prescreve', 'medicamento', 'remedio', 'remédio', 'dar medicamento', 'aplicar medicamento', 'agendar medicamento', 'agenda medicamento'],
+            'consulta' => ['consulta', 'atender', 'atendimento', 'consultar'],
             'vacinar' => ['vacinar', 'vacina', 'vacinação', 'vacinacao', 'aplicar vacina'],
             'obito' => ['óbito', 'obito', 'faleceu', 'morreu', 'morte'],
             'orcamento' => ['orçamento', 'orcamento', 'cotação', 'cotacao', 'preço', 'preco'],
             'venda' => ['vender', 'venda', 'comprar', 'pdv', 'vende'],
-            'consulta' => ['consultar', 'consulta', 'atender', 'atendimento'],
             'buscar' => ['buscar', 'procurar', 'encontrar', 'listar', 'mostrar', 'ver', 'exibir'],
             'debito' => ['débito', 'debito', 'dívida', 'divida', 'deve', 'pendente', 'fiado'],
             'historico' => ['histórico', 'historico', 'ficha', 'prontuário', 'prontuario'],
@@ -361,12 +430,31 @@ class IaAssistenteController extends DefaultController
             'ajuda' => ['ajuda', 'help', 'comandos', 'o que você faz', 'que faz', 'funcionalidades']
         ];
 
+        // Serviços que devem ser agendados (não são atendimento clínico)
+        $servicosAgendamento = ['banho', 'tosa', 'hospedagem', 'hotel', 'creche', 'day care'];
+        
         $acaoDetectada = 'desconhecida';
-        foreach ($acoes as $acao => $palavras) {
-            foreach ($palavras as $palavra) {
-                if (strpos($comando, $palavra) !== false) {
-                    $acaoDetectada = $acao;
-                    break 2;
+        
+        // Verifica se é um agendamento de serviço (banho, tosa, hospedagem)
+        $isAgendamentoServico = false;
+        foreach ($servicosAgendamento as $servico) {
+            if (strpos($comando, $servico) !== false) {
+                $isAgendamentoServico = true;
+                break;
+            }
+        }
+        
+        // Se tem palavra de agendamento + serviço, é agendamento
+        if ($isAgendamentoServico && (strpos($comando, 'agendar') !== false || strpos($comando, 'marcar') !== false || strpos($comando, 'reservar') !== false)) {
+            $acaoDetectada = 'agendar';
+        } else {
+            // Caso contrário, detecta normalmente
+            foreach ($acoes as $acao => $palavras) {
+                foreach ($palavras as $palavra) {
+                    if (strpos($comando, $palavra) !== false) {
+                        $acaoDetectada = $acao;
+                        break 2;
+                    }
                 }
             }
         }
@@ -477,6 +565,9 @@ class IaAssistenteController extends DefaultController
             
             case 'prescrever':
                 return $this->prescreverMedicamento($analise, $baseId, $session);
+            
+            case 'consulta':
+                return $this->registrarAtendimento($analise, $baseId, $session);
             
             case 'vacinar':
                 return $this->aplicarVacina($analise, $baseId);
@@ -1880,10 +1971,172 @@ class IaAssistenteController extends DefaultController
         }
     }
     
+    // ========== ATENDIMENTO/CONSULTA ==========
+    
+    private function registrarAtendimento(array $analise, int $baseId, $session): array
+    {
+        try {
+            error_log("IA: Iniciando registrarAtendimento");
+            error_log("IA: Analise = " . json_encode($analise));
+            
+            $petNome = $analise['entidades']['nome'] ?? $analise['pet'] ?? null;
+            error_log("IA: Pet nome = " . $petNome);
+            
+            if (!$petNome) {
+                error_log("IA: Pet nome não identificado, perguntando");
+                // Se não identificou o pet, pergunta qual é
+                $session->set('ia_contexto', [
+                    'aguardando' => 'nome_pet_atendimento',
+                    'dados' => []
+                ]);
+                
+                return [
+                    'message' => '🩺 **Atendimento Veterinário**\n\n🐕 Qual o nome do pet?',
+                    'aguardando' => true
+                ];
+            }
+            
+            error_log("IA: Buscando pet no banco");
+            // Busca flexível do pet (tolera erros de digitação e maiúsculas/minúsculas)
+            $pet = $this->buscarPetFlexivel($petNome, $baseId);
+            
+            error_log("IA: Pet encontrado = " . ($pet ? 'SIM (ID: ' . $pet->getId() . ')' : 'NÃO'));
+            
+            if (!$pet) {
+                return [
+                    'message' => "❌ Pet **{$petNome}** não encontrado no sistema.\n\n💡 Verifique se o nome está correto ou cadastre o pet primeiro.",
+                    'acao' => 'erro'
+                ];
+            }
+            
+            error_log("IA: Verificando dono_id = " . $pet->getDono_Id());
+            
+            // Verificar se tem dono
+            if (!$pet->getDono_Id()) {
+                return [
+                    'message' => "⚠️ O pet **{$pet->getNome()}** não tem um tutor cadastrado.\n\nPor favor, vincule um tutor ao pet primeiro.",
+                    'acao' => 'erro'
+                ];
+            }
+            
+            error_log("IA: Preparando dados do fluxo");
+            
+            // Iniciar fluxo
+            $dados = [
+                'pet_id' => $pet->getId(),
+                'pet_nome' => $pet->getNome(),
+                'cliente_id' => $pet->getDono_Id(),
+            ];
+            
+            error_log("IA: Salvando contexto na sessão");
+            
+            $session->set('ia_contexto', [
+                'aguardando' => 'tipo_atendimento',
+                'dados' => $dados
+            ]);
+            
+            error_log("IA: Retornando mensagem de sucesso");
+            
+            return [
+                'message' => "🩺 Atendimento para **{$pet->getNome()}**\n\n📋 Qual o tipo de atendimento?\n\nExemplo: Consulta, Retorno, Emergência, Check-up",
+                'aguardando' => true
+            ];
+            
+        } catch (\Exception $e) {
+            error_log("IA: ERRO CAPTURADO = " . $e->getMessage());
+            error_log("IA: STACK TRACE = " . $e->getTraceAsString());
+            return [
+                'message' => "❌ Erro ao iniciar atendimento: " . $e->getMessage(),
+                'acao' => 'erro'
+            ];
+        }
+    }
+    
+    private function perguntarObservacoesAtendimento(array $dados, $session): array
+    {
+        $session->set('ia_contexto', [
+            'aguardando' => 'observacoes_atendimento',
+            'dados' => $dados
+        ]);
+        
+        return [
+            'message' => "📝 Observações do atendimento?\n\nDescreva brevemente o motivo da consulta ou principais queixas.",
+            'aguardando' => true
+        ];
+    }
+    
+    private function perguntarAnamneseAtendimento(array $dados, $session): array
+    {
+        $session->set('ia_contexto', [
+            'aguardando' => 'anamnese_atendimento',
+            'dados' => $dados
+        ]);
+        
+        return [
+            'message' => "📋 Anamnese completa?\n\nDescreva os detalhes do atendimento, exame físico, diagnóstico, etc.\n\n(Ou digite 'pular' para deixar em branco)",
+            'aguardando' => true
+        ];
+    }
+    
+    private function finalizarAtendimento(array $dados, int $baseId, $session): array
+    {
+        try {
+            $consulta = new \App\Entity\Consulta();
+            $consulta->setEstabelecimentoId($baseId);
+            $consulta->setClienteId($dados['cliente_id']);
+            $consulta->setPetId($dados['pet_id']);
+            $consulta->setData(new \DateTime());
+            $consulta->setHora(new \DateTime());
+            $consulta->setTipo($dados['tipo_atendimento']);
+            $consulta->setObservacoes($dados['observacoes_atendimento']);
+            $consulta->setStatus('atendido');
+            $consulta->setCriadoEm(new \DateTime());
+            
+            // Anamnese em formato Delta (Quill)
+            if (!empty($dados['anamnese']) && strtolower($dados['anamnese']) !== 'pular') {
+                $anamnese = json_encode([
+                    'ops' => [
+                        ['insert' => $dados['anamnese']]
+                    ]
+                ]);
+                $consulta->setAnamnese($anamnese);
+            }
+            
+            // Salvar usando o repositório
+            $consultaRepo = $this->em->getRepository(\App\Entity\Consulta::class);
+            if (method_exists($consultaRepo, 'salvarConsulta')) {
+                $consultaRepo->salvarConsulta($consulta);
+            } else {
+                $this->em->persist($consulta);
+                $this->em->flush();
+            }
+            
+            $session->remove('ia_contexto');
+            
+            $message = "✅ Atendimento registrado com sucesso!\n\n";
+            $message .= "🐕 Pet: {$dados['pet_nome']}\n";
+            $message .= "📋 Tipo: {$dados['tipo_atendimento']}\n";
+            $message .= "📝 Observações: {$dados['observacoes_atendimento']}\n";
+            $message .= "🕐 Data/Hora: " . date('d/m/Y H:i') . "\n\n";
+            $message .= "📂 O atendimento foi adicionado à ficha do pet!";
+            
+            return [
+                'message' => $message,
+                'acao' => 'atendimento',
+                'dados' => ['consulta_id' => $consulta->getId(), 'pet_id' => $dados['pet_id']]
+            ];
+            
+        } catch (\Exception $e) {
+            $session->remove('ia_contexto');
+            return ['message' => "❌ Erro ao registrar atendimento: " . $e->getMessage()];
+        }
+    }
+    
     private function mostrarAjuda(): array
     {
         $message = "🤖 **Dra. HomePet - Assistente IA**\n\n";
         $message .= "Posso ajudar você com:\n\n";
+        $message .= "━━━━━━━━━━━━━━━━━━━━━━\n\n";
         
         $message .= "📋 **CADASTROS**\n";
         $message .= "• cadastrar pet Cacal do tutor Lulu\n";
@@ -1896,6 +2149,8 @@ class IaAssistenteController extends DefaultController
         $message .= "🏥 **CLÍNICA**\n";
         $message .= "• internar Harry por pneumonia\n";
         $message .= "• prescrever dipirona para Luna\n";
+        $message .= "• atender Rex\n";
+        $message .= "• consulta para Luna\n";
         $message .= "• vacinar Max contra raiva\n";
         $message .= "• dar alta para Rex\n\n";
         
@@ -1909,11 +2164,106 @@ class IaAssistenteController extends DefaultController
         $message .= "• relatório do sistema\n";
         $message .= "• resumo do mês\n\n";
         
+        $message .= "━━━━━━━━━━━━━━━━━━━━━━\n\n";
         $message .= "💡 **Dica:** Fale naturalmente, eu entendo! 😊";
         
         return ['message' => $message, 'acao' => 'ajuda'];
     }
 
+    // ========== MÉTODOS AUXILIARES DE NORMALIZAÇÃO ==========
+    
+    private function normalizarTexto(string $texto): string
+    {
+        // Remove acentos
+        $texto = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $texto);
+        // Remove caracteres especiais, mantém apenas letras, números e espaços
+        $texto = preg_replace('/[^a-z0-9\s]/i', '', $texto);
+        // Remove espaços extras
+        $texto = preg_replace('/\s+/', ' ', trim($texto));
+        return $texto;
+    }
+    
+    private function corrigirErrosDigitacao(string $comando): string
+    {
+        $palavrasCorretas = [
+            'consulta', 'atendimento', 'atender', 'prescrever', 'prescricao',
+            'internar', 'internacao', 'agendar', 'marcar', 'vacinar', 'vacina',
+            'cadastrar', 'registrar', 'buscar', 'procurar', 'debito', 'divida',
+            'historico', 'ficha', 'alta', 'obito', 'orcamento', 'venda'
+        ];
+        
+        $palavras = explode(' ', $comando);
+        $palavrasCorrigidas = [];
+        
+        foreach ($palavras as $palavra) {
+            $melhorMatch = $palavra;
+            $menorDistancia = 3; // Máximo de 3 caracteres de diferença
+            
+            foreach ($palavrasCorretas as $correta) {
+                $distancia = levenshtein($palavra, $correta);
+                if ($distancia < $menorDistancia) {
+                    $menorDistancia = $distancia;
+                    $melhorMatch = $correta;
+                }
+            }
+            
+            $palavrasCorrigidas[] = $melhorMatch;
+        }
+        
+        return implode(' ', $palavrasCorrigidas);
+    }
+    
+    private function buscarPetFlexivel(string $petNome, int $baseId)
+    {
+        // 1. Busca exata (case-insensitive)
+        $pet = $this->em->getRepository(\App\Entity\Pet::class)
+            ->createQueryBuilder('p')
+            ->where('LOWER(p.nome) = :nome')
+            ->andWhere('p.estabelecimentoId = :baseId')
+            ->setParameter('nome', strtolower($petNome))
+            ->setParameter('baseId', $baseId)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+        
+        if ($pet) return $pet;
+        
+        // 2. Busca com LIKE (contém)
+        $pet = $this->em->getRepository(\App\Entity\Pet::class)
+            ->createQueryBuilder('p')
+            ->where('LOWER(p.nome) LIKE :nome')
+            ->andWhere('p.estabelecimentoId = :baseId')
+            ->setParameter('nome', '%' . strtolower($petNome) . '%')
+            ->setParameter('baseId', $baseId)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+        
+        if ($pet) return $pet;
+        
+        // 3. Busca aproximada (Levenshtein)
+        $todosPets = $this->em->getRepository(\App\Entity\Pet::class)
+            ->createQueryBuilder('p')
+            ->where('p.estabelecimentoId = :baseId')
+            ->setParameter('baseId', $baseId)
+            ->setMaxResults(50)
+            ->getQuery()
+            ->getResult();
+        
+        $melhorMatch = null;
+        $menorDistancia = 3; // Máximo de 3 caracteres de diferença
+        
+        foreach ($todosPets as $p) {
+            $distancia = levenshtein(strtolower($petNome), strtolower($p->getNome()));
+            if ($distancia < $menorDistancia) {
+                $menorDistancia = $distancia;
+                $melhorMatch = $p;
+            }
+        }
+        
+        return $melhorMatch;
+    }
+    
     private function registrarLog(string $comando, array $analise, array $resultado, int $baseId): void
     {
         $log = sprintf(

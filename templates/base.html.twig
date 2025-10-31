@@ -654,8 +654,9 @@
             box.scrollTop = box.scrollHeight;
         } catch (e) {
             document.getElementById('loading')?.remove();
+            console.error('Erro capturado:', e);
             box.innerHTML += `<div class="mb-2 alert alert-danger p-2">
-                <strong>Erro:</strong> Não foi possível processar o comando.
+                <strong>Erro:</strong> ${e.message || 'Não foi possível processar o comando.'}
             </div>`;
         }
 
