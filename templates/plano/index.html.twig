@@ -1,8 +1,9 @@
 {% extends 'base.html.twig' %}
 
+{% block page_title %}<i class="bi bi-card-list me-2"></i> Planos{% endblock %}
+
 {% block body %}
 <div class="container mt-5">
-    <h1>Planos</h1>
 
     <a href="{{ path('app_plano_create') }}" class="btn btn-secondary btn-sm mb-3">+ Novo Plano</a>
 

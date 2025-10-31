@@ -33,10 +33,11 @@
 </style>
 {% endblock %}
 
+{% block page_title %}<i class="fas fa-wallet me-2"></i> Fechamento de Caixa{% endblock %}
+
 {% block body %}
 <div class="container mt-5">
-    <h1 class="text-primary mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <span><i class="fas fa-wallet me-2"></i> Fechamento de Caixa</span>
+    <div class="d-flex align-items-center justify-content-end mb-4">
         <input type="date" id="dataFiltro" class="form-control form-control-md" value="{{ data|date('Y-m-d') }}" style="max-width: 220px;">
     </h1>
 

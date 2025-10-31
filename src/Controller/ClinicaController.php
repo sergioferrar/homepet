@@ -68,50 +68,75 @@ class ClinicaController extends DefaultController
             $pets = $repoPet->pesquisarPetsOuTutor($baseId, $termo);
         }
 
-        // 🔹 BUSCA TODAS AS PRESCRIÇÕES DE TODAS AS INTERNAÇÕES ATIVAS
+        // 🔹 BUSCA TODAS AS PRESCRIÇÕES DE TODAS AS INTERNAÇÕES ATIVAS (OTIMIZADO)
         $prescricoesGerais = [];
         $calendarioPrescricoesGeral = [];
         
-        foreach ($internacoes as $internacao) {
-            $internacaoId = $internacao['id'] ?? null;
-            if (!$internacaoId) continue;
-
-            // Busca prescrições desta internação
-            $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findBy(['internacaoId' => $internacaoId]);
+        // Coleta todos os IDs de internações ativas
+        $internacaoIds = array_filter(array_column($internacoes, 'id'));
+        
+        if (!empty($internacaoIds)) {
+            // Busca TODOS os eventos de prescrição de uma vez
+            $eventos = $em->getRepository(\App\Entity\InternacaoEvento::class)
+                ->createQueryBuilder('e')
+                ->where('e.internacaoId IN (:internacaoIds)')
+                ->andWhere('e.tipo = :tipo')
+                ->setParameter('internacaoIds', $internacaoIds)
+                ->setParameter('tipo', 'prescricao')
+                ->getQuery()
+                ->getResult();
             
-            foreach ($prescricoes as $p) {
-                $eventos = $em->getRepository(\App\Entity\InternacaoEvento::class)->findBy(['internacaoId' => $p->getId()]);
-                $primeira = $p->getDataHora();
-                $freqHoras = (int)$p->getFrequenciaHoras();
-                $duracaoDias = (int)$p->getDuracaoDias();
-
-                if ($freqHoras <= 0 || $duracaoDias <= 0 || !$primeira) {
-                    continue;
+            // Busca TODAS as execuções de uma vez
+            $eventoIds = array_map(fn($e) => $e->getId(), $eventos);
+            $execucoes = [];
+            if (!empty($eventoIds)) {
+                $execucoesResult = $em->getRepository(\App\Entity\InternacaoExecucao::class)
+                    ->createQueryBuilder('ex')
+                    ->where('ex.prescricaoId IN (:eventoIds)')
+                    ->setParameter('eventoIds', $eventoIds)
+                    ->getQuery()
+                    ->getResult();
+                
+                // Indexa por prescricaoId para acesso rápido
+                foreach ($execucoesResult as $exec) {
+                    $execucoes[$exec->getPrescricaoId()] = $exec;
+                }
+            }
+            
+            // Indexa internações por ID para acesso rápido
+            $internacoesMap = [];
+            foreach ($internacoes as $int) {
+                $internacoesMap[$int['id']] = $int;
+            }
+            
+            // Processa eventos
+            foreach ($eventos as $evento) {
+                $internacaoId = $evento->getInternacaoId();
+                $internacao = $internacoesMap[$internacaoId] ?? null;
+                
+                if (!$internacao) continue;
+                
+                $execucao = $execucoes[$evento->getId()] ?? null;
+                
+                $cor = '#667eea'; // roxo
+                $status = 'pendente';
+                if ($execucao && $execucao->getStatus() == 'confirmado') {
+                    $cor = '#10b981'; // verde
+                    $status = 'confirmado';
                 }
 
-                foreach ($eventos as $i => $evento) {
-                    $doseTime = (clone $primeira)->modify('+' . ($i * $freqHoras) . ' hours');
-                    $execucao = $em->getRepository(\App\Entity\InternacaoExecucao::class)->findOneBy(['prescricaoId' => $evento->getId()]);
-
-                    $cor = '#0d6efd';
-                    $status = 'pendente';
-                    if ($execucao && $execucao->getStatus() == 'confirmado') {
-                        $cor = 'green';
-                        $status = 'confirmado';
-                    }
-
-                    $calendarioPrescricoesGeral[] = [
-                        'title' => ($internacao['pet_nome'] ?? 'Pet') . ' - ' . $p->getMedicamento()->getNome() . " (" . $p->getDose() . ")",
-                        'start' => $doseTime->format(\DateTime::ATOM),
-                        'end' => (clone $doseTime)->modify('+30 minutes')->format(\DateTime::ATOM),
-                        'color' => $cor,
-                        'prescricao_id' => $evento->getId(),
-                        'internacao_id' => $internacaoId,
-                        'pet_nome' => $internacao['pet_nome'] ?? 'Pet',
-                        'dono_nome' => $internacao['dono_nome'] ?? '',
-                        'status' => $status,
-                    ];
-                }
+                $calendarioPrescricoesGeral[] = [
+                    'title' => ($internacao['pet_nome'] ?? 'Pet') . ' - ' . $evento->getTitulo(),
+                    'start' => $evento->getDataHora()->format(\DateTime::ATOM),
+                    'end' => (clone $evento->getDataHora())->modify('+30 minutes')->format(\DateTime::ATOM),
+                    'color' => $cor,
+                    'evento_id' => $evento->getId(),
+                    'internacao_id' => $internacaoId,
+                    'pet_nome' => $internacao['pet_nome'] ?? 'Pet',
+                    'dono_nome' => $internacao['dono_nome'] ?? '',
+                    'status' => $status,
+                    'descricao' => $evento->getDescricao(),
+                ];
             }
         }
 
@@ -1069,60 +1094,55 @@ class ClinicaController extends DefaultController
         $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findBy(['internacaoId' => $id]);
 
         // --- CALENDÁRIO ---
-        $events = [];
-        foreach ($prescricoes as $p) {
-            // if (!$p->getDataHora()) {
-            //     continue;
-            // }
-            $eventos = $em->getRepository(\App\Entity\InternacaoEvento::class)->findBy(['internacaoId' => $p->getId()]);
-            $primeira = $p->getDataHora();
-            $freqHoras = (int)$p->getFrequenciaHoras();
-            $duracaoDias = (int)$p->getDuracaoDias();
-
-            if ($freqHoras <= 0 || $duracaoDias <= 0) {
-                continue;
+        // Busca TODOS os eventos de prescrição desta internação de uma vez
+        $todosEventos = $em->getRepository(\App\Entity\InternacaoEvento::class)
+            ->createQueryBuilder('e')
+            ->where('e.internacaoId = :internacaoId')
+            ->andWhere('e.tipo IN (:tipos)')
+            ->setParameter('internacaoId', $id)
+            ->setParameter('tipos', ['prescricao', 'medicacao'])
+            ->orderBy('e.dataHora', 'ASC')
+            ->getQuery()
+            ->getResult();
+        
+        // Busca todas as execuções de uma vez
+        $eventoIds = array_map(fn($e) => $e->getId(), $todosEventos);
+        $execucoes = [];
+        if (!empty($eventoIds)) {
+            $execucoesResult = $em->getRepository(\App\Entity\InternacaoExecucao::class)
+                ->createQueryBuilder('ex')
+                ->where('ex.prescricaoId IN (:eventoIds)')
+                ->setParameter('eventoIds', $eventoIds)
+                ->getQuery()
+                ->getResult();
+            
+            // Indexa por prescricaoId
+            foreach ($execucoesResult as $exec) {
+                $execucoes[$exec->getPrescricaoId()] = $exec;
             }
-
-            $numDoses = ($duracaoDias * 24) / $freqHoras;
-            foreach ($eventos as $i => $evento) {
-                $doseTime = (clone $primeira)->modify('+' . ($i * $freqHoras) . ' hours');
-                // consultar na porecricao execucao
-                $execucao = $em->getRepository(\App\Entity\InternacaoExecucao::class)->findOneBy(['prescricaoId' => $evento->getId()]);
-
-                $cor = '#0d6efd';
-                $habilitaModal = true;
-                if ($execucao) {
-                    if ($execucao->getStatus() == 'confirmado') {
-                        $habilitaModal = false;
-                        $cor = 'green';
-                    }
-                }
-
-                $events[] = [
-                    'title' => $p->getMedicamento()->getNome() . " - " . $p->getDose(),
-                    'start' => $doseTime->format(\DateTime::ATOM),
-                    'end' => (clone $doseTime)->modify('+30 minutes')->format(\DateTime::ATOM),
-                    'color' => $cor,
-                    'prescricao_id' => $evento->getId(),
-                    'habilita_modal' => $habilitaModal,
-                ];
-            }
-            //dd($events);
-            /*for ($i = 0; $i < $numDoses; $i++) {
-                $doseTime = (clone $primeira)->modify('+' . ($i * $freqHoras) . ' hours');
-                // consultar na porecricao execucao
-                $execucao = $em->getRepository(\App\Entity\InternacaoExecucao::class)->findOneBy(['prescricaoId' => $p->getId()]);
-                $cor = ($execucao->getStatus() == 'confirmado' ?'green':'#0d6efd');
-                $events[] = [
-                    'title' => $p->getMedicamento()->getNome() . " - " . $p->getDose(),
-                    'start' => $doseTime->format(\DateTime::ATOM),
-                    'end' => (clone $doseTime)->modify('+30 minutes')->format(\DateTime::ATOM),
-                    'color' => $cor,
-                    'prescricao_id' => $p->getId(),
-                ];
-            }*/
         }
-        // dd($events);
+        
+        // Processa todos os eventos
+        $events = [];
+        foreach ($todosEventos as $evento) {
+            $execucao = $execucoes[$evento->getId()] ?? null;
+            
+            $cor = '#0d6efd';
+            $habilitaModal = true;
+            if ($execucao && $execucao->getStatus() == 'confirmado') {
+                $habilitaModal = false;
+                $cor = 'green';
+            }
+
+            $events[] = [
+                'title' => $evento->getTitulo(),
+                'start' => $evento->getDataHora()->format(\DateTime::ATOM),
+                'end' => (clone $evento->getDataHora())->modify('+30 minutes')->format(\DateTime::ATOM),
+                'color' => $cor,
+                'prescricao_id' => $evento->getId(),
+                'habilita_modal' => $habilitaModal,
+            ];
+        }
 
         // --- VETERINÁRIOS ---
         $veterinarios = $veterinarioRepo->findBy(['estabelecimentoId' => $baseId]);
@@ -1334,13 +1354,188 @@ class ClinicaController extends DefaultController
             $em->persist($execucao);
             $em->flush();
 
-            // Opcional: marcar evento da prescrição como executado
-            $internacaoRepo->marcarMedicacaoComoExecutada($baseId, $eventoId);
+            return $this->json(['ok' => true, 'msg' => 'Medicação confirmada com sucesso!']);
+
+        } catch (\Exception $e) {
+            return $this->json(['ok' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * @Route("/internacao/{id}/evento/{eventoId}/executar", name="clinica_internacao_evento_executar", methods={"POST"})
+     */
+    public function executarEvento(
+        int                    $id,
+        int                    $eventoId,
+        Request                $request,
+        EntityManagerInterface $em,
+        InternacaoRepository   $internacaoRepo
+    ): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $horaAplicacao = $request->get('hora_aplicacao');
+        $veterinarioId = (int)$request->get('veterinario_id', 1);
+        $anotacoes = $request->get('anotacoes', 'Confirmado via sistema');
+
+        try {
+            // Busca o veterinário
+            $veterinario = $em->getRepository(\App\Entity\Veterinario::class)->find($veterinarioId);
+            if (!$veterinario) {
+                // Se não encontrar, usa o primeiro veterinário disponível
+                $veterinario = $em->getRepository(\App\Entity\Veterinario::class)->findOneBy([]);
+            }
+
+            // Cria entidade de execução
+            $execucao = new InternacaoExecucao();
+            $execucao->setInternacaoId($id);
+            $execucao->setPrescricaoId($eventoId);
+            if ($veterinario) {
+                $execucao->setVeterinario($veterinario);
+            }
+            $execucao->setDataExecucao(new \DateTime($horaAplicacao ?: 'now'));
+            $execucao->setStatus('confirmado');
+            $execucao->setAnotacoes($anotacoes);
+
+            $em->persist($execucao);
+            $em->flush();
 
             return $this->json(['ok' => true, 'msg' => 'Medicação confirmada com sucesso!']);
 
         } catch (\Exception $e) {
             return $this->json(['ok' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * @Route("/notificacoes", name="clinica_notificacoes", methods={"GET"})
+     */
+    public function notificacoes(EntityManagerInterface $em): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+        
+        try {
+            $agora = new \DateTime();
+            $notificacoes = [];
+            
+            // Buscar medicamentos pendentes nas próximas 2 horas
+            $eventos = $em->getRepository(\App\Entity\InternacaoEvento::class)
+                ->createQueryBuilder('e')
+                ->where('e.tipo = :tipo')
+                ->andWhere('e.dataHora BETWEEN :agora AND :limite')
+                ->setParameter('tipo', 'prescricao')
+                ->setParameter('agora', $agora)
+                ->setParameter('limite', (clone $agora)->modify('+2 hours'))
+                ->orderBy('e.dataHora', 'ASC')
+                ->getQuery()
+                ->getResult();
+            
+            foreach ($eventos as $evento) {
+                // Verifica se já foi executado
+                $execucao = $em->getRepository(\App\Entity\InternacaoExecucao::class)
+                    ->findOneBy(['prescricaoId' => $evento->getId(), 'status' => 'confirmado']);
+                
+                if (!$execucao) {
+                    $diff = $agora->diff($evento->getDataHora());
+                    $minutos = ($diff->h * 60) + $diff->i;
+                    
+                    if ($diff->invert) {
+                        // Atrasado
+                        $icon = 'bi-exclamation-triangle-fill';
+                        $color = 'text-danger';
+                        $tempo = 'Atrasado há ' . $minutos . ' min';
+                    } else if ($minutos <= 30) {
+                        // Próximo (30 min)
+                        $icon = 'bi-clock-fill';
+                        $color = 'text-warning';
+                        $tempo = 'Em ' . $minutos . ' minutos';
+                    } else {
+                        // Futuro próximo
+                        $icon = 'bi-clock';
+                        $color = 'text-info';
+                        $tempo = 'Em ' . $minutos . ' minutos';
+                    }
+                    
+                    $notificacoes[] = [
+                        'titulo' => $evento->getTitulo(),
+                        'mensagem' => $evento->getDescricao() ?? 'Medicamento pendente',
+                        'tempo' => $tempo,
+                        'icon' => $icon,
+                        'color' => $color,
+                        'data' => $evento->getDataHora()->format('Y-m-d H:i:s')
+                    ];
+                }
+            }
+            
+            return new JsonResponse(['notificacoes' => $notificacoes]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse(['notificacoes' => [], 'error' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * @Route("/buscar", name="clinica_buscar", methods={"GET"})
+     */
+    public function buscar(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+        $query = $request->query->get('q', '');
+        
+        if (strlen($query) < 2) {
+            return new JsonResponse(['resultados' => []]);
+        }
+        
+        try {
+            $resultados = [];
+            
+            // Buscar pets
+            $pets = $em->getRepository(\App\Entity\Pet::class)
+                ->createQueryBuilder('p')
+                ->where('LOWER(p.nome) LIKE :query')
+                ->andWhere('p.estabelecimentoId = :estab')
+                ->setParameter('query', '%' . strtolower($query) . '%')
+                ->setParameter('estab', $baseId)
+                ->setMaxResults(5)
+                ->getQuery()
+                ->getResult();
+            
+            foreach ($pets as $pet) {
+                $resultados[] = [
+                    'nome' => $pet->getNome(),
+                    'tipo' => 'Pet' . ($pet->getEspecie() ? ' - ' . $pet->getEspecie() : ''),
+                    'url' => '/homepet/public/clinica/pet/' . $pet->getId(),
+                    'icon' => 'bi-heart-fill'
+                ];
+            }
+            
+            // Buscar clientes
+            $clientes = $em->getRepository(\App\Entity\Cliente::class)
+                ->createQueryBuilder('c')
+                ->where('LOWER(c.nome) LIKE :query')
+                ->andWhere('c.estabelecimentoId = :estab')
+                ->setParameter('query', '%' . strtolower($query) . '%')
+                ->setParameter('estab', $baseId)
+                ->setMaxResults(5)
+                ->getQuery()
+                ->getResult();
+            
+            foreach ($clientes as $cliente) {
+                $resultados[] = [
+                    'nome' => $cliente->getNome(),
+                    'tipo' => 'Cliente' . ($cliente->getTelefone() ? ' - ' . $cliente->getTelefone() : ''),
+                    'url' => '/homepet/public/clinica/cliente/' . $cliente->getId(),
+                    'icon' => 'bi-person-fill'
+                ];
+            }
+            
+            return new JsonResponse(['resultados' => $resultados]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse(['resultados' => [], 'error' => $e->getMessage()]);
         }
     }
 

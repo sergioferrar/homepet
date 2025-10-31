@@ -1,5 +1,6 @@
 {% extends 'base.html.twig' %}
 {% block title %}Painel de Controle{% endblock %}
+{% block page_title %}Dashboard - Clínica Veterinária{% endblock %}
 
 {% block stylesheets %}
 <style>
@@ -55,23 +56,26 @@
             <button class="btn btn-outline-secondary btn-lg" type="button">
                 <i class="fas fa-history me-2"></i> Histórico
             </button>
-            <button class="btn btn-outline-secondary btn-lg" type="button">
+            <a href="{{ path('orcamento_index') }}" class="btn btn-outline-secondary btn-lg">
                 <i class="fas fa-file-invoice-dollar me-2"></i> Orçamentos
-            </button>
+            </a>
         </div>
     </div>
 
     <!-- 🔹 Offcanvas Lateral - Prescrições Médicas -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasPrescricoes" style="width: 90%; max-width: 1400px;">
-        <div class="offcanvas-header bg-primary text-white">
+        <div class="offcanvas-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
             <h5 class="offcanvas-title">
                 <i class="fas fa-calendar-alt me-2"></i>Calendário de Prescrições Médicas
             </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
         <div class="offcanvas-body">
-            <p class="text-muted mb-4">Visualize e gerencie todas as prescrições de todos os pets internados</p>
-            <div id="calendar-prescricoes-geral" style="width: 100%; min-height: 700px;"></div>
+            <p class="text-muted mb-4">
+                <i class="bi bi-info-circle me-2"></i>
+                Visualize e gerencie todas as prescrições de todos os pets internados
+            </p>
+            <div id="calendar-prescricoes-geral" style="width: 100%; min-height: 700px; background: white; border-radius: 8px; padding: 10px;"></div>
         </div>
     </div>
 
@@ -81,7 +85,6 @@
 
 <!-- 📊 Dashboard -->
 <div class="container mt-4">
-    <h1 class="text-primary mb-4 text-center">Painel de Controle Clínica Veterinária</h1>
     <div class="rows">
         <div class="row">
             <div class="col-6 col-md-3">
@@ -340,34 +343,54 @@ $(function(){
     let calendarLoaded = false;
     let calendar = null;
     
+    console.log('🔍 Iniciando script do calendário...');
+    
     const offcanvasPrescricoes = document.getElementById('offcanvasPrescricoes');
+    console.log('🔍 Offcanvas encontrado:', offcanvasPrescricoes ? 'SIM' : 'NÃO');
+    
     if (offcanvasPrescricoes) {
         offcanvasPrescricoes.addEventListener('shown.bs.offcanvas', function () {
+            console.log('✅ Offcanvas aberto!');
+            
             if (!calendarLoaded) {
                 const calendarEl = document.getElementById('calendar-prescricoes-geral');
+                console.log('🔍 Elemento calendário encontrado:', calendarEl ? 'SIM' : 'NÃO');
+                
                 if (calendarEl) {
                     const eventos = {{ calendario_prescricoes_geral|json_encode|raw }};
+                    console.log('📊 Total de eventos:', eventos.length);
+                    console.log('📋 Eventos:', eventos);
                     
-                    calendar = new FullCalendar.Calendar(calendarEl, {
-                        initialView: 'timeGridWeek',
-                        locale: 'pt-br',
-                        height: 700,
-                        slotMinTime: "00:00:00",
-                        slotMaxTime: "24:00:00",
-                        allDaySlot: false,
-                        headerToolbar: {
-                            left: 'prev,next today',
-                            center: 'title',
-                            right: 'timeGridDay,timeGridWeek,dayGridMonth'
-                        },
-                        events: eventos,
+                    if (typeof FullCalendar === 'undefined') {
+                        console.error('❌ FullCalendar não está carregado!');
+                        calendarEl.innerHTML = '<div class="alert alert-danger">Erro: FullCalendar não carregado. Recarregue a página.</div>';
+                        return;
+                    }
+                    
+                    console.log('✅ FullCalendar está disponível!');
+                    
+                    try {
+                        calendar = new FullCalendar.Calendar(calendarEl, {
+                            initialView: 'timeGridWeek',
+                            locale: 'pt-br',
+                            height: 700,
+                            slotMinTime: "00:00:00",
+                            slotMaxTime: "24:00:00",
+                            allDaySlot: false,
+                            headerToolbar: {
+                                left: 'prev,next today',
+                                center: 'title',
+                                right: 'timeGridDay,timeGridWeek,dayGridMonth'
+                            },
+                            events: eventos,
                         eventClick: function(info) {
                             const event = info.event;
                             const petNome = event.extendedProps.pet_nome || 'Pet';
                             const donoNome = event.extendedProps.dono_nome || '';
                             const internacaoId = event.extendedProps.internacao_id;
-                            const prescricaoId = event.extendedProps.prescricao_id;
+                            const eventoId = event.extendedProps.evento_id;
                             const status = event.extendedProps.status || 'pendente';
+                            const descricao = event.extendedProps.descricao || '';
                             
                             let statusBadge = status === 'confirmado' 
                                 ? '<span class="badge bg-success">Administrado</span>' 
@@ -376,78 +399,118 @@ $(function(){
                             let botaoConfirmar = '';
                             if (status !== 'confirmado') {
                                 botaoConfirmar = `
-                                    <button class="btn btn-success btn-sm w-100 mb-2" onclick="confirmarMedicamento(${prescricaoId}, '${event.title}')">
+                                    <button class="btn btn-success w-100 mb-2" onclick="confirmarMedicamentoGeral(${eventoId}, ${internacaoId}, '${event.title.replace(/'/g, "\\'")}')">
                                         <i class="fas fa-check me-1"></i>Confirmar Administração
                                     </button>
                                 `;
                             }
                             
-                            const html = `
-                                <div class="p-3">
-                                    <h5 class="mb-3">${event.title}</h5>
-                                    <p class="mb-2"><strong>Pet:</strong> ${petNome}</p>
-                                    <p class="mb-2"><strong>Tutor:</strong> ${donoNome}</p>
-                                    <p class="mb-2"><strong>Horário:</strong> ${event.start.toLocaleString('pt-BR')}</p>
-                                    <p class="mb-3"><strong>Status:</strong> ${statusBadge}</p>
-                                    ${botaoConfirmar}
-                                    <a href="/homepet/public/clinica/internacao/${internacaoId}/ficha" 
-                                       class="btn btn-primary btn-sm w-100" target="_blank">
-                                        <i class="fas fa-external-link-alt me-1"></i>Abrir Ficha de Internação
-                                    </a>
+                            const modalHtml = `
+                                <div class="modal fade" id="modalDetalhePrescricao" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-primary text-white">
+                                                <h5 class="modal-title">Detalhes da Prescrição</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <h5 class="mb-3">${event.title}</h5>
+                                                <p class="mb-2"><strong>Pet:</strong> ${petNome}</p>
+                                                <p class="mb-2"><strong>Tutor:</strong> ${donoNome}</p>
+                                                <p class="mb-2"><strong>Horário:</strong> ${event.start.toLocaleString('pt-BR')}</p>
+                                                ${descricao ? `<p class="mb-2"><strong>Detalhes:</strong> ${descricao}</p>` : ''}
+                                                <p class="mb-3"><strong>Status:</strong> ${statusBadge}</p>
+                                                ${botaoConfirmar}
+                                                <a href="/homepet/public/clinica/internacao/${internacaoId}/ficha" 
+                                                   class="btn btn-primary w-100" target="_blank">
+                                                    <i class="fas fa-external-link-alt me-1"></i>Abrir Ficha de Internação
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             `;
                             
-                            Utils.modal(html, 'primary', null, 'md', 'Detalhes da Prescrição', '', 'Fechar', '');
+                            // Remove modal anterior se existir
+                            const oldModal = document.getElementById('modalDetalhePrescricao');
+                            if (oldModal) oldModal.remove();
+                            
+                            // Adiciona novo modal
+                            document.body.insertAdjacentHTML('beforeend', modalHtml);
+                            
+                            // Abre o modal
+                            const modal = new bootstrap.Modal(document.getElementById('modalDetalhePrescricao'));
+                            modal.show();
+                            
+                            // Remove modal do DOM quando fechar
+                            document.getElementById('modalDetalhePrescricao').addEventListener('hidden.bs.modal', function () {
+                                this.remove();
+                            });
                         }
                     });
                     
+                    console.log('Renderizando calendário...');
                     calendar.render();
                     calendarLoaded = true;
+                    console.log('Calendário renderizado com sucesso!');
+                    
+                    } catch (error) {
+                        console.error('Erro ao criar calendário:', error);
+                        calendarEl.innerHTML = '<div class="alert alert-danger">Erro ao carregar calendário: ' + error.message + '</div>';
+                    }
+                } else {
+                    console.error('Elemento calendar-prescricoes-geral não encontrado!');
                 }
+            } else {
+                console.log('Calendário já foi carregado');
             }
         });
+    } else {
+        console.error('Elemento offcanvasPrescricoes não encontrado!');
     }
 });
 
-// 🔹 Função para confirmar administração de medicamento
-function confirmarMedicamento(prescricaoId, titulo) {
+// 🔹 Função para confirmar administração de medicamento no calendário geral
+function confirmarMedicamentoGeral(eventoId, internacaoId, titulo) {
     if (!confirm(`Confirmar administração de:\n${titulo}?`)) {
         return;
     }
     
-    const horaAplicacao = new Date().toISOString().slice(0, 16);
-    
-    // Busca o internacaoId do evento
-    const evento = calendar.getEvents().find(e => e.extendedProps.prescricao_id === prescricaoId);
-    if (!evento) {
-        alert('❌ Erro: Evento não encontrado');
-        return;
+    // Fecha o modal antes de processar
+    const modalElement = document.getElementById('modalDetalhePrescricao');
+    if (modalElement) {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) modal.hide();
     }
     
-    const internacaoId = evento.extendedProps.internacao_id;
+    const horaAplicacao = new Date().toISOString().slice(0, 16);
     
-    // Cria FormData para enviar como form tradicional
+    // Cria FormData para enviar
     const formData = new FormData();
     formData.append('hora_aplicacao', horaAplicacao);
-    formData.append('veterinario_id', 1); // ID padrão - ajustar conforme necessário
-    formData.append('anotacoes', 'Confirmado via dashboard');
+    formData.append('veterinario_id', 1); // ID padrão
+    formData.append('anotacoes', 'Confirmado via calendário geral');
     
-    fetch(`/homepet/public/clinica/internacao/${internacaoId}/prescricao/${prescricaoId}/executar`, {
+    console.log('🔄 Confirmando medicamento...', {eventoId, internacaoId});
+    
+    fetch(`/homepet/public/clinica/internacao/${internacaoId}/evento/${eventoId}/executar`, {
         method: 'POST',
         body: formData
     })
     .then(response => response.json())
     .then(data => {
+        console.log('✅ Resposta do servidor:', data);
         if (data.ok || data.success) {
             alert('✅ Medicamento confirmado com sucesso!');
-            location.reload();
+            // Recarrega a página para atualizar as cores
+            window.location.reload();
         } else {
             alert('❌ Erro ao confirmar: ' + (data.msg || data.message || 'Erro desconhecido'));
         }
     })
     .catch(error => {
-        console.error('Erro:', error);
-        alert('❌ Erro ao confirmar medicamento');
+        console.error('❌ Erro:', error);
+        alert('❌ Erro ao confirmar medicamento: ' + error.message);
     });
 }
 </script>

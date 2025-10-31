@@ -90,8 +90,8 @@ class IaAssistenteController extends DefaultController
         $dados = $contexto['dados'] ?? [];
         
         switch ($etapa) {
+            // Fluxo de Agendamento
             case 'confirmar_pet':
-                // Usuário confirmou o pet
                 if (stripos($resposta, 'sim') !== false || stripos($resposta, 's') !== false) {
                     $dados['pet_confirmado'] = true;
                     return $this->perguntarTaxiDog($dados, $session);
@@ -120,10 +120,79 @@ class IaAssistenteController extends DefaultController
             case 'observacoes':
                 $dados['observacoes'] = $resposta;
                 return $this->finalizarAgendamento($dados, $baseId, $session);
+            
+            // Fluxo de Internação
+            case 'motivo_internacao':
+                $dados['motivo'] = $resposta;
+                return $this->perguntarRiscoInternacao($dados, $session);
+                
+            case 'risco_internacao':
+                $dados['risco'] = ucfirst(strtolower($resposta));
+                return $this->perguntarBoxInternacao($dados, $session);
+                
+            case 'box_internacao':
+                $dados['box'] = $resposta;
+                return $this->perguntarPrognosticoInternacao($dados, $session);
+                
+            case 'prognostico_internacao':
+                $dados['prognostico'] = ucfirst(strtolower($resposta));
+                return $this->perguntarAltaPrevistaInternacao($dados, $session);
+                
+            case 'alta_prevista_internacao':
+                // Processar data
+                if (stripos($resposta, 'amanhã') !== false || stripos($resposta, 'amanha') !== false) {
+                    $dados['alta_prevista'] = date('d/m/Y', strtotime('+1 day'));
+                } elseif (preg_match('/(\d+)\s*dias?/i', $resposta, $matches)) {
+                    $dias = (int)$matches[1];
+                    $dados['alta_prevista'] = date('d/m/Y', strtotime("+{$dias} days"));
+                } elseif (preg_match('/(\d{1,2}\/\d{1,2}\/\d{4})/', $resposta, $matches)) {
+                    $dados['alta_prevista'] = $matches[1];
+                } else {
+                    $dados['alta_prevista'] = $resposta;
+                }
+                return $this->perguntarAnotacoesInternacao($dados, $session);
+                
+            case 'anotacoes_internacao':
+                $dados['anotacoes'] = $resposta;
+                return $this->finalizarInternacao($dados, $baseId, $session);
+            
+            // Fluxo de Prescrição
+            case 'nome_medicamento':
+                $dados['medicamento'] = ucfirst(strtolower($resposta));
+                return $this->perguntarDoseMedicamento($dados, $session);
+                
+            case 'dose_medicamento':
+                $dados['dose'] = $resposta;
+                return $this->perguntarFrequenciaMedicamento($dados, $session);
+                
+            case 'frequencia_medicamento':
+                $dados['frequencia'] = $resposta;
+                // Extrair horas da frequência (ex: "8 em 8 horas" -> 8)
+                if (preg_match('/(\d+)\s*(?:em|a cada)\s*\d+\s*horas?/i', $resposta, $matches)) {
+                    $dados['frequencia_horas'] = (int)$matches[1];
+                } elseif (preg_match('/(\d+)\s*horas?/i', $resposta, $matches)) {
+                    $dados['frequencia_horas'] = (int)$matches[1];
+                } else {
+                    $dados['frequencia_horas'] = 8; // padrão
+                }
+                return $this->perguntarDuracaoMedicamento($dados, $session);
+                
+            case 'duracao_medicamento':
+                // Extrair número de dias
+                if (preg_match('/(\d+)\s*dias?/i', $resposta, $matches)) {
+                    $dados['duracao_dias'] = (int)$matches[1];
+                } else {
+                    $dados['duracao_dias'] = (int)$resposta;
+                }
+                return $this->perguntarViaMedicamento($dados, $session);
+                
+            case 'via_medicamento':
+                $dados['via'] = ucfirst(strtolower($resposta));
+                return $this->finalizarPrescricao($dados, $baseId, $session);
                 
             default:
                 $session->remove('ia_contexto');
-                return ['message' => '❌ Erro no fluxo de agendamento.'];
+                return ['message' => '❌ Erro no fluxo de conversa.'];
         }
     }
     
@@ -275,17 +344,21 @@ class IaAssistenteController extends DefaultController
         
         // Detectar tipo de ação
         $acoes = [
-            'cadastrar' => ['cadastrar', 'cadastra', 'criar', 'adicionar', 'registrar'],
-            'agendar' => ['agendar', 'marcar', 'reservar'],
+            'cadastrar' => ['cadastrar', 'cadastra', 'criar', 'adicionar', 'registrar', 'novo'],
+            'agendar' => ['agendar', 'marcar', 'reservar', 'agenda'],
             'internar' => ['internar', 'internação', 'internacao', 'hospitalizar'],
             'alta' => ['alta', 'liberar', 'liberação', 'liberacao', 'dar alta'],
-            'prescrever' => ['prescrever', 'prescrição', 'prescricao', 'receitar', 'medicar'],
+            'prescrever' => ['prescrever', 'prescrição', 'prescricao', 'receitar', 'medicar', 'prescreve', 'medicamento', 'remedio', 'remédio', 'dar medicamento', 'aplicar medicamento', 'agendar medicamento', 'agenda medicamento'],
             'vacinar' => ['vacinar', 'vacina', 'vacinação', 'vacinacao', 'aplicar vacina'],
             'obito' => ['óbito', 'obito', 'faleceu', 'morreu', 'morte'],
             'orcamento' => ['orçamento', 'orcamento', 'cotação', 'cotacao', 'preço', 'preco'],
-            'venda' => ['vender', 'venda', 'comprar', 'pdv'],
+            'venda' => ['vender', 'venda', 'comprar', 'pdv', 'vende'],
             'consulta' => ['consultar', 'consulta', 'atender', 'atendimento'],
-            'buscar' => ['buscar', 'procurar', 'encontrar', 'listar', 'mostrar']
+            'buscar' => ['buscar', 'procurar', 'encontrar', 'listar', 'mostrar', 'ver', 'exibir'],
+            'debito' => ['débito', 'debito', 'dívida', 'divida', 'deve', 'pendente', 'fiado'],
+            'historico' => ['histórico', 'historico', 'ficha', 'prontuário', 'prontuario'],
+            'relatorio' => ['relatório', 'relatorio', 'resumo', 'balanço', 'balanco'],
+            'ajuda' => ['ajuda', 'help', 'comandos', 'o que você faz', 'que faz', 'funcionalidades']
         ];
 
         $acaoDetectada = 'desconhecida';
@@ -336,25 +409,31 @@ class IaAssistenteController extends DefaultController
             $entidades['hora'] = $hora . ':' . $minuto;
         }
 
-        // Extrair nomes - mais flexível
-        // Tenta "para o/a Nome" ou "pro/pra Nome"
-        if (preg_match('/(?:para|pro|pra)\s+(?:o|a)?\s*([A-Z][a-zà-úA-ZÀ-Ú]+)/i', $comando, $matches)) {
+        // Extrair nomes - mais flexível e case-insensitive
+        // Tenta "pet Nome" primeiro (mais específico)
+        if (preg_match('/pet\s+([a-zà-úA-ZÀ-Ú]+)/i', $comando, $matches)) {
             $nome = trim($matches[1]);
-            // Remove palavras de tempo que podem ter sido capturadas
             $palavrasTempo = ['hoje', 'amanha', 'amanhã', 'ontem', 'dia'];
-            $nomePartes = explode(' ', strtolower($nome));
-            if (!in_array($nomePartes[0], $palavrasTempo)) {
-                $entidades['nome'] = $nome;
+            if (!in_array(strtolower($nome), $palavrasTempo)) {
+                $entidades['nome'] = ucfirst(strtolower($nome));
+            }
+        }
+        
+        // Tenta "para o/a Nome" ou "pro/pra Nome"
+        if (!isset($entidades['nome']) && preg_match('/(?:para|pro|pra)\s+(?:o|a)?\s*([a-zà-úA-ZÀ-Ú]+)/i', $comando, $matches)) {
+            $nome = trim($matches[1]);
+            $palavrasTempo = ['hoje', 'amanha', 'amanhã', 'ontem', 'dia', 'pet'];
+            if (!in_array(strtolower($nome), $palavrasTempo)) {
+                $entidades['nome'] = ucfirst(strtolower($nome));
             }
         }
         
         // Tenta "do/da Nome"
-        if (!isset($entidades['nome']) && preg_match('/(?:do|da)\s+([A-Z][a-zà-úA-ZÀ-Ú]+)/i', $comando, $matches)) {
+        if (!isset($entidades['nome']) && preg_match('/(?:do|da)\s+([a-zà-úA-ZÀ-Ú]+)/i', $comando, $matches)) {
             $nome = trim($matches[1]);
-            $palavrasTempo = ['hoje', 'amanha', 'amanhã', 'ontem', 'dia'];
-            $nomePartes = explode(' ', strtolower($nome));
-            if (!in_array($nomePartes[0], $palavrasTempo)) {
-                $entidades['nome'] = $nome;
+            $palavrasTempo = ['hoje', 'amanha', 'amanhã', 'ontem', 'dia', 'pet'];
+            if (!in_array(strtolower($nome), $palavrasTempo)) {
+                $entidades['nome'] = ucfirst(strtolower($nome));
             }
         }
 
@@ -391,13 +470,13 @@ class IaAssistenteController extends DefaultController
                 return $this->iniciarAgendamento($analise, $baseId, $session);
             
             case 'internar':
-                return $this->internarPet($analise, $baseId);
+                return $this->internarPet($analise, $baseId, $session);
             
             case 'alta':
                 return $this->darAlta($analise, $baseId);
             
             case 'prescrever':
-                return $this->prescreverMedicamento($analise, $baseId);
+                return $this->prescreverMedicamento($analise, $baseId, $session);
             
             case 'vacinar':
                 return $this->aplicarVacina($analise, $baseId);
@@ -414,10 +493,20 @@ class IaAssistenteController extends DefaultController
             case 'buscar':
                 return $this->buscarInformacao($analise, $baseId);
             
+            case 'debito':
+                return $this->consultarDebitos($analise, $baseId);
+            
+            case 'historico':
+                return $this->consultarHistorico($analise, $baseId);
+            
+            case 'relatorio':
+                return $this->gerarRelatorio($analise, $baseId);
+            
+            case 'ajuda':
+                return $this->mostrarAjuda();
+            
             default:
-                return [
-                    'message' => 'Desculpe, não entendi o comando.\n\n📋 Exemplos:\n• "agendar banho para Rex amanhã às 14h"\n• "cadastrar pet Cacal do tutor Lulu"\n• "internar Rex por pneumonia"\n• "prescrever dipirona para Luna"\n• "vacinar Max contra raiva"\n• "dar alta para Rex"\n• "registrar óbito do Luna"\n• "buscar cliente Maria"'
-                ];
+                return $this->mostrarAjuda();
         }
     }
     
@@ -815,14 +904,13 @@ class IaAssistenteController extends DefaultController
         }
     }
 
-    private function internarPet(array $analise, int $baseId): array
+    private function internarPet(array $analise, int $baseId, $session): array
     {
         $entidades = $analise['entidades'];
         $nomeBusca = $entidades['nome'] ?? null;
-        $comando = $analise['comando_original'];
         
         if (!$nomeBusca) {
-            return ['message' => '❌ Especifique o nome do pet.\nExemplo: "internar Rex por pneumonia"'];
+            return ['message' => '❌ Especifique o nome do pet.\nExemplo: "internar Harry" ou "registrar internação do Rex"'];
         }
         
         try {
@@ -841,42 +929,199 @@ class IaAssistenteController extends DefaultController
                 return ['message' => "❌ Pet '{$nomeBusca}' não encontrado."];
             }
             
-            // Extrair motivo
-            $motivo = '';
-            if (preg_match('/por\s+(.+?)(?:\.|$)/i', $comando, $matches)) {
-                $motivo = trim($matches[1]);
-            }
+            // Iniciar fluxo de perguntas
+            $dados = [
+                'pet_id' => $pet->getId(),
+                'pet_nome' => $pet->getNome(),
+                'dono_id' => $pet->getDono_Id()
+            ];
             
+            return $this->perguntarMotivoInternacao($dados, $session);
+            
+        } catch (\Exception $e) {
+            return ['message' => "❌ Erro: " . $e->getMessage()];
+        }
+    }
+    
+    private function perguntarMotivoInternacao(array $dados, $session): array
+    {
+        $session->set('ia_contexto', [
+            'aguardando_resposta' => true,
+            'etapa' => 'motivo_internacao',
+            'dados' => $dados
+        ]);
+        
+        return [
+            'message' => "🏥 Internação do pet **{$dados['pet_nome']}**\n\n📝 Qual o motivo da internação?",
+            'aguardando' => true
+        ];
+    }
+    
+    private function perguntarRiscoInternacao(array $dados, $session): array
+    {
+        $session->set('ia_contexto', [
+            'aguardando_resposta' => true,
+            'etapa' => 'risco_internacao',
+            'dados' => $dados
+        ]);
+        
+        return [
+            'message' => "⚠️ Qual o nível de risco?\n\n• Baixo\n• Médio\n• Alto\n• Crítico",
+            'aguardando' => true
+        ];
+    }
+    
+    private function perguntarBoxInternacao(array $dados, $session): array
+    {
+        $session->set('ia_contexto', [
+            'aguardando_resposta' => true,
+            'etapa' => 'box_internacao',
+            'dados' => $dados
+        ]);
+        
+        return [
+            'message' => "🏠 Qual o número do box?\n\nExemplo: Box 1, Box 2, etc.",
+            'aguardando' => true
+        ];
+    }
+    
+    private function perguntarPrognosticoInternacao(array $dados, $session): array
+    {
+        $session->set('ia_contexto', [
+            'aguardando_resposta' => true,
+            'etapa' => 'prognostico_internacao',
+            'dados' => $dados
+        ]);
+        
+        return [
+            'message' => "🔮 Qual o prognóstico?\n\n• Excelente\n• Bom\n• Regular\n• Reservado\n• Grave",
+            'aguardando' => true
+        ];
+    }
+    
+    private function perguntarAltaPrevistaInternacao(array $dados, $session): array
+    {
+        $session->set('ia_contexto', [
+            'aguardando_resposta' => true,
+            'etapa' => 'alta_prevista_internacao',
+            'dados' => $dados
+        ]);
+        
+        return [
+            'message' => "📅 Qual a data prevista para alta?\n\nExemplo: 05/11/2025 ou 'amanhã' ou '3 dias'",
+            'aguardando' => true
+        ];
+    }
+    
+    private function perguntarAnotacoesInternacao(array $dados, $session): array
+    {
+        $session->set('ia_contexto', [
+            'aguardando_resposta' => true,
+            'etapa' => 'anotacoes_internacao',
+            'dados' => $dados
+        ]);
+        
+        return [
+            'message' => "📝 Alguma anotação adicional?\n\n(Digite 'não' se não houver)",
+            'aguardando' => true
+        ];
+    }
+    
+    private function finalizarInternacao(array $dados, int $baseId, $session): array
+    {
+        try {
             // Criar internação
             $internacao = new \App\Entity\Internacao();
-            $internacao->setPetId($pet->getId());
-            $internacao->setDonoId($pet->getDono_Id());
+            $internacao->setPetId($dados['pet_id']);
+            $internacao->setDonoId($dados['dono_id']);
             $internacao->setEstabelecimentoId($baseId);
             $internacao->setDataInicio(new \DateTime());
-            $internacao->setStatus('ativo');
-            $internacao->setSituacao('estável');
+            $internacao->setStatus('ativa');
+            $internacao->setMotivo($dados['motivo']);
+            $internacao->setDiagnostico($dados['motivo']);
             
-            if ($motivo) {
-                $internacao->setMotivo($motivo);
-                $internacao->setDiagnostico($motivo);
+            // Campos adicionais
+            if (isset($dados['risco'])) {
+                $internacao->setRisco($dados['risco']);
+                $internacao->setSituacao($dados['risco']);
+            }
+            if (isset($dados['box'])) {
+                $internacao->setBox($dados['box']);
+            }
+            if (isset($dados['prognostico'])) {
+                $internacao->setPrognostico($dados['prognostico']);
+            }
+            if (isset($dados['alta_prevista'])) {
+                // Converter string de data para DateTime
+                $altaPrevista = \DateTime::createFromFormat('d/m/Y', $dados['alta_prevista']);
+                if ($altaPrevista) {
+                    $internacao->setAltaPrevista($altaPrevista);
+                }
+            }
+            if (isset($dados['anotacoes']) && strtolower($dados['anotacoes']) !== 'não') {
+                $internacao->setAnotacoes($dados['anotacoes']);
             }
             
             $this->em->persist($internacao);
             $this->em->flush();
             
-            $message = "🏥 Internação registrada!\n\n";
-            $message .= "🐕 Pet: {$pet->getNome()}\n";
-            $message .= "📋 ID Internação: #{$internacao->getId()}\n";
-            $message .= "📅 Data: " . $internacao->getDataInicio()->format('d/m/Y H:i') . "\n";
-            if ($motivo) {
-                $message .= "🩺 Motivo: {$motivo}\n";
+            // Criar evento de internação na timeline
+            $internacaoRepo = $this->em->getRepository(\App\Entity\Internacao::class);
+            $descricaoEvento = "Motivo: {$dados['motivo']}";
+            if (isset($dados['risco'])) {
+                $descricaoEvento .= " | Risco: {$dados['risco']}";
             }
-            $message .= "📊 Status: Ativo\n";
+            if (isset($dados['box'])) {
+                $descricaoEvento .= " | Box: {$dados['box']}";
+            }
+            if (isset($dados['prognostico'])) {
+                $descricaoEvento .= " | Prognóstico: {$dados['prognostico']}";
+            }
             
-            return ['message' => $message, 'dados' => ['internacao_id' => $internacao->getId()]];
+            $internacaoRepo->inserirEvento(
+                $baseId,
+                $internacao->getId(),
+                $dados['pet_id'],
+                'internacao',
+                'Internação Iniciada',
+                $descricaoEvento,
+                new \DateTime(),
+                'ativo'
+            );
+            
+            $session->remove('ia_contexto');
+            
+            $message = "✅ Internação registrada com sucesso!\n\n";
+            $message .= "🐕 Pet: {$dados['pet_nome']}\n";
+            $message .= "📋 ID Internação: #{$internacao->getId()}\n";
+            $message .= "📅 Data Início: " . $internacao->getDataInicio()->format('d/m/Y H:i') . "\n";
+            $message .= "🩺 Motivo: {$dados['motivo']}\n";
+            if (isset($dados['risco'])) {
+                $message .= "⚠️ Risco: {$dados['risco']}\n";
+            }
+            if (isset($dados['box'])) {
+                $message .= "🏠 Box: {$dados['box']}\n";
+            }
+            if (isset($dados['prognostico'])) {
+                $message .= "🔮 Prognóstico: {$dados['prognostico']}\n";
+            }
+            if (isset($dados['alta_prevista'])) {
+                $message .= "📅 Alta Prevista: {$dados['alta_prevista']}\n";
+            }
+            if (isset($dados['anotacoes']) && strtolower($dados['anotacoes']) !== 'não') {
+                $message .= "📝 Anotações: {$dados['anotacoes']}\n";
+            }
+            $message .= "📊 Status: Ativo";
+            
+            return [
+                'message' => $message,
+                'acao' => 'internar',
+                'dados' => ['internacao_id' => $internacao->getId()]
+            ];
             
         } catch (\Exception $e) {
-            return ['message' => "❌ Erro: " . $e->getMessage()];
+            $session->remove('ia_contexto');
+            return ['message' => "❌ Erro ao criar internação: " . $e->getMessage()];
         }
     }
     
@@ -938,7 +1183,7 @@ class IaAssistenteController extends DefaultController
         }
     }
     
-    private function prescreverMedicamento(array $analise, int $baseId): array
+    private function prescreverMedicamento(array $analise, int $baseId, $session): array
     {
         $entidades = $analise['entidades'];
         $nomeBusca = $entidades['nome'] ?? null;
@@ -964,16 +1209,6 @@ class IaAssistenteController extends DefaultController
                 return ['message' => "❌ Pet '{$nomeBusca}' não encontrado."];
             }
             
-            // Extrair medicamento
-            $medicamento = '';
-            if (preg_match('/prescrever\s+(\w+)/i', $comando, $matches)) {
-                $medicamento = $matches[1];
-            }
-            
-            if (!$medicamento) {
-                return ['message' => '❌ Especifique o medicamento.\nExemplo: "prescrever dipirona para Luna"'];
-            }
-            
             // Buscar internação ativa
             $internacao = $this->em->getRepository(\App\Entity\Internacao::class)
                 ->createQueryBuilder('i')
@@ -982,7 +1217,7 @@ class IaAssistenteController extends DefaultController
                 ->andWhere('i.status = :status')
                 ->setParameter('petId', $pet->getId())
                 ->setParameter('estab', $baseId)
-                ->setParameter('status', 'ativo')
+                ->setParameter('status', 'ativa')
                 ->setMaxResults(1)
                 ->getQuery()
                 ->getOneOrNullResult();
@@ -991,26 +1226,206 @@ class IaAssistenteController extends DefaultController
                 return ['message' => "❌ {$pet->getNome()} não está internado. Interne o pet primeiro."];
             }
             
+            // Extrair medicamento - tenta vários padrões
+            $medicamento = '';
+            
+            // Padrão: "prescrever/medicar/dar MEDICAMENTO"
+            if (preg_match('/(?:prescrever|prescreve|medicar|dar|aplicar|agendar|agenda)\s+(?:medicamento\s+)?(\w+)/i', $comando, $matches)) {
+                $medicamento = ucfirst(strtolower($matches[1]));
+            }
+            
+            // Se não encontrou, pede o nome
+            if (!$medicamento || in_array(strtolower($medicamento), ['medicamento', 'remedio', 'remédio', 'pro', 'para', 'do', 'da'])) {
+                $dados = [
+                    'pet_id' => $pet->getId(),
+                    'pet_nome' => $pet->getNome(),
+                    'internacao_id' => $internacao->getId()
+                ];
+                
+                $session->set('ia_contexto', [
+                    'aguardando_resposta' => true,
+                    'etapa' => 'nome_medicamento',
+                    'dados' => $dados
+                ]);
+                
+                return [
+                    'message' => "💊 Qual medicamento deseja prescrever para **{$pet->getNome()}**?\n\nExemplo: Dipirona, Amoxicilina, Meloxicam",
+                    'aguardando' => true
+                ];
+            }
+            
+            // Iniciar fluxo de perguntas
+            $dados = [
+                'pet_id' => $pet->getId(),
+                'pet_nome' => $pet->getNome(),
+                'internacao_id' => $internacao->getId(),
+                'medicamento' => $medicamento
+            ];
+            
+            return $this->perguntarDoseMedicamento($dados, $session);
+            
+        } catch (\Exception $e) {
+            return ['message' => "❌ Erro: " . $e->getMessage()];
+        }
+    }
+    
+    private function perguntarDoseMedicamento(array $dados, $session): array
+    {
+        $session->set('ia_contexto', [
+            'aguardando_resposta' => true,
+            'etapa' => 'dose_medicamento',
+            'dados' => $dados
+        ]);
+        
+        return [
+            'message' => "💊 Prescrição de **{$dados['medicamento']}** para **{$dados['pet_nome']}**\n\n💉 Qual a dose?\n\nExemplo: 1 comprimido, 5ml, 2 gotas",
+            'aguardando' => true
+        ];
+    }
+    
+    private function perguntarFrequenciaMedicamento(array $dados, $session): array
+    {
+        $session->set('ia_contexto', [
+            'aguardando_resposta' => true,
+            'etapa' => 'frequencia_medicamento',
+            'dados' => $dados
+        ]);
+        
+        return [
+            'message' => "⏰ Qual a frequência?\n\nExemplo: 8 em 8 horas, 12 em 12 horas, 6 em 6 horas",
+            'aguardando' => true
+        ];
+    }
+    
+    private function perguntarDuracaoMedicamento(array $dados, $session): array
+    {
+        $session->set('ia_contexto', [
+            'aguardando_resposta' => true,
+            'etapa' => 'duracao_medicamento',
+            'dados' => $dados
+        ]);
+        
+        return [
+            'message' => "📅 Por quantos dias?\n\nExemplo: 7 dias, 10 dias, 5 dias",
+            'aguardando' => true
+        ];
+    }
+    
+    private function perguntarViaMedicamento(array $dados, $session): array
+    {
+        $session->set('ia_contexto', [
+            'aguardando_resposta' => true,
+            'etapa' => 'via_medicamento',
+            'dados' => $dados
+        ]);
+        
+        return [
+            'message' => "💉 Qual a via de administração?\n\n• Oral\n• Intravenosa (IV)\n• Intramuscular (IM)\n• Subcutânea (SC)\n• Tópica",
+            'aguardando' => true
+        ];
+    }
+    
+    private function finalizarPrescricao(array $dados, int $baseId, $session): array
+    {
+        try {
+            // Buscar ou criar medicamento
+            $medicamentoObj = $this->em->getRepository(\App\Entity\Medicamento::class)
+                ->createQueryBuilder('m')
+                ->where('LOWER(m.nome) = :nome')
+                ->setParameter('nome', strtolower($dados['medicamento']))
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+            
+            if (!$medicamentoObj) {
+                $medicamentoObj = new \App\Entity\Medicamento();
+                $medicamentoObj->setNome($dados['medicamento']);
+                if (isset($dados['via'])) {
+                    $medicamentoObj->setVia($dados['via']);
+                }
+                $this->em->persist($medicamentoObj);
+                $this->em->flush();
+            }
+            
             // Criar prescrição
             $prescricao = new \App\Entity\InternacaoPrescricao();
-            $prescricao->setInternacaoId($internacao->getId());
-            $prescricao->setMedicamento($medicamento);
+            $prescricao->setInternacaoId($dados['internacao_id']);
+            $prescricao->setMedicamento($medicamentoObj);
+            $prescricao->setDescricao($dados['medicamento']);
+            $prescricao->setDose($dados['dose']);
+            $prescricao->setFrequencia($dados['frequencia']);
+            $prescricao->setFrequenciaHoras($dados['frequencia_horas']);
+            $prescricao->setDuracaoDias($dados['duracao_dias']);
             $prescricao->setDataHora(new \DateTime());
-            $prescricao->setStatus('pendente');
+            $prescricao->setCriadoEm(new \DateTime());
             
             $this->em->persist($prescricao);
             $this->em->flush();
             
-            $message = "💊 Prescrição registrada!\n\n";
-            $message .= "🐕 Pet: {$pet->getNome()}\n";
-            $message .= "💉 Medicamento: {$medicamento}\n";
-            $message .= "📋 ID Prescrição: #{$prescricao->getId()}\n";
-            $message .= "📅 Data: " . $prescricao->getDataHora()->format('d/m/Y H:i') . "\n";
+            // Criar eventos no calendário
+            $internacaoRepo = $this->em->getRepository(\App\Entity\Internacao::class);
+            $dataInicio = new \DateTime();
+            $totalEventos = 0;
             
-            return ['message' => $message];
+            // Calcular quantas aplicações por dia (arredonda para cima)
+            $aplicacoesPorDia = (int) ceil(24 / $dados['frequencia_horas']);
+            
+            for ($dia = 0; $dia < $dados['duracao_dias']; $dia++) {
+                for ($aplicacao = 0; $aplicacao < $aplicacoesPorDia; $aplicacao++) {
+                    $dataEvento = clone $dataInicio;
+                    $dataEvento->modify("+{$dia} days");
+                    
+                    // Calcula o horário da aplicação
+                    $horasAdicionar = $aplicacao * $dados['frequencia_horas'];
+                    
+                    // Se ultrapassar 24h, pula para o próximo dia
+                    if ($horasAdicionar >= 24) {
+                        continue;
+                    }
+                    
+                    $dataEvento->modify("+{$horasAdicionar} hours");
+                    
+                    $titulo = "{$dados['medicamento']} - {$dados['dose']}";
+                    $descricao = "Via: " . ($dados['via'] ?? 'Oral') . " | Frequência: {$dados['frequencia']}";
+                    
+                    $internacaoRepo->inserirEvento(
+                        $baseId,
+                        $dados['internacao_id'],
+                        $dados['pet_id'],
+                        'prescricao',
+                        $titulo,
+                        $descricao,
+                        $dataEvento,
+                        'pendente'
+                    );
+                    
+                    $totalEventos++;
+                }
+            }
+            
+            $session->remove('ia_contexto');
+            
+            $message = "✅ Prescrição criada com sucesso!\n\n";
+            $message .= "🐕 Pet: {$dados['pet_nome']}\n";
+            $message .= "💊 Medicamento: {$dados['medicamento']}\n";
+            $message .= "💉 Dose: {$dados['dose']}\n";
+            $message .= "⏰ Frequência: {$dados['frequencia']}\n";
+            $message .= "📅 Duração: {$dados['duracao_dias']} dias\n";
+            if (isset($dados['via'])) {
+                $message .= "💉 Via: {$dados['via']}\n";
+            }
+            $message .= "📋 ID Prescrição: #{$prescricao->getId()}\n";
+            $message .= "📆 {$totalEventos} eventos criados no calendário!";
+            
+            return [
+                'message' => $message,
+                'acao' => 'prescrever',
+                'dados' => ['prescricao_id' => $prescricao->getId()]
+            ];
             
         } catch (\Exception $e) {
-            return ['message' => "❌ Erro: " . $e->getMessage()];
+            $session->remove('ia_contexto');
+            return ['message' => "❌ Erro ao criar prescrição: " . $e->getMessage()];
         }
     }
     
@@ -1221,6 +1636,284 @@ class IaAssistenteController extends DefaultController
         }
     }
 
+    private function consultarDebitos(array $analise, int $baseId): array
+    {
+        $entidades = $analise['entidades'];
+        $nomeBusca = $entidades['nome'] ?? null;
+        
+        if (!$nomeBusca) {
+            return ['message' => '❌ Especifique o nome do cliente.\nExemplo: "débitos do João" ou "quanto Maria deve"'];
+        }
+        
+        try {
+            // Buscar cliente
+            $cliente = $this->em->getRepository(\App\Entity\Cliente::class)
+                ->createQueryBuilder('c')
+                ->where('LOWER(c.nome) LIKE :nome')
+                ->andWhere('c.estabelecimentoId = :estab')
+                ->setParameter('nome', '%' . strtolower($nomeBusca) . '%')
+                ->setParameter('estab', $baseId)
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+            
+            if (!$cliente) {
+                return ['message' => "❌ Cliente '{$nomeBusca}' não encontrado."];
+            }
+            
+            // Buscar débitos pendentes
+            $debitos = $this->em->getRepository(\App\Entity\FinanceiroPendente::class)
+                ->createQueryBuilder('f')
+                ->where('f.clienteId = :clienteId')
+                ->andWhere('f.estabelecimentoId = :estab')
+                ->andWhere('f.status = :status')
+                ->setParameter('clienteId', $cliente->getId())
+                ->setParameter('estab', $baseId)
+                ->setParameter('status', 'Pendente')
+                ->getQuery()
+                ->getResult();
+            
+            $totalDebito = 0;
+            $message = "💰 Débitos de **{$cliente->getNome()}**\n\n";
+            
+            if (count($debitos) > 0) {
+                foreach ($debitos as $debito) {
+                    $totalDebito += $debito->getValor();
+                    $message .= "• {$debito->getDescricao()}: R$ " . number_format($debito->getValor(), 2, ',', '.') . "\n";
+                    $message .= "  Data: " . $debito->getData()->format('d/m/Y') . "\n\n";
+                }
+                $message .= "**Total devido: R$ " . number_format($totalDebito, 2, ',', '.') . "**";
+            } else {
+                $message .= "✅ Nenhum débito pendente!\nCliente está em dia. 🎉";
+            }
+            
+            return ['message' => $message];
+            
+        } catch (\Exception $e) {
+            return ['message' => "❌ Erro: " . $e->getMessage()];
+        }
+    }
+    
+    private function consultarHistorico(array $analise, int $baseId): array
+    {
+        $entidades = $analise['entidades'];
+        $nomeBusca = $entidades['nome'] ?? null;
+        
+        if (!$nomeBusca) {
+            return ['message' => '❌ Especifique o nome do pet.\nExemplo: "histórico do Rex" ou "ficha da Luna"'];
+        }
+        
+        try {
+            // Buscar pet
+            $pet = $this->em->getRepository(\App\Entity\Pet::class)
+                ->createQueryBuilder('p')
+                ->where('LOWER(p.nome) LIKE :nome')
+                ->andWhere('p.estabelecimentoId = :estab')
+                ->setParameter('nome', '%' . strtolower($nomeBusca) . '%')
+                ->setParameter('estab', $baseId)
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+            
+            if (!$pet) {
+                return ['message' => "❌ Pet '{$nomeBusca}' não encontrado."];
+            }
+            
+            $message = "📋 Histórico de **{$pet->getNome()}**\n\n";
+            
+            // Informações básicas
+            $message .= "🐕 **Dados:**\n";
+            if ($pet->getEspecie()) $message .= "• Espécie: {$pet->getEspecie()}\n";
+            if ($pet->getRaca()) $message .= "• Raça: {$pet->getRaca()}\n";
+            if ($pet->getIdade()) $message .= "• Idade: {$pet->getIdade()} anos\n";
+            if ($pet->getPeso()) $message .= "• Peso: {$pet->getPeso()} kg\n";
+            $message .= "\n";
+            
+            // Vacinas
+            $vacinas = $this->em->getRepository(\App\Entity\Vacina::class)
+                ->createQueryBuilder('v')
+                ->where('v.petId = :petId')
+                ->andWhere('v.estabelecimentoId = :estab')
+                ->setParameter('petId', $pet->getId())
+                ->setParameter('estab', $baseId)
+                ->orderBy('v.dataAplicacao', 'DESC')
+                ->setMaxResults(3)
+                ->getQuery()
+                ->getResult();
+            
+            if (count($vacinas) > 0) {
+                $message .= "💉 **Últimas Vacinas:**\n";
+                foreach ($vacinas as $vacina) {
+                    $message .= "• {$vacina->getTipo()} - " . $vacina->getDataAplicacao()->format('d/m/Y') . "\n";
+                }
+                $message .= "\n";
+            }
+            
+            // Internações
+            $internacoes = $this->em->getRepository(\App\Entity\Internacao::class)
+                ->createQueryBuilder('i')
+                ->where('i.pet_id = :petId')
+                ->andWhere('i.estabelecimento_id = :estab')
+                ->setParameter('petId', $pet->getId())
+                ->setParameter('estab', $baseId)
+                ->orderBy('i.data_inicio', 'DESC')
+                ->setMaxResults(2)
+                ->getQuery()
+                ->getResult();
+            
+            if (count($internacoes) > 0) {
+                $message .= "🏥 **Internações:**\n";
+                foreach ($internacoes as $int) {
+                    $status = $int->getStatus() === 'ativa' ? '🔴 Ativa' : '✅ Finalizada';
+                    $message .= "• {$status} - " . $int->getDataInicio()->format('d/m/Y') . "\n";
+                    if ($int->getMotivo()) $message .= "  Motivo: {$int->getMotivo()}\n";
+                }
+                $message .= "\n";
+            }
+            
+            $message .= "🔗 Acesse a ficha completa em:\n/clinica/pet/{$pet->getId()}";
+            
+            return ['message' => $message];
+            
+        } catch (\Exception $e) {
+            return ['message' => "❌ Erro: " . $e->getMessage()];
+        }
+    }
+    
+    private function gerarRelatorio(array $analise, int $baseId): array
+    {
+        $comando = $analise['comando_original'];
+        
+        try {
+            $hoje = new \DateTime();
+            $message = "📊 **Relatório do Sistema**\n";
+            $message .= "Data: " . $hoje->format('d/m/Y H:i') . "\n\n";
+            
+            // Pets cadastrados
+            $totalPets = $this->em->getRepository(\App\Entity\Pet::class)
+                ->createQueryBuilder('p')
+                ->select('COUNT(p.id)')
+                ->where('p.estabelecimentoId = :estab')
+                ->setParameter('estab', $baseId)
+                ->getQuery()
+                ->getSingleScalarResult();
+            
+            $message .= "🐕 **Pets:** {$totalPets} cadastrados\n";
+            
+            // Clientes
+            $totalClientes = $this->em->getRepository(\App\Entity\Cliente::class)
+                ->createQueryBuilder('c')
+                ->select('COUNT(c.id)')
+                ->where('c.estabelecimentoId = :estab')
+                ->setParameter('estab', $baseId)
+                ->getQuery()
+                ->getSingleScalarResult();
+            
+            $message .= "👥 **Clientes:** {$totalClientes} cadastrados\n\n";
+            
+            // Internações ativas
+            $internacoes = $this->em->getRepository(\App\Entity\Internacao::class)
+                ->createQueryBuilder('i')
+                ->select('COUNT(i.id)')
+                ->where('i.estabelecimento_id = :estab')
+                ->andWhere('i.status = :status')
+                ->setParameter('estab', $baseId)
+                ->setParameter('status', 'ativa')
+                ->getQuery()
+                ->getSingleScalarResult();
+            
+            $message .= "🏥 **Internações Ativas:** {$internacoes}\n";
+            
+            // Agendamentos hoje
+            $inicioHoje = (clone $hoje)->setTime(0, 0, 0);
+            $fimHoje = (clone $hoje)->setTime(23, 59, 59);
+            
+            $agendamentosHoje = $this->em->getRepository(\App\Entity\Agendamento::class)
+                ->createQueryBuilder('a')
+                ->select('COUNT(a.id)')
+                ->where('a.estabelecimentoId = :estab')
+                ->andWhere('a.data BETWEEN :inicio AND :fim')
+                ->setParameter('estab', $baseId)
+                ->setParameter('inicio', $inicioHoje)
+                ->setParameter('fim', $fimHoje)
+                ->getQuery()
+                ->getSingleScalarResult();
+            
+            $message .= "📅 **Agendamentos Hoje:** {$agendamentosHoje}\n\n";
+            
+            // Financeiro do mês
+            $inicioMes = (clone $hoje)->modify('first day of this month')->setTime(0, 0, 0);
+            
+            $entradas = $this->em->getRepository(\App\Entity\Financeiro::class)
+                ->createQueryBuilder('f')
+                ->select('SUM(f.valor)')
+                ->where('f.estabelecimentoId = :estab')
+                ->andWhere('f.tipo = :tipo')
+                ->andWhere('f.data >= :inicio')
+                ->setParameter('estab', $baseId)
+                ->setParameter('tipo', 'ENTRADA')
+                ->setParameter('inicio', $inicioMes)
+                ->getQuery()
+                ->getSingleScalarResult();
+            
+            $message .= "💰 **Faturamento do Mês:**\n";
+            $message .= "R$ " . number_format($entradas ?? 0, 2, ',', '.') . "\n\n";
+            
+            // Débitos pendentes
+            $debitos = $this->em->getRepository(\App\Entity\FinanceiroPendente::class)
+                ->createQueryBuilder('f')
+                ->select('SUM(f.valor)')
+                ->where('f.estabelecimentoId = :estab')
+                ->andWhere('f.status = :status')
+                ->setParameter('estab', $baseId)
+                ->setParameter('status', 'Pendente')
+                ->getQuery()
+                ->getSingleScalarResult();
+            
+            $message .= "⚠️ **Débitos Pendentes:**\n";
+            $message .= "R$ " . number_format($debitos ?? 0, 2, ',', '.') . "\n";
+            
+            return ['message' => $message, 'acao' => 'relatorio'];
+            
+        } catch (\Exception $e) {
+            return ['message' => "❌ Erro ao gerar relatório: " . $e->getMessage()];
+        }
+    }
+    
+    private function mostrarAjuda(): array
+    {
+        $message = "🤖 **Dra. HomePet - Assistente IA**\n\n";
+        $message .= "Posso ajudar você com:\n\n";
+        
+        $message .= "📋 **CADASTROS**\n";
+        $message .= "• cadastrar pet Cacal do tutor Lulu\n";
+        $message .= "• novo cliente João Silva\n\n";
+        
+        $message .= "📅 **AGENDAMENTOS**\n";
+        $message .= "• agendar banho para Rex amanhã às 14h\n";
+        $message .= "• marcar consulta para Luna hoje\n\n";
+        
+        $message .= "🏥 **CLÍNICA**\n";
+        $message .= "• internar Harry por pneumonia\n";
+        $message .= "• prescrever dipirona para Luna\n";
+        $message .= "• vacinar Max contra raiva\n";
+        $message .= "• dar alta para Rex\n\n";
+        
+        $message .= "🔍 **CONSULTAS**\n";
+        $message .= "• buscar cliente Maria\n";
+        $message .= "• débitos do João\n";
+        $message .= "• histórico do Rex\n";
+        $message .= "• ficha da Luna\n\n";
+        
+        $message .= "📊 **RELATÓRIOS**\n";
+        $message .= "• relatório do sistema\n";
+        $message .= "• resumo do mês\n\n";
+        
+        $message .= "💡 **Dica:** Fale naturalmente, eu entendo! 😊";
+        
+        return ['message' => $message, 'acao' => 'ajuda'];
+    }
+
     private function registrarLog(string $comando, array $analise, array $resultado, int $baseId): void
     {
         $log = sprintf(
@@ -1229,7 +1922,7 @@ class IaAssistenteController extends DefaultController
             $baseId,
             $comando,
             $analise['acao'],
-            $resultado['message']
+            substr($resultado['message'], 0, 100)
         );
 
         file_put_contents(

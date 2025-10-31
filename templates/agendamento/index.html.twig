@@ -1,5 +1,7 @@
 {% extends 'base.html.twig' %}
 
+{% block page_title %}<i class="bi bi-calendar-check me-2"></i> Agendamentos{% endblock %}
+
 {% block stylesheets %}
 {{ parent() }}
 <style>
@@ -15,7 +17,6 @@
 
 {% block body %}
 <div class="container mt-5">
-    <h1 class="text-primary mb-4">Agendamentos</h1>
     <div class="tabela-container container-fluid px-2">
         <div class="row my-3">
             <div class="col-12">
