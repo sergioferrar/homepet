@@ -81,12 +81,13 @@ class ClienteRepository extends ServiceEntityRepository
     public function save($baseId, array $clientData): void
     {
         $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.cliente
-        (estabelecimento_id, nome, email, telefone, rua, numero, complemento, bairro, cidade, whatsapp)
-        VALUES  (:estabelecimento_id, :nome, :email, :telefone, :rua, :numero, :complemento, :bairro, :cidade, :whatsapp)";
+        (estabelecimento_id, nome, cpf, email, telefone, rua, numero, complemento, bairro, cidade, whatsapp)
+        VALUES  (:estabelecimento_id, :nome, :cpf, :email, :telefone, :rua, :numero, :complemento, :bairro, :cidade, :whatsapp)";
 
         $this->conn->executeQuery($sql, [
             'estabelecimento_id' => $baseId,
             'nome' => $clientData['nome'],
+            'cpf' => $clientData['cpf'] ?? null,
             'email' => $clientData['email'],
             'telefone' => $clientData['telefone'],
             'rua' => $clientData['rua'],
@@ -101,13 +102,14 @@ class ClienteRepository extends ServiceEntityRepository
     public function update($baseId, array $clienteData): void
     {
         $sql = "UPDATE {$_ENV['DBNAMETENANT']}.cliente 
-                SET nome = :nome, email = :email, telefone = :telefone, 
+                SET nome = :nome, cpf = :cpf, email = :email, telefone = :telefone, 
                     rua = :rua, numero = :numero, complemento = :complemento, 
                     bairro = :bairro, cidade = :cidade, whatsapp = :whatsapp
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
         $this->conn->executeQuery($sql, [
             'nome' => $clienteData['nome'],
+            'cpf' => $clienteData['cpf'] ?? null,
             'email' => $clienteData['email'],
             'telefone' => $clienteData['telefone'],
             'rua' => $clienteData['rua'],
@@ -133,7 +135,7 @@ class ClienteRepository extends ServiceEntityRepository
         $params = [];
 
         if ($term) {
-            $where .= " AND (nome LIKE :term OR email LIKE :term OR telefone LIKE :term OR rua LIKE :term)";
+            $where .= " AND (nome LIKE :term OR cpf LIKE :term OR email LIKE :term OR telefone LIKE :term OR rua LIKE :term)";
             $params['term'] = "%$term%";
         }
 

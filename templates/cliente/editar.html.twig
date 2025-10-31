@@ -9,9 +9,15 @@
 
         <form method="post" action="{{ path('cliente_editar', {'id': cliente.id}) }}">
 
-            <div class="form-group mb-2">
-                <label for="nome">Nome</label>
-                <input type="text" id="nome" name="nome" required class="form-control" value="{{ cliente.nome }}">
+            <div class="row mb-2">
+                <div class="col-8">
+                    <label for="nome">Nome</label>
+                    <input type="text" id="nome" name="nome" required class="form-control" value="{{ cliente.nome }}">
+                </div>
+                <div class="col-4">
+                    <label for="cpf">CPF</label>
+                    <input type="text" id="cpf" name="cpf" class="form-control" value="{{ cliente.cpf ?? '' }}" placeholder="000.000.000-00">
+                </div>
             </div>
 
             <div class="row">
@@ -71,6 +77,19 @@
     </div>
 
     <script>
+        // Máscara de CPF
+        $(function(){
+            $('#cpf').on('input', function() {
+                let value = $(this).val().replace(/\D/g, '');
+                if (value.length <= 11) {
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                    $(this).val(value);
+                }
+            });
+        });
+        
         function confirmDelete(url) {
             if (confirm('Você tem certeza que deseja deletar este cliente?')) {
                 window.location.href = url;

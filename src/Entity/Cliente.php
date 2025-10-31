@@ -34,6 +34,11 @@ class Cliente
     private $telefone;
 
     /**
+     * @ORM\Column(type="string", length=14, nullable=true)
+     */
+    private $cpf;
+
+    /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $rua;
@@ -114,6 +119,17 @@ class Cliente
     public function setTelefone(?string $telefone): self
     {
         $this->telefone = $telefone;
+        return $this;
+    }
+
+    public function getCpf(): ?string
+    {
+        return $this->cpf;
+    }
+
+    public function setCpf(?string $cpf): self
+    {
+        $this->cpf = $cpf;
         return $this;
     }
 

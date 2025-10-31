@@ -164,8 +164,8 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function findByClienteId(int $baseId, int $clienteId): array
     {
         $sql = "SELECT f.descricao, f.valor, f.data
-                FROM u199209817_{$baseId}.financeiropendente f
-                JOIN u199209817_{$baseId}.pet p ON f.pet_id = p.id
+                FROM {$_ENV['DBNAMETENANT']}.financeiropendente f
+                JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
                 WHERE f.estabelecimento_id = :baseId AND p.dono_id = :clienteId
                 ORDER BY f.data DESC";
 

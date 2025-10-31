@@ -46,6 +46,7 @@ class ClienteController extends DefaultController
 
             $this->getRepositorio(Cliente::class)->save($this->session->get('userId'), [
                 'nome' => $cliente->getNome(),
+                'cpf' => $request->request->get('cpf'),
                 'email' => $cliente->getEmail(),
                 'telefone' => $cliente->getTelefone(),
                 'rua' => $cliente->getRua(),
@@ -84,6 +85,7 @@ class ClienteController extends DefaultController
             $clienteAtualizado = [
                 'id'          => $cliente['id'],
                 'nome'        => $request->get('nome'),
+                'cpf'         => $request->get('cpf'),
                 'email'       => $request->get('email'),
                 'telefone'    => $request->get('telefone'),
                 'rua'         => $request->get('rua'),

@@ -12,9 +12,15 @@
 
 {% block form_content %}
     <form method="post" action="{{ path('cliente_novo') }}">
-        <div class="mb-3">
-            <label for="nome" class="form-label">Nome</label>
-            <input type="text" class="form-control" id="nome" name="nome" required>
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <label for="nome" class="form-label">Nome</label>
+                <input type="text" class="form-control" id="nome" name="nome" required>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="cpf" class="form-label">CPF</label>
+                <input type="text" class="form-control" id="cpf" name="cpf" placeholder="000.000.000-00">
+            </div>
         </div>
         <div class="row">
             <div class="col-md-6 mb-3">
@@ -72,6 +78,18 @@
 {% block form_javascripts %}
     <script>
         $(function(){
+            // Máscara de CPF
+            $('#cpf').on('input', function() {
+                let value = $(this).val().replace(/\D/g, '');
+                if (value.length <= 11) {
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                    $(this).val(value);
+                }
+            });
+            
+            // CEP
             $('#cep').change(function () {
                 var cep = $(this).val().replace('-', '').replace('.', '');
                 if (cep.length === 8) {
