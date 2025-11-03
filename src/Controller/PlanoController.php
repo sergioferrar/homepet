@@ -19,9 +19,9 @@ class PlanoController extends DefaultController
         $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanos();
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($this->session->get('userId'));
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
-        
+
         $data['planos'] = $planos;
-        
+
         return $this->render('plano/index.html.twig', $data);
     }
 
@@ -41,7 +41,7 @@ class PlanoController extends DefaultController
     public function editar(Request $request): Response
     {
         $plano = $this->getRepositorio(\App\Entity\Plano::class)->verPlano($request->get('id'));
-        
+
         $data['plano'] = $plano;
         $data['modulos'] = $this->modulosSistema;
         return $this->render('plano/editar.html.twig', $data);
@@ -52,18 +52,18 @@ class PlanoController extends DefaultController
      */
     public function strore(Request $request): Response
     {
-        
+
         $plano = new \App\Entity\Plano();
         $plano->setTitulo($request->get('nome'));
         // $plano->setDescricao($request->get('descricao'));
         $plano->setDescricao(json_encode($request->get('modulos')));
         $plano->setValor($request->get('valor'));
         $plano->setStatus($request->get('status'));
-        $plano->setTrial(($request->get('trial')?true:false));
+        $plano->setTrial(($request->get('trial') ? true : false));
         $plano->setDataPlano((new \Datetime("now")));
         $plano->setModulos(json_encode($request->get('modulos')));
-        
-        $this->getRepositorio(\App\Entity\Plano::class)->add($plano,true);
+
+        $this->getRepositorio(\App\Entity\Plano::class)->add($plano, true);
 
         return $this->redirectToRoute('app_plano');
     }
@@ -80,18 +80,32 @@ class PlanoController extends DefaultController
         $plano->setDescricao(json_encode($request->get('modulos')));
         $plano->setValor($request->get('valor'));
         $plano->setStatus($request->get('status'));
-        $plano->setTrial(($request->get('trial')?true:false));
+        $plano->setTrial(($request->get('trial') ? true : false));
         $plano->setDataPlano((new \Datetime("now")));
         $plano->setModulos(json_encode($request->get('modulos')));
-        
+
         $this->getRepositorio(\App\Entity\Plano::class)->update($plano, $request->get('id'));
 
         return $this->redirectToRoute('app_plano');
     }
 
-    public function listarPlanosLoja(Request $request): Response{}
-    public function inclurLoja(Request $request): Response{}// Incluir estabelecimento
-    public function validarPlano(Request $request): Response{}
-    public function ativarPlanoLoja(Request $request): Response{}
-    public function inativarPlanoLoja(Request $request): Response{}
+    public function listarPlanosLoja(Request $request): Response
+    {
+    }
+
+    public function inclurLoja(Request $request): Response
+    {
+    }// Incluir estabelecimento
+
+    public function validarPlano(Request $request): Response
+    {
+    }
+
+    public function ativarPlanoLoja(Request $request): Response
+    {
+    }
+
+    public function inativarPlanoLoja(Request $request): Response
+    {
+    }
 }

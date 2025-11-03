@@ -38,7 +38,7 @@ class LoginController extends DefaultController
         // dd($request);
         $data = [];
 
-        if($request->get('confirmation')){
+        if ($request->get('confirmation')) {
             $this->addFlash('message', base64_decode($request->get('confirmation')));
             return $this->redirectToRoute('app_login');
         }
@@ -84,12 +84,12 @@ class LoginController extends DefaultController
         $request->getSession()->set('estabelecimentoId', $this->security->getUser()->getPetshopId());
 
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
-        ->findById($this->security->getUser()->getPetshopId())[0];
+            ->findById($this->security->getUser()->getPetshopId())[0];
 
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
-        
+
         //dd($validaPlano);
-        if($validaPlano){
+        if ($validaPlano) {
             $mensagem = str_replace(' ', '-', $validaPlano);
             return $this->redirectToRoute('logout', ['error' => $mensagem]);
         }
@@ -115,30 +115,30 @@ class LoginController extends DefaultController
     {
         $data = [];
 
-        if($request->isMethod('POST')){
+        if ($request->isMethod('POST')) {
             $usuario = $this->getRepositorio(\App\Entity\Usuario::class)->localizaUsuario($request->get('username'));
-            
-            if(!$usuario){
+
+            if (!$usuario) {
                 $error = 'O e-mail informado não foi localizado.';
                 $this->addFlash('message', $error);
                 return $this->redirectToRoute('app_login_recover');
             }
 
             $token = base64_encode(json_encode([
-                'username' => $request->get('username'), 
+                'username' => $request->get('username'),
                 'email' => $request->get('username'),
                 'hash' => $usuario['senha'],
                 'petshop_id' => $usuario['petshop_id']
             ]));
-            
+
             $confirmationUrl = $this->generateUrl(
-                'app_login_altera', 
+                'app_login_altera',
                 [
                     'token' => $token
-                ], 
+                ],
                 UrlGeneratorInterface::ABSOLUTE_URL
             );
-            
+
             $html = $this->render('login/email.html.twig', [
                 'confirmation_link' => $confirmationUrl,
                 'nome_usuario' => $usuario['nome_usuario'],
@@ -149,13 +149,13 @@ class LoginController extends DefaultController
                 'Redefinição de senha solicitada',
                 $html
             );
-            
+
             $error = 'Um e-mail com o link para redefinir sua senha foi enviado para o endereço informado.<br>
 Verifique sua caixa de entrada e siga as instruções para criar uma nova senha.<br>
 Caso não encontre o e-mail, verifique também sua pasta de spam ou lixo eletrônico.';
-                $this->addFlash('message', $error);
-                return $this->redirectToRoute('app_login_recover');
-            
+            $this->addFlash('message', $error);
+            return $this->redirectToRoute('app_login_recover');
+
         }
 
         return $this->render('login/recorver.html.twig', $data);
@@ -175,12 +175,12 @@ Caso não encontre o e-mail, verifique também sua pasta de spam ou lixo eletrô
         $tokenDecrypt = json_decode(base64_decode($token), true);
 
         $usuario = $this->getRepositorio(\App\Entity\Usuario::class)->localizaUsuario($tokenDecrypt['email']);
-        if(!$usuario){
+        if (!$usuario) {
             $this->addFlash('error', 'Esta página não pode ser acessada diretamente sem um usuário válido.');
             return $this->redirectToRoute('app_login');
         }
 
-        if($usuario['senha'] != $tokenDecrypt['hash']) {
+        if ($usuario['senha'] != $tokenDecrypt['hash']) {
             $this->addFlash('error', 'Esta página não pode ser acessada diretamente pois a hash não é valida.');
             return $this->redirectToRoute('app_login');
         }
@@ -188,7 +188,7 @@ Caso não encontre o e-mail, verifique também sua pasta de spam ou lixo eletrô
         $data['token'] = $token;
 
         // validando post
-        if($request->isMethod('POST')){
+        if ($request->isMethod('POST')) {
 
             $senha = $request->request->get('senha');
             $confirmar = $request->request->get('confirmar');

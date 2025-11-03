@@ -38,7 +38,8 @@ class ClinicaController extends DefaultController
     /**
      * @Route("/dashboard", name="clinica_dashboard", methods={"GET"})
      */
-    public function dashboard(Request $request, EntityManagerInterface $em): Response{
+    public function dashboard(Request $request, EntityManagerInterface $em): Response
+    {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
@@ -48,7 +49,7 @@ class ClinicaController extends DefaultController
         $repoConsulta = $this->getRepositorio(Consulta::class);
         $repoInternacao = $this->getRepositorio(Internacao::class);
 
-        
+
         $internacoes = $repoInternacao->listarInternacoesAtivas($baseId);
         $totalPets = $repoPet->countTotalPets($baseId);
         $totalDono = $repoCliente->countTotalDono($baseId);
@@ -71,10 +72,10 @@ class ClinicaController extends DefaultController
         // 🔹 BUSCA TODAS AS PRESCRIÇÕES DE TODAS AS INTERNAÇÕES ATIVAS (OTIMIZADO)
         $prescricoesGerais = [];
         $calendarioPrescricoesGeral = [];
-        
+
         // Coleta todos os IDs de internações ativas
         $internacaoIds = array_filter(array_column($internacoes, 'id'));
-        
+
         if (!empty($internacaoIds)) {
             // Busca TODOS os eventos de prescrição de uma vez
             $eventos = $em->getRepository(\App\Entity\InternacaoEvento::class)
@@ -85,7 +86,7 @@ class ClinicaController extends DefaultController
                 ->setParameter('tipo', 'prescricao')
                 ->getQuery()
                 ->getResult();
-            
+
             // Busca TODAS as execuções de uma vez
             $eventoIds = array_map(fn($e) => $e->getId(), $eventos);
             $execucoes = [];
@@ -96,28 +97,28 @@ class ClinicaController extends DefaultController
                     ->setParameter('eventoIds', $eventoIds)
                     ->getQuery()
                     ->getResult();
-                
+
                 // Indexa por prescricaoId para acesso rápido
                 foreach ($execucoesResult as $exec) {
                     $execucoes[$exec->getPrescricaoId()] = $exec;
                 }
             }
-            
+
             // Indexa internações por ID para acesso rápido
             $internacoesMap = [];
             foreach ($internacoes as $int) {
                 $internacoesMap[$int['id']] = $int;
             }
-            
+
             // Processa eventos
             foreach ($eventos as $evento) {
                 $internacaoId = $evento->getInternacaoId();
                 $internacao = $internacoesMap[$internacaoId] ?? null;
-                
+
                 if (!$internacao) continue;
-                
+
                 $execucao = $execucoes[$evento->getId()] ?? null;
-                
+
                 $cor = '#667eea'; // roxo
                 $status = 'pendente';
                 if ($execucao && $execucao->getStatus() == 'confirmado') {
@@ -240,7 +241,7 @@ class ClinicaController extends DefaultController
                 'data' => new \DateTime($r['data']),
                 'tipo' => 'Receita',
                 'resumo' => $r['resumo'],
-                'observacoes' => $item['observacoes']??null,
+                'observacoes' => $item['observacoes'] ?? null,
                 'receita_cabecalho' => $r['cabecalho'],
                 'receita_conteudo' => $r['conteudo'],
                 'receita_rodape' => $r['rodape'],
@@ -749,7 +750,7 @@ class ClinicaController extends DefaultController
         $this->switchDB();
         $baseId = $this->session->get('userId');
 
-        $repoDoc->getRepositorio(DocumentoModelo::class);
+        $repoDoc = $this->getRepositorio(DocumentoModelo::class);
         $documento = $repoDoc->buscarPorId($baseId, $id);
 
         if (!$documento) {
@@ -902,8 +903,8 @@ class ClinicaController extends DefaultController
 
         $totalGeral = $totalReceita - $totalDespesa;
         $dataAtual = $request->query->get('data')
-        ? new \DateTime($request->query->get('data'))
-        : new \DateTime();
+            ? new \DateTime($request->query->get('data'))
+            : new \DateTime();
 
         return $this->render('clinica/financeirodash.html.twig', [
             'financeiro_hoje' => $financeiroHoje,
@@ -1104,7 +1105,7 @@ class ClinicaController extends DefaultController
             ->orderBy('e.dataHora', 'ASC')
             ->getQuery()
             ->getResult();
-        
+
         // Busca todas as execuções de uma vez
         $eventoIds = array_map(fn($e) => $e->getId(), $todosEventos);
         $execucoes = [];
@@ -1115,18 +1116,18 @@ class ClinicaController extends DefaultController
                 ->setParameter('eventoIds', $eventoIds)
                 ->getQuery()
                 ->getResult();
-            
+
             // Indexa por prescricaoId
             foreach ($execucoesResult as $exec) {
                 $execucoes[$exec->getPrescricaoId()] = $exec;
             }
         }
-        
+
         // Processa todos os eventos
         $events = [];
         foreach ($todosEventos as $evento) {
             $execucao = $execucoes[$evento->getId()] ?? null;
-            
+
             $cor = '#0d6efd';
             $habilitaModal = true;
             if ($execucao && $execucao->getStatus() == 'confirmado') {
@@ -1269,13 +1270,14 @@ class ClinicaController extends DefaultController
             $prescricao->setDataHora(new \DateTime($dataHoraPrimeiraDose));
             $prescricao->setCriadoEm(new \DateTime());
 
+
             $em->persist($prescricao);
             $em->flush();
 
             // --- Cria eventos da timeline ---
             $petId = method_exists($internacao, 'getPetId')
-            ? $internacao->getPetId()
-            : ($internacao->getPet() ? $internacao->getPet()->getId() : null);
+                ? $internacao->getPetId()
+                : ($internacao->getPet() ? $internacao->getPet()->getId() : null);
 
             if ($petId) {
                 $numDoses = ($duracaoDias * 24) / $frequenciaHoras;
@@ -1415,11 +1417,11 @@ class ClinicaController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
-        
+
         try {
             $agora = new \DateTime();
             $notificacoes = [];
-            
+
             // Buscar medicamentos pendentes nas próximas 2 horas
             $eventos = $em->getRepository(\App\Entity\InternacaoEvento::class)
                 ->createQueryBuilder('e')
@@ -1431,16 +1433,16 @@ class ClinicaController extends DefaultController
                 ->orderBy('e.dataHora', 'ASC')
                 ->getQuery()
                 ->getResult();
-            
+
             foreach ($eventos as $evento) {
                 // Verifica se já foi executado
                 $execucao = $em->getRepository(\App\Entity\InternacaoExecucao::class)
                     ->findOneBy(['prescricaoId' => $evento->getId(), 'status' => 'confirmado']);
-                
+
                 if (!$execucao) {
                     $diff = $agora->diff($evento->getDataHora());
                     $minutos = ($diff->h * 60) + $diff->i;
-                    
+
                     if ($diff->invert) {
                         // Atrasado
                         $icon = 'bi-exclamation-triangle-fill';
@@ -1457,7 +1459,7 @@ class ClinicaController extends DefaultController
                         $color = 'text-info';
                         $tempo = 'Em ' . $minutos . ' minutos';
                     }
-                    
+
                     $notificacoes[] = [
                         'titulo' => $evento->getTitulo(),
                         'mensagem' => $evento->getDescricao() ?? 'Medicamento pendente',
@@ -1468,14 +1470,14 @@ class ClinicaController extends DefaultController
                     ];
                 }
             }
-            
+
             return new JsonResponse(['notificacoes' => $notificacoes]);
-            
+
         } catch (\Exception $e) {
             return new JsonResponse(['notificacoes' => [], 'error' => $e->getMessage()]);
         }
     }
-    
+
     /**
      * @Route("/buscar", name="clinica_buscar", methods={"GET"})
      */
@@ -1484,14 +1486,14 @@ class ClinicaController extends DefaultController
         $this->switchDB();
         $baseId = $this->getIdBase();
         $query = $request->query->get('q', '');
-        
+
         if (strlen($query) < 2) {
             return new JsonResponse(['resultados' => []]);
         }
-        
+
         try {
             $resultados = [];
-            
+
             // Buscar pets
             $pets = $em->getRepository(\App\Entity\Pet::class)
                 ->createQueryBuilder('p')
@@ -1502,7 +1504,7 @@ class ClinicaController extends DefaultController
                 ->setMaxResults(5)
                 ->getQuery()
                 ->getResult();
-            
+
             foreach ($pets as $pet) {
                 $resultados[] = [
                     'nome' => $pet->getNome(),
@@ -1511,7 +1513,7 @@ class ClinicaController extends DefaultController
                     'icon' => 'bi-heart-fill'
                 ];
             }
-            
+
             // Buscar clientes
             $clientes = $em->getRepository(\App\Entity\Cliente::class)
                 ->createQueryBuilder('c')
@@ -1522,7 +1524,7 @@ class ClinicaController extends DefaultController
                 ->setMaxResults(5)
                 ->getQuery()
                 ->getResult();
-            
+
             foreach ($clientes as $cliente) {
                 $resultados[] = [
                     'nome' => $cliente->getNome(),
@@ -1531,9 +1533,9 @@ class ClinicaController extends DefaultController
                     'icon' => 'bi-person-fill'
                 ];
             }
-            
+
             return new JsonResponse(['resultados' => $resultados]);
-            
+
         } catch (\Exception $e) {
             return new JsonResponse(['resultados' => [], 'error' => $e->getMessage()]);
         }

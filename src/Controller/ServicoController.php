@@ -39,7 +39,7 @@ class ServicoController extends DefaultController
 
         return $this->render('servico/index.html.twig', [
             'servicos' => $servicos,
-            'tipo'     => $tipoFiltro,
+            'tipo' => $tipoFiltro,
         ]);
     }
 

@@ -30,7 +30,7 @@ class HomeController extends DefaultController
      */
     public function index(Request $request): Response
     {
-        
+
         $this->switchDB();
         $agendamento = $this->getRepositorio(Financeiro::class)->totalAgendamento($this->estabelecimentoId);
         $agendamentoDia = $this->getRepositorio(Financeiro::class)->totalAgendamentoDia($this->estabelecimentoId);

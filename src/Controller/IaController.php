@@ -8,7 +8,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Repository\PetRepository;
 use App\Repository\AgendamentoRepository;
-use App\Service\IaGeminiService; // <- AQUI muda
+use App\Service\IaGeminiService;
+
+// <- AQUI muda
 
 class IaController extends AbstractController
 {
@@ -17,10 +19,11 @@ class IaController extends AbstractController
     private $iaGeminiService;
 
     public function __construct(
-        PetRepository $petRepository,
+        PetRepository         $petRepository,
         AgendamentoRepository $agendamentoRepository,
-        IaGeminiService $iaGeminiService // <- AQUI muda
-    ) {
+        IaGeminiService       $iaGeminiService // <- AQUI muda
+    )
+    {
         $this->petRepository = $petRepository;
         $this->agendamentoRepository = $agendamentoRepository;
         $this->iaGeminiService = $iaGeminiService;

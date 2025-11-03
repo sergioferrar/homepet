@@ -25,17 +25,18 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/", name="financeiro_index")
      */
-    public function index(Request $request, FinanceiroRepository $financeiroRepo, FinanceiroPendenteRepository $financeiroPendenteRepo): Response {
+    public function index(Request $request, FinanceiroRepository $financeiroRepo, FinanceiroPendenteRepository $financeiroPendenteRepo): Response
+    {
         $this->switchDB();
         $baseId = $this->session->get('userId');
 
         // --- Aba Diário ---
         $dataDiario = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
         $financeirosDiarios = $financeiroRepo->findTotalByDate($baseId, $dataDiario);
-        
+
         // --- Aba Pendente ---
         $financeirosPendentes = $financeiroPendenteRepo->findAllPendentes($baseId);
-        
+
         // --- Aba Relatório ---
         $mesInicio = $request->query->get('mes_inicio', (new \DateTime('first day of this month'))->format('Y-m'));
         $mesFim = $request->query->get('mes_fim', (new \DateTime('last day of this month'))->format('Y-m'));
@@ -52,14 +53,14 @@ class FinanceiroController extends DefaultController
 
         return $this->render('financeiro/index.html.twig', [
             'financeiros' => $financeirosDiarios,
-            'data'        => $dataDiario,
-            'pendentes'   => $financeirosPendentes,
-            'mes_inicio'  => $mesInicio,
-            'mes_fim'     => $mesFim,
-            'relatorio'   => $relatorioData,
-            'inativos'    => $financeirosInativos,
+            'data' => $dataDiario,
+            'pendentes' => $financeirosPendentes,
+            'mes_inicio' => $mesInicio,
+            'mes_fim' => $mesFim,
+            'relatorio' => $relatorioData,
+            'inativos' => $financeirosInativos,
             'fluxo_caixa' => $fluxoCaixa,
-            'data_fluxo'  => $dataFluxo,
+            'data_fluxo' => $dataFluxo,
         ]);
     }
 
@@ -70,7 +71,7 @@ class FinanceiroController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->session->get('userId');
-        
+
         if ($request->isMethod('POST')) {
             $financeiro = new Financeiro();
             $financeiro->setDescricao($request->request->get('descricao'));
@@ -103,9 +104,9 @@ class FinanceiroController extends DefaultController
 
         if ($request->isMethod('POST')) {
             $financeiro->setDescricao($request->request->get('descricao'));
-            $financeiro->setValor((float) $request->request->get('valor'));
+            $financeiro->setValor((float)$request->request->get('valor'));
             $financeiro->setData(new \DateTime($request->request->get('data')));
-            $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int) $request->request->get('pet_id') : null);
+            $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int)$request->request->get('pet_id') : null);
 
             $financeiroRepo->update($baseId, $financeiro);
             return $this->redirectToRoute('financeiro_index');
@@ -113,7 +114,7 @@ class FinanceiroController extends DefaultController
 
         return $this->render('financeiro/editar.html.twig', [
             'financeiro' => $financeiro,
-            'pets'       => $petRepo->findAllPets($baseId)
+            'pets' => $petRepo->findAllPets($baseId)
         ]);
     }
 
@@ -124,7 +125,7 @@ class FinanceiroController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->session->get('userId');
-        
+
         $financeiro = $financeiroRepo->findFinanceiro($baseId, $id);
 
         if (!$financeiro) {
@@ -138,11 +139,11 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/pendente/confirmar/{id}", name="financeiro_confirmar_pagamento", methods={"POST"})
      */
-    public function confirmarPagamento(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository, FinanceiroRepository $financeiroRepo): Response 
+    public function confirmarPagamento(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository, FinanceiroRepository $financeiroRepo): Response
     {
         $this->switchDB();
         $baseId = $this->session->get('userId');
-        
+
         $financeiroPendente = $financeiroPendenteRepository->findPendenteById($baseId, $id);
 
         if (!$financeiroPendente) {
@@ -155,9 +156,9 @@ class FinanceiroController extends DefaultController
         $financeiro->setValor($financeiroPendente['valor']);
         $financeiro->setData(new \DateTime());
         $financeiro->setPetId($financeiroPendente['pet_id']);
-        
+
         $financeiroRepo->save($baseId, $financeiro);
-        
+
         $financeiroPendenteRepository->deletePendente($baseId, $id);
 
         $this->addFlash('success', 'Pagamento confirmado e movido para o Financeiro Diário.');
@@ -172,7 +173,7 @@ class FinanceiroController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->session->get('userId');
-        
+
         $mesInicio = $request->query->get('mes_inicio');
         $mesFim = $request->query->get('mes_fim');
 
@@ -184,7 +185,7 @@ class FinanceiroController extends DefaultController
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        
+
         $sheet->setCellValue('A1', 'Data');
         $sheet->setCellValue('B1', 'Total');
 
@@ -212,9 +213,9 @@ class FinanceiroController extends DefaultController
         $this->switchDB();
         $baseId = $this->session->get('userId');
         $data = new \DateTime();
-        
+
         $fluxo = $this->getFluxoCaixa($baseId, $data);
-        
+
         return new JsonResponse([
             'total_entradas' => $fluxo['total_entradas'],
             'total_saidas' => $fluxo['total_saidas'],
@@ -334,7 +335,7 @@ class FinanceiroController extends DefaultController
         }
 
         // 🔹 5. Ordena por data
-        usort($movimentos, function($a, $b) {
+        usort($movimentos, function ($a, $b) {
             return $a['data'] <=> $b['data'];
         });
 

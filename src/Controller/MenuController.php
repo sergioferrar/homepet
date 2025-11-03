@@ -38,12 +38,12 @@ class MenuController extends DefaultController
             $menu->setIcone($request->request->get('icone'));
             $menu->setModulo($request->request->get('modulo'));
 
-            $repositorio = $this->getRepositorio(\App\Entity\Menu::class)->add($menu, true);    
+            $repositorio = $this->getRepositorio(\App\Entity\Menu::class)->add($menu, true);
 
             return $this->redirectToRoute('menu_index');
         }
 
-        $listaMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent'=>null]);
+        $listaMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => null]);
         $data = [];
         $data['menus'] = $listaMenu;
         $data['rota'] = $this->generateUrl('menu_new');
@@ -83,19 +83,19 @@ class MenuController extends DefaultController
             return $this->redirectToRoute('menu_index');
         }
 
-        $listaMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent'=>null]);
+        $listaMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => null]);
         $data = [];
         $data['menu'] = $menu;
         $data['menus'] = $listaMenu;
-        $data['rota'] = $this->generateUrl('menu_edit',['id' => $request->get('id')]);
+        $data['rota'] = $this->generateUrl('menu_edit', ['id' => $request->get('id')]);
         $data['modulos'] = $this->getRepositorio(\App\Entity\Modulo::class)->findAll();
-        
+
         return $this->render('menu/form.html.twig', $data);
     }
 
     /**
      * @Route("/listamenu", name="leftMenu")
-    */
+     */
     public function getMenu(Request $request): Response
     {
 
@@ -118,14 +118,14 @@ class MenuController extends DefaultController
             $modulo[] = $this->getRepositorio(\App\Entity\Modulo::class)->findOneBy(['descricao' => $row])->getId();
         }
 
-        $listaMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent'=>null]);
-        foreach($listaMenu as $menu){
+        $listaMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => null]);
+        foreach ($listaMenu as $menu) {
             $dataS = [];
-            
-            if(in_array($menu->getModulo(), $modulo)){
-                $listaSubMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent'=>$menu->getId()]);
-                if($listaSubMenu){                    
-                    foreach($listaSubMenu as $submenu){
+
+            if (in_array($menu->getModulo(), $modulo)) {
+                $listaSubMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => $menu->getId()]);
+                if ($listaSubMenu) {
+                    foreach ($listaSubMenu as $submenu) {
                         $dataS[] = $submenu;
                     }
                 }
@@ -134,7 +134,7 @@ class MenuController extends DefaultController
                     'menu' => $menu,
                     'submenu' => (!empty($dataS) ? $dataS : false)
                 ];
-            
+
             }
         }
         return $this->render('left-menu.html.twig', ['menuLateral' => $data]);

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use App\Entity\Agendamento;
@@ -23,13 +24,13 @@ class AgendamentoController extends DefaultController
     public function index(Request $request): Response
     {
         $this->switchDB();
-        $data              = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
-        $agendamentos      = $this->getRepositorio(Agendamento::class)->findByDate($this->session->get('userId'), $data);
+        $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
+        $agendamentos = $this->getRepositorio(Agendamento::class)->findByDate($this->session->get('userId'), $data);
         $totalAgendamentos = $this->getRepositorio(Agendamento::class)->contarAgendamentosPorData($this->session->get('userId'), $data);
 
         return $this->render('agendamento/index.html.twig', [
-            'agendamentos'      => $agendamentos,
-            'data'              => $data,
+            'agendamentos' => $agendamentos,
+            'data' => $data,
             'totalAgendamentos' => $totalAgendamentos,
         ]);
     }
@@ -53,7 +54,7 @@ class AgendamentoController extends DefaultController
             $agendamento->setStatus('aguardando');
             $agendamento->setTaxaTaxiDog(
                 isset($data['taxa_taxi_dog']) && $data['taxa_taxi_dog'] !== ''
-                    ? (float) $data['taxa_taxi_dog']
+                    ? (float)$data['taxa_taxi_dog']
                     : null
             );
             $agendamento->setStatus('aguardando');
@@ -80,8 +81,8 @@ class AgendamentoController extends DefaultController
         $donos = $this->getRepositorio(Agendamento::class)->findAllDonos($this->session->get('userId'));
 
         return $this->render('agendamento/novo.html.twig', [
-            'donos'    => $donos,
-            'pets'     => $this->getRepositorio(Agendamento::class)->findAllPets($this->session->get('userId')),
+            'donos' => $donos,
+            'pets' => $this->getRepositorio(Agendamento::class)->findAllPets($this->session->get('userId')),
             'servicos' => $this->getRepositorio(Agendamento::class)->findAllServicos($this->session->get('userId')),
         ]);
     }
@@ -92,14 +93,14 @@ class AgendamentoController extends DefaultController
     public function editar(Request $request, int $id): Response
     {
         $this->switchDB();
-        $repo  = $this->getRepositorio(Agendamento::class);
+        $repo = $this->getRepositorio(Agendamento::class);
         $dados = $this->getRepositorio(Agendamento::class)
             ->listaAgendamentoPorId($this->session->get('userId'), $request->get('id'));
-        
+
         $aps = $this->getRepositorio(Agendamento::class)
             ->listaApsPorId($this->session->get('userId'), $request->get('id'));
 
-        if (! $dados) {
+        if (!$dados) {
             throw $this->createNotFoundException('O agendamento não foi encontrado');
         }
 
@@ -107,17 +108,17 @@ class AgendamentoController extends DefaultController
             $data = $request->request->all();
 
             $userId = $this->session->get('userId');
-            
+
             $agendamento = new Agendamento();
             $agendamento->setId($id);
-            $agendamento->setConcluido((bool) $dados['concluido']);
+            $agendamento->setConcluido((bool)$dados['concluido']);
             $agendamento->setMetodoPagamento($data['metodo_pagamento']);
             $agendamento->setData(new \DateTime($data['data']));
             $agendamento->setHoraChegada(new \DateTime($data['hora_chegada']));
             $agendamento->setTaxiDog(isset($data['taxi_dog']) && $data['taxi_dog'] === 'sim');
             $agendamento->setTaxaTaxiDog(
                 isset($data['taxa_taxi_dog']) && $data['taxa_taxi_dog'] !== ''
-                    ? (float) $data['taxa_taxi_dog']
+                    ? (float)$data['taxa_taxi_dog']
                     : null
             );
 
@@ -151,7 +152,7 @@ class AgendamentoController extends DefaultController
     public function concluir(int $id): JsonResponse
     {
         $this->switchDB();
-        $repo  = $this->getRepositorio(Agendamento::class);
+        $repo = $this->getRepositorio(Agendamento::class);
         $dados = $repo->listaAgendamentoPorId($this->session->get('userId'), $id);
 
         if (!$dados) {
@@ -179,19 +180,19 @@ class AgendamentoController extends DefaultController
             $clientes[$clienteId]['servicos'][] = [
                 'servico_nome' => $row['servico_nome'],
                 'pet_nome' => $row['pet_nome'],
-                'valor' => (float) $row['valor'],
+                'valor' => (float)$row['valor'],
             ];
-            $clientes[$clienteId]['valor_total'] += (float) $row['valor'];
+            $clientes[$clienteId]['valor_total'] += (float)$row['valor'];
             $clientes[$clienteId]['petIds'][] = $row['petId'];
 
-            $totalGeral += (float) $row['valor'];
+            $totalGeral += (float)$row['valor'];
         }
 
         // Adicionar Táxi Dog ao total, se aplicável
         if ($dados['taxi_dog']) {
-            $totalGeral += (float) $dados['taxa_taxi_dog'];
+            $totalGeral += (float)$dados['taxa_taxi_dog'];
             foreach ($clientes as &$cliente) {
-                $cliente['valor_total'] += (float) $dados['taxa_taxi_dog'];
+                $cliente['valor_total'] += (float)$dados['taxa_taxi_dog'];
             }
         }
 
@@ -219,10 +220,10 @@ class AgendamentoController extends DefaultController
     public function alterarPagamento(int $id, Request $request): Response
     {
         $this->switchDB();
-        $repo  = $this->getRepositorio(Agendamento::class);
+        $repo = $this->getRepositorio(Agendamento::class);
         $dados = $repo->listaAgendamentoPorId($this->session->get('userId'), $id);
 
-        if (! $dados) {
+        if (!$dados) {
             return $this->json(['status' => 'erro', 'mensagem' => 'Agendamento não encontrado.'], Response::HTTP_NOT_FOUND);
         }
 
@@ -234,7 +235,7 @@ class AgendamentoController extends DefaultController
             'pacote_quinzenal',
         ];
 
-        if (! in_array($metodoPagamento, $metodosPermitidos, true)) {
+        if (!in_array($metodoPagamento, $metodosPermitidos, true)) {
             return $this->json(['status' => 'erro', 'mensagem' => 'Método de pagamento inválido.'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -253,10 +254,10 @@ class AgendamentoController extends DefaultController
     public function alterarHoraSaida(Request $request, int $id): Response
     {
         $this->switchDB();
-        $repo  = $this->getRepositorio(Agendamento::class);
+        $repo = $this->getRepositorio(Agendamento::class);
         $dados = $repo->listaAgendamentoPorId($this->session->get('userId'), $id);
 
-        if (! $dados) {
+        if (!$dados) {
             return $this->json(['status' => 'erro', 'mensagem' => 'O agendamento não foi encontrado.'], Response::HTTP_NOT_FOUND);
         }
 
@@ -280,10 +281,10 @@ class AgendamentoController extends DefaultController
     public function executarAcao(Request $request, int $id, string $acao): Response
     {
         $this->switchDB();
-        $repo  = $this->getRepositorio(Agendamento::class);
+        $repo = $this->getRepositorio(Agendamento::class);
         $dados = $repo->listaAgendamentoPorId($this->session->get('userId'), $id);
 
-        if (! $dados) {
+        if (!$dados) {
             return $this->json(['status' => 'erro', 'mensagem' => 'O agendamento não foi encontrado.'], Response::HTTP_NOT_FOUND);
         }
 
@@ -312,7 +313,7 @@ class AgendamentoController extends DefaultController
                         }
 
                         $clientes[$clienteId]['descricao'][] = "{$row['servico_nome']} para {$row['pet_nome']}";
-                        $clientes[$clienteId]['valor_total'] += (float) $row['valor'];
+                        $clientes[$clienteId]['valor_total'] += (float)$row['valor'];
                         $clientes[$clienteId]['petIds'][] = $row['petId'];
                     }
 
@@ -322,7 +323,7 @@ class AgendamentoController extends DefaultController
 
                         // Táxi Dog, apenas uma vez por cliente
                         if ($dados['taxi_dog']) {
-                            $info['valor_total'] += (float) $dados['taxa_taxi_dog'];
+                            $info['valor_total'] += (float)$dados['taxa_taxi_dog'];
                             $descricaoFinal .= ' + Táxi Dog';
                         }
 
@@ -339,9 +340,9 @@ class AgendamentoController extends DefaultController
                 $repo->updateConcluido($this->session->get('userId'), $id);
 
                 return $this->json([
-                    'status'    => 'success',
-                    'mensagem'  => 'Agendamento concluído com sucesso.',
-                    'id'        => $id,
+                    'status' => 'success',
+                    'mensagem' => 'Agendamento concluído com sucesso.',
+                    'id' => $id,
                     'concluido' => true,
                 ]);
 
@@ -357,14 +358,14 @@ class AgendamentoController extends DefaultController
 
                     if (!isset($clientes[$clienteId])) {
                         $clientes[$clienteId] = [
-                            'descricao'   => [],
+                            'descricao' => [],
                             'valor_total' => 0,
-                            'petIds'      => [],
+                            'petIds' => [],
                         ];
                     }
 
                     $clientes[$clienteId]['descricao'][] = "{$row['servico_nome']} para {$row['pet_nome']}";
-                    $clientes[$clienteId]['valor_total'] += (float) $row['valor'];
+                    $clientes[$clienteId]['valor_total'] += (float)$row['valor'];
                     $clientes[$clienteId]['petIds'][] = $row['petId'];
                 }
 
@@ -373,7 +374,7 @@ class AgendamentoController extends DefaultController
                     $descricaoFinal = "Pagamento pendente - " . implode(', ', $info['descricao']);
 
                     if ($dados['taxi_dog']) {
-                        $info['valor_total'] += (float) $dados['taxa_taxi_dog'];
+                        $info['valor_total'] += (float)$dados['taxa_taxi_dog'];
                         $descricaoFinal .= ' + Táxi Dog';
                     }
 
@@ -393,7 +394,7 @@ class AgendamentoController extends DefaultController
                         } catch (\Exception $e) {
                             error_log("Erro ao salvar no financeiro pendente: " . $e->getMessage());
                             return $this->json([
-                                'status'   => 'erro',
+                                'status' => 'erro',
                                 'mensagem' => 'Erro ao registrar no financeiro pendente: ' . $e->getMessage(),
                             ], Response::HTTP_INTERNAL_SERVER_ERROR);
                         }
@@ -408,19 +409,19 @@ class AgendamentoController extends DefaultController
                 $agendamento->setMetodoPagamento('pendente');
                 $agendamento->setHoraChegada($dados['horaChegada'] ? new \DateTime($dados['horaChegada']) : null);
                 $agendamento->setHoraSaida($dados['horaSaida'] ? new \DateTime($dados['horaSaida']) : null);
-                $agendamento->setTaxiDog((bool) $dados['taxi_dog']);
+                $agendamento->setTaxiDog((bool)$dados['taxi_dog']);
                 $agendamento->setTaxaTaxiDog(
                     isset($dados['taxa_taxi_dog']) && $dados['taxa_taxi_dog'] !== ''
-                        ? (float) $dados['taxa_taxi_dog']
+                        ? (float)$dados['taxa_taxi_dog']
                         : null
                 );
 
                 $repo->update($this->session->get('userId'), $agendamento);
 
                 return $this->json([
-                    'status'           => 'sucesso',
-                    'mensagem'         => 'Agendamento marcado como pendente e registrado no financeiro pendente.',
-                    'id'               => $id,
+                    'status' => 'sucesso',
+                    'mensagem' => 'Agendamento marcado como pendente e registrado no financeiro pendente.',
+                    'id' => $id,
                     'metodo_pagamento' => 'pendente',
                 ]);
 
@@ -428,7 +429,7 @@ class AgendamentoController extends DefaultController
                 return $this->json(['status' => 'erro', 'mensagem' => 'Ação inválida.'], Response::HTTP_BAD_REQUEST);
         }
 
-        
+
     }
 
     /**
@@ -447,13 +448,12 @@ class AgendamentoController extends DefaultController
 
         $cliente = $this->getRepositorio(\App\Entity\Cliente::class)->localizaTodosClientePorID($baseId, $donoId);
 
-        if (! $cliente) {
+        if (!$cliente) {
             return $this->json(['status' => 'erro', 'mensagem' => 'Cliente não encontrado.'], Response::HTTP_NOT_FOUND);
         }
 
         return $this->json(['status' => 'sucesso', 'cliente' => $cliente]);
     }
-
 
 
     /**
@@ -523,7 +523,7 @@ class AgendamentoController extends DefaultController
         return $this->json(['status' => 'sucesso', 'mensagem' => 'Status atualizado com sucesso.']);
     }
 
-     /**
+    /**
      * @Route("/concluir-pagamento/{id}", name="agendamento_concluir_pagamento", methods={"POST"})
      */
     public function concluirPagamento(Request $request, int $id): JsonResponse
@@ -541,7 +541,7 @@ class AgendamentoController extends DefaultController
             return $this->json(['status' => 'erro', 'mensagem' => 'Este agendamento já foi concluído anteriormente.'], Response::HTTP_BAD_REQUEST);
         }
 
-        $desconto = (float) $request->request->get('desconto', 0);
+        $desconto = (float)$request->request->get('desconto', 0);
         $metodoPagamento = $request->request->get('metodo_pagamento');
 
         $listaServicoPorAgendamento = $repo->listaApsPorId($this->session->get('userId'), $id);
@@ -560,16 +560,16 @@ class AgendamentoController extends DefaultController
             }
 
             $clientes[$clienteId]['descricao'][] = "{$row['servico_nome']} para {$row['pet_nome']}";
-            $clientes[$clienteId]['valor_total'] += (float) $row['valor'];
+            $clientes[$clienteId]['valor_total'] += (float)$row['valor'];
             $clientes[$clienteId]['petIds'][] = $row['petId'];
 
-            $totalGeral += (float) $row['valor'];
+            $totalGeral += (float)$row['valor'];
         }
 
         if ($dados['taxi_dog']) {
-            $totalGeral += (float) $dados['taxa_taxi_dog'];
+            $totalGeral += (float)$dados['taxa_taxi_dog'];
             foreach ($clientes as &$cliente) {
-                $cliente['valor_total'] += (float) $dados['taxa_taxi_dog'];
+                $cliente['valor_total'] += (float)$dados['taxa_taxi_dog'];
                 $cliente['descricao'][] = "Táxi Dog";
             }
         }
@@ -596,7 +596,7 @@ class AgendamentoController extends DefaultController
         $agendamento->setData(new \DateTime($dados['data']));
         $agendamento->setHoraChegada($dados['horaChegada'] ? new \DateTime($dados['horaChegada']) : null);
         $agendamento->setHoraSaida($dados['horaSaida'] ? new \DateTime($dados['horaSaida']) : null);
-        $agendamento->setTaxiDog((bool) $dados['taxi_dog']);
+        $agendamento->setTaxiDog((bool)$dados['taxi_dog']);
         $agendamento->setTaxaTaxiDog($dados['taxa_taxi_dog'] ?? null);
         $agendamento->setConcluido(true);
         $agendamento->setMetodoPagamento($metodoPagamento);

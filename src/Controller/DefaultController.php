@@ -58,17 +58,17 @@ class DefaultController extends AbstractController
         $this->estabelecimentoId = $this->session->get('estabelecimentoId');
     }
 
-    public function switchDB():void
-    {   
+    public function switchDB(): void
+    {
         $conexao = $this->managerRegistry->getConnection()->getParams();
-        
+
         $estabelecimentoId = "{$_ENV['DBNAMETENANT']}";
 
         (new DynamicConnectionManager($this->managerRegistry))->switchDatabase($estabelecimentoId, $estabelecimentoId);
     }
 
-    public function restauraLoginDB():void
-    {   
+    public function restauraLoginDB(): void
+    {
         (new DynamicConnectionManager($this->managerRegistry))->restoreOriginal();
     }
 
@@ -171,23 +171,24 @@ class DefaultController extends AbstractController
 
     public function verificarPlanoPorPeriodo($dataInicio, $dataFim)
     {
-        if($dataInicio && $dataFim){
+        if ($dataInicio && $dataFim) {
 
             $hoje = new \DateTime();
 
             // dd($dataInicio, $dataFim    );
             if ($hoje > $dataFim) {
                 return "Seu plano expirou em " . $dataFim->format('d/m/Y') . ". Por favor, renove seu plano.";
-            } 
+            }
         }
 
         return false;
     }
+
     /**
      * Retorna o ID base da sessão (estabelecimento/usuário)
      */
     public function getIdBase(): int
     {
-        return (int) $this->session->get('userId');
+        return (int)$this->session->get('userId');
     }
 }

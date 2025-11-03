@@ -22,7 +22,7 @@ class ClienteController extends DefaultController
     {
         $this->switchDB();
         $search = $request->query->get('search');
-        $clientes =  $this->getRepositorio(Cliente::class)->search($this->session->get('userId'), $search);
+        $clientes = $this->getRepositorio(Cliente::class)->search($this->session->get('userId'), $search);
 
         return $this->render('cliente/index.html.twig', ['clientes' => $clientes]);
     }
@@ -67,10 +67,11 @@ class ClienteController extends DefaultController
      * @Route("/editar/{id}", name="cliente_editar", methods={"GET", "POST"})
      */
     public function editar(
-        Request $request,
-        int $id,
+        Request           $request,
+        int               $id,
         ClienteRepository $clienteRepository
-    ): Response {
+    ): Response
+    {
         $this->switchDB();
         $baseId = $this->session->get('userId');
 
@@ -83,18 +84,18 @@ class ClienteController extends DefaultController
 
         if ($request->isMethod('POST')) {
             $clienteAtualizado = [
-                'id'          => $cliente['id'],
-                'nome'        => $request->get('nome'),
-                'cpf'         => $request->get('cpf'),
-                'email'       => $request->get('email'),
-                'telefone'    => $request->get('telefone'),
-                'rua'         => $request->get('rua'),
-                'numero'      => $request->get('numero'),
+                'id' => $cliente['id'],
+                'nome' => $request->get('nome'),
+                'cpf' => $request->get('cpf'),
+                'email' => $request->get('email'),
+                'telefone' => $request->get('telefone'),
+                'rua' => $request->get('rua'),
+                'numero' => $request->get('numero'),
                 'complemento' => $request->get('complemento'),
-                'bairro'      => $request->get('bairro'),
-                'cidade'      => $request->get('cidade'),
-                'whatsapp'    => $request->get('whatsapp') ?? '',
-                'cep'         => $request->get('cep'),
+                'bairro' => $request->get('bairro'),
+                'cidade' => $request->get('cidade'),
+                'whatsapp' => $request->get('whatsapp') ?? '',
+                'cep' => $request->get('cep'),
             ];
 
             $clienteRepository->update($baseId, $clienteAtualizado);
@@ -205,8 +206,6 @@ class ClienteController extends DefaultController
             ])
         ]);
     }
-
-
 
 
 }

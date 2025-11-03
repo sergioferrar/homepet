@@ -18,7 +18,7 @@ class VacinaController extends DefaultController
 {
     /**
      * Lista todas as vacinas do pet
-     * 
+     *
      * @Route("/pet/{petId}/vacinas", name="clinica_vacinas", methods={"GET"})
      */
     public function listar(int $petId, VacinaRepository $repo): Response
@@ -33,14 +33,14 @@ class VacinaController extends DefaultController
 
         return $this->render('clinica/vacina/index.html.twig', [
             'vacinas' => $vacinas,
-            'pet'     => $pet,
-            'petId'   => $petId,
+            'pet' => $pet,
+            'petId' => $petId,
         ]);
     }
 
     /**
      * Cria uma nova vacina (POST)
-     * 
+     *
      * @Route("/pet/{petId}/vacina/nova", name="clinica_vacina_nova", methods={"POST"})
      */
     public function novaVacina(int $petId, Request $request, VacinaRepository $repo): JsonResponse
@@ -70,7 +70,7 @@ class VacinaController extends DefaultController
 
     /**
      * Remove uma vacina
-     * 
+     *
      * @Route("/pet/{petId}/vacina/{id}/remover", name="clinica_vacina_remover", methods={"POST"})
      */
     public function remover(int $petId, int $id, VacinaRepository $repo, Request $request): JsonResponse
@@ -79,7 +79,7 @@ class VacinaController extends DefaultController
         $baseId = $this->getIdBase();
 
         $vacina = $repo->buscarPorId($baseId, $id);
-        if (! $vacina) {
+        if (!$vacina) {
             return new JsonResponse(['ok' => false, 'msg' => 'Vacina não encontrada']);
         }
 

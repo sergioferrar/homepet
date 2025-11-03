@@ -23,25 +23,25 @@ class OrcamentoController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
-        
+
         $status = $request->query->get('status', 'todos');
         $busca = $request->query->get('busca', '');
 
         $qb = $em->createQueryBuilder();
         $qb->select('o')
-           ->from(Orcamento::class, 'o')
-           ->where('o.estabelecimentoId = :estab')
-           ->setParameter('estab', $baseId)
-           ->orderBy('o.dataCriacao', 'DESC');
+            ->from(Orcamento::class, 'o')
+            ->where('o.estabelecimentoId = :estab')
+            ->setParameter('estab', $baseId)
+            ->orderBy('o.dataCriacao', 'DESC');
 
         if ($status !== 'todos') {
             $qb->andWhere('o.status = :status')
-               ->setParameter('status', $status);
+                ->setParameter('status', $status);
         }
 
         if ($busca) {
             $qb->andWhere('o.clienteNome LIKE :busca OR o.petNome LIKE :busca')
-               ->setParameter('busca', '%' . $busca . '%');
+                ->setParameter('busca', '%' . $busca . '%');
         }
 
         $orcamentos = $qb->getQuery()->getResult();
@@ -135,11 +135,11 @@ class OrcamentoController extends DefaultController
             $orcamento->setValorFinal($data['valorFinal']);
             $orcamento->setStatus('pendente');
             $orcamento->setDataCriacao(new \DateTime());
-            
+
             if (!empty($data['dataValidade'])) {
                 $orcamento->setDataValidade(new \DateTime($data['dataValidade']));
             }
-            
+
             $orcamento->setObservacoes($data['observacoes'] ?? null);
 
             $em->persist($orcamento);
@@ -180,7 +180,7 @@ class OrcamentoController extends DefaultController
     public function visualizar(int $id, EntityManagerInterface $em): Response
     {
         $this->switchDB();
-        
+
         $orcamento = $em->getRepository(Orcamento::class)->find($id);
 
         if (!$orcamento) {
@@ -204,16 +204,16 @@ class OrcamentoController extends DefaultController
     {
         try {
             $this->switchDB();
-            
+
             $orcamento = $em->getRepository(Orcamento::class)->find($id);
-            
+
             if (!$orcamento) {
                 return new JsonResponse(['success' => false, 'message' => 'Orçamento não encontrado'], 404);
             }
 
             $novoStatus = $request->request->get('status');
             $orcamento->setStatus($novoStatus);
-            
+
             $em->flush();
 
             return new JsonResponse([
@@ -236,9 +236,9 @@ class OrcamentoController extends DefaultController
     {
         try {
             $this->switchDB();
-            
+
             $orcamento = $em->getRepository(Orcamento::class)->find($id);
-            
+
             if (!$orcamento) {
                 return new JsonResponse(['success' => false, 'message' => 'Orçamento não encontrado'], 404);
             }
@@ -269,7 +269,7 @@ class OrcamentoController extends DefaultController
         try {
             $this->switchDB();
             $baseId = $this->getIdBase();
-            
+
             // Usar repositório para buscar pets
             // Nota: dono_id é VARCHAR na tabela, então convertemos o ID para string
             $pets = $em->getRepository(\App\Entity\Pet::class)
@@ -293,10 +293,10 @@ class OrcamentoController extends DefaultController
             }
 
             return new JsonResponse(['success' => true, 'pets' => $result]);
-            
+
         } catch (\Exception $e) {
             return new JsonResponse([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Erro ao buscar pets: ' . $e->getMessage()
             ], 500);
         }

@@ -19,14 +19,14 @@ class EstabelecimentoController extends DefaultController
      */
     public function index(): Response
     {
-        if($this->security->getUser()->getAccessLevel() == 'Admin'){
-            return $this->redirectToRoute('petshop_edit',['eid'=>$this->security->getUser()->getId()]);
+        if ($this->security->getUser()->getAccessLevel() == 'Admin') {
+            return $this->redirectToRoute('petshop_edit', ['eid' => $this->security->getUser()->getId()]);
         }
-        
+
         $estabelecimentos = $this->getRepositorio(\App\Entity\Estabelecimento::class)->listaEstabelecimentos($this->session->get('userId'));
 
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
-        ->findById($this->security->getUser()->getPetshopId())[0];
+            ->findById($this->security->getUser()->getPetshopId())[0];
 
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
 
@@ -103,8 +103,8 @@ class EstabelecimentoController extends DefaultController
         //            $this->tempDirManager->deletarDiretorio();
         //  }
 
-                return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId(), 'planoId' => $plano]);
-            }
+        return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId(), 'planoId' => $plano]);
+    }
 
     /**
      * @Route("/landing/usuario/cadastrar", name="petshop_usuario_cadastrar")
@@ -121,16 +121,16 @@ class EstabelecimentoController extends DefaultController
             switch ($request->get('access_level')) {
                 case 'Super Admin':
                 case 'Admin':
-                $roles = ['ROLE_ADMIN'];
-                break;
+                    $roles = ['ROLE_ADMIN'];
+                    break;
                 case 'Atendente':
                 case 'Tosador':
                 case 'Balconista':
-                $roles = ['ROLE_ADMIN_USER'];
-                break;
+                    $roles = ['ROLE_ADMIN_USER'];
+                    break;
                 default:
-                $roles = ['ROLE_USER'];
-                break;
+                    $roles = ['ROLE_USER'];
+                    break;
             }
 
             $usuario->setRoles($roles);
@@ -138,7 +138,7 @@ class EstabelecimentoController extends DefaultController
 
             $this->getRepositorio(Usuario::class)->add($usuario, true);
 
-            $confirmationUrl = $this->generateUrl('confirma_cadastro', ['estabelecimento'=>$request->get('estabelecimento')], UrlGeneratorInterface::ABSOLUTE_URL);
+            $confirmationUrl = $this->generateUrl('confirma_cadastro', ['estabelecimento' => $request->get('estabelecimento')], UrlGeneratorInterface::ABSOLUTE_URL);
             $html = $this->render('estabelecimento/email.html.twig', [
                 'confirmation_link' => $confirmationUrl,
             ])->getContent();
@@ -199,10 +199,10 @@ class EstabelecimentoController extends DefaultController
 
             $dataPagamento = [
                 'comprador' => $comprador,
-                'planoId'=>$plano->getId(),
-                'title'=>$plano->getTitulo(),
-                'price'=> 1.00,//$plano->getValor(),
-                'email'=> $usario->getEmail(),
+                'planoId' => $plano->getId(),
+                'title' => $plano->getTitulo(),
+                'price' => 1.00,//$plano->getValor(),
+                'email' => $usario->getEmail(),
             ];
 
             return $this->render('pagamento/pagamento.html.twig', $dataPagamento);
@@ -210,12 +210,12 @@ class EstabelecimentoController extends DefaultController
             // $code = $mercadoPagoService->createPreference($dataPagamento);
             // dd($code);
             // return $this->redirect($code['init_point']);
-        // } catch(\Exception $e){
-        //     dd($e);
-        // }
-        // return $this->render('estabelecimento/confirmacao.html.twig', [
-        //     'estabelecimento' => $request->get('estabelecimento'),
-        // ]);
+            // } catch(\Exception $e){
+            //     dd($e);
+            // }
+            // return $this->render('estabelecimento/confirmacao.html.twig', [
+            //     'estabelecimento' => $request->get('estabelecimento'),
+            // ]);
         } catch (\Exception $e) {
             // Trate o erro conforme necessário
             throw $e;
@@ -223,11 +223,10 @@ class EstabelecimentoController extends DefaultController
     }
 
 
-
     /**
      * @Route("/estabelecimento/renovacao/{eid}", name="petshop_renovacao")
      */
-    public function renovaAssinatura(Request $request):Response
+    public function renovaAssinatura(Request $request): Response
     {
         $dataAtual = new \DateTime();
 
@@ -238,7 +237,7 @@ class EstabelecimentoController extends DefaultController
         $dataFinal = $dataAtual->format('Y-m-d H:i:s'); // ou 'Y-m-d H:i:s' se precisar da hora
 
         $this->getRepositorio(\App\Entity\Estabelecimento::class)
-        ->renovacao($this->session->get('userId'), $request->get('eid'), (new \DateTime())->format('Y-m-d H:i:s'), $dataFinal);
+            ->renovacao($this->session->get('userId'), $request->get('eid'), (new \DateTime())->format('Y-m-d H:i:s'), $dataFinal);
 
         return $this->redirectToRoute('app_estabelecimento');
     }
@@ -250,7 +249,7 @@ class EstabelecimentoController extends DefaultController
     {
         $loja = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($request->get('eid'));
         $data = [];
-        $data['loja']=$loja;
-        return $this->render('estabelecimento/edit.html.twig',$data);
+        $data['loja'] = $loja;
+        return $this->render('estabelecimento/edit.html.twig', $data);
     }
 }

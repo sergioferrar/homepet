@@ -2,15 +2,15 @@
 
 namespace App\Controller;
 
-use App\Entity\Venda;
-use App\Entity\VendaItem;
-use App\Entity\Servico;
-use App\Entity\Produto;
+use App\Entity\CaixaMovimento;
+use App\Entity\Cliente;
+use App\Entity\EstoqueMovimento;
 use App\Entity\Financeiro;
 use App\Entity\FinanceiroPendente;
-use App\Entity\EstoqueMovimento;
-use App\Entity\Cliente;
-use App\Entity\CaixaMovimento;
+use App\Entity\Produto;
+use App\Entity\Servico;
+use App\Entity\Venda;
+use App\Entity\VendaItem;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -43,27 +43,27 @@ class PdvController extends DefaultController
 
         foreach ($produtos as $p) {
             $itens[] = [
-                'id'       => $p->getId(),
-                'nome'     => $p->getNome(),
-                'valor'    => $p->getPrecoVenda() ?? 0,
-                'estoque'  => $p->getEstoqueAtual() ?? 0,
-                'tipo'     => 'Produto'
+                'id' => $p->getId(),
+                'nome' => $p->getNome(),
+                'valor' => $p->getPrecoVenda() ?? 0,
+                'estoque' => $p->getEstoqueAtual() ?? 0,
+                'tipo' => 'Produto',
             ];
         }
 
         foreach ($servicos as $s) {
             $itens[] = [
-                'id'       => $s->getId(),
-                'nome'     => $s->getNome(),
-                'valor'    => $s->getValor() ?? 0,
-                'estoque'  => null,
-                'tipo'     => 'Serviço'
+                'id' => $s->getId(),
+                'nome' => $s->getNome(),
+                'valor' => $s->getValor() ?? 0,
+                'estoque' => null,
+                'tipo' => 'Serviço',
             ];
         }
 
         return $this->render('clinica/pdv.html.twig', [
             'produtos' => $itens,
-            'clientes' => $clientes
+            'clientes' => $clientes,
         ]);
     }
 
@@ -96,12 +96,12 @@ class PdvController extends DefaultController
         foreach ($dados['itens'] as $item) {
             if ($item['tipo'] === 'Produto') {
                 $produto = $em->getRepository(Produto::class)
-                              ->findOneBy(['id' => $item['id'], 'estabelecimentoId' => $baseId]);
-                
+                    ->findOneBy(['id' => $item['id'], 'estabelecimentoId' => $baseId]);
+
                 if (!$produto) {
                     return new JsonResponse([
                         'ok' => false,
-                        'msg' => "❌ Produto '{$item['nome']}' não encontrado."
+                        'msg' => "❌ Produto '{$item['nome']}' não encontrado.",
                     ], 404);
                 }
 
@@ -109,7 +109,7 @@ class PdvController extends DefaultController
                 if ($estoqueAtual < $item['quantidade']) {
                     return new JsonResponse([
                         'ok' => false,
-                        'msg' => "❌ Estoque insuficiente para '{$produto->getNome()}'. Disponível: {$estoqueAtual}"
+                        'msg' => "❌ Estoque insuficiente para '{$produto->getNome()}'. Disponível: {$estoqueAtual}",
                     ], 400);
                 }
 
@@ -124,7 +124,7 @@ class PdvController extends DefaultController
         $venda->setTotal($dados['total']);
         $venda->setMetodoPagamento($dados['metodo']);
         $venda->setData(new \DateTime());
-        
+
         // 🔹 Campos adicionais (troco, bandeira, parcelas, observação, pet)
         if (!empty($dados['troco'])) {
             $venda->setTroco($dados['troco']);
@@ -172,9 +172,9 @@ class PdvController extends DefaultController
                 $mov->setOrigem('Venda PDV #' . ($venda->getId() ?? 'novo'));
                 $mov->setQuantidade($item['quantidade']);
                 $mov->setData(new \DateTime());
-                $mov->setObservacao("Venda para: " . ($cliente ? $cliente->getNome() : 'Consumidor Final') . 
-                                   " | Estoque anterior: {$estoqueAnterior} | Novo estoque: {$novoEstoque}");
-                
+                $mov->setObservacao("Venda para: " . ($cliente ? $cliente->getNome() : 'Consumidor Final') .
+                    " | Estoque anterior: {$estoqueAnterior} | Novo estoque: {$novoEstoque}");
+
                 $em->persist($produto);
                 $em->persist($mov);
             }
@@ -184,8 +184,8 @@ class PdvController extends DefaultController
         if (abs($totalCalculado - $dados['total']) > 0.01) {
             return new JsonResponse([
                 'ok' => false,
-                'msg' => "❌ Divergência no total. Calculado: R$ " . number_format($totalCalculado, 2, ',', '.') . 
-                        " | Informado: R$ " . number_format($dados['total'], 2, ',', '.')
+                'msg' => "❌ Divergência no total. Calculado: R$ " . number_format($totalCalculado, 2, ',', '.') .
+                    " | Informado: R$ " . number_format($dados['total'], 2, ',', '.'),
             ], 400);
         }
 
@@ -214,7 +214,7 @@ class PdvController extends DefaultController
             $fin->setTipo('ENTRADA');
             $fin->setEstabelecimentoId($baseId);
             $em->persist($fin);
-            
+
             // ⚠️ NÃO registra no CaixaMovimento para evitar duplicação no fluxo de caixa
             // O Financeiro já é capturado no fluxo de caixa
         }
@@ -222,10 +222,10 @@ class PdvController extends DefaultController
         $em->flush();
 
         return new JsonResponse([
-            'ok' => true, 
+            'ok' => true,
             'msg' => '✅ Venda registrada com sucesso!',
             'venda_id' => $venda->getId(),
-            'total' => number_format($dados['total'], 2, ',', '.')
+            'total' => number_format($dados['total'], 2, ',', '.'),
         ]);
     }
 
@@ -292,7 +292,7 @@ class PdvController extends DefaultController
             if ($saldoAtual < $dados['valor']) {
                 return new JsonResponse([
                     'ok' => false,
-                    'msg' => '❌ Saldo insuficiente no caixa. Disponível: R$ ' . number_format($saldoAtual, 2, ',', '.')
+                    'msg' => '❌ Saldo insuficiente no caixa. Disponível: R$ ' . number_format($saldoAtual, 2, ',', '.'),
                 ], 400);
             }
         }
@@ -324,113 +324,111 @@ class PdvController extends DefaultController
 
         $novoSaldo = $saldoAtual - $dados['valor'];
         return new JsonResponse([
-            'ok' => true, 
+            'ok' => true,
             'msg' => '💸 Saída registrada com sucesso!',
             'valor' => number_format($dados['valor'], 2, ',', '.'),
             'saldo_anterior' => number_format($saldoAtual, 2, ',', '.'),
-            'saldo_atual' => number_format($novoSaldo, 2, ',', '.')
+            'saldo_atual' => number_format($novoSaldo, 2, ',', '.'),
         ]);
     }
 
-    
-/**
- * @Route("/caixa", name="clinica_pdv_caixa", methods={"GET"})
- */
-public function caixa(EntityManagerInterface $em): Response
-{
-    $this->switchDB();
-    $baseId = $this->getIdBase();
+    /**
+     * @Route("/caixa", name="clinica_pdv_caixa", methods={"GET"})
+     */
+    public function caixa(EntityManagerInterface $em): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
 
-    // 🔹 Define o intervalo do dia atual (00:00 até 23:59)
-    $inicioDia = (new \DateTime('today'))->setTime(0, 0, 0);
-    $fimDia = (new \DateTime('today'))->setTime(23, 59, 59);
+        // 🔹 Define o intervalo do dia atual (00:00 até 23:59)
+        $inicioDia = (new \DateTime('today'))->setTime(0, 0, 0);
+        $fimDia = (new \DateTime('today'))->setTime(23, 59, 59);
 
-    $repoVenda = $em->getRepository(\App\Entity\Venda::class);
-    $repoFinanceiro = $em->getRepository(\App\Entity\Financeiro::class);
-    $repoCaixa = $em->getRepository(\App\Entity\CaixaMovimento::class);
+        $repoVenda = $em->getRepository(\App\Entity\Venda::class);
+        $repoFinanceiro = $em->getRepository(\App\Entity\Financeiro::class);
+        $repoCaixa = $em->getRepository(\App\Entity\CaixaMovimento::class);
 
-    // 🔹 1. Busca todos os lançamentos do financeiro de hoje (entradas)
-    $financeiros = $repoFinanceiro->createQueryBuilder('f')
-        ->where('f.estabelecimentoId = :estab')
-        ->andWhere('f.data BETWEEN :inicio AND :fim')
-        ->setParameter('estab', $baseId)
-        ->setParameter('inicio', $inicioDia)
-        ->setParameter('fim', $fimDia)
-        ->orderBy('f.data', 'ASC')
-        ->getQuery()
-        ->getResult();
+        // 🔹 1. Busca todos os lançamentos do financeiro de hoje (entradas)
+        $financeiros = $repoFinanceiro->createQueryBuilder('f')
+            ->where('f.estabelecimentoId = :estab')
+            ->andWhere('f.data BETWEEN :inicio AND :fim')
+            ->setParameter('estab', $baseId)
+            ->setParameter('inicio', $inicioDia)
+            ->setParameter('fim', $fimDia)
+            ->orderBy('f.data', 'ASC')
+            ->getQuery()
+            ->getResult();
 
-    $entradas = 0;
-    foreach ($financeiros as $f) {
-        $entradas += floatval($f->getValor());
+        $entradas = 0;
+        foreach ($financeiros as $f) {
+            $entradas += floatval($f->getValor());
+        }
+
+        // 🔹 2. Busca as saídas do caixa manual
+        $saidasRepo = $repoCaixa->createQueryBuilder('c')
+            ->where('c.estabelecimentoId = :estab')
+            ->andWhere('c.data BETWEEN :inicio AND :fim')
+            ->setParameter('estab', $baseId)
+            ->setParameter('inicio', $inicioDia)
+            ->setParameter('fim', $fimDia)
+            ->orderBy('c.data', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $saidas = 0;
+        foreach ($saidasRepo as $s) {
+            $saidas += floatval($s->getValor());
+        }
+
+        // 🔹 3. Calcula saldo
+        $saldo = $entradas - $saidas;
+
+        // 🔹 4. Totais de vendas
+        $totalGeral = 0;
+        $totais = [];
+        if (method_exists($repoVenda, 'totalPorFormaPagamento')) {
+            $totais = $repoVenda->totalPorFormaPagamento($baseId, new \DateTime());
+        }
+        if (method_exists($repoVenda, 'totalGeralDoDia')) {
+            $totalGeral = $repoVenda->totalGeralDoDia($baseId, new \DateTime());
+        }
+
+        // 🔹 5. Junta todos os registros pro Twig
+        $registros = [];
+
+        foreach ($financeiros as $f) {
+            $registros[] = [
+                'data' => $f->getData(),
+                'descricao' => $f->getDescricao(),
+                'metodoPagamento' => $f->getMetodoPagamento(),
+                'valor' => $f->getValor(),
+                'tipo' => 'ENTRADA',
+            ];
+        }
+
+        foreach ($saidasRepo as $s) {
+            $registros[] = [
+                'data' => $s->getData(),
+                'descricao' => $s->getDescricao(),
+                'metodoPagamento' => 'Caixa Manual',
+                'valor' => $s->getValor(),
+                'tipo' => 'SAIDA',
+            ];
+        }
+
+        // 🔹 Ordena por data
+        usort($registros, fn($a, $b) => $a['data'] <=> $b['data']);
+
+        return $this->render('clinica/pdv_caixa.html.twig', [
+            'data' => new \DateTime(),
+            'registros' => $registros,
+            'entradas' => $entradas,
+            'saidas' => $saidas,
+            'saldo' => $saldo,
+            'totais' => $totais,
+            'totalGeral' => $totalGeral,
+        ]);
     }
-
-    // 🔹 2. Busca as saídas do caixa manual
-    $saidasRepo = $repoCaixa->createQueryBuilder('c')
-        ->where('c.estabelecimentoId = :estab')
-        ->andWhere('c.data BETWEEN :inicio AND :fim')
-        ->setParameter('estab', $baseId)
-        ->setParameter('inicio', $inicioDia)
-        ->setParameter('fim', $fimDia)
-        ->orderBy('c.data', 'ASC')
-        ->getQuery()
-        ->getResult();
-
-    $saidas = 0;
-    foreach ($saidasRepo as $s) {
-        $saidas += floatval($s->getValor());
-    }
-
-    // 🔹 3. Calcula saldo
-    $saldo = $entradas - $saidas;
-
-    // 🔹 4. Totais de vendas
-    $totalGeral = 0;
-    $totais = [];
-    if (method_exists($repoVenda, 'totalPorFormaPagamento')) {
-        $totais = $repoVenda->totalPorFormaPagamento($baseId, new \DateTime());
-    }
-    if (method_exists($repoVenda, 'totalGeralDoDia')) {
-        $totalGeral = $repoVenda->totalGeralDoDia($baseId, new \DateTime());
-    }
-
-    // 🔹 5. Junta todos os registros pro Twig
-    $registros = [];
-
-    foreach ($financeiros as $f) {
-        $registros[] = [
-            'data' => $f->getData(),
-            'descricao' => $f->getDescricao(),
-            'metodoPagamento' => $f->getMetodoPagamento(),
-            'valor' => $f->getValor(),
-            'tipo' => 'ENTRADA'
-        ];
-    }
-
-    foreach ($saidasRepo as $s) {
-        $registros[] = [
-            'data' => $s->getData(),
-            'descricao' => $s->getDescricao(),
-            'metodoPagamento' => 'Caixa Manual',
-            'valor' => $s->getValor(),
-            'tipo' => 'SAIDA'
-        ];
-    }
-
-    // 🔹 Ordena por data
-    usort($registros, fn($a, $b) => $a['data'] <=> $b['data']);
-
-    return $this->render('clinica/pdv_caixa.html.twig', [
-        'data'       => new \DateTime(),
-        'registros'  => $registros,
-        'entradas'   => $entradas,
-        'saidas'     => $saidas,
-        'saldo'      => $saldo,
-        'totais'     => $totais,
-        'totalGeral' => $totalGeral,
-    ]);
-}
-
 
     /**
      * @Route("/listar", name="clinica_pdv_listar", methods={"GET"})
@@ -489,7 +487,7 @@ public function caixa(EntityManagerInterface $em): Response
 
         // 🔹 Busca produto
         $produto = $em->getRepository(Produto::class)
-                     ->findOneBy(['id' => $dados['produto_id'], 'estabelecimentoId' => $baseId]);
+            ->findOneBy(['id' => $dados['produto_id'], 'estabelecimentoId' => $baseId]);
 
         if (!$produto) {
             return new JsonResponse(['ok' => false, 'msg' => 'Produto não encontrado.'], 404);
@@ -520,7 +518,7 @@ public function caixa(EntityManagerInterface $em): Response
             'produto' => $produto->getNome(),
             'estoque_anterior' => $estoqueAnterior,
             'quantidade_entrada' => $dados['quantidade'],
-            'estoque_atual' => $novoEstoque
+            'estoque_atual' => $novoEstoque,
         ]);
     }
 
@@ -545,7 +543,7 @@ public function caixa(EntityManagerInterface $em): Response
 
         // 🔹 Busca produto
         $produto = $em->getRepository(Produto::class)
-                     ->findOneBy(['id' => $dados['produto_id'], 'estabelecimentoId' => $baseId]);
+            ->findOneBy(['id' => $dados['produto_id'], 'estabelecimentoId' => $baseId]);
 
         if (!$produto) {
             return new JsonResponse(['ok' => false, 'msg' => 'Produto não encontrado.'], 404);
@@ -554,7 +552,7 @@ public function caixa(EntityManagerInterface $em): Response
         // 🔹 Calcula diferença
         $estoqueAnterior = $produto->getEstoqueAtual() ?? 0;
         $diferenca = $dados['novo_estoque'] - $estoqueAnterior;
-        
+
         if ($diferenca == 0) {
             return new JsonResponse(['ok' => false, 'msg' => 'O estoque já está no valor informado.'], 400);
         }
@@ -571,7 +569,7 @@ public function caixa(EntityManagerInterface $em): Response
         $mov->setQuantidade(abs($diferenca));
         $mov->setData(new \DateTime());
         $mov->setObservacao(
-            ($dados['motivo'] ?? 'Ajuste de estoque') . 
+            ($dados['motivo'] ?? 'Ajuste de estoque') .
             " | Estoque anterior: {$estoqueAnterior} | Novo estoque: {$dados['novo_estoque']} | " .
             ($diferenca > 0 ? "Acréscimo: +{$diferenca}" : "Redução: {$diferenca}")
         );
@@ -586,7 +584,7 @@ public function caixa(EntityManagerInterface $em): Response
             'produto' => $produto->getNome(),
             'estoque_anterior' => $estoqueAnterior,
             'estoque_atual' => $dados['novo_estoque'],
-            'diferenca' => $diferenca
+            'diferenca' => $diferenca,
         ]);
     }
 
@@ -601,7 +599,7 @@ public function caixa(EntityManagerInterface $em): Response
 
         // 🔹 Busca produto
         $produto = $em->getRepository(Produto::class)
-                     ->findOneBy(['id' => $produtoId, 'estabelecimentoId' => $baseId]);
+            ->findOneBy(['id' => $produtoId, 'estabelecimentoId' => $baseId]);
 
         if (!$produto) {
             return new JsonResponse(['ok' => false, 'msg' => 'Produto não encontrado.'], 404);
@@ -609,24 +607,24 @@ public function caixa(EntityManagerInterface $em): Response
 
         // 🔹 Busca movimentos
         $movimentos = $em->getRepository(EstoqueMovimento::class)
-                        ->createQueryBuilder('m')
-                        ->where('m.produto = :produto')
-                        ->andWhere('m.estabelecimentoId = :estab')
-                        ->setParameter('produto', $produto)
-                        ->setParameter('estab', $baseId)
-                        ->orderBy('m.data', 'DESC')
-                        ->setMaxResults(50)
-                        ->getQuery()
-                        ->getResult();
+            ->createQueryBuilder('m')
+            ->where('m.produto = :produto')
+            ->andWhere('m.estabelecimentoId = :estab')
+            ->setParameter('produto', $produto)
+            ->setParameter('estab', $baseId)
+            ->orderBy('m.data', 'DESC')
+            ->setMaxResults(50)
+            ->getQuery()
+            ->getResult();
 
-        $dados = array_map(function($m) {
+        $dados = array_map(function ($m) {
             return [
                 'id' => $m->getId(),
                 'data' => $m->getData()->format('d/m/Y H:i'),
                 'tipo' => $m->getTipo(),
                 'quantidade' => $m->getQuantidade(),
                 'origem' => $m->getOrigem(),
-                'observacao' => $m->getObservacao()
+                'observacao' => $m->getObservacao(),
             ];
         }, $movimentos);
 
@@ -635,9 +633,9 @@ public function caixa(EntityManagerInterface $em): Response
             'produto' => [
                 'id' => $produto->getId(),
                 'nome' => $produto->getNome(),
-                'estoque_atual' => $produto->getEstoqueAtual() ?? 0
+                'estoque_atual' => $produto->getEstoqueAtual() ?? 0,
             ],
-            'movimentos' => $dados
+            'movimentos' => $dados,
         ]);
     }
 
@@ -652,29 +650,29 @@ public function caixa(EntityManagerInterface $em): Response
 
         // 🔹 Busca produtos com estoque baixo (menos de 10 unidades)
         $produtos = $em->getRepository(Produto::class)
-                      ->createQueryBuilder('p')
-                      ->where('p.estabelecimentoId = :estab')
-                      ->andWhere('p.estoqueAtual < :minimo')
-                      ->setParameter('estab', $baseId)
-                      ->setParameter('minimo', 10)
-                      ->orderBy('p.estoqueAtual', 'ASC')
-                      ->getQuery()
-                      ->getResult();
+            ->createQueryBuilder('p')
+            ->where('p.estabelecimentoId = :estab')
+            ->andWhere('p.estoqueAtual < :minimo')
+            ->setParameter('estab', $baseId)
+            ->setParameter('minimo', 10)
+            ->orderBy('p.estoqueAtual', 'ASC')
+            ->getQuery()
+            ->getResult();
 
-        $dados = array_map(function($p) {
+        $dados = array_map(function ($p) {
             return [
                 'id' => $p->getId(),
                 'nome' => $p->getNome(),
                 'estoque_atual' => $p->getEstoqueAtual() ?? 0,
                 'preco_venda' => $p->getPrecoVenda() ?? 0,
-                'status' => ($p->getEstoqueAtual() ?? 0) == 0 ? 'ESGOTADO' : 'BAIXO'
+                'status' => ($p->getEstoqueAtual() ?? 0) == 0 ? 'ESGOTADO' : 'BAIXO',
             ];
         }, $produtos);
 
         return new JsonResponse([
             'ok' => true,
             'total_alertas' => count($dados),
-            'produtos' => $dados
+            'produtos' => $dados,
         ]);
     }
 
@@ -692,14 +690,14 @@ public function caixa(EntityManagerInterface $em): Response
 
         // 🔹 Busca vendas do dia
         $vendas = $em->getRepository(Venda::class)
-                    ->createQueryBuilder('v')
-                    ->where('v.estabelecimentoId = :estab')
-                    ->andWhere('v.data BETWEEN :inicio AND :fim')
-                    ->setParameter('estab', $baseId)
-                    ->setParameter('inicio', $inicioDia)
-                    ->setParameter('fim', $fimDia)
-                    ->getQuery()
-                    ->getResult();
+            ->createQueryBuilder('v')
+            ->where('v.estabelecimentoId = :estab')
+            ->andWhere('v.data BETWEEN :inicio AND :fim')
+            ->setParameter('estab', $baseId)
+            ->setParameter('inicio', $inicioDia)
+            ->setParameter('fim', $fimDia)
+            ->getQuery()
+            ->getResult();
 
         $totalVendas = 0;
         $quantidadeVendas = count($vendas);
@@ -708,11 +706,11 @@ public function caixa(EntityManagerInterface $em): Response
         foreach ($vendas as $v) {
             $totalVendas += $v->getTotal();
             $metodo = $v->getMetodoPagamento();
-            
+
             if (!isset($porMetodo[$metodo])) {
                 $porMetodo[$metodo] = ['quantidade' => 0, 'total' => 0];
             }
-            
+
             $porMetodo[$metodo]['quantidade']++;
             $porMetodo[$metodo]['total'] += $v->getTotal();
         }
@@ -724,8 +722,8 @@ public function caixa(EntityManagerInterface $em): Response
                 'quantidade_vendas' => $quantidadeVendas,
                 'total_vendas' => number_format($totalVendas, 2, ',', '.'),
                 'ticket_medio' => $quantidadeVendas > 0 ? number_format($totalVendas / $quantidadeVendas, 2, ',', '.') : '0,00',
-                'por_metodo' => $porMetodo
-            ]
+                'por_metodo' => $porMetodo,
+            ],
         ]);
     }
 
@@ -762,7 +760,7 @@ public function caixa(EntityManagerInterface $em): Response
 
             foreach ($vendas as $venda) {
                 $totalGasto += $venda->getTotal();
-                
+
                 // Buscar itens da venda
                 $itens = $em->getRepository(VendaItem::class)
                     ->findBy(['venda' => $venda]);
@@ -773,7 +771,7 @@ public function caixa(EntityManagerInterface $em): Response
                         'produto' => $item->getProduto(),
                         'quantidade' => $item->getQuantidade(),
                         'valor_unitario' => number_format($item->getValorUnitario(), 2, ',', '.'),
-                        'subtotal' => number_format($item->getSubtotal(), 2, ',', '.')
+                        'subtotal' => number_format($item->getSubtotal(), 2, ',', '.'),
                     ];
                 }
 
@@ -783,7 +781,7 @@ public function caixa(EntityManagerInterface $em): Response
                     'total' => number_format($venda->getTotal(), 2, ',', '.'),
                     'metodo_pagamento' => $venda->getMetodoPagamento(),
                     'observacao' => $venda->getObservacao(),
-                    'itens' => $itensFormatados
+                    'itens' => $itensFormatados,
                 ];
             }
 
@@ -793,14 +791,14 @@ public function caixa(EntityManagerInterface $em): Response
                     'id' => $pet->getId(),
                     'nome' => $pet->getNome(),
                     'especie' => $pet->getEspecie(),
-                    'raca' => $pet->getRaca()
+                    'raca' => $pet->getRaca(),
                 ],
                 'vendas' => $vendasFormatadas,
                 'resumo' => [
                     'total_vendas' => count($vendas),
                     'total_gasto' => number_format($totalGasto, 2, ',', '.'),
-                    'ticket_medio' => count($vendas) > 0 ? number_format($totalGasto / count($vendas), 2, ',', '.') : '0,00'
-                ]
+                    'ticket_medio' => count($vendas) > 0 ? number_format($totalGasto / count($vendas), 2, ',', '.') : '0,00',
+                ],
             ]);
 
         } catch (\Exception $e) {

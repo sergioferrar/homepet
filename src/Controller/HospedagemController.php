@@ -31,12 +31,12 @@ class HospedagemController extends DefaultController
             }
 
             $hospedagem = new HospedagemCaes();
-            $hospedagem->setClienteId((int) $clienteId);
-            $hospedagem->setPetId((int) $request->request->get('pet_id'));
+            $hospedagem->setClienteId((int)$clienteId);
+            $hospedagem->setPetId((int)$request->request->get('pet_id'));
             $hospedagem->setDataEntrada(new \DateTime($request->request->get('dataEntrada')));
             $hospedagem->setDataSaida(new \DateTime($request->request->get('dataSaida')));
 
-            $valorInformado = (float) $request->request->get('valor');
+            $valorInformado = (float)$request->request->get('valor');
             $dias = $hospedagem->getDataSaida()->diff($hospedagem->getDataEntrada())->days + 1;
             $valorTotal = $dias * $valorInformado;
 
@@ -112,12 +112,12 @@ class HospedagemController extends DefaultController
             }
 
             $hospedagem = new HospedagemCaes();
-            $hospedagem->setClienteId((int) $clienteId);
-            $hospedagem->setPetId((int) $request->request->get('pet_id'));
+            $hospedagem->setClienteId((int)$clienteId);
+            $hospedagem->setPetId((int)$request->request->get('pet_id'));
             $hospedagem->setDataEntrada(new \DateTime($request->request->get('dataEntrada')));
             $hospedagem->setDataSaida(new \DateTime($request->request->get('dataSaida')));
 
-            $valorInformado = (float) $request->request->get('valor');
+            $valorInformado = (float)$request->request->get('valor');
             $dias = $hospedagem->getDataSaida()->diff($hospedagem->getDataEntrada())->days + 1;
             $valorTotal = $dias * $valorInformado;
 

@@ -489,12 +489,13 @@
 
                     // clique no evento abre modal
                     eventClick: function (info) {
-                        console.log(info.event)
+                        console.log(info.event.start)
                         let start = info.event.start;
                         let end = info.event.end;
 
                         // converte para o formato que o datetime-local aceita
-                        let startLocal = start.toISOString().slice(0, 16);
+                        let startLocal = start.toISOString();//.slice(0, 16);
+                        console.log(startLocal)
 
                         $(document).find('input[name="hora_aplicacao"]').attr('value', toDateTimeLocalValue(new Date(startLocal)));
 
