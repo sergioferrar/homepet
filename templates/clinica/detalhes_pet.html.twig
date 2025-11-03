@@ -687,7 +687,7 @@
                                 </div>
                                 <div class="modal-footer">
                                     <button type="submit" class="btn btn-primary">Salvar</button>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar
+                                    <button type="button" class="btn btn-secondary" id="btn-cancelar-editar">Cancelar
                                     </button>
                                 </div>
                                 <button type="button" class="btn btn-primary add-servico">
@@ -719,9 +719,16 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <form class="modal-content" id="form-novo-servico" method="post"
                   action="{{ path('clinica_concluir_venda', {'petId': pet.id}) }}">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalAdicionarServicoLabel">Adicionar Serviço / Lançamento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <div class="modal-header bg-primary text-white">
+                    <div class="d-flex flex-column w-100">
+                        <h5 class="modal-title mb-2" id="modalAdicionarServicoLabel">Adicionar Serviço / Lançamento</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-light text-dark fs-6 px-3 py-2">
+                                <i class="fas fa-calculator me-2"></i>Total: R$ <span id="total-servicos">0,00</span>
+                            </span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -784,7 +791,7 @@
                     <input type="hidden" name="pet_id" value="{{ pet.id }}">
                 </div>
                 <div class="modal-footer d-flex justify-content-between align-items-center flex-wrap">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" id="btn-cancelar-servico">
                         Cancelar
                     </button>
 
@@ -829,8 +836,17 @@
             const historicoTabElement = $('button[data-bs-target="#historico"]')[0];
             let historicoTab = historicoTabElement ? new bootstrap.Tab(historicoTabElement) : null;
 
-            const modalAdicionarServico = new bootstrap.Modal($('#modalAdicionarServico')[0]);
-            const modalEditarVenda = new bootstrap.Modal($('#modalEditarVenda')[0]);
+            // Torna as variáveis globais para acesso em outros handlers
+            // backdrop: 'static' impede fechar ao clicar fora
+            // keyboard: false impede fechar com ESC
+            window.modalAdicionarServico = new bootstrap.Modal($('#modalAdicionarServico')[0], {
+                backdrop: 'static',
+                keyboard: false
+            });
+            window.modalEditarVenda = new bootstrap.Modal($('#modalEditarVenda')[0], {
+                backdrop: 'static',
+                keyboard: false
+            });
 
             window.currentQuillDisplayEditors = [];
 
@@ -1132,6 +1148,9 @@
                             if (window.Notify && Notify.toast) {
                                 Notify.toast(data.mensagem, "success");
                             }
+                            // Limpa os dados antes de fechar
+                            $('#servico-descricao-1').val('').trigger('change');
+                            $('#servicos-container').empty();
                             modalAdicionarServico.hide();
                             setTimeout(() => location.reload(), 800);
                         } else {
@@ -1153,11 +1172,16 @@
             });
 
             $btnAdicionarServico.on('click', function () {
-                $('.modal').modal('hide'); 
+                // Limpa o formulário sem fechar o modal
                 $('#servico-descricao-1').val('').trigger('change');
                 $('#servicos-container').empty();
                 $('#cartao-opcoes').addClass('d-none');
-                modalAdicionarServico.show();
+                $('#total-servicos').text('0,00');
+                
+                // Se o modal não estiver aberto, abre
+                if (!$('#modalAdicionarServico').hasClass('show')) {
+                    modalAdicionarServico.show();
+                }
             });
 
             $(document).on('change', '#servico-descricao', function () {
@@ -1287,6 +1311,9 @@
                     .then(r => r.json())
                     .then(d => {
                         if (d.status === "success") {
+                            // Limpa os dados antes de fechar
+                            $('#editar-descricao').val('');
+                            $('#editar-valor').val('');
                             modalEditarVenda.hide();
                             location.reload();
                         } else {
@@ -1348,6 +1375,60 @@
     // Remover serviço
     $(document).on("click", ".remove-servico", function () {
         $(this).closest(".servico-item").remove();
+        calcularTotal();
+    });
+
+    // Função para calcular o total
+    function calcularTotal() {
+        let total = 0;
+        
+        // Serviço principal
+        const servicoPrincipal = $('#servico-descricao-1');
+        if (servicoPrincipal.length && servicoPrincipal.val()) {
+            let valorPrincipal = parseFloat(servicoPrincipal.find('option:selected').data('valor')) || 0;
+            const descontoPrincipal = parseFloat($('#servico-desconto').val()) || 0;
+            
+            // Verifica se tem diárias para o serviço principal
+            const diarias1 = $('#quantidade-diarias-1');
+            if (diarias1.length && diarias1.val()) {
+                const qtdDiarias = parseInt(diarias1.val()) || 1;
+                valorPrincipal = valorPrincipal * qtdDiarias;
+            }
+            
+            total += (valorPrincipal - descontoPrincipal);
+        }
+        
+        // Serviços adicionais
+        $('.servico-item').each(function() {
+            const select = $(this).find('.select-servico');
+            const desconto = parseFloat($(this).find('input[name="desconto[]"]').val()) || 0;
+            
+            if (select.val()) {
+                let valor = parseFloat(select.find('option:selected').data('valor')) || 0;
+                
+                // Verifica se tem diárias para este serviço
+                const diariasInput = $(this).find('.quantidade-diarias');
+                if (diariasInput.length && diariasInput.val()) {
+                    const qtdDiarias = parseInt(diariasInput.val()) || 1;
+                    valor = valor * qtdDiarias;
+                }
+                
+                total += (valor - desconto);
+            }
+        });
+        
+        // Atualiza o display
+        $('#total-servicos').text(total.toFixed(2).replace('.', ','));
+    }
+    
+    // Atualizar total quando mudar serviço, desconto ou diárias
+    $(document).on('change input', '#servico-descricao-1, #servico-desconto, .select-servico, input[name="desconto[]"], .quantidade-diarias', function() {
+        calcularTotal();
+    });
+    
+    // Calcular total ao abrir o modal
+    $('#modalAdicionarServico').on('shown.bs.modal', function() {
+        calcularTotal();
     });
 
         $('.modal').on('hidden.modal.bs', function () {
@@ -1356,10 +1437,13 @@
 
 
         $(document).ready(function() {
-            $('#tabelaVacinas').DataTable({
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json' },
-                order: [[2, 'desc']]
-            });
+            // Verifica se DataTable está disponível antes de inicializar
+            if ($.fn.DataTable && $('#tabelaVacinas').length) {
+                $('#tabelaVacinas').DataTable({
+                    language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json' },
+                    order: [[2, 'desc']]
+                });
+            }
         });
 
         $(document).on('change', '#servico-metodo', function() {
@@ -1398,6 +1482,44 @@
                 }
             } catch (err) {
                 alert("Erro ao remover vacina: " + err.message);
+            }
+        });
+
+        // === CONFIRMAÇÃO ANTES DE FECHAR MODAL ===
+        
+        // Remove o botão X (fechar) do modal para forçar uso do Cancelar
+        $('#modalAdicionarServico .btn-close').remove();
+        
+        // Handler APENAS para o botão Cancelar
+        $('#btn-cancelar-servico').on('click', function(e) {
+            e.preventDefault();
+            const temDados = $('#servico-descricao-1').val() || $('.servico-item').length > 0;
+            
+            if (temDados) {
+                if (confirm('Você tem dados não salvos. Deseja realmente cancelar e perder as informações?')) {
+                    window.modalAdicionarServico.hide();
+                }
+            } else {
+                window.modalAdicionarServico.hide();
+            }
+        });
+
+        // === CONFIRMAÇÃO PARA MODAL EDITAR VENDA ===
+        
+        // Remove o botão X do modal editar
+        $('#modalEditarVenda .btn-close').remove();
+        
+        // Handler APENAS para o botão Cancelar
+        $('#btn-cancelar-editar').on('click', function(e) {
+            e.preventDefault();
+            const temDados = $('#editar-descricao').val() || $('#editar-valor').val();
+            
+            if (temDados) {
+                if (confirm('Você tem alterações não salvas. Deseja realmente cancelar?')) {
+                    window.modalEditarVenda.hide();
+                }
+            } else {
+                window.modalEditarVenda.hide();
             }
         });
 
