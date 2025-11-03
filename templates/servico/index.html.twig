@@ -24,14 +24,6 @@
     .card-item { transition: box-shadow 0.2s; }
     .card-item:hover { box-shadow: 0 0 0 4px #e5eefe; }
     .valor-label { font-size: 1.1rem; color: #198754; font-weight: bold; }
-    .pagination-wrapper { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
-    .pagination-wrapper button {
-        background-color: #fff; border: 1px solid #dee2e6; color: #0d6efd;
-        padding: 6px 16px; border-radius: 999px; cursor: pointer;
-    }
-    .pagination-wrapper button.active {
-        background-color: #0d6efd; color: #fff; font-weight: bold; border: 1px solid #0a58ca;
-    }
 </style>
 {% endblock %}
 
@@ -120,105 +112,66 @@
         {% endfor %}
     </div>
 
-    <div class="pagination-wrapper" id="pagination"></div>
+    <div class="row mt-4">
+        <div class="col text-center">
+            <nav aria-label="Paginação">
+                <ul id="pagination" class="pagination justify-content-center mb-0"></ul>
+            </nav>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block javascripts %}
 {{ parent() }}
+<script src="{{ asset('js/TabelaDefault.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const cards       = Array.from(document.querySelectorAll('.card-item'));
+    const filterSelect = document.getElementById('filter-type');
     const searchInput = document.getElementById('searchInput');
-    const filterSelect= document.getElementById('filter-type');
-    const pagination  = document.getElementById('pagination');
-    const perPage     = 6;
-    let currentPage   = 1;
-    let filteredCards = cards.slice();
-
-    function updateFilteredCards() {
-        const query = searchInput.value.toLowerCase();
-        const type  = filterSelect.value;
-        filteredCards = [];
-        cards.forEach(card => {
+    const cardContainer = document.getElementById('cardContainer');
+    const allCards = Array.from(cardContainer.querySelectorAll('.card-item'));
+    
+    // Função para aplicar filtros
+    function applyFilters() {
+        const searchValue = searchInput.value.toLowerCase();
+        const typeValue = filterSelect.value;
+        
+        allCards.forEach(card => {
             const searchText = card.getAttribute('data-search');
-            const cardType   = card.getAttribute('data-type');
-            const matchesSearch = searchText.includes(query);
-            const matchesType   = !type || cardType === type;
+            const cardType = card.getAttribute('data-type');
+            
+            const matchesSearch = !searchValue || searchText.includes(searchValue);
+            const matchesType = !typeValue || cardType === typeValue;
+            
             if (matchesSearch && matchesType) {
-                filteredCards.push(card);
+                card.classList.remove('d-none');
+                card.style.display = '';
+            } else {
+                card.classList.add('d-none');
+                card.style.display = 'none';
             }
-            // Oculta tudo por enquanto, será exibido na renderPage
-            card.style.display = 'none';
         });
-    }
-
-    function renderPage(page) {
-        currentPage = page;
-        const start = (page - 1) * perPage;
-        const end   = page * perPage;
-
-        // Oculta todos primeiro
-        cards.forEach(card => {
-            card.style.display = 'none';
-        });
-
-        // Mostra apenas os filtrados da página atual
-        filteredCards.slice(start, end).forEach(card => {
-            card.style.display = 'block';
-        });
-
-        renderPagination();
-    }
-
-    function renderPagination() {
-        const totalPages = Math.ceil(filteredCards.length / perPage);
-        pagination.innerHTML = '';
-        if (totalPages <= 1) return;
-
-        if (currentPage > 1) {
-            const prev = document.createElement('button');
-            prev.textContent = '◀️';
-            prev.addEventListener('click', () => renderPage(currentPage - 1));
-            pagination.appendChild(prev);
-        }
-
-        let startPage = Math.max(currentPage - 1, 1);
-        let endPage   = Math.min(startPage + 3, totalPages);
-        if (endPage - startPage < 3 && startPage > 1) {
-            startPage = Math.max(endPage - 3, 1);
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            const btn = document.createElement('button');
-            btn.textContent = i;
-            btn.classList.toggle('active', i === currentPage);
-            btn.addEventListener('click', () => renderPage(i));
-            pagination.appendChild(btn);
-        }
-
-        if (currentPage < totalPages) {
-            const next = document.createElement('button');
-            next.textContent = '▶️';
-            next.addEventListener('click', () => renderPage(currentPage + 1));
-            pagination.appendChild(next);
+        
+        // Reinicializa a paginação
+        if (window.tabelaServicos) {
+            window.tabelaServicos.cards = allCards.filter(card => !card.classList.contains('d-none'));
+            window.tabelaServicos.filteredCards = window.tabelaServicos.cards.slice();
+            window.tabelaServicos.goToPage(1);
         }
     }
-
-    // Eventos de busca e filtro
-    searchInput.addEventListener('input', () => {
-        updateFilteredCards();
-        renderPage(1);
+    
+    // Inicializa a paginação
+    window.tabelaServicos = new TabelaDefault({
+        cardContainerId: 'cardContainer',
+        paginationId: 'pagination',
+        searchInputId: 'searchInput',
+        itemsPerPage: 6
     });
-
-    filterSelect.addEventListener('change', () => {
-        updateFilteredCards();
-        renderPage(1);
-    });
-
-    // Inicializa
-    updateFilteredCards();
-    renderPage(1);
+    
+    // Event listeners
+    searchInput.addEventListener('input', applyFilters);
+    filterSelect.addEventListener('change', applyFilters);
 });
 </script>
 {% endblock %}
