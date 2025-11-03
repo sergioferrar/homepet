@@ -1098,9 +1098,9 @@ class ClinicaController extends DefaultController
         $todosEventos = $em->getRepository(\App\Entity\InternacaoEvento::class)
             ->createQueryBuilder('e')
             ->where('e.internacaoId = :internacaoId')
-            ->andWhere('e.tipo IN (:tipos)')
+            ->andWhere('e.tipo = :tipo')
             ->setParameter('internacaoId', $id)
-            ->setParameter('tipos', ['prescricao', 'medicacao'])
+            ->setParameter('tipo', 'prescricao')
             ->orderBy('e.dataHora', 'ASC')
             ->getQuery()
             ->getResult();
@@ -1292,10 +1292,10 @@ class ClinicaController extends DefaultController
 
                     $internacaoRepo->inserirEvento(
                         $baseId,
-                        $prescricao->getId(),
+                        $id,
                         $petId,
-                        'medicacao',
-                        'Dose de medicação agendada',
+                        'prescricao',
+                        $medicamento->getNome(),
                         $descricaoEvento,
                         $dataDose
                     );
