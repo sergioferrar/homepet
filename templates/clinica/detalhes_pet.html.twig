@@ -809,6 +809,32 @@
         </div>
     </div>
 
+    {# MODAL DE CONFIRMAÇÃO #}
+    <div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-warning text-dark border-0">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Atenção
+                    </h5>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <p class="mb-0" id="mensagem-confirmacao">
+                        Você tem dados não salvos. Deseja realmente cancelar e perder as informações?
+                    </p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" class="btn btn-secondary" id="btn-nao-confirmar">
+                        <i class="fas fa-times me-1"></i>Não
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btn-sim-confirmar">
+                        <i class="fas fa-check me-1"></i>Sim, fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 {% block javascripts %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
@@ -1490,18 +1516,40 @@
         // Remove o botão X (fechar) do modal para forçar uso do Cancelar
         $('#modalAdicionarServico .btn-close').remove();
         
+        // Cria instância do modal de confirmação
+        const modalConfirmacao = new bootstrap.Modal($('#modalConfirmacao')[0]);
+        let acaoConfirmacao = null;
+        
         // Handler APENAS para o botão Cancelar
         $('#btn-cancelar-servico').on('click', function(e) {
             e.preventDefault();
             const temDados = $('#servico-descricao-1').val() || $('.servico-item').length > 0;
             
             if (temDados) {
-                if (confirm('Você tem dados não salvos. Deseja realmente cancelar e perder as informações?')) {
+                // Define a ação a ser executada após confirmação
+                acaoConfirmacao = function() {
                     window.modalAdicionarServico.hide();
-                }
+                };
+                $('#mensagem-confirmacao').text('Você tem dados não salvos. Deseja realmente cancelar e perder as informações?');
+                modalConfirmacao.show();
             } else {
                 window.modalAdicionarServico.hide();
             }
+        });
+        
+        // Handler para o botão "Sim, fechar" do modal de confirmação
+        $('#btn-sim-confirmar').on('click', function() {
+            modalConfirmacao.hide();
+            if (acaoConfirmacao) {
+                acaoConfirmacao();
+                acaoConfirmacao = null;
+            }
+        });
+        
+        // Handler para o botão "Não" do modal de confirmação
+        $('#btn-nao-confirmar').on('click', function() {
+            modalConfirmacao.hide();
+            acaoConfirmacao = null;
         });
 
         // === CONFIRMAÇÃO PARA MODAL EDITAR VENDA ===
@@ -1515,9 +1563,12 @@
             const temDados = $('#editar-descricao').val() || $('#editar-valor').val();
             
             if (temDados) {
-                if (confirm('Você tem alterações não salvas. Deseja realmente cancelar?')) {
+                // Define a ação a ser executada após confirmação
+                acaoConfirmacao = function() {
                     window.modalEditarVenda.hide();
-                }
+                };
+                $('#mensagem-confirmacao').text('Você tem alterações não salvas. Deseja realmente cancelar?');
+                modalConfirmacao.show();
             } else {
                 window.modalEditarVenda.hide();
             }
