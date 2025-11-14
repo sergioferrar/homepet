@@ -33,13 +33,16 @@
 </style>
 {% endblock %}
 
-{% block page_title %}<i class="fas fa-wallet me-2"></i> Fechamento de Caixa{% endblock %}
+{% block page_title %}Fechamento de Caixa{% endblock %}
 
 {% block body %}
-<div class="container mt-5">
-    <div class="d-flex align-items-center justify-content-end mb-4">
+<div class="container-fluid mt-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h1 class="mb-0">
+            <i class="fas fa-wallet me-2"></i> Fechamento de Caixa
+        </h1>
         <input type="date" id="dataFiltro" class="form-control form-control-md" value="{{ data|date('Y-m-d') }}" style="max-width: 220px;">
-    </h1>
+    </div>
 
     <!-- 🔹 Cards de resumo -->
     <div class="row mb-4">
