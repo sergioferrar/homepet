@@ -1,0 +1,428 @@
+/**
+ * Design System - System Pet
+ * Arquivo de estilos globais padronizados
+ */
+
+/* ========================================
+   DESIGN TOKENS
+   ======================================== */
+
+:root {
+    /* Primary Gradient */
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    
+    /* Card Gradients */
+    --gradient-pets: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-clients: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --gradient-debts: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+    --gradient-time: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    
+    /* Semantic Colors */
+    --color-success: #198754;
+    --color-danger: #dc3545;
+    --color-warning: #ffc107;
+    --color-info: #0dcaf0;
+    --color-primary: #0d6efd;
+    --color-secondary: #6c757d;
+    
+    /* Neutral Colors */
+    --color-text-primary: #212529;
+    --color-text-muted: #6c757d;
+    --color-bg-light: #f8f9fa;
+    --color-border: #dee2e6;
+    
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-xxl: 3rem;
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.1);
+    --shadow-hover: 0 0 0 4px #e5eefe;
+    
+    /* Border Radius */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+}
+
+/* ========================================
+   CARDS
+   ======================================== */
+
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-lg);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.card-item {
+    transition: box-shadow 0.2s;
+}
+
+.card-item:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.card-flutuante {
+    transition: all 0.3s ease;
+    border-radius: var(--radius-md);
+}
+
+.card-flutuante:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+
+.btn {
+    transition: all 0.2s;
+    border-radius: var(--radius-md);
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.btn-outline-secondary:hover {
+    transform: translateY(-1px);
+}
+
+/* ========================================
+   WELCOME CARD
+   ======================================== */
+
+.welcome-card {
+    background: var(--gradient-primary);
+    border: none;
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-xl);
+}
+
+/* ========================================
+   STATISTICS CARDS
+   ======================================== */
+
+.stat-card-pets {
+    background: var(--gradient-pets);
+}
+
+.stat-card-clients {
+    background: var(--gradient-clients);
+}
+
+.stat-card-debts {
+    background: var(--gradient-debts);
+}
+
+.stat-card-time {
+    background: var(--gradient-time);
+}
+
+.stat-card {
+    border: none;
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-lg);
+}
+
+.stat-card .card-body {
+    display: flex;
+    flex-column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+}
+
+.stat-card i {
+    font-size: 2.5rem;
+    opacity: 0.9;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes floatIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.float-in {
+    animation: floatIn 0.6s ease;
+}
+
+/* ========================================
+   HEADER COMPONENTS
+   ======================================== */
+
+.page-header {
+    margin-top: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--color-text-primary);
+}
+
+.action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+/* ========================================
+   SEARCH COMPONENT
+   ======================================== */
+
+.search-container {
+    margin-bottom: var(--spacing-lg);
+}
+
+.search-container input {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    transition: all 0.2s;
+}
+
+.search-container input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* ========================================
+   PAGINATION
+   ======================================== */
+
+.pagination {
+    margin-top: var(--spacing-xl);
+}
+
+.pagination .page-link {
+    border-radius: var(--radius-md);
+    margin: 0 var(--spacing-xs);
+    transition: all 0.2s;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+/* ========================================
+   MODALS
+   ======================================== */
+
+.modal-content {
+    border: none;
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-lg);
+}
+
+.modal-header {
+    border-bottom: 2px solid rgba(0,0,0,0.05);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.modal-footer {
+    border-top: 2px solid rgba(0,0,0,0.05);
+}
+
+/* ========================================
+   FORMS
+   ======================================== */
+
+.form-label {
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.form-label.required::after {
+    content: " *";
+    color: var(--color-danger);
+}
+
+.form-control,
+.form-select {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    transition: all 0.2s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* ========================================
+   DROPDOWNS
+   ======================================== */
+
+.dropdown-menu {
+    border: none;
+    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-md);
+}
+
+.dropdown-item {
+    transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: var(--color-bg-light);
+}
+
+.dropdown-item.text-danger:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* ========================================
+   BADGES
+   ======================================== */
+
+.badge {
+    border-radius: var(--radius-sm);
+    padding: 0.35em 0.65em;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 576px) {
+    .action-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .action-bar > * {
+        width: 100%;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .stat-card .card-body {
+        padding: var(--spacing-lg);
+    }
+    
+    .stat-card i {
+        font-size: 2rem;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .stat-card i {
+        font-size: 2.2rem;
+    }
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+.shadow-hover:hover {
+    box-shadow: var(--shadow-hover) !important;
+}
+
+.gradient-primary {
+    background: var(--gradient-primary);
+}
+
+.gradient-pets {
+    background: var(--gradient-pets);
+}
+
+.gradient-clients {
+    background: var(--gradient-clients);
+}
+
+.gradient-debts {
+    background: var(--gradient-debts);
+}
+
+.gradient-time {
+    background: var(--gradient-time);
+}
+
+.text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ========================================
+   ICONS
+   ======================================== */
+
+.icon-lg {
+    font-size: 2.5rem;
+}
+
+.icon-md {
+    font-size: 1.5rem;
+}
+
+.icon-sm {
+    font-size: 1rem;
+}
+
+/* ========================================
+   SPACING UTILITIES
+   ======================================== */
+
+.gap-xs { gap: var(--spacing-xs); }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+.gap-xl { gap: var(--spacing-xl); }

@@ -14,20 +14,29 @@
 {% endblock %}
 
 {% block body %}
-<div class="container mt-5">
-    <div class="tabela-container container-fluid px-2">
-        <div class="row my-3">
-            <div class="col-12">
-                <input type="text" id="searchInputClientes" class="form-control form-control-md" placeholder="🔍 Pesquisar por nome, CPF, e-mail ou telefone..." />
-            </div>
+<div class="container mt-4">
+    <!-- Action Bar -->
+    <div class="row mb-4 align-items-center action-bar">
+        <div class="col-md-6">
+            <h3 class="page-title mb-0">
+                <i class="bi bi-people-fill me-2"></i>Clientes
+            </h3>
         </div>
-        <div class="demo-inline-spacing mb-3">
-            <a href="{{ path('cliente_novo') }}">
-                <button type="button" class="btn btn-primary">
-                    <span class="icon-base bx bx-plus icon-sm me-2"></span> Novo Cliente
-                </button>
+        <div class="col-md-6 text-end">
+            <a href="{{ path('cliente_novo') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Novo Cliente
             </a>
         </div>
+    </div>
+
+    <!-- Search -->
+    <div class="row mb-4 search-container">
+        <div class="col-12">
+            <input type="text" id="searchInputClientes" class="form-control" placeholder="🔍 Pesquisar por nome, CPF, e-mail ou telefone..." />
+        </div>
+    </div>
+
+    <div class="tabela-container container-fluid px-2">
         <div id="cardContainerClientes" class="row gy-3">
             {% for cliente in clientes %}
                 <div class="col-12 card-item" data-search="{{ cliente.nome }} {{ cliente.cpf }} {{ cliente.email }} {{ cliente.telefone }}">

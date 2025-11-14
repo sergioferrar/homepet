@@ -16,20 +16,26 @@
 {% endblock %}
 
 {% block body %}
-<div class="container mt-5">
+<div class="container mt-4">
+    <!-- Action Bar -->
+    <div class="row mb-4 align-items-center action-bar">
+        <div class="col-md-12">
+            <h3 class="page-title mb-0">
+                <i class="bi bi-calendar-check me-2"></i>Agendamentos
+            </h3>
+            <p class="text-muted mb-0 mt-2">Gerencie os agendamentos através do calendário integrado</p>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="row mb-4 search-container">
+        <div class="col-12">
+            <input type="text" id="searchInputAgendamento" class="form-control" placeholder="🔍 Pesquisar por pet, tutor, serviço, data..." />
+        </div>
+    </div>
+
     <div class="tabela-container container-fluid px-2">
-        <div class="row my-3">
-            <div class="col-12">
-                <input type="text" id="searchInputAgendamento" class="form-control form-control-md" placeholder="🔍 Pesquisar por pet, tutor, serviço, data..." />
-            </div>
-        </div>
-        <div class="demo-inline-spacing mb-3">
-            <a href="{{ path('agendamento_novo') }}">
-                <button type="button" class="btn btn-primary">
-                    <span class="icon-base bx bx-plus icon-sm me-2"></span> Novo Agendamento
-                </button>
-            </a>
-        </div>
+
         <div id="cardContainerAgendamento" class="row gy-3">
             {% for agendamento in agendamentos %}
                 {% set cor_texto = '' %}

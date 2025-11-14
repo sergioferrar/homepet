@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=BoxRepository::class)
+ * @ORM\Entity(repositoryClass="App\Repository\BoxRepository")
  * @ORM\Table(name="box")
  */
 class Box
@@ -17,65 +17,69 @@ class Box
      */
     private $id;
 
-    /**
-     * @ORM\Column(type="smallint", options={"unsigned": true})
-     */
+    /** @ORM\Column(name="estabelecimento_id", type="integer") */
+    private $estabelecimentoId;
+
+    /** @ORM\Column(type="string", length=20) */
     private $numero;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Pet")
-     * @ORM\JoinColumn(name="pet_id", referencedColumnName="id", nullable=true)
-     */
-    private $pet;
+    /** @ORM\Column(type="string", columnDefinition="ENUM('pequeno', 'medio', 'grande')") */
+    private $tipo;
 
-    /**
-     * @ORM\Column(type="boolean", options={"default": false})
-     */
-    private $ocupado;
+    /** @ORM\Column(type="string", length=100, nullable=true) */
+    private $localizacao;
 
-    // Getters e Setters
+    /** @ORM\Column(type="string", columnDefinition="ENUM('disponivel', 'ocupado', 'manutencao', 'reservado')") */
+    private $status = 'disponivel';
 
-    public function getId(): ?int
+    /** @ORM\Column(type="integer") */
+    private $capacidade = 1;
+
+    /** @ORM\Column(name="valor_diaria", type="decimal", precision=10, scale=2) */
+    private $valorDiaria;
+
+    /** @ORM\Column(type="text", nullable=true) */
+    private $observacoes;
+
+    /** @ORM\Column(name="created_at", type="datetime") */
+    private $createdAt;
+
+    /** @ORM\Column(name="updated_at", type="datetime") */
+    private $updatedAt;
+
+    public function __construct()
     {
-        return $this->id;
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
     }
 
-    public function getNumero(): ?int
-    {
-        return $this->numero;
-    }
+    // Getters and Setters
+    public function getId(): ?int { return $this->id; }
 
-    public function setNumero(int $numero): self
-    {
-        if ($numero < 1 || $numero > 10) {
-            throw new \InvalidArgumentException('O número do box deve estar entre 1 e 10.');
-        }
-        $this->numero = $numero;
+    public function getEstabelecimentoId(): ?int { return $this->estabelecimentoId; }
+    public function setEstabelecimentoId(int $id): self { $this->estabelecimentoId = $id; return $this; }
 
-        return $this;
-    }
+    public function getNumero(): ?string { return $this->numero; }
+    public function setNumero(string $numero): self { $this->numero = $numero; return $this; }
 
-    public function getPet(): ?Pet
-    {
-        return $this->pet;
-    }
+    public function getTipo(): ?string { return $this->tipo; }
+    public function setTipo(string $tipo): self { $this->tipo = $tipo; return $this; }
 
-    public function setPet(?Pet $pet): self
-    {
-        $this->pet = $pet;
+    public function getLocalizacao(): ?string { return $this->localizacao; }
+    public function setLocalizacao(?string $localizacao): self { $this->localizacao = $localizacao; return $this; }
 
-        return $this;
-    }
+    public function getStatus(): ?string { return $this->status; }
+    public function setStatus(string $status): self { $this->status = $status; return $this; }
 
-    public function getOcupado(): ?bool
-    {
-        return $this->ocupado;
-    }
+    public function getCapacidade(): ?int { return $this->capacidade; }
+    public function setCapacidade(int $capacidade): self { $this->capacidade = $capacidade; return $this; }
 
-    public function setOcupado(bool $ocupado): self
-    {
-        $this->ocupado = $ocupado;
+    public function getValorDiaria(): ?float { return $this->valorDiaria; }
+    public function setValorDiaria(float $valor): self { $this->valorDiaria = $valor; return $this; }
 
-        return $this;
-    }
+    public function getObservacoes(): ?string { return $this->observacoes; }
+    public function setObservacoes(?string $obs): self { $this->observacoes = $obs; return $this; }
+
+    public function getCreatedAt(): ?\DateTimeInterface { return $this->createdAt; }
+    public function getUpdatedAt(): ?\DateTimeInterface { return $this->updatedAt; }
 }
