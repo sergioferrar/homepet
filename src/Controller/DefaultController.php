@@ -191,4 +191,46 @@ class DefaultController extends AbstractController
     {
         return (int)$this->session->get('userId');
     }
+    
+
+    protected function quillDeltaToHtml(?string $deltaJson): string
+    {
+        if (!$deltaJson) {
+            return '';
+        }
+
+        $delta = json_decode($deltaJson, true);
+        if (!$delta || !isset($delta['ops'])) {
+            return '';
+        }
+
+        $html = '';
+        foreach ($delta['ops'] as $op) {
+            $insert = $op['insert'] ?? '';
+            $attributes = $op['attributes'] ?? [];
+
+            if (isset($attributes['bold'])) {
+                $insert = "<strong>{$insert}</strong>";
+            }
+            if (isset($attributes['italic'])) {
+                $insert = "<em>{$insert}</em>";
+            }
+            if (isset($attributes['underline'])) {
+                $insert = "<u>{$insert}</u>";
+            }
+            if (isset($attributes['header'])) {
+                $level = $attributes['header'];
+                $insert = "<h{$level}>{$insert}</h{$level}>";
+            }
+            if (isset($attributes['list'])) {
+                $listType = $attributes['list'] === 'ordered' ? 'ol' : 'ul';
+                $insert = "<li>{$insert}</li>";
+                $html .= "<{$listType}>{$insert}</{$listType}>";
+                continue;
+            }
+            $html .= nl2br($insert);
+        }
+
+        return $html;
+    }
 }
