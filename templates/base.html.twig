@@ -58,7 +58,6 @@
         .btn-primary {
             background: var(--purple-gradient) !important;
             border: none !important;
-            color: white !important;
         }
         
         .btn-primary:hover {
@@ -105,16 +104,7 @@
         .progress-bar {
             background: var(--purple-gradient) !important;
         }
-        
-        /* 🎨 Links roxos */
-        a {
-            color: var(--purple-primary) !important;
-        }
-        
-        a:hover {
-            color: var(--purple-dark) !important;
-        }
-        
+               
         /* 🎨 Formulários com foco roxo */
         .form-control:focus,
         .form-select:focus {
@@ -245,11 +235,6 @@
         /* Containers com fundo suave */
         .container-fluid {
             background-color: transparent;
-        }
-        
-        /* Tabelas com fundo branco */
-        .table {
-            background-color: #ffffff;
         }
         
         /* Modais com fundo branco */
@@ -565,19 +550,20 @@
 
         // Toggle sidebar - modo mini com ícones
         $('.sidebar-toggle').on('click', function() {
+            $('body').toggleClass('toggle-sidebar')
             const isCollapsed = $('.sidebar').hasClass('collapsed');
             
-            if (isCollapsed) {
-                // Expandir sidebar
-                $('.sidebar').removeClass('collapsed');
-                $('.header').removeClass('collapsed');
-                $('.main').removeClass('collapsed');
-            } else {
-                // Colapsar sidebar - modo mini
-                $('.sidebar').addClass('collapsed');
-                $('.header').addClass('collapsed');
-                $('.main').addClass('collapsed');
-            }
+            // if (isCollapsed) {
+            //     // Expandir sidebar
+            //     $('.sidebar').removeClass('collapsed');
+            //     $('.header').removeClass('collapsed');
+            //     $('.main').removeClass('collapsed');
+            // } else {
+            //     // Colapsar sidebar - modo mini
+            //     $('.sidebar').addClass('collapsed');
+            //     $('.header').addClass('collapsed');
+            //     $('.main').addClass('collapsed');
+            // }
         });
 
         // Toggle search bar em mobile
