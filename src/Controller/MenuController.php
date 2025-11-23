@@ -119,6 +119,7 @@ class MenuController extends DefaultController
         }
 
         $listaMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => null]);
+        
         foreach ($listaMenu as $menu) {
             $dataS = [];
 

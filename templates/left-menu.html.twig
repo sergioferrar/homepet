@@ -1,12 +1,15 @@
 {% for rows in menuLateral %}
 	{# {{ dump(rows) }} #}
 	{% if rows.submenu == false %}
+        {% if rows.menu.status == 'ativo' %}
 		<li class="nav-item">
             <a class="nav-link {% if app.request.attributes.get('_route') == rows.menu.rota %} active {%else %} collapsed {% endif %}" href="{% if rows.menu.rota != '#' %}{{ url(rows.menu.rota) }}{% endif %}">
                 <i class="bi bi-{{rows.menu.icone}}"></i><span>{{rows.menu.titulo}}</span>
             </a>
         </li>
+        {% endif %}
 	{% else %}
+         {% if rows.menu.status == 'ativo' %}
 		<li class="nav-item">
             <a class="nav-link {% if app.request.attributes.get('_route') == 'agendamento_novo' or app.request.attributes.get('_route') == 'agendamento_index' %} {% else %} collapsed {% endif %}" data-bs-target="#{{rows.menu.id}}" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-{{rows.menu.icone}}"></i><span>{{rows.menu.titulo}}</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -21,6 +24,7 @@
             	{% endfor %}
             </ul>
         </li>
+        {% endif %}
 	{% endif %}
 	{# {% for row in rows %}
 

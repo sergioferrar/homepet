@@ -455,16 +455,16 @@
         {% endif %}
         {{ render(path('leftMenu', {activeRoute : route})) }}
         
-        <li class="nav-item">
+      {#   <li class="nav-item">
             <a class="nav-link {% if app.request.attributes.get('_route') starts with 'orcamento' %} active {% else %} collapsed {% endif %}" href="{{ path('orcamento_index') }}">
                 <i class="bi bi-file-invoice-dollar"></i><span>Orçamentos</span>
             </a>
-        </li>
+        </li> #}
         
         {% if app.session.get('accessLevel') == 'Super Admin' %}
         <li class="nav-item">
                 <a class="nav-link {% if app.request.attributes.get('_route') == 'app_plano' or app.request.attributes.get('_route') == 'app_estabelecimento' %} {% else %} collapsed {% endif %}" data-bs-target="#administracao" data-bs-toggle="collapse" href="#">
-                    <i class="bi bi-sliders"></i><span>Administração</span><i class="bi bi-chevron-down ms-auto"></i>
+                    <i class="bi bi-sliders"></i><span>Configurações</span><i class="bi bi-chevron-down ms-auto"></i>
                 </a>
                 <ul id="administracao" class="nav-content collapse {% if app.request.attributes.get('_route') == 'app_plano' or app.request.attributes.get('_route') == 'app_estabelecimento' %} show {% endif %}" data-bs-parent="#sidebar-nav">
                     
