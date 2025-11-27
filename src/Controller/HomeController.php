@@ -30,6 +30,12 @@ class HomeController extends DefaultController
      */
     public function index(Request $request): Response
     {
+        // Redireciona usuários não autenticados diretamente para a tela de login
+        // Isso evita que a aplicação lance uma exceção de autenticação em produção
+        // quando alguém acessa apenas o domínio raiz.
+        if (!$this->security->getUser()) {
+            return $this->redirectToRoute('app_login');
+        }
 
         $this->switchDB();
         $agendamento = $this->getRepositorio(Financeiro::class)->totalAgendamento($this->estabelecimentoId);
