@@ -89,8 +89,7 @@ class LoginController extends DefaultController
         // Verifica se o estabelecimento está ativo (pagamento confirmado)
         if ($estabelecimento->getStatus() === 'Inativo') {
             $request->getSession()->invalidate();
-            $this->addFlash('error', 'Seu cadastro está pendente de pagamento. Por favor, complete o pagamento para acessar o sistema.');
-            return $this->redirectToRoute('app_login');
+            return $this->redirectToRoute('app_login_pagamento_pendente');
         }
 
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
@@ -113,6 +112,14 @@ class LoginController extends DefaultController
         // Valida se existe sessão expired
         $request->getSession()->invalidate();
         return $this->redirectToRoute('app_login');
+    }
+
+    /**
+     * @Route("/login/pagamento-pendente", name="app_login_pagamento_pendente")
+     */
+    public function pagamentoPendente(): Response
+    {
+        return $this->render('login/pagamento_pendente.html.twig');
     }
 
     /**
