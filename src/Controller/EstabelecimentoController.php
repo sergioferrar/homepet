@@ -75,32 +75,25 @@ class EstabelecimentoController extends DefaultController
         $this->getRepositorio(Estabelecimento::class)->add($estabelecimento, true);
         //dd($estabelecimento);
 
-        // Criar database apartir do estabelecimento criado
-        //$database = $this->getRepositorio(Estabelecimento::class)->verificaDatabase($estabelecimento->getId());
-        // if (!$database) {
-        //     ## Inicia a criação do diretório para "download" do dump
-            $this->tempDirManager->init();
-            $arquivoSQL = "backup_bd_modelo.sql";
-            $diretorio = $this->tempDirManager->obterCaminho($arquivoSQL);
-        /*
+        // Criar database apartir do estabelecimento criado usando DatabaseBkp
+        try {
             $backupFile = dirname(__DIR__, 2) . '/instalation.sql';
+            
+            // Verifica se o arquivo de instalação existe
+            if (!file_exists($backupFile)) {
+                throw new \Exception("Arquivo de instalação não encontrado: {$backupFile}");
+            }
+            
+            // Cria o banco de dados e importa a estrutura
             $this->databaseBkp->setDbName("homepet_{$estabelecimento->getId()}")
                 ->createDatabase()
                 ->importDatabase($backupFile);
-        */
-                   ## Quebra da string do banco para puchar suas informações
-                   $hosts = explode(':', explode('mysql://', $_SERVER['DATABASE_URL'])[1]);
-                   $base = explode('@', $hosts[1]);
-                   // Realiza o backup do banco modelo
-                   $bck_bd_modelo = "mysqldump -u root -p -h " . end($base) . " --routines --set-gtid-purged=OFF --events --triggers homepet_000 | sed 's/homepet_000/homepet_{$estabelecimento->getId()}/g' > " . $diretorio;
-                   shell_exec($bck_bd_modelo);
-                   // Cria o novo banco de dados
-                   $criar_bd = "mysql -u root -p -h " . end($base) . " -e \"CREATE DATABASE homepet_{$estabelecimento->getId()}\"";
-                   shell_exec($criar_bd);
-                   //restaura o backup no novo banco
-                   $restaura_bd = "mysql -u root -p -h " . end($base) . " -c homepet_{$estabelecimento->getId()} < " . $diretorio;
-                   shell_exec($restaura_bd);
-                   $this->tempDirManager->deletarDiretorio();
+                
+        } catch (\Exception $e) {
+            // Log do erro mas não bloqueia o cadastro
+            error_log("Erro ao criar banco de dados para estabelecimento {$estabelecimento->getId()}: " . $e->getMessage());
+            // Você pode adicionar uma flash message aqui se quiser notificar o usuário
+        }
 
         return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId(), 'planoId' => $plano]);
     }
