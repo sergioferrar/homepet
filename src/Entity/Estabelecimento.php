@@ -58,7 +58,7 @@ class Estabelecimento
     private $pais;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="string", length=10)
      */
     private $cep;
 
@@ -193,14 +193,15 @@ class Estabelecimento
         return $this;
     }
 
-    public function getCep(): ?int
+    public function getCep(): ?string
     {
         return $this->cep;
     }
 
-    public function setCep(int $cep): self
+    public function setCep(string $cep): self
     {
-        $this->cep = $cep;
+        // Remove formatação do CEP (mantém apenas números)
+        $this->cep = preg_replace('/\D/', '', $cep);
 
         return $this;
     }

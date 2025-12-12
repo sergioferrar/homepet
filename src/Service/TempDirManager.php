@@ -15,15 +15,17 @@ class TempDirManager
     {
         $dataHoje = date('dmY');
 
-        $diretorioTemp = $this->diretorioProjeto . "/" . $_SERVER["PASTA_PROJETO_TEMPORARIOS"];
+        $diretorioTemp = $_SERVER["PASTA_PROJETO_TEMPORARIOS"] ?? ($this->diretorioProjeto . "/var/temp");
+        
+        // Cria o diretório base se não existir (com permissão recursiva)
         if (!is_dir($diretorioTemp)) {
-            mkdir($diretorioTemp);
+            mkdir($diretorioTemp, 0777, true);
         }
 
         $nanosegundos = (int) (microtime(true) * 1000000000);
         $hora = date("H_i_s");
-        $this->diretorioEspecifico = $diretorioTemp . ($dataHoje . "_" . $hora . "__" . $nanosegundos . "/");
-        mkdir($this->diretorioEspecifico);
+        $this->diretorioEspecifico = $diretorioTemp . "/" . ($dataHoje . "_" . $hora . "__" . $nanosegundos . "/");
+        mkdir($this->diretorioEspecifico, 0777, true);
     }
 
     public function diretorioBase(): string

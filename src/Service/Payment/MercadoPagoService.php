@@ -24,6 +24,15 @@ class MercadoPagoService
 
 	public function oauthMP()
 	{
+		// Retorna o access token diretamente do .env
+		// Evita erro de OAuth quando as credenciais não estão completas
+		return [
+			'access_token' => $this->accessToken
+		];
+	}
+	
+	public function oauthMPOriginal()
+	{
 		$data = [];
 		$data["client_secret"] = $_ENV['MERCADO_PAGO_CLIENT_SECRET'];
 		$data["client_id"] = $_ENV['MERCADO_PAGO_CLIENT_ID'];
@@ -173,6 +182,21 @@ class MercadoPagoService
 				'X-Idempotency-Key' => Uuid::uuid4()->toString(),
 			],
 			'json' => $data
+		]);
+
+		return $response->toArray();
+	}
+
+	/**
+	 * Consulta o status de um pagamento no Mercado Pago
+	 */
+	public function consultarPagamento(string $paymentId, string $token): array
+	{
+		$response = $this->client->request('GET', "https://api.mercadopago.com/v1/payments/{$paymentId}", [
+			'headers' => [
+				'Authorization' => 'Bearer ' . $token,
+				'Content-Type' => 'application/json',
+			]
 		]);
 
 		return $response->toArray();

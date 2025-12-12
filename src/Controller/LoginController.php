@@ -86,6 +86,13 @@ class LoginController extends DefaultController
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
             ->findById($this->security->getUser()->getPetshopId())[0];
 
+        // Verifica se o estabelecimento está ativo (pagamento confirmado)
+        if ($estabelecimento->getStatus() === 'Inativo') {
+            $request->getSession()->invalidate();
+            $this->addFlash('error', 'Seu cadastro está pendente de pagamento. Por favor, complete o pagamento para acessar o sistema.');
+            return $this->redirectToRoute('app_login');
+        }
+
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
 
         //dd($validaPlano);

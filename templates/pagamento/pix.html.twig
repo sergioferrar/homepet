@@ -115,6 +115,54 @@
 				console.log(error);
 			})
 		})
+
+		// Verificação automática do status do pagamento
+		{% if payment_id is defined %}
+		let verificacoes = 0;
+		const maxVerificacoes = 60; // 5 minutos (60 x 5 segundos)
+		
+		function verificarPagamento() {
+			verificacoes++;
+			
+			if (verificacoes > maxVerificacoes) {
+				console.log('Tempo limite de verificação atingido');
+				return;
+			}
+
+			fetch('{{ path('pagamento_verificar_status') }}?payment_id={{ payment_id }}')
+				.then(response => response.json())
+				.then(data => {
+					console.log('Status do pagamento:', data.status);
+					
+					if (data.status === 'approved') {
+						// Pagamento aprovado - redireciona para página de sucesso
+						$('#status').html('<div class="alert alert-success"><strong>✅ Pagamento Aprovado!</strong><br>Redirecionando...</div>');
+						setTimeout(() => {
+							window.location.href = '{{ path('pagamento_sucesso') }}';
+						}, 2000);
+					} else if (data.status === 'rejected' || data.status === 'cancelled') {
+						// Pagamento recusado ou cancelado
+						$('#status').html('<div class="alert alert-danger"><strong>❌ Pagamento ' + data.status + '</strong></div>');
+					} else if (data.status === 'pending' || data.status === 'in_process') {
+						// Ainda pendente - continua verificando
+						setTimeout(verificarPagamento, 5000); // Verifica a cada 5 segundos
+					} else {
+						// Outro status - continua verificando
+						setTimeout(verificarPagamento, 5000);
+					}
+				})
+				.catch(error => {
+					console.error('Erro ao verificar pagamento:', error);
+					setTimeout(verificarPagamento, 5000); // Tenta novamente em caso de erro
+				});
+		}
+
+		// Inicia a verificação após 5 segundos
+		setTimeout(verificarPagamento, 5000);
+		
+		// Mostra mensagem de aguardando pagamento
+		$('#status').html('<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Aguardando confirmação do pagamento...</div>');
+		{% endif %}
 		const mp = new MercadoPago("TEST-f9dcb738-f6dd-4eb2-a42f-dac0ea45143d", {
 			locale: 'pt-BR'
 		});

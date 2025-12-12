@@ -61,11 +61,17 @@
 				<div class="card-body p-3">
 					<div class="checkout-container">
 						
+						<div class="alert alert-info mb-3">
+							<strong>💳 Formas de pagamento aceitas:</strong><br>
+							• <strong>PIX:</strong> Aprovação instantânea<br>
+							• <strong>Cartão de Crédito:</strong> Apenas crédito (débito não é aceito para pagamentos online)
+						</div>
+						
 						<label for="paymentType">Selecione a forma de pagamento:</label>
 						<select id="paymentType" class="form-select">
 							<option value="">-- Escolha --</option>
+							<option value="pix">PIX (Recomendado - Instantâneo)</option>
 							<option value="card">Cartão de Crédito</option>
-							<option value="pix">PIX</option>
 						</select>
 						<!-- Área dinâmica -->
 						<div class="area-pix" style="display: none;">
@@ -117,7 +123,8 @@
 {% block javascripts %}
 	<script src="//sdk.mercadopago.com/js/v2"></script>
 	<script type="module">
-		const mp = new MercadoPago("TEST-f9dcb738-f6dd-4eb2-a42f-dac0ea45143d", {
+		// Public Key de produção - Sergio Ferrari
+		const mp = new MercadoPago("APP_USR-a6eb6213-ae14-4a59-ade4-f990a26ef542", {
 			locale: 'pt-BR'
 		});
 		const paymentType = document.getElementById("paymentType");
@@ -128,30 +135,98 @@
 			statusDiv.innerHTML = "";
 			formContainer.style.display = "block";
 			if (this.value === "card") {
+				// Aviso sobre cartão de crédito
+				statusDiv.innerHTML = `
+					<div class="alert alert-warning">
+						<strong>⚠️ Atenção:</strong> Apenas cartões de CRÉDITO são aceitos.<br>
+						Cartões de débito não funcionam para pagamentos online.<br>
+						<strong>Recomendamos usar PIX</strong> para aprovação instantânea.
+					</div>
+				`;
+				
 				// Renderiza o Brick de Cartão
 				const cardForm = mp.bricks();
 				cardForm.create("cardPayment", "payment-form", {
 					initialization: {
-				amount: 100.00, // valor do pagamento
-			},
-			callbacks: {
-				onReady: () => {
-					console.log("✅ Formulário de cartão pronto!");
-				},
-				onSubmit: (formData) => {
-					statusDiv.innerHTML = `<div class="loading">Processando pagamento...</div>`;
-				// Aqui você envia formData ao seu backend
-					console.log("Dados do Cartão:", formData);
-					setTimeout(() => {
-						statusDiv.innerHTML = `<div class="success">✅ Pagamento aprovado!</div>`;
-					}, 2000);
-				},
-				onError: (error) => {
-					statusDiv.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
-				}
+						amount: {{ price }}, // valor do plano escolhido
+					},
+					callbacks: {
+						onReady: () => {
+							console.log("✅ Formulário de cartão pronto!");
+						},
+						onSubmit: async (formData) => {
+							statusDiv.innerHTML = `<div class="loading">Processando pagamento com cartão...</div>`;
+							
+							try {
+								// Envia os dados do cartão para o backend
+								const response = await fetch('{{ path('pagar_com_cartao') }}', {
+									method: 'POST',
+									headers: {
+										'Content-Type': 'application/json',
+									},
+									body: JSON.stringify({
+										...formData,
+										email: '{{ email }}',
+										amount: {{ price }},
+										description: '{{ title }}'
+									})
+								});
+								
+								const result = await response.json();
+								
+								if (result.status === 'approved') {
+									statusDiv.innerHTML = `<div class="success">✅ Pagamento aprovado! Redirecionando...</div>`;
+									setTimeout(() => {
+										window.location.href = '{{ path('pagamento_sucesso') }}';
+									}, 2000);
+								} else if (result.status === 'pending' || result.status === 'in_process') {
+									statusDiv.innerHTML = `<div class="alert alert-warning">⏳ Pagamento em processamento. Você receberá um e-mail quando for confirmado.</div>`;
+									setTimeout(() => {
+										window.location.href = '{{ path('pagamento_pendente') }}';
+									}, 3000);
+								} else {
+									let mensagemErro = 'Tente outro cartão de CRÉDITO';
+									
+									if (result.status_detail) {
+										const erros = {
+											'cc_rejected_insufficient_amount': 'Saldo insuficiente',
+											'cc_rejected_bad_filled_security_code': 'Código de segurança inválido',
+											'cc_rejected_bad_filled_date': 'Data de validade inválida',
+											'cc_rejected_bad_filled_other': 'Dados do cartão incorretos',
+											'cc_rejected_call_for_authorize': 'Entre em contato com seu banco',
+											'cc_rejected_card_disabled': 'Cartão desabilitado',
+											'cc_rejected_duplicated_payment': 'Pagamento duplicado',
+											'cc_rejected_high_risk': 'Pagamento recusado por segurança',
+											'cc_rejected_invalid_installments': 'Número de parcelas inválido',
+											'cc_rejected_max_attempts': 'Limite de tentativas excedido',
+											'cc_rejected_other_reason': 'Cartão recusado pelo banco'
+										};
+										
+										mensagemErro = erros[result.status_detail] || result.status_detail;
+									}
+									
+									statusDiv.innerHTML = `
+										<div class="alert alert-danger">
+											<strong>❌ Pagamento Recusado</strong><br>
+											${mensagemErro}<br><br>
+											<small>
+												<strong>Dica:</strong> Use PIX para aprovação instantânea ou tente outro cartão de CRÉDITO.<br>
+												<em>Cartões de débito não são aceitos para pagamentos online.</em>
+											</small>
+										</div>
+									`;
+								}
+							} catch (error) {
+								console.error('Erro:', error);
+								statusDiv.innerHTML = `<div class="error">❌ Erro ao processar pagamento: ${error.message}</div>`;
+							}
+						},
+						onError: (error) => {
+							statusDiv.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
+						}
+					}
+				});
 			}
-		});
-		}
 		if (this.value === "pix") {
 			document.querySelector('.payment-method').innerHTML = document.querySelector('.area-pix').innerHTML;
 			// Renderiza o Brick de Pix
