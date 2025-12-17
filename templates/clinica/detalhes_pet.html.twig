@@ -973,14 +973,14 @@
                         contentDiv.className = 'service-detail-content';
                         cardDiv.appendChild(contentDiv);
                         serviceDetailsContent.appendChild(cardDiv);
-                        console.log(contentData)
+                        console.log(JSON.parse(contentData))
                         if (contentData) {
                             if (isHtml) {
                                 contentDiv.innerHTML = contentData;
                             } else {
                                 const quillDisplay = new Quill(contentDiv, { theme: 'bubble', readOnly: true, modules: { toolbar: false } });
                                 window.currentQuillDisplayEditors.push(quillDisplay);
-                                try { quillDisplay.setContents(JSON.parse(contentData)); }
+                                try { quillDisplay.setContents(JSON.parse(contentData).ops[0]); }
                                 catch { quillDisplay.setText('Conteúdo não disponível ou formato inválido.'); }
                             }
                         } else {
@@ -1024,7 +1024,7 @@
                     if (tipo === 'Receita'){
                         Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html(), 'Imprimir Receita', 'Fechar', 'imprimir-receita');
                         var conteudoDaReceita = '';
-                        console.log(serviceDisplayContainer);
+                        console.log(serviceDisplayContainer.html());
 
                         $(document).on('click', '.imprimir-receita', function () {
                             // Encontra o conteúdo da receita
