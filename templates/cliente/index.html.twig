@@ -10,36 +10,71 @@
     .card-item { transition: box-shadow 0.2s; }
     .card-item:hover { box-shadow: 0 0 0 4px #e5eefe; }
     .dropdown-menu .dropdown-item.text-danger { color: #dc3545 !important; }
+{#     .cliente-card {
+        background: #fff;
+        transition: all .25s ease;
+    }
+
+    .cliente-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(0,0,0,.08);
+    }
+
+    .cliente-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6f42c1, #a98eda);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: white;
+    } #}
+.info-group {
+  margin-bottom: 1rem;
+}
+
+.info-label {
+  font-size: .8rem;
+  color: #6c757d;
+}
+
+.info-box {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: .6rem .9rem;
+  font-weight: 500;
+}
+
+.pet-info-box {
+  background: #f8f9fa;
+  border-radius: 14px;
+  padding: .9rem 1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,.05);
+}
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="container mt-4">
+<div class="container">
     <!-- Action Bar -->
     <div class="row mb-4 align-items-center action-bar">
-        <div class="col-md-6">
-            <h3 class="page-title mb-0">
+        <div class="col-md-12">
+            <h3 class="page-title text-muted mb-0">
                 <i class="bi bi-people-fill me-2"></i>Clientes
-            </h3>
-        </div>
-        <div class="col-md-6 text-end">
-            <a href="{{ path('cliente_novo') }}" class="btn btn-primary">
+            <a href="{{ path('cliente_novo') }}" class="btn btn-primary float-end">
                 <i class="fas fa-plus me-2"></i>Novo Cliente
             </a>
+            </h3>
         </div>
     </div>
 
-    <!-- Search -->
-    <div class="row mb-4 search-container">
-        <div class="col-12">
-            <input type="text" id="searchInputClientes" class="form-control" placeholder="🔍 Pesquisar por nome, CPF, e-mail ou telefone..." />
-        </div>
-    </div>
 
     <div class="tabela-container container-fluid px-2">
         <div id="cardContainerClientes" class="row gy-3">
             {% for cliente in clientes %}
-                <div class="col-12 card-item" data-search="{{ cliente.nome }} {{ cliente.cpf }} {{ cliente.email }} {{ cliente.telefone }}">
+                <div class="col-12 card-items" style="z-index: 99 !important;" data-search="{{ cliente.nome }} {{ cliente.cpf }} {{ cliente.email }} {{ cliente.telefone }}">
                     <div class="card shadow-lg border-0 rounded-3">
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -49,42 +84,40 @@
                                            data-bs-toggle="offcanvas"
                                            data-bs-target="#offcanvasScrolling"
                                            aria-controls="offcanvasScrolling"
-                                           data-id="{{ cliente.id }}">
+                                        data-id="{{ cliente.id }}">
                                             {{ cliente.nome }}
-                                        </a>
+                                    </a>
                                     </h5>
-                                    {% if cliente.cpf %}
-                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
-                                        <i class="bx bx-id-card"></i> {{ cliente.cpf }}
-                                    </p>
-                                    {% endif %}
-                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
-                                        <i class="bx bx-envelope"></i> {{ cliente.email ?? '-' }}
-                                    </p>
-                                    <p class="card-text text-muted d-flex align-items-center gap-1">
-                                        <i class="bx bx-phone"></i> {{ cliente.telefone ?? '-' }}
-                                    </p>
+                                    <div class="d-flex flex-wrap gap-3 text-muted small mt-1">
+                                        {% if cliente.cpf %}
+                                            <span><i class="bx bx-id-card"></i> {{ cliente.cpf }}</span>
+                                        {% endif %}
+                                        <span><i class="bx bx-envelope"></i> {{ cliente.email ?? '-' }}</span>
+                                        <span><i class="bx bx-phone"></i> {{ cliente.telefone ?? '-' }}</span>
+                                    </div>
                                 </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <div class="dropdown">
-                                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                            Ação
+                                <!-- Ações -->
+                                <div class="col-auto">
+                                    <div class="dropdown dropstart">
+                                        <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-toggle="dropdown">
+                                            <i class="bx bx-dots-vertical-rounded"></i> Ação
                                         </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
+                                        <ul class="dropdown-menu">
+                                            <li class="d-none">
                                                 <a href="{{ path('cliente_agendamentos', {'id': cliente.id}) }}" class="dropdown-item">
-                                                    Ver Agendamentos
+                                                    <i class="bx bx-calendar"></i> Ver Agendamentos
                                                 </a>
                                             </li>
                                             <li>
                                                 <a href="{{ path('cliente_editar', {'id': cliente.id}) }}" class="dropdown-item">
-                                                    Editar
+                                                    <i class="bx bx-edit"></i> Editar
                                                 </a>
                                             </li>
                                             <li>
-                                                <form method="post" action="{{ path('cliente_deletar', {'id': cliente.id}) }}" class="d-inline">
-                                                    <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Tem certeza que deseja deletar este cliente?')">
-                                                        Deletar
+                                                <form method="post" action="{{ path('cliente_deletar', {'id': cliente.id}) }}">
+                                                    <button type="submit" class="dropdown-item text-danger"
+                                                    onclick="return confirm('Tem certeza que deseja deletar este cliente?')">
+                                                    <i class="bx bx-trash"></i> Deletar
                                                     </button>
                                                 </form>
                                             </li>
@@ -113,45 +146,80 @@
 
 <!-- OFFCANVAS: Mantém tudo aqui! -->
 <div class="offcanvas offcanvas-end" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
-  <div class="offcanvas-header border-bottom">
-    <h5 class="offcanvas-title fw-bold text-primary" id="offcanvasScrollingLabel">📋 Detalhes do Cliente</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+<div class="offcanvas-header border-bottom bg-white">
+  <div>
+    <h5 class="offcanvas-title fw-bold text-primary mb-0">
+      <i class="bx bx-user-circle"></i> Detalhes do Cliente
+    </h5>
+    <small class="text-muted">Informações completas, Agendamentos, pagamentos e pets</small>
   </div>
+  <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+</div>
   <div class="offcanvas-body bg-light">
-    <ul class="nav nav-tabs mb-4" id="clienteTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <a class="nav-link active" id="dados-tab" data-bs-toggle="tab" href="#dados" role="tab">Dados do Cliente</a>
-      </li>
-      <li class="nav-item" role="presentation">
-        <a class="nav-link" id="agendamentos-tab" data-bs-toggle="tab" href="#agendamentos" role="tab">📅 Agendamentos</a>
-      </li>
-      <li class="nav-item" role="presentation">
-        <a class="nav-link" id="pagamentos-tab" data-bs-toggle="tab" href="#pagamentos" role="tab">Pagamentos Pendentes</a>
-      </li>
-      <li class="nav-item" role="presentation">
-        <a class="nav-link" id="pets-tab" data-bs-toggle="tab" href="#pets" role="tab">Pets</a>
-      </li>
-    </ul>
+<ul class="nav nav-pills gap-2 mb-4" id="clienteTabs" role="tablist">
+  <li class="nav-item">
+    <button class="nav-link active rounded-pill px-3" data-bs-toggle="tab" data-bs-target="#dados">
+      <i class="bx bx-id-card"></i> Dados
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link rounded-pill px-3" data-bs-toggle="tab" data-bs-target="#agendamentos">
+      <i class="bx bx-calendar"></i> Agenda
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link rounded-pill px-3" data-bs-toggle="tab" data-bs-target="#pagamentos">
+      <i class="bx bx-credit-card"></i> Pagamentos
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link rounded-pill px-3" data-bs-toggle="tab" data-bs-target="#pets">
+      <i class="bx bx-paw"></i> Pets
+    </button>
+  </li>
+</ul>
     <div class="tab-content">
       <div class="tab-pane fade show active" id="dados" role="tabpanel">
-        <div class="row g-3">
+        <div class="row g-3 placeholder-glow">
           <div class="col-md-6">
-            <p class="mb-1 info-label">Nome:</p>
-            <div class="info-box" id="clienteNome">-</div>
-            <p class="mt-3 mb-1 info-label">CPF:</p>
-            <div class="info-box" id="clienteCpf">-</div>
-            <p class="mt-3 mb-1 info-label">Email:</p>
-            <div class="info-box" id="clienteEmail">-</div>
-            <p class="mt-3 mb-1 info-label">Telefone:</p>
-            <div class="info-box" id="clienteTelefone">-</div>
+
+            <div class="info-group">
+              <span class="info-label"><i class="bx bx-user"></i> Nome</span>
+              <div class="info-box placeholder col-12" id="clienteNome">-</div>
+            </div>
+            
+            <div class="info-group">
+              <span class="info-label"><i class="bx bxs-id-card"></i> CPF</span>
+              <div class="info-box placeholder col-12" id="clienteCpf">-</div>
+            </div>
+            
+            <div class="info-group">
+              <span class="info-label"><i class="bx bx-envelope"></i> E-mail</span>
+              <div class="info-box placeholder col-12" id="clienteEmail">-</div>
+            </div>
+            
+            <div class="info-group">
+              <span class="info-label"><i class="bx bx-phone"></i> Telefone</span>
+              <div class="info-box placeholder col-12" id="clienteTelefone">-</div>
+            </div>
+
           </div>
           <div class="col-md-6">
-            <p class="mb-1 info-label">Endereço:</p>
-            <div class="info-box" id="clienteEndereco">-</div>
-            <p class="mt-3 mb-1 info-label">Bairro:</p>
-            <div class="info-box" id="clienteBairro">-</div>
-            <p class="mt-3 mb-1 info-label">Cidade:</p>
-            <div class="info-box" id="clienteCidade">-</div>
+            
+            <div class="info-group">
+              <span class="info-label"><i class="bx bx-map-pin"></i> Endereço</span>
+              <div class="info-box placeholder col-12" id="clienteEndereco">-</div>
+            </div>
+            
+            <div class="info-group">
+              <span class="info-label"><i class="bx bx-map"></i> Bairro</span>
+              <div class="info-box placeholder col-12" id="clienteBairro">-</div>
+            </div>
+            
+            <div class="info-group">
+              <span class="info-label"><i class="bx bx-pin"></i> Cidade</span>
+              <div class="info-box placeholder col-12" id="clienteCidade">-</div>
+            </div>
           </div>
         </div>
         <div class="mt-4">
@@ -171,10 +239,15 @@
     </div>
     <!-- Modal do Pet dentro do offcanvas -->
     <div class="offcanvas offcanvas-end shadow" tabindex="-1" id="offcanvasPet" aria-labelledby="offcanvasPetLabel">
-      <div class="offcanvas-header border-bottom" style="background-color: #f5faff;">
-        <h5 class="offcanvas-title fw-bold text-success" id="offcanvasPetLabel">🐾 Detalhes do Pet</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-      </div>
+<div class="offcanvas-header border-bottom bg-white">
+  <div>
+    <h5 class="fw-bold text-success mb-0">
+      <i class="bx bx-paw"></i> Detalhes do Pet
+    </h5>
+    <small class="text-muted">Ficha completa do animal</small>
+  </div>
+  <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+</div>
       <div class="offcanvas-body bg-white" style="padding: 1.5rem 1.2rem;">
         <div class="mb-4 border rounded shadow-sm p-3 bg-light">
           <h6 class="text-muted mb-1">Nome do Pet</h6>
@@ -228,6 +301,7 @@
 {{ parent() }}
 <script src="{{ asset('js/TabelaDefault.js') }}"></script>
 <script>
+    $('#searchInput').attr('id','searchInputClientes');
 document.addEventListener('DOMContentLoaded', function () {
     new TabelaDefault({
         cardContainerId: 'cardContainerClientes',
@@ -237,138 +311,166 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Abre modal com detalhes do cliente (AJAX igual antes)
-    document.querySelectorAll('.abrir-modal-cliente').forEach(function (el) {
-        el.addEventListener('click', function (e) {
-            e.preventDefault();
-            const clienteId = this.getAttribute('data-id');
-            fetch('{{ path('cliente_detalhes', {'id': 'ID'}) }}'.replace('ID', clienteId))
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'ok') {
-                        const c = data.cliente;
-                        document.getElementById('clienteNome').innerText = c.nome || '-';
-                        document.getElementById('clienteCpf').innerText = c.cpf || '-';
-                        document.getElementById('clienteEmail').innerText = c.email || '-';
-                        document.getElementById('clienteTelefone').innerText = c.telefone || '-';
-                        document.getElementById('clienteEndereco').innerText = [c.rua, c.numero, c.complemento].filter(Boolean).join(', ') || '-';
-                        document.getElementById('clienteBairro').innerText = c.bairro || '-';
-                        document.getElementById('clienteCidade').innerText = c.cidade || '-';
-                        document.getElementById('clientePendencias').innerText = c.temFinanceiroPendente ? 'Sim' : 'Não';
+    $('.abrir-modal-cliente').on('click', function (e) {
+        e.preventDefault();
+        $('.info-box').addClass('placeholder').addClass('.col-12');
+        const clienteId = $(this).data('id');
 
-                        // Pets
-                        const petsDiv = document.getElementById('clientePets');
-                        petsDiv.innerHTML = '';
-                        if (c.pets && c.pets.length > 0) {
-                            const table = document.createElement('table');
-                            table.className = 'table agendamento-tabela pets-tabela';
-                            const thead = document.createElement('thead');
-                            thead.innerHTML = `
+        $.getJSON(
+            '{{ path('cliente_detalhes', {'id': 'ID'}) }}'.replace('ID', clienteId)
+        )
+        .done(function (data) {
+            if (data.status === 'ok') {
+                $('.info-box').removeClass('placeholder').removeClass('.col-12');
+                const c = data.cliente;
+
+                $('#clienteNome').text(c.nome || '-');
+                $('#clienteCpf').text(c.cpf || '-');
+                $('#clienteEmail').text(c.email || '-');
+                $('#clienteTelefone').text(c.telefone || '-');
+                $('#clienteEndereco').text(
+                    [c.rua, c.numero, c.complemento].filter(Boolean).join(', ') || '-'
+                );
+                $('#clienteBairro').text(c.bairro || '-');
+                $('#clienteCidade').text(c.cidade || '-');
+                $('#clientePendencias').text(c.temFinanceiroPendente ? 'Sim' : 'Não');
+
+                // 🐾 Pets
+                const $petsDiv = $('#clientePets');
+                $petsDiv.html('');
+
+                if (c.pets && c.pets.length > 0) {
+
+                    const $table = $(`
+                        <table class="table agendamento-tabela pets-tabela">
+                            <thead>
                                 <tr>
                                     <th>🐾 Nome</th>
                                     <th>Espécie</th>
                                     <th>Sexo</th>
                                     <th>Raça</th>
                                 </tr>
-                            `;
-                            table.appendChild(thead);
-                            const tbody = document.createElement('tbody');
-                            c.pets.forEach(p => {
-                                const tr = document.createElement('tr');
-                                tr.innerHTML = `
-                                    <td><a href="#" class="link-primary text-decoration-none pet-nome">${p.nome}</a></td>
-                                    <td>${p.especie}</td>
-                                    <td>${p.sexo}</td>
-                                    <td>${p.raca}</td>
-                                `;
-                                // Modal pet
-                                const link = tr.querySelector('.pet-nome');
-                                link.addEventListener('click', (e) => {
-                                    e.preventDefault();
-                                    document.getElementById('modalPetNome').innerText = p.nome || '-';
-                                    document.getElementById('modalPetEspecie').innerText = p.especie || '-';
-                                    document.getElementById('modalPetSexo').innerText = p.sexo || '-';
-                                    document.getElementById('modalPetRaca').innerText = p.raca || '-';
-                                    document.getElementById('modalPetPorte').innerText = p.porte || '-';
-                                    document.getElementById('modalPetIdade').innerText = p.idade || '-';
-                                    document.getElementById('modalPetObs').innerText = p.observacoes || 'Nenhuma observação';
-                                    const petModal = new bootstrap.Offcanvas(document.getElementById('offcanvasPet'));
-                                    petModal.show();
-                                });
-                                tbody.appendChild(tr);
-                            });
-                            table.appendChild(tbody);
-                            petsDiv.appendChild(table);
-                        } else {
-                            petsDiv.innerHTML = '<div class="text-muted">Nenhum pet cadastrado.</div>';
-                        }
-                        // Agendamentos
-                        const agendamentosList = document.getElementById('clienteAgendamentos');
-                        agendamentosList.innerHTML = '';
-                        if (c.agendamentos && c.agendamentos.length > 0) {
-                            let tabela = `
-                                <table class="table agendamento-tabela">
-                                    <thead>
-                                        <tr>
-                                            <th class="icone">📅</th>
-                                            <th>Data</th>
-                                            <th>Pet</th>
-                                            <th>Serviço</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                            `;
-                            c.agendamentos.forEach(ag => {
-                                tabela += `
-                                    <tr>
-                                        <td class="icone">🐾</td>
-                                        <td>${ag.data}</td>
-                                        <td>${ag.pet}</td>
-                                        <td>${ag.servico}</td>
-                                    </tr>
-                                `;
-                            });
-                            tabela += `</tbody></table>`;
-                            agendamentosList.innerHTML = tabela;
-                        } else {
-                            agendamentosList.innerHTML = '<div class="text-muted">Nenhum agendamento encontrado.</div>';
-                        }
-                        // Pagamentos
-                        const pagamentosList = document.getElementById('clientePagamentos');
-                        pagamentosList.innerHTML = '';
-                        if (c.pendencias && c.pendencias.length > 0) {
-                            let tabela = `
-                                <table class="table agendamento-tabela pagamentos-tabela">
-                                    <thead>
-                                        <tr>
-                                            <th>💳 Descrição</th>
-                                            <th class="valor">Valor</th>
-                                            <th>🗓️ Data</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                            `;
-                            c.pendencias.forEach(pg => {
-                                tabela += `
-                                    <tr>
-                                        <td>${pg.descricao}</td>
-                                        <td class="valor">R$ ${parseFloat(pg.valor).toFixed(2)}</td>
-                                        <td>${pg.data}</td>
-                                    </tr>
-                                `;
-                            });
-                            tabela += `</tbody></table>`;
-                            pagamentosList.innerHTML = tabela;
-                        } else {
-                            pagamentosList.innerHTML = '<div class="text-muted">Nenhuma pendência registrada.</div>';
-                        }
-                    }
-                })
-                .catch(error => {
-                    alert('Erro ao carregar os dados do cliente.');
-                    console.error(error);
-                });
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    `);
+
+                    c.pets.forEach(p => {
+                        const $tr = $(`
+                            <tr>
+                                <td><a href="#" class="link-primary text-decoration-none pet-nome">${p.nome}</a></td>
+                                <td>${p.especie}</td>
+                                <td>${p.sexo}</td>
+                                <td>${p.raca}</td>
+                            </tr>
+                        `);
+
+                        // Modal do pet
+                        $tr.find('.pet-nome').on('click', function (e) {
+                            e.preventDefault();
+
+                            $('#modalPetNome').text(p.nome || '-');
+                            $('#modalPetEspecie').text(p.especie || '-');
+                            $('#modalPetSexo').text(p.sexo || '-');
+                            $('#modalPetRaca').text(p.raca || '-');
+                            $('#modalPetPorte').text(p.porte || '-');
+                            $('#modalPetIdade').text(p.idade || '-');
+                            $('#modalPetObs').text(p.observacoes || 'Nenhuma observação');
+
+                            const petModal = new bootstrap.Offcanvas($('#offcanvasPet')[0]);
+                            petModal.show();
+                        });
+
+                        $table.find('tbody').append($tr);
+                    });
+
+                    $petsDiv.append($table);
+
+                } else {
+                    $petsDiv.html('<div class="text-muted">Nenhum pet cadastrado.</div>');
+                }
+
+                // 📅 Agendamentos
+                const $agendamentosList = $('#clienteAgendamentos');
+                $agendamentosList.html('');
+
+                if (c.agendamentos && c.agendamentos.length > 0) {
+
+                    let tabela = `
+                        <table class="table agendamento-tabela">
+                            <thead>
+                                <tr>
+                                    <th class="icone"><i class"bx bx-calendar"></i></th>
+                                    <th>Data</th>
+                                    <th>Pet</th>
+                                    <th>Serviço</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    c.agendamentos.forEach(ag => {
+                        tabela += `
+                            <tr>
+                                <td class="icone">🐾</td>
+                                <td>${ag.data}</td>
+                                <td>${ag.pet}</td>
+                                <td>${ag.servico}</td>
+                            </tr>
+                        `;
+                    });
+
+                    tabela += `</tbody></table>`;
+
+                    $agendamentosList.html(tabela);
+
+                } else {
+                    $agendamentosList.html('<div class="text-muted">Nenhum agendamento encontrado.</div>');
+                }
+
+                // 💳 Pagamentos
+                const $pagamentosList = $('#clientePagamentos');
+                $pagamentosList.html('');
+
+                if (c.pendencias && c.pendencias.length > 0) {
+
+                    let tabela = `
+                        <table class="table agendamento-tabela pagamentos-tabela">
+                            <thead>
+                                <tr>
+                                    <th>💳 Descrição</th>
+                                    <th class="valor">Valor</th>
+                                    <th>🗓️ Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    c.pendencias.forEach(pg => {
+                        tabela += `
+                            <tr>
+                                <td>${pg.descricao}</td>
+                                <td class="valor">R$ ${parseFloat(pg.valor).toFixed(2)}</td>
+                                <td>${pg.data}</td>
+                            </tr>
+                        `;
+                    });
+
+                    tabela += `</tbody></table>`;
+
+                    $pagamentosList.html(tabela);
+
+                } else {
+                    $pagamentosList.html('<div class="text-muted">Nenhuma pendência registrada.</div>');
+                }
+            }
+        })
+        .fail(function (error) {
+            alert('Erro ao carregar os dados do cliente.');
+            console.error(error);
         });
-    });
+});
+
     // Trava o fundo quando modal aberto
     document.getElementById('offcanvasScrolling').addEventListener('show.bs.offcanvas', () => {
         document.body.classList.add('modal-open');

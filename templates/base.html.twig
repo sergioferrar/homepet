@@ -5,17 +5,13 @@
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>Home Pet Shop System</title>
+    <title>{% block title %}{% endblock %} - Home Pet Shop System</title>
     <meta content="" name="description">
     <meta content="" name="keywords">
     <meta name="base" content="{{ url('home') }}"/>
 
     <!-- Favicons -->
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('images/logo.png')}}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}" crossorigin="use-credentials">
 
     <!-- Google Fonts -->
     <link href="https://fonts.gstatic.com" rel="preconnect">
@@ -309,6 +305,45 @@
         
         .back-to-top:hover {
             background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%) !important;
+        }
+
+        
+        /* Estilos para resultados de busca */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e4e7eb;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: 5px;
+        }
+        
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            text-decoration: none;
+            color: #333;
+            transition: background 0.2s;
+        }
+        
+        .search-result-item:hover {
+            background: #f6f5ff;
+        }
+        
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .search-bar {
+            position: relative;
         }
     </style>
 
@@ -702,47 +737,7 @@
     // Atualiza notificações a cada 2 minutos
     setInterval(carregarNotificacoes, 120000);
 
-    // 🔍 SISTEMA DE BUSCA
-    const searchInput = document.getElementById('searchInput');
-    const searchResults = document.getElementById('searchResults');
-    const searchForm = document.getElementById('searchForm');
     
-    let searchTimeout;
-    
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        const query = this.value.trim();
-        
-        if (query.length < 2) {
-            searchResults.style.display = 'none';
-            return;
-        }
-        
-        searchTimeout = setTimeout(async () => {
-            try {
-                const response = await fetch(`/homepet/public/clinica/buscar?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-                
-                if (data.resultados && data.resultados.length > 0) {
-                    searchResults.innerHTML = data.resultados.map(r => `
-                        <a href="${r.url}" class="search-result-item">
-                            <i class="bi ${r.icon} me-2"></i>
-                            <div>
-                                <strong>${r.nome}</strong>
-                                <small class="text-muted d-block">${r.tipo}</small>
-                            </div>
-                        </a>
-                    `).join('');
-                    searchResults.style.display = 'block';
-                } else {
-                    searchResults.innerHTML = '<div class="search-result-item text-muted">Nenhum resultado encontrado</div>';
-                    searchResults.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Erro na busca:', error);
-            }
-        }, 300);
-    });
     
     // Fecha resultados ao clicar fora
     document.addEventListener('click', function(e) {
@@ -756,46 +751,6 @@
         e.preventDefault();
     });
 </script>
-
-<style>
-    /* Estilos para resultados de busca */
-    .search-results {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: white;
-        border: 1px solid #e4e7eb;
-        border-radius: 6px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        max-height: 400px;
-        overflow-y: auto;
-        z-index: 1000;
-        margin-top: 5px;
-    }
-    
-    .search-result-item {
-        display: flex;
-        align-items: center;
-        padding: 12px 15px;
-        border-bottom: 1px solid #f0f0f0;
-        text-decoration: none;
-        color: #333;
-        transition: background 0.2s;
-    }
-    
-    .search-result-item:hover {
-        background: #f6f5ff;
-    }
-    
-    .search-result-item:last-child {
-        border-bottom: none;
-    }
-    
-    .search-bar {
-        position: relative;
-    }
-</style>
 
 {% block javascripts %}{% endblock %}
 

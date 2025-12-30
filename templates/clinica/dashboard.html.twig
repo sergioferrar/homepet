@@ -4,94 +4,94 @@
 
 {% block stylesheets %}
 <style>
-.card-listagem-scroll { max-height: 416px; overflow-y: auto; }
-.card-body-fixo { height: 500px; overflow-y: auto; }
+    .card-listagem-scroll { max-height: 416px; overflow-y: auto; }
+    .card-body-fixo { height: 500px; overflow-y: auto; }
 
-/* Melhorias visuais */
-.card {
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: none;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.btn {
-    transition: all 0.2s;
-}
-
-.btn:hover {
-    transform: translateY(-1px);
-}
-
-.icon-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    right: 15px;
-    top: 15px;
-}
-
-.icon-circle i {
-    font-size: 24px;
-}
-
-/* Cards modernos */
-.card {
-    border-radius: 12px;
-}
-
-.card-header {
-    border-radius: 12px 12px 0 0 !important;
-}
-
-/* Animações suaves */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
+    /* Melhorias visuais */
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-}
 
-.row > div {
-    animation: fadeInUp 0.5s ease-out;
-}
+    .btn {
+        transition: all 0.2s;
+    }
 
-.card-header {
-    border-bottom: 2px solid rgba(0,0,0,0.05);
-    background: linear-gradient(to right, rgba(255,255,255,0.9), rgba(255,255,255,0.5));
-}
+    .btn:hover {
+        transform: translateY(-1px);
+    }
 
-/* Estilo das abas de vacinas */
-.vaccine-tabs .nav-link {
-    background-color: #e9ecef;
-    color: #6c757d;
-    border: none;
-    transition: all 0.3s;
-    border-radius: 0.375rem;
-}
+    .icon-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        right: 15px;
+        top: 15px;
+    }
 
-.vaccine-tabs .nav-link:hover {
-    background-color: #0d6efd;
-    color: white;
-}
+    .icon-circle i {
+        font-size: 24px;
+    }
 
-.vaccine-tabs .nav-link.active {
-    background-color: var(--bs-primary, #0d6efd) !important;
-    color: white !important;
-    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
-}
+    /* Cards modernos */
+    .card {
+        border-radius: 12px;
+    }
+
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+    }
+
+    /* Animações suaves */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .row > div {
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    .card-header {
+        border-bottom: 2px solid rgba(0,0,0,0.05);
+        background: linear-gradient(to right, rgba(255,255,255,0.9), rgba(255,255,255,0.5));
+    }
+
+    /* Estilo das abas de vacinas */
+    .vaccine-tabs .nav-link {
+        background-color: #e9ecef;
+        color: #6c757d;
+        border: none;
+        transition: all 0.3s;
+        border-radius: 0.375rem;
+    }
+
+    .vaccine-tabs .nav-link:hover {
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .vaccine-tabs .nav-link.active {
+        background-color: var(--bs-primary, #0d6efd) !important;
+        color: white !important;
+        box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+    }
 </style>
 {% endblock %}
 
@@ -465,6 +465,8 @@
 <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.19/locales-all.global.min.js'></script>
 <script>
 $(function(){
+    $('#searchForm').attr('action', "{{ path('clinica_dashboard') }}");
+    
     var largura = screen.width;
     var altura = screen.height;
     $('.consulta').on('click', function(){
@@ -647,5 +649,47 @@ function confirmarMedicamentoGeral(eventoId, internacaoId, titulo) {
         alert('❌ Erro ao confirmar medicamento: ' + error.message);
     });
 }
+
+// 🔍 SISTEMA DE BUSCA
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    const searchForm = document.getElementById('searchForm');
+    
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
+        
+        searchTimeout = setTimeout(async () => {
+            try {
+                const response = await fetch(`/homepet/public/clinica/buscar?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.resultados && data.resultados.length > 0) {
+                    searchResults.innerHTML = data.resultados.map(r => `
+                        <a href="${r.url}" class="search-result-item">
+                            <i class="bi ${r.icon} me-2"></i>
+                            <div>
+                                <strong>${r.nome}</strong>
+                                <small class="text-muted d-block">${r.tipo}</small>
+                            </div>
+                        </a>
+                    `).join('');
+                    searchResults.style.display = 'block';
+                } else {
+                    searchResults.innerHTML = '<div class="search-result-item text-muted">Nenhum resultado encontrado</div>';
+                    searchResults.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro na busca:', error);
+            }
+        }, 300);
+    });
 </script>
 {% endblock %}

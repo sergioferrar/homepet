@@ -372,7 +372,7 @@ class DashboardController extends DefaultController
                 $resultados[] = [
                     'nome' => $pet->getNome(),
                     'tipo' => 'Pet' . ($pet->getEspecie() ? ' - ' . $pet->getEspecie() : ''),
-                    'url' => '/homepet/public/clinica/pet/' . $pet->getId(),
+                    'url' => $this->generateUrl('clinica_detalhes_pet', ['id' => $pet->getId()]),
                     'icon' => 'bi-heart-fill'
                 ];
             }

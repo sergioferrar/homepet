@@ -2,26 +2,11 @@
 
 {% block page_title %}<i class="bi bi-heart-fill me-2"></i> Pets{% endblock %}
 
-{% block stylesheets %}
-{{ parent() }}
-<style>
-    .card-title { color: #004080; font-weight: bold; }
-    .tabela-container input.form-control-md { max-width: 450px; margin-bottom: 1.5rem; }
-    .card-item { transition: box-shadow 0.2s; }
-    .card-item:hover { box-shadow: 0 0 0 4px #e5eefe; }
-    .dropdown-menu .dropdown-item.text-danger { color: #dc3545 !important; }
-</style>
-{% endblock %}
-
 {% block body %}
-<div class="container mt-5">
+<div class="container">
     <div class="tabela-container container-fluid px-2">
-        <div class="row my-3">
-            <div class="col-12">
-                <input type="text" id="searchInputPets" class="form-control form-control-md" placeholder="🔍 Pesquisar por nome, dono, raça, espécie..." />
-            </div>
-        </div>
-        <div class="demo-inline-spacing mb-3">
+        
+        <div class="text-end mb-3">
             <a href="{{ path('pet_novo') }}">
                 <button type="button" class="btn btn-primary">
                     <span class="icon-base bx bx-plus icon-sm me-2"></span> Novo Pet
@@ -29,71 +14,95 @@
             </a>
         </div>
         <div id="cardContainerPets" class="row gy-3">
-            {% for pet in pets %}
-                <div class="col-12 card-item" data-search="{{ pet.nome }} {{ pet.dono_nome }} {{ pet.especie }} {{ pet.raca }}">
-                    <div class="card shadow-lg border-0 rounded-3">
-                        <div class="card-body p-3">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <div class="flex-grow-1">
-                                    <h5 class="card-title mb-1">
-                                        <a href="#" class="text-primary abrir-modal-pet fw-bold"
-                                           data-bs-toggle="offcanvas"
-                                           data-bs-target="#offcanvasPet"
-                                           aria-controls="offcanvasPet"
-                                           data-id="{{ pet.id }}">
-                                            {{ pet.nome }}
-                                        </a>
-                                    </h5>
-                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
-                                        <i class="bx bx-user"></i> {{ pet.dono_nome }}
-                                    </p>
-                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
-                                        <i class="bx bx-shape-circle"></i> {{ pet.especie }}
-                                        <span class="mx-2 text-secondary">|</span>
-                                        <span><b>Raça:</b> {{ pet.raca }}</span>
-                                    </p>
-                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
-                                        <i class="bx bx-male-female"></i> {{ pet.sexo }}
-                                        <span class="mx-2 text-secondary">|</span>
-                                        <span><b>Porte:</b> {{ pet.porte }}</span>
-                                        <span class="mx-2 text-secondary">|</span>
-                                        <span><b>Idade:</b> {{ pet.idade }} anos</span>
-                                    </p>
-                                    <p class="card-text text-muted d-flex align-items-center gap-1">
-                                        <i class="bx bx-comment"></i> <b>Obs:</b> {{ pet.observacoes ?: '-' }}
-                                    </p>
-                                </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <div class="dropdown">
-                                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                            Ação
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
-                                                <a href="{{ path('pet_editar', {'id': pet.id}) }}" class="dropdown-item">
-                                                    Editar
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <form method="post" action="{{ path('pet_deletar', {'id': pet.id}) }}" class="d-inline">
-                                                    <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Tem certeza que deseja deletar este pet?')">
-                                                        Deletar
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
+{% for pet in pets %}
+<div class="col-12 card-items" data-search="{{ pet.nome }} {{ pet.dono_nome }} {{ pet.especie }} {{ pet.raca }}">
+
+<div class="card pet-card border-0 rounded-4 shadow-sm">
+    <div class="card-body p-3">
+
+        <div class="row align-items-center g-3">
+
+            <!-- Avatar -->
+            <div class="col-auto">
+                <div class="pet-avatar">
+                    <i class="bx bx-paw"></i>
                 </div>
-            {% else %}
-                <div class="col-12">
-                    <div class="alert alert-info text-center mb-0">Nenhum pet encontrado.</div>
+            </div>
+
+            <!-- Conteúdo -->
+            <div class="col">
+
+                <h5 class="mb-1 fw-semibold text-primary">
+                    <a href="#" class="text-primary abrir-modal-pet text-decoration-none"
+                       data-bs-toggle="offcanvas"
+                       data-bs-target="#offcanvasPet"
+                       aria-controls="offcanvasPet"
+                       data-id="{{ pet.id }}">
+                        {{ pet.nome }}
+                    </a>
+                    <span class="text-muted fs-6">— {{ pet.dono_nome }}</span>
+                </h5>
+
+                <div class="d-flex flex-wrap gap-3 text-muted small mt-1">
+                    <span>{{ pet.especie|especie|raw }} {{ pet.especie }}</span>
+                    <span><b>Raça:</b> {{ pet.raca }}</span>
+                    <span>{{ pet.sexo }}</span>
+                    <span><b>Porte:</b> {{ pet.porte }}</span>
+                    <span><b>Idade:</b> {{ pet.idade }} anos</span>
                 </div>
-            {% endfor %}
+
+                <div class="mt-2">
+                    {% if pet.observacoes %}
+                        <span class="bg-warning-subtle text-warning-emphasis px-3 py-2 rounded-3">
+                            <i class="bx bx-error-circle"></i> {{ pet.observacoes }}
+                        </span>
+                    {% else %}
+                        <span class="bg-light text-muted px-3 py-2 rounded-3">
+                            Sem observações
+                        </span>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- Ações -->
+            <div class="col-auto">
+                <div class="dropdown dropstart">
+                    <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-toggle="dropdown">
+                        <i class="bx bx-dots-vertical-rounded"></i> Ação
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                        <li>
+                            <a href="{{ path('pet_editar', {'id': pet.id}) }}" class="dropdown-item">
+                                Editar
+                            </a>
+                        </li>
+                        <li>
+                            <form method="post" action="{{ path('pet_deletar', {'id': pet.id}) }}">
+                                <button type="submit" class="dropdown-item text-danger"
+                                        onclick="return confirm('Tem certeza que deseja deletar este pet?')">
+                                    Deletar
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
         </div>
+    </div>
+</div>
+
+</div>
+{% else %}
+<div class="col-12">
+    <div class="alert alert-info text-center mb-0">Nenhum pet encontrado.</div>
+</div>
+{% endfor %}
+
+</div>
+
         <div class="row mt-4">
             <div class="col text-center">
                 <nav aria-label="Paginação">
@@ -103,12 +112,27 @@
         </div>
     </div>
 </div>
+
+<div class="offcanvas offcanvas-start" data-bs-scroll="true" tabindex="-1" id="abrir-modal-pet" aria-labelledby="abrir-modal-petLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="abrir-modal-petLabel">Backdrop with scrolling</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <p>Try scrolling the rest of the page to see this option in action.</p>
+  </div>
+</div>
 {% endblock %}
 
 {% block javascripts %}
 {{ parent() }}
 <script src="{{ asset('js/TabelaDefault.js') }}"></script>
 <script>
+const offcanvasElementList = document.querySelectorAll('.offcanvas')
+const offcanvasList = [...offcanvasElementList].map(offcanvasEl => new bootstrap.Offcanvas(offcanvasEl))
+
+$('#searchInput').attr('id','searchInputPets');
+
 document.addEventListener('DOMContentLoaded', function () {
     new TabelaDefault({
         cardContainerId: 'cardContainerPets',

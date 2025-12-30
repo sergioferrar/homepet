@@ -57,7 +57,41 @@ class AppExtension extends AbstractExtension
             new TwigFilter('getStatus', [$this, 'getStatus']),
             new TwigFilter('validaPlano', [$this, 'validaPlano']),
             new TwigFilter('listaPlano', [$this, 'listaPlano']),
+            new TwigFilter('especie', [$this, 'especie']),
+            new TwigFilter('sexo', [$this, 'sexo']),
         ];
+    }
+
+    public function sexo($string)
+    {
+        switch (strtolower($string)) {
+            case 'f':
+                return 'Fêmea';
+                break;
+            case 'm':
+                return 'Macho';
+                break;
+            
+            default:
+                // code...
+                break;
+        }
+    }
+
+    public function especie($string)
+    {
+        switch ($string) {
+            case 'canina':
+                return '<i class="bx bxs-dog"></i>';
+                break;
+            case 'felina':
+                return '<i class="fs-5 bx bxs-cat"></i>';
+                break;
+            
+            default:
+                return '<i class="bx bxs-dog"></i>';
+                break;
+        }
     }
 
 

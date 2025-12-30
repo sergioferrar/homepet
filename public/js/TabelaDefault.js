@@ -5,7 +5,7 @@ class TabelaDefault {
         this.searchInput = document.getElementById(config.searchInputId);
         this.itemsPerPage = config.itemsPerPage || 5;
         this.currentPage = 1;
-        this.cards = Array.from(this.cardContainer.querySelectorAll('.card-item'));
+        this.cards = Array.from(this.cardContainer.querySelectorAll('.card-items'));
         this.filteredCards = this.cards.slice();
 
         if (this.searchInput) {
