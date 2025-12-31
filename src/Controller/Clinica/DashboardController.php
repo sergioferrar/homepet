@@ -347,15 +347,16 @@ class DashboardController extends DefaultController
     public function buscar(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $this->switchDB();
+
         $baseId = $this->getIdBase();
+        $resultados = [];
         $query = $request->query->get('q', '');
 
         if (strlen($query) < 2) {
             return new JsonResponse(['resultados' => []]);
         }
-
+        
         try {
-            $resultados = [];
 
             // Buscar pets
             $pets = $em->getRepository(\App\Entity\Pet::class)

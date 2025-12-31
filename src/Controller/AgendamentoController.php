@@ -27,7 +27,7 @@ class AgendamentoController extends DefaultController
         $data = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
         $agendamentos = $this->getRepositorio(Agendamento::class)->findByDate($this->session->get('userId'), $data);
         $totalAgendamentos = $this->getRepositorio(Agendamento::class)->contarAgendamentosPorData($this->session->get('userId'), $data);
-
+        // dd($agendamentos, $data);
         return $this->render('agendamento/index.html.twig', [
             'agendamentos' => $agendamentos,
             'data' => $data,

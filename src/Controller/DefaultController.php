@@ -48,6 +48,7 @@ class DefaultController extends AbstractController
      */
     public function __construct(?Security $security, ManagerRegistry $managerRegistry, RequestStack $request, TempDirManager $tempDirManager, DatabaseBkp $databaseBkp)
     {
+        date_default_timezone_set('America/Sao_Paulo');  
         $this->security = $security;
         $this->managerRegistry = $managerRegistry;
         $this->requestStack = $request;

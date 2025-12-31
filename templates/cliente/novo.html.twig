@@ -1,14 +1,17 @@
 {# templates/cliente/novo.html.twig #}
 {% extends 'forms/_form_base.html.twig' %}
 
-{% block form_page_title %}Novo Cliente{% endblock %}
+{% block form_page_title %}Novo Agendamento{% endblock %}
+{% block page_title %}
+    Novo Agendamento
+{% endblock %}
 
 {% block breadcrumb_items %}
+    <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-primary">Agendamento</a></li>
     <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-primary">Clientes</a></li>
     <li class="breadcrumb-item active">Novo</li>
 {% endblock %}
 
-{% block form_card_title %}Cadastro de Cliente{% endblock %}
 
 {% block form_content %}
     <form method="post" action="{{ path('cliente_novo') }}">
@@ -77,6 +80,7 @@
 
 {% block form_javascripts %}
     <script>
+        $('.search-bar').addClass('d-none');
         $(function(){
             // Máscara de CPF
             $('#cpf').on('input', function() {

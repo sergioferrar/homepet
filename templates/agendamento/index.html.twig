@@ -13,102 +13,185 @@
     .dropdown-menu .dropdown-item.text-danger { color: #dc3545 !important; }
     .text-danger.fw-bold { color: #c00 !important; font-weight: bold !important; }
     .text-success.fw-bold { color: #007f00 !important; font-weight: bold !important; }
+
+    .agenda-card {
+        transition: all .25s ease;
+        background: #fff;
+    }
+
+    .agenda-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(0,0,0,.08);
+    }
+
+    .agenda-date {
+        width: 64px;
+        background: #f8f9fa;
+        border-radius: 14px;
+        padding: .5rem;
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
+    }
+
+    .info-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .info-label {
+      font-size: .8rem;
+      color: #6c757d;
+    }
+
+    .info-box {
+      background: #fff;
+      border-radius: 12px;
+      padding: .6rem .9rem;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-4">
     <!-- Action Bar -->
-    <div class="row mb-4 align-items-center action-bar">
-        <div class="col-md-12">
-            <p class="text-muted mb-0 mt-2">Gerencie os agendamentos através do calendário integrado</p>
-        </div>
+    <div class="pagetitle">
+      <h1>Gerencie os agendamentos através do calendário integrado
+            <a href="{{ path('agendamento_novo') }}" class="btn btn-primary float-end">
+                <i class="bx bx-plus-medical me-1"></i>Novo Agendamento
+            </a>
+        </h1>
+      <nav></h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+          <li class="breadcrumb-item">Atendimento</li>
+          <li class="breadcrumb-item active">Agendamentos</li>
+        </ol>
+      </nav>
     </div>
 
-    <!-- Search -->
-    <div class="row mb-4 search-container">
-        <div class="col-12">
-            <input type="text" id="searchInputAgendamento" class="form-control" placeholder="🔍 Pesquisar por pet, tutor, serviço, data..." />
+    <div class="row mb-4 align-items-center action-bar">
+        <div class="col-md-12">
+            <h3 class="text-muted mb-0 mt-2"></h3>
         </div>
     </div>
 
     <div class="tabela-container container-fluid px-2">
 
         <div id="cardContainerAgendamento" class="row gy-3">
+
             {% for agendamento in agendamentos %}
-                {% set cor_texto = '' %}
-                {% if agendamento.metodo_pagamento == 'pendente' %}
-                    {% set cor_texto = 'text-danger fw-bold' %}
-                {% elseif agendamento.concluido %}
-                    {% set cor_texto = 'text-success fw-bold' %}
-                {% endif %}
-                <div class="col-12 card-item" data-search="{{ agendamento.pet_nome }} {{ agendamento.dono_nome }} {{ agendamento.servico_nome }} {{ agendamento.horaChegada|date('d/m/Y') }}">
-                    <div class="card shadow-lg border-0 rounded-3">
-                        <div class="card-body p-3">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <div class="flex-grow-1">
-                                    <h5 class="card-title mb-1 {{ cor_texto }}">
-                                        <i class="bx bx-calendar"></i>
-                                        {{ agendamento.horaChegada ? agendamento.horaChegada|date('d/m/Y') : 'Sem data' }}
-                                        <span class="ms-2"><i class="bx bx-time"></i> {{ agendamento.horaChegada ? agendamento.horaChegada|date('H:i') : '--:--' }}</span>
-                                    </h5>
-                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
-                                        <i class="bx bx-user"></i> <b>Tutor:</b>
-                                        <a href="javascript:void(0);" class="text-decoration-none buscar-cliente {{ cor_texto }}" data-dono-id="{{ agendamento.dono_id }}">
-                                            {{ agendamento.dono_nome }}
-                                        </a>
-                                    </p>
-                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
-                                        <i class="bx bx-paw"></i> <b>Pet:</b> {{ agendamento.pet_nome }}
-                                    </p>
-                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
-                                        <i class="bx bx-briefcase"></i> <b>Serviço:</b> {{ agendamento.servico_nome }}
-                                    </p>
-                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
-                                        <i class="bx bx-car"></i> <b>Táxi Dog:</b> {{ agendamento.taxi_dog ? 'Sim' : 'Não' }}
-                                        {% if agendamento.taxi_dog %}
-                                            <span class="ms-2"><b>Taxa:</b> R$ {{ agendamento.taxa_taxi_dog }}</span>
-                                        {% endif %}
-                                    </p>
-                                    <p class="card-text text-muted mb-1 d-flex align-items-center gap-1">
-                                        <i class="bx bx-credit-card"></i> <b>Pagamento:</b>
-                                        {{ agendamento.metodo_pagamento|capitalize }}
-                                    </p>
-                                </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <div class="dropdown">
-                                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                            Ação
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
-                                                <a href="{{ path('agendamento_editar', {'id': agendamento.id}) }}" class="dropdown-item">
-                                                    Editar
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="javascript:void(0);" class="dropdown-item open-concluir-modal" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}">
-                                                    Concluir Pagamento
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="javascript:void(0);" class="dropdown-item reload-form text-danger" data-id="{{ agendamento.id }}" data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao': 'deletar'}) }}">
-                                                    Deletar
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
+            {% set cor_texto = '' %}
+            {% if agendamento.metodo_pagamento == 'pendente' %}
+                {% set cor_texto = 'text-danger fw-bold' %}
+            {% elseif agendamento.concluido %}
+                {% set cor_texto = 'text-success fw-bold' %}
+            {% endif %}
+
+            <div class="col-12 card-items"
+                 data-search="{{ agendamento.pet_nome }} {{ agendamento.dono_nome }} {{ agendamento.servico_nome }} {{ agendamento.horaChegada|date('d/m/Y') }}">
+
+            <div class="card agenda-card border-0 rounded-4 shadow-sm">
+                <div class="card-body p-3">
+
+                    <div class="row align-items-center g-3">
+
+                        <!-- Data -->
+                        <div class="col-auto text-center agenda-date {{ cor_texto }}">
+                            <div class="fs-4 fw-bold">
+                                {{ agendamento.horaChegada ? agendamento.horaChegada|date('d') : '--' }}
+                            </div>
+                            <div class="text-uppercase small">
+                                {{ agendamento.horaChegada|mes_br }}
+                            </div>
+                            <div class="small">
+                                {{ agendamento.horaChegada ? agendamento.horaChegada|date('H:i') : '--:--' }}
                             </div>
                         </div>
+
+                        <!-- Conteúdo -->
+                        <div class="col">
+
+                            <h6 class="mb-1 {{ cor_texto }}">
+                                <i class="bx bx-briefcase"></i> {{ agendamento.servico_nome }}
+                            </h6>
+
+                            <div class="d-flex flex-wrap gap-3 text-muted small">
+
+                                <span>
+                                    <i class="bx bx-user"></i>
+                                    <a href="javascript:void(0);"
+                                       class="buscar-cliente text-decoration-none {{ cor_texto }}"
+                                       data-dono-id="{{ agendamento.dono_id }}">
+                                        {{ agendamento.dono_nome }}
+                                    </a>
+                                </span>
+
+                                <span><i class="bx bx-paw"></i> {{ agendamento.pet_nome }}</span>
+
+                                <span>
+                                    <i class="bx bx-car"></i>
+                                    Táxi Dog: {{ agendamento.taxi_dog ? 'Sim' : 'Não' }}
+                                    {% if agendamento.taxi_dog %}
+                                        — R$ {{ agendamento.taxa_taxi_dog }}
+                                    {% endif %}
+                                </span>
+
+                                <span>
+                                    <i class="bx bx-credit-card"></i>
+                                    {{ agendamento.metodo_pagamento|capitalize }}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Ações -->
+                        <div class="col-auto">
+                            <div class="dropdown dropstart">
+                                <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-toggle="dropdown">
+                                    <i class="bx bx-dots-vertical-rounded"></i> Ação
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3" style="width: 350px !important;">
+                                    <li>
+                                        <a href="{{ path('agendamento_editar', {'id': agendamento.id}) }}" class="dropdown-item">
+                                            <i class="bx bx-edit"></i> Editar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);"
+                                           class="dropdown-item open-concluir-modal"
+                                           data-id="{{ agendamento.id }}"
+                                           data-action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}">
+                                            <i class="bx bx-check-circle"></i> Concluir Pagamento
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);"
+                                           class="dropdown-item text-danger reload-form"
+                                           data-id="{{ agendamento.id }}"
+                                           data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao': 'deletar'}) }}">
+                                            <i class="bx bx-trash"></i> Deletar
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
+            </div>
+
+            </div>
+
             {% else %}
-                <div class="col-12">
-                    <div class="alert alert-info text-center mb-0">Nenhum agendamento encontrado.</div>
-                </div>
+            <div class="col-12">
+                <div class="alert alert-info text-center mb-0">Nenhum agendamento encontrado.</div>
+            </div>
             {% endfor %}
-        </div>
+
+            </div>
+
         <div class="row mt-4">
             <div class="col text-center">
                 <nav aria-label="Paginação">
@@ -121,24 +204,69 @@
 
 <!-- Modal Cliente -->
 <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Informações do Cliente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p><strong>Nome:</strong> <span id="clienteNome"></span></p>
-                <p><strong>Email:</strong> <span id="clienteEmail"></span></p>
-                <p><strong>Telefone:</strong> <span id="clienteTelefone"></span></p>
-                <p><strong>Endereço:</strong> <span id="clienteEndereco"></span></p>
-                <p><strong>Bairro:</strong> <span id="clienteBairro"></span></p>
-                <p><strong>Cidade:</strong> <span id="clienteCidade"></span></p>
-                <p><strong>CEP:</strong> <span id="clienteCep"></span></p>
-            </div>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4 shadow">
+
+      <div class="modal-header bg-white border-bottom">
+        <div>
+          <h5 class="modal-title fw-bold text-primary mb-0">
+            <i class="bx bx-user-circle"></i> Informações do Cliente
+          </h5>
+          <small class="text-muted">Ficha completa do cliente</small>
         </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body bg-light">
+
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <div class="info-group mb-3">
+              <strong class="info-label"><i class="bx bx-user"></i> Nome</strong>
+              <div class="info-box" id="clienteNome">-</div>
+            </div>
+
+            <div class="info-group mb-3">
+              <strong class="info-label"><i class="bx bx-envelope"></i> Email</strong>
+              <div class="info-box" id="clienteEmail">-</div>
+            </div>
+
+            <div class="info-group mb-3">
+              <strong class="info-label"><i class="bx bx-phone"></i> Telefone</strong>
+              <div class="info-box" id="clienteTelefone">-</div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="info-group mb-3">
+              <strong class="info-label"><i class="bx bx-map"></i> Endereço</strong>
+              <div class="info-box" id="clienteEndereco">-</div>
+            </div>
+
+            <div class="info-group mb-3">
+              <strong class="info-label"><i class="bx bx-current-location"></i> Bairro</strong>
+              <div class="info-box" id="clienteBairro">-</div>
+            </div>
+
+            <div class="info-group mb-3">
+              <strong class="info-label"><i class="bx bx-buildings"></i> Cidade</strong>
+              <div class="info-box" id="clienteCidade">-</div>
+            </div>
+
+            <div class="info-group mb-3">
+              <strong class="info-label"><i class="bx bx-mail-send"></i> CEP</strong>
+              <div class="info-box" id="clienteCep">-</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
     </div>
+  </div>
 </div>
+
 
 <!-- Modal Concluir Agendamento -->
 <div class="modal fade" id="modalConcluir" tabindex="-1" aria-hidden="true">
@@ -206,6 +334,7 @@
 let agendamentosPendentesMarcados = new Set();
 let totalOriginal = 0;
 
+    $('#searchInput').attr('id','searchInputAgendamento');
 document.addEventListener('DOMContentLoaded', function () {
     new TabelaDefault({
         cardContainerId: 'cardContainerAgendamento',

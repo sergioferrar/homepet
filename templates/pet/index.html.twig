@@ -1,17 +1,27 @@
 {% extends 'base.html.twig' %}
 
-{% block page_title %}<i class="bi bi-heart-fill me-2"></i> Pets{% endblock %}
+{% block page_title %}Listagem de Pets{% endblock %}
 
 {% block body %}
 <div class="container">
+
+    <div class="pagetitle">
+        <h1>Listagem de Pets
+        <a class="me-5 btn btn-primary btm-sm float-end" href="{{ url('pet_novo') }}"><span class="icon-base bx bx-plus icon-sm me-2"></span> Novo Pet</a>
+        </h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                <li class="breadcrumb-item">Atendimento</li>
+                <li class="breadcrumb-item active">Pets</li>
+            </ol>
+        </nav>
+    </div>
+
     <div class="tabela-container container-fluid px-2">
         
         <div class="text-end mb-3">
-            <a href="{{ path('pet_novo') }}">
-                <button type="button" class="btn btn-primary">
-                    <span class="icon-base bx bx-plus icon-sm me-2"></span> Novo Pet
-                </button>
-            </a>
+            
         </div>
         <div id="cardContainerPets" class="row gy-3">
 

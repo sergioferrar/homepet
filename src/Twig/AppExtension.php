@@ -59,22 +59,36 @@ class AppExtension extends AbstractExtension
             new TwigFilter('listaPlano', [$this, 'listaPlano']),
             new TwigFilter('especie', [$this, 'especie']),
             new TwigFilter('sexo', [$this, 'sexo']),
+            new TwigFilter('mes_br', [$this, 'mes_br']),
         ];
+    }
+
+    public function mes_br($date): string
+    {
+        $data = new \DateTime($date, new \DateTimeZone('America/Sao_Paulo'));
+        
+        $meses = [
+            1 => 'JAN', 2 => 'FEV', 3 => 'MAR', 4 => 'ABR',
+            5 => 'MAI', 6 => 'JUN', 7 => 'JUL', 8 => 'AGO',
+            9 => 'SET', 10 => 'OUT', 11 => 'NOV', 12 => 'DEZ'
+        ];
+
+        return $meses[(int) $data->format('n')] ?? '';
     }
 
     public function sexo($string)
     {
         switch (strtolower($string)) {
             case 'f':
-                return 'Fêmea';
-                break;
+            return 'Fêmea';
+            break;
             case 'm':
-                return 'Macho';
-                break;
+            return 'Macho';
+            break;
             
             default:
                 // code...
-                break;
+            break;
         }
     }
 
@@ -82,15 +96,15 @@ class AppExtension extends AbstractExtension
     {
         switch ($string) {
             case 'canina':
-                return '<i class="bx bxs-dog"></i>';
-                break;
+            return '<i class="bx bxs-dog"></i>';
+            break;
             case 'felina':
-                return '<i class="fs-5 bx bxs-cat"></i>';
-                break;
+            return '<i class="fs-5 bx bxs-cat"></i>';
+            break;
             
             default:
-                return '<i class="bx bxs-dog"></i>';
-                break;
+            return '<i class="bx bxs-dog"></i>';
+            break;
         }
     }
 
@@ -99,16 +113,16 @@ class AppExtension extends AbstractExtension
     {
         $linhas = json_decode($string, true);
         $lista = '<ul class="features-list">
-<li class="list-group-item">Agendamentos de Pets</li>
-<li class="list-group-item">Cadastro de Clientes</li>
-<li class="list-group-item">Cadastro de Pets</li>
-<li class="list-group-item">Serviços do petShop</li>
-<li class="list-group-item">Área de financeiro</li>
-<li class="list-group-item">Quadro de Banho e Tosa</li>
-<li class="list-group-item">Clinica Veterinária</li>
-<li class="list-group-item">Hospedagem de Cães</li>
-<li class="list-group-item">Gestão de usuários</li>
-</ul>';
+        <li class="list-group-item">Agendamentos de Pets</li>
+        <li class="list-group-item">Cadastro de Clientes</li>
+        <li class="list-group-item">Cadastro de Pets</li>
+        <li class="list-group-item">Serviços do petShop</li>
+        <li class="list-group-item">Área de financeiro</li>
+        <li class="list-group-item">Quadro de Banho e Tosa</li>
+        <li class="list-group-item">Clinica Veterinária</li>
+        <li class="list-group-item">Hospedagem de Cães</li>
+        <li class="list-group-item">Gestão de usuários</li>
+        </ul>';
         $html = '<ul class="features-list">';
         $i = 0;
         foreach($this->modulosSistema as $key => $value){

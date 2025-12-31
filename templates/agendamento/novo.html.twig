@@ -3,15 +3,24 @@
 	Novo Agendamento
 {% endblock %}
 {% block body %}
-	<div class="pagetitle">
-		<nav>
-			<ol class="breadcrumb bg-light p-2 rounded">
-				<li class="breadcrumb-item">
-					<a href="{{ path('home') }}" class="text-decoration-none text-primary">Home</a>
-				</li>
-			</ol>
-		</nav>
-	</div>
+
+    <div class="pagetitle">
+      <h1>
+      	Novo Agendamento
+            <a href="{{ path('agendamento_index') }}" class="btn btn-primary float-end">
+                <i class="bx bxs-left-arrow-alt me-1"></i>Voltar
+            </a>
+        </h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+          <li class="breadcrumb-item">Atendimento</li>
+          <li class="breadcrumb-item active">Novo Agendamento</li>
+        </ol>
+      </nav>
+    </div>
+	
+
 	<section class="section">
 		<div class="row justify-content-between">
 			<form method="post" action="{{ path('agendamento_novo') }}">
@@ -128,6 +137,7 @@
 
 	<script>
 	// Correção do erro de que não estava cadastrando + de 1 pet
+	$('.search-bar').addClass('d-none');
 	$(document).ready(function () {
 		window.atualizarPetId = function (input) { // Define no escopo global
 			let $input = $(input);
