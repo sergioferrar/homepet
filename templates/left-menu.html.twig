@@ -1,33 +1,60 @@
+{% set rotaAtual = app.request.attributes.get('_route') %}
+
 {% for rows in menuLateral %}
-	{# {{ dump(rows) }} #}
-	{% if rows.submenu == false %}
+    {% if rows.submenu == false %}
+
         {% if rows.menu.status == 'ativo' %}
-		<li class="nav-item">
-            <a class="nav-link {% if app.request.attributes.get('_route') == rows.menu.rota %} active {%else %} collapsed {% endif %}" href="{% if rows.menu.rota != '#' %}{{ url(rows.menu.rota) }}{% endif %}">
-                <i class="bi bi-{{rows.menu.icone}}"></i><span>{{rows.menu.titulo}}</span>
+        <li class="nav-item">
+            <a 
+                class="nav-link {% if rotaAtual == rows.menu.rota %} active {% else %} collapsed {% endif %}"
+                href="{% if rows.menu.rota != '#' %}{{ path(rows.menu.rota) }}{% endif %}">
+                <i class="bi bi-{{ rows.menu.icone }}"></i>
+                <span>{{ rows.menu.titulo }}</span>
             </a>
         </li>
         {% endif %}
-	{% else %}
-         {% if rows.menu.status == 'ativo' %}
-		<li class="nav-item">
-            <a class="nav-link collapsed {% if app.request.attributes.get('_route') == 'agendamento_novo' or app.request.attributes.get('_route') == 'agendamento_index' %} {% else %} collapsed {% endif %}" data-bs-target="#{{rows.menu.id}}" data-bs-toggle="collapse" href="#">
-                <i class="bi bi-{{rows.menu.icone}}"></i><span>{{rows.menu.titulo}}</span><i class="bi bi-chevron-down ms-auto"></i>
+
+    {% else %}
+
+        {% if rows.menu.status == 'ativo' %}
+
+        {# verifica se algum submenu está ativo #}
+        {% set menuAberto = false %}
+        {% for sub in rows.submenu %}
+            {% if sub.rota == rotaAtual %}
+                {% set menuAberto = true %}
+            {% endif %}
+        {% endfor %}
+
+        <li class="nav-item">
+            <a class="nav-link {% if not menuAberto %}collapsed{% endif %}"
+               href="#"
+               data-bs-toggle="collapse"
+               data-bs-target="#menu-{{ rows.menu.id }}">
+                <i class="bi bi-{{ rows.menu.icone }}"></i>
+                <span>{{ rows.menu.titulo }}</span>
+                <i class="bi bi-chevron-down ms-auto"></i>
             </a>
-            <ul id="{{rows.menu.id}}" class="nav-content collapse {% if app.request.attributes.get('_route') == 'agendamento_novo' or app.request.attributes.get('_route') == 'agendamento_index' %} show {% endif %}" data-bs-parent="#sidebar-nav">
-            	{% for sub in rows.submenu %}
+
+            <ul id="menu-{{ rows.menu.id }}"
+                class="nav-content collapse {% if menuAberto %}show{% endif %}"
+                data-bs-parent="#sidebar-nav">
+
+                {% for sub in rows.submenu %}
                 <li>
-                    <a {% if app.request.attributes.get('_route') == sub.rota %} class="active" {% endif %} href="{{ path(sub.rota) }}">
-                        <i class="bi bi-circle"></i><span>{{sub.titulo}}</span>
+                    <a href="{{ path(sub.rota) }}"
+                       class="{% if rotaAtual == sub.rota %}active{% endif %}">
+                        <i class="bi bi-circle"></i>
+                        <span>{{ sub.titulo }}</span>
                     </a>
                 </li>
-            	{% endfor %}
+                {% endfor %}
+
             </ul>
         </li>
-        {% endif %}
-	{% endif %}
-	{# {% for row in rows %}
 
-		{{ dump(row) }}<br>
-	{% endfor %} #}
+        {% endif %}
+
+    {% endif %}
+
 {% endfor %}

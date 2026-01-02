@@ -350,7 +350,7 @@
 </head>
 
 {% if app.request.attributes.get('_route') == 'home' %}
-<body class="body fundacat">
+<body class="">
 {% else %}
 <body>
 {% endif %}
@@ -460,18 +460,18 @@
   <aside id="sidebar" class="sidebar">
 
     <ul class="sidebar-nav" id="sidebar-nav">
-
-      <li class="nav-item">
-            <a class="nav-link" href="{{ path('home') }}">
-                <i class="bi bi-grid"></i>
-                <span>Home</span>
-            </a>
-        </li>
          {% if app.request.attributes.get('_route') is null %}
             {% set route = 'home' %}
         {% else %}
             {% set route = app.request.attributes.get('_route')  %}
         {% endif %}
+      <li class="nav-item">
+            <a class="nav-link {% if route == 'home' %}active{% endif %}" href="{{ path('home') }}">
+                <i class="bi bi-grid"></i>
+                <span>Home</span>
+            </a>
+        </li>
+        
         {{ render(path('leftMenu', {activeRoute : route})) }}
         
         {% if app.session.get('accessLevel') == 'Super Admin' %}
@@ -570,56 +570,16 @@
 <!-- Custom JS for Sidebar Toggle -->
 <script>
     $(document).ready(function() {
-        // Estado inicial: sidebar aberta em desktop, colapsada em mobile
-        if ($(window).width() < 992) {
-            $('.sidebar').addClass('collapsed');
-            $('.header').addClass('collapsed');
-            $('.main').addClass('collapsed');
-        }
-
         // Toggle sidebar - modo mini com ícones
         $('.sidebar-toggle').on('click', function() {
             $('body').toggleClass('toggle-sidebar')
             const isCollapsed = $('.sidebar').hasClass('collapsed');
-            
-            // if (isCollapsed) {
-            //     // Expandir sidebar
-            //     $('.sidebar').removeClass('collapsed');
-            //     $('.header').removeClass('collapsed');
-            //     $('.main').removeClass('collapsed');
-            // } else {
-            //     // Colapsar sidebar - modo mini
-            //     $('.sidebar').addClass('collapsed');
-            //     $('.header').addClass('collapsed');
-            //     $('.main').addClass('collapsed');
-            // }
         });
 
         // Toggle search bar em mobile
         $('.search-bar-toggle').on('click', function(e) {
             e.preventDefault();
             $('.search-bar').toggleClass('active');
-        });
-
-        // Fechar sidebar ao clicar fora dela em mobile
-        $(document).on('click', function(e) {
-            if ($(window).width() < 992 && !$('.sidebar').hasClass('collapsed') && !$(e.target).closest('.sidebar, .sidebar-toggle').length) {
-                $('.sidebar').addClass('collapsed');
-                $('.header').addClass('collapsed');
-                $('.main').addClass('collapsed');
-            }
-        });
-
-        // Ajustar layout ao redimensionar
-        $(window).on('resize', function() {
-            if ($(window).width() < 992) {
-                // Mobile: sempre colapsada
-                if (!$('.sidebar').hasClass('collapsed')) {
-                    $('.sidebar').addClass('collapsed');
-                    $('.header').addClass('collapsed');
-                    $('.main').addClass('collapsed');
-                }
-            }
         });
     });
 </script>

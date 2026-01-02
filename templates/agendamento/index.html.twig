@@ -91,7 +91,7 @@
                     <div class="row align-items-center g-3">
 
                         <!-- Data -->
-                        <div class="col-auto text-center agenda-date {{ cor_texto }}">
+                        <div class="col-md-2 col-sm-6 col-xs-12 text-center agenda-date {{ cor_texto }}">
                             <div class="fs-4 fw-bold">
                                 {{ agendamento.horaChegada ? agendamento.horaChegada|date('d') : '--' }}
                             </div>
@@ -104,7 +104,7 @@
                         </div>
 
                         <!-- Conteúdo -->
-                        <div class="col">
+                        <div class="col-md-6 col-sm-6 col-xs-12">
 
                             <h6 class="mb-1 {{ cor_texto }}">
                                 <i class="bx bx-briefcase"></i> {{ agendamento.servico_nome }}
@@ -141,7 +141,7 @@
                         </div>
 
                         <!-- Ações -->
-                        <div class="col-auto">
+                        <div class="col-md-4 col-sm-6 col-xs-12 text-end">
                             <div class="dropdown dropstart">
                                 <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-toggle="dropdown">
                                     <i class="bx bx-dots-vertical-rounded"></i> Ação
