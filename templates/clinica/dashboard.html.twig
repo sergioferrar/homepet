@@ -96,6 +96,18 @@
 {% endblock %}
 
 {% block body %}
+    <div class="pagetitle">
+      <h1>Dashboard
+            <a class="btn btn-primary btm-sm float-end" href="{{ url('orcamento_novo') }}"><i class="bi bi-file-earmark-plus me-2"></i>Novo Orçamento</a>
+        </h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+          <li class="breadcrumb-item">Clinica Veterinária</li>
+          <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+      </nav>
+    </div>
 
 <!-- 🔍 Barra de Ações e Pesquisa -->
 <div class="container-fluid mt-4">
@@ -104,16 +116,16 @@
         <div class="col-lg-8">
             <div class="d-flex flex-wrap gap-2">
                 <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasPrescricoes">
-                    <i class="fas fa-prescription-bottle-alt me-2"></i> Prescrições
+                    <i class="bi bi-capsule-pill me-2"></i> Prescrições
                 </button>
                 <a href="{{ path('orcamento_index') }}" class="btn btn-primary">
-                    <i class="fas fa-file-invoice-dollar me-2"></i> Orçamentos
+                    <i class="bi bi-receipt me-2"></i> Orçamentos
                 </a>
-                <button class="btn btn-primary" type="button" onclick="alert('Em desenvolvimento')">
-                    <i class="fas fa-cut me-2"></i> Serviços
+                <button class="btn btn-primary" type="button" onclick="Utils.modal('Em desenvolvimento')">
+                    <i class="bi bi-scissors me-2"></i> Serviços
                 </button>
-                <button class="btn btn-primary" type="button" onclick="alert('Em desenvolvimento')">
-                    <i class="fas fa-history me-2"></i> Histórico
+                <button class="btn btn-primary" type="button" onclick="Utils.modal('Em desenvolvimento')">
+                    <i class="bi bi-clock-history me-2"></i> Histórico
                 </button>
             </div>
         </div>
@@ -121,10 +133,10 @@
         <!-- Busca -->
         <div class="col-lg-4">
             <form method="get" action="{{ path('clinica_dashboard') }}" class="d-flex gap-2">
-                <input type="text" name="q" value="{{ termo }}" class="form-control form-control-sm"
+                <input type="text" name="q" value="{{ termo }}" class="form-control"
                        placeholder="🔍 Buscar pet ou tutor..." />
                 <button type="submit" class="btn btn-primary btn-sm">
-                    <i class="fas fa-search"></i>
+                    <i class="bi bi-search"></i>
                 </button>
             </form>
         </div>
@@ -139,10 +151,10 @@
                         <div class="card-body p-3">
                             <h6 class="mb-2">
                                 <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}" class="text-primary text-decoration-none">
-                                    <i class="fas fa-paw me-1"></i> {{ pet.nome }}
+                                    <i class="bi bi-paw me-1"></i> {{ pet.nome }}
                                 </a>
                             </h6>
-                            <p class="mb-1 small"><i class="fas fa-user me-1"></i> {{ pet.dono_nome }}</p>
+                            <p class="mb-1 small"><i class="bi bi-person me-1"></i> {{ pet.dono_nome }}</p>
                             <p class="mb-0 small text-muted">{{ pet.especie }} • {{ pet.raca }}</p>
                         </div>
                     </div>
@@ -150,7 +162,7 @@
             {% else %}
                 <div class="col-12">
                     <div class="alert alert-info mb-0">
-                        <i class="fas fa-info-circle me-2"></i>Nenhum resultado encontrado para "{{ termo }}".
+                        <i class="bi bi-info-circle me-2"></i>Nenhum resultado encontrado para "{{ termo }}".
                     </div>
                 </div>
             {% endfor %}
@@ -162,7 +174,7 @@
     <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasPrescricoes" style="width: 90%; max-width: 1400px;">
         <div class="offcanvas-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
             <h5 class="offcanvas-title">
-                <i class="fas fa-calendar-alt me-2"></i>Calendário de Prescrições Médicas
+                <i class="bi bi-calendar-event me-2"></i>Calendário de Prescrições Médicas
             </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
@@ -206,7 +218,7 @@
             <div class="card border-0 shadow-sm h-100 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
                     <div class="mb-3">
-                        <i class="fas fa-paw" style="font-size: 2.5rem; opacity: 0.9;"></i>
+                        <i class="bi bi-heart-pulse" style="font-size: 2.5rem; opacity: 0.9;"></i>
                     </div>
                     <h2 class="mb-2 text-white fw-bold">{{ total_pets }}</h2>
                     <p class="mb-0 small text-white opacity-75">Animais Registrados</p>
@@ -217,7 +229,7 @@
             <div class="card border-0 shadow-sm h-100 text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                 <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
                     <div class="mb-3">
-                        <i class="fas fa-users" style="font-size: 2.5rem; opacity: 0.9;"></i>
+                        <i class="bi bi-person" style="font-size: 2.5rem; opacity: 0.9;"></i>
                     </div>
                     <h2 class="mb-2 text-white fw-bold">{{ totaldono }}</h2>
                     <p class="mb-0 small text-white opacity-75">Clientes Cadastrados</p>
@@ -228,7 +240,7 @@
             <div class="card border-0 shadow-sm h-100 text-white" style="background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);">
                 <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
                     <div class="mb-3">
-                        <i class="fas fa-hand-holding-usd" style="font-size: 2.5rem; opacity: 0.9;"></i>
+                        <i class="bi bi-cash-stack" style="font-size: 2.5rem; opacity: 0.9;"></i>
                     </div>
                     <h2 class="mb-2 text-white fw-bold">R$ {{ debitos_cliente|number_format(2, ',', '.') }}</h2>
                     <p class="mb-0 small text-white opacity-75">Débitos em Aberto</p>
@@ -239,7 +251,7 @@
             <div class="card border-0 shadow-sm h-100 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                 <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
                     <div class="mb-3">
-                        <i class="fas fa-stopwatch" style="font-size: 2.5rem; opacity: 0.9;"></i>
+                        <i class="bi bi-stopwatch" style="font-size: 2.5rem; opacity: 0.9;"></i>
                     </div>
                     <h2 class="mb-2 text-white fw-bold">{{ media_atendimento }}</h2>
                     <p class="mb-0 small text-white opacity-75">Média de Atendimento</p>
@@ -257,7 +269,7 @@
                     <div class="card border-0 rounded-3">
                         <div class="card-header">
                             <h5 class="card-title">
-                                <i class="fas fa-stethoscope me-2 text-primary"></i>Últimos atendimentos (24h)
+                                <i class="bi bi-heart-pulse me-2 text-primary"></i>Últimos atendimentos (24h)
                             </h5>
                         </div>
                         <div class="card-body card-body-fixo">
@@ -297,7 +309,7 @@
                     <div class="card border-0 rounded-3">
                         <div class="card-header">
                             <h5 class="card-title mb-2">
-                                <i class="fas fa-paw me-2 text-success"></i>Últimos animais cadastrados
+                                <i class="bi bi-heart-pulse me-2 text-success"></i>Últimos animais cadastrados
                             </h5>
                         </div>
                         <div class="card-body card-body-fixo">
@@ -334,7 +346,7 @@
                     <div class="card border-0 rounded-3">
                         <div class="card-body">
                             <h5 class="card-title mb-2">
-                                <i class="fas fa-procedures me-2 text-danger"></i>Animais internados
+                                <i class="bi bi-hospital me-2 text-danger"></i>Animais internados
                             </h5>
                             <div class="card-listagem-scroll">
                                 <div class="row g-0">
@@ -380,7 +392,7 @@
                     <div class="card border-0 rounded-3">
                         <div class="card-body">
                             <h5 class="card-title mb-2">
-                                <i class="fas fa-syringe me-2 text-warning"></i>Vacinas
+                                <i class="bi bi-droplet me-2 text-warning"></i>Vacinas
                             </h5>
                             <nav class="vaccine-tabs nav nav-pills flex-row mb-2">
                                 <a href="#tab-vencidas" class="nav-link active small" data-bs-toggle="tab">Vencidas</a>

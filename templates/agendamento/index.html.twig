@@ -70,12 +70,6 @@
       </nav>
     </div>
 
-    <div class="row mb-4 align-items-center action-bar">
-        <div class="col-md-12">
-            <h3 class="text-muted mb-0 mt-2"></h3>
-        </div>
-    </div>
-
     <div class="tabela-container container-fluid px-2">
 
         <div id="cardContainerAgendamento" class="row gy-3">
@@ -214,10 +208,10 @@
           </h5>
           <small class="text-muted">Ficha completa do cliente</small>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close fs-3" data-bs-dismiss="modal"></button>
       </div>
 
-      <div class="modal-body bg-light">
+      <div class="modal-body bg-light placeholder-glow">
 
         <div class="row g-3">
 
@@ -446,11 +440,16 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         const url = "{{ absolute_url(path('api_buscar_cliente')) }}";
+                    const modal = new bootstrap.Modal(document.getElementById('modalCliente'));
+                    modal.show();
         $.ajax({
             type: 'POST',
             url: url,
             data: { dono_id: donoId },
             dataType: 'json',
+            beforeSend: function(){
+                $('.info-box').addClass('placeholder').addClass('col-12');
+            },
             success: function (data) {
                 if (data.status === "sucesso") {
                     modalCliente.find('#clienteNome').html(data.cliente.nome || '-');
@@ -465,8 +464,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     modalCliente.find('#clienteBairro').html(data.cliente.bairro || '-');
                     modalCliente.find('#clienteCidade').html(data.cliente.cidade || '-');
                     modalCliente.find('#clienteCep').html(data.cliente.cep || '-');
-                    const modal = new bootstrap.Modal(document.getElementById('modalCliente'));
-                    modal.show();
+                    $('.info-box').removeClass('placeholder').removeClass('col-12');
                 } else {
                     Notify.toast("Erro: " + data.mensagem, "danger");
                 }

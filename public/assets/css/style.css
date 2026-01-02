@@ -1,7 +1,7 @@
 /**
 * Template Name: NiceAdmin
 * Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
-* Updated: Apr 20 2024 with Bootstrap v5.3.3
+* Updated: Apr 7 2025 with Bootstrap v5.3.5
 * Author: BootstrapMade.com
 * License: https://bootstrapmade.com/license/
 */
@@ -15,10 +15,9 @@
 
 body {
   font-family: "Open Sans", sans-serif;
-  background: #eef5ee;
+  background: #f6f9ff;
   color: #444444;
 }
-
 
 a {
   color: #4154f1;
@@ -222,7 +221,7 @@ h6 {
   margin-bottom: 30px;
   border: none;
   border-radius: 5px;
-  /*box-shadow: 0px 0 30px rgba(1, 41, 112, 0.1);*/
+  box-shadow: 0px 0 30px rgba(1, 41, 112, 0.1);
 }
 
 .card-header,
@@ -1282,116 +1281,3 @@ h6 {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
-
-
-        /* Estilizar a sidebar como colapsável em todas as resoluções */
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            width: 250px;
-            background: #fff;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease-in-out;
-            z-index: 1000;
-        }
-
-        /* Estado colapsado */
-        .sidebar.collapsed {
-            transform: translateX(-100%);
-        }
-
-        /* Ajustar o header e o main */
-        .header {
-            transition: padding-left 0.3s ease-in-out;
-            padding-left: 250px; /* Alinhado com a sidebar aberta */
-        }
-
-        .main {
-            padding: 20px;
-            min-height: calc(100vh - 120px);
-            transition: margin-left 0.3s ease-in-out;
-            margin-left: 250px; /* Alinhado com a sidebar aberta */
-        }
-
-        /* Quando a sidebar está colapsada */
-        .header.collapsed {
-            padding-left: 0;
-        }
-
-        .main.collapsed {
-            margin-left: 0;
-        }
-
-        /* Tornar botões e links touch-friendly */
-        .nav-link, .dropdown-item, .btn {
-            padding: 10px 15px;
-            font-size: 16px;
-            line-height: 1.5;
-        }
-
-        /* Ajustar o header para evitar sobreposição */
-        .header-nav ul {
-            flex-wrap: nowrap;
-        }
-
-        /* Estilizar o botão de toggle da sidebar */
-        .sidebar-toggle {
-            font-size: 24px;
-            padding: 10px;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-
-        /* Ajustar dropdowns */
-        .dropdown-menu {
-            width: 100%;
-            max-width: 300px;
-        }
-
-        /* Garantir que o footer não sobreponha o conteúdo */
-        .footer {
-            padding: 15px;
-            text-align: center;
-        }
-
-        /* Comportamento em telas menores */
-        @media (max-width: 991px) {
-            .sidebar {
-                transform: translateX(-100%); /* Começa colapsada em mobile */
-            }
-            .sidebar.active {
-                transform: translateX(0); /* Abre ao ativar */
-            }
-            .header {
-                padding-left: 0; /* Sem padding em mobile por padrão */
-            }
-            .main {
-                margin-left: 0; /* Sem margem em mobile por padrão */
-            }
-            .header .search-bar {
-                display: none;
-            }
-            .header .search-bar.active {
-                display: block;
-                position: absolute;
-                top: 60px;
-                left: 0;
-                right: 0;
-                background: #fff;
-                padding: 10px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                z-index: 999;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .header-nav .nav-item {
-                margin-left: 5px;
-            }
-            .dropdown-menu {
-                font-size: 14px;
-            }
-        }

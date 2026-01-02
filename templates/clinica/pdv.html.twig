@@ -29,9 +29,7 @@
 {% block body %}
 <div class="container-fluid ">
     <div class="pagetitle">
-        <h1>Ponto de Venda
-        <a class="me-5 btn btn-primary btm-sm float-end" href="{{ url('cliente_index') }}"><i class="bi bi-arrow-left-square"></i> Voltar</a>
-        </h1>
+        <h1>Ponto de Venda</h1>
         <nav>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
@@ -45,20 +43,17 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="mb-0"><i class="fas fa-cash-register me-2"></i> Ponto de Venda</h3>
         <div class="d-flex gap-2">
-            <a href="#" class="btn btn-outline-dark tela-cheia">
-                <i class="bx bx-exit-fullscreen"></i> PDV em Tela cheia
-            </a>
             <a href="{{ path('clinica_estoque_index') }}" class="btn btn-outline-dark">
-                <i class="bx bxs-box"></i> Estoque
+                <i class="bi bi-box-seam"></i> Estoque
             </a>
             <a href="{{ path('clinica_pdv_listar') }}" class="btn btn-outline-primary">
-                <i class="bx bx-list-ol"></i> Listagem
+                <i class="bi bi-card-checklist"></i> Listagem
             </a>
             <button class="btn btn-outline-danger" id="btnSaidaHeader">
-                <i class="bx bx-download"></i> Registrar Saída
+                <i class="bi bi-upload"></i> Registrar Saída
             </button>
             <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-success">
-                <i class="bx bx-wallet"></i> Caixa
+                <i class="bi bi-wallet2"></i> Caixa
             </a>
         </div>
     </div>
@@ -173,21 +168,6 @@
 <script>
 
 $('.search-bar').addClass('d-none');
-
-
-// Abrir PDV em Modal Cheia
-var modalPDV = '';
-$('.tela-cheia').on('click', function(){
-    $('.pdv').html();
-    modalPDV = Utils.modal($('.pdv').html(), 'secondary', null, 'fullscreen', 'Gerenciar PDF');
-    $('.tela-cheia').fadeOut()
-
-    $(`#${modalPDV.id}`).on('hidden.bs.modal',function(){
-    $('.tela-cheia').fadeIn()
-});
-    return false;
-});
-
 
 
 const produtos = {{ produtos|json_encode|raw }};

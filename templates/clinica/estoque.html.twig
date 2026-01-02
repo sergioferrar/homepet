@@ -1,7 +1,20 @@
 {% extends 'base.html.twig' %}
-{% block title %}Estoque{% endblock %}
+{% block title %}Ponto de Venda - Controle de Estoque{% endblock %}
+{% block page_title %}Controle de Estoque{% endblock %}
 
 {% block body %}
+    <div class="pagetitle">
+        <h1>Ponto de Venda - Controle de Estoque
+        <a class="btn btn-primary btm-sm float-end" href="{{ url('clinica_pdv_index') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+        </h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                <li class="breadcrumb-item">Atendimento</li>
+                <li class="breadcrumb-item active">PDV - Controle de estoque</li>
+            </ol>
+        </nav>
+    </div>
 <div class="container-fluid bg-white p-4 mt-4 rounded shadow-sm">
 
     <!-- 🔹 Barra de navegação -->
@@ -9,10 +22,13 @@
         <h3 class="mb-0"><i class="fas fa-boxes me-2"></i> Controle de Estoque</h3>
         <div class="d-flex gap-2">
             <a href="{{ path('clinica_pdv_index') }}" class="btn btn-outline-success">
-                <i class="fas fa-cash-register"></i> PDV
+                <i class="bx bx-calculator"></i> PDV
             </a>
             <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-primary">
-                <i class="fas fa-wallet"></i> Caixa
+                <i class="bx bx-wallet"></i> Caixa
+            </a>
+            <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-primary">
+                <i class="bx bx-plus"></i> Novo Produto
             </a>
         </div>
     </div>
@@ -37,7 +53,7 @@
             <input type="text" name="unidade" class="form-control" placeholder="Unidade (ex: un, cx)">
         </div>
         <div class="col-md-1">
-            <button class="btn btn-success w-100"><i class="fas fa-plus"></i></button>
+            <button class="btn btn-sm btn-success p-2 w-100"><i class="bx bx-plus"></i></button>
         </div>
     </form>
 

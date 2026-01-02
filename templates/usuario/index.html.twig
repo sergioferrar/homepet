@@ -5,44 +5,100 @@
 
 {% block body %}
 
+
+    <div class="pagetitle">
+      <h1>Listagem de usuários
+            <a href="{{ path('app_usuario_create') }}" class="btn btn-primary float-end">
+                <i class="bx bx-plus-medical me-1"></i>Novo usuário
+            </a>
+        </h1>
+      <nav></h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+          <li class="breadcrumb-item">Gestão</li>
+          <li class="breadcrumb-item active">Listagem de usuários</li>
+        </ol>
+      </nav>
+    </div>
+
     <div class="container mt-5">
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
-
-            <a href="{{ url('app_usuario_create')}}" class="btn btn-secondary">Novo usuário</a>
-        </div>
-
-        <!-- Bordered Table -->
-        <table class="table table-bordered datatable">
-            <thead>
-            <tr>
-                <th>Nome do usuário</th>
-                <th>E-mail</th>
-                <th>Nivel</th>
-                {% if app.session.get('accessLevel') == 'Super Admin' %}
-                    <th>Estabelecimento</th>
-                {% endif %}
-                <th>Ações</th>
-            </tr>
-            </thead>
-            <tbody>
+<div class="tabela-container container-fluid px-2">
+        <div id="cardContainerUsuarios" class="row gy-3">
             {% for usuario in usuarios %}
-                <tr>
-                    <td>{{ usuario.nome_usuario }}</td>
-                    <td>{{ usuario.email }}</td>
-                    <td>{{ usuario.access_level }}</td>
-                    {% if app.session.get('accessLevel') == 'Super Admin' %}
-                        <td>{{ usuario.razaoSocial }}</td>
-                    {% endif %}
-                    <td>
-                        <div class="btn-group" role="group" aria-label="Basic example">
-                            <a href="{{ url('usuario_edit', {'id': usuario.id}) }}" class="btn btn-warning btn-sm mr-custom">Editar</a>
-
+                <div class="col-12 card-items" style="z-index: 99 !important;" data-search="{{ usuario.nome_usuario }} {{ usuario.email }}">
+                    <div class="card shadow-lg border-0 rounded-3">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title mb-1">
+                                        <a href="#" class="text-primary abrir-modal-cliente fw-bold"
+                                           data-bs-toggle="offcanvas"
+                                           data-bs-target="#offcanvasScrolling"
+                                           aria-controls="offcanvasScrolling"
+                                        data-id="{{ usuario.id }}">
+                                            {{ usuario.nome_usuario }}
+                                    </a>
+                                    </h5>
+                                    <div class="d-flex flex-wrap gap-3 text-muted small mt-1">
+                                        
+                                        {% if app.session.get('accessLevel') == 'Super Admin' %}
+                                            <td></td>
+                                            <span><i class="bx bxs-school"></i> {{ usuario.razaoSocial }}</span>
+                                        {% endif %}
+                                        <span><i class="bx bxs-id-card"></i> {{ usuario.access_level ?? '-' }}</span>
+                                        <span><i class="bx bx-envelope"></i> {{ usuario.email ?? '-' }}</span>
+                                    </div>
+                                </div>
+                                <!-- Ações -->
+                                <div class="col-auto">
+                                    <div class="dropdown dropstart">
+                                        <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-toggle="dropdown">
+                                            <i class="bx bx-dots-vertical-rounded"></i> Ação
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a href="{{ path('usuario_edit', {'id': usuario.id}) }}" class="dropdown-item">
+                                                    <i class="bx bx-edit"></i> Editar
+                                                </a>
+                                            </li>
+                                            
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </td>
-                </tr>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center mb-0">Nenhum cliente encontrado.</div>
+                </div>
             {% endfor %}
-            </tbody>
-        </table>
+        </div>
+        <div class="row mt-4">
+            <div class="col text-center">
+                <nav aria-label="Paginação">
+                    <ul id="paginationClientes" class="pagination justify-content-center mb-0"></ul>
+                </nav>
+            </div>
+        </div>
     </div>
+
+    </div>
+{% endblock %}
+{% block javascripts %}
+    <script src="{{ asset('js/TabelaDefault.js') }}"></script>
+<script>
+    $('#searchInput').attr('id','searchInputUsuarios');
+document.addEventListener('DOMContentLoaded', function () {
+    new TabelaDefault({
+        cardContainerId: 'cardContainerUsuarios',
+        paginationId: 'paginationClientes',
+        searchInputId: 'searchInputUsuarios',
+        itemsPerPage: 5 // ou qualquer valor
+    });
+});
+    </script>
 {% endblock %}

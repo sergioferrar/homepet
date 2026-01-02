@@ -1,20 +1,28 @@
 {# templates/cliente/novo.html.twig #}
 {% extends 'forms/_form_base.html.twig' %}
 
-{% block form_page_title %}Novo Agendamento{% endblock %}
+{% block form_page_title %}Novo Cliente{% endblock %}
 {% block page_title %}
-    Novo Agendamento
+    Novo Cliente
+{% endblock %}
+
+{% block btn_voltar %}
+    <a class="btn btn-primary btm-sm float-end pt-2" href="{{ url('cliente_index') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
 {% endblock %}
 
 {% block breadcrumb_items %}
-    <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-primary">Agendamento</a></li>
+    <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-primary">Atendimento</a></li>
     <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-primary">Clientes</a></li>
-    <li class="breadcrumb-item active">Novo</li>
+    <li class="breadcrumb-item active">Novo cliente</li>
 {% endblock %}
 
 
 {% block form_content %}
     <form method="post" action="{{ path('cliente_novo') }}">
+        <div class="row">
+            <div class="col-8"></div>
+            <div class="col-4"></div>
+        </div>
         <div class="row">
             <div class="col-md-8 mb-3">
                 <label for="nome" class="form-label">Nome</label>

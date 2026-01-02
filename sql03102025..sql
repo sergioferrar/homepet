@@ -26,3 +26,10 @@ CREATE TABLE vacina (
     INDEX idx_estabelecimento (estabelecimento_id),
     INDEX idx_pet (pet_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+ALTER TABLE `homepet_1`.`produto` 
+ADD COLUMN `codigo` BIGINT NULL AFTER `nome`,
+ADD COLUMN `refrigerado` ENUM('Sim', 'Não') NULL DEFAULT 'Não' AFTER `codigo`,
+ADD COLUMN `data_validade` DATETIME NULL AFTER `data_cadastro`,
+ADD COLUMN `codigo_fabrica` VARCHAR(255) NULL AFTER `data_validade`;

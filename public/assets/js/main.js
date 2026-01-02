@@ -39,7 +39,7 @@
     el.addEventListener('scroll', listener)
   }
 
-  /**
+/**
    * Sidebar toggle
    */
   if (select('.toggle-sidebar-btn')) {
@@ -47,7 +47,7 @@
       select('body').classList.toggle('toggle-sidebar')
     })
   }
-
+  
   /**
    * Search bar toggle
    */

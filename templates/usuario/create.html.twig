@@ -1,35 +1,66 @@
 {% extends 'base.html.twig' %}
 
+{% block title %}Cadastrar novo usuario{% endblock %}
+{% block page_title %}Cadastrar novo usuario{% endblock %}
 {% block body %}
-    <div class="container mt-5">
-        <h1>Editar usuario</h1>
-        <form method="post" action="{{ url('usuario_create_save') }}">
-            <div class="form-group">
-                <label for="nome_usuario">Nome do usuário</label>
-                <input type="text" class="form-control" id="nome_usuario" name="nome_usuario" required>
-            </div>
-            <div class="form-group">
-                <label for="email">E-mail</label>
-                <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label for="senha">Senha</label>
-                <input type="password" class="form-control" id="senha" name="senha" required>
-            </div>
-            <div class="form-group">
-                <label for="access_level">Nivel de acesso</label>
-                <select name="access_level" id="access_level" class="form-select">
-                    <option value="">Selecione o nivel de acesso</option>
-                    {% if app.session.get('accessLevel') == 'Super Admin' %}
-                        <option value="Super Admin">Super Admin</option>
-                    {% endif %}
-                    <option value="Admin">Admin</option>
-                    <option value="Balconista">Balconista</option>
-                    <option value="Atendente">Atendente</option>
-                    <option value="Tosador">Tosador</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Salvar</button>
-        </form>
+
+
+    <div class="pagetitle">
+      <h1>Cadastrar novo usuario
+            <a href="{{ path('app_usuario') }}" class="btn btn-primary float-end">
+                <i class="bi bi-arrow-left me-1"></i>Voltar
+            </a>
+        </h1>
+      <nav></h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+          <li class="breadcrumb-item">Gestão</li>
+          <li class="breadcrumb-item">Listagem de usuários</li>
+          <li class="breadcrumb-item active">Cadastrar novo usuario</li>
+        </ol>
+      </nav>
     </div>
+    <div class="container-fluid mt-5">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Preencha as informações abaixo</h5>
+                
+                <form method="post" action="{{ url('usuario_create_save') }}">
+                    <div class="form-group mb-3">
+                        <label for="nome_usuario">Nome do usuário</label>
+                        <input type="text" class="form-control" id="nome_usuario" name="nome_usuario" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="email">E-mail</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="senha">Senha</label>
+                        <input type="password" class="form-control" id="senha" name="senha" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="access_level">Nivel de acesso</label>
+                        <select name="access_level" id="access_level" class="form-select">
+                            <option value="">Selecione o nivel de acesso</option>
+                            {% if app.session.get('accessLevel') == 'Super Admin' %}
+                                <option value="Super Admin">Super Admin</option>
+                            {% endif %}
+                            <option value="Admin">Admin</option>
+                            <option value="Balconista">Balconista</option>
+                            <option value="Atendente">Atendente</option>
+                            <option value="Tosador">Tosador</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </form>
+            </div>
+        </div>
+        
+    </div>
+{% endblock %}
+{% block javascripts %}
+<script>
+    $('.search-bar').hide();
+    </script>
 {% endblock %}

@@ -1,18 +1,27 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Orçamentos{% endblock %}
+{% block page_title %}Orçamentos{% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-file-invoice-dollar"></i> Orçamentos</h2>
-        <a href="{{ path('orcamento_novo') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Novo Orçamento
-        </a>
+
+    <div class="pagetitle">
+      <h1>Orçamentos
+            <a class="btn btn-primary btm-sm float-end" href="{{ url('orcamento_novo') }}"><i class="bi bi-file-earmark-plus me-2"></i>Novo Orçamento</a>
+        </h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+          <li class="breadcrumb-item">Atendimento</li>
+          <li class="breadcrumb-item active">Orçamentos</li>
+        </ol>
+      </nav>
     </div>
+        
+<div class="container-fluid mt-4">
 
     <div class="card shadow-sm mb-4">
-        <div class="card-body">
+        <div class="card-body mt-4">
             <form method="get" class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Status</label>
@@ -30,7 +39,7 @@
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search"></i> Filtrar
+                        <i class="bi bi-search"></i> Filtrar
                     </button>
                 </div>
             </form>

@@ -2,17 +2,30 @@
 {% block title %}Relatório de Vendas{% endblock %}
 
 {% block body %}
+        <div class="pagetitle">
+            <h1>Relatório de Vendas
+            <a class="btn btn-primary btm-sm float-end" href="{{ url('clinica_pdv_index') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+            </h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                    <li class="breadcrumb-item">Atendimento</li>
+                    <li class="breadcrumb-item">PDV</li>
+                    <li class="breadcrumb-item active">Relatório de Vendas</li>
+                </ol>
+            </nav>
+        </div>
+
 <div class="container-fluid bg-white p-4 mt-4 rounded shadow-sm">
 
     <!-- 🔹 Barra de navegação -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0"><i class="fas fa-list"></i> Relatório de Vendas (PDV)</h3>
         <div>
             <a href="{{ path('clinica_pdv_index') }}" class="btn btn-outline-primary me-2">
-                <i class="fas fa-cash-register"></i> PDV
+                <i class="bi bi-cash-coin"></i> PDV
             </a>
             <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-success">
-                <i class="fas fa-wallet"></i> Fechamento de Caixa
+                <i class="bi bi-wallet2"></i> Fechamento de Caixa
             </a>
         </div>
     </div>
