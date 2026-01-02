@@ -466,7 +466,7 @@
             {% set route = app.request.attributes.get('_route')  %}
         {% endif %}
       <li class="nav-item">
-            <a class="nav-link {% if route == 'home' %}active{% endif %}" href="{{ path('home') }}">
+            <a class="nav-link {% if route == 'home' %}active {% else %} collapsed{% endif %}" href="{{ path('home') }}">
                 <i class="bi bi-grid"></i>
                 <span>Home</span>
             </a>

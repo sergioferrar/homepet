@@ -6,7 +6,7 @@
         {% if rows.menu.status == 'ativo' %}
         <li class="nav-item">
             <a 
-                class="nav-link {% if rotaAtual == rows.menu.rota %} active {% else %} collapsed {% endif %}"
+                class="nav-link {% if rows.rota == rows.menu.rota %} active {% else %} collapsed {% endif %}"
                 href="{% if rows.menu.rota != '#' %}{{ path(rows.menu.rota) }}{% endif %}">
                 <i class="bi bi-{{ rows.menu.icone }}"></i>
                 <span>{{ rows.menu.titulo }}</span>
@@ -21,13 +21,13 @@
         {# verifica se algum submenu está ativo #}
         {% set menuAberto = false %}
         {% for sub in rows.submenu %}
-            {% if sub.rota == rotaAtual %}
+            {% if sub.rota == rows.rota %}
                 {% set menuAberto = true %}
             {% endif %}
         {% endfor %}
 
         <li class="nav-item">
-            <a class="nav-link {% if not menuAberto %}collapsed{% endif %}"
+            <a class="nav-link {% if not menuAberto %}collapsed {% else %} active {% endif %}"
                href="#"
                data-bs-toggle="collapse"
                data-bs-target="#menu-{{ rows.menu.id }}">
@@ -37,13 +37,13 @@
             </a>
 
             <ul id="menu-{{ rows.menu.id }}"
-                class="nav-content collapse {% if menuAberto %}show{% endif %}"
+                class="nav-content collapse {% if menuAberto %} show {% endif %}"
                 data-bs-parent="#sidebar-nav">
 
                 {% for sub in rows.submenu %}
                 <li>
                     <a href="{{ path(sub.rota) }}"
-                       class="{% if rotaAtual == sub.rota %}active{% endif %}">
+                       class="{% if rows.rota == sub.rota %}active{% endif %} {{ sub.rota }} {{ rows.rota }}">
                         <i class="bi bi-circle"></i>
                         <span>{{ sub.titulo }}</span>
                     </a>

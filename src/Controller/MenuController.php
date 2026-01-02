@@ -133,7 +133,8 @@ class MenuController extends DefaultController
 
                 $data[] = [
                     'menu' => $menu,
-                    'submenu' => (!empty($dataS) ? $dataS : false)
+                    'submenu' => (!empty($dataS) ? $dataS : false),
+                    'rota' => $request->get('activeRoute')
                 ];
 
             }
