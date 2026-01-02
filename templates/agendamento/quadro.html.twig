@@ -1,9 +1,16 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<div class="pagetitle">
-    <h1 style="color: #0078d4; font-weight: 600;">Quadro de Banho e Tosa</h1>
-</div>
+    <div class="pagetitle">
+        <h1>Quadro de Banho e Tosa</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                <li class="breadcrumb-item">Operações</li>
+                <li class="breadcrumb-item active">Quadro de Banho e Tosa</li>
+            </ol>
+        </nav>
+    </div>
 
 <section class="container-fluid">
     <!-- Campo de seleção de data -->

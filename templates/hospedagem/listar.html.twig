@@ -2,11 +2,21 @@
 
 {% block body %}
     <div class="pagetitle">
-        <h1 class="text-center shadow-sm rounded p-2">🐾 Hospedagens Agendadas</h1>
+        <h1>Hospedagens Agendadas
+            <a class="btn btn-primary btm-sm float-end pt-2" href="{{ url('hospedagem_agendar') }}"><i class="bi bi-plus me-1"></i>Nova Hospedagem</a>
+        </h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                <li class="breadcrumb-item">Operações</li>
+                <li class="breadcrumb-item active">Hospedagens Agendadas</li>
+            </ol>
+        </nav>
     </div>
+    
 
     <div class="card shadow-sm">
-        <div class="card-body">
+        <div class="card-body pt-4">
             <form method="get" class="mb-4">
                 <div class="input-group">
                     <input type="date" name="data" value="{{ dataFiltro }}" class="form-control">

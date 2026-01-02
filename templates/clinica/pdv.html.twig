@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 {% block title %}PDV - Ponto de Venda{% endblock %}
-{% block page_title %}<i class="fas fa-cash-register me-2"></i> Ponto de Venda{% endblock %}
+{% block page_title %}<i class="bi bi-cash me-2"></i> Ponto de Venda{% endblock %}
 
 {% block stylesheets %}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -41,7 +41,7 @@
     <div class="bg-white p-4 mt-4 rounded shadow-sm pdv">
     <!-- 🔹 Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0"><i class="fas fa-cash-register me-2"></i> Ponto de Venda</h3>
+        <h3 class="mb-0"><i class="bi bi-cash me-2"></i> Ponto de Venda</h3>
         <div class="d-flex gap-2">
             <a href="{{ path('clinica_estoque_index') }}" class="btn btn-outline-dark">
                 <i class="bi bi-box-seam"></i> Estoque
@@ -81,7 +81,7 @@
             <!-- 🔍 Campo de produto com autocomplete -->
             <div class="d-flex mb-3">
                 <input type="text" id="inputProduto" class="form-control me-2" placeholder="Digite o nome do produto ou serviço...">
-                <button class="btn btn-primary" id="btnAddProduto"><i class="fas fa-plus"></i></button>
+                <button class="btn btn-primary" id="btnAddProduto"><i class="bi bi-plus-lg"></i></button>
             </div>
             <div id="autocomplete-list" class="autocomplete-suggestions"></div>
 
@@ -133,7 +133,7 @@
 
             <div class="mt-3">
                 <button class="btn btn-success w-100" id="btnFinalizar">
-                    <i class="fas fa-check"></i> Finalizar Venda
+                    <i class="bi bi-check-lg"></i> Finalizar Venda
                 </button>
             </div>
         </div>

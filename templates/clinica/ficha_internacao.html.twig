@@ -56,7 +56,7 @@
                         <button class="btn btn-sm btn-success me-2 internacao-acao"
                                 data-url="{{ path('clinica_internacao_acao', {id: internacao.id, acao: 'alta'}) }}"
                                 data-token="{{ csrf_token('internacao_acao_' ~ internacao.id) }}">
-                            <i class="fas fa-check me-1"></i> Alta
+                            <i class="bi bi-check-lg me-1"></i> Alta
                         </button>
                         <button class="btn btn-sm btn-danger me-2 internacao-acao"
                                 data-url="{{ path('clinica_internacao_acao', {id: internacao.id, acao: 'obito'}) }}"
@@ -66,7 +66,7 @@
                         <button class="btn btn-sm btn-warning me-2 internacao-acao"
                                 data-url="{{ path('clinica_internacao_acao', {id: internacao.id, acao: 'cancelar'}) }}"
                                 data-token="{{ csrf_token('internacao_acao_' ~ internacao.id) }}">
-                            <i class="fas fa-ban me-1"></i> Cancelar
+                            <i class="bi bi-slash-circle me-1"></i> Cancelar
                         </button>
                     {% endif %}
                 </div>
@@ -127,10 +127,10 @@
                     <div class="tab-pane fade" id="prescricao-content">
                         <div class="d-flex justify-content-end mb-3">
                             <button class="btn btn-sm btn-info me-2 modal-NovoMedicamento">
-                                <i class="fas fa-plus me-1"></i>
+                                <i class="bi bi-plus-lg me-1"></i>
                                 Adicionar Medicamento
                             </button>
-                            <button class="btn btn-sm btn-primary modalPrescricaoBtn"><i class="fas fa-plus me-1"></i>
+                            <button class="btn btn-sm btn-primary modalPrescricaoBtn"><i class="bi bi-plus-lg me-1"></i>
                                 Nova Prescrição
                             </button>
                         </div>

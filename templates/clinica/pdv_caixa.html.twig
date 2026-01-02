@@ -77,7 +77,7 @@
                 <div class="card shadow-sm border-0 bg-light">
                     <div class="card-body text-center">
                         <h6 class="card-title text-success text-uppercase fw-bold">
-                        <i class="fas fa-arrow-up me-1"></i> Entradas
+                        <i class="bi bi-arrow-up me-1"></i> Entradas
                         </h6>
                         <h3 class="fw-bold text-success mt-2 mb-1" id="valorEntradas">
                         R$ {{ entradas|number_format(2, ',', '.') }}
@@ -90,7 +90,7 @@
                 <div class="card shadow-sm border-0 bg-light">
                     <div class="card-body text-center">
                         <h6 class="card-title text-danger text-uppercase fw-bold">
-                        <i class="fas fa-arrow-down me-1"></i> Saídas
+                        <i class="bi bi-arrow-down me-1"></i> Saídas
                         </h6>
                         <h3 class="fw-bold text-danger mt-2 mb-1" id="valorSaidas">
                         - R$ {{ saidas|number_format(2, ',', '.') }}
@@ -103,7 +103,7 @@
                 <div class="card shadow-sm border-0 bg-light">
                     <div class="card-body text-center">
                         <h6 class="card-title text-dark text-uppercase fw-bold">
-                        <i class="fas fa-balance-scale me-1"></i> Saldo Final
+                        <i class="bi bi-scale me-1"></i> Saldo Final
                         </h6>
                         <h3 id="valorSaldo" class="fw-bold {% if saldo < 0 %}text-danger{% else %}text-success{% endif %} mt-2 mb-1">
                         R$ {{ saldo|number_format(2, ',', '.') }}
@@ -124,11 +124,11 @@
                                 <div>
                                     <h5 class="card-title mb-1">{{ r.descricao }}</h5>
                                     <p class="text-muted mb-1">
-                                        <i class="fas fa-clock me-1"></i>{{ r.data|date('H:i') }}
+                                        <i class="bi bi-clock me-1"></i>{{ r.data|date('H:i') }}
                                         <span class="mx-2 text-secondary">|</span>
-                                        <i class="fas fa-money-bill-wave me-1"></i>{{ r.metodoPagamento|capitalize }}
+                                        <i class="bi bi-cash-stack me-1"></i>{{ r.metodoPagamento|capitalize }}
                                         <span class="mx-2 text-secondary">|</span>
-                                        <i class="fas fa-tag me-1"></i>{{ r.tipo }}
+                                        <i class="bi bi-tag me-1"></i>{{ r.tipo }}
                                     </p>
                                 </div>
                                 <div>

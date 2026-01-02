@@ -28,27 +28,24 @@
 {% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <!-- Action Bar -->
-    <div class="row mb-4 align-items-center action-bar">
-        <div class="col-md-6">
-            <h3 class="page-title mb-0">
-                <i class="bi bi-briefcase-fill me-2"></i>Serviços
-            </h3>
-        </div>
-        <div class="col-md-6 text-end">
-            <a href="{{ path('servico_novo') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>Novo Serviço
+    <div class="pagetitle">
+        <h1>Serviços
+            <a href="{{ path('servico_novo') }}" class="btn btn-primary float-end">
+                <i class="bi bi-plus-lg me-2"></i>Novo Serviço
             </a>
-        </div>
+        </h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                <li class="breadcrumb-item">Gestão</li>
+                <li class="breadcrumb-item active">Lista de serviços</li>
+            </ol>
+        </nav>
     </div>
+<div class="container mt-4">
 
     <!-- Search and Filters -->
     <div class="row mb-4 search-container">
-        <div class="col-md-8">
-            <input type="text" id="searchInput" class="form-control"
-                   placeholder="🔍 Pesquisar por nome ou descrição..." />
-        </div>
         <div class="col-md-4">
             <select id="filter-type" class="form-select">
                 <option value="">Todos os tipos</option>
@@ -60,7 +57,7 @@
 
     <div id="cardContainer" class="row gy-3">
         {% for servico in servicos %}
-            <div class="col-12 card-item"
+            <div class="col-12 card-items"
                  data-search="{{ servico.nome|lower }} {{ servico.descricao|lower }} {{ servico.tipo }}"
                  data-type="{{ servico.tipo }}">
                 <div class="card shadow-lg border-0 rounded-3">
@@ -117,7 +114,6 @@
 {% endblock %}
 
 {% block javascripts %}
-{{ parent() }}
 <script src="{{ asset('js/TabelaDefault.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -160,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
         cardContainerId: 'cardContainer',
         paginationId: 'pagination',
         searchInputId: 'searchInput',
-        itemsPerPage: 6
+        itemsPerPage: 5
     });
     
     // Event listeners

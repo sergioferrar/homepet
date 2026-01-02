@@ -1,12 +1,21 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<div class="pagetitle">
-    <h1 class="text-center shadow-sm rounded p-2">✏️ Editar Hospedagem</h1>
-</div>
+    <div class="pagetitle">
+        <h1>Editar Hospedagem
+            <a class="btn btn-primary btm-sm float-end pt-2" href="{{ url('hospedagem_listar') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+        </h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                <li class="breadcrumb-item">Operações</li>
+                <li class="breadcrumb-item active">Editar Hospedagem</li>
+            </ol>
+        </nav>
+    </div>
 
 <div class="card shadow-sm">
-    <div class="card-body">
+    <div class="card-body pt-4">
         <form method="POST" action="{{ path('hospedagem_editar', { id: hospedagem.id }) }}">
 
             <input type="hidden" name="cliente_id" value="{{ hospedagem.cliente_id }}">

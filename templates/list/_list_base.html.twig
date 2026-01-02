@@ -19,12 +19,11 @@
 {% endblock %}
 
 {% block body %}
-<div class="container mt-5">
+<div class="container">
     <h1 class="text-primary mb-4">{% block list_title %}Título da Listagem{% endblock %}</h1>
     <div class="tabela-container container-fluid px-2">
         <div class="row my-3">
             <div class="col-12 col-md-6">
-                <input type="text" id="searchInput" class="form-control form-control-md" placeholder="🔍 Pesquisar..." />
             </div>
             <div class="col-12 col-md-6 d-flex justify-content-end align-items-center">
                 {% block list_actions %}
