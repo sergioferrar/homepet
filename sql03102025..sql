@@ -28,7 +28,7 @@ CREATE TABLE vacina (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
-ALTER TABLE `homepet_1`.`produto` 
+ALTER TABLE `produto` 
 ADD COLUMN `codigo` BIGINT NULL AFTER `nome`,
 ADD COLUMN `refrigerado` ENUM('Sim', 'Não') NULL DEFAULT 'Não' AFTER `codigo`,
 ADD COLUMN `data_validade` DATETIME NULL AFTER `data_cadastro`,

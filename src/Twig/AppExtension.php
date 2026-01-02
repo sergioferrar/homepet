@@ -60,7 +60,33 @@ class AppExtension extends AbstractExtension
             new TwigFilter('especie', [$this, 'especie']),
             new TwigFilter('sexo', [$this, 'sexo']),
             new TwigFilter('mes_br', [$this, 'mes_br']),
+            new TwigFilter('metodoPagamento', [$this, 'metodoPagamento']),
         ];
+    }
+
+    public function metodoPagamento($string)
+    {
+        switch (strtolower($string)) {
+            case 'debito':
+                return '<i class="bx bx-credit-card"></i> '.$string;
+                break;
+            case 'credito':
+                return '<i class="bi bi-credit-card-fill"></i> '.$string;
+                break;
+            case 'dinheiro':
+                return '<i class="bi bi-cash-coin"></i> '.$string;
+                break;
+            case 'pix':
+                return '<i class="bx bx-transfer"></i> '.$string;
+                break;
+            case 'pendente':
+                return '<i class="bi bi-clock-history"></i> '.$string;
+                break;
+            
+            default:
+                // code...
+                break;
+        }
     }
 
     public function mes_br($date): string

@@ -336,7 +336,7 @@ public function inativar($baseId, int $id): void
     public function findInativos(int $baseId, ?int $petId = null): array
     {
         $sql = "SELECT f.id, f.descricao, f.valor, f.data, f.pet_id, 
-                       p.nome AS pet_nome, c.nome AS dono_nome
+                       p.nome AS pet_nome, c.nome AS dono_nome, COALESCE(metodo_pagamento, 'Dinheiro') AS metodo_pagamento
                   FROM {$_ENV['DBNAMETENANT']}.financeiro f
              LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
              LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id

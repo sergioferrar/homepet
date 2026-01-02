@@ -142,6 +142,7 @@ class VendaController extends DefaultController
             $financeiro->setValor($valorFinal);
             $financeiro->setDescricao(trim($descricaoFinal, ' +'));
             $financeiro->setData($data);
+            $financeiro->setMetodoPagamento($metodoPagamento);
             $financeiro->setOrigem('clinica');
             $financeiro->setStatus('concluido');
 

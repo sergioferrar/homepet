@@ -3,6 +3,16 @@
 {% block page_title %}<i class="bi bi-card-list me-2"></i> Planos{% endblock %}
 
 {% block body %}
+    <div class="pagetitle">
+        <h1>Planos de assinatura</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                <li class="breadcrumb-item">Configurações</li>
+                <li class="breadcrumb-item active">Planos de assinatura</li>
+            </ol>
+        </nav>
+    </div>
 <div class="container mt-5">
 
     <a href="{{ path('app_plano_create') }}" class="btn btn-secondary btn-sm mb-3">+ Novo Plano</a>
