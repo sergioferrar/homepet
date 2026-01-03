@@ -1,12 +1,18 @@
 {% extends 'base.html.twig' %}
 {% block body %}
 	<div class="pagetitle">
-		<h1 class="text-primary">Novo plano</h1>
+		<h1>Novo plano</h1>
+		
+		<a class="btn btn-primary btm-sm mb-3" href="{{ url('app_plano') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+
 		<nav>
-			<ol class="breadcrumb bg-light p-2 rounded">
-				<li class="breadcrumb-item"><a href="{{ path('home') }}" class="text-decoration-none text-primary">Home</a></li>
-			</ol>
-		</nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                <li class="breadcrumb-item">Configurações</li>
+                <li class="breadcrumb-item">Planos</li>
+                <li class="breadcrumb-item active">Novo plano</li>
+            </ol>
+        </nav>
 	</div>
 	<form method="post" action="{{url('app_plano_create_new')}}">
 		<section class="section">

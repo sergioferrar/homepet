@@ -33,3 +33,15 @@ ADD COLUMN `codigo` BIGINT NULL AFTER `nome`,
 ADD COLUMN `refrigerado` ENUM('Sim', 'Não') NULL DEFAULT 'Não' AFTER `codigo`,
 ADD COLUMN `data_validade` DATETIME NULL AFTER `data_cadastro`,
 ADD COLUMN `codigo_fabrica` VARCHAR(255) NULL AFTER `data_validade`;
+
+ALTER TABLE `produto` 
+ADD COLUMN `ncm` INT NOT NULL AFTER `codigo_fabrica`,
+ADD COLUMN `cfop` INT NOT NULL AFTER `ncm`,
+ADD COLUMN `cest` DOUBLE NULL DEFAULT NULL AFTER `cfop`,
+ADD COLUMN `aliquota_icms` DOUBLE NULL DEFAULT NULL AFTER `cest`,
+ADD COLUMN `aliquota_pis` DOUBLE NULL DEFAULT NULL AFTER `aliquota_icms`,
+ADD COLUMN `aliquota_cofins` DOUBLE NULL DEFAULT NULL AFTER `aliquota_pis`,
+ADD COLUMN `aliquota_ipi` DOUBLE NULL DEFAULT NULL AFTER `aliquota_cofins`,
+ADD COLUMN `aliquota_iss` DOUBLE NULL DEFAULT NULL AFTER `aliquota_ipi`,
+ADD COLUMN `aliquota_ibs` DOUBLE NULL DEFAULT NULL AFTER `aliquota_iss`,
+ADD COLUMN `aliquota_cbs` DOUBLE NULL DEFAULT NULL AFTER `aliquota_ibs`;
