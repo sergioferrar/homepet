@@ -1,0 +1,195 @@
+{% extends 'list/_list_base.html.twig' %}
+
+
+{% block title %}Configturações so sistema{% endblock %}
+
+{% block list_title %}Configturações so sistema{% endblock %}
+
+{% block breadcrumbsAction %}
+
+{% endblock %}
+
+{% block breadcrumbsGrupo %}Configurações{% endblock %}
+
+{% block breadcrumbsAtivo %}Configturações so sistema{% endblock %}
+
+{% block page_title %}Configturações so sistema{% endblock %}
+
+{% block list_content %}
+<div class="container-fluid py-4">
+
+    <h3 class="fw-bold mb-4">Configurações do Estabelecimento</h3>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body">
+
+            <!-- NAV TABS -->
+            <ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">
+
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#geral">
+                        Geral
+                    </button>
+                </li>
+
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pagamentos">
+                        Pagamentos & Fiscal
+                    </button>
+                </li>
+
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#emails">
+                        E-mails & Notificações
+                    </button>
+                </li>
+
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ia">
+                        IA & Automação
+                    </button>
+                </li>
+
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#usuarios">
+                        Usuários & Permissões
+                    </button>
+                </li>
+
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#marketing">
+                        Marketing & Pixels
+                    </button>
+                </li>
+
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#integracoes">
+                        Integrações & APIs
+                    </button>
+                </li>
+
+            </ul>
+
+            <!-- CONTENT -->
+            <div class="tab-content">
+
+                <!-- GERAL -->
+                <div class="tab-pane fade show active" id="geral">
+                    <h5 class="fw-bold mb-3">Informações Gerais</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nome do Estabelecimento</label>
+                            <input class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">CNPJ</label>
+                            <input class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGAMENTOS -->
+                <div class="tab-pane fade" id="pagamentos">
+                    <h5 class="fw-bold mb-3">Gateways de Pagamento & Emissão Fiscal</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Chave PagSeguro</label>
+                            <input class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Chave Mercado Pago</label>
+                            <input class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Token Emissão NF-e</label>
+                            <input class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EMAILS -->
+                <div class="tab-pane fade" id="emails">
+                    <h5 class="fw-bold mb-3">Serviço de E-mail</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Servidor SMTP</label>
+                            <input class="form-control">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Porta</label>
+                            <input class="form-control">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Criptografia</label>
+                            <select class="form-select">
+                                <option>TLS</option>
+                                <option>SSL</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IA -->
+                <div class="tab-pane fade" id="ia">
+                    <h5 class="fw-bold mb-3">Configurações de IA</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">API Key da IA</label>
+                        <input class="form-control">
+                    </div>
+                </div>
+
+                <!-- USUÁRIOS -->
+                <div class="tab-pane fade" id="usuarios">
+                    <h5 class="fw-bold mb-3">Permissões & Perfis</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">Modelo de Permissões</label>
+                        <select class="form-select">
+                            <option>Administrador</option>
+                            <option>Operacional</option>
+                            <option>Financeiro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- MARKETING -->
+                <div class="tab-pane fade" id="marketing">
+                    <h5 class="fw-bold mb-3">Pixels & Inbound</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">Facebook Pixel</label>
+                        <input class="form-control">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Google Tag Manager</label>
+                        <input class="form-control">
+                    </div>
+                </div>
+
+                <!-- INTEGRAÇÕES -->
+                <div class="tab-pane fade" id="integracoes">
+                    <h5 class="fw-bold mb-3">Conexões Externas & APIs</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">Webhook URL</label>
+                        <input class="form-control">
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="text-end mt-4">
+                <button class="btn btn-primary btn-lg">Salvar Configurações</button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

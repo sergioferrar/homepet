@@ -528,6 +528,12 @@
                             <i class="bi bi-shop"></i><span>Menus</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if app.request.attributes.get('_route') != 'app_settings' %} collapsed {% endif %}"
+                           href="{{ url('app_settings') }}">
+                            <i class="bi bi-shop"></i><span>Configturações so sistema</span>
+                        </a>
+                    </li>
                 </ul>
             </li>
         {% endif %}
