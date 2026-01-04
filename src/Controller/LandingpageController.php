@@ -2,6 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\Estabelecimento;
+use App\Entity\Usuario;
+use App\Service\DatabaseBkp;
+use App\Service\EmailService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,7 +41,7 @@ class LandingpageController extends DefaultController
         return $this->render('home/cadastro-estabelecimento.html.twig', $data);
     }
 
-    
+
 
     /**
      * @Route("/landing/cadastrar", name="estabelecimento_cadastrar", methods="POST")
@@ -93,50 +97,92 @@ class LandingpageController extends DefaultController
      */
     public function cadastrarUsuario(EmailService $emailService, Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            $usuario = new Usuario();
-            $usuario->setNomeUsuario($request->get('nome_usuario'));
-            $usuario->setSenha(password_hash($request->get('senha'), PASSWORD_DEFAULT, ["cost" => 10]));
-            $usuario->setEmail($request->get('email'));
-            $usuario->setAccessLevel($request->get('access_level'));
-
-            switch ($request->get('access_level')) {
-                case 'Super Admin':
-                case 'Admin':
-                    $roles = ['ROLE_ADMIN'];
-                    break;
-                case 'Atendente':
-                case 'Tosador':
-                case 'Balconista':
-                    $roles = ['ROLE_ADMIN_USER'];
-                    break;
-                default:
-                    $roles = ['ROLE_USER'];
-                    break;
-            }
-
-            $usuario->setRoles($roles);
-            $usuario->setPetshopId($request->get('estabelecimento'));
-
-            $this->getRepositorio(Usuario::class)->add($usuario, true);
-
-            $confirmationUrl = $this->generateUrl('confirma_cadastro', ['estabelecimento' => $request->get('estabelecimento')], UrlGeneratorInterface::ABSOLUTE_URL);
-            $html = $this->render('estabelecimento/email.html.twig', [
-                'confirmation_link' => $confirmationUrl,
-            ])->getContent();
-
-            $emailService->sendEmail(
-                $request->get('email'),
-                'Confirmação de cadastro no sistema System Home Pet',
-                $html
-            );
-
-            return $this->redirectToRoute('app_login', ['confirmation' => base64_encode("Foi enviado um e-mail para <b>{$request->get('email')}</b> Verifique sua caixa de entrada ou na caixa de SPAN e clique no link para concluir o seu cadastro!")]);
+        if (!$request->isMethod('POST')) {
+            return $this->render('usuario/cadastrar.html.twig', [
+                'estabelecimento' => $request->get('estabelecimento'),
+            ]);
         }
 
-        return $this->render('usuario/cadastrar.html.twig', [
-            'estabelecimento' => $request->get('estabelecimento'),
-        ]);
+        /**
+         * 1. Validação básica
+         */
+        $senha = $request->get('senha');
+        $confirmacao = $request->get('senha_confirmacao');
+
+        if ($senha !== $confirmacao) {
+            $this->addFlash('error', 'As senhas não conferem. Tente novamente.');
+            return $this->redirectToRoute('petshop_usuario_cadastro');
+        }
+
+        /**
+         * 2. Criação do usuário
+         */
+        $usuario = new Usuario();
+        $usuario->setNomeUsuario($request->get('nome_usuario'));
+        $usuario->setEmail($request->get('email'));
+        $usuario->setAccessLevel($request->get('access_level'));
+        $usuario->setPetshopId($request->get('estabelecimento'));
+
+        $usuario->setSenha(
+            password_hash($senha, PASSWORD_DEFAULT, ['cost' => 10])
+        );
+
+        /**
+         * 3. Definição de roles
+         */
+        switch ($request->get('access_level')) { 
+            case 'Super Admin': 
+            case 'Admin': 
+                $roles = ['ROLE_ADMIN']; 
+            break; 
+            case 'Atendente': 
+            case 'Tosador': 
+            case 'Balconista': 
+                $roles = ['ROLE_ADMIN_USER']; 
+            break; 
+            default: 
+                $roles = ['ROLE_USER']; 
+            break;
+        }
+
+        $usuario->setRoles($roles);
+
+        /**
+         * 4. Persistência
+         */
+        $this->getRepositorio(Usuario::class)->add($usuario, true);
+
+        /**
+         * 5. Geração do link de confirmação
+         */
+        $confirmationUrl = $this->generateUrl(
+            'confirma_cadastro',
+            ['estabelecimento' => $request->get('estabelecimento')],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+
+        $html = $this->render('estabelecimento/email.html.twig', [
+            'confirmation_link' => $confirmationUrl,
+        ])->getContent();
+
+        /**
+         * 6. Envio de e-mail
+         */
+        $emailService->sendEmail(
+            $request->get('email'),
+            'Confirmação de cadastro no sistema System Home Pet',
+            $html
+        );
+
+        /**
+         * 7. Redirecionamento com feedback
+         */
+        $mensagem = base64_encode(
+            "Foi enviado um e-mail para <b>{$request->get('email')}</b>. 
+             Verifique sua caixa de entrada ou SPAM e clique no link para concluir seu cadastro!"
+        );
+
+        return $this->redirectToRoute('app_login', ['confirmation' => $mensagem]);
     }
 
     /**
