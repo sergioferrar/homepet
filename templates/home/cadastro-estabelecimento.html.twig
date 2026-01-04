@@ -92,46 +92,46 @@
                             <form action="{{ url('estabelecimento_cadastrar') }}" method="POST">
                                 <div class="mb-3">
                                     <label class="form-label">Razão Social</label>
-                                    <input type="text" class="form-control form-control-lg" name="razaoSocial" required>
+                                    <input type="text" class="form-control form-control-lg" name="razaoSocial" id="razaoSocial" required>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">CNPJ</label>
-                                    <input type="text" class="form-control form-control-lg" name="cnpj" required>
+                                    <input type="text" class="form-control form-control-lg" name="cnpj" id="cnpj" required>
                                 </div>
                                 <hr class="my-4">
                                 <h6 class="fw-bold mb-3">Endereço</h6>
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">CEP</label>
-                                        <input type="text" class="form-control" name="cep">
+                                        <input type="text" class="form-control" name="cep" id="cep">
                                     </div>
                                     <div class="col-md-8 mb-3">
                                         <label class="form-label">Rua</label>
-                                        <input type="text" class="form-control" name="rua">
+                                        <input type="text" class="form-control" name="rua" id="rua">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Número</label>
-                                        <input type="text" class="form-control" name="numero">
+                                        <input type="text" class="form-control" name="numero" id="numero">
                                     </div>
                                     <div class="col-md-8 mb-3">
                                         <label class="form-label">Complemento</label>
-                                        <input type="text" class="form-control" name="complemento">
+                                        <input type="text" class="form-control" name="complemento" id="complemento">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Bairro</label>
-                                        <input type="text" class="form-control" name="bairro">
+                                        <input type="text" class="form-control" name="bairro" id="bairro">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Cidade</label>
-                                        <input type="text" class="form-control" name="cidade">
+                                        <input type="text" class="form-control" name="cidade" id="cidade">
                                     </div>
                                 </div>
-                                <input type="hidden" name="pais" value="brasil">
-                                <input type="hidden" name="planoId" value="{{ planoId }}">
+                                <input type="hidden" name="pais" id="pais" value="brasil">
+                                <input type="hidden" name="planoId" id="planoId" value="{{ planoId }}">
                                 <div class="d-grid mt-4">
                                     <button class="btn btn-primary btn-lg">
                                         Criar meu estabelecimento

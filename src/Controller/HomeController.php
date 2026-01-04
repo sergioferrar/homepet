@@ -12,20 +12,6 @@ class HomeController extends DefaultController
 {
 
     /**
-     * @Route("/landing/getstarted", name="landing_home")
-     */
-    public function landing(Request $request): Response
-    {
-        $data = [];
-
-        $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome();
-        $data['planos'] = $planos;
-        $data['modulos'] = $this->modulosSistema;
-
-        return $this->render('home/landing.html.twig', $data);
-    }
-
-    /**
      * @Route("/dashboard", name="home")
      */
     public function index(Request $request): Response
