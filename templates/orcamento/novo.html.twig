@@ -1,129 +1,134 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Novo Orçamento{% endblock %}
-{% block page_title %}<i class="bi bi-file-earmark-plus me-2"></i>Novo Orçamento{% endblock %}
+{% block page_title %}Novo Orçamento{% endblock %}
 
 {% block stylesheets %}
-<style>
-.autocomplete-suggestions {
-    border: 1px solid #ccc;
-    background: #fff;
-    position: absolute;
-    z-index: 1000;
-    max-height: 200px;
-    overflow-y: auto;
-    width: 100%;
-    border-radius: 6px;
-    margin-top: 2px;
-}
-.autocomplete-suggestion {
-    padding: 8px 12px;
-    cursor: pointer;
-    border-bottom: 1px solid #eee;
-}
-.autocomplete-suggestion:hover {
-    background: #007bff;
-    color: #fff;
-}
-.autocomplete-suggestion:last-child {
-    border-bottom: none;
-}
-</style>
+    <style>
+        .autocomplete-suggestions {
+            border: 1px solid #ccc;
+            background: #fff;
+            position: absolute;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            border-radius: 6px;
+            margin-top: 2px;
+        }
+
+        .autocomplete-suggestion {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .autocomplete-suggestion:hover {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .autocomplete-suggestion:last-child {
+            border-bottom: none;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
 
     <div class="pagetitle">
-      <h1>Novo Orçamento
-            <a class="btn btn-primary btm-sm float-end" href="{{ url('orcamento_index') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+        <h1>Novo Orçamento
+            <a class="btn btn-primary btm-sm float-end" href="{{ url('orcamento_index') }}"><i
+                        class="bi bi-arrow-left me-1"></i>Voltar</a>
         </h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
-          <li class="breadcrumb-item">Atendimento</li>
-          <li class="breadcrumb-item">Orçamentos</li>
-          <li class="breadcrumb-item active">Novo Orçamento</li>
-        </ol>
-      </nav>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+                <li class="breadcrumb-item">Atendimento</li>
+                <li class="breadcrumb-item">Orçamentos</li>
+                <li class="breadcrumb-item active">Novo Orçamento</li>
+            </ol>
+        </nav>
     </div>
-        
-<div class="container-fluid mt-4">
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Dados do Cliente</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3 position-relative">
-                            <label class="form-label">Cliente/Tutor *</label>
-                            <input type="text" id="inputCliente" class="form-control" placeholder="Digite o nome do cliente..." autocomplete="off" required>
-                            <input type="hidden" id="clienteId">
-                            <input type="hidden" id="clienteNome">
-                            <div id="autocomplete-cliente" class="autocomplete-suggestions"></div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Pet <small class="text-muted">(opcional)</small></label>
-                            <select id="petId" class="form-select" disabled>
-                                <option value="">Selecione primeiro um cliente</option>
-                            </select>
-                            <small class="text-muted">Selecione um cliente para ver seus pets</small>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Data de Validade</label>
-                            <input type="date" id="dataValidade" class="form-control">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Observações</label>
-                        <textarea id="observacoes" class="form-control" rows="3"></textarea>
-                    </div>
-                </div>
-            </div>
+    <div class="container-fluid mt-4">
 
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Itens do Orçamento</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-3">
-                            <label class="form-label">Tipo</label>
-                            <select id="tipoItem" class="form-select">
-                                <option value="produto">Produto</option>
-                                <option value="servico">Serviço</option>
-                                <option value="banho_tosa">Banho e Tosa</option>
-                                <option value="clinica">Clínica</option>
-                            </select>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Dados do Cliente</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3 position-relative">
+                                <label class="form-label">Cliente/Tutor *</label>
+                                <input type="text" id="inputCliente" class="form-control"
+                                       placeholder="Digite o nome do cliente..." autocomplete="off" required>
+                                <input type="hidden" id="clienteId">
+                                <input type="hidden" id="clienteNome">
+                                <div id="autocomplete-cliente" class="autocomplete-suggestions"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Pet <small class="text-muted">(opcional)</small></label>
+                                <select id="petId" class="form-select" disabled>
+                                    <option value="">Selecione primeiro um cliente</option>
+                                </select>
+                                <small class="text-muted">Selecione um cliente para ver seus pets</small>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Item</label>
-                            <select id="itemSelect" class="form-select">
-                                <option value="">Selecione</option>
-                            </select>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Data de Validade</label>
+                                <input type="date" id="dataValidade" class="form-control">
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Qtd</label>
-                            <input type="number" id="quantidade" class="form-control" value="1" min="1">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Valor Unit.</label>
-                            <input type="number" id="valorUnitario" class="form-control" step="0.01" min="0">
-                        </div>
-                        <div class="col-md-1 d-flex align-items-end">
-                            <button type="button" class="btn btn-success w-100" onclick="adicionarItem()">
-                                <i class="bi bi-plus-lg"></i>
-                            </button>
+                        <div class="mb-3">
+                            <label class="form-label">Observações</label>
+                            <textarea id="observacoes" class="form-control" rows="3"></textarea>
                         </div>
                     </div>
+                </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="tabelaItens">
-                            <thead>
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Itens do Orçamento</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Tipo</label>
+                                <select id="tipoItem" class="form-select">
+                                    <option value="produto">Produto</option>
+                                    <option value="servico">Serviço</option>
+                                    <option value="banho_tosa">Banho e Tosa</option>
+                                    <option value="clinica">Clínica</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Item</label>
+                                <select id="itemSelect" class="form-select">
+                                    <option value="">Selecione</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Qtd</label>
+                                <input type="number" id="quantidade" class="form-control" value="1" min="1">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Valor Unit.</label>
+                                <input type="number" id="valorUnitario" class="form-control" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="button" class="btn btn-success w-100" onclick="adicionarItem()">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="tabelaItens">
+                                <thead>
                                 <tr>
                                     <th>Descrição</th>
                                     <th>Tipo</th>
@@ -132,234 +137,235 @@
                                     <th>Subtotal</th>
                                     <th width="50">Ação</th>
                                 </tr>
-                            </thead>
-                            <tbody id="itensBody">
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody id="itensBody">
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Resumo</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Valor Total</label>
-                        <input type="text" id="valorTotal" class="form-control" readonly value="R$ 0,00">
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Resumo</h5>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Desconto (R$)</label>
-                        <input type="number" id="desconto" class="form-control" step="0.01" min="0" value="0" onchange="calcularTotal()">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Valor Total</label>
+                            <input type="text" id="valorTotal" class="form-control" readonly value="R$ 0,00">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Desconto (R$)</label>
+                            <input type="number" id="desconto" class="form-control" step="0.01" min="0" value="0"
+                                   onchange="calcularTotal()">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label"><strong>Valor Final</strong></label>
+                            <input type="text" id="valorFinal" class="form-control fw-bold" readonly value="R$ 0,00">
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" onclick="salvarOrcamento()">
+                            <i class="bi bi-save"></i> Salvar Orçamento
+                        </button>
                     </div>
-                    <div class="mb-4">
-                        <label class="form-label"><strong>Valor Final</strong></label>
-                        <input type="text" id="valorFinal" class="form-control fw-bold" readonly value="R$ 0,00">
-                    </div>
-                    <button type="button" class="btn btn-primary w-100" onclick="salvarOrcamento()">
-                        <i class="bi bi-save"></i> Salvar Orçamento
-                    </button>
                 </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block javascripts %}
-<script>
-let itens = [];
-let produtos = {{ produtos|json_encode|raw }};
-let servicos = {{ servicos|json_encode|raw }};
-let clientes = {{ clientes|json_encode|raw }};
+    <script>
+        let itens = [];
+        let produtos = {{ produtos|json_encode|raw }};
+        let servicos = {{ servicos|json_encode|raw }};
+        let clientes = {{ clientes|json_encode|raw }};
 
-console.log('=== DEBUG ORÇAMENTO ===');
-console.log('Produtos:', produtos);
-console.log('Total de produtos:', produtos.length);
-console.log('Serviços:', servicos);
-console.log('Total de serviços:', servicos.length);
-console.log('Clientes:', clientes);
-console.log('Total de clientes:', clientes.length);
-console.log('======================');
+        console.log('=== DEBUG ORÇAMENTO ===');
+        console.log('Produtos:', produtos);
+        console.log('Total de produtos:', produtos.length);
+        console.log('Serviços:', servicos);
+        console.log('Total de serviços:', servicos.length);
+        console.log('Clientes:', clientes);
+        console.log('Total de clientes:', clientes.length);
+        console.log('======================');
 
-// 🔹 Autocomplete de Cliente
-const inputCliente = document.getElementById('inputCliente');
-const autocompleteCliente = document.getElementById('autocomplete-cliente');
+        // 🔹 Autocomplete de Cliente
+        const inputCliente = document.getElementById('inputCliente');
+        const autocompleteCliente = document.getElementById('autocomplete-cliente');
 
-if (!inputCliente || !autocompleteCliente) {
-    console.error('Elementos não encontrados!');
-}
+        if (!inputCliente || !autocompleteCliente) {
+            console.error('Elementos não encontrados!');
+        }
 
-inputCliente.addEventListener('input', function() {
-    const termo = this.value.toLowerCase();
-    console.log('Termo digitado:', termo);
-    
-    autocompleteCliente.innerHTML = '';
-    
-    if (termo.length < 2) {
-        autocompleteCliente.style.display = 'none';
-        return;
-    }
-    
-    const filtrados = clientes.filter(c => c.nome.toLowerCase().includes(termo));
-    console.log('Clientes filtrados:', filtrados);
-    
-    if (filtrados.length === 0) {
-        autocompleteCliente.innerHTML = '<div class="autocomplete-suggestion" style="color: #999;">Nenhum cliente encontrado</div>';
-        autocompleteCliente.style.display = 'block';
-        return;
-    }
-    
-    filtrados.forEach(cliente => {
-        const div = document.createElement('div');
-        div.className = 'autocomplete-suggestion';
-        div.textContent = cliente.nome;
-        div.onclick = function() {
-            selecionarCliente(cliente);
-        };
-        autocompleteCliente.appendChild(div);
-    });
-    
-    autocompleteCliente.style.display = 'block';
-});
+        inputCliente.addEventListener('input', function () {
+            const termo = this.value.toLowerCase();
+            console.log('Termo digitado:', termo);
 
-// Fechar autocomplete ao clicar fora
-document.addEventListener('click', function(e) {
-    if (!inputCliente.contains(e.target) && !autocompleteCliente.contains(e.target)) {
-        autocompleteCliente.style.display = 'none';
-    }
-});
+            autocompleteCliente.innerHTML = '';
 
-function selecionarCliente(cliente) {
-    console.log('Cliente selecionado:', cliente);
-    
-    document.getElementById('inputCliente').value = cliente.nome;
-    document.getElementById('clienteId').value = cliente.id;
-    document.getElementById('clienteNome').value = cliente.nome;
-    autocompleteCliente.style.display = 'none';
-    
-    // Carregar pets do cliente
-    carregarPetsDoCliente(cliente.id);
-}
-
-function carregarPetsDoCliente(clienteId) {
-    const petSelect = document.getElementById('petId');
-    
-    console.log('Carregando pets do cliente:', clienteId);
-    
-    if (!clienteId) {
-        petSelect.innerHTML = '<option value="">Selecione primeiro um cliente</option>';
-        petSelect.disabled = true;
-        return;
-    }
-    
-    // Mostrar carregando
-    petSelect.innerHTML = '<option value="">Carregando pets...</option>';
-    petSelect.disabled = true;
-    
-    fetch(`/orcamento/api/cliente/${clienteId}/pets`)
-        .then(r => {
-            console.log('Resposta recebida:', r);
-            return r.json();
-        })
-        .then(data => {
-            console.log('Dados dos pets:', data);
-            
-            if (!data.success) {
-                throw new Error(data.message || 'Erro ao buscar pets');
+            if (termo.length < 2) {
+                autocompleteCliente.style.display = 'none';
+                return;
             }
-            
-            const pets = data.pets;
-            petSelect.innerHTML = '<option value="">Nenhum pet selecionado</option>';
-            
-            if (pets.length === 0) {
-                petSelect.innerHTML += '<option value="" disabled>⚠️ Este cliente não tem pets cadastrados</option>';
-            } else {
-                pets.forEach(pet => {
-                    const info = pet.especie || pet.raca ? ` (${pet.especie || ''}${pet.especie && pet.raca ? ' - ' : ''}${pet.raca || ''})` : '';
-                    petSelect.innerHTML += `<option value="${pet.id}" data-nome="${pet.nome}">${pet.nome}${info}</option>`;
+
+            const filtrados = clientes.filter(c => c.nome.toLowerCase().includes(termo));
+            console.log('Clientes filtrados:', filtrados);
+
+            if (filtrados.length === 0) {
+                autocompleteCliente.innerHTML = '<div class="autocomplete-suggestion" style="color: #999;">Nenhum cliente encontrado</div>';
+                autocompleteCliente.style.display = 'block';
+                return;
+            }
+
+            filtrados.forEach(cliente => {
+                const div = document.createElement('div');
+                div.className = 'autocomplete-suggestion';
+                div.textContent = cliente.nome;
+                div.onclick = function () {
+                    selecionarCliente(cliente);
+                };
+                autocompleteCliente.appendChild(div);
+            });
+
+            autocompleteCliente.style.display = 'block';
+        });
+
+        // Fechar autocomplete ao clicar fora
+        document.addEventListener('click', function (e) {
+            if (!inputCliente.contains(e.target) && !autocompleteCliente.contains(e.target)) {
+                autocompleteCliente.style.display = 'none';
+            }
+        });
+
+        function selecionarCliente(cliente) {
+            console.log('Cliente selecionado:', cliente);
+
+            document.getElementById('inputCliente').value = cliente.nome;
+            document.getElementById('clienteId').value = cliente.id;
+            document.getElementById('clienteNome').value = cliente.nome;
+            autocompleteCliente.style.display = 'none';
+
+            // Carregar pets do cliente
+            carregarPetsDoCliente(cliente.id);
+        }
+
+        function carregarPetsDoCliente(clienteId) {
+            const petSelect = document.getElementById('petId');
+
+            console.log('Carregando pets do cliente:', clienteId);
+
+            if (!clienteId) {
+                petSelect.innerHTML = '<option value="">Selecione primeiro um cliente</option>';
+                petSelect.disabled = true;
+                return;
+            }
+
+            // Mostrar carregando
+            petSelect.innerHTML = '<option value="">Carregando pets...</option>';
+            petSelect.disabled = true;
+
+            fetch(`/orcamento/api/cliente/${clienteId}/pets`)
+                .then(r => {
+                    console.log('Resposta recebida:', r);
+                    return r.json();
+                })
+                .then(data => {
+                    console.log('Dados dos pets:', data);
+
+                    if (!data.success) {
+                        throw new Error(data.message || 'Erro ao buscar pets');
+                    }
+
+                    const pets = data.pets;
+                    petSelect.innerHTML = '<option value="">Nenhum pet selecionado</option>';
+
+                    if (pets.length === 0) {
+                        petSelect.innerHTML += '<option value="" disabled>⚠️ Este cliente não tem pets cadastrados</option>';
+                    } else {
+                        pets.forEach(pet => {
+                            const info = pet.especie || pet.raca ? ` (${pet.especie || ''}${pet.especie && pet.raca ? ' - ' : ''}${pet.raca || ''})` : '';
+                            petSelect.innerHTML += `<option value="${pet.id}" data-nome="${pet.nome}">${pet.nome}${info}</option>`;
+                        });
+                        petSelect.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    console.error('Erro ao buscar pets:', err);
+                    console.error('Stack trace:', err.stack);
+                    petSelect.innerHTML = '<option value="">❌ Erro ao carregar pets</option>';
+                    alert('Erro ao buscar pets do cliente.\nVerifique o Console (F12) para mais detalhes.\nErro: ' + err.message);
                 });
-                petSelect.disabled = false;
+        }
+
+        document.getElementById('tipoItem').addEventListener('change', function () {
+            const tipo = this.value;
+            const itemSelect = document.getElementById('itemSelect');
+
+            itemSelect.innerHTML = '<option value="">Selecione</option>';
+
+            if (tipo === 'produto') {
+                produtos.forEach(p => {
+                    itemSelect.innerHTML += `<option value="${p.id}" data-nome="${p.nome}" data-preco="${p.preco}">${p.nome} - R$ ${parseFloat(p.preco).toFixed(2)}</option>`;
+                });
+            } else if (tipo === 'servico') {
+                servicos.forEach(s => {
+                    itemSelect.innerHTML += `<option value="${s.id}" data-nome="${s.nome}" data-preco="${s.preco}">${s.nome} - R$ ${parseFloat(s.preco).toFixed(2)}</option>`;
+                });
             }
-        })
-        .catch(err => {
-            console.error('Erro ao buscar pets:', err);
-            console.error('Stack trace:', err.stack);
-            petSelect.innerHTML = '<option value="">❌ Erro ao carregar pets</option>';
-            alert('Erro ao buscar pets do cliente.\nVerifique o Console (F12) para mais detalhes.\nErro: ' + err.message);
         });
-}
 
-document.getElementById('tipoItem').addEventListener('change', function() {
-    const tipo = this.value;
-    const itemSelect = document.getElementById('itemSelect');
-    
-    itemSelect.innerHTML = '<option value="">Selecione</option>';
-    
-    if (tipo === 'produto') {
-        produtos.forEach(p => {
-            itemSelect.innerHTML += `<option value="${p.id}" data-nome="${p.nome}" data-preco="${p.preco}">${p.nome} - R$ ${parseFloat(p.preco).toFixed(2)}</option>`;
+        document.getElementById('itemSelect').addEventListener('change', function () {
+            const option = this.options[this.selectedIndex];
+            if (option.value) {
+                document.getElementById('valorUnitario').value = option.dataset.preco;
+            }
         });
-    } else if (tipo === 'servico') {
-        servicos.forEach(s => {
-            itemSelect.innerHTML += `<option value="${s.id}" data-nome="${s.nome}" data-preco="${s.preco}">${s.nome} - R$ ${parseFloat(s.preco).toFixed(2)}</option>`;
-        });
-    }
-});
 
-document.getElementById('itemSelect').addEventListener('change', function() {
-    const option = this.options[this.selectedIndex];
-    if (option.value) {
-        document.getElementById('valorUnitario').value = option.dataset.preco;
-    }
-});
+        function adicionarItem() {
+            const tipo = document.getElementById('tipoItem').value;
+            const itemSelect = document.getElementById('itemSelect');
+            const quantidade = parseInt(document.getElementById('quantidade').value);
+            const valorUnitario = parseFloat(document.getElementById('valorUnitario').value);
 
-function adicionarItem() {
-    const tipo = document.getElementById('tipoItem').value;
-    const itemSelect = document.getElementById('itemSelect');
-    const quantidade = parseInt(document.getElementById('quantidade').value);
-    const valorUnitario = parseFloat(document.getElementById('valorUnitario').value);
-    
-    if (!itemSelect.value || !quantidade || !valorUnitario) {
-        alert('Preencha todos os campos do item');
-        return;
-    }
-    
-    const descricao = itemSelect.options[itemSelect.selectedIndex].dataset.nome || itemSelect.options[itemSelect.selectedIndex].text;
-    const subtotal = quantidade * valorUnitario;
-    
-    itens.push({
-        descricao,
-        tipo,
-        quantidade,
-        valorUnitario,
-        subtotal
-    });
-    
-    atualizarTabela();
-    calcularTotal();
-    
-    // Limpar campos
-    itemSelect.value = '';
-    document.getElementById('quantidade').value = 1;
-    document.getElementById('valorUnitario').value = '';
-}
+            if (!itemSelect.value || !quantidade || !valorUnitario) {
+                alert('Preencha todos os campos do item');
+                return;
+            }
 
-function removerItem(index) {
-    itens.splice(index, 1);
-    atualizarTabela();
-    calcularTotal();
-}
+            const descricao = itemSelect.options[itemSelect.selectedIndex].dataset.nome || itemSelect.options[itemSelect.selectedIndex].text;
+            const subtotal = quantidade * valorUnitario;
 
-function atualizarTabela() {
-    const tbody = document.getElementById('itensBody');
-    tbody.innerHTML = '';
-    
-    itens.forEach((item, index) => {
-        tbody.innerHTML += `
+            itens.push({
+                descricao,
+                tipo,
+                quantidade,
+                valorUnitario,
+                subtotal
+            });
+
+            atualizarTabela();
+            calcularTotal();
+
+            // Limpar campos
+            itemSelect.value = '';
+            document.getElementById('quantidade').value = 1;
+            document.getElementById('valorUnitario').value = '';
+        }
+
+        function removerItem(index) {
+            itens.splice(index, 1);
+            atualizarTabela();
+            calcularTotal();
+        }
+
+        function atualizarTabela() {
+            const tbody = document.getElementById('itensBody');
+            tbody.innerHTML = '';
+
+            itens.forEach((item, index) => {
+                tbody.innerHTML += `
             <tr>
                 <td>${item.descricao}</td>
                 <td>${item.tipo}</td>
@@ -373,76 +379,76 @@ function atualizarTabela() {
                 </td>
             </tr>
         `;
-    });
-}
-
-function calcularTotal() {
-    const valorTotal = itens.reduce((sum, item) => sum + item.subtotal, 0);
-    const desconto = parseFloat(document.getElementById('desconto').value) || 0;
-    const valorFinal = valorTotal - desconto;
-    
-    document.getElementById('valorTotal').value = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
-    document.getElementById('valorFinal').value = `R$ ${valorFinal.toFixed(2).replace('.', ',')}`;
-}
-
-function salvarOrcamento() {
-    const clienteId = document.getElementById('clienteId').value;
-    const clienteNome = document.getElementById('clienteNome').value;
-    
-    const petSelect = document.getElementById('petId');
-    const petId = petSelect.value || null;
-    const petNome = petId && petSelect.selectedIndex > 0 ? petSelect.options[petSelect.selectedIndex].dataset.nome : null;
-    
-    if (!clienteId || !clienteNome) {
-        alert('Selecione um cliente');
-        return;
-    }
-    
-    if (itens.length === 0) {
-        alert('Adicione pelo menos um item ao orçamento');
-        return;
-    }
-    
-    const valorTotal = itens.reduce((sum, item) => sum + item.subtotal, 0);
-    const desconto = parseFloat(document.getElementById('desconto').value) || 0;
-    const valorFinal = valorTotal - desconto;
-    
-    if (valorFinal < 0) {
-        alert('O desconto não pode ser maior que o valor total');
-        return;
-    }
-    
-    const data = {
-        clienteId,
-        clienteNome,
-        petId,
-        petNome,
-        valorTotal,
-        desconto,
-        valorFinal,
-        dataValidade: document.getElementById('dataValidade').value || null,
-        observacoes: document.getElementById('observacoes').value || null,
-        itens
-    };
-    
-    fetch('{{ path('orcamento_salvar') }}', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
-    })
-    .then(r => r.json())
-    .then(result => {
-        if (result.success) {
-            alert(result.message);
-            window.location.href = '{{ path('orcamento_index') }}';
-        } else {
-            alert(result.message);
+            });
         }
-    })
-    .catch(err => {
-        alert('Erro ao salvar orçamento');
-        console.error(err);
-    });
-}
-</script>
+
+        function calcularTotal() {
+            const valorTotal = itens.reduce((sum, item) => sum + item.subtotal, 0);
+            const desconto = parseFloat(document.getElementById('desconto').value) || 0;
+            const valorFinal = valorTotal - desconto;
+
+            document.getElementById('valorTotal').value = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
+            document.getElementById('valorFinal').value = `R$ ${valorFinal.toFixed(2).replace('.', ',')}`;
+        }
+
+        function salvarOrcamento() {
+            const clienteId = document.getElementById('clienteId').value;
+            const clienteNome = document.getElementById('clienteNome').value;
+
+            const petSelect = document.getElementById('petId');
+            const petId = petSelect.value || null;
+            const petNome = petId && petSelect.selectedIndex > 0 ? petSelect.options[petSelect.selectedIndex].dataset.nome : null;
+
+            if (!clienteId || !clienteNome) {
+                alert('Selecione um cliente');
+                return;
+            }
+
+            if (itens.length === 0) {
+                alert('Adicione pelo menos um item ao orçamento');
+                return;
+            }
+
+            const valorTotal = itens.reduce((sum, item) => sum + item.subtotal, 0);
+            const desconto = parseFloat(document.getElementById('desconto').value) || 0;
+            const valorFinal = valorTotal - desconto;
+
+            if (valorFinal < 0) {
+                alert('O desconto não pode ser maior que o valor total');
+                return;
+            }
+
+            const data = {
+                clienteId,
+                clienteNome,
+                petId,
+                petNome,
+                valorTotal,
+                desconto,
+                valorFinal,
+                dataValidade: document.getElementById('dataValidade').value || null,
+                observacoes: document.getElementById('observacoes').value || null,
+                itens
+            };
+
+            fetch('{{ path('orcamento_salvar') }}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+                .then(r => r.json())
+                .then(result => {
+                    if (result.success) {
+                        alert(result.message);
+                        window.location.href = '{{ path('orcamento_index') }}';
+                    } else {
+                        alert(result.message);
+                    }
+                })
+                .catch(err => {
+                    alert('Erro ao salvar orçamento');
+                    console.error(err);
+                });
+        }
+    </script>
 {% endblock %}

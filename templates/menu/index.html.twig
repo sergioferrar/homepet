@@ -7,20 +7,24 @@
         <div class="row mt-4">
             <table class="table table-sm table-striped">
                 <thead>
-                    <tr>
-                        <th>ID</th><th>Título</th><th>Rota</th><th>Status</th><th>Ações</th>
-                    </tr>
+                <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Rota</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
                 </thead>
                 <tbody>
-                    {% for menu in menus %}
-                        <tr>
-                            <td>{{ menu.id }}</td>
-                            <td>{{ menu.titulo }}</td>
-                            <td>{{ menu.rota }}</td>
-                            <td>{{ menu.status }}</td>
-                            <td><a href="{{ path('menu_edit', {'id': menu.id}) }}">Editar</a></td>
-                        </tr>
-                    {% endfor %}
+                {% for menu in menus %}
+                    <tr>
+                        <td>{{ menu.id }}</td>
+                        <td>{{ menu.titulo }}</td>
+                        <td>{{ menu.rota }}</td>
+                        <td>{{ menu.status }}</td>
+                        <td><a href="{{ path('menu_edit', {'id': menu.id}) }}">Editar</a></td>
+                    </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>

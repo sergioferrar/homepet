@@ -3,84 +3,85 @@
 {% block title %}Financeiro da Clínica{% endblock %}
 
 {% block stylesheets %}
-{{ parent() }}
-<style>
-    .financeiro-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
+    {{ parent() }}
+    <style>
+        .financeiro-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
 
-    .financeiro-table-wrapper {
-        max-height: 400px;
-        overflow-y: auto;
-    }
+        .financeiro-table-wrapper {
+            max-height: 400px;
+            overflow-y: auto;
+        }
 
-    .financeiro-table thead th {
-        position: sticky;
-        top: 0;
-        background: #f8f9fa;
-    }
-</style>
+        .financeiro-table thead th {
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <h2 class="mb-4 text-center">Painel Financeiro</h2>
+    <div class="container mt-4">
+        <h2 class="mb-4 text-center">Painel Financeiro</h2>
 
-    <ul class="nav nav-tabs mb-4">
-        <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">Financeiro</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{{ path('clinica_dashboard') }}">Painel</a>
-        </li>
-    </ul>
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Financeiro</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('clinica_dashboard') }}">Painel</a>
+            </li>
+        </ul>
 
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <input type="text" id="pesquisarPet" class="form-control" placeholder="🔎 Pesquisar nome do pet ou dono...">
-        </div>
-        <div class="col-md-6">
-            <input type="date" id="filtrarData" class="form-control" value="{{ dataAtual|date('Y-m-d') }}">
-        </div>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card text-white bg-success shadow text-center">
-                <h5>Receita do Mês</h5>
-                <h4>R$ {{ total_receita|number_format(2, ',', '.') }}</h4>
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <input type="text" id="pesquisarPet" class="form-control"
+                       placeholder="🔎 Pesquisar nome do pet ou dono...">
+            </div>
+            <div class="col-md-6">
+                <input type="date" id="filtrarData" class="form-control" value="{{ dataAtual|date('Y-m-d') }}">
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-danger shadow text-center">
-                <h5>Despesa do Mês</h5>
-                <h4>R$ {{ total_despesa|number_format(2, ',', '.') }}</h4>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-white bg-success shadow text-center">
+                    <h5>Receita do Mês</h5>
+                    <h4>R$ {{ total_receita|number_format(2, ',', '.') }}</h4>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-danger shadow text-center">
+                    <h5>Despesa do Mês</h5>
+                    <h4>R$ {{ total_despesa|number_format(2, ',', '.') }}</h4>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-dark shadow text-center">
+                    <h5>Saldo Geral</h5>
+                    <h4>R$ {{ saldo_geral|number_format(2, ',', '.') }}</h4>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-dark shadow text-center">
-                <h5>Saldo Geral</h5>
-                <h4>R$ {{ saldo_geral|number_format(2, ',', '.') }}</h4>
-            </div>
-        </div>
-    </div>
 
-    <h4 class="mt-4">Resumo de Lançamentos do Dia</h4>
+        <h4 class="mt-4">Resumo de Lançamentos do Dia</h4>
 
-    <div class="financeiro-table-wrapper">
-        <table class="table table-striped table-hover table-bordered financeiro-table">
-            <thead>
+        <div class="financeiro-table-wrapper">
+            <table class="table table-striped table-hover table-bordered financeiro-table">
+                <thead>
                 <tr>
                     <th>Dono</th>
                     <th>Pets</th>
                     <th>Valor Total</th>
                     <th>Data</th>
                 </tr>
-            </thead>
-            <tbody id="tabelaFinanceiro">
+                </thead>
+                <tbody id="tabelaFinanceiro">
                 {% for item in financeiro_hoje %}
                     <tr>
                         <td>{{ item.dono_nome }}</td>
@@ -93,23 +94,23 @@
                         <td colspan="4" class="text-center text-muted">Nenhum lançamento encontrado para hoje.</td>
                     </tr>
                 {% endfor %}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
-<script>
-    document.getElementById('pesquisarPet').addEventListener('keyup', function () {
-        const filtro = this.value.toLowerCase();
-        document.querySelectorAll('#tabelaFinanceiro tr').forEach(function (linha) {
-            const texto = linha.innerText.toLowerCase();
-            linha.style.display = texto.includes(filtro) ? '' : 'none';
+    <script>
+        document.getElementById('pesquisarPet').addEventListener('keyup', function () {
+            const filtro = this.value.toLowerCase();
+            document.querySelectorAll('#tabelaFinanceiro tr').forEach(function (linha) {
+                const texto = linha.innerText.toLowerCase();
+                linha.style.display = texto.includes(filtro) ? '' : 'none';
+            });
         });
-    });
 
-    document.getElementById('filtrarData').addEventListener('change', function () {
-        const dataSelecionada = this.value;
-        window.location.href = `{{ path('financeiro_dashboard') }}?data=${dataSelecionada}`;
-    });
-</script>
+        document.getElementById('filtrarData').addEventListener('change', function () {
+            const dataSelecionada = this.value;
+            window.location.href = `{{ path('financeiro_dashboard') }}?data=${dataSelecionada}`;
+        });
+    </script>
 {% endblock %}

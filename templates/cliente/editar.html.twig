@@ -1,92 +1,98 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<div class="container">
-    <div class="pagetitle">
-        <h1>Editar Cliente
-        <a class="me-md-5 mt-sm-3 btn btn-primary btm-sm mb-3 float-md-end" href="{{ url('cliente_index') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
-        </h1>
-        <nav>
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
-                <li class="breadcrumb-item">Atendimento</li>
-                <li class="breadcrumb-item active">Editar Cliente</li>
-            </ol>
-        </nav>
-    </div>
-    <form method="post" action="{{ path('cliente_editar', {'id': cliente.id}) }}">
-        <div class="row mb-2">
-            <div class="col-8">
-                <label for="nome">Nome</label>
-                <input type="text" id="nome" name="nome" required class="form-control" value="{{ cliente.nome }}">
-            </div>
-            <div class="col-4">
-                <label for="cpf">CPF</label>
-                <input type="text" id="cpf" name="cpf" class="form-control" value="{{ cliente.cpf ?? '' }}" placeholder="000.000.000-00">
-            </div>
+    <div class="container">
+        <div class="pagetitle">
+            <h1>Editar Cliente
+                <a class="me-md-5 mt-sm-3 btn btn-primary btm-sm mb-3 float-md-end" href="{{ url('cliente_index') }}"><i
+                            class="bi bi-arrow-left me-1"></i>Voltar</a>
+            </h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+                    <li class="breadcrumb-item">Atendimento</li>
+                    <li class="breadcrumb-item active">Editar Cliente</li>
+                </ol>
+            </nav>
         </div>
-        <div class="row">
-            <div class="col-6">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" class="form-control" value="{{ cliente.email }}">
-            </div>
-            <div class="col-3">
-                <label for="telefone">Telefone</label>
-                <input type="text" id="telefone" name="telefone" class="form-control" value="{{ cliente.telefone }}">
-            </div>
-            <div class="col-3 pt-4">
-                <label for="telefone" class="me-4">Whatsapp?</label>
-                <div class="btn-group float-end" role="group" aria-label="Basic radio toggle button group">
-                    <input type="radio" class="btn-check" name="whatsapp" {% if cliente.whatsapp == 'Sim' %}checked{% endif %} id="whatsapp1" value="Sim">
-                    <label class="btn btn-outline-primary" for="whatsapp1">Sim</label>
-                    <input type="radio" class="btn-check" name="whatsapp" {% if cliente.whatsapp == 'Não' %}checked{% endif %}  id="whatsapp2" value="Não">
-                    <label class="btn btn-outline-primary" for="whatsapp2">Não</label>
+        <form method="post" action="{{ path('cliente_editar', {'id': cliente.id}) }}">
+            <div class="row mb-2">
+                <div class="col-8">
+                    <label for="nome">Nome</label>
+                    <input type="text" id="nome" name="nome" required class="form-control" value="{{ cliente.nome }}">
+                </div>
+                <div class="col-4">
+                    <label for="cpf">CPF</label>
+                    <input type="text" id="cpf" name="cpf" class="form-control" value="{{ cliente.cpf ?? '' }}"
+                           placeholder="000.000.000-00">
                 </div>
             </div>
-        </div>
-        <div class="row mb-2">
-            <div class="col-2">
-                <label for="cep">CEP</label>
-                <input type="text" class="form-control" id="cep" name="cep" value="{{ cliente.cep }}">
+            <div class="row">
+                <div class="col-6">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-control" value="{{ cliente.email }}">
+                </div>
+                <div class="col-3">
+                    <label for="telefone">Telefone</label>
+                    <input type="text" id="telefone" name="telefone" class="form-control"
+                           value="{{ cliente.telefone }}">
+                </div>
+                <div class="col-3 pt-4">
+                    <label for="telefone" class="me-4">Whatsapp?</label>
+                    <div class="btn-group float-end" role="group" aria-label="Basic radio toggle button group">
+                        <input type="radio" class="btn-check" name="whatsapp"
+                               {% if cliente.whatsapp == 'Sim' %}checked{% endif %} id="whatsapp1" value="Sim">
+                        <label class="btn btn-outline-primary" for="whatsapp1">Sim</label>
+                        <input type="radio" class="btn-check" name="whatsapp"
+                               {% if cliente.whatsapp == 'Não' %}checked{% endif %} id="whatsapp2" value="Não">
+                        <label class="btn btn-outline-primary" for="whatsapp2">Não</label>
+                    </div>
+                </div>
             </div>
-            <div class="col-6">
-                <label for="rua">Rua</label>
-                <input type="text" class="form-control" id="rua" name="rua" value="{{ cliente.rua }}">
+            <div class="row mb-2">
+                <div class="col-2">
+                    <label for="cep">CEP</label>
+                    <input type="text" class="form-control" id="cep" name="cep" value="{{ cliente.cep }}">
+                </div>
+                <div class="col-6">
+                    <label for="rua">Rua</label>
+                    <input type="text" class="form-control" id="rua" name="rua" value="{{ cliente.rua }}">
+                </div>
+                <div class="col-1">
+                    <label for="numero">Número</label>
+                    <input type="text" class="form-control" id="numero" name="numero" value="{{ cliente.numero }}">
+                </div>
+                <div class="col-3">
+                    <label for="complemento">Complemento</label>
+                    <input type="text" class="form-control" id="complemento" name="complemento"
+                           value="{{ cliente.complemento }}">
+                </div>
             </div>
-            <div class="col-1">
-                <label for="numero">Número</label>
-                <input type="text" class="form-control" id="numero" name="numero" value="{{ cliente.numero }}">
+            <div class="row mb-4">
+                <div class="col-6">
+                    <label for="bairro">Bairro</label>
+                    <input type="text" class="form-control" id="bairro" name="bairro" value="{{ cliente.bairro }}">
+                </div>
+                <div class="col-6">
+                    <label for="cidade">Cidade</label>
+                    <input type="text" class="form-control" id="cidade" name="cidade" value="{{ cliente.cidade }}">
+                </div>
             </div>
-            <div class="col-3">
-                <label for="complemento">Complemento</label>
-                <input type="text" class="form-control" id="complemento" name="complemento" value="{{ cliente.complemento }}">
-            </div>
-        </div>
-        <div class="row mb-4">
-            <div class="col-6">
-                <label for="bairro">Bairro</label>
-                <input type="text" class="form-control" id="bairro" name="bairro" value="{{ cliente.bairro }}">
-            </div>
-            <div class="col-6">
-                <label for="cidade">Cidade</label>
-                <input type="text" class="form-control" id="cidade" name="cidade" value="{{ cliente.cidade }}">
-            </div>
-        </div>
-        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-        <button type="button" class="btn btn-danger"
-        onclick="confirmDelete('{{ path('cliente_deletar', {'id': cliente.id}) }}')">Deletar Cliente
-        </button>
-    </form>
-</div>
+            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            <button type="button" class="btn btn-danger"
+                    onclick="confirmDelete('{{ path('cliente_deletar', {'id': cliente.id}) }}')">Deletar Cliente
+            </button>
+        </form>
+    </div>
 
 {% endblock %}
 
 {% block javascripts %}
-    
+
     <script>
         // Máscara de CPF
-        $(function(){
-            $('#cpf').on('input', function() {
+        $(function () {
+            $('#cpf').on('input', function () {
                 let value = $(this).val().replace(/\D/g, '');
                 if (value.length <= 11) {
                     value = value.replace(/(\d{3})(\d)/, '$1.$2');
@@ -96,7 +102,7 @@
                 }
             });
         });
-        
+
         function confirmDelete(url) {
             if (confirm('Você tem certeza que deseja deletar este cliente?')) {
                 window.location.href = url;

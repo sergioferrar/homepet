@@ -9,36 +9,44 @@
             box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
             padding: 20px;
         }
+
         .pagetitle h1 {
             font-size: 2rem;
             font-weight: bold;
             color: #0056b3;
             text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
         }
+
         .btn-success {
             background-color: #0056b3;
             border-color: #0056b3;
             font-weight: bold;
         }
+
         .btn-success:hover {
             background-color: #004494;
             border-color: #004494;
         }
+
         .form-control {
             border-radius: 10px;
             padding: 10px;
             transition: all 0.3s ease-in-out;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+
         .form-control:focus {
             box-shadow: 0 4px 10px rgba(0, 86, 179, 0.2);
         }
+
         .form-label {
             font-weight: bold;
         }
+
         .btn-group label {
             border-radius: 10px !important;
         }
+
         .section {
             padding: 30px;
         }
@@ -49,11 +57,12 @@
     <div class="pagetitle">
         <h1 class="text-primary">{% block form_page_title %}Cadastrar novo PET{% endblock %}
             {% block btn_voltar %}{% endblock %}
-            
+
         </h1>
         <nav>
             <ol class="breadcrumb bg-light p-2 rounded">
-                <li class="breadcrumb-item"><a href="{{ path('home') }}" class="text-decoration-none text-primary">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('home') }}"
+                                               class="text-decoration-none text-primary">Home</a></li>
                 {% block breadcrumb_items %}
                     {# Itens adicionais do breadcrumb podem ser adicionados aqui #}
                 {% endblock %}

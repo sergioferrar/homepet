@@ -2,300 +2,314 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Checkout - Pagamento</title>
-  <meta name="description" content="">
-  <meta name="keywords" content="">
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Checkout - Pagamento</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
 
-  <!-- Favicons -->
-      <link rel="shortcut icon" type="image/x-icon" href="{{ asset('images/logo.png')}}">
+    <!-- Favicons -->
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('images/logo.png') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="manifest" href="{{ asset('manifest.webmanifest') }}" crossorigin="use-credentials">
 
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com" rel="preconnect">
-  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+          rel="stylesheet">
 
-  <!-- Vendor CSS Files -->
-  <link href="{{ asset('landing/assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ asset('landing/assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
-  <link href="{{ asset('landing/assets/vendor/aos/aos.css') }}" rel="stylesheet">
-  <link href="{{ asset('landing/assets/vendor/glightbox/css/glightbox.min.css') }}" rel="stylesheet">
-  <link href="{{ asset('landing/assets/vendor/swiper/swiper-bundle.min.css') }}" rel="stylesheet">
+    <!-- Vendor CSS Files -->
+    <link href="{{ asset('landing/assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('landing/assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
+    <link href="{{ asset('landing/assets/vendor/aos/aos.css') }}" rel="stylesheet">
+    <link href="{{ asset('landing/assets/vendor/glightbox/css/glightbox.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('landing/assets/vendor/swiper/swiper-bundle.min.css') }}" rel="stylesheet">
 
-  <!-- Main CSS File -->
-  <link href="{{ asset('landing/assets/css/main.css') }}" rel="stylesheet">
-  <style>
-		
-		.checkout-container { 
-			margin: 0 auto;
-			background: #fff;
-			border-radius: 16px;
-			box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-			{# width: 450px; #}
-			padding: 25px;
-			transition: all 0.3s ease-in-out;
-		}
-		h2 {
-			margin-bottom: 20px;
-			color: #333;
-			text-align: center;
-		}
-		select {
-			width: 100%;
-			padding: 10px;
-			margin-bottom: 20px;
-			border-radius: 8px;
-			border: 1px solid #ccc;
-		}
-		.payment-method {
-			display: block;
-			margin-top: 15px;
-		}
-		.loading {
-			text-align: center;
-			padding: 20px;
-		}
-		.success {
-			text-align: center;
-			color: green;
-			font-weight: bold;
-			padding: 20px;
-		}
-		.error {
-			text-align: center;
-			color: red;
-			padding: 20px;
-		}
-	</style>
+    <!-- Main CSS File -->
+    <link href="{{ asset('landing/assets/css/main.css') }}" rel="stylesheet">
+    <style>
+
+        .checkout-container {
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        {# width: 450px; #} padding: 25px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .payment-method {
+            display: block;
+            margin-top: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .success {
+            text-align: center;
+            color: green;
+            font-weight: bold;
+            padding: 20px;
+        }
+
+        .error {
+            text-align: center;
+            color: red;
+            padding: 20px;
+        }
+    </style>
 </head>
 
 <body class="index-page">
 
-		<header id="header" class="header d-flex align-items-center fixed-top mb-5">
-			<div class="container position-relative d-flex align-items-center justify-content-between">
-				<a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
-					<!-- Uncomment the line below if you also wish to use an image logo -->
-					<!-- <img src="assets/img/logo.webp" alt=""> -->
-					<h1 class="sitename">System Home Pet</h1><span>.</span>
-				</a>
-				<nav id="navmenu" class="navmenu d-none">
-					<ul>
-						<li><a href="#hero" class="active">Página inicial</a></li>
-						<li><a href="#about">Sobre nós</a></li>
-						{# <li><a href="#services">Services</a></li> #}
-						{# <li><a href="#portfolio">Portfolio</a></li> #}
-						<li><a href="#pricing">Preços</a></li>
-						{# <li><a href="#team">Team</a></li> #}
-						
-						{# <li><a href="#contact">Contact</a></li> #}
-					</ul>
-					<i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-				</nav>
-				<a class="btn-getstarted" href="{{url('landing_home')}}">Voltar ao site</a>
-			</div>
-		</header>
+<header id="header" class="header d-flex align-items-center fixed-top mb-5">
+    <div class="container position-relative d-flex align-items-center justify-content-between">
+        <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
+            <!-- Uncomment the line below if you also wish to use an image logo -->
+            <!-- <img src="assets/img/logo.webp" alt=""> -->
+            <h1 class="sitename">System Home Pet</h1><span>.</span>
+        </a>
+        <nav id="navmenu" class="navmenu d-none">
+            <ul>
+                <li><a href="#hero" class="active">Página inicial</a></li>
+                <li><a href="#about">Sobre nós</a></li>
+                {# <li><a href="#services">Services</a></li> #}
+                {# <li><a href="#portfolio">Portfolio</a></li> #}
+                <li><a href="#pricing">Preços</a></li>
+                {# <li><a href="#team">Team</a></li> #}
 
-  <main class="main mb-5 mt-5 pt-5 container-fluid">
+                {# <li><a href="#contact">Contact</a></li> #}
+            </ul>
+            <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+        </nav>
+        <a class="btn-getstarted" href="{{ url('landing_home') }}">Voltar ao site</a>
+    </div>
+</header>
 
-     <!-- Pricing Section -->
+<main class="main mb-5 mt-5 pt-5 container-fluid">
+
+    <!-- Pricing Section -->
     <section id="pricing" class="pricing section container-fluid">
 
-      <!-- Section Title -->
-      <div class="container section-title mt-4 mb-3" data-aos="fade-up">
-        <h2>Finalizar Pagamento</h2>
-      </div><!-- End Section Title -->
+        <!-- Section Title -->
+        <div class="container section-title mt-4 mb-3" data-aos="fade-up">
+            <h2>Finalizar Pagamento</h2>
+        </div><!-- End Section Title -->
 
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
+        <div class="container" data-aos="fade-up" data-aos-delay="100">
 
-        <div class="checkout-container col-md-6">
-						
-						<div class="alert alert-info mb-3">
-							<strong>💳 Formas de pagamento aceitas:</strong><br>
-							• <strong>PIX:</strong> Aprovação instantânea<br>
-							• <strong>Cartão de Crédito:</strong> Apenas crédito (débito não é aceito para pagamentos online)
-						</div>
-						
-						<label for="paymentType">Selecione a forma de pagamento:</label>
-						<select id="paymentType" class="form-select">
-							<option value="">-- Escolha --</option>
-							<option value="pix">PIX (Recomendado - Instantâneo)</option>
-							<option value="card">Cartão de Crédito</option>
-						</select>
-						<!-- Área dinâmica -->
-						<div class="area-pix" style="display: none;">
-							<form id="form-checkout" action="{{ url('pagar_com_pix') }}" method="post">
-								<div>
-									<div>
-										<label for="payerFirstName">Nome</label>
-										<input class="form-control" id="form-checkout__payerFirstName" name="payerFirstName" type="text">
-									</div>
-									<div>
-										<label for="payerLastName">Sobrenome</label>
-										<input class="form-control" id="form-checkout__payerLastName" name="payerLastName" type="text">
-									</div>
-									<div>
-										<label for="email">E-mail</label>
-										<input class="form-control" id="form-checkout__email" name="email" type="text">
-									</div>
-									<div>
-										<label for="identificationType">Documento</label>
-										<select class="form-select" id="form-checkout__identificationType" name="identificationType" type="text">
-											<option value="cpf">CPF</option>
-											<option value="cnpj">CNPJ</option>
-										</select>
-									</div>
-									<div>
-										<label for="identificationNumber">Número do documento</label>
-										<input class="form-control" id="form-checkout__identificationNumber" name="identificationNumber" type="text">
-									</div>
-								</div>
-								<div>
-									<div>
-										<input type="hidden" name="transactionAmount" id="transactionAmount" value="{{price}}">
-										<input type="hidden" name="description" id="description" value="{{title}}">
-										<br>
-										<button type="submit" class="btn btn-outline-success">Efetuar pagamento</button>
-									</div>
-								</div>
-							</form>
-						</div>
-						<div id="payment-form" class="payment-method col-md-12 pt-4"></div>
-						<div id="status"></div>
-					</div>
-	</div>
-      </div>
+            <div class="checkout-container col-md-6">
+
+                <div class="alert alert-info mb-3">
+                    <strong>💳 Formas de pagamento aceitas:</strong><br>
+                    • <strong>PIX:</strong> Aprovação instantânea<br>
+                    • <strong>Cartão de Crédito:</strong> Apenas crédito (débito não é aceito para pagamentos online)
+                </div>
+
+                <label for="paymentType">Selecione a forma de pagamento:</label>
+                <select id="paymentType" class="form-select">
+                    <option value="">-- Escolha --</option>
+                    <option value="pix">PIX (Recomendado - Instantâneo)</option>
+                    <option value="card">Cartão de Crédito</option>
+                </select>
+                <!-- Área dinâmica -->
+                <div class="area-pix" style="display: none;">
+                    <form id="form-checkout" action="{{ url('pagar_com_pix') }}" method="post">
+                        <div>
+                            <div>
+                                <label for="payerFirstName">Nome</label>
+                                <input class="form-control" id="form-checkout__payerFirstName" name="payerFirstName"
+                                       type="text">
+                            </div>
+                            <div>
+                                <label for="payerLastName">Sobrenome</label>
+                                <input class="form-control" id="form-checkout__payerLastName" name="payerLastName"
+                                       type="text">
+                            </div>
+                            <div>
+                                <label for="email">E-mail</label>
+                                <input class="form-control" id="form-checkout__email" name="email" type="text">
+                            </div>
+                            <div>
+                                <label for="identificationType">Documento</label>
+                                <select class="form-select" id="form-checkout__identificationType"
+                                        name="identificationType" type="text">
+                                    <option value="cpf">CPF</option>
+                                    <option value="cnpj">CNPJ</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="identificationNumber">Número do documento</label>
+                                <input class="form-control" id="form-checkout__identificationNumber"
+                                       name="identificationNumber" type="text">
+                            </div>
+                        </div>
+                        <div>
+                            <div>
+                                <input type="hidden" name="transactionAmount" id="transactionAmount"
+                                       value="{{ price }}">
+                                <input type="hidden" name="description" id="description" value="{{ title }}">
+                                <br>
+                                <button type="submit" class="btn btn-outline-success">Efetuar pagamento</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div id="payment-form" class="payment-method col-md-12 pt-4"></div>
+                <div id="status"></div>
+            </div>
+        </div>
+        </div>
 
     </section><!-- /Pricing Section -->
- 
 
 
-  </main>
+</main>
 
-  <footer id="footer" class="footer light-background container-fluid">
+<footer id="footer" class="footer light-background container-fluid">
 
     <div class="container-fluid copyright text-center mt-4">
-            <p>© <span>Copyright</span> <strong class="px-1 sitename">System Home PET</strong> <span>Todos os direitos reservados</span></p>
-            <div class="credits">
-              <!-- All the links in the footer should remain intact. -->
-              <!-- You can delete the links only if you've purchased the pro version. -->
-              <!-- Licensing information: https://bootstrapmade.com/license/ -->
-              <!-- Purchase the pro version with working PHP/AJAX contact form: [buy-url] -->
-              Desenvolvido por <a href="https://api.whatsapp.com/send/?phone=5531995318362&text=Gostaria+de+mais+informações+sobre+o+sistema&type=phone_number&app_absent=0">Sérgio Ferrari</a>
-              
-            </div>
-          </div>
+        <p>© <span>Copyright</span> <strong class="px-1 sitename">System Home PET</strong> <span>Todos os direitos reservados</span>
+        </p>
+        <div class="credits">
+            <!-- All the links in the footer should remain intact. -->
+            <!-- You can delete the links only if you've purchased the pro version. -->
+            <!-- Licensing information: https://bootstrapmade.com/license/ -->
+            <!-- Purchase the pro version with working PHP/AJAX contact form: [buy-url] -->
+            Desenvolvido por <a
+                    href="https://api.whatsapp.com/send/?phone=5531995318362&text=Gostaria+de+mais+informações+sobre+o+sistema&type=phone_number&app_absent=0">Sérgio
+                Ferrari</a>
 
-  </footer>
+        </div>
+    </div>
 
-  <!-- Scroll Top -->
-  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+</footer>
 
-  <!-- Preloader -->
-  <div id="preloader"></div>
+<!-- Scroll Top -->
+<a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
 
-  <!-- Vendor JS Files -->
-  <script src="{{ asset('landing/assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-  <script src="{{ asset('landing/assets/vendor/php-email-form/validate.js') }}"></script>
-  <script src="{{ asset('landing/assets/vendor/aos/aos.js') }}"></script>
-  <script src="{{ asset('landing/assets/vendor/glightbox/js/glightbox.min.js') }}"></script>
-  <script src="{{ asset('landing/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js') }}"></script>
-  <script src="{{ asset('landing/assets/vendor/isotope-layout/isotope.pkgd.min.js') }}"></script>
-  <script src="{{ asset('landing/assets/vendor/swiper/swiper-bundle.min.js') }}"></script>
+<!-- Preloader -->
+<div id="preloader"></div>
 
-  <!-- Main JS File -->
-  <script src="{{ asset('landing/assets/js/main.js') }}"></script>
+<!-- Vendor JS Files -->
+<script src="{{ asset('landing/assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ asset('landing/assets/vendor/php-email-form/validate.js') }}"></script>
+<script src="{{ asset('landing/assets/vendor/aos/aos.js') }}"></script>
+<script src="{{ asset('landing/assets/vendor/glightbox/js/glightbox.min.js') }}"></script>
+<script src="{{ asset('landing/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js') }}"></script>
+<script src="{{ asset('landing/assets/vendor/isotope-layout/isotope.pkgd.min.js') }}"></script>
+<script src="{{ asset('landing/assets/vendor/swiper/swiper-bundle.min.js') }}"></script>
+
+<!-- Main JS File -->
+<script src="{{ asset('landing/assets/js/main.js') }}"></script>
 
 
-	<script src="//sdk.mercadopago.com/js/v2"></script>
-	<script type="module">
-		// Public Key de produção - Sergio Ferrari
-		const mp = new MercadoPago("APP_USR-a6eb6213-ae14-4a59-ade4-f990a26ef542", {
-			locale: 'pt-BR'
-		});
-		const paymentType = document.getElementById("paymentType");
-		const formContainer = document.getElementById("payment-form");
-		const statusDiv = document.getElementById("status");
-		paymentType.addEventListener("change", async function () {
-			formContainer.innerHTML = "";
-			statusDiv.innerHTML = "";
-			formContainer.style.display = "block";
-			if (this.value === "card") {
-				// Aviso sobre cartão de crédito
-				statusDiv.innerHTML = `
+<script src="//sdk.mercadopago.com/js/v2"></script>
+<script type="module">
+    // Public Key de produção - Sergio Ferrari
+    const mp = new MercadoPago("APP_USR-a6eb6213-ae14-4a59-ade4-f990a26ef542", {
+        locale: 'pt-BR'
+    });
+    const paymentType = document.getElementById("paymentType");
+    const formContainer = document.getElementById("payment-form");
+    const statusDiv = document.getElementById("status");
+    paymentType.addEventListener("change", async function () {
+        formContainer.innerHTML = "";
+        statusDiv.innerHTML = "";
+        formContainer.style.display = "block";
+        if (this.value === "card") {
+            // Aviso sobre cartão de crédito
+            statusDiv.innerHTML = `
 					<div class="alert alert-warning">
 						<strong>⚠️ Atenção:</strong> Apenas cartões de CRÉDITO são aceitos.<br>
 						Cartões de débito não funcionam para pagamentos online.<br>
 						<strong>Recomendamos usar PIX</strong> para aprovação instantânea.
 					</div>
 				`;
-				
-				// Renderiza o Brick de Cartão
-				const cardForm = mp.bricks();
-				cardForm.create("cardPayment", "payment-form", {
-					initialization: {
-						amount: {{ price }}, // valor do plano escolhido
-					},
-					callbacks: {
-						onReady: () => {
-							console.log("✅ Formulário de cartão pronto!");
-						},
-						onSubmit: async (formData) => {
-							statusDiv.innerHTML = `<div class="loading">Processando pagamento com cartão...</div>`;
-							
-							try {
-								// Envia os dados do cartão para o backend
-								const response = await fetch('{{ path('pagar_com_cartao') }}', {
-									method: 'POST',
-									headers: {
-										'Content-Type': 'application/json',
-									},
-									body: JSON.stringify({
-										...formData,
-										email: '{{ email }}',
-										amount: {{ price }},
-										description: '{{ title }}'
-									})
-								});
-								
-								const result = await response.json();
-								
-								if (result.status === 'approved') {
-									statusDiv.innerHTML = `<div class="success">✅ Pagamento aprovado! Redirecionando...</div>`;
-									setTimeout(() => {
-										window.location.href = '{{ path('pagamento_sucesso') }}';
-									}, 2000);
-								} else if (result.status === 'pending' || result.status === 'in_process') {
-									statusDiv.innerHTML = `<div class="alert alert-warning">⏳ Pagamento em processamento. Você receberá um e-mail quando for confirmado.</div>`;
-									setTimeout(() => {
-										window.location.href = '{{ path('pagamento_pendente') }}';
-									}, 3000);
-								} else {
-									let mensagemErro = 'Tente outro cartão de CRÉDITO';
-									
-									if (result.status_detail) {
-										const erros = {
-											'cc_rejected_insufficient_amount': 'Saldo insuficiente',
-											'cc_rejected_bad_filled_security_code': 'Código de segurança inválido',
-											'cc_rejected_bad_filled_date': 'Data de validade inválida',
-											'cc_rejected_bad_filled_other': 'Dados do cartão incorretos',
-											'cc_rejected_call_for_authorize': 'Entre em contato com seu banco',
-											'cc_rejected_card_disabled': 'Cartão desabilitado',
-											'cc_rejected_duplicated_payment': 'Pagamento duplicado',
-											'cc_rejected_high_risk': 'Pagamento recusado por segurança',
-											'cc_rejected_invalid_installments': 'Número de parcelas inválido',
-											'cc_rejected_max_attempts': 'Limite de tentativas excedido',
-											'cc_rejected_other_reason': 'Cartão recusado pelo banco'
-										};
-										
-										mensagemErro = erros[result.status_detail] || result.status_detail;
-									}
-									
-									statusDiv.innerHTML = `
+
+            // Renderiza o Brick de Cartão
+            const cardForm = mp.bricks();
+            cardForm.create("cardPayment", "payment-form", {
+                initialization: {
+                    amount: {{ price }}, // valor do plano escolhido
+                },
+                callbacks: {
+                    onReady: () => {
+                        console.log("✅ Formulário de cartão pronto!");
+                    },
+                    onSubmit: async (formData) => {
+                        statusDiv.innerHTML = `<div class="loading">Processando pagamento com cartão...</div>`;
+
+                        try {
+                            // Envia os dados do cartão para o backend
+                            const response = await fetch('{{ path('pagar_com_cartao') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    ...formData,
+                                    email: '{{ email }}',
+                                    amount: {{ price }},
+                                    description: '{{ title }}'
+                                })
+                            });
+
+                            const result = await response.json();
+
+                            if (result.status === 'approved') {
+                                statusDiv.innerHTML = `<div class="success">✅ Pagamento aprovado! Redirecionando...</div>`;
+                                setTimeout(() => {
+                                    window.location.href = '{{ path('pagamento_sucesso') }}';
+                                }, 2000);
+                            } else if (result.status === 'pending' || result.status === 'in_process') {
+                                statusDiv.innerHTML = `<div class="alert alert-warning">⏳ Pagamento em processamento. Você receberá um e-mail quando for confirmado.</div>`;
+                                setTimeout(() => {
+                                    window.location.href = '{{ path('pagamento_pendente') }}';
+                                }, 3000);
+                            } else {
+                                let mensagemErro = 'Tente outro cartão de CRÉDITO';
+
+                                if (result.status_detail) {
+                                    const erros = {
+                                        'cc_rejected_insufficient_amount': 'Saldo insuficiente',
+                                        'cc_rejected_bad_filled_security_code': 'Código de segurança inválido',
+                                        'cc_rejected_bad_filled_date': 'Data de validade inválida',
+                                        'cc_rejected_bad_filled_other': 'Dados do cartão incorretos',
+                                        'cc_rejected_call_for_authorize': 'Entre em contato com seu banco',
+                                        'cc_rejected_card_disabled': 'Cartão desabilitado',
+                                        'cc_rejected_duplicated_payment': 'Pagamento duplicado',
+                                        'cc_rejected_high_risk': 'Pagamento recusado por segurança',
+                                        'cc_rejected_invalid_installments': 'Número de parcelas inválido',
+                                        'cc_rejected_max_attempts': 'Limite de tentativas excedido',
+                                        'cc_rejected_other_reason': 'Cartão recusado pelo banco'
+                                    };
+
+                                    mensagemErro = erros[result.status_detail] || result.status_detail;
+                                }
+
+                                statusDiv.innerHTML = `
 										<div class="alert alert-danger">
 											<strong>❌ Pagamento Recusado</strong><br>
 											${mensagemErro}<br><br>
@@ -305,47 +319,48 @@
 											</small>
 										</div>
 									`;
-								}
-							} catch (error) {
-								console.error('Erro:', error);
-								statusDiv.innerHTML = `<div class="error">❌ Erro ao processar pagamento: ${error.message}</div>`;
-							}
-						},
-						onError: (error) => {
-							statusDiv.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
-						}
-					}
-				});
-			}
-		if (this.value === "pix") {
-			document.querySelector('.payment-method').innerHTML = document.querySelector('.area-pix').innerHTML;
-			// Renderiza o Brick de Pix
-			(async function getIdentificationTypes() {
-				try {
-					const identificationTypes = await mp.getIdentificationTypes();
-					const identificationTypeElement = document.getElementById('form-checkout__identificationType');
-					createSelectOptions(identificationTypeElement, identificationTypes);
-				} catch (e) {
-					return console.error('Error getting identificationTypes: ', e);
-				}
-			})();
-			function createSelectOptions(elem, options, labelsAndKeys = { label: "name", value: "id" }) {
-				const { label, value } = labelsAndKeys;
-				elem.options.length = 0;
-				const tempOptions = document.createDocumentFragment();
-				options.forEach(option => {
-					const optValue = option[value];
-					const optLabel = option[label];
-					const opt = document.createElement('option');
-					opt.value = optValue;
-					opt.textContent = optLabel;
-					tempOptions.appendChild(opt);
-				});
-				elem.appendChild(tempOptions);
-			}
-		}
-	});
-	</script>
+                            }
+                        } catch (error) {
+                            console.error('Erro:', error);
+                            statusDiv.innerHTML = `<div class="error">❌ Erro ao processar pagamento: ${error.message}</div>`;
+                        }
+                    },
+                    onError: (error) => {
+                        statusDiv.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
+                    }
+                }
+            });
+        }
+        if (this.value === "pix") {
+            document.querySelector('.payment-method').innerHTML = document.querySelector('.area-pix').innerHTML;
+            // Renderiza o Brick de Pix
+            (async function getIdentificationTypes() {
+                try {
+                    const identificationTypes = await mp.getIdentificationTypes();
+                    const identificationTypeElement = document.getElementById('form-checkout__identificationType');
+                    createSelectOptions(identificationTypeElement, identificationTypes);
+                } catch (e) {
+                    return console.error('Error getting identificationTypes: ', e);
+                }
+            })();
+
+            function createSelectOptions(elem, options, labelsAndKeys = {label: "name", value: "id"}) {
+                const {label, value} = labelsAndKeys;
+                elem.options.length = 0;
+                const tempOptions = document.createDocumentFragment();
+                options.forEach(option => {
+                    const optValue = option[value];
+                    const optLabel = option[label];
+                    const opt = document.createElement('option');
+                    opt.value = optValue;
+                    opt.textContent = optLabel;
+                    tempOptions.appendChild(opt);
+                });
+                elem.appendChild(tempOptions);
+            }
+        }
+    });
+</script>
 
 </body>
 

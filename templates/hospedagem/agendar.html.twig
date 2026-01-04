@@ -3,87 +3,89 @@
 {% block body %}
     <div class="pagetitle">
         <h1>Agendar Hospedagem
-            <a class="btn btn-primary btm-sm float-end pt-2" href="{{ url('hospedagem_listar') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+            <a class="btn btn-primary btm-sm float-end pt-2" href="{{ url('hospedagem_listar') }}"><i
+                        class="bi bi-arrow-left me-1"></i>Voltar</a>
         </h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
                 <li class="breadcrumb-item">Operações</li>
                 <li class="breadcrumb-item active">Agendar Hospedagem</li>
             </ol>
         </nav>
     </div>
 
-<div class="card shadow-sm">
-    <div class="card-body pt-4">
-        <form method="POST" action="{{ path('hospedagem_agendar') }}">
+    <div class="card shadow-sm">
+        <div class="card-body pt-4">
+            <form method="POST" action="{{ path('hospedagem_agendar') }}">
 
-            <div class="mb-3">
-                <label class="form-label">Pet (Dono - Nome):</label>
-                <input type="text" name="pet_nome" class="form-control" list="lista_pets" required oninput="atualizarPetId(this)">
-                <datalist id="lista_pets">
-                    {% for pet in pets %}
-                        <option 
-                            data-id="{{ pet.id }}" 
-                            data-cliente="{{ pet.dono_id }}" 
-                            value="{{ pet.dono_nome ~ ' - ' ~ pet.nome }}">
-                        </option>
-                    {% endfor %}
-                </datalist>
+                <div class="mb-3">
+                    <label class="form-label">Pet (Dono - Nome):</label>
+                    <input type="text" name="pet_nome" class="form-control" list="lista_pets" required
+                           oninput="atualizarPetId(this)">
+                    <datalist id="lista_pets">
+                        {% for pet in pets %}
+                            <option
+                                    data-id="{{ pet.id }}"
+                                    data-cliente="{{ pet.dono_id }}"
+                                    value="{{ pet.dono_nome ~ ' - ' ~ pet.nome }}">
+                            </option>
+                        {% endfor %}
+                    </datalist>
 
 
-                <input type="hidden" name="pet_id" id="pet_id_hidden">
-                <input type="hidden" name="cliente_id" id="cliente_id_hidden">
+                    <input type="hidden" name="pet_id" id="pet_id_hidden">
+                    <input type="hidden" name="cliente_id" id="cliente_id_hidden">
 
-            </div>
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label">Data Entrada:</label>
-                <input type="date" name="dataEntrada" class="form-control" required>
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Data Entrada:</label>
+                    <input type="date" name="dataEntrada" class="form-control" required>
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label">Data Saída:</label>
-                <input type="date" name="dataSaida" class="form-control" required>
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Data Saída:</label>
+                    <input type="date" name="dataSaida" class="form-control" required>
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label">Valor (R$):</label>
-                <input type="number" name="valor" class="form-control" step="0.01" required>
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Valor (R$):</label>
+                    <input type="number" name="valor" class="form-control" step="0.01" required>
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label">Observações:</label>
-                <textarea name="observacoes" class="form-control" rows="3"></textarea>
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Observações:</label>
+                    <textarea name="observacoes" class="form-control" rows="3"></textarea>
+                </div>
 
-            <div class="text-center">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-calendar-plus"></i> Agendar
-                </button>
-            </div>
-        </form>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-calendar-plus"></i> Agendar
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<script>
-    function atualizarPetId(input) {
-        const datalist = document.getElementById('lista_pets');
-        const petHidden = document.getElementById('pet_id_hidden');
-        const clienteHidden = document.getElementById('cliente_id_hidden');
-        const value = input.value;
+    <script>
+        function atualizarPetId(input) {
+            const datalist = document.getElementById('lista_pets');
+            const petHidden = document.getElementById('pet_id_hidden');
+            const clienteHidden = document.getElementById('cliente_id_hidden');
+            const value = input.value;
 
-        petHidden.value = '';
-        clienteHidden.value = '';
+            petHidden.value = '';
+            clienteHidden.value = '';
 
-        for (let option of datalist.options) {
-            if (option.value === value) {
-                petHidden.value = option.dataset.id;
-                clienteHidden.value = option.dataset.cliente;
-                break;
+            for (let option of datalist.options) {
+                if (option.value === value) {
+                    petHidden.value = option.dataset.id;
+                    clienteHidden.value = option.dataset.cliente;
+                    break;
+                }
             }
         }
-    }
 
-</script>
+    </script>
 {% endblock %}

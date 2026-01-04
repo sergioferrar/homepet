@@ -7,7 +7,8 @@
 {% endblock %}
 
 {% block btn_voltar %}
-    <a class="me-md-5 mt-sm-3 btn btn-primary btm-sm mb-3 float-md-end" href="{{ url('cliente_index') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+    <a class="me-md-5 mt-sm-3 btn btn-primary btm-sm mb-3 float-md-end" href="{{ url('cliente_index') }}"><i
+                class="bi bi-arrow-left me-1"></i>Voltar</a>
 {% endblock %}
 
 {% block breadcrumb_items %}
@@ -89,9 +90,9 @@
 {% block form_javascripts %}
     <script>
         $('.search-bar').addClass('d-none');
-        $(function(){
+        $(function () {
             // Máscara de CPF
-            $('#cpf').on('input', function() {
+            $('#cpf').on('input', function () {
                 let value = $(this).val().replace(/\D/g, '');
                 if (value.length <= 11) {
                     value = value.replace(/(\d{3})(\d)/, '$1.$2');
@@ -100,7 +101,7 @@
                     $(this).val(value);
                 }
             });
-            
+
             // CEP
             $('#cep').change(function () {
                 var cep = $(this).val().replace('-', '').replace('.', '');

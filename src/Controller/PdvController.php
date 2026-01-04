@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("/clinica/pdv")
+ * @Route("dashboard/clinica/pdv")
  */
 class PdvController extends DefaultController
 {

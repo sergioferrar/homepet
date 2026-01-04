@@ -18,7 +18,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /**
- * @Route("/financeiro")
+ * @Route("dashboard/financeiro")
  */
 class FinanceiroController extends DefaultController
 {

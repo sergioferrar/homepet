@@ -3,17 +3,18 @@
 {% block body %}
     <div class="pagetitle">
         <h1>Hospedagens Agendadas
-            <a class="btn btn-primary btm-sm float-end pt-2" href="{{ url('hospedagem_agendar') }}"><i class="bi bi-plus me-1"></i>Nova Hospedagem</a>
+            <a class="btn btn-primary btm-sm float-end pt-2" href="{{ url('hospedagem_agendar') }}"><i
+                        class="bi bi-plus me-1"></i>Nova Hospedagem</a>
         </h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
                 <li class="breadcrumb-item">Operações</li>
                 <li class="breadcrumb-item active">Hospedagens Agendadas</li>
             </ol>
         </nav>
     </div>
-    
+
 
     <div class="card shadow-sm">
         <div class="card-body pt-4">
@@ -26,39 +27,42 @@
 
             <table class="table table-striped datatable">
                 <thead>
-                    <tr>
-                        <th>Cliente</th>
-                        <th>Pet</th>
-                        <th>Data Entrada</th>
-                        <th>Data Saída</th>
-                        <th>Valor</th>
-                        <th>Observações</th>
-                        <th class="text-center">Ações</th>
-                    </tr>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Pet</th>
+                    <th>Data Entrada</th>
+                    <th>Data Saída</th>
+                    <th>Valor</th>
+                    <th>Observações</th>
+                    <th class="text-center">Ações</th>
+                </tr>
                 </thead>
                 <tbody>
-                    {% for item in dados %}
-                        <tr>
-                            <td>{{ item.cliente_nome }}</td>
-                            <td>{{ item.pet_nome }}</td>
-                            <td>{{ item.data_entrada|date('d/m/Y') }}</td>
-                            <td>{{ item.data_saida|date('d/m/Y') }}</td>
-                            <td>R$ {{ item.valor }}</td>
-                            <td>{{ item.observacoes }}</td>
-                            <td class="text-center">
-                                <div class="btn-group">
-                                    <a href="{{ path('hospedagem_editar', { id: item.id }) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
-                                    <form method="post" action="{{ path('hospedagem_concluir_pagamento', { id: item.id }) }}" onsubmit="return confirm('Confirmar pagamento?');">
-                                        <button class="btn btn-sm btn-success ms-1">💰 Pago</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="7" class="text-center">Nenhuma hospedagem cadastrada.</td>
-                        </tr>
-                    {% endfor %}
+                {% for item in dados %}
+                    <tr>
+                        <td>{{ item.cliente_nome }}</td>
+                        <td>{{ item.pet_nome }}</td>
+                        <td>{{ item.data_entrada|date('d/m/Y') }}</td>
+                        <td>{{ item.data_saida|date('d/m/Y') }}</td>
+                        <td>R$ {{ item.valor }}</td>
+                        <td>{{ item.observacoes }}</td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <a href="{{ path('hospedagem_editar', { id: item.id }) }}"
+                                   class="btn btn-sm btn-warning">✏️ Editar</a>
+                                <form method="post"
+                                      action="{{ path('hospedagem_concluir_pagamento', { id: item.id }) }}"
+                                      onsubmit="return confirm('Confirmar pagamento?');">
+                                    <button class="btn btn-sm btn-success ms-1">💰 Pago</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">Nenhuma hospedagem cadastrada.</td>
+                    </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>

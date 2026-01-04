@@ -8,6 +8,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
+ * @Route("dashboard")
+ 
  * Esta versão da controller inclui suporte ao novo campo `tipo` (clinica ou pet_shop)
  * e permite filtrar a listagem de serviços de acordo com esse valor. Note que
  * você precisa atualizar o repositório para aceitar o parâmetro de tipo na

@@ -4,20 +4,19 @@
 
 
     <div class="pagetitle">
-      <h1>Editar Agendamento
-            <a class="me-md-5 mt-sm-3 btn btn-primary btm-sm mb-3 float-md-end" href="{{ url('agendamento_index') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+        <h1>Editar Agendamento
+            <a class="me-md-5 mt-sm-3 btn btn-primary btm-sm mb-3 float-md-end" href="{{ url('agendamento_index') }}"><i
+                        class="bi bi-arrow-left me-1"></i>Voltar</a>
         </h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
-          <li class="breadcrumb-item">Atendimento</li>
-          <li class="breadcrumb-item active">Editar Agendamento</li>
-        </ol>
-      </nav>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+                <li class="breadcrumb-item">Atendimento</li>
+                <li class="breadcrumb-item active">Editar Agendamento</li>
+            </ol>
+        </nav>
     </div>
-        
 
-    
     <section class="section">
         <div class="row justify-content-between">
             <form method="post" action="{{ path('agendamento_editar',{id:agendamentoId}) }}">
@@ -39,23 +38,28 @@
                                     <div class="pet-group">
                                         <div class="mb-3 hr">
                                             <label class="form-label">Nome do Pet</label>
-                                            <input type="text" class="form-control pet-nome" name="pets[{{row.id}}][pet_nome]"
-                                                   list="lista_pets" required oninput="atualizarPetId(this)" value="{{ row.pet_nome }}">
+                                            <input type="text" class="form-control pet-nome"
+                                                   name="pets[{{ row.id }}][pet_nome]"
+                                                   list="lista_pets" required oninput="atualizarPetId(this)"
+                                                   value="{{ row.pet_nome }}">
                                             <datalist id="lista_pets">
                                                 {% for pet in pets %}
-                                                    <option data-id="{{ pet.id }}" {% if row.petId == pet.id %} checked {% endif %} value="{{ pet.nome }}">
-                                                {% endfor %}
-                                                <input type="hidden" class="pet-id" name="pets[{{row.id}}][pet_id]" value="{{ row.petId }}">
+                                                <option data-id="{{ pet.id }}" {% if row.petId == pet.id %} checked {% endif %}
+                                                        value="{{ pet.nome }}">
+                                                    {% endfor %}
+                                                    <input type="hidden" class="pet-id"
+                                                           name="pets[{{ row.id }}][pet_id]" value="{{ row.petId }}">
                                             </datalist>
                                         </div>
                                     </div>
-                                    
+
                                     <div id="servicos-container-0">
                                         <div class="mb-3 servico-item" data-id=0>
                                             <label class="form-label">Serviço</label>
-                                            <select class="form-select" name="pets[{{row.id}}][servicos][]" disabled>
+                                            <select class="form-select" name="pets[{{ row.id }}][servicos][]" disabled>
                                                 {% for servico in servicos %}
-                                                    <option {% if row.servicoId == servico.id %} selected {% endif %} value="{{ servico.id }}">{{ servico.nome }}</option>
+                                                    <option {% if row.servicoId == servico.id %} selected {% endif %}
+                                                            value="{{ servico.id }}">{{ servico.nome }}</option>
                                                 {% endfor %}
                                             </select>
                                         </div>
@@ -79,53 +83,53 @@
                                 <div class="mb-3">
                                     <label class="form-label">Método de Pagamento</label>
                                     <select class="form-select" name="metodo_pagamento">
-                                        <option 
-                                            {% if agendamento.metodo_pagamento == 'dinheiro' %} selected {% endif %} 
+                                        <option
+                                                {% if agendamento.metodo_pagamento == 'dinheiro' %} selected {% endif %}
                                                 value="dinheiro">Dinheiro
                                         </option>
 
-                                        <option 
-                                            {% if agendamento.metodo_pagamento == 'pix' %} selected {% endif %} 
+                                        <option
+                                                {% if agendamento.metodo_pagamento == 'pix' %} selected {% endif %}
                                                 value="pix">Pix
                                         </option>
 
-                                        <option 
-                                            {% if agendamento.metodo_pagamento == 'credito' %} selected {% endif %} 
+                                        <option
+                                                {% if agendamento.metodo_pagamento == 'credito' %} selected {% endif %}
                                                 value="credito">Cartão de Crédito
                                         </option>
 
-                                        <option 
-                                            {% if agendamento.metodo_pagamento == 'debito' %} selected {% endif %} 
+                                        <option
+                                                {% if agendamento.metodo_pagamento == 'debito' %} selected {% endif %}
                                                 value="debito">Cartão de Débito
                                         </option>
 
-                                        <option 
-                                            {% if agendamento.metodo_pagamento == 'pendente' %} selected {% endif %} 
+                                        <option
+                                                {% if agendamento.metodo_pagamento == 'pendente' %} selected {% endif %}
                                                 value="pendente" selected>Pendente
                                         </option>
 
-                                        <option 
-                                            {% if agendamento.metodo_pagamento == 'pacote_semanal_1' %} selected {% endif %} 
+                                        <option
+                                                {% if agendamento.metodo_pagamento == 'pacote_semanal_1' %} selected {% endif %}
                                                 value="pacote_semanal_1">Pacote Semanal - 1ª Semana
                                         </option>
 
-                                        <option 
-                                            {% if agendamento.metodo_pagamento == 'pacote_semanal_2' %} selected {% endif %} 
+                                        <option
+                                                {% if agendamento.metodo_pagamento == 'pacote_semanal_2' %} selected {% endif %}
                                                 value="pacote_semanal_2">Pacote Semanal - 2ª Semana
                                         </option>
 
-                                        <option 
-                                            {% if agendamento.metodo_pagamento == 'pacote_semanal_3' %} selected {% endif %} 
+                                        <option
+                                                {% if agendamento.metodo_pagamento == 'pacote_semanal_3' %} selected {% endif %}
                                                 value="pacote_semanal_3">Pacote Semanal - 3ª Semana
                                         </option>
 
-                                        <option 
-                                            {% if agendamento.metodo_pagamento == 'pacote_semanal_4' %} selected {% endif %} 
+                                        <option
+                                                {% if agendamento.metodo_pagamento == 'pacote_semanal_4' %} selected {% endif %}
                                                 value="pacote_semanal_4">Pacote Semanal - 4ª Semana
                                         </option>
 
-                                        <option 
-                                            {% if agendamento.metodo_pagamento == 'pacote_quinzenal' %} selected {% endif %} 
+                                        <option
+                                                {% if agendamento.metodo_pagamento == 'pacote_quinzenal' %} selected {% endif %}
                                                 value="pacote_quinzenal">Pacote Quinzenal
                                         </option>
 
@@ -134,27 +138,33 @@
                                 <div class="mb-3">
                                     <label class="form-label">Táxi Dog</label>
                                     <select class="form-select taxi-dog" name="taxi_dog">
-                                        <option {% if agendamento.taxi_dog == '0' %} selected {% endif %} value="0">Não</option>
-                                        <option {% if agendamento.taxi_dog == '1' %} selected {% endif %} value="1">Sim</option>
+                                        <option {% if agendamento.taxi_dog == '0' %} selected {% endif %} value="0">
+                                            Não
+                                        </option>
+                                        <option {% if agendamento.taxi_dog == '1' %} selected {% endif %} value="1">
+                                            Sim
+                                        </option>
                                     </select>
                                 </div>
-                                <div class="mb-3 taxa-container" {% if agendamento.taxi_dog == 'nao' %} style="display: none;" {% endif  %}>
+                                <div class="mb-3 taxa-container" {% if agendamento.taxi_dog == 'nao' %} style="display: none;" {% endif %}>
                                     <label class="form-label">Taxa Táxi Dog</label>
                                     <input type="number" class="form-control taxa-taxi-dog"
                                            name="taxa_taxi_dog" step="0.01" value="{{ agendamento.taxa_taxi_dog }}">
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Data Agendamento</label>
-                                    <input type="date" class="form-control" name="data" value="{{ agendamento.data|date('Y-m-d') }}" required>
+                                    <input type="date" class="form-control" name="data"
+                                           value="{{ agendamento.data|date('Y-m-d') }}" required>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Hora de Chegada</label>
-                                    <input type="time" class="form-control" name="hora_chegada" value="{{ agendamento.horaChegada|date("H:i") }}" required>
+                                    <input type="time" class="form-control" name="hora_chegada"
+                                           value="{{ agendamento.horaChegada|date("H:i") }}" required>
                                 </div>
                             </div>
                             <div class="card-footer">
                                 <button type="submit" class="btn btn-success btn-block">
-                                   <i class="bx bxs-save"></i> Agendar
+                                    <i class="bx bxs-save"></i> Agendar
                                 </button>
                             </div>
                         </div>
@@ -176,50 +186,50 @@
 {% block javascripts %}
 
     <script>
-    $('.search-bar').addClass('d-none');
-    // Correção do erro de que não estava cadastrando + de 1 pet
-    $(document).ready(function () {
-        window.atualizarPetId = function (input) { // Define no escopo global
-            let $input = $(input);
-            let $petIdInput = $input.closest(".pet-group").find(".pet-id");
-            let $options = $("#lista_pets").find("option");
+        $('.search-bar').addClass('d-none');
+        // Correção do erro de que não estava cadastrando + de 1 pet
+        $(document).ready(function () {
+            window.atualizarPetId = function (input) { // Define no escopo global
+                let $input = $(input);
+                let $petIdInput = $input.closest(".pet-group").find(".pet-id");
+                let $options = $("#lista_pets").find("option");
 
-            $petIdInput.val("");
+                $petIdInput.val("");
 
-            $options.each(function () {
-                if ($(this).val() === $input.val()) {
-                    $petIdInput.val($(this).data("id"));
-                    return false; // Interrompe o loop (equivalente ao `break` no `for`).
+                $options.each(function () {
+                    if ($(this).val() === $input.val()) {
+                        $petIdInput.val($(this).data("id"));
+                        return false; // Interrompe o loop (equivalente ao `break` no `for`).
+                    }
+                });
+
+                console.log($petIdInput);
+            };
+        });
+        $(document).ready(function () {
+            let petIndex = 0;
+
+            $('.taxi-dog').on('change', function () {
+                if ($(this).val() == 'nao') {
+                    $('.taxa-container').slideUp()
+
+                }
+                if ($(this).val() == 'sim') {
+                    $('.taxa-container').slideDown()
+
                 }
             });
 
-            console.log($petIdInput);
-        };
-    });
-    $(document).ready(function () {
-        let petIndex = 0;
+            function toggleTaxa(select) {
 
-        $('.taxi-dog').on('change', function(){
-            if($(this).val() == 'nao'){
-            $('.taxa-container').slideUp()
 
             }
-            if($(this).val() == 'sim'){
-            $('.taxa-container').slideDown()
 
-            }
-        });
+            // Adicionar novo pet
+            $(".addpet").click(function () {
+                petIndex++;
 
-        function toggleTaxa(select) {
-
-            
-        }
-
-        // Adicionar novo pet
-        $(".addpet").click(function () {
-            petIndex++;
-
-            let petHtml = `
+                let petHtml = `
                 <div class="pet-group mt-3" data-pet-index="${petIndex}">
                     <div class="mb-3">
                         <label class="form-label">Nome do Pet</label>
@@ -253,14 +263,14 @@
                 </div>
             `;
 
-            $(".custom-pet-group").append(petHtml);
-        });
+                $(".custom-pet-group").append(petHtml);
+            });
 
-        // Adicionar serviço ao pet correspondente
-        $(document).on("click", ".add-servico", function () {
-            let petIndex = $(this).data("pet-index");
+            // Adicionar serviço ao pet correspondente
+            $(document).on("click", ".add-servico", function () {
+                let petIndex = $(this).data("pet-index");
 
-            let servicoHtml = `
+                let servicoHtml = `
                 <div class="mb-3 servico-item">
                     <select class="form-select" name="pets[${petIndex}][servicos][]" required>
                         {% for servico in servicos %}
@@ -273,31 +283,31 @@
                 </div>
             `;
 
-            $(`#servicos-container-${petIndex}`).append(servicoHtml);
-        });
+                $(`#servicos-container-${petIndex}`).append(servicoHtml);
+            });
 
-        // Remover pet
-        $(document).on("click", ".remove-pet", function () {
-            $(this).closest(".pet-group").remove();
-        });
+            // Remover pet
+            $(document).on("click", ".remove-pet", function () {
+                $(this).closest(".pet-group").remove();
+            });
 
-        // Remover serviço
-        $(document).on("click", ".remove-servico", function () {
-            $(this).closest(".servico-item").remove();
-        });
+            // Remover serviço
+            $(document).on("click", ".remove-servico", function () {
+                $(this).closest(".servico-item").remove();
+            });
 
-        // Atualizar ID do pet com base na seleção do nome
-        $(document).on("input", ".pet-nome", function () {
-            let input = $(this);
-            let selectedOption = $("#lista_pets option").filter(function () {
-                return $(this).val() === input.val();
-            }).first();
+            // Atualizar ID do pet com base na seleção do nome
+            $(document).on("input", ".pet-nome", function () {
+                let input = $(this);
+                let selectedOption = $("#lista_pets option").filter(function () {
+                    return $(this).val() === input.val();
+                }).first();
 
-            if (selectedOption.length) {
-                input.siblings(".pet-id").val(selectedOption.data("id"));
-            }
+                if (selectedOption.length) {
+                    input.siblings(".pet-id").val(selectedOption.data("id"));
+                }
+            });
         });
-    });
 
     </script>
 {% endblock %}

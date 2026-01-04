@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("/clinica/estoque")
+ * @Route("dashboard/clinica/estoque")
  */
 class EstoqueController extends DefaultController
 {

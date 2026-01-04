@@ -1,49 +1,51 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<h2>Medicamentos</h2>
+    <h2>Medicamentos</h2>
 
-<form method="post">
-    <div class="form-group">
-        <label>Nome</label>
-        <input type="text" name="nome" class="form-control" required>
-    </div>
-    <div class="form-group">
-        <label>Via</label>
-        <input type="text" name="via" class="form-control">
-    </div>
-    <div class="form-group">
-        <label>Concentração</label>
-        <input type="text" name="concentracao" class="form-control">
-    </div>
-    <button class="btn btn-primary mt-2">Cadastrar</button>
-</form>
+    <form method="post">
+        <div class="form-group">
+            <label>Nome</label>
+            <input type="text" name="nome" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Via</label>
+            <input type="text" name="via" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>Concentração</label>
+            <input type="text" name="concentracao" class="form-control">
+        </div>
+        <button class="btn btn-primary mt-2">Cadastrar</button>
+    </form>
 
-<hr>
+    <hr>
 
-<table class="table table-striped mt-3">
-    <thead>
+    <table class="table table-striped mt-3">
+        <thead>
         <tr>
             <th>Nome</th>
             <th>Via</th>
             <th>Concentração</th>
             <th>Ações</th>
         </tr>
-    </thead>
-    <tbody>
+        </thead>
+        <tbody>
         {% for medicamento in medicamentos %}
             <tr>
                 <td>{{ medicamento.nome }}</td>
                 <td>{{ medicamento.via ?: '-' }}</td>
                 <td>{{ medicamento.concentracao ?: '-' }}</td>
                 <td>
-                    <a href="{{ path('clinica_medicamento_editar', {id: medicamento.id}) }}" class="btn btn-sm btn-warning">Editar</a>
-                    <form method="post" action="{{ path('clinica_medicamento_excluir', {id: medicamento.id}) }}" style="display:inline-block">
+                    <a href="{{ path('clinica_medicamento_editar', {id: medicamento.id}) }}"
+                       class="btn btn-sm btn-warning">Editar</a>
+                    <form method="post" action="{{ path('clinica_medicamento_excluir', {id: medicamento.id}) }}"
+                          style="display:inline-block">
                         <button class="btn btn-sm btn-danger" onclick="return confirm('Excluir?')">Excluir</button>
                     </form>
                 </td>
             </tr>
         {% endfor %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
 {% endblock %}

@@ -5,255 +5,261 @@
         <h1>Quadro de Banho e Tosa</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
                 <li class="breadcrumb-item">Operações</li>
                 <li class="breadcrumb-item active">Quadro de Banho e Tosa</li>
             </ol>
         </nav>
     </div>
 
-<section class="container-fluid">
-    <!-- Campo de seleção de data -->
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <label for="dataSelecionada" class="form-label">Selecione a Data:</label>
-            <input type="date" id="dataSelecionada" class="form-control" value="{{ data.format('Y-m-d') }}">
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Coluna Aguardando -->
-        <div class="col-md-4 col-xl-4">
-            <div class="card trello-column h-100">
-                <div class="card-header trello-header" style="background: #f7c948;">
-                    <span class="me-2">🕒</span>Aguardando
-                </div>
-                <div class="card-body trello-body" id="aguardando" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                    {% for agendamento in aguardando %}
-                        <div class="trello-card draggable" id="card-{{ agendamento.aps_id }}" draggable="true" ondragstart="drag(event)">
-                            <div class="card-body">
-                                <strong class="d-block mb-1">
-                                    {% if agendamento.taxi_dog %}
-                                        <span class="me-1">🚗</span>
-                                    {% endif %}
-                                    {{ agendamento.pet_nome }}
-                                </strong>
-                                <span class="text-muted d-block">{{ agendamento.servico_nome }}</span>
-                                <small class="text-muted">Dono: {{ agendamento.dono_nome }}</small>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
+    <section class="container-fluid">
+        <!-- Campo de seleção de data -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="dataSelecionada" class="form-label">Selecione a Data:</label>
+                <input type="date" id="dataSelecionada" class="form-control" value="{{ data.format('Y-m-d') }}">
             </div>
         </div>
 
-        <!-- Coluna Em Processo -->
-        <div class="col-md-4 col-lg-4">
-            <div class="card trello-column h-100">
-                <div class="card-header trello-header" style="background: #48c6ef;">
-                    <span class="me-2">🧼</span>Em Processo
-                </div>
-                <div class="card-body trello-body" id="em_processo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                    {% for agendamento in em_processo %}
-                        <div class="trello-card draggable" id="card-{{ agendamento.aps_id }}" draggable="true" ondragstart="drag(event)">
-                            <div class="card-body">
-                                <strong class="d-block mb-1">
-                                    {% if agendamento.taxi_dog %}
-                                        <span class="me-1">🚗</span>
-                                    {% endif %}
-                                    {{ agendamento.pet_nome }}
-                                </strong>
-                                <span class="text-muted d-block">{{ agendamento.servico_nome }}</span>
-                                <small class="text-muted">Dono: {{ agendamento.dono_nome }}</small>
+        <div class="row">
+            <!-- Coluna Aguardando -->
+            <div class="col-md-4 col-xl-4">
+                <div class="card trello-column h-100">
+                    <div class="card-header trello-header" style="background: #f7c948;">
+                        <span class="me-2">🕒</span>Aguardando
+                    </div>
+                    <div class="card-body trello-body" id="aguardando" ondrop="drop(event)"
+                         ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                        {% for agendamento in aguardando %}
+                            <div class="trello-card draggable" id="card-{{ agendamento.aps_id }}" draggable="true"
+                                 ondragstart="drag(event)">
+                                <div class="card-body">
+                                    <strong class="d-block mb-1">
+                                        {% if agendamento.taxi_dog %}
+                                            <span class="me-1">🚗</span>
+                                        {% endif %}
+                                        {{ agendamento.pet_nome }}
+                                    </strong>
+                                    <span class="text-muted d-block">{{ agendamento.servico_nome }}</span>
+                                    <small class="text-muted">Dono: {{ agendamento.dono_nome }}</small>
+                                </div>
                             </div>
-                        </div>
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Coluna Finalizado -->
-        <div class="col-md-4 col-lg-4">
-            <div class="card trello-column h-100">
-                <div class="card-header trello-header" style="background: #48b1bf;">
-                    <span class="me-2">✅</span>Finalizado
-                </div>
-                <div class="card-body trello-body" id="finalizado" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                    {% for agendamento in finalizado %}
-                        <div class="trello-card draggable" id="card-{{ agendamento.aps_id }}" draggable="true" ondragstart="drag(event)">
-                            <div class="card-body">
-                                <strong class="d-block mb-1">
-                                    {% if agendamento.taxi_dog %}
-                                        <span class="me-1">🚗</span>
-                                    {% endif %}
-                                    {{ agendamento.pet_nome }}
-                                </strong>
-                                <span class="text-muted d-block">{{ agendamento.servico_nome }}</span>
-                                <small class="text-muted">Dono: {{ agendamento.dono_nome }}</small>
+            <!-- Coluna Em Processo -->
+            <div class="col-md-4 col-lg-4">
+                <div class="card trello-column h-100">
+                    <div class="card-header trello-header" style="background: #48c6ef;">
+                        <span class="me-2">🧼</span>Em Processo
+                    </div>
+                    <div class="card-body trello-body" id="em_processo" ondrop="drop(event)"
+                         ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                        {% for agendamento in em_processo %}
+                            <div class="trello-card draggable" id="card-{{ agendamento.aps_id }}" draggable="true"
+                                 ondragstart="drag(event)">
+                                <div class="card-body">
+                                    <strong class="d-block mb-1">
+                                        {% if agendamento.taxi_dog %}
+                                            <span class="me-1">🚗</span>
+                                        {% endif %}
+                                        {{ agendamento.pet_nome }}
+                                    </strong>
+                                    <span class="text-muted d-block">{{ agendamento.servico_nome }}</span>
+                                    <small class="text-muted">Dono: {{ agendamento.dono_nome }}</small>
+                                </div>
                             </div>
-                        </div>
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna Finalizado -->
+            <div class="col-md-4 col-lg-4">
+                <div class="card trello-column h-100">
+                    <div class="card-header trello-header" style="background: #48b1bf;">
+                        <span class="me-2">✅</span>Finalizado
+                    </div>
+                    <div class="card-body trello-body" id="finalizado" ondrop="drop(event)"
+                         ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                        {% for agendamento in finalizado %}
+                            <div class="trello-card draggable" id="card-{{ agendamento.aps_id }}" draggable="true"
+                                 ondragstart="drag(event)">
+                                <div class="card-body">
+                                    <strong class="d-block mb-1">
+                                        {% if agendamento.taxi_dog %}
+                                            <span class="me-1">🚗</span>
+                                        {% endif %}
+                                        {{ agendamento.pet_nome }}
+                                    </strong>
+                                    <span class="text-muted d-block">{{ agendamento.servico_nome }}</span>
+                                    <small class="text-muted">Dono: {{ agendamento.dono_nome }}</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 {% endblock %}
 
 {% block javascripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Adicionando o evento para o seletor de data
-        const dataSelecionada = document.getElementById('dataSelecionada');
-        if (dataSelecionada) {
-            dataSelecionada.addEventListener('change', function () {
-                const novaData = this.value;
-                window.location.href = "{{ path('agendamento_quadro') }}?data=" + novaData;
-            });
-        }
-
-        function allowDrop(ev) {
-            ev.preventDefault();
-            ev.currentTarget.classList.add('drag-over');
-        }
-
-        function dragLeave(ev) {
-            ev.currentTarget.classList.remove('drag-over');
-        }
-
-        function drag(ev) {
-            ev.dataTransfer.setData("text/plain", ev.target.id);
-            setTimeout(() => {
-                ev.target.classList.add('dragging');
-            }, 0);
-        }
-
-        function drop(ev) {
-            ev.preventDefault();
-            const cardId = ev.dataTransfer.getData("text/plain");
-            const card = document.getElementById(cardId);
-
-            let target = ev.target;
-            while (target && !target.classList.contains('trello-body')) {
-                target = target.parentElement;
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Adicionando o evento para o seletor de data
+            const dataSelecionada = document.getElementById('dataSelecionada');
+            if (dataSelecionada) {
+                dataSelecionada.addEventListener('change', function () {
+                    const novaData = this.value;
+                    window.location.href = "{{ path('agendamento_quadro') }}?data=" + novaData;
+                });
             }
 
-            if (!target) return;
-
-            target.classList.remove('drag-over');
-            const novoStatus = target.id;
-            const idPetServico = cardId.replace('card-', '');
-
-            // Move o card para o final da coluna de destino
-            if (card.parentElement.id !== novoStatus) {
-                target.appendChild(card);
+            function allowDrop(ev) {
+                ev.preventDefault();
+                ev.currentTarget.classList.add('drag-over');
             }
 
-            // Requisição AJAX para atualizar o status
-            const url = "{{ path('alterar_status_pet', {'id': 'ID'}) }}".replace('ID', idPetServico);
+            function dragLeave(ev) {
+                ev.currentTarget.classList.remove('drag-over');
+            }
 
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ status: novoStatus })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (typeof Notify !== 'undefined') {
-                    Notify.toast(data.mensagem, data.status);
-                } else {
-                    console.log(data.mensagem);
+            function drag(ev) {
+                ev.dataTransfer.setData("text/plain", ev.target.id);
+                setTimeout(() => {
+                    ev.target.classList.add('dragging');
+                }, 0);
+            }
+
+            function drop(ev) {
+                ev.preventDefault();
+                const cardId = ev.dataTransfer.getData("text/plain");
+                const card = document.getElementById(cardId);
+
+                let target = ev.target;
+                while (target && !target.classList.contains('trello-body')) {
+                    target = target.parentElement;
                 }
-            })
-            .catch(error => {
-                console.error('Erro ao atualizar status:', error);
-                if (typeof Notify !== 'undefined') {
-                    Notify.toast('Erro ao comunicar com o servidor.', 'erro');
+
+                if (!target) return;
+
+                target.classList.remove('drag-over');
+                const novoStatus = target.id;
+                const idPetServico = cardId.replace('card-', '');
+
+                // Move o card para o final da coluna de destino
+                if (card.parentElement.id !== novoStatus) {
+                    target.appendChild(card);
                 }
+
+                // Requisição AJAX para atualizar o status
+                const url = "{{ path('alterar_status_pet', {'id': 'ID'}) }}".replace('ID', idPetServico);
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({status: novoStatus})
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (typeof Notify !== 'undefined') {
+                            Notify.toast(data.mensagem, data.status);
+                        } else {
+                            console.log(data.mensagem);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao atualizar status:', error);
+                        if (typeof Notify !== 'undefined') {
+                            Notify.toast('Erro ao comunicar com o servidor.', 'erro');
+                        }
+                    });
+            }
+
+            document.querySelectorAll('.trello-body').forEach(area => {
+                area.addEventListener('dragover', allowDrop);
+                area.addEventListener('dragleave', dragLeave);
+                area.addEventListener('drop', drop);
             });
+
+            document.querySelectorAll('.draggable').forEach(card => {
+                card.addEventListener('dragstart', drag);
+                card.addEventListener('dragend', () => card.classList.remove('dragging'));
+            });
+        });
+    </script>
+
+    <style>
+        .trello-column {
+            border-radius: 8px;
+            background-color: #f1f3f5;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: none;
         }
 
-        document.querySelectorAll('.trello-body').forEach(area => {
-            area.addEventListener('dragover', allowDrop);
-            area.addEventListener('dragleave', dragLeave);
-            area.addEventListener('drop', drop);
-        });
+        .trello-header {
+            border-radius: 8px 8px 0 0;
+            color: white;
+            font-weight: 600;
+            padding: 12px;
+            border-bottom: none;
+            text-align: center;
+        }
 
-        document.querySelectorAll('.draggable').forEach(card => {
-            card.addEventListener('dragstart', drag);
-            card.addEventListener('dragend', () => card.classList.remove('dragging'));
-        });
-    });
-</script>
+        .trello-body {
+            background-color: #f1f3f5;
+            border-radius: 0 0 8px 8px;
+            padding: 10px;
+            min-height: 200px;
+            max-height: 70vh;
+            overflow-y: auto;
+            transition: background-color 0.2s ease;
+        }
 
-<style>
-    .trello-column {
-        border-radius: 8px;
-        background-color: #f1f3f5;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        border: none;
-    }
+        .trello-card {
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 8px;
+            padding: 10px;
+            cursor: move;
+            transition: all 0.2s ease;
+            width: 100%;
+            display: block;
+            position: relative;
+            z-index: 1;
+        }
 
-    .trello-header {
-        border-radius: 8px 8px 0 0;
-        color: white;
-        font-weight: 600;
-        padding: 12px;
-        border-bottom: none;
-        text-align: center;
-    }
+        .trello-card:hover {
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+            background-color: #f9fafb;
+        }
 
-    .trello-body {
-        background-color: #f1f3f5;
-        border-radius: 0 0 8px 8px;
-        padding: 10px;
-        min-height: 200px;
-        max-height: 70vh;
-        overflow-y: auto;
-        transition: background-color 0.2s ease;
-    }
+        .drag-over {
+            background-color: #e2e4e6;
+            border: 2px dashed #0078d4;
+        }
 
-    .trello-card {
-        background-color: white;
-        border-radius: 6px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        margin-bottom: 8px;
-        padding: 10px;
-        cursor: move;
-        transition: all 0.2s ease;
-        width: 100%;
-        display: block;
-        position: relative;
-        z-index: 1;
-    }
+        .dragging {
+            opacity: 0.6;
+            transform: rotate(2deg);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            pointer-events: none;
+        }
 
-    .trello-card:hover {
-        box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-        background-color: #f9fafb;
-    }
+        .card-body {
+            padding: 0;
+        }
 
-    .drag-over {
-        background-color: #e2e4e6;
-        border: 2px dashed #0078d4;
-    }
-
-    .dragging {
-        opacity: 0.6;
-        transform: rotate(2deg);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        z-index: 10;
-        pointer-events: none;
-    }
-
-    .card-body {
-        padding: 0;
-    }
-
-    .text-muted {
-        font-size: 0.9em;
-    }
-</style>
+        .text-muted {
+            font-size: 0.9em;
+        }
+    </style>
 {% endblock %}

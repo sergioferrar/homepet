@@ -7,7 +7,8 @@
             </div>
             <div class="col-md-6">
                 <label for="especie" class="form-label">Espécie</label>
-                <input type="text" class="form-control rounded-3" id="especie" name="especie" value="{{ pet.especie }}" required>
+                <input type="text" class="form-control rounded-3" id="especie" name="especie" value="{{ pet.especie }}"
+                       required>
             </div>
             <div class="col-md-6">
                 <label for="sexo" class="form-label">Sexo</label>
@@ -34,13 +35,15 @@
             </div>
             <div class="col-md-12">
                 <label for="observacoes" class="form-label">Observações</label>
-                <textarea class="form-control rounded-3" id="observacoes" name="observacoes" rows="2">{{ pet.observacoes }}</textarea>
+                <textarea class="form-control rounded-3" id="observacoes" name="observacoes"
+                          rows="2">{{ pet.observacoes }}</textarea>
             </div>
             <div class="col-md-12">
                 <label for="dono_id" class="form-label">Dono</label>
                 <select class="form-select rounded-3" id="dono_id" name="dono_id" required>
                     {% for cliente in clientes %}
-                        <option value="{{ cliente.id }}" {% if pet.dono_id == cliente.id %}selected{% endif %}>{{ cliente.nome }}</option>
+                        <option value="{{ cliente.id }}"
+                                {% if pet.dono_id == cliente.id %}selected{% endif %}>{{ cliente.nome }}</option>
                     {% endfor %}
                 </select>
             </div>

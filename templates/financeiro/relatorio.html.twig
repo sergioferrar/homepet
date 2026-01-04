@@ -1,56 +1,59 @@
 {% extends 'base.html.twig' %}
 
 {% block stylesheets %}
-{{ parent() }}
-<style>
-    .table-custom {
-        background-color: #343a40;
-        color: #ffffff;
-    }
-    .table-custom th, .table-custom td {
-        border-color: #495057;
-    }
-    .table-custom thead th {
-        background-color: #495057;
-    }
-</style>
+    {{ parent() }}
+    <style>
+        .table-custom {
+            background-color: #343a40;
+            color: #ffffff;
+        }
+
+        .table-custom th, .table-custom td {
+            border-color: #495057;
+        }
+
+        .table-custom thead th {
+            background-color: #495057;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-<div class="container mt-5">
-    <h1>Relatório Financeiro</h1>
+    <div class="container mt-5">
+        <h1>Relatório Financeiro</h1>
 
-    <!-- Formulário de filtro -->
-    <form method="GET" action="{{ path('financeiro_relatorio') }}" class="mb-4">
-        <div class="row">
-            <div class="col-md-4">
-                <label for="mes_inicio">Mês Inicial</label>
-                <input type="month" id="mes_inicio" name="mes_inicio" class="form-control" value="{{ mes_inicio }}">
+        <!-- Formulário de filtro -->
+        <form method="GET" action="{{ path('financeiro_relatorio') }}" class="mb-4">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="mes_inicio">Mês Inicial</label>
+                    <input type="month" id="mes_inicio" name="mes_inicio" class="form-control" value="{{ mes_inicio }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="mes_fim">Mês Final</label>
+                    <input type="month" id="mes_fim" name="mes_fim" class="form-control" value="{{ mes_fim }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary mt-4">Filtrar</button>
+                </div>
             </div>
-            <div class="col-md-4">
-                <label for="mes_fim">Mês Final</label>
-                <input type="month" id="mes_fim" name="mes_fim" class="form-control" value="{{ mes_fim }}">
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary mt-4">Filtrar</button>
-            </div>
+        </form>
+        <div class="col-md-4 d-flex align-items-end">
+            <a href="{{ path('financeiro_relatorio_export', {'mes_inicio': mes_inicio, 'mes_fim': mes_fim}) }}"
+               class="btn btn-success w-100">
+                Baixar Excel
+            </a>
         </div>
-    </form>
-    <div class="col-md-4 d-flex align-items-end">
-        <a href="{{ path('financeiro_relatorio_export', {'mes_inicio': mes_inicio, 'mes_fim': mes_fim}) }}" class="btn btn-success w-100">
-            Baixar Excel
-        </a>
-    </div>
 
 
-    <table class="table table-custom table-striped mt-3">
-        <thead>
+        <table class="table table-custom table-striped mt-3">
+            <thead>
             <tr>
                 <th>Data</th>
                 <th>Total</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             {% for item in relatorio %}
                 <tr>
                     <td>{{ item.data|date('d/m/Y') }}</td>
@@ -61,7 +64,7 @@
                     <td colspan="2" class="text-center">Nenhum registro encontrado.</td>
                 </tr>
             {% endfor %}
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

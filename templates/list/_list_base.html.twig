@@ -2,13 +2,29 @@
 {% extends 'base.html.twig' %}
 
 {% block stylesheets %}
-    {{ parent() }}
     <style>
-        .card-title { color: #004080; font-weight: bold; }
-        .tabela-container input.form-control-md { max-width: 450px; margin-bottom: 1.5rem; }
-        .card-item { transition: box-shadow 0.2s; }
-        .card-item:hover { box-shadow: 0 0 0 4px #e5eefe; }
-        .dropdown-menu .dropdown-item.text-danger { color: #dc3545 !important; }
+        .card-title {
+            color: #004080;
+            font-weight: bold;
+        }
+
+        .tabela-container input.form-control-md {
+            max-width: 450px;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-item {
+            transition: box-shadow 0.2s;
+        }
+
+        .card-item:hover {
+            box-shadow: 0 0 0 4px #e5eefe;
+        }
+
+        .dropdown-menu .dropdown-item.text-danger {
+            color: #dc3545 !important;
+        }
+
         .tabela-container .pagination {
             --bs-pagination-color: #004080;
             --bs-pagination-hover-color: #004080;
@@ -18,39 +34,55 @@
     {% block list_stylesheets %}{% endblock %}
 {% endblock %}
 
+
+
 {% block body %}
-<div class="container">
-    <h1 class="text-primary mb-4">{% block list_title %}Título da Listagem{% endblock %}</h1>
-    <div class="tabela-container container-fluid px-2">
-        <div class="row my-3">
-            <div class="col-12 col-md-6">
+    <div class="pagetitle">
+        <h1>{% block list_title %}Título da Listagem{% endblock %}
+            {% block breadcrumbsAction %}{% endblock %}
+        </h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+                <li class="breadcrumb-item">{% block breadcrumbsGrupo %}{% endblock %}</li>
+                <li class="breadcrumb-item active">{% block breadcrumbsAtivo %}{% endblock %}</li>
+            </ol>
+        </nav>
+    </div>
+
+
+
+    <div class="container">
+        <div class="tabela-container container-fluid px-2">
+            <div class="row my-3">
+                <div class="col-12 col-md-6">
+                </div>
+                <div class="col-12 col-md-6 d-flex justify-content-end align-items-center">
+                    {% block list_actions %}
+                        {# Botão "Novo..." será injetado aqui #}
+                    {% endblock %}
+                </div>
             </div>
-            <div class="col-12 col-md-6 d-flex justify-content-end align-items-center">
-                {% block list_actions %}
-                    {# Botão "Novo..." será injetado aqui #}
+
+            <div id="cardContainer" class="row gy-3">
+                {% block list_content %}
+                    {# Conteúdo específico da listagem (os cards) será injetado aqui #}
                 {% endblock %}
             </div>
-        </div>
-        
-        <div id="cardContainer" class="row gy-3">
-            {% block list_content %}
-                {# Conteúdo específico da listagem (os cards) será injetado aqui #}
-            {% endblock %}
-        </div>
-        
-        <div class="row mt-4">
-            <div class="col text-center">
-                <nav aria-label="Paginação">
-                    <ul id="pagination" class="pagination justify-content-center mb-0"></ul>
-                </nav>
+
+            <div class="row mt-4">
+                <div class="col text-center">
+                    <nav aria-label="Paginação">
+                        <ul id="pagination" class="pagination justify-content-center mb-0"></ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-{% block list_modals %}
-    {# Modais ou offcanvases específicos para a listagem serão injetados aqui #}
-{% endblock %}
+    {% block list_modals %}
+        {# Modais ou offcanvases específicos para a listagem serão injetados aqui #}
+    {% endblock %}
 
 {% endblock %}
 

@@ -13,7 +13,7 @@ use App\Service\TempDirManager;
 use App\Service\DatabaseBkp;
 
 /**
- * @Route("/ia/assistente")
+ * @Route("dashboard/ia/assistente")
  */
 class IaAssistenteController extends DefaultController
 {

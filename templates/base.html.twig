@@ -11,15 +11,17 @@
     <meta name="base" content="{{ url('home') }}"/>
 
     <!-- Favicons -->
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('images/logo.png')}}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('images/logo.png') }}">
 
     <!-- Google Fonts -->
     <link href="https://fonts.gstatic.com" rel="preconnect">
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+          rel="stylesheet">
 
     <!-- Vendor CSS Files -->
     <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet" name="fontawesome" crossorigin="anonymous">
+    <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet" name="fontawesome"
+          crossorigin="anonymous">
     <link href="{{ asset('assets/vendor/boxicons/css/boxicons.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/vendor/quill/quill.snow.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/vendor/quill/quill.bubble.css') }}" rel="stylesheet">
@@ -29,7 +31,7 @@
     <!-- Template Main CSS File -->
     <link href="{{ asset('js/plugins/datatables/dataTables.bootstrap4.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
-    
+
     <!-- Design System -->
     <link href="{{ asset('css/design-system.css') }}" rel="stylesheet">
 
@@ -42,88 +44,88 @@
             --purple-light: #f6f5ff;
             --purple-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
+
         /* Cor de fundo do sistema */
         body {
             background-color: #f5f7fa !important;
         }
-        
+
         .main {
             background-color: #f5f7fa !important;
             transition: margin-left 0.3s ease;
         }
-        
+
         /* 🎨 Botões primários roxos */
         .btn-primary {
             background: var(--purple-gradient) !important;
             border: none !important;
         }
-        
+
         .btn-primary:hover {
             background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%) !important;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
         }
-        
+
         /* 🎨 Links e elementos ativos roxos */
         .sidebar-nav .nav-link:hover,
         .sidebar-nav .nav-link.active {
             color: var(--purple-primary) !important;
             background: var(--purple-light) !important;
         }
-        
+
         .sidebar-nav .nav-link.active i {
             color: var(--purple-primary) !important;
         }
-        
+
         /* 🎨 Badges e alertas roxos */
         .badge.bg-primary {
             background: var(--purple-gradient) !important;
         }
-        
+
         .alert-primary {
             background-color: var(--purple-light) !important;
             border-color: var(--purple-primary) !important;
             color: var(--purple-dark) !important;
         }
-        
+
         /* 🎨 Cards com destaque roxo */
         .card-header.bg-primary {
             background: var(--purple-gradient) !important;
             color: white !important;
         }
-        
+
         /* 🎨 Tabs roxas */
         .nav-tabs .nav-link.active {
             color: var(--purple-primary) !important;
             border-bottom: 2px solid var(--purple-primary) !important;
         }
-        
+
         /* 🎨 Progress bars roxas */
         .progress-bar {
             background: var(--purple-gradient) !important;
         }
-               
+
         /* 🎨 Formulários com foco roxo */
         .form-control:focus,
         .form-select:focus {
             border-color: var(--purple-primary) !important;
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
         }
-        
+
         /* 🎨 Checkboxes e radios roxos */
         .form-check-input:checked {
             background-color: var(--purple-primary) !important;
             border-color: var(--purple-primary) !important;
         }
-        
+
         /* Cards com fundo branco limpo */
         .card {
             background-color: #ffffff;
             border: 1px solid #e4e7eb;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
-        
+
         /* Sidebar com fundo mais escuro */
         .sidebar {
             background-color: #ffffff;
@@ -131,28 +133,28 @@
             transition: width 0.3s ease;
             overflow: hidden;
         }
-        
+
         /* Sidebar colapsada - modo mini com ícones */
         .sidebar.collapsed {
             width: 80px !important;
         }
-        
+
         /* Esconde apenas o texto (span), mantém os ícones (i) */
         .sidebar.collapsed .nav-link > span {
             display: none !important;
         }
-        
+
         .sidebar.collapsed .logo span {
             display: none !important;
         }
-        
+
         .sidebar.collapsed .nav-link {
             text-align: center !important;
             padding: 15px 0 !important;
             justify-content: center !important;
             display: flex !important;
         }
-        
+
         /* Garante que os ícones apareçam */
         .sidebar.collapsed .nav-link > i {
             margin: 0 !important;
@@ -162,28 +164,28 @@
             visibility: visible !important;
             opacity: 1 !important;
         }
-        
+
         /* Esconde a seta de dropdown */
         .sidebar.collapsed .bi-chevron-down {
             display: none !important;
         }
-        
+
         /* Esconde submenus quando colapsado */
         .sidebar.collapsed .nav-content {
             display: none !important;
         }
-        
+
         /* Ajusta o logo quando colapsado */
         .sidebar.collapsed .logo {
             justify-content: center !important;
             padding: 20px 0 !important;
         }
-        
+
         /* Remove padding lateral dos itens */
         .sidebar.collapsed .nav-item {
             padding: 0 !important;
         }
-        
+
         /* Header roxo com gradiente */
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
@@ -191,7 +193,7 @@
             box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3) !important;
             transition: left 0.3s ease;
         }
-        
+
         /* Texto branco na navbar */
         .header .logo span,
         .header #page-title,
@@ -199,115 +201,115 @@
         .header .nav-link {
             color: white !important;
         }
-        
+
         .header .search-form input::placeholder {
             color: rgba(255, 255, 255, 0.7) !important;
         }
-        
+
         .header .search-form input {
             background: rgba(255, 255, 255, 0.2) !important;
             border: 1px solid rgba(255, 255, 255, 0.3) !important;
         }
-        
+
         .header .search-form button {
             background: rgba(255, 255, 255, 0.2) !important;
             color: white !important;
         }
-        
+
         .header .sidebar-toggle {
             color: white !important;
         }
-        
+
         .header .badge-number {
             background: #ef4444 !important;
         }
-        
+
         .header.collapsed {
             left: 80px !important;
         }
-        
+
         /* Main expandido quando sidebar colapsada */
         .main.collapsed {
             margin-left: 80px !important;
         }
-        
+
         /* Containers com fundo suave */
         .container-fluid {
             background-color: transparent;
         }
-        
+
         /* Modais com fundo branco */
         .modal-content {
             background-color: #ffffff;
         }
-        
+
         /* Offcanvas com fundo branco */
         .offcanvas {
             background-color: #ffffff;
         }
-        
+
         /* Footer */
         .footer {
             background-color: #ffffff;
             border-top: 1px solid #e4e7eb;
         }
-        
+
         /* 🎨 Ícones de dashboard roxos */
         .dashboard .sales-card .card-icon {
             color: var(--purple-primary) !important;
             background: var(--purple-light) !important;
         }
-        
+
         /* 🎨 Tabelas com cabeçalho roxo */
         .table thead {
             background: var(--purple-light) !important;
             color: var(--purple-dark) !important;
         }
-        
+
         /* 🎨 Dropdown hover roxo */
         .dropdown-item:hover {
             background-color: var(--purple-light) !important;
             color: var(--purple-primary) !important;
         }
-        
+
         /* 🎨 Paginação roxa */
         .pagination .page-item.active .page-link {
             background: var(--purple-gradient) !important;
             border-color: var(--purple-primary) !important;
         }
-        
+
         .pagination .page-link:hover {
             color: var(--purple-primary) !important;
             background-color: var(--purple-light) !important;
         }
-        
+
         /* 🎨 Spinner roxo */
         .spinner-border {
             color: var(--purple-primary) !important;
         }
-        
+
         /* 🎨 Toast roxo */
         .toast-header {
             background: var(--purple-gradient) !important;
             color: white !important;
         }
-        
+
         /* 🎨 Accordion roxo */
         .accordion-button:not(.collapsed) {
             background-color: var(--purple-light) !important;
             color: var(--purple-primary) !important;
         }
-        
+
         /* 🎨 Back to top roxo */
         .back-to-top {
             background: var(--purple-gradient) !important;
         }
-        
+
         .back-to-top:hover {
             background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%) !important;
         }
 
-        
+
         /* Estilos para resultados de busca */
         .search-results {
             position: absolute;
@@ -317,13 +319,13 @@
             background: white;
             border: 1px solid #e4e7eb;
             border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             max-height: 400px;
             overflow-y: auto;
             z-index: 1000;
             margin-top: 5px;
         }
-        
+
         .search-result-item {
             display: flex;
             align-items: center;
@@ -333,15 +335,15 @@
             color: #333;
             transition: background 0.2s;
         }
-        
+
         .search-result-item:hover {
             background: #f6f5ff;
         }
-        
+
         .search-result-item:last-child {
             border-bottom: none;
         }
-        
+
         .search-bar {
             position: relative;
         }
@@ -356,24 +358,32 @@
 {% endif %}
 
 <!-- ======= Header ======= -->
-  <header id="header" class="header fixed-top d-flex align-items-center">
+<header id="header" class="header fixed-top d-flex align-items-center">
 
     <div class="d-flex align-items-center justify-content-between">
-      <a href="{{ path('home') }}" class="logo d-flex align-items-center">
-        
-        <span class="d-none d-lg-block fs-6">{% block page_title %}Dashboard{% endblock %}</span>
-      </a>
-      <i class="bi bi-list toggle-sidebar-btn"></i>
+        <a href="{{ path('home') }}" class="logo d-flex align-items-center">
+
+            <span class="d-none d-lg-block fs-6">System Home Pet</span>
+        </a>
+        <i class="bi bi-list toggle-sidebar-btn"></i>
     </div><!-- End Logo -->
 
-    <div class="search-bar">
-        <form class="search-form d-flex align-items-center" id="searchForm">
-            <input type="text" id="searchInput" placeholder="Buscar pets, clientes..." title="Buscar" autocomplete="off">
-            <button type="submit" title="Buscar"><i class="bi bi-search"></i></button>
+    <div class="d-flex align-items-center justify-content-between ms-4">
+        <a href="javascript:void(0);" class="d-flex align-items-center text-white">
+            <span class="d-none d-lg-block fs-6">{% block page_title %}Dashboard{% endblock %}</span>
+        </a>
+    </div><!-- End Logo -->
+
+    <div class="search-bar m-0">
+        <form class="search-form d-flex align-items-center bg-transparent" id="searchForm">
+            <input type="text" id="searchInput" placeholder="Buscar pets, clientes..." title="Buscar"
+                   autocomplete="off">
+            <button type="submit" class="bg-transparent" title="Buscar"><i class="bi bi-search"></i></button>
         </form>
         <!-- Resultados da busca -->
         <div id="searchResults" class="search-results" style="display: none;"></div>
     </div>
+    
 
     <nav class="header-nav ms-auto">
         <ul class="d-flex align-items-center">
@@ -388,17 +398,23 @@
                     <i class="bi bi-bell"></i>
                     <span class="badge bg-danger badge-number" id="notificationCount" style="display: none;">0</span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications" style="max-height: 400px; overflow-y: auto;">
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications"
+                    style="max-height: 400px; overflow-y: auto;">
                     <li class="dropdown-header">
                         <span id="notificationHeader">Carregando notificações...</span>
                     </li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
                     <div id="notificationList">
                         <!-- Notificações serão carregadas aqui via JavaScript -->
                     </div>
-                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
                     <li class="dropdown-footer">
-                        <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasPrescricoes">Ver calendário completo</a>
+                        <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasPrescricoes">Ver calendário
+                            completo</a>
                     </li>
                 </ul>
             </li><!-- End Notification Nav -->
@@ -412,7 +428,8 @@
 
             <li class="nav-item dropdown pe-3">
                 <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-                    <img src="https://avatars.githubusercontent.com/u/93411015?v=4" alt="Profile" class="rounded-circle">
+                    <img src="https://avatars.githubusercontent.com/u/93411015?v=4" alt="Profile"
+                         class="rounded-circle">
                     <span class="d-none d-md-block dropdown-toggle ps-2">{{ app.session.get('user') }}</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
@@ -420,28 +437,36 @@
                         <h6>{{ app.session.get('user') }}</h6>
                         <span>{{ app.session.get('accessLevel') }}</span>
                     </li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
                     <li class="d-none">
                         <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
                             <i class="bi bi-person"></i>
                             <span>My Profile</span>
                         </a>
                     </li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
                     <li class="d-none">
                         <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
                             <i class="bi bi-gear"></i>
                             <span>Account Settings</span>
                         </a>
                     </li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
                     <li class="d-none">
                         <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
                             <i class="bi bi-question-circle"></i>
                             <span>Need Help?</span>
                         </a>
                     </li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
                     <li>
                         <a class="dropdown-item d-flex align-items-center" href="{{ url('logout') }}">
                             <i class="bi bi-box-arrow-right"></i>
@@ -455,48 +480,54 @@
 </header><!-- End Header -->
 
 
-
 <!-- ======= Sidebar ======= -->
-  <aside id="sidebar" class="sidebar">
+<aside id="sidebar" class="sidebar">
 
     <ul class="sidebar-nav" id="sidebar-nav">
-         {% if app.request.attributes.get('_route') is null %}
+        {% if app.request.attributes.get('_route') is null %}
             {% set route = 'home' %}
         {% else %}
-            {% set route = app.request.attributes.get('_route')  %}
+            {% set route = app.request.attributes.get('_route') %}
         {% endif %}
-      <li class="nav-item">
-            <a class="nav-link {% if route == 'home' %}active {% else %} collapsed{% endif %}" href="{{ path('home') }}">
+        <li class="nav-item">
+            <a class="nav-link {% if route == 'home' %}active {% else %} collapsed{% endif %}"
+               href="{{ path('home') }}">
                 <i class="bi bi-grid"></i>
                 <span>Home</span>
             </a>
         </li>
-        
+
         {{ render(path('leftMenu', {activeRoute : route})) }}
-        
+
         {% if app.session.get('accessLevel') == 'Super Admin' %}
-        <li class="nav-item">
-                <a class="nav-link {% if app.request.attributes.get('_route') == 'app_plano' or app.request.attributes.get('_route') == 'app_estabelecimento' %} {% else %} collapsed {% endif %}" data-bs-target="#administracao" data-bs-toggle="collapse" href="#">
+            <li class="nav-item">
+                <a class="nav-link {% if app.request.attributes.get('_route') == 'app_plano' or app.request.attributes.get('_route') == 'app_estabelecimento' %} {% else %} collapsed {% endif %}"
+                   data-bs-target="#administracao" data-bs-toggle="collapse" href="#">
                     <i class="bi bi-sliders"></i><span>Configurações</span><i class="bi bi-chevron-down ms-auto"></i>
                 </a>
-                <ul id="administracao" class="nav-content collapse {% if app.request.attributes.get('_route') == 'app_plano' or app.request.attributes.get('_route') == 'app_estabelecimento' %} show {% endif %}" data-bs-parent="#sidebar-nav">
-                    
+                <ul id="administracao"
+                    class="nav-content collapse {% if app.request.attributes.get('_route') == 'app_plano' or app.request.attributes.get('_route') == 'app_estabelecimento' %} show {% endif %}"
+                    data-bs-parent="#sidebar-nav">
 
-            <li class="nav-item">
-                <a class="nav-link {% if app.request.attributes.get('_route') != 'app_plano' %} collapsed {% endif %}" href="{{ url('app_plano') }}">
-                    <i class="bi bi-exclamation-square"></i><span>Planos</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if app.request.attributes.get('_route') != 'app_estabelecimento' %} collapsed {% endif %}" href="{{ url('app_estabelecimento') }}">
-                    <i class="bi bi-shop"></i><span>Estabelecimento</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if app.request.attributes.get('_route') != 'menu_index' %} collapsed {% endif %}" href="{{ url('menu_index') }}">
-                    <i class="bi bi-shop"></i><span>Menus</span>
-                </a>
-            </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if app.request.attributes.get('_route') != 'app_plano' %} collapsed {% endif %}"
+                           href="{{ url('app_plano') }}">
+                            <i class="bi bi-exclamation-square"></i><span>Planos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if app.request.attributes.get('_route') != 'app_estabelecimento' %} collapsed {% endif %}"
+                           href="{{ url('app_estabelecimento') }}">
+                            <i class="bi bi-shop"></i><span>Estabelecimento</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if app.request.attributes.get('_route') != 'menu_index' %} collapsed {% endif %}"
+                           href="{{ url('menu_index') }}">
+                            <i class="bi bi-shop"></i><span>Menus</span>
+                        </a>
+                    </li>
                 </ul>
             </li>
         {% endif %}
@@ -525,29 +556,34 @@
 </footer><!-- End Footer -->
 
 <!-- Botão flutuante para IA -->
-    <button id="btnChatIA" class="btn rounded-circle" style="position: fixed; bottom: 80px; right: 20px; z-index: 1050; width: 60px; height: 60px; font-size: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-        <i class="bi bi-robot"></i>
-    </button>
+<button id="btnChatIA" class="btn rounded-circle"
+        style="position: fixed; bottom: 80px; right: 20px; z-index: 1050; width: 60px; height: 60px; font-size: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+    <i class="bi bi-robot"></i>
+</button>
 
-    <!-- Modal da IA -->
-    <div class="modal fade" id="chatIaModal" tabindex="-1" aria-labelledby="chatIaLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable modal-lg">
-            <div class="modal-content">
-                <div class="modal-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <h5 class="modal-title">Dra. HomePet - Assistente IA</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="chatBoxIa" style="max-height: 400px; overflow-y: auto; background: #f7f7f7; padding: 10px; border-radius: 6px;"></div>
-                    <div class="input-group mt-3">
-                        <input type="text" id="inputPerguntaIa" class="form-control" placeholder="Digite sua dúvida clínica..." />
-                        <button class="btn btn-success" id="btnEnviarIa">Enviar</button>
-                    </div>
+<!-- Modal da IA -->
+<div class="modal fade" id="chatIaModal" tabindex="-1" aria-labelledby="chatIaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h5 class="modal-title">Dra. HomePet - Assistente IA</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="chatBoxIa"
+                     style="max-height: 400px; overflow-y: auto; background: #f7f7f7; padding: 10px; border-radius: 6px;"></div>
+                <div class="input-group mt-3">
+                    <input type="text" id="inputPerguntaIa" class="form-control"
+                           placeholder="Digite sua dúvida clínica..."/>
+                    <button class="btn btn-success" id="btnEnviarIa">Enviar</button>
                 </div>
             </div>
         </div>
     </div>
-<a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+</div>
+<a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
 
 <!-- Vendor JS Files -->
 <script src="{{ asset('js/plugins/jquery/jquery.min.js') }}"></script>
@@ -569,15 +605,15 @@
 
 <!-- Custom JS for Sidebar Toggle -->
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         // Toggle sidebar - modo mini com ícones
-        $('.sidebar-toggle').on('click', function() {
+        $('.sidebar-toggle').on('click', function () {
             $('body').toggleClass('toggle-sidebar')
             const isCollapsed = $('.sidebar').hasClass('collapsed');
         });
 
         // Toggle search bar em mobile
-        $('.search-bar-toggle').on('click', function(e) {
+        $('.search-bar-toggle').on('click', function (e) {
             e.preventDefault();
             $('.search-bar').toggleClass('active');
         });
@@ -595,7 +631,7 @@
 
         const box = document.getElementById("chatBoxIa");
         box.innerHTML += `<div class="mb-2"><strong>Você:</strong> ${comando}</div>`;
-        
+
         // Mostrar loading
         box.innerHTML += `<div class="mb-2 text-muted" id="loading"><em>🤖 Processando...</em></div>`;
         box.scrollTop = box.scrollHeight;
@@ -603,8 +639,8 @@
         try {
             const response = await fetch("{{ path('ia_assistente_executar') }}", {
                 method: "POST",
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ comando })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({comando})
             });
 
             if (!response.ok) {
@@ -614,10 +650,10 @@
             }
 
             const data = await response.json();
-            
+
             // Remove loading
             document.getElementById('loading')?.remove();
-            
+
             if (data.success) {
                 box.innerHTML += `<div class="mb-2 alert alert-success p-2">
                     <strong>🤖 Assistente:</strong> ${data.message}
@@ -628,7 +664,7 @@
                     <strong>🤖 Assistente:</strong> ${data.message}
                 </div>`;
             }
-            
+
             box.scrollTop = box.scrollHeight;
         } catch (e) {
             document.getElementById('loading')?.remove();
@@ -646,16 +682,16 @@
         try {
             const response = await fetch('/homepet/public/clinica/notificacoes');
             const data = await response.json();
-            
+
             const notificationList = document.getElementById('notificationList');
             const notificationCount = document.getElementById('notificationCount');
             const notificationHeader = document.getElementById('notificationHeader');
-            
+
             if (data.notificacoes && data.notificacoes.length > 0) {
                 notificationCount.textContent = data.notificacoes.length;
                 notificationCount.style.display = 'inline';
                 notificationHeader.textContent = `Você tem ${data.notificacoes.length} notificação(ões)`;
-                
+
                 notificationList.innerHTML = data.notificacoes.map(n => `
                     <li class="notification-item">
                         <i class="bi ${n.icon} ${n.color}"></i>
@@ -681,24 +717,23 @@
             console.error('Erro ao carregar notificações:', error);
         }
     }
-    
+
     // Carrega notificações ao abrir a página
     carregarNotificacoes();
-    
+
     // Atualiza notificações a cada 2 minutos
     setInterval(carregarNotificacoes, 120000);
 
-    
-    
+
     // Fecha resultados ao clicar fora
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
             searchResults.style.display = 'none';
         }
     });
-    
+
     // Previne submit do form
-    searchForm.addEventListener('submit', function(e) {
+    searchForm.addEventListener('submit', function (e) {
         e.preventDefault();
     });
 </script>

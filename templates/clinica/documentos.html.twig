@@ -3,206 +3,209 @@
 {% block title %}Documentos - {{ pet.nome }}{% endblock %}
 
 {% block stylesheets %}
-{{ parent() }}
-<link href="{{ asset('assets/vendors/quill/quill.snow.css') }}" rel="stylesheet">
-<style>
-    .documento-card {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,.1);
-        padding: 1.5rem;
-    }
-    .quill-editor {
-        min-height: 120px;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-    }
-</style>
+    {{ parent() }}
+    <link href="{{ asset('assets/vendors/quill/quill.snow.css') }}" rel="stylesheet">
+    <style>
+        .documento-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
+            padding: 1.5rem;
+        }
+
+        .quill-editor {
+            min-height: 120px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid bg-white p-3 my-4">
-    <div class="row align-items-center mb-3">
-        <div class="col-8">
-            <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>Voltar à Ficha do Pet
-            </a>
-        </div>
-        <div class="col-4 text-end">
-            <img src="{{ asset('images/pet.jpeg') }}" width="60" class="rounded-circle border me-2" onerror="this.style.display='none'">
-            <strong>Pet: {{ pet.nome }}</strong>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="row">
-        <div class="col-md-7">
-            <div class="documento-card">
-                <h5 class="mb-3"><i class="bi bi-file-earmark-text me-1"></i> Criar / Editar Documento</h5>
-
-                <select id="select-doc" class="form-select mb-3">
-                    <option value="">🗂️ Selecione um documento salvo para editar...</option>
-                    {% for d in documentos %}
-                        <option value="{{ d.id }}"
-                                data-titulo="{{ d.titulo }}"
-                                data-tipo="{{ d.tipo }}"
-                                data-cabecalho="{{ d.cabecalho|e('html_attr') }}"
-                                data-conteudo="{{ d.conteudo|e('html_attr') }}"
-                                data-rodape="{{ d.rodape|e('html_attr') }}">
-                            {{ d.titulo }} ({{ d.tipo }})
-                        </option>
-                    {% endfor %}
-                </select>
-
-                <form id="form-documento" method="POST" action="{{ path('clinica_documentos', {'petId': pet.id}) }}">
-                    <div class="mb-3">
-                        <label class="form-label">Título</label>
-                        <input type="text" class="form-control" name="titulo" id="titulo" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Tipo de Documento</label>
-                        <select name="tipo" id="tipo" class="form-select" required>
-                            <option value="">Selecione...</option>
-                            <option value="Atestado">Atestado</option>
-                            <option value="Declaração">Declaração</option>
-                            <option value="Termo de Internação">Termo de Internação</option>
-                            <option value="Receita">Receita</option>
-                            <option value="Outros">Outros</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label>🏢 Cabeçalho</label>
-                        <div id="editor-cabecalho" class="quill-editor"></div>
-                        <input type="hidden" name="cabecalho" id="input-cabecalho">
-                    </div>
-
-                    <div class="mb-3">
-                        <label>📄 Conteúdo</label>
-                        <div id="editor-conteudo" class="quill-editor"></div>
-                        <input type="hidden" name="conteudo" id="input-conteudo">
-                    </div>
-
-                    <div class="mb-3">
-                        <label>🖊️ Rodapé</label>
-                        <div id="editor-rodape" class="quill-editor"></div>
-                        <input type="hidden" name="rodape" id="input-rodape">
-                    </div>
-
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" id="btn-pdf" class="btn btn-outline-primary">
-                            <i class="bi bi-file-pdf"></i> PDF
-                        </button>
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save"></i> Salvar
-                        </button>
-                    </div>
-                </form>
+    <div class="container-fluid bg-white p-3 my-4">
+        <div class="row align-items-center mb-3">
+            <div class="col-8">
+                <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Voltar à Ficha do Pet
+                </a>
+            </div>
+            <div class="col-4 text-end">
+                <img src="{{ asset('images/pet.jpeg') }}" width="60" class="rounded-circle border me-2"
+                     onerror="this.style.display='none'">
+                <strong>Pet: {{ pet.nome }}</strong>
             </div>
         </div>
 
-        <div class="col-md-5">
-            <div class="documento-card">
-                <h5 class="mb-3">📁 Documentos Salvos</h5>
-                {% if documentos|length %}
-                    <table class="table table-sm align-middle">
-                        <thead>
+        <hr>
+
+        <div class="row">
+            <div class="col-md-7">
+                <div class="documento-card">
+                    <h5 class="mb-3"><i class="bi bi-file-earmark-text me-1"></i> Criar / Editar Documento</h5>
+
+                    <select id="select-doc" class="form-select mb-3">
+                        <option value="">🗂️ Selecione um documento salvo para editar...</option>
+                        {% for d in documentos %}
+                            <option value="{{ d.id }}"
+                                    data-titulo="{{ d.titulo }}"
+                                    data-tipo="{{ d.tipo }}"
+                                    data-cabecalho="{{ d.cabecalho|e('html_attr') }}"
+                                    data-conteudo="{{ d.conteudo|e('html_attr') }}"
+                                    data-rodape="{{ d.rodape|e('html_attr') }}">
+                                {{ d.titulo }} ({{ d.tipo }})
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <form id="form-documento" method="POST"
+                          action="{{ path('clinica_documentos', {'petId': pet.id}) }}">
+                        <div class="mb-3">
+                            <label class="form-label">Título</label>
+                            <input type="text" class="form-control" name="titulo" id="titulo" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Documento</label>
+                            <select name="tipo" id="tipo" class="form-select" required>
+                                <option value="">Selecione...</option>
+                                <option value="Atestado">Atestado</option>
+                                <option value="Declaração">Declaração</option>
+                                <option value="Termo de Internação">Termo de Internação</option>
+                                <option value="Receita">Receita</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>🏢 Cabeçalho</label>
+                            <div id="editor-cabecalho" class="quill-editor"></div>
+                            <input type="hidden" name="cabecalho" id="input-cabecalho">
+                        </div>
+
+                        <div class="mb-3">
+                            <label>📄 Conteúdo</label>
+                            <div id="editor-conteudo" class="quill-editor"></div>
+                            <input type="hidden" name="conteudo" id="input-conteudo">
+                        </div>
+
+                        <div class="mb-3">
+                            <label>🖊️ Rodapé</label>
+                            <div id="editor-rodape" class="quill-editor"></div>
+                            <input type="hidden" name="rodape" id="input-rodape">
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" id="btn-pdf" class="btn btn-outline-primary">
+                                <i class="bi bi-file-pdf"></i> PDF
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Salvar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="documento-card">
+                    <h5 class="mb-3">📁 Documentos Salvos</h5>
+                    {% if documentos|length %}
+                        <table class="table table-sm align-middle">
+                            <thead>
                             <tr>
                                 <th>Título</th>
                                 <th>Tipo</th>
                                 <th class="text-end">Excluir</th>
                             </tr>
-                        </thead>
-                        <tbody>
-                        {% for d in documentos %}
-                            <tr>
-                                <td>{{ d.titulo }}</td>
-                                <td>{{ d.tipo }}</td>
-                                <td class="text-end">
-                                    <form method="POST"
-                                          action="{{ path('clinica_documento_excluir', {'petId': pet.id, 'id': d.id}) }}"
-                                          onsubmit="return confirm('Excluir este documento?');">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_doc') }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                {% else %}
-                    <div class="alert alert-secondary text-center">Nenhum documento salvo.</div>
-                {% endif %}
+                            </thead>
+                            <tbody>
+                            {% for d in documentos %}
+                                <tr>
+                                    <td>{{ d.titulo }}</td>
+                                    <td>{{ d.tipo }}</td>
+                                    <td class="text-end">
+                                        <form method="POST"
+                                              action="{{ path('clinica_documento_excluir', {'petId': pet.id, 'id': d.id}) }}"
+                                              onsubmit="return confirm('Excluir este documento?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_doc') }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="alert alert-secondary text-center">Nenhum documento salvo.</div>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
 
-    <form id="form-pdf" method="POST" action="{{ path('clinica_documento_pdf', {'petId': pet.id}) }}">
-        <input type="hidden" name="cabecalho">
-        <input type="hidden" name="conteudo">
-        <input type="hidden" name="rodape">
-    </form>
-</div>
+        <form id="form-pdf" method="POST" action="{{ path('clinica_documento_pdf', {'petId': pet.id}) }}">
+            <input type="hidden" name="cabecalho">
+            <input type="hidden" name="conteudo">
+            <input type="hidden" name="rodape">
+        </form>
+    </div>
 {% endblock %}
 
 {% block javascripts %}
-<script src="{{ asset('assets/vendors/quill/quill.js') }}"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const toolbar = [
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'align': [] }],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-        ['link', 'clean']
-    ];
+    <script src="{{ asset('assets/vendors/quill/quill.js') }}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toolbar = [
+                ['bold', 'italic', 'underline', 'strike'],
+                [{'align': []}],
+                [{'list': 'ordered'}, {'list': 'bullet'}],
+                ['link', 'clean']
+            ];
 
-    const quillCabecalho = new Quill('#editor-cabecalho', {theme: 'snow', modules: {toolbar}});
-    const quillConteudo  = new Quill('#editor-conteudo',  {theme: 'snow', modules: {toolbar}});
-    const quillRodape    = new Quill('#editor-rodape',    {theme: 'snow', modules: {toolbar}});
+            const quillCabecalho = new Quill('#editor-cabecalho', {theme: 'snow', modules: {toolbar}});
+            const quillConteudo = new Quill('#editor-conteudo', {theme: 'snow', modules: {toolbar}});
+            const quillRodape = new Quill('#editor-rodape', {theme: 'snow', modules: {toolbar}});
 
-    const formDoc = document.getElementById('form-documento');
-    const formPdf = document.getElementById('form-pdf');
-    const btnPdf  = document.getElementById('btn-pdf');
-    const selectDoc = document.getElementById('select-doc');
-    const inputTitulo = document.getElementById('titulo');
-    const inputTipo = document.getElementById('tipo');
+            const formDoc = document.getElementById('form-documento');
+            const formPdf = document.getElementById('form-pdf');
+            const btnPdf = document.getElementById('btn-pdf');
+            const selectDoc = document.getElementById('select-doc');
+            const inputTitulo = document.getElementById('titulo');
+            const inputTipo = document.getElementById('tipo');
 
-    // Carregar documento selecionado
-    selectDoc.addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
-        if (!selected.value) return;
+            // Carregar documento selecionado
+            selectDoc.addEventListener('change', function () {
+                const selected = this.options[this.selectedIndex];
+                if (!selected.value) return;
 
-        inputTitulo.value = selected.dataset.titulo;
-        inputTipo.value = selected.dataset.tipo;
-        quillCabecalho.root.innerHTML = decodeHtml(selected.dataset.cabecalho);
-        quillConteudo.root.innerHTML  = decodeHtml(selected.dataset.conteudo);
-        quillRodape.root.innerHTML    = decodeHtml(selected.dataset.rodape);
-    });
+                inputTitulo.value = selected.dataset.titulo;
+                inputTipo.value = selected.dataset.tipo;
+                quillCabecalho.root.innerHTML = decodeHtml(selected.dataset.cabecalho);
+                quillConteudo.root.innerHTML = decodeHtml(selected.dataset.conteudo);
+                quillRodape.root.innerHTML = decodeHtml(selected.dataset.rodape);
+            });
 
-    function decodeHtml(html) {
-        const txt = document.createElement("textarea");
-        txt.innerHTML = html;
-        return txt.value;
-    }
+            function decodeHtml(html) {
+                const txt = document.createElement("textarea");
+                txt.innerHTML = html;
+                return txt.value;
+            }
 
-    // Salvar no banco
-    formDoc.addEventListener('submit', function () {
-        document.getElementById('input-cabecalho').value = quillCabecalho.root.innerHTML;
-        document.getElementById('input-conteudo').value  = quillConteudo.root.innerHTML;
-        document.getElementById('input-rodape').value    = quillRodape.root.innerHTML;
-    });
+            // Salvar no banco
+            formDoc.addEventListener('submit', function () {
+                document.getElementById('input-cabecalho').value = quillCabecalho.root.innerHTML;
+                document.getElementById('input-conteudo').value = quillConteudo.root.innerHTML;
+                document.getElementById('input-rodape').value = quillRodape.root.innerHTML;
+            });
 
-    // Gerar PDF
-    btnPdf.addEventListener('click', function () {
-        formPdf.querySelector('[name="cabecalho"]').value = quillCabecalho.root.innerHTML;
-        formPdf.querySelector('[name="conteudo"]').value  = quillConteudo.root.innerHTML;
-        formPdf.querySelector('[name="rodape"]').value    = quillRodape.root.innerHTML;
-        formPdf.submit();
-    });
-});
-</script>
+            // Gerar PDF
+            btnPdf.addEventListener('click', function () {
+                formPdf.querySelector('[name="cabecalho"]').value = quillCabecalho.root.innerHTML;
+                formPdf.querySelector('[name="conteudo"]').value = quillConteudo.root.innerHTML;
+                formPdf.querySelector('[name="rodape"]').value = quillRodape.root.innerHTML;
+                formPdf.submit();
+            });
+        });
+    </script>
 {% endblock %}

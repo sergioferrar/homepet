@@ -14,7 +14,8 @@
 
 {# Conteúdo do formulário #}
 {% block form_content %}
-    <form method="post" action="{% if pet is defined %}{{ path('pet_editar', {'id': pet.id}) }}{% else %}{{ path('pet_novo') }}{% endif %}">
+    <form method="post"
+          action="{% if pet is defined %}{{ path('pet_editar', {'id': pet.id}) }}{% else %}{{ path('pet_novo') }}{% endif %}">
         <div class="mb-3">
             <label for="nome" class="form-label">Nome</label>
             <input type="text" class="form-control" id="nome" name="nome" value="{{ pet.nome|default('') }}" required>
@@ -22,7 +23,8 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="especie" class="form-label">Espécie</label>
-                <input type="text" class="form-control" id="especie" name="especie" value="{{ pet.especie|default('') }}">
+                <input type="text" class="form-control" id="especie" name="especie"
+                       value="{{ pet.especie|default('') }}">
             </div>
             <div class="col-md-6 mb-3">
                 <label for="sexo" class="form-label">Sexo</label>
@@ -43,9 +45,15 @@
                 <label for="porte" class="form-label">Porte</label>
                 <select class="form-control" id="porte" name="porte">
                     <option value="">Selecionar</option>
-                    <option value="Pequeno" {% if pet.porte is defined and pet.porte == 'Pequeno' %}selected{% endif %}>Pequeno</option>
-                    <option value="Médio" {% if pet.porte is defined and pet.porte == 'Médio' %}selected{% endif %}>Médio</option>
-                    <option value="Grande" {% if pet.porte is defined and pet.porte == 'Grande' %}selected{% endif %}>Grande</option>
+                    <option value="Pequeno" {% if pet.porte is defined and pet.porte == 'Pequeno' %}selected{% endif %}>
+                        Pequeno
+                    </option>
+                    <option value="Médio" {% if pet.porte is defined and pet.porte == 'Médio' %}selected{% endif %}>
+                        Médio
+                    </option>
+                    <option value="Grande" {% if pet.porte is defined and pet.porte == 'Grande' %}selected{% endif %}>
+                        Grande
+                    </option>
                 </select>
             </div>
             <div class="col-md-6 mb-3">
@@ -55,7 +63,8 @@
         </div>
         <div class="mb-3">
             <label for="observacoes" class="form-label">Observações</label>
-            <textarea class="form-control" id="observacoes" name="observacoes" rows="3">{{ pet.observacoes|default('') }}</textarea>
+            <textarea class="form-control" id="observacoes" name="observacoes"
+                      rows="3">{{ pet.observacoes|default('') }}</textarea>
         </div>
         <div class="row">
             <div class="col-md-6 mb-3">
@@ -66,8 +75,10 @@
             <div class="col-md-6 mb-3">
                 <label for="castrado" class="form-label">Castrado</label>
                 <select class="form-control" id="castrado" name="castrado">
-                    <option value="0" {% if pet.castrado is defined and pet.castrado == 0 %}selected{% endif %}>Não</option>
-                    <option value="1" {% if pet.castrado is defined and pet.castrado == 1 %}selected{% endif %}>Sim</option>
+                    <option value="0" {% if pet.castrado is defined and pet.castrado == 0 %}selected{% endif %}>Não
+                    </option>
+                    <option value="1" {% if pet.castrado is defined and pet.castrado == 1 %}selected{% endif %}>Sim
+                    </option>
                 </select>
             </div>
         </div>
@@ -76,7 +87,8 @@
             <select class="form-control" id="dono_id" name="dono_id">
                 <option value="">Selecionar cliente</option>
                 {% for cliente in clientes %}
-                    <option value="{{ cliente.id }}" {% if pet.dono_id is defined and cliente.id == pet.dono_id %}selected{% endif %}>{{ cliente.nome }}</option>
+                    <option value="{{ cliente.id }}"
+                            {% if pet.dono_id is defined and cliente.id == pet.dono_id %}selected{% endif %}>{{ cliente.nome }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -88,48 +100,48 @@
 
 {# JavaScript específico para este formulário #}
 {% block form_javascripts %}
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    var racas = {{ racas|json_encode()|raw }};
-    var input = document.getElementById("raca");
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var racas = {{ racas|json_encode()|raw }};
+            var input = document.getElementById("raca");
 
-    input.addEventListener("input", function () {
-        var val = this.value;
-        closeAllLists();
-        if (!val) return false;
+            input.addEventListener("input", function () {
+                var val = this.value;
+                closeAllLists();
+                if (!val) return false;
 
-        var divList = document.createElement("div");
-        divList.setAttribute("id", "autocomplete-list");
-        divList.setAttribute("class", "autocomplete-items");
-        this.parentNode.appendChild(divList);
+                var divList = document.createElement("div");
+                divList.setAttribute("id", "autocomplete-list");
+                divList.setAttribute("class", "autocomplete-items");
+                this.parentNode.appendChild(divList);
 
-        racas.forEach(function (raca) {
-            if (raca.toLowerCase().includes(val.toLowerCase())) {
-                var item = document.createElement("div");
-                item.setAttribute("class", "lista");
-                item.innerHTML = "<strong>" + raca.substr(0, val.length) + "</strong>" + raca.substr(val.length);
-                item.innerHTML += "<input type='hidden' value='" + raca + "'>";
-                item.addEventListener("click", function () {
-                    input.value = this.getElementsByTagName("input")[0].value;
-                    closeAllLists();
+                racas.forEach(function (raca) {
+                    if (raca.toLowerCase().includes(val.toLowerCase())) {
+                        var item = document.createElement("div");
+                        item.setAttribute("class", "lista");
+                        item.innerHTML = "<strong>" + raca.substr(0, val.length) + "</strong>" + raca.substr(val.length);
+                        item.innerHTML += "<input type='hidden' value='" + raca + "'>";
+                        item.addEventListener("click", function () {
+                            input.value = this.getElementsByTagName("input")[0].value;
+                            closeAllLists();
+                        });
+                        divList.appendChild(item);
+                    }
                 });
-                divList.appendChild(item);
+            });
+
+            function closeAllLists(elmnt) {
+                var items = document.getElementsByClassName("autocomplete-items");
+                for (var i = 0; i < items.length; i++) {
+                    if (elmnt != items[i] && elmnt != input) {
+                        items[i].parentNode.removeChild(items[i]);
+                    }
+                }
             }
+
+            document.addEventListener("click", function (e) {
+                closeAllLists(e.target);
+            });
         });
-    });
-
-    function closeAllLists(elmnt) {
-        var items = document.getElementsByClassName("autocomplete-items");
-        for (var i = 0; i < items.length; i++) {
-            if (elmnt != items[i] && elmnt != input) {
-                items[i].parentNode.removeChild(items[i]);
-            }
-        }
-    }
-
-    document.addEventListener("click", function (e) {
-        closeAllLists(e.target);
-    });
-});
-</script>
+    </script>
 {% endblock %}

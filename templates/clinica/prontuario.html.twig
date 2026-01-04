@@ -31,7 +31,8 @@
             <li class="list-group-item">
                 <strong>{{ r.tipo|capitalize }}</strong> - {{ r.descricao }} ({{ r.data|date('d/m/Y H:i') }})
                 {% if r.anexo %}
-                    <a href="{{ asset('uploads/' ~ r.anexo) }}" target="_blank" class="btn btn-sm btn-outline-secondary ms-2">📎 Ver</a>
+                    <a href="{{ asset('uploads/' ~ r.anexo) }}" target="_blank"
+                       class="btn btn-sm btn-outline-secondary ms-2">📎 Ver</a>
                 {% endif %}
             </li>
         {% else %}

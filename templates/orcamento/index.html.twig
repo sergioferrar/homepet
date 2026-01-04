@@ -6,51 +6,54 @@
 {% block body %}
 
     <div class="pagetitle">
-      <h1>Orçamentos
-            <a class="btn btn-primary btm-sm float-end" href="{{ url('orcamento_novo') }}"><i class="bi bi-file-earmark-plus me-2"></i>Novo Orçamento</a>
+        <h1>Orçamentos
+            <a class="btn btn-primary btm-sm float-end" href="{{ url('orcamento_novo') }}"><i
+                        class="bi bi-file-earmark-plus me-2"></i>Novo Orçamento</a>
         </h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
-          <li class="breadcrumb-item">Atendimento</li>
-          <li class="breadcrumb-item active">Orçamentos</li>
-        </ol>
-      </nav>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+                <li class="breadcrumb-item">Atendimento</li>
+                <li class="breadcrumb-item active">Orçamentos</li>
+            </ol>
+        </nav>
     </div>
-        
-<div class="container-fluid mt-4">
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-body mt-4">
-            <form method="get" class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select">
-                        <option value="todos" {% if status == 'todos' %}selected{% endif %}>Todos</option>
-                        <option value="pendente" {% if status == 'pendente' %}selected{% endif %}>Pendente</option>
-                        <option value="aprovado" {% if status == 'aprovado' %}selected{% endif %}>Aprovado</option>
-                        <option value="recusado" {% if status == 'recusado' %}selected{% endif %}>Recusado</option>
-                        <option value="convertido" {% if status == 'convertido' %}selected{% endif %}>Convertido</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Buscar</label>
-                    <input type="text" name="busca" class="form-control" placeholder="Nome do cliente ou pet" value="{{ busca }}">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-search"></i> Filtrar
-                    </button>
-                </div>
-            </form>
+    <div class="container-fluid mt-4">
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body mt-4">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="todos" {% if status == 'todos' %}selected{% endif %}>Todos</option>
+                            <option value="pendente" {% if status == 'pendente' %}selected{% endif %}>Pendente</option>
+                            <option value="aprovado" {% if status == 'aprovado' %}selected{% endif %}>Aprovado</option>
+                            <option value="recusado" {% if status == 'recusado' %}selected{% endif %}>Recusado</option>
+                            <option value="convertido" {% if status == 'convertido' %}selected{% endif %}>Convertido
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Buscar</label>
+                        <input type="text" name="busca" class="form-control" placeholder="Nome do cliente ou pet"
+                               value="{{ busca }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Filtrar
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
                         <tr>
                             <th>ID</th>
                             <th>Data</th>
@@ -63,50 +66,51 @@
                             <th>Validade</th>
                             <th>Ações</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         {% for orcamento in orcamentos %}
-                        <tr>
-                            <td>#{{ orcamento.id }}</td>
-                            <td>{{ orcamento.dataCriacao|date('d/m/Y H:i') }}</td>
-                            <td>{{ orcamento.clienteNome }}</td>
-                            <td>{{ orcamento.petNome ?? '-' }}</td>
-                            <td>R$ {{ orcamento.valorTotal|number_format(2, ',', '.') }}</td>
-                            <td>R$ {{ orcamento.desconto|number_format(2, ',', '.') }}</td>
-                            <td><strong>R$ {{ orcamento.valorFinal|number_format(2, ',', '.') }}</strong></td>
-                            <td>
-                                {% if orcamento.status == 'pendente' %}
-                                    <span class="badge bg-warning">Pendente</span>
-                                {% elseif orcamento.status == 'aprovado' %}
-                                    <span class="badge bg-success">Aprovado</span>
-                                {% elseif orcamento.status == 'recusado' %}
-                                    <span class="badge bg-danger">Recusado</span>
-                                {% elseif orcamento.status == 'convertido' %}
-                                    <span class="badge bg-info">Convertido</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if orcamento.dataValidade %}
-                                    {{ orcamento.dataValidade|date('d/m/Y') }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{{ path('orcamento_visualizar', {id: orcamento.id}) }}" class="btn btn-sm btn-info" title="Visualizar">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td>#{{ orcamento.id }}</td>
+                                <td>{{ orcamento.dataCriacao|date('d/m/Y H:i') }}</td>
+                                <td>{{ orcamento.clienteNome }}</td>
+                                <td>{{ orcamento.petNome ?? '-' }}</td>
+                                <td>R$ {{ orcamento.valorTotal|number_format(2, ',', '.') }}</td>
+                                <td>R$ {{ orcamento.desconto|number_format(2, ',', '.') }}</td>
+                                <td><strong>R$ {{ orcamento.valorFinal|number_format(2, ',', '.') }}</strong></td>
+                                <td>
+                                    {% if orcamento.status == 'pendente' %}
+                                        <span class="badge bg-warning">Pendente</span>
+                                    {% elseif orcamento.status == 'aprovado' %}
+                                        <span class="badge bg-success">Aprovado</span>
+                                    {% elseif orcamento.status == 'recusado' %}
+                                        <span class="badge bg-danger">Recusado</span>
+                                    {% elseif orcamento.status == 'convertido' %}
+                                        <span class="badge bg-info">Convertido</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if orcamento.dataValidade %}
+                                        {{ orcamento.dataValidade|date('d/m/Y') }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ path('orcamento_visualizar', {id: orcamento.id}) }}"
+                                       class="btn btn-sm btn-info" title="Visualizar">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
                         {% else %}
-                        <tr>
-                            <td colspan="10" class="text-center">Nenhum orçamento encontrado</td>
-                        </tr>
+                            <tr>
+                                <td colspan="10" class="text-center">Nenhum orçamento encontrado</td>
+                            </tr>
                         {% endfor %}
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}

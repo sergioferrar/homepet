@@ -31,7 +31,7 @@ use App\Repository\PetRepository;
 use App\Controller\DefaultController;
 
 /**
- * @Route("/clinica")
+ * @Route("dashboard/clinica")
  */
 class AgendaController extends DefaultController
 {

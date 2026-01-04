@@ -7,7 +7,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 
-
+/**
+ * @Route("dashboard/")
+ */
 class MenuController extends DefaultController
 {
     /**

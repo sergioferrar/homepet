@@ -3,99 +3,99 @@
 {% block title %}Pagamento Pendente{% endblock %}
 
 {% block body %}
-<div class="container">
-    <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
-        <div class="col-md-6">
-            <div class="card shadow-lg border-0">
-                <div class="card-body text-center p-5">
-                    <!-- Ícone -->
-                    <div class="mb-4">
-                        <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 5rem;"></i>
-                    </div>
-                    
-                    <!-- Título -->
-                    <h2 class="mb-3 text-dark">Pagamento Pendente</h2>
-                    
-                    <!-- Mensagem -->
-                    <p class="text-muted mb-4" style="font-size: 1.1rem;">
-                        Seu cadastro está aguardando a confirmação do pagamento.<br>
-                        Por favor, complete o pagamento para acessar o sistema.
-                    </p>
-                    
-                    <!-- Informações -->
-                    <div class="alert alert-info text-start mb-4">
-                        <strong><i class="bi bi-info-circle me-2"></i>Como proceder:</strong>
-                        <ul class="mt-2 mb-0">
-                            <li>Verifique seu e-mail para o link de pagamento</li>
-                            <li>Complete o pagamento via PIX ou Cartão</li>
-                            <li>Após a confirmação, você poderá fazer login</li>
-                        </ul>
-                    </div>
-                    
-                    <!-- Botões -->
-                    <div class="d-grid gap-2">
-                        <button onclick="voltarLogin()" class="btn btn-primary btn-lg">
-                            <i class="bi bi-arrow-left me-1"></i>Voltar ao Login
-                        </button>
-                        
-                        <a href="mailto:suporte@systemhomepet.com" class="btn btn-outline-secondary">
-                            <i class="bi bi-envelope me-2"></i>Precisa de Ajuda?
-                        </a>
-                    </div>
-                    
-                    <script>
-                        function voltarLogin() {
-                            // Pega a URL base atual
-                            const baseUrl = window.location.origin + window.location.pathname.split('/login')[0];
-                            window.location.href = baseUrl + '/login';
-                        }
-                    </script>
-                    
-                    <!-- Rodapé -->
-                    <div class="mt-4 pt-4 border-top">
-                        <small class="text-muted">
-                            <i class="bi bi-shield-check me-1"></i>
-                            Seus dados estão seguros e protegidos
-                        </small>
+    <div class="container">
+        <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+            <div class="col-md-6">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body text-center p-5">
+                        <!-- Ícone -->
+                        <div class="mb-4">
+                            <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 5rem;"></i>
+                        </div>
+
+                        <!-- Título -->
+                        <h2 class="mb-3 text-dark">Pagamento Pendente</h2>
+
+                        <!-- Mensagem -->
+                        <p class="text-muted mb-4" style="font-size: 1.1rem;">
+                            Seu cadastro está aguardando a confirmação do pagamento.<br>
+                            Por favor, complete o pagamento para acessar o sistema.
+                        </p>
+
+                        <!-- Informações -->
+                        <div class="alert alert-info text-start mb-4">
+                            <strong><i class="bi bi-info-circle me-2"></i>Como proceder:</strong>
+                            <ul class="mt-2 mb-0">
+                                <li>Verifique seu e-mail para o link de pagamento</li>
+                                <li>Complete o pagamento via PIX ou Cartão</li>
+                                <li>Após a confirmação, você poderá fazer login</li>
+                            </ul>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="d-grid gap-2">
+                            <button onclick="voltarLogin()" class="btn btn-primary btn-lg">
+                                <i class="bi bi-arrow-left me-1"></i>Voltar ao Login
+                            </button>
+
+                            <a href="mailto:suporte@systemhomepet.com" class="btn btn-outline-secondary">
+                                <i class="bi bi-envelope me-2"></i>Precisa de Ajuda?
+                            </a>
+                        </div>
+
+                        <script>
+                            function voltarLogin() {
+                                // Pega a URL base atual
+                                const baseUrl = window.location.origin + window.location.pathname.split('/login')[0];
+                                window.location.href = baseUrl + '/login';
+                            }
+                        </script>
+
+                        <!-- Rodapé -->
+                        <div class="mt-4 pt-4 border-top">
+                            <small class="text-muted">
+                                <i class="bi bi-shield-check me-1"></i>
+                                Seus dados estão seguros e protegidos
+                            </small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<style>
-    body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .card {
-        border-radius: 15px;
-        animation: fadeIn 0.5s ease-in;
-    }
-    
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
+
+        .card {
+            border-radius: 15px;
+            animation: fadeIn 0.5s ease-in;
         }
-    }
-    
-    .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        padding: 12px;
-        font-weight: 600;
-    }
-    
-    .btn-primary:hover {
-        background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-</style>
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+    </style>
 {% endblock %}

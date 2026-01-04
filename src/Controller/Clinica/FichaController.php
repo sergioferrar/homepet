@@ -32,7 +32,7 @@ use App\Controller\DefaultController;
 
 
 /**
- * @Route("/clinica")
+ * @Route("dashboard/clinica")
  */
 class FichaController extends DefaultController
 {

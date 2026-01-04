@@ -29,7 +29,8 @@
                             </div>
                             <div class="d-flex align-items-center gap-1">
                                 <h4 class="mb-0 me-3 fw-bold">R$ {{ item.valor|number_format(2, ',', '.') }}</h4>
-                                <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': item.id}) }}">
+                                <form method="post"
+                                      action="{{ path('financeiro_confirmar_pagamento', {'id': item.id}) }}">
                                     <button type="submit" class="btn btn-success btn-sm">Confirmar Pagamento</button>
                                 </form>
                             </div>

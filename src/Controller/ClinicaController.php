@@ -31,7 +31,7 @@ use App\Repository\PetRepository;
 
 
 /**
- * @Route("/clinica")
+ * @Route("dashboard/clinica")
  */
 class ClinicaController extends DefaultController
 {

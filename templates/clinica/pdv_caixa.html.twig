@@ -2,33 +2,60 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-    .card-title { color: #004080; font-weight: bold; }
-    .tabela-container input.form-control-md { max-width: 400px; margin-bottom: 1.5rem; }
-    .card-item { transition: box-shadow 0.2s; border-left: 4px solid transparent; }
-    .card-item:hover { box-shadow: 0 0 0 4px #e5eefe; border-left-color: #007bff; }
-    .valor-entrada { color: #28a745; font-weight: bold; }
-    .valor-saida { color: #dc3545; font-weight: bold; }
-    
-    /* Estilos para impressão */
-    @media print {
-    .btn, #searchInputCaixa, #dataFiltro, #paginationCaixa, nav, .no-print {
-    display: none !important;
-    }
-    .card {
-    break-inside: avoid;
-    page-break-inside: avoid;
-    }
-    body {
-    font-size: 12pt;
-    }
-    h1 {
-    font-size: 18pt;
-    margin-bottom: 20px;
-    }
-    .card-body {
-    padding: 10px !important;
-    }
-    }
+        .card-title {
+            color: #004080;
+            font-weight: bold;
+        }
+
+        .tabela-container input.form-control-md {
+            max-width: 400px;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-item {
+            transition: box-shadow 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .card-item:hover {
+            box-shadow: 0 0 0 4px #e5eefe;
+            border-left-color: #007bff;
+        }
+
+        .valor-entrada {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .valor-saida {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        /* Estilos para impressão */
+        @media print {
+            .btn, #searchInputCaixa, #dataFiltro, #paginationCaixa, nav, .no-print {
+                display: none !important;
+            }
+
+            .card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            body {
+                font-size: 12pt;
+            }
+
+            h1 {
+                font-size: 18pt;
+                margin-bottom: 20px;
+            }
+
+            .card-body {
+                padding: 10px !important;
+            }
+        }
     </style>
 {% endblock %}
 {% block page_title %}Fechamento de Caixa{% endblock %}
@@ -36,11 +63,12 @@
     <div class="container-fluid">
         <div class="pagetitle">
             <h1>Fechamento de Caixa
-            <a class="me-md-5 mt-sm-3 btn btn-primary btm-sm mb-3 float-md-end" href="{{ url('clinica_pdv_index') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+                <a class="me-md-5 mt-sm-3 btn btn-primary btm-sm mb-3 float-md-end"
+                   href="{{ url('clinica_pdv_index') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
             </h1>
             <nav>
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
                     <li class="breadcrumb-item">Atendimento</li>
                     <li class="breadcrumb-item">PDV</li>
                     <li class="breadcrumb-item active">Fechamento de Caixa</li>
@@ -49,27 +77,28 @@
         </div>
 
 
-            <div class="col-12 mb-3">
-                <div class="row">
-                    <div class="col-4">
-                        <input type="date" id="dataFiltro" class="form-control" value="{{ data|date('Y-m-d') }}">
-                    </div>
-                    <div class="col-4">
-                        <input type="text" id="searchInputCaixa" class="form-control" placeholder="🔍 Buscar por descrição ou forma de pagamento...">
-                    </div>
-                    <div class="col-4">
-                        <div class="d-flex gap-2 text-end">
-                            <a href="{{ path('clinica_pdv_listar') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-list"></i> Listagem de Vendas
-                            </a>
-                            <button type="button" class="btn btn-success float-end" onclick="imprimirCaixa()">
-                            <i class="fas fa-print"></i> Imprimir
-                            </button>
-                        </div>
-                    </div>
-                    
+        <div class="col-12 mb-3">
+            <div class="row">
+                <div class="col-4">
+                    <input type="date" id="dataFiltro" class="form-control" value="{{ data|date('Y-m-d') }}">
                 </div>
+                <div class="col-4">
+                    <input type="text" id="searchInputCaixa" class="form-control"
+                           placeholder="🔍 Buscar por descrição ou forma de pagamento...">
+                </div>
+                <div class="col-4">
+                    <div class="d-flex gap-2 text-end">
+                        <a href="{{ path('clinica_pdv_listar') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-list"></i> Listagem de Vendas
+                        </a>
+                        <button type="button" class="btn btn-success float-end" onclick="imprimirCaixa()">
+                            <i class="fas fa-print"></i> Imprimir
+                        </button>
+                    </div>
+                </div>
+
             </div>
+        </div>
 
         <!-- 🔹 Cards de resumo -->
         <div class="row">
@@ -77,10 +106,10 @@
                 <div class="card shadow-sm border-0 bg-light">
                     <div class="card-body text-center">
                         <h6 class="card-title text-success text-uppercase fw-bold">
-                        <i class="bi bi-arrow-up me-1"></i> Entradas
+                            <i class="bi bi-arrow-up me-1"></i> Entradas
                         </h6>
                         <h3 class="fw-bold text-success mt-2 mb-1" id="valorEntradas">
-                        R$ {{ entradas|number_format(2, ',', '.') }}
+                            R$ {{ entradas|number_format(2, ',', '.') }}
                         </h3>
                         <small class="text-muted">Vendas e recebimentos</small>
                     </div>
@@ -90,10 +119,10 @@
                 <div class="card shadow-sm border-0 bg-light">
                     <div class="card-body text-center">
                         <h6 class="card-title text-danger text-uppercase fw-bold">
-                        <i class="bi bi-arrow-down me-1"></i> Saídas
+                            <i class="bi bi-arrow-down me-1"></i> Saídas
                         </h6>
                         <h3 class="fw-bold text-danger mt-2 mb-1" id="valorSaidas">
-                        - R$ {{ saidas|number_format(2, ',', '.') }}
+                            - R$ {{ saidas|number_format(2, ',', '.') }}
                         </h3>
                         <small class="text-muted">Pagamentos e retiradas</small>
                     </div>
@@ -103,10 +132,11 @@
                 <div class="card shadow-sm border-0 bg-light">
                     <div class="card-body text-center">
                         <h6 class="card-title text-dark text-uppercase fw-bold">
-                        <i class="bi bi-scale me-1"></i> Saldo Final
+                            <i class="bi bi-scale me-1"></i> Saldo Final
                         </h6>
-                        <h3 id="valorSaldo" class="fw-bold {% if saldo < 0 %}text-danger{% else %}text-success{% endif %} mt-2 mb-1">
-                        R$ {{ saldo|number_format(2, ',', '.') }}
+                        <h3 id="valorSaldo"
+                            class="fw-bold {% if saldo < 0 %}text-danger{% else %}text-success{% endif %} mt-2 mb-1">
+                            R$ {{ saldo|number_format(2, ',', '.') }}
                         </h3>
                         <small class="text-muted">Diferença entre entradas e saídas</small>
                     </div>
@@ -151,51 +181,52 @@
             <div class="row mt-4">
                 <div class="col text-center">
                     <nav aria-label="Paginação">
-                    <ul id="paginationCaixa" class="pagination justify-content-center mb-0"></ul>
-                </nav>
+                        <ul id="paginationCaixa" class="pagination justify-content-center mb-0"></ul>
+                    </nav>
+                </div>
             </div>
         </div>
+        <!-- 🔹 Rodapé -->
+        <div class="mt-4 text-center text-muted small">
+            <hr>
+            <i class="fas fa-heart text-danger"></i> Sistema HomePet — Controle de Caixa Diário
+        </div>
     </div>
-    <!-- 🔹 Rodapé -->
-    <div class="mt-4 text-center text-muted small">
-        <hr>
-        <i class="fas fa-heart text-danger"></i> Sistema HomePet — Controle de Caixa Diário
-    </div>
-</div>
 {% endblock %}
 {% block javascripts %}
-{{ parent() }}
-<script src="{{ asset('js/TabelaDefault.js') }}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
+    {{ parent() }}
+    <script src="{{ asset('js/TabelaDefault.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
 // Paginação e busca
-new TabelaDefault({
-cardContainerId: 'cardContainerCaixa',
-paginationId: 'paginationCaixa',
-searchInputId: 'searchInputCaixa',
-itemsPerPage: 6
-});
+            new TabelaDefault({
+                cardContainerId: 'cardContainerCaixa',
+                paginationId: 'paginationCaixa',
+                searchInputId: 'searchInputCaixa',
+                itemsPerPage: 6
+            });
 // Filtro de data (recarrega via fetch AJAX)
-const inputData = document.getElementById('dataFiltro');
-inputData.addEventListener('change', async () => {
-const data = inputData.value;
-try {
-const res = await fetch(`{{ path('clinica_pdv_caixa') }}?data=${data}`);
-const html = await res.text();
+            const inputData = document.getElementById('dataFiltro');
+            inputData.addEventListener('change', async () => {
+                const data = inputData.value;
+                try {
+                    const res = await fetch(`{{ path('clinica_pdv_caixa') }}?data=${data}`);
+                    const html = await res.text();
 // Substitui o conteúdo principal pelo novo HTML filtrado
-const parser = new DOMParser();
-const doc = parser.parseFromString(html, 'text/html');
-const novoConteudo = doc.querySelector('.container').innerHTML;
-document.querySelector('.container').innerHTML = novoConteudo;
-showToast('📅 Caixa atualizado para ' + new Date(data).toLocaleDateString('pt-BR'), 'success');
-} catch (e) {
-showToast('❌ Erro ao carregar o caixa dessa data.', 'error');
-}
-});
-});
-// Função para imprimir o caixa
-function imprimirCaixa() {
-window.print();
-}
-</script>
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const novoConteudo = doc.querySelector('.container').innerHTML;
+                    document.querySelector('.container').innerHTML = novoConteudo;
+                    showToast('📅 Caixa atualizado para ' + new Date(data).toLocaleDateString('pt-BR'), 'success');
+                } catch (e) {
+                    showToast('❌ Erro ao carregar o caixa dessa data.', 'error');
+                }
+            });
+        });
+
+        // Função para imprimir o caixa
+        function imprimirCaixa() {
+            window.print();
+        }
+    </script>
 {% endblock %}

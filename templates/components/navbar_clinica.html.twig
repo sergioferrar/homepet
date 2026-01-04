@@ -1,17 +1,22 @@
 <nav class="nav nav-pills mb-4">
-    <a class="nav-link {{ app.request.get('_route') starts with 'clinica_' ? 'active' : '' }}" href="{{ path('clinica_index') }}">
+    <a class="nav-link {{ app.request.get('_route') starts with 'clinica_' ? 'active' : '' }}"
+       href="{{ path('clinica_index') }}">
         <i class="bi bi-calendar-check"></i> Agendamentos
     </a>
-    <a class="nav-link {{ app.request.get('_route') starts with 'vacina_' ? 'active' : '' }}" href="{{ path('vacina_index') }}">
+    <a class="nav-link {{ app.request.get('_route') starts with 'vacina_' ? 'active' : '' }}"
+       href="{{ path('vacina_index') }}">
         <i class="bi bi-capsule"></i> Vacinas
     </a>
-    <a class="nav-link {{ app.request.get('_route') starts with 'exame_' ? 'active' : '' }}" href="{{ path('exame_index') }}">
+    <a class="nav-link {{ app.request.get('_route') starts with 'exame_' ? 'active' : '' }}"
+       href="{{ path('exame_index') }}">
         <i class="bi bi-clipboard-data"></i> Exames
     </a>
-    <a class="nav-link {{ app.request.get('_route') starts with 'estoque_' ? 'active' : '' }}" href="{{ path('estoque_index') }}">
+    <a class="nav-link {{ app.request.get('_route') starts with 'estoque_' ? 'active' : '' }}"
+       href="{{ path('estoque_index') }}">
         <i class="bi bi-box-seam"></i> Estoque
     </a>
-    <a class="nav-link {{ app.request.get('_route') starts with 'fila_espera' ? 'active' : '' }}" href="{{ path('fila_espera') }}">
+    <a class="nav-link {{ app.request.get('_route') starts with 'fila_espera' ? 'active' : '' }}"
+       href="{{ path('fila_espera') }}">
         <i class="bi bi-clock-history"></i> Fila de Espera
     </a>
 </nav>

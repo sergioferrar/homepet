@@ -3,172 +3,183 @@
 {% block title %}Nova Consulta{% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <div class="row">
-        <!-- COLUNA ESQUERDA - FORMULÁRIO -->
-        <div class="col-md-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h4 class="mb-4">Marcar Nova Consulta</h4>
-                    <form method="post">
-                        <div class="form-group mb-3">
-                            <label for="cliente_id">Cliente</label>
-                            <select id="cliente_id" name="cliente_id" class="form-control" required>
-                                <option value="">Selecione</option>
-                                {% for cliente in clientes %}
-                                    <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+    <div class="container mt-4">
+        <div class="row">
+            <!-- COLUNA ESQUERDA - FORMULÁRIO -->
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h4 class="mb-4">Marcar Nova Consulta</h4>
+                        <form method="post">
+                            <div class="form-group mb-3">
+                                <label for="cliente_id">Cliente</label>
+                                <select id="cliente_id" name="cliente_id" class="form-control" required>
+                                    <option value="">Selecione</option>
+                                    {% for cliente in clientes %}
+                                        <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
 
-                        <div class="form-group mb-3">
-                            <label for="pet_id">Pet</label>
-                            <select id="pet_id" name="pet_id" class="form-control" required></select>
-                        </div>
+                            <div class="form-group mb-3">
+                                <label for="pet_id">Pet</label>
+                                <select id="pet_id" name="pet_id" class="form-control" required></select>
+                            </div>
 
-                        <div class="form-group mb-3">
-                            <label for="data">Data</label>
-                            <input type="date" id="data" name="data" class="form-control" required>
-                        </div>
+                            <div class="form-group mb-3">
+                                <label for="data">Data</label>
+                                <input type="date" id="data" name="data" class="form-control" required>
+                            </div>
 
-                        <div class="form-group mb-3">
-                            <label for="hora">Hora</label>
-                            <input type="time" id="hora" name="hora" class="form-control" required>
-                        </div>
+                            <div class="form-group mb-3">
+                                <label for="hora">Hora</label>
+                                <input type="time" id="hora" name="hora" class="form-control" required>
+                            </div>
 
-                        <div class="form-group mb-3">
-                            <select class="form-select" aria-label="Default select example">
-                              <option selected>tipo</option>
-                              <option value="1">Atendimento Clínico</option>
-                              <option value="2">Vacina</option>
-                            </select>
-                        </div>
+                            <div class="form-group mb-3">
+                                <select class="form-select" aria-label="Default select example">
+                                    <option selected>tipo</option>
+                                    <option value="1">Atendimento Clínico</option>
+                                    <option value="2">Vacina</option>
+                                </select>
+                            </div>
 
-                        <div class="form-group mb-3">
-                            <label for="observacoes">Observações</label>
-                            <textarea id="observacoes" name="observacoes" class="form-control"></textarea>
-                        </div>
+                            <div class="form-group mb-3">
+                                <label for="observacoes">Observações</label>
+                                <textarea id="observacoes" name="observacoes" class="form-control"></textarea>
+                            </div>
 
-                        <button class="btn btn-primary">Salvar</button>
-                    </form>
+                            <button class="btn btn-primary">Salvar</button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- COLUNA DIREITA - CONSULTAS DE HOJE -->
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="mb-3" style="text-align: center;">Consultas</h5>
+            <!-- COLUNA DIREITA - CONSULTAS DE HOJE -->
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-3" style="text-align: center;">Consultas</h5>
 
-                    <form method="get" class="row g-2 mb-3">
-                        <div class="col-7">
-                            <input type="text" name="pet_nome" class="form-control" placeholder="🔍 Nome do pet" value="{{ app.request.get('pet_nome') }}">
-                        </div>
-                        <div class="col-5">
-                            <input type="date" name="data" class="form-control" value="{{ app.request.get('data') }}">
-                        </div>
-                        <div class="col-12">
-                            <button class="btn btn-outline-primary w-100" type="submit">Filtrar</button>
-                        </div>
-                    </form>
+                        <form method="get" class="row g-2 mb-3">
+                            <div class="col-7">
+                                <input type="text" name="pet_nome" class="form-control" placeholder="🔍 Nome do pet"
+                                       value="{{ app.request.get('pet_nome') }}">
+                            </div>
+                            <div class="col-5">
+                                <input type="date" name="data" class="form-control"
+                                       value="{{ app.request.get('data') }}">
+                            </div>
+                            <div class="col-12">
+                                <button class="btn btn-outline-primary w-100" type="submit">Filtrar</button>
+                            </div>
+                        </form>
 
-                    {% if consultas is not empty %}
-                        <div class="list-group" style="max-height: 400px; overflow-y: auto;">
-                            {% for c in consultas %}
-                                <div class="list-group-item mb-3 rounded border status-box 
+                        {% if consultas is not empty %}
+                            <div class="list-group" style="max-height: 400px; overflow-y: auto;">
+                                {% for c in consultas %}
+                                    <div class="list-group-item mb-3 rounded border status-box
                                     {% if c.status == 'atendido' %}bg-success text-white
                                     {% elseif c.status == 'aguardando' %}bg-warning
                                     {% elseif c.status == 'cancelado' %}bg-danger text-white{% endif %}"
-                                    id="consulta-{{ c.id }}">
-                                    <div>
-                                        <strong>🕒 {{ c.hora|date('H:i') }}</strong><br>
-                                        <strong>🐶 Pet:</strong> {{ c.pet_nome }}<br>
-                                        <strong>👤 Dono:</strong> {{ c.cliente_nome }}<br>
-                                        {% if c.observacoes %}
-                                            <strong>📌 Obs:</strong> {{ c.observacoes }}
-                                        {% endif %}
+                                         id="consulta-{{ c.id }}">
+                                        <div>
+                                            <strong>🕒 {{ c.hora|date('H:i') }}</strong><br>
+                                            <strong>🐶 Pet:</strong> {{ c.pet_nome }}<br>
+                                            <strong>👤 Dono:</strong> {{ c.cliente_nome }}<br>
+                                            {% if c.observacoes %}
+                                                <strong>📌 Obs:</strong> {{ c.observacoes }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="form-group mt-2">
+                                            <select class="form-control form-select"
+                                                    onchange="setStatus(this.dataset.id, this.value)"
+                                                    data-id="{{ c.id }}">
+                                                <option value="aguardando"
+                                                        {% if c.status == 'aguardando' %}selected{% endif %}>⏳
+                                                    Aguardando
+                                                </option>
+                                                <option value="atendido"
+                                                        {% if c.status == 'atendido' %}selected{% endif %}>✅ Atendido
+                                                </option>
+                                                <option value="cancelado"
+                                                        {% if c.status == 'cancelado' %}selected{% endif %}>❌ Cancelado
+                                                </option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div class="form-group mt-2">
-                                        <select class="form-control form-select" onchange="setStatus(this.dataset.id, this.value)" data-id="{{ c.id }}">
-                                            <option value="aguardando" {% if c.status == 'aguardando' %}selected{% endif %}>⏳ Aguardando</option>
-                                            <option value="atendido" {% if c.status == 'atendido' %}selected{% endif %}>✅ Atendido</option>
-                                            <option value="cancelado" {% if c.status == 'cancelado' %}selected{% endif %}>❌ Cancelado</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted">Nenhuma consulta encontrada.</p>
-                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">Nenhuma consulta encontrada.</p>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    document.getElementById('cliente_id').addEventListener('change', function () {
-        const clienteId = this.value;
-        const url = '{{ path("clinica_api_pets", {"clienteId": "CLIENTE_ID"}) }}'.replace('CLIENTE_ID', clienteId);
+    <script>
+        document.getElementById('cliente_id').addEventListener('change', function () {
+            const clienteId = this.value;
+            const url = '{{ path("clinica_api_pets", {"clienteId": "CLIENTE_ID"}) }}'.replace('CLIENTE_ID', clienteId);
 
-        fetch(url)
-            .then(resp => resp.json())
-            .then(data => {
-                const select = document.getElementById('pet_id');
-                select.innerHTML = '';
-                if (data.length === 0) {
-                    const opt = document.createElement('option');
-                    opt.text = 'Nenhum pet encontrado';
-                    select.appendChild(opt);
-                } else {
-                    data.forEach(pet => {
+            fetch(url)
+                .then(resp => resp.json())
+                .then(data => {
+                    const select = document.getElementById('pet_id');
+                    select.innerHTML = '';
+                    if (data.length === 0) {
                         const opt = document.createElement('option');
-                        opt.value = pet.id;
-                        opt.innerText = pet.nome;
+                        opt.text = 'Nenhum pet encontrado';
                         select.appendChild(opt);
-                    });
+                    } else {
+                        data.forEach(pet => {
+                            const opt = document.createElement('option');
+                            opt.value = pet.id;
+                            opt.innerText = pet.nome;
+                            select.appendChild(opt);
+                        });
+                    }
+                })
+                .catch(err => console.error(err));
+        });
+
+        function setStatus(id, status) {
+            const url = '{{ path("clinica_consulta_status", {"id": "CONSULTA_ID", "status": "STATUS"}) }}'
+                .replace('CONSULTA_ID', id)
+                .replace('STATUS', status);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .catch(err => console.error(err));
-    });
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro ao atualizar status');
+                    return response.json();
+                })
+                .then(data => {
+                    const box = document.getElementById('consulta-' + id);
+                    box.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'text-white');
 
-    function setStatus(id, status) {
-        const url = '{{ path("clinica_consulta_status", {"id": "CONSULTA_ID", "status": "STATUS"}) }}'
-            .replace('CONSULTA_ID', id)
-            .replace('STATUS', status);
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Erro ao atualizar status');
-            return response.json();
-        })
-        .then(data => {
-            const box = document.getElementById('consulta-' + id);
-            box.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'text-white');
-
-            switch (status) {
-                case 'atendido':
-                    box.classList.add('bg-success', 'text-white');
-                    break;
-                case 'aguardando':
-                    box.classList.add('bg-warning');
-                    break;
-                case 'cancelado':
-                    box.classList.add('bg-danger', 'text-white');
-                    break;
-            }
-        })
-        .catch(error => {
-            console.error(error);
-            alert('Erro ao salvar o status.');
-        });
-    }
-</script>
+                    switch (status) {
+                        case 'atendido':
+                            box.classList.add('bg-success', 'text-white');
+                            break;
+                        case 'aguardando':
+                            box.classList.add('bg-warning');
+                            break;
+                        case 'cancelado':
+                            box.classList.add('bg-danger', 'text-white');
+                            break;
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert('Erro ao salvar o status.');
+                });
+        }
+    </script>
 {% endblock %}

@@ -26,7 +26,7 @@ class HomeController extends DefaultController
     }
 
     /**
-     * @Route("/", name="home")
+     * @Route("/dashboard", name="home")
      */
     public function index(Request $request): Response
     {

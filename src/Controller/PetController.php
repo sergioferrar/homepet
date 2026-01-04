@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("/pet")
+ * @Route("dashboard/pet")
  */
 class PetController extends DefaultController
 {

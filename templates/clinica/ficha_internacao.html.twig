@@ -265,34 +265,34 @@
                 if (url.includes('obito')) confirmMsg = 'Confirmar óbito desta internação?';
                 if (url.includes('cancelar')) confirmMsg = 'Confirmar cancelamento desta internação?';
 
-                Utils.modal(confirmMsg, 'primary', function(){
-                        $.ajax({
-                            url: url,
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-                            },
-                            data: {
-                                _token: token
-                            },
-                            success: function(resp){
-                                if (resp.ok === true) {
-                                    Utils.modal('Ação registrada com sucesso!', 'success', function(){
-                                        location.reload();
-                                    });
-                                    //alert('Ação registrada com sucesso!');
-                                    
-                                } else {
-                                    Utils.modal(resp.msg, 'danger');
-                                    //alert(resp.msg);
-                                }
-                            },
-                            error: function(x,d){
-                                Utils.modal('Erro ao processar ação.', 'danger');
-                            }
-                        });
+                Utils.modal(confirmMsg, 'primary', function () {
+                    $.ajax({
+                        url: url,
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                        },
+                        data: {
+                            _token: token
+                        },
+                        success: function (resp) {
+                            if (resp.ok === true) {
+                                Utils.modal('Ação registrada com sucesso!', 'success', function () {
+                                    location.reload();
+                                });
+                                //alert('Ação registrada com sucesso!');
 
-                        
+                            } else {
+                                Utils.modal(resp.msg, 'danger');
+                                //alert(resp.msg);
+                            }
+                        },
+                        error: function (x, d) {
+                            Utils.modal('Erro ao processar ação.', 'danger');
+                        }
+                    });
+
+
                 }, 'md', 'Mensagem do sistema', 'Confirmar', 'Cancelar');
 
                 //if (!confirm(confirmMsg)) return;

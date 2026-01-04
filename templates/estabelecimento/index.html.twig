@@ -1,41 +1,44 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Listagem de Estabelecimentos{% endblock %}
-{% block page_title %}<i class="bi bi-building me-2"></i> Estabelecimentos{% endblock %}
+{% block page_title %}Estabelecimentos{% endblock %}
 
 {% block body %}
-    <div class="container-fluid">
-        <div class="card mt-5">
-            <div class="card-header">
+<div class="container-fluid">
+    <div class="card mt-5">
+        <div class="card-header">
             <div class="card-body">
                 <table class="table table-striped">
                     <thead>
-                        <tr>
-                            <td>Estabelecimento</td>
-                            <td>Data de Cadastro</td>
-                            <td>Status</td>
-                            <td>Plano</td>
-                            <td>Ações</td>
-                        </tr>
+                    <tr>
+                        <td>Estabelecimento</td>
+                        <td>Data de Cadastro</td>
+                        <td>Status</td>
+                        <td>Plano</td>
+                        <td>Ações</td>
+                    </tr>
                     </thead>
                     <tbody>
-                        {% for row in estabelecimentos %}
-                            <tr>
-                                <td>{{ row.razaoSocial }}</td>
-                                <td>{{ row.dataCadastro|date('d/m/Y') }}</td>
-                                <td>{{ row.status }}</td>
-                                <td>{{ row.titulo }}</td>
-                                <td>
-                                    <a class="btn btn-sm btn-outline-primary" href="{{url('petshop_edit',{eid:row.id})}}" role="button">Editar</a>
-                                    {% if app.session.get('accessLevel') == 'Super Admin' and row.id|validaPlano %}
-                                        <a class="btn btn-sm btn-outline-warning" href="{{ url('petshop_renovacao',{eid:row.id}) }}" role="button">Renovar assinatura</a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
+                    {% for row in estabelecimentos %}
+                        <tr>
+                            <td>{{ row.razaoSocial }}</td>
+                            <td>{{ row.dataCadastro|date('d/m/Y') }}</td>
+                            <td>{{ row.status }}</td>
+                            <td>{{ row.titulo }}</td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" href="{{ url('petshop_edit',{eid:row.id}) }}"
+                                   role="button">Editar</a>
+                                {% if app.session.get('accessLevel') == 'Super Admin' and row.id|validaPlano %}
+                                    <a class="btn btn-sm btn-outline-warning"
+                                       href="{{ url('petshop_renovacao',{eid:row.id}) }}" role="button">Renovar
+                                        assinatura</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-{% endblock %}
+    {% endblock %}

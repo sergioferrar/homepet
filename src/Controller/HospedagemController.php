@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 
 /**
- * @Route("/hospedagem")
+ * @Route("dashboard/hospedagem")
  */
 class HospedagemController extends DefaultController
 {

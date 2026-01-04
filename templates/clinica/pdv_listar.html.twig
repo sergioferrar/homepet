@@ -2,37 +2,38 @@
 {% block title %}Relatório de Vendas{% endblock %}
 
 {% block body %}
-        <div class="pagetitle">
-            <h1>Relatório de Vendas
-            <a class="me-md-5 mt-sm-3 btn btn-primary btm-sm mb-3 float-md-end" href="{{ url('clinica_pdv_index') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
-            </h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
-                    <li class="breadcrumb-item">Atendimento</li>
-                    <li class="breadcrumb-item">PDV</li>
-                    <li class="breadcrumb-item active">Relatório de Vendas</li>
-                </ol>
-            </nav>
-        </div>
-
-<div class="container-fluid bg-white p-4 mt-4 rounded shadow-sm">
-
-    <!-- 🔹 Barra de navegação -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <a href="{{ path('clinica_pdv_index') }}" class="btn btn-outline-primary me-2">
-                <i class="bi bi-cash-coin"></i> PDV
-            </a>
-            <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-success">
-                <i class="bi bi-wallet2"></i> Fechamento de Caixa
-            </a>
-        </div>
+    <div class="pagetitle">
+        <h1>Relatório de Vendas
+            <a class="me-md-5 mt-sm-3 btn btn-primary btm-sm mb-3 float-md-end" href="{{ url('clinica_pdv_index') }}"><i
+                        class="bi bi-arrow-left me-1"></i>Voltar</a>
+        </h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+                <li class="breadcrumb-item">Atendimento</li>
+                <li class="breadcrumb-item">PDV</li>
+                <li class="breadcrumb-item active">Relatório de Vendas</li>
+            </ol>
+        </nav>
     </div>
-    <hr>
 
-    <table class="table table-striped">
-        <thead>
+    <div class="container-fluid bg-white p-4 mt-4 rounded shadow-sm">
+
+        <!-- 🔹 Barra de navegação -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <a href="{{ path('clinica_pdv_index') }}" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-cash-coin"></i> PDV
+                </a>
+                <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-success">
+                    <i class="bi bi-wallet2"></i> Fechamento de Caixa
+                </a>
+            </div>
+        </div>
+        <hr>
+
+        <table class="table table-striped">
+            <thead>
             <tr>
                 <th>ID</th>
                 <th>Data</th>
@@ -40,8 +41,8 @@
                 <th>Valor</th>
                 <th>Forma de Pagamento</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             {% for v in vendas %}
                 <tr>
                     <td>{{ v.id }}</td>
@@ -51,9 +52,11 @@
                     <td>{{ v.metodoPagamento|upper }}</td>
                 </tr>
             {% else %}
-                <tr><td colspan="5" class="text-center text-muted">Nenhuma venda encontrada.</td></tr>
+                <tr>
+                    <td colspan="5" class="text-center text-muted">Nenhuma venda encontrada.</td>
+                </tr>
             {% endfor %}
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

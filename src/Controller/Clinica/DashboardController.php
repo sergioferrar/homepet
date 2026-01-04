@@ -32,12 +32,12 @@ use App\Controller\DefaultController;
 
 
 /**
- * @Route("/clinica")
+ * @Route("dashboard/clinica")
  */
 class DashboardController extends DefaultController
 {
     /**
-     * @Route("/dashboard", name="clinica_dashboard", methods={"GET"})
+     * @Route("/administrativo", name="clinica_dashboard", methods={"GET"})
      */
     public function dashboard(Request $request, EntityManagerInterface $em): Response
     {

@@ -1,24 +1,24 @@
 {% extends 'base.html.twig' %}
 
-{% block page_title %}<i class="bi bi-card-list me-2"></i> Planos{% endblock %}
+{% block page_title %}Planos{% endblock %}
 
 {% block body %}
     <div class="pagetitle">
-        <h1>Planos de assinatura <a href="{{ path('app_plano_create') }}" class="btn btn-primary btn-sm mb-3 float-md-end"><i class="bi bi-plus"></i> Novo Plano</a></h1>
+        <h1>Planos de assinatura <a href="{{ path('app_plano_create') }}"
+                                    class="btn btn-primary btn-sm mb-3 float-md-end"><i class="bi bi-plus"></i> Novo
+                Plano</a></h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{url('home')}}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
                 <li class="breadcrumb-item">Configurações</li>
                 <li class="breadcrumb-item active">Planos de assinatura</li>
             </ol>
         </nav>
     </div>
-<div class="container mt-5">
+    <div class="container mt-5">
 
-    
-
-    <table class="table table-bordered datatable">
-        <thead>
+        <table class="table table-bordered datatable">
+            <thead>
             <tr>
                 <th>Plano</th>
                 <th>Trial</th>
@@ -26,29 +26,31 @@
                 <th>Status</th>
                 <th>Ações</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             {% for row in planos %}
-        <tr>
-            <td>{{row.titulo}}</td>
-            <td class="text-center">{{row.trial|getTrial|raw}}</td>
-            <td class="text-center"><span class="badge text-bg-secondary">{{row.totalLojas}}</span></td>
-            <td class="text-center">{{row.status|getStatus|raw}}</td>
-            <td class="text-center">
-                <div class="dropdown">
-                  <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Ação
-                  </button>
-                  <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{{url('app_plano_editar',{'id':row.id})}}">Editar</a></li>
-                    <li><a class="dropdown-item" href="#">Ver lojas</a></li>
-                    <li><a class="dropdown-item" href="#">Inativar</a></li>
-                  </ul>
-                </div>
-            </td>
-        </tr>
+                <tr>
+                    <td>{{ row.titulo }}</td>
+                    <td class="text-center">{{ row.trial|getTrial|raw }}</td>
+                    <td class="text-center"><span class="badge text-bg-secondary">{{ row.totalLojas }}</span></td>
+                    <td class="text-center">{{ row.status|getStatus|raw }}</td>
+                    <td class="text-center">
+                        <div class="dropdown">
+                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                Ação
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item"
+                                       href="{{ url('app_plano_editar',{'id':row.id}) }}">Editar</a></li>
+                                <li><a class="dropdown-item" href="#">Ver lojas</a></li>
+                                <li><a class="dropdown-item" href="#">Inativar</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
             {% endfor %}
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 {% endblock %}
