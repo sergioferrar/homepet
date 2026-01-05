@@ -71,14 +71,17 @@ class AgendamentoRepository extends ServiceEntityRepository
                     GROUP_CONCAT(CONCAT(s.nome, ' (R$ ', s.valor, ')') ORDER BY s.nome SEPARATOR ', ') AS servico_nome
                 FROM `{$_ENV['DBNAMETENANT']}`.agendamento a
                 INNER JOIN `{$_ENV['DBNAMETENANT']}`.agendamento_pet_servico aps ON aps.agendamentoId = a.id
-                INNER JOIN `{$_ENV['DBNAMETENANT']}`.pet p ON (aps.petId = p.id )#AND estabelecimento_id = '{$baseId}')
-                INNER JOIN `{$_ENV['DBNAMETENANT']}`.cliente c ON (p.dono_id = c.id )#AND estabelecimento_id = '{$baseId}')
-                INNER JOIN `{$_ENV['DBNAMETENANT']}`.servico s ON (aps.servicoId = s.id )#AND estabelecimento_id = '{$baseId}')
-                WHERE a.estabelecimento_id='{$baseId}' #AND DATE(a.data) = :data
+                INNER JOIN `{$_ENV['DBNAMETENANT']}`.pet p ON aps.petId = p.id
+                INNER JOIN `{$_ENV['DBNAMETENANT']}`.cliente c ON p.dono_id = c.id
+                INNER JOIN `{$_ENV['DBNAMETENANT']}`.servico s ON aps.servicoId = s.id
+                WHERE a.estabelecimento_id = :baseId AND DATE(a.data) = :data
                 GROUP BY a.id, p.id
                 ORDER BY a.horaChegada ASC, c.nome, p.nome";
 
-        $stmt = $this->conn->executeQuery($sql/*, ['data' => $data->format('Y-m-d')]*/);
+        $stmt = $this->conn->executeQuery($sql, [
+            'baseId' => $baseId,
+            'data' => $data->format('Y-m-d')
+        ]);
         return $stmt->fetchAllAssociative();
     }
 
