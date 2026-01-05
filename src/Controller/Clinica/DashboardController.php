@@ -242,8 +242,8 @@ class DashboardController extends DefaultController
             $timeline_items[] = [
                 'data' => new \DateTime($r['data']),
                 'tipo' => 'Receita',
-                'resumo' => $r['resumo'],
-                'observacoes' => $item['observacoes'] ?? null,
+                'resumo' => $r['resumo'] ?? '',
+                'observacoes' => $r['resumo'] ?? '', // Usa resumo como observações para receitas
                 'receita_cabecalho' => $r['cabecalho'],
                 'receita_conteudo' => $r['conteudo'],
                 'receita_rodape' => $r['rodape'],

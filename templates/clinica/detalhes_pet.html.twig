@@ -1008,29 +1008,112 @@
                     if (tipo === 'Consulta' || tipo === 'Retorno') {
                         const anamneseDeltaString = this.dataset.atendimentoDelta;
                         const borderColorClass = (tipo === 'Consulta') ? 'border-primary' : 'border-success';
-                        appendServiceDetailCard(`Atendimento: ${observacoes}`, anamneseDeltaString, borderColorClass);
+                        
+                        // Monta o card com título e observações
+                        const cardDiv = document.createElement('div');
+                        cardDiv.className = `service-detail-card p-3 rounded ${borderColorClass} border-start border-4`;
+                        
+                        // Título com tipo e observações
+                        const cardHeader = document.createElement('h5');
+                        cardHeader.className = 'mb-2 text-primary';
+                        cardHeader.innerHTML = `<i class="fas fa-stethoscope me-2"></i>${tipo}`;
+                        cardDiv.appendChild(cardHeader);
+                        
+                        // Observações/Assunto
+                        if (observacoes) {
+                            const obsDiv = document.createElement('div');
+                            obsDiv.className = 'mb-3 p-2 bg-light rounded';
+                            obsDiv.innerHTML = `<strong>Assunto:</strong> ${observacoes}`;
+                            cardDiv.appendChild(obsDiv);
+                        }
+                        
+                        // Data
+                        const cardDate = document.createElement('p');
+                        cardDate.className = 'text-muted mb-3';
+                        cardDate.innerHTML = `<small><i class="fas fa-calendar me-1"></i>Registrado em: ${data}</small>`;
+                        cardDiv.appendChild(cardDate);
+                        
+                        // Conteúdo da anamnese
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'service-detail-content';
+                        cardDiv.appendChild(contentDiv);
+                        serviceDetailsContent.appendChild(cardDiv);
+                        
+                        if (anamneseDeltaString) {
+                            try {
+                                const anamneseData = JSON.parse(anamneseDeltaString);
+                                const quillDisplay = new Quill(contentDiv, {
+                                    theme: 'bubble',
+                                    readOnly: true,
+                                    modules: {toolbar: false}
+                                });
+                                window.currentQuillDisplayEditors.push(quillDisplay);
+                                quillDisplay.setContents(anamneseData);
+                            } catch (e) {
+                                contentDiv.innerHTML = '<p class="text-muted">Conteúdo não disponível ou formato inválido.</p>';
+                            }
+                        } else {
+                            contentDiv.innerHTML = '<p class="text-muted">Nenhum detalhe de anamnese disponível.</p>';
+                        }
                     } else if (tipo === 'Receita') {
 
                         const cabecalhoHtmlString = this.dataset.receitaCabecalhoHtml;
-
-                        const conteudoDeltaString = JSON.parse(this.dataset.receitaConteudoDelta);
+                        let conteudoDeltaString = null;
+                        try {
+                            conteudoDeltaString = JSON.parse(this.dataset.receitaConteudoDelta);
+                        } catch(e) {
+                            console.log('Erro ao parsear conteúdo da receita:', e);
+                        }
                         const rodapeHtmlString = this.dataset.receitaRodapeHtml;
-                        const borderColorClass = 'border-primary';
-
-                        if (cabecalhoHtmlString) appendServiceDetailCard(null, cabecalhoHtmlString, borderColorClass, true);
-                        if (conteudoDeltaString) appendServiceDetailCard(null, conteudoDeltaString, borderColorClass, false);
-                        if (rodapeHtmlString) appendServiceDetailCard(null, rodapeHtmlString, borderColorClass, true);
-
-                        var receita = '';
-                        receita += cabecalhoHtmlString;
-                        receita += conteudoDeltaString;
-                        receita += rodapeHtmlString;
+                        
+                        // Cria container da receita para impressão
+                        const receitaContainer = document.createElement('div');
+                        receitaContainer.id = 'receita-para-impressao';
+                        receitaContainer.className = 'receita-container p-4';
+                        receitaContainer.style.cssText = 'border: 1px solid #ddd; border-radius: 12px; background: #fff;';
+                        
+                        // Cabeçalho
+                        if (cabecalhoHtmlString) {
+                            const cabecalhoDiv = document.createElement('div');
+                            cabecalhoDiv.className = 'receita-cabecalho text-center mb-4 pb-3 border-bottom';
+                            cabecalhoDiv.innerHTML = cabecalhoHtmlString;
+                            receitaContainer.appendChild(cabecalhoDiv);
+                        }
+                        
+                        // Conteúdo
+                        const conteudoDiv = document.createElement('div');
+                        conteudoDiv.className = 'receita-conteudo my-4';
+                        conteudoDiv.style.minHeight = '200px';
+                        receitaContainer.appendChild(conteudoDiv);
+                        
+                        if (conteudoDeltaString) {
+                            const quillDisplay = new Quill(conteudoDiv, {
+                                theme: 'bubble',
+                                readOnly: true,
+                                modules: {toolbar: false}
+                            });
+                            window.currentQuillDisplayEditors.push(quillDisplay);
+                            try {
+                                quillDisplay.setContents(conteudoDeltaString);
+                            } catch(e) {
+                                conteudoDiv.innerHTML = '<p>Conteúdo não disponível.</p>';
+                            }
+                        } else {
+                            conteudoDiv.innerHTML = '<p class="text-muted">Nenhum conteúdo na receita.</p>';
+                        }
+                        
+                        // Rodapé
+                        if (rodapeHtmlString) {
+                            const rodapeDiv = document.createElement('div');
+                            rodapeDiv.className = 'receita-rodape text-center mt-4 pt-3 border-top';
+                            rodapeDiv.innerHTML = rodapeHtmlString;
+                            receitaContainer.appendChild(rodapeDiv);
+                        }
+                        
+                        serviceDetailsContent.appendChild(receitaContainer);
 
                         if (!cabecalhoHtmlString && !conteudoDeltaString && !rodapeHtmlString) {
-                            const cardDiv = document.createElement('div');
-                            cardDiv.className = `service-detail-card ${borderColorClass}`;
-                            cardDiv.innerHTML = `<h6 class="mb-2">Receita Médica - ${resumo}</h6><p class="text-muted mb-3"><small>Emitida em: ${data}</small></p><p>Nenhum detalhe de receita disponível.</p>`;
-                            serviceDetailsContent.appendChild(cardDiv);
+                            receitaContainer.innerHTML = `<div class="text-center p-4"><h6 class="mb-2">Receita Médica</h6><p class="text-muted mb-3"><small>Emitida em: ${data}</small></p><p>Nenhum detalhe de receita disponível.</p></div>`;
                         }
                     } else {
                         const borderColorClass = 'border-secondary';
@@ -1042,14 +1125,15 @@
 
                     if (tipo === 'Receita') {
                         Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html(), 'Imprimir Receita', 'Fechar', 'imprimir-receita');
-                        var conteudoDaReceita = '';
 
-
-                        $(document).on('click', '.imprimir-receita', function () {
-                            // Encontra o conteúdo da receita
-                            var elementoParaImprimir = $(this).closest('.modal-content').find('#service-details-content');
+                        $(document).off('click', '.imprimir-receita').on('click', '.imprimir-receita', function () {
+                            // Encontra o container da receita
+                            var elementoParaImprimir = $(this).closest('.modal-content').find('#receita-para-impressao');
                             if (!elementoParaImprimir.length) {
-
+                                elementoParaImprimir = $(this).closest('.modal-content').find('#service-details-content');
+                            }
+                            if (!elementoParaImprimir.length) {
+                                alert('Não foi possível encontrar o conteúdo da receita.');
                                 return;
                             }
 
@@ -1069,17 +1153,76 @@
 
                             var doc = iframe.contentWindow.document;
 
-                            // Escreve o conteúdo no iframe
+                            // Escreve o conteúdo no iframe com estilos adequados para impressão
                             doc.open();
                             doc.write(`
+                                <!DOCTYPE html>
                                 <html>
                                     <head>
-                                        <title>Impressão de Receita</title>
-                                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+                                        <meta charset="UTF-8">
+                                        <title>Receita Médica Veterinária</title>
                                         <style>
-                                            body { font-family: Arial, sans-serif; margin: 20px; }
+                                            * {
+                                                margin: 0;
+                                                padding: 0;
+                                                box-sizing: border-box;
+                                            }
+                                            body { 
+                                                font-family: 'Times New Roman', Times, serif;
+                                                font-size: 14pt;
+                                                line-height: 1.6;
+                                                padding: 20mm;
+                                                color: #000;
+                                            }
+                                            .receita-container {
+                                                max-width: 100%;
+                                                border: none !important;
+                                                padding: 0 !important;
+                                            }
+                                            .receita-cabecalho {
+                                                text-align: center;
+                                                margin-bottom: 30px;
+                                                padding-bottom: 15px;
+                                                border-bottom: 2px solid #333;
+                                            }
+                                            .receita-cabecalho h1, 
+                                            .receita-cabecalho h2, 
+                                            .receita-cabecalho h3 {
+                                                margin-bottom: 5px;
+                                            }
+                                            .receita-conteudo {
+                                                min-height: 300px;
+                                                margin: 30px 0;
+                                                padding: 20px 0;
+                                            }
+                                            .receita-conteudo .ql-editor {
+                                                padding: 0 !important;
+                                            }
+                                            .receita-conteudo p {
+                                                margin-bottom: 10px;
+                                            }
+                                            .receita-rodape {
+                                                text-align: center;
+                                                margin-top: 50px;
+                                                padding-top: 20px;
+                                                border-top: 1px solid #333;
+                                            }
+                                            /* Remove elementos desnecessários */
+                                            .border, .border-bottom, .border-top {
+                                                border: none !important;
+                                            }
+                                            .p-4, .p-3, .my-4, .mb-4, .mt-4, .pb-3, .pt-3 {
+                                                padding: 0 !important;
+                                                margin: 0 !important;
+                                            }
                                             @media print {
-                                                body { -webkit-print-color-adjust: exact; }
+                                                body { 
+                                                    -webkit-print-color-adjust: exact;
+                                                    print-color-adjust: exact;
+                                                }
+                                                @page {
+                                                    margin: 15mm;
+                                                }
                                             }
                                         </style>
                                     </head>
@@ -1094,7 +1237,6 @@
                             const removerIframe = () => {
                                 if (iframe && iframe.parentNode) {
                                     document.body.removeChild(iframe);
-
                                 }
                             };
 
