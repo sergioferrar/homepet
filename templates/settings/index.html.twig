@@ -21,72 +21,138 @@
     <h3 class="fw-bold mb-4">Configurações do Estabelecimento</h3>
 
     <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-body">
+        <div class="card-body p-0 pb-4">
 
             <!-- NAV TABS -->
-            <ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">
+            <ul class="nav nav-tabs mb-4 gap-1 ps-0 ms-0" id="configTabs" role="tablist">
 
                 <li class="nav-item">
-                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#geral">
+                    <button class="nav-link active d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#geral">
+                        <i class="bi bi-building"></i>
                         Geral
                     </button>
                 </li>
 
                 <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pagamentos">
-                        Pagamentos & Fiscal
+                    <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#pagamentos">
+                        <i class="bi bi-credit-card"></i>
+                        Pagamentos
                     </button>
                 </li>
 
                 <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#emails">
-                        E-mails & Notificações
+                    <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#emails">
+                        <i class="bi bi-envelope"></i>
+                        E-mails
                     </button>
                 </li>
 
                 <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ia">
-                        IA & Automação
+                    <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#ia">
+                        <i class="bi bi-cpu"></i>
+                        Automação
                     </button>
                 </li>
 
                 <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#usuarios">
-                        Usuários & Permissões
+                    <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#usuarios">
+                        <i class="bi bi-people"></i>
+                        Permissões
                     </button>
                 </li>
 
                 <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#marketing">
-                        Marketing & Pixels
+                    <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#marketing">
+                        <i class="bi bi-megaphone"></i>
+                        Marketing
                     </button>
                 </li>
 
                 <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#integracoes">
-                        Integrações & APIs
+                    <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#integracoes">
+                        <i class="bi bi-diagram-3"></i>
+                        Integrações
                     </button>
                 </li>
 
             </ul>
 
+
             <!-- CONTENT -->
-            <div class="tab-content">
+            <div class="tab-content p-4">
 
                 <!-- GERAL -->
                 <div class="tab-pane fade show active" id="geral">
-                    <h5 class="fw-bold mb-3">Informações Gerais</h5>
+
+                    <h5 class="fw-bold mb-3">Informações do Estabelecimento</h5>
 
                     <div class="row">
+
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Nome do Estabelecimento</label>
-                            <input class="form-control">
+                            <label class="form-label">Razão Social</label>
+                            <input class="form-control" name="razaoSocial" value="{{ estabelecimento.razaoSocial }}" required>
                         </div>
+
                         <div class="col-md-6 mb-3">
                             <label class="form-label">CNPJ</label>
-                            <input class="form-control">
+                            <input class="form-control" name="cnpj" value="{{ estabelecimento.cnpj }}" required>
                         </div>
+
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Rua</label>
+                            <input class="form-control" name="rua" value="{{ estabelecimento.rua }}" required>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Número</label>
+                            <input class="form-control" name="numero" value="{{ estabelecimento.numero }}" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Complemento</label>
+                            <input class="form-control" name="complemento" value="{{ estabelecimento.complemento }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Bairro</label>
+                            <input class="form-control" name="bairro" value="{{ estabelecimento.bairro }}" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cidade</label>
+                            <input class="form-control" name="cidade" value="{{ estabelecimento.cidade }}" required>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">País</label>
+                            <input class="form-control" name="pais" value="{{ estabelecimento.pais }}">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">CEP</label>
+                            <input class="form-control" name="cep" value="{{ estabelecimento.cep }}" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status do Estabelecimento</label>
+                            <select class="form-select" name="status" required>
+                                <option {% if estabelecimento.status == 'Ativo' %} selected {% endif %} value="Ativo">Ativo</option>
+                                <option {% if estabelecimento.status == 'Inativo' %} selected {% endif %} value="Inativo">Inativo</option>
+                                <option {% if estabelecimento.status == 'Suspenso' %} selected {% endif %} value="Suspenso">Suspenso</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Plano</label>
+                            <select class="form-select" name="planoId" required>
+                                {% for row in planos %}
+                                    <option {% if estabelecimento.planoId == row.id %} selected {% endif %} value="{{ row.id }}">{{ row.titulo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
                     </div>
+
                 </div>
 
                 <!-- PAGAMENTOS -->
@@ -183,7 +249,7 @@
 
             </div>
 
-            <div class="text-end mt-4">
+            <div class="text-end mt-4 me-4">
                 <button class="btn btn-primary btn-lg">Salvar Configurações</button>
             </div>
 
