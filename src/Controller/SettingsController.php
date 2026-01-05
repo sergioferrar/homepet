@@ -9,15 +9,24 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * @Route("dashboard/")
  */
-class SettingsController extends AbstractController
+class SettingsController extends DefaultController
 {
     /**
      * @Route("settings", name="app_settings")
      */
     public function index(): Response
     {
-        return $this->render('settings/index.html.twig', [
-            'controller_name' => 'SettingsController',
-        ]);
+        $data = [];
+
+        $dadosUsuarioLogado = $this->getRepositorio(\App\Entity\Usuario::class)->findOneBy(['id' => $this->session->get('userId')]);
+        $dadosEstabelecimentoLogado = $this->getRepositorio(\App\Entity\Estabelecimento::class)->findOneBy(['id' => $dadosUsuarioLogado->getId()]);
+        $dadosPlanoLogado = $this->getRepositorio(\App\Entity\Plano::class)->findOneBy(['id' => $dadosEstabelecimentoLogado->getPlanoId()]);
+        $dadosPlanos = $this->getRepositorio(\App\Entity\Plano::class)->findAll();
+        $data['estabelecimento'] = $dadosEstabelecimentoLogado;
+        $data['planoLogado'] = $dadosEstabelecimentoLogado;
+        $data['planos'] = $dadosPlanos;
+        // dd($data);
+
+        return $this->render('settings/index.html.twig', $data);
     }
 }
