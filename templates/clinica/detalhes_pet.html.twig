@@ -979,11 +979,13 @@
                         contentDiv.className = 'service-detail-content';
                         cardDiv.appendChild(contentDiv);
                         serviceDetailsContent.appendChild(cardDiv);
-                        // console.log(JSON.parse(contentData))
+
                         if (contentData) {
                             if (isHtml) {
+
                                 contentDiv.innerHTML = contentData;
                             } else {
+
                                 const quillDisplay = new Quill(contentDiv, {
                                     theme: 'bubble',
                                     readOnly: true,
@@ -991,7 +993,9 @@
                                 });
                                 window.currentQuillDisplayEditors.push(quillDisplay);
                                 try {
-                                    quillDisplay.setContents(JSON.parse(contentData).ops[0]);
+                                    quillDisplay.setContents(contentData.ops[0].insert);
+                                    $('.service-detail-content .ql-editor p').html(contentData.ops[0].insert)
+                                    // $('.service-detail-content').removeClass('ql-disabled');
                                 } catch {
                                     quillDisplay.setText('Conteúdo não disponível ou formato inválido.');
                                 }
@@ -1006,13 +1010,15 @@
                         const borderColorClass = (tipo === 'Consulta') ? 'border-primary' : 'border-success';
                         appendServiceDetailCard(`Atendimento: ${observacoes}`, anamneseDeltaString, borderColorClass);
                     } else if (tipo === 'Receita') {
+
                         const cabecalhoHtmlString = this.dataset.receitaCabecalhoHtml;
-                        const conteudoDeltaString = this.dataset.receitaConteudoDelta;
+
+                        const conteudoDeltaString = JSON.parse(this.dataset.receitaConteudoDelta);
                         const rodapeHtmlString = this.dataset.receitaRodapeHtml;
                         const borderColorClass = 'border-primary';
 
                         if (cabecalhoHtmlString) appendServiceDetailCard(null, cabecalhoHtmlString, borderColorClass, true);
-                        if (conteudoDeltaString) appendServiceDetailCard(null, conteudoDeltaString, borderColorClass);
+                        if (conteudoDeltaString) appendServiceDetailCard(null, conteudoDeltaString, borderColorClass, false);
                         if (rodapeHtmlString) appendServiceDetailCard(null, rodapeHtmlString, borderColorClass, true);
 
                         var receita = '';
@@ -1037,13 +1043,13 @@
                     if (tipo === 'Receita') {
                         Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html(), 'Imprimir Receita', 'Fechar', 'imprimir-receita');
                         var conteudoDaReceita = '';
-                        console.log(serviceDisplayContainer.html());
+
 
                         $(document).on('click', '.imprimir-receita', function () {
                             // Encontra o conteúdo da receita
                             var elementoParaImprimir = $(this).closest('.modal-content').find('#service-details-content');
                             if (!elementoParaImprimir.length) {
-                                console.warn('Elemento não encontrado para impressão.');
+
                                 return;
                             }
 
@@ -1088,7 +1094,7 @@
                             const removerIframe = () => {
                                 if (iframe && iframe.parentNode) {
                                     document.body.removeChild(iframe);
-                                    console.log('🧹 Iframe de impressão removido.');
+
                                 }
                             };
 
@@ -1223,8 +1229,7 @@
             });
 
             $(document).on('change', '#servico-descricao', function () {
-                console.log($(this))
-                // console.log($(this).find('option:selected').data('valor'))
+
                 const nomeServico = $(this).val();
 
                 $(document).next('input[name="valor[]"]').val($(this).find('option:selected').data('valor'));
