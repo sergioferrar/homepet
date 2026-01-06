@@ -34,22 +34,14 @@
 
                         <!-- Botões -->
                         <div class="d-grid gap-2">
-                            <button onclick="voltarLogin()" class="btn btn-primary btn-lg">
+                            <a hrf="{{ url('app_login') }}" class="btn btn-primary btn-lg">
                                 <i class="bi bi-arrow-left me-1"></i>Voltar ao Login
-                            </button>
+                            </a>
 
                             <a href="mailto:suporte@systemhomepet.com" class="btn btn-outline-secondary">
                                 <i class="bi bi-envelope me-2"></i>Precisa de Ajuda?
                             </a>
                         </div>
-
-                        <script>
-                            function voltarLogin() {
-                                // Pega a URL base atual
-                                const baseUrl = window.location.origin + window.location.pathname.split('/login')[0];
-                                window.location.href = baseUrl + '/login';
-                            }
-                        </script>
 
                         <!-- Rodapé -->
                         <div class="mt-4 pt-4 border-top">

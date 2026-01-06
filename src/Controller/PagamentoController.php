@@ -11,9 +11,7 @@ use MercadoPago\Client\Common\RequestOptions;
 use MercadoPago\MercadoPagoConfig;
 use App\Service\Payment\MercadoPagoService;
 
-/**
- * @Route("dashboard/")
- */
+
 class PagamentoController extends DefaultController
 {
 

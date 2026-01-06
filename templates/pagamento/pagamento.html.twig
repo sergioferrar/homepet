@@ -111,77 +111,91 @@
     <!-- Pricing Section -->
     <section id="pricing" class="pricing section container-fluid">
 
-        <!-- Section Title -->
-        <div class="container section-title mt-4 mb-3" data-aos="fade-up">
-            <h2>Finalizar Pagamento</h2>
-        </div><!-- End Section Title -->
+    <div class="container section-title mt-4 mb-3" data-aos="fade-up">
+        <h2><i class="bi bi-shield-lock me-2"></i>Finalizar Pagamento</h2>
+        <p class="text-muted">Ambiente seguro e criptografado</p>
+    </div>
 
-        <div class="container" data-aos="fade-up" data-aos-delay="100">
+    <div class="container" data-aos="fade-up" data-aos-delay="100">
 
-            <div class="checkout-container col-md-6">
+        <div class="checkout-container col-md-6 mx-auto card shadow-sm border-0 p-4">
 
-                <div class="alert alert-info mb-3">
-                    <strong>💳 Formas de pagamento aceitas:</strong><br>
-                    • <strong>PIX:</strong> Aprovação instantânea<br>
-                    • <strong>Cartão de Crédito:</strong> Apenas crédito (débito não é aceito para pagamentos online)
+            <div class="alert alert-info d-flex align-items-start gap-2 mb-4">
+                <i class="bi bi-info-circle-fill fs-4"></i>
+                <div>
+                    <strong>Formas de pagamento aceitas:</strong><br>
+                    <i class="bi bi-qr-code me-1"></i> PIX — Aprovação instantânea<br>
+                    <i class="bi bi-credit-card-2-front me-1"></i> Cartão de Crédito — Apenas crédito
                 </div>
-
-                <label for="paymentType">Selecione a forma de pagamento:</label>
-                <select id="paymentType" class="form-select">
-                    <option value="">-- Escolha --</option>
-                    <option value="pix">PIX (Recomendado - Instantâneo)</option>
-                    <option value="card">Cartão de Crédito</option>
-                </select>
-                <!-- Área dinâmica -->
-                <div class="area-pix" style="display: none;">
-                    <form id="form-checkout" action="{{ url('pagar_com_pix') }}" method="post">
-                        <div>
-                            <div>
-                                <label for="payerFirstName">Nome</label>
-                                <input class="form-control" id="form-checkout__payerFirstName" name="payerFirstName"
-                                       type="text">
-                            </div>
-                            <div>
-                                <label for="payerLastName">Sobrenome</label>
-                                <input class="form-control" id="form-checkout__payerLastName" name="payerLastName"
-                                       type="text">
-                            </div>
-                            <div>
-                                <label for="email">E-mail</label>
-                                <input class="form-control" id="form-checkout__email" name="email" type="text">
-                            </div>
-                            <div>
-                                <label for="identificationType">Documento</label>
-                                <select class="form-select" id="form-checkout__identificationType"
-                                        name="identificationType" type="text">
-                                    <option value="cpf">CPF</option>
-                                    <option value="cnpj">CNPJ</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="identificationNumber">Número do documento</label>
-                                <input class="form-control" id="form-checkout__identificationNumber"
-                                       name="identificationNumber" type="text">
-                            </div>
-                        </div>
-                        <div>
-                            <div>
-                                <input type="hidden" name="transactionAmount" id="transactionAmount"
-                                       value="{{ price }}">
-                                <input type="hidden" name="description" id="description" value="{{ title }}">
-                                <br>
-                                <button type="submit" class="btn btn-outline-success">Efetuar pagamento</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div id="payment-form" class="payment-method col-md-12 pt-4"></div>
-                <div id="status"></div>
             </div>
-        </div>
-        </div>
 
-    </section><!-- /Pricing Section -->
+            <label class="form-label fw-semibold">
+                <i class="bi bi-wallet2 me-1"></i>Selecione a forma de pagamento
+            </label>
+
+            <select id="paymentType" class="form-select mb-4">
+                <option value="">-- Escolha --</option>
+                <option value="pix">PIX (Recomendado - Instantâneo)</option>
+                <option value="card">Cartão de Crédito</option>
+            </select>
+
+            <!-- Área PIX -->
+            <div class="area-pix" style="display: none;">
+
+                <h5 class="mb-3">
+                    <i class="bi bi-qr-code-scan me-2"></i>Pagamento via PIX
+                </h5>
+
+                <form id="form-checkout" action="{{ url('pagar_com_pix') }}" method="post" class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Nome</label>
+                        <input class="form-control" id="form-checkout__payerFirstName" name="payerFirstName" type="text">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Sobrenome</label>
+                        <input class="form-control" id="form-checkout__payerLastName" name="payerLastName" type="text">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">E-mail</label>
+                        <input class="form-control" id="form-checkout__email" name="email" type="text">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Documento</label>
+                        <select class="form-select" id="form-checkout__identificationType" name="identificationType">
+                            <option value="cpf">CPF</option>
+                            <option value="cnpj">CNPJ</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label">Número do documento</label>
+                        <input class="form-control" id="form-checkout__identificationNumber" name="identificationNumber" type="text">
+                    </div>
+
+                    <input type="hidden" name="transactionAmount" id="transactionAmount" value="{{ price }}">
+                    <input type="hidden" name="description" id="description" value="{{ title }}">
+
+                    <div class="col-12 d-grid mt-3">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-lock-fill me-2"></i>Efetuar Pagamento com Segurança
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+            <div id="payment-form" class="payment-method col-md-12 pt-4"></div>
+            <div id="status"></div>
+
+        </div>
+    </div>
+
+</section>
+
 
 
 </main>

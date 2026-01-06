@@ -6,7 +6,7 @@ use App\Entity\Estabelecimento;
 use App\Entity\Usuario;
 use App\Service\DatabaseBkp;
 use App\Service\EmailService;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Service\Payment\MercadoPagoService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -186,7 +186,7 @@ class LandingpageController extends DefaultController
     }
 
     /**
-     * @Route("/assinatura/confirmacao/cadastro/{estabelecimento}", name="confirma_cadastro")
+     * @Route("/assinatura/pagamento/efetuar/{estabelecimento}", name="confirma_cadastro")
      */
     public function confirmacaoCadastro(Request $request, MercadoPagoService $mercadoPagoService): Response
     {

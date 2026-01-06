@@ -63,7 +63,7 @@ class LoginController extends DefaultController
     /**
      * @Route("/valida-login", name="app_login_valida")
      */
-    public function index(Request $request): Response
+    public function index(EmailService $emailService, Request $request): Response
     {
         if (!$this->security->getUser()) {
             $request->getSession()->invalidate();
@@ -86,8 +86,21 @@ class LoginController extends DefaultController
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
             ->findById($this->security->getUser()->getPetshopId())[0];
 
-        // Verifica se o estabelecimento está ativo (pagamento confirmado)
-        if ($estabelecimento->getStatus() === 'Inativo') {
+            // Verifica se o estabelecimento está ativo (pagamento confirmado)
+        if ($estabelecimento->getStatus() === 'Inativo') {                
+
+            $confirmationUrl = $this->generateUrl('confirma_cadastro', ['estabelecimento' => $this->security->getUser()->getPetshopId()],UrlGeneratorInterface::ABSOLUTE_URL);
+
+            $html = $this->render('landingpage/efetuarpagamento.html.twig', [
+                'payment_link' => $confirmationUrl,
+            ])->getContent();
+
+            $emailService->sendEmail(
+                $this->security->getUser()->getEmail(),
+                'Renovar sua assinatura no System Home Pet',
+                $html
+            );
+            
             $request->getSession()->invalidate();
             return $this->redirectToRoute('app_login_pagamento_pendente');
         }
