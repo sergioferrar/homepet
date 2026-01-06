@@ -194,12 +194,24 @@
             transition: left 0.3s ease;
         }
 
-        /* Texto branco na navbar */
+        /* Texto branco na navbar - FORÇADO */
         .header .logo span,
         .header #page-title,
         .header .search-form input,
-        .header .nav-link {
+        .header .nav-link,
+        .header .toggle-sidebar-btn,
+        .header .nav-icon,
+        .header .nav-profile,
+        .header .nav-profile span,
+        .header .search-form button i {
             color: white !important;
+        }
+        
+        /* Logo sempre visível */
+        .header .logo span {
+            display: block !important;
+            font-size: 18px !important;
+            font-weight: 700 !important;
         }
 
         .header .search-form input::placeholder {

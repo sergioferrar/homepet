@@ -167,6 +167,27 @@ class FinanceiroController extends DefaultController
     }
 
     /**
+     * @Route("/pendente/deletar/{id}", name="financeiro_deletar_pendente", methods={"POST"})
+     */
+    public function deletarPendente(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
+    {
+        $this->switchDB();
+        $baseId = $this->session->get('userId');
+
+        $financeiroPendente = $financeiroPendenteRepository->findPendenteById($baseId, $id);
+
+        if (!$financeiroPendente) {
+            throw $this->createNotFoundException('Registro financeiro pendente não encontrado.');
+        }
+
+        $financeiroPendenteRepository->deletePendente($baseId, $id);
+
+        $this->addFlash('success', 'Registro pendente excluído com sucesso.');
+
+        return $this->redirectToRoute('financeiro_index', ['aba' => 'pendente']);
+    }
+
+    /**
      * @Route("/relatorio/export", name="financeiro_relatorio_export")
      */
     public function exportRelatorioExcel(Request $request, FinanceiroRepository $financeiroRepo): Response

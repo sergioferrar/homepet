@@ -120,13 +120,13 @@ class MenuController extends DefaultController
             $modulo[] = $this->getRepositorio(\App\Entity\Modulo::class)->findOneBy(['descricao' => $row])->getId();
         }
 
-        $listaMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => null]);
+        $listaMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => null], ['ordem' => 'ASC']);
         
         foreach ($listaMenu as $menu) {
             $dataS = [];
 
             if (in_array($menu->getModulo(), $modulo)) {
-                $listaSubMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => $menu->getId()]);
+                $listaSubMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => $menu->getId()], ['ordem' => 'ASC']);
                 if ($listaSubMenu) {
                     foreach ($listaSubMenu as $submenu) {
                         $dataS[] = $submenu;
