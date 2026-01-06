@@ -89,8 +89,9 @@ class EstabelecimentoRepository extends ServiceEntityRepository
 
     public function aprovacao($baseId, $eid)
     {
+        $data = date('Y-m-d H:i:s', strtotime('+1month'));
         $sql = "UPDATE estabelecimento 
-            SET status = 'Ativo'
+            SET status = 'Ativo', dataPlanoFim = '$data'
             WHERE id='$eid'";
 
         $this->conn->executeQuery($sql);
