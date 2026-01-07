@@ -3,58 +3,62 @@
 {% block title %}Pagamento Pendente{% endblock %}
 
 {% block body %}
-    <div class="container">
-        <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
-            <div class="col-md-6">
-                <div class="card shadow-lg border-0">
-                    <div class="card-body text-center p-5">
-                        <!-- Ícone -->
-                        <div class="mb-4">
-                            <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 5rem;"></i>
-                        </div>
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 85vh;">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-body text-center p-5">
 
-                        <!-- Título -->
-                        <h2 class="mb-3 text-dark">Pagamento Pendente</h2>
-
-                        <!-- Mensagem -->
-                        <p class="text-muted mb-4" style="font-size: 1.1rem;">
-                            Seu cadastro está aguardando a confirmação do pagamento.<br>
-                            Por favor, complete o pagamento para acessar o sistema.
-                        </p>
-
-                        <!-- Informações -->
-                        <div class="alert alert-info text-start mb-4">
-                            <strong><i class="bi bi-info-circle me-2"></i>Como proceder:</strong>
-                            <ul class="mt-2 mb-0">
-                                <li>Verifique seu e-mail para o link de pagamento</li>
-                                <li>Complete o pagamento via PIX ou Cartão</li>
-                                <li>Após a confirmação, você poderá fazer login</li>
-                            </ul>
-                        </div>
-
-                        <!-- Botões -->
-                        <div class="d-grid gap-2">
-                            <a hrf="{{ url('app_login') }}" class="btn btn-primary btn-lg">
-                                <i class="bi bi-arrow-left me-1"></i>Voltar ao Login
-                            </a>
-
-                            <a href="mailto:suporte@systemhomepet.com" class="btn btn-outline-secondary">
-                                <i class="bi bi-envelope me-2"></i>Precisa de Ajuda?
-                            </a>
-                        </div>
-
-                        <!-- Rodapé -->
-                        <div class="mt-4 pt-4 border-top">
-                            <small class="text-muted">
-                                <i class="bi bi-shield-check me-1"></i>
-                                Seus dados estão seguros e protegidos
-                            </small>
-                        </div>
+                    <!-- Ícone -->
+                    <div class="mb-4">
+                        <i class="bi bi-clock-history text-warning" style="font-size: 4.5rem;"></i>
                     </div>
+
+                    <!-- Título -->
+                    <h2 class="fw-bold mb-2">Assinatura Expirada</h2>
+
+                    <!-- Mensagem principal -->
+                    <p class="text-muted mb-4 fs-5">
+                        Sua assinatura não está ativa no momento.<br>
+                        Renove seu plano para continuar utilizando o sistema sem interrupções.
+                    </p>
+
+                    <!-- Caixa de instruções -->
+                    <div class="alert alert-info text-start rounded-3 mb-4">
+                        <strong class="d-block mb-2">
+                            <i class="bi bi-info-circle me-2"></i>Como regularizar seu acesso
+                        </strong>
+                        <ul class="mb-0 ps-3">
+                            <li>Verifique seu e-mail para acessar o link de pagamento</li>
+                            <li>Finalize o pagamento via <strong>PIX</strong> ou <strong>Cartão</strong></li>
+                            <li>Após a confirmação, seu acesso será liberado automaticamente</li>
+                        </ul>
+                    </div>
+
+                    <!-- Ações -->
+                    <div class="d-grid gap-3">
+                        <a href="{{ link }}"
+                           class="btn btn-primary btn-lg rounded-pill">
+                            <i class="bi bi-arrow-repeat me-2"></i>Renovar assinatura
+                        </a>
+
+                        <a href="mailto:suporte@systemhomepet.com" class="btn btn-outline-secondary rounded-pill">
+                            <i class="bi bi-headset me-2"></i>Falar com o suporte
+                        </a>
+                    </div>
+
+                    <!-- Rodapé -->
+                    <div class="mt-5 pt-3 border-top small text-muted">
+                        <i class="bi bi-shield-lock me-1"></i>
+                        Seus dados permanecem seguros e protegidos
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
+</div>
+
 
     <style>
         body {

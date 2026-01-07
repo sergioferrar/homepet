@@ -32,6 +32,15 @@ class LoginController extends DefaultController
             return $this->redirectToRoute('app_login');
         }
 
+        if ($request->get('success') && !empty($request->get('success'))) {
+            $success = ucfirst(implode(' ', explode('-', $request->get('success'))));
+
+            $this->addFlash('message', $success);
+
+            // para remover a queryString de erro e exibir a mensagem apenas 1 única vez deve-se ter o redirecionamento para ela mesma
+            return $this->redirectToRoute('app_login');
+        }
+
         if ($this->security->getUser()) {
             return $this->redirectToRoute('app_login_valida');
         }
@@ -102,7 +111,7 @@ class LoginController extends DefaultController
             );
             
             $request->getSession()->invalidate();
-            return $this->redirectToRoute('app_login_pagamento_pendente');
+            return $this->redirectToRoute('app_login_pagamento_pendente', ['link' => base64_encode($confirmationUrl)]);
         }
 
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
@@ -130,9 +139,10 @@ class LoginController extends DefaultController
     /**
      * @Route("/login/pagamento-pendente", name="app_login_pagamento_pendente")
      */
-    public function pagamentoPendente(): Response
+    public function pagamentoPendente(Request $request): Response
     {
-        return $this->render('login/pagamento_pendente.html.twig');
+        
+        return $this->render('login/pagamento_pendente.html.twig',['link' => base64_decode($request->get('link'))]);
     }
 
     /**
