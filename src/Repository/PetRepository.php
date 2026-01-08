@@ -28,7 +28,7 @@ class PetRepository extends ServiceEntityRepository
     public function findPetById($baseId, $petId): ?array
     {
         $sql = "SELECT p.id, p.nome, p.especie, p.sexo, p.raca, p.porte, p.idade, 
-                    p.observacoes, p.peso, p.castrado,
+                    p.observacoes, p.peso, p.castrado, p.data_nascimento as dataNascimento,
                     c.id AS dono_id,
                     c.nome AS dono_nome,
                     c.telefone AS dono_telefone,
@@ -58,7 +58,7 @@ class PetRepository extends ServiceEntityRepository
 
     public function findAllPets($baseId): array
     {
-        $sql = "SELECT p.id, CONCAT(p.nome, ' - ', c.nome) AS nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.observacoes, c.nome as dono_nome
+        $sql = "SELECT p.id, CONCAT(p.nome, ' - ', c.nome) AS nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.data_nascimento, p.observacoes, c.nome as dono_nome
                 FROM {$_ENV['DBNAMETENANT']}.pet p
                 JOIN {$_ENV['DBNAMETENANT']}.cliente c ON (p.dono_id = c.id)
                 WHERE p.estabelecimento_id = '{$baseId}'";
@@ -87,8 +87,8 @@ class PetRepository extends ServiceEntityRepository
     public function save($baseId, Pet $pet): void
     {
         $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.pet 
-                (estabelecimento_id, nome, especie, sexo, raca, porte, idade, observacoes, dono_id, peso, castrado) 
-                VALUES (:estabelecimento_id, :nome, :especie, :sexo, :raca, :porte, :idade, :observacoes, :dono_id, :peso, :castrado)";
+                (estabelecimento_id, nome, especie, sexo, raca, porte, idade, observacoes, dono_id, peso, castrado, data_nascimento) 
+                VALUES (:estabelecimento_id, :nome, :especie, :sexo, :raca, :porte, :idade, :observacoes, :dono_id, :peso, :castrado, :data_nascimento)";
         
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('estabelecimento_id', $baseId);
@@ -102,6 +102,7 @@ class PetRepository extends ServiceEntityRepository
         $stmt->bindValue('dono_id', $pet->getDono_Id());
         $stmt->bindValue('peso', $pet->getPeso());
         $stmt->bindValue('castrado', $pet->getCastrado() === '' ? 0 : (int)$pet->getCastrado());
+        $stmt->bindValue('data_nascimento', $pet->getDataNascimento() ? $pet->getDataNascimento()->format('Y-m-d') : null);
         $stmt->execute();
     }
 
@@ -111,7 +112,7 @@ class PetRepository extends ServiceEntityRepository
         $sql = "UPDATE {$_ENV['DBNAMETENANT']}.pet 
                 SET nome = :nome, especie = :especie, sexo = :sexo, raca = :raca, porte = :porte, 
                     idade = :idade, observacoes = :observacoes, dono_id = :dono_id, 
-                    peso = :peso, castrado = :castrado
+                    peso = :peso, castrado = :castrado, data_nascimento = :data_nascimento
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
         $stmt = $this->conn->prepare($sql);
@@ -125,6 +126,7 @@ class PetRepository extends ServiceEntityRepository
         $stmt->bindValue('dono_id', $pet->getDono_Id());
         $stmt->bindValue('peso', $pet->getPeso());
         $stmt->bindValue('castrado', $pet->getCastrado() === '' ? 0 : (int)$pet->getCastrado());
+        $stmt->bindValue('data_nascimento', $pet->getDataNascimento() ? $pet->getDataNascimento()->format('Y-m-d') : null);
         $stmt->bindValue('baseId', $baseId);
         $stmt->bindValue('id', $pet->getId());
         $stmt->execute();

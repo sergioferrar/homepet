@@ -45,11 +45,16 @@ class PetController extends DefaultController
                 ->setSexo($request->get('sexo'))
                 ->setRaca($request->get('raca'))
                 ->setPorte($request->get('porte'))
-                ->setIdade((int)$request->get('idade'))
                 ->setObservacoes($request->get('observacoes'))
-                ->setPeso($request->get('peso') ? (float)$request->get('peso') : null) // <-- peso
-                ->setCastrado($request->get('castrado') === '1') // <-- castrado
+                ->setPeso($request->get('peso') ? (float)$request->get('peso') : null)
+                ->setCastrado($request->get('castrado') === '1')
                 ->setDono_Id($donoId);
+
+            // Data de nascimento
+            $dataNascimento = $request->get('data_nascimento');
+            if ($dataNascimento) {
+                $pet->setDataNascimento(new \DateTime($dataNascimento));
+            }
 
             $this->getRepositorio(Pet::class)->save($this->session->get('userId'), $pet);
 
@@ -151,9 +156,14 @@ class PetController extends DefaultController
                 ->setSexo($request->get('sexo') ?? '')
                 ->setRaca($request->get('raca') ?? '')
                 ->setPorte($request->get('porte') ?? '')
-                ->setIdade($request->get('idade') ?? 0)
                 ->setObservacoes($request->get('observacoes') ?? '')
                 ->setDono_Id($donoId);
+
+            // Data de nascimento
+            $dataNascimento = $request->get('data_nascimento');
+            if ($dataNascimento) {
+                $pets->setDataNascimento(new \DateTime($dataNascimento));
+            }
 
             $this->getRepositorio(Pet::class)->update($this->session->get('userId'), $pets);
             return $this->redirectToRoute('pet_index');

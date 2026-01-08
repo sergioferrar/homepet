@@ -61,6 +61,7 @@ class AppExtension extends AbstractExtension
             new TwigFilter('sexo', [$this, 'sexo']),
             new TwigFilter('mes_br', [$this, 'mes_br']),
             new TwigFilter('metodoPagamento', [$this, 'metodoPagamento']),
+            new TwigFilter('idadeFormatada', [$this, 'idadeFormatada']),
         ];
     }
 
@@ -116,6 +117,38 @@ class AppExtension extends AbstractExtension
                 // code...
             break;
         }
+    }
+
+    public function idadeFormatada($dataNascimento)
+    {
+        if (!$dataNascimento) {
+            return 'Não informada';
+        }
+        
+        if (is_string($dataNascimento)) {
+            $dataNascimento = new \DateTime($dataNascimento);
+        }
+        
+        $hoje = new \DateTime();
+        $diff = $hoje->diff($dataNascimento);
+        
+        $anos = $diff->y;
+        $meses = $diff->m;
+        
+        if ($anos === 0 && $meses === 0) {
+            $dias = $diff->d;
+            return $dias . ' dia(s)';
+        }
+        
+        if ($anos === 0) {
+            return $meses . ' mês(es)';
+        }
+        
+        if ($meses === 0) {
+            return $anos . ' ano(s)';
+        }
+        
+        return $anos . ' ano(s) e ' . $meses . ' mês(es)';
     }
 
     public function especie($string)

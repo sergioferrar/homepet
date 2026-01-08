@@ -82,7 +82,7 @@
                                 <small class="text-muted fw-normal">({{ pet.id }})</small></td>
                             <td>{{ pet.raca }}</td>
                             <td>{{ pet.sexo }}</td>
-                            <td>{{ pet.idade }} anos</td>
+                            <td>{{ pet.dataNascimento ? pet.dataNascimento|idadeFormatada : 'Não informada' }}</td>
                             <td>{{ pet.peso }} KG</td>
                             <td>
                             <span class="p-2 badge {% if pet.castrado == 1 %} text-bg-success {% else %} text-bg-danger {% endif %}">

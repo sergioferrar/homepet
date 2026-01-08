@@ -24,6 +24,9 @@ class Pet
     /** @ORM\Column(type="integer", nullable=true) */
     private $idade;
 
+    /** @ORM\Column(type="date", nullable=true) */
+    private $dataNascimento;
+
     /** @ORM\Column(type="string", length=255, nullable=true) */
     private $sexo;
 
@@ -61,6 +64,41 @@ class Pet
 
     public function getIdade(): ?int { return $this->idade; }
     public function setIdade(?int $idade): self { $this->idade = $idade; return $this; }
+
+    public function getDataNascimento(): ?\DateTimeInterface { return $this->dataNascimento; }
+    public function setDataNascimento(?\DateTimeInterface $dataNascimento): self { $this->dataNascimento = $dataNascimento; return $this; }
+
+    /**
+     * Calcula a idade formatada baseada na data de nascimento
+     * Retorna string como "2 anos", "6 meses", "2 anos e 3 meses"
+     */
+    public function getIdadeFormatada(): ?string
+    {
+        if (!$this->dataNascimento) {
+            return $this->idade ? $this->idade . ' ano(s)' : null;
+        }
+        
+        $hoje = new \DateTime();
+        $diff = $hoje->diff($this->dataNascimento);
+        
+        $anos = $diff->y;
+        $meses = $diff->m;
+        
+        if ($anos === 0 && $meses === 0) {
+            $dias = $diff->d;
+            return $dias . ' dia(s)';
+        }
+        
+        if ($anos === 0) {
+            return $meses . ' mês(es)';
+        }
+        
+        if ($meses === 0) {
+            return $anos . ' ano(s)';
+        }
+        
+        return $anos . ' ano(s) e ' . $meses . ' mês(es)';
+    }
 
     public function getSexo(): ?string { return $this->sexo; }
     public function setSexo(?string $sexo): self { $this->sexo = $sexo; return $this; }

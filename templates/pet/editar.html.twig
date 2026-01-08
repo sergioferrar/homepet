@@ -65,9 +65,10 @@
                 </select>
             </div>
             <div class="col-md-6 mb-3">
-                <label for="idade" class="form-label">Idade</label>
-                <input type="number" class="form-control" id="idade" name="idade" value="{{ pet.idade|default('') }}"
-                       required>
+                <label for="data_nascimento" class="form-label">Data de Nascimento</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento"
+                       value="{{ pet.dataNascimento is defined and pet.dataNascimento ? pet.dataNascimento|date('Y-m-d') : '' }}">
+                <small class="text-muted" id="idade_calculada"></small>
             </div>
         </div>
 
@@ -108,4 +109,53 @@
             <button type="submit" class="btn btn-success w-50">Salvar</button>
         </div>
     </form>
+{% endblock %}
+
+{% block form_javascripts %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var dataNascimentoInput = document.getElementById("data_nascimento");
+            var idadeCalculada = document.getElementById("idade_calculada");
+            
+            function calcularIdade() {
+                var dataNascimento = dataNascimentoInput.value;
+                if (!dataNascimento) {
+                    idadeCalculada.textContent = "";
+                    return;
+                }
+                
+                var nascimento = new Date(dataNascimento);
+                var hoje = new Date();
+                
+                var anos = hoje.getFullYear() - nascimento.getFullYear();
+                var meses = hoje.getMonth() - nascimento.getMonth();
+                
+                if (meses < 0 || (meses === 0 && hoje.getDate() < nascimento.getDate())) {
+                    anos--;
+                    meses += 12;
+                }
+                if (hoje.getDate() < nascimento.getDate()) {
+                    meses--;
+                    if (meses < 0) meses += 12;
+                }
+                
+                var texto = "";
+                if (anos === 0 && meses === 0) {
+                    var dias = Math.floor((hoje - nascimento) / (1000 * 60 * 60 * 24));
+                    texto = dias + " dia(s)";
+                } else if (anos === 0) {
+                    texto = meses + " mês(es)";
+                } else if (meses === 0) {
+                    texto = anos + " ano(s)";
+                } else {
+                    texto = anos + " ano(s) e " + meses + " mês(es)";
+                }
+                
+                idadeCalculada.textContent = "Idade: " + texto;
+            }
+            
+            dataNascimentoInput.addEventListener("change", calcularIdade);
+            calcularIdade();
+        });
+    </script>
 {% endblock %}

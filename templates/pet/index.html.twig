@@ -58,7 +58,7 @@
                                             <span><b>Raça:</b> {{ pet.raca }}</span>
                                             <span>{{ pet.sexo }}</span>
                                             <span><b>Porte:</b> {{ pet.porte }}</span>
-                                            <span><b>Idade:</b> {{ pet.idade }} anos</span>
+                                            <span><b>Idade:</b> {{ pet.data_nascimento ? pet.data_nascimento|idadeFormatada : 'Não informada' }}</span>
                                         </div>
 
                                         <div class="mt-2">
