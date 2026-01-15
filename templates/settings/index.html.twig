@@ -160,6 +160,30 @@
                     <h5 class="fw-bold mb-3">Gateways de Pagamento & Emissão Fiscal</h5>
 
                     <div class="row">
+                        <label class="card me-2" style="width: 18rem;">
+                            <input type="radio" class="form-check-input mt-3" name="type_gateway" value="MERCADO_PAGO">
+                            <img src="{{ asset('images/mp_logo.png') }}" class="card-img-top" alt="Logo Mercado Pago">
+                            <div class="card-body">
+                                <h5 class="card-title">Mercado Pago</h5>
+                            </div>
+                            <div class="card-body">
+                                <a href="https://www.mercadopago.com.br/developers/panel/app" target="_blank" class="btn btn-sm btn-primary w-100">Obter credenciais</a>
+                            </div>
+                        </label>
+
+                        <label class="card" style="width: 18rem;">
+                            <input type="radio" class="form-check-input mt-3" name="type_gateway" value="PAG_SEGURO">
+                            <img src="https://1000logos.net/wp-content/uploads/2022/09/PagSeguro-Logo.jpg" class="card-img-top" alt="Logo Mercado Pago">
+                            <div class="card-body">
+                                <h5 class="card-title">Pag Seguro</h5>
+                            </div>
+                            <div class="card-body">
+                                <a href="https://developer.pagbank.com.br/v1/reference/autenticacao" target="_blank" class="card-link">Obter credenciais</a>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Chave PagSeguro</label>
                             <input class="form-control">

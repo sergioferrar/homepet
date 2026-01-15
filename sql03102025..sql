@@ -45,3 +45,14 @@ ADD COLUMN `aliquota_ipi` DOUBLE NULL DEFAULT NULL AFTER `aliquota_cofins`,
 ADD COLUMN `aliquota_iss` DOUBLE NULL DEFAULT NULL AFTER `aliquota_ipi`,
 ADD COLUMN `aliquota_ibs` DOUBLE NULL DEFAULT NULL AFTER `aliquota_iss`,
 ADD COLUMN `aliquota_cbs` DOUBLE NULL DEFAULT NULL AFTER `aliquota_ibs`;
+
+CREATE TABLE `homepet_login`.`config` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `estabelecimento_id` INT NOT NULL,
+  `chave` VARCHAR(255) NULL,
+  `valor` TEXT NULL,
+  `tipo` VARCHAR(255) NULL,
+  `observacao` TEXT NULL,
+  PRIMARY KEY (`id`),
+);
+
