@@ -266,7 +266,7 @@
             petSelect.innerHTML = '<option value="">Carregando pets...</option>';
             petSelect.disabled = true;
 
-            fetch(`/orcamento/api/cliente/${clienteId}/pets`)
+            fetch(`${$('meta[name="base"]').attr('content')}/orcamento/api/cliente/${clienteId}/pets`)
                 .then(r => {
                     console.log('Resposta recebida:', r);
                     return r.json();

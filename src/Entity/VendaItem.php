@@ -36,6 +36,11 @@ class VendaItem
     /** @ORM\Column(type="decimal", precision=10, scale=2) */
     private $subtotal;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $tipo;
+
     // --- Getters e Setters ---
 
     public function getId(): ?int { return $this->id; }
@@ -54,4 +59,16 @@ class VendaItem
 
     public function getSubtotal(): ?float { return (float)$this->subtotal; }
     public function setSubtotal(float $subtotal): self { $this->subtotal = $subtotal; return $this; }
+
+    public function getTipo(): ?string
+    {
+        return $this->tipo;
+    }
+
+    public function setTipo(string $tipo): self
+    {
+        $this->tipo = $tipo;
+
+        return $this;
+    }
 }

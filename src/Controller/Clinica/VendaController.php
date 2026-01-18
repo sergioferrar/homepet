@@ -14,6 +14,8 @@ use App\Entity\Medicamento;
 use App\Entity\Pet;
 use App\Entity\Servico;
 use App\Entity\Vacina;
+use App\Entity\Venda;
+use App\Entity\VendaItem;
 use App\Entity\Veterinario;
 use App\Repository\ConsultaRepository;
 use App\Repository\DocumentoModeloRepository;
@@ -40,123 +42,91 @@ class VendaController extends DefaultController
     /**
      * @Route("/pet/{petId}/venda/concluir", name="clinica_concluir_venda", methods={"POST"})
      */
-    public function concluirVenda(Request $request, int $petId, EntityManagerInterface $entityManager): JsonResponse
+    public function concluirVenda(Request $request, int $petId, EntityManagerInterface $em): JsonResponse
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        // --- Pegando todos os campos do POST
-        $servicoId = $request->get('servico_id');
-        $descricao = $request->get('descricao');
-        $data = $request->get('data') ? new \DateTime($request->get('data')) : new \DateTime();
-        $observacao = $request->get('observacao');
+        $pet = $this->getRepositorio(\App\Entity\Pet::class)->find($request->get('pet_id'));
+
         $metodoPagamento = $request->get('metodo_pagamento');
+        $origem = 'clinica';
 
-        // --- Se vier ID do serviço, busca o valor oficial no banco (anti-gambiarra)
-        if ($servicoId) {
-            $servico = $entityManager->getRepository(Servico::class)->find($servicoId);
-            if (!$servico) {
-                return $this->json(['status' => 'error', 'mensagem' => 'Serviço não encontrado!'], 404);
-            }
-            $descricao = $servico->getNome();
-            $valor = (float)$servico->getValor();
-        }
+        // 1️⃣ Cria a VENDA
+        $venda = new Venda();
+        $venda->setEstabelecimentoId($baseId);
+        $venda->setCliente($pet->getDono_Id());
+        $venda->setPetId($request->get('pet_id'));
+        $venda->setParcelas($request->get('parcelas'));
+        $venda->setOrigem($origem);
+        $venda->setMetodoPagamento($metodoPagamento);
+        $venda->setStatus($metodoPagamento === 'pendente' ? 'Pendente' : 'Aberta');
 
+        $em->persist($venda);
 
-        $valorFinal = 0;
-        $descontoFinal = 0;
-        $descricaoFinal = '';
-
-
+        // 2️⃣ Processa itens
         $descricoes = (array)$request->get('descricao', []);
         $descontos = (array)$request->get('desconto', []);
-        $valoresCalculados = (array)$request->get('valor_calculado', []); // vindo do JS (internações)
-        $valoresSimples = (array)$request->get('valor', []); // outros serviços
+        $valores = (array)$request->get('valor', []);
         $quantidades = (array)$request->get('quantidade_diarias', []);
 
-        $valorFinal = 0;
-        $descontoFinal = 0;
-        $descricaoFinal = '';
+        $valorTotal = 0;
+        $descontoTotal = 0;
 
         foreach ($descricoes as $i => $servicoId) {
-            $servico = $this->getRepositorio(\App\Entity\Servico::class)->listaServicoPorId($baseId, $servicoId);
+
+            $servico = $this->getRepositorio(Servico::class)
+                ->listaServicoPorId($baseId, $servicoId);
+
             if (!$servico) continue;
 
-            $descricaoServico = $servico['descricao'] ?? 'Serviço';
-            $valorBase = (float)($servico['valor'] ?? 0);
-            $desconto = isset($descontos[$i]) ? (float)$descontos[$i] : 0;
+            $quantidade = $quantidades[$i] ?? 1;
+            $valorUnitario = (float)$servico['valor'];
+            $desconto = (float)($descontos[$i] ?? 0);
 
-            // 🔍 Tenta achar uma quantidade ou valor calculado mesmo que o índice não coincida
-            $quantidade = 1;
-            $valorCalculado = null;
+            $valorItem = ($valorUnitario * $quantidade) - $desconto;
 
-            if (stripos($descricaoServico, 'internação') !== false) {
-                // Procura o primeiro valor em quantidade_diarias
-                if (!empty($quantidades)) {
-                    $quantidade = (int)reset($quantidades); // pega o primeiro valor do array
-                }
-                if (!empty($valoresCalculados)) {
-                    $valorCalculado = (float)reset($valoresCalculados);
-                }
+            $item = new VendaItem();
+            $item->setVenda($venda);
+            $item->setTipo('servico');
+            $item->setProduto($servicoId);
+            $item->setQuantidade($quantidade);
+            $item->setValorUnitario($valorUnitario);
+            $item->setSubtotal($valorItem);
 
-                // Calcula corretamente
-                if ($valorCalculado > 0) {
-                    $valorBase = $valorCalculado;
-                } elseif ($quantidade > 1) {
-                    $valorBase *= $quantidade;
-                }
+            $em->persist($item);
 
-                $descricaoServico .= " ({$quantidade} diárias)";
-            }
-
-            $valorFinal += $valorBase;
-            $descontoFinal += $desconto;
-            $descricaoFinal .= $descricaoServico . ' + ';
+            $valorTotal += $valorItem;
+            $descontoTotal += $desconto;
         }
 
+        
 
-        $valorFinal = max(0, $valorFinal - $descontoFinal);
+        // 3️⃣ Finaliza venda
+        $venda->setTotal($valorTotal + $descontoTotal);
+        // $venda->setDescontoTotal($descontoTotal);
+        // $venda->setValorFinal($valorTotal);
 
-        if ($metodoPagamento === 'pendente') {
-            $financeiroPendente = new FinanceiroPendente();
-            $financeiroPendente->setEstabelecimentoId($baseId);
-            $financeiroPendente->setPetId($petId);
-            $financeiroPendente->setValor($valorFinal);
-            $financeiroPendente->setDescricao(trim($descricaoFinal, ' +'));
-            $financeiroPendente->setData($data);
-            $financeiroPendente->setStatus('pendente');
-            $financeiroPendente->setOrigem('clinica');
-            $financeiroPendente->setMetodoPagamento($metodoPagamento);
-
-            $entityManager->persist($financeiroPendente);
-            $entityManager->flush();
-
-            return $this->json([
-                'status' => 'success',
-                'mensagem' => 'Lançado como pendente.',
-            ]);
-        } else {
-            $financeiro = new Financeiro();
+        // 4️⃣ Se não for pendente, cria financeiro
+        if ($metodoPagamento !== 'pendente') {
+            $financeiro = new \App\Entity\Financeiro();
+            $financeiro->setVenda($venda->getTotal());
             $financeiro->setEstabelecimentoId($baseId);
-            $financeiro->setPetId($petId);
-            $financeiro->setValor($valorFinal);
-            $financeiro->setDescricao(trim($descricaoFinal, ' +'));
-            $financeiro->setData($data);
+            $financeiro->setValor($valorTotal);
             $financeiro->setMetodoPagamento($metodoPagamento);
-            $financeiro->setOrigem('clinica');
             $financeiro->setStatus('concluido');
 
-            $entityManager->persist($financeiro);
-            $entityManager->flush();
-
-            return $this->json([
-                'status' => 'success',
-                'mensagem' => 'Pagamento registrado no financeiro!',
-            ]);
+            $em->persist($financeiro);
         }
 
-    }
+        $em->flush();
 
+        return $this->json([
+            'status' => 'success',
+            'mensagem' => 'Venda registrada com sucesso!',
+            'venda_id' => $venda->getId()
+        ]);
+    }
 
     /**
      * @Route("/pet/{petId}/venda/{id}/inativar", name="clinica_inativar_venda", methods={"POST"})

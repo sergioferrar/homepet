@@ -77,6 +77,11 @@ class Financeiro
      */
     private $tipo = 'ENTRADA';
 
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $venda;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -250,6 +255,18 @@ class Financeiro
     public function setTipo(string $tipo): self
     {
         $this->tipo = $tipo;
+        return $this;
+    }
+
+    public function getVenda(): ?int
+    {
+        return $this->venda;
+    }
+
+    public function setVenda(?int $venda): self
+    {
+        $this->venda = $venda;
+
         return $this;
     }
 }

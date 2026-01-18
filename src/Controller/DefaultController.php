@@ -18,6 +18,10 @@ use App\Service\DynamicConnectionManager;
 
 class DefaultController extends AbstractController
 {
+    private $status;
+    private $message;
+    private $error;
+
     public $data;
     public $user;
     public $managerRegistry;
@@ -234,4 +238,44 @@ class DefaultController extends AbstractController
 
         return $html;
     }
+
+    protected function infor($message)
+    {
+        $this->message = $message;
+        $this->status = 'info';
+        $this->error = false;
+    }
+
+    protected function alert($message)
+    {
+        $this->message = $message;
+        $this->status = 'warning';
+        $this->error = false;
+    }
+
+    protected function sucesso($message)
+    {
+        $this->message = $message;
+        $this->status = 'success';
+        $this->error = false;
+    }
+
+    protected function erro($message)
+    {
+        $this->message = $message;
+        $this->status = 'danger';
+        $this->error = true;
+    }
+
+    protected function message(string $dialog, $status)
+    {
+        $this->$status($dialog);
+
+        return [
+            'message' => $this->message,
+            'status' => $this->status,
+            'error' => $this->error,
+        ];
+    }
+
 }

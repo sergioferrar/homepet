@@ -15,7 +15,7 @@ use App\Entity\Servico;
 use App\Entity\Pet;
 
 /**
- * @Route("dashboard/")
+ * @Route("dashboard")
  */
 class OrcamentoController extends DefaultController
 {

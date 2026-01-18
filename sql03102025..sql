@@ -56,3 +56,16 @@ CREATE TABLE `homepet_login`.`config` (
   PRIMARY KEY (`id`),
 );
 
+
+
+ALTER TABLE `venda` 
+ADD COLUMN `origem` VARCHAR(255) NULL AFTER `pet_id`,
+ADD COLUMN `status` ENUM('Aberta', 'Pendente', 'Paga') NULL DEFAULT 'Aberta' AFTER `origem`;
+
+
+ALTER TABLE `venda_item` 
+ADD COLUMN `tipo` ENUM('servico', 'produto', 'medicamento') NULL DEFAULT 'produto' AFTER `subtotal`;
+
+ALTER TABLE `financeiro` 
+ADD COLUMN `venda` INT NULL DEFAULT NULL AFTER `parcelas`;
+

@@ -48,6 +48,16 @@ class Venda
     /** @ORM\Column(type="integer", nullable=true, name="pet_id") */
     private $petId;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $origem;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $status;
+
     // --- Getters e Setters ---
 
     public function getId(): ?int { return $this->id; }
@@ -81,4 +91,28 @@ class Venda
 
     public function getPetId(): ?int { return $this->petId; }
     public function setPetId(?int $petId): self { $this->petId = $petId; return $this; }
+
+    public function getOrigem(): ?string
+    {
+        return $this->origem;
+    }
+
+    public function setOrigem(string $origem): self
+    {
+        $this->origem = $origem;
+
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
 }

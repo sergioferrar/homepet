@@ -1,138 +1,103 @@
 {% extends 'list/_list_base.html.twig' %}
-
-
-{% block title %}Configturações so sistema{% endblock %}
-
-{% block list_title %}Configturações so sistema{% endblock %}
-
+{% block title %}Configurações globais do Estabelecimento{% endblock %}
+{% block list_title %}Configurações globais do Estabelecimento{% endblock %}
 {% block breadcrumbsAction %}
-
 {% endblock %}
-
 {% block breadcrumbsGrupo %}Configurações{% endblock %}
-
-{% block breadcrumbsAtivo %}Configturações so sistema{% endblock %}
-
-{% block page_title %}Configturações so sistema{% endblock %}
-
+{% block breadcrumbsAtivo %}Configurações globais do Estabelecimento{% endblock %}
+{% block page_title %}Configurações globais do Estabelecimento{% endblock %}
 {% block list_content %}
     <div class="container-fluid py-4">
-
-        <h3 class="fw-bold mb-4">Configurações do Estabelecimento</h3>
-
+        
         <div class="card shadow-sm border-0 rounded-4">
             <div class="card-body p-0 pb-4">
-
                 <!-- NAV TABS -->
                 <ul class="nav nav-tabs mb-4 gap-1 ps-0 ms-0" id="configTabs" role="tablist">
-
                     <li class="nav-item">
                         <button class="nav-link active d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#geral">
-                            <i class="bi bi-building"></i>
-                            Geral
+                        <i class="bi bi-building"></i>
+                        Geral
                         </button>
                     </li>
-
                     <li class="nav-item">
                         <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#pagamentos">
-                            <i class="bi bi-credit-card"></i>
-                            Pagamentos
+                        <i class="bi bi-credit-card"></i>
+                        Pagamentos
                         </button>
                     </li>
-
                     <li class="nav-item">
                         <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#emails">
-                            <i class="bi bi-envelope"></i>
-                            E-mails
+                        <i class="bi bi-envelope"></i>
+                        E-mails
                         </button>
                     </li>
-
-                    <li class="nav-item">
+                    <li class="nav-item d-none">
                         <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#ia">
-                            <i class="bi bi-cpu"></i>
-                            Automação
+                        <i class="bi bi-cpu"></i>
+                        Automação
                         </button>
                     </li>
-
-                    <li class="nav-item">
+                    <li class="nav-item d-none">
                         <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#usuarios">
-                            <i class="bi bi-people"></i>
-                            Permissões
+                        <i class="bi bi-people"></i>
+                        Permissões
                         </button>
                     </li>
-
-                    <li class="nav-item">
+                    <li class="nav-item d-none">
                         <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#marketing">
-                            <i class="bi bi-megaphone"></i>
-                            Marketing
+                        <i class="bi bi-megaphone"></i>
+                        Marketing
                         </button>
                     </li>
-
-                    <li class="nav-item">
+                    <li class="nav-item d-none">
                         <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#integracoes">
-                            <i class="bi bi-diagram-3"></i>
-                            Integrações
+                        <i class="bi bi-diagram-3"></i>
+                        Integrações
                         </button>
                     </li>
-
                 </ul>
-
-
                 <!-- CONTENT -->
                 <div class="tab-content p-4">
-
                     <!-- GERAL -->
                     <div class="tab-pane fade show active" id="geral">
-
                         <h5 class="fw-bold mb-3">Informações do Estabelecimento</h5>
-
                         <div class="row">
-
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Razão Social</label>
                                 <input class="form-control" name="razaoSocial" value="{{ estabelecimento.razaoSocial }}" required>
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">CNPJ</label>
                                 <input class="form-control" name="cnpj" value="{{ estabelecimento.cnpj }}" required>
                             </div>
-
                             <div class="col-md-8 mb-3">
                                 <label class="form-label">Rua</label>
                                 <input class="form-control" name="rua" value="{{ estabelecimento.rua }}" required>
                             </div>
-
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Número</label>
                                 <input class="form-control" name="numero" value="{{ estabelecimento.numero }}" required>
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Complemento</label>
                                 <input class="form-control" name="complemento" value="{{ estabelecimento.complemento }}">
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Bairro</label>
                                 <input class="form-control" name="bairro" value="{{ estabelecimento.bairro }}" required>
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Cidade</label>
                                 <input class="form-control" name="cidade" value="{{ estabelecimento.cidade }}" required>
                             </div>
-
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">País</label>
                                 <input class="form-control" name="pais" value="{{ estabelecimento.pais }}">
                             </div>
-
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">CEP</label>
                                 <input class="form-control" name="cep" value="{{ estabelecimento.cep }}" required>
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Status do Estabelecimento</label>
                                 <select class="form-select" name="status" required>
@@ -141,112 +106,142 @@
                                     <option {% if estabelecimento.status == 'Suspenso' %} selected {% endif %} value="Suspenso">Suspenso</option>
                                 </select>
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Plano</label>
                                 <select class="form-select" name="planoId" required>
                                     {% for row in planos %}
-                                        <option {% if estabelecimento.planoId == row.id %} selected {% endif %} value="{{ row.id }}">{{ row.titulo }}</option>
+                                        <option {% if estabelecimento.planoId == row.id %} selected {% else %} disabled {% endif %} value="{{ row.id }}">{{ row.titulo }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                         </div>
                         <button class="btn btn-sm btn-success float-end">Saltar alterações</button>
-
                     </div>
-
                     <!-- PAGAMENTOS -->
                     <div class="tab-pane fade" id="pagamentos">
-                        <h5 class="fw-bold mb-3">Gateways de Pagamento & Emissão Fiscal</h5>
-
-                        <div class="row">
-                            <label class="card me-2" style="width: 18rem;">
-                            <span class="card-body h-50">
-                                <input type="radio" class="form-check-input mt-3" name="type_gateway" value="MERCADO_PAGO">
-                            <img src="{{ asset('images/mp_logo.png') }}" class="card-img-top img-fluid" alt="Logo Mercado Pago">
-                            </span>
-
-                                <div class="card-body">
-                                    <h5 class="card-title">Mercado Pago</h5>
-                                </div>
-                                <div class="card-body">
-                                    <a href="https://www.mercadopago.com.br/developers/panel/app" target="_blank" class="btn btn-sm btn-primary w-100">Obter credenciais</a>
-                                </div>
-                            </label>
-
-                            <label class="card" style="width: 18rem;">
-                            <span class="card-body h-50">
-                                <input type="radio" class="form-check-input mt-3" name="type_gateway" value="PAG_SEGURO">
-                            <img src="https://1000logos.net/wp-content/uploads/2022/09/PagSeguro-Logo.jpg" class="card-img-top img-fluid mt-5" alt="Logo Mercado Pago">
-                            </span>
-                                <div class="card-body">
-                                    <h5 class="card-title">Pag Seguro</h5>
-                                </div>
-                                <div class="card-body">
-                                    <a href="https://developer.pagbank.com.br/v1/reference/autenticacao" target="_blank" class="btn btn-sm btn-primary w-100">Obter credenciais</a>
-                                </div>
-                            </label>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Chave PagSeguro</label>
-                                <input class="form-control">
+                        <h5 class="fw-bold mb-3">Gateways de Pagamento</h5>
+                        <form action="{{ url('setting_payment_estabelecimento', {'eid':app.session.get('estabelecimentoId')}) }}" method="post">
+                            <div class="alert alert-info">
+                                <strong>Atenção:</strong>
+                                estamos adicionando novos gateways para adequar a área de pagamentos ao seu perfil financeiro.<br>
+                                Para mais informações, entre em contato com o suporte.
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Chave Mercado Pago</label>
-                                <input class="form-control">
+                            <div class="row">
+                                <label class="card me-2" style="width: 18rem;">
+                                    <span class="card-body h-50">
+                                        <input type="radio" {% if gateway[0].valor == 'MERCADO_PAGO' %} checked {% endif %} class="form-check-input mt-3" name="gateway_chave" value="MERCADO_PAGO">
+                                        <input type="hidden" name="gateway_tipo" value="gateway">
+                                        <input type="hidden" name="gateway_observacao" value="Campo responsável por exibir a seleção do gateway de pagamento">
+                                        <img src="{{ asset('images/mp_logo.png') }}" class="card-img-top img-fluid" alt="Logo Mercado Pago">
+                                    </span>
+                                    <div class="card-body">
+                                        <h5 class="card-title">Mercado Pago</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <a href="https://www.mercadopago.com.br/developers/panel/app" target="_blank" class="btn btn-sm btn-primary w-100">Obter credenciais</a>
+                                    </div>
+                                </label>
+                                <label class="card d-none" style="width: 18rem;">
+                                    <span class="card-body h-50">
+                                        <input type="radio" class="form-check-input mt-3" name="type_gateway" value="PAG_SEGURO">
+                                        <img src="https://1000logos.net/wp-content/uploads/2022/09/PagSeguro-Logo.jpg" class="card-img-top img-fluid mt-5" alt="Logo Mercado Pago">
+                                    </span>
+                                    <div class="card-body">
+                                        <h5 class="card-title">Pag Seguro</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <a href="https://developer.pagbank.com.br/v1/reference/autenticacao" target="_blank" class="btn btn-sm btn-primary w-100">Obter credenciais</a>
+                                    </div>
+                                </label>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Token Emissão NF-e</label>
-                                <input class="form-control">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label" for="gateway_payment_env">Ambiente</label>
+                                    <select name="gateway_payment_env" id="gateway_payment_env" class="form-select">
+                                        <option {% if gateway[1].valor == 'sandbox' %} selected {% endif %} value="sandbox">Ambiente de testes</option>
+                                        <option {% if gateway[1].valor == 'production' %} selected {% endif %} value="production">Ambiente de produção</option>
+                                    </select>
+                                    <input type="hidden" name="gateway_payment_env_tipo" value="gateway">
+                                    <input type="hidden" name="gateway_payment_env_observacao" value="Campo responsável por identificar qual o ambiente o gateway está sendo executado.">
+                                </div>
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label">Token</label>
+                                    <input class="form-control" type="text" name="gateway_payment_token" value="{{ gateway[2].valor }}">
+                                    <input type="hidden" name="gateway_payment_token_tipo" value="gateway">
+                                    <input type="hidden" name="gateway_payment_token_observacao" value="Campo responsável por identificar o token para o processamento do gateway">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">E-mail de autenticação</label>
+                                    <input class="form-control" type="text" name="gateway_payment_email" value="{{ gateway[3].valor }}">
+                                    <input type="hidden" name="gateway_payment_email_tipo" value="gateway">
+                                    <input type="hidden" name="gateway_payment_email_observacao" value="Campo responsável por identificar o e-mail do Estabelecimento para envio de notas e/outras notificações">
+                                </div>
                             </div>
-                        </div>
-
-                        <button class="btn btn-sm btn-success float-end">Saltar alterações</button>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Chave secreta</label>
+                                    <input class="form-control" type="text" name="gateway_payment_key_secret" value="{{ gateway[4].valor }}">
+                                    <input type="hidden" name="gateway_payment_key_secret_tipo" value="gateway">
+                                    <input type="hidden" name="gateway_payment_key_secret_observacao" value="Este campo é somente utilizado nas requisições do gateway para efetivar o pagamento">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Chave pública</label>
+                                    <input class="form-control" type="text" name="gateway_payment_key_public" value="{{ gateway[5].valor }}">
+                                    <input type="hidden" name="gateway_payment_key_public_tipo" value="gateway">
+                                    <input type="hidden" name="gateway_payment_key_public_observacao" value="Este campo também é somente utilizado nas requisições do gateway para efetivar o pagamento">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-success float-end">Saltar alterações</button>
+                        </form>
                     </div>
-
                     <!-- EMAILS -->
                     <div class="tab-pane fade" id="emails">
                         <h5 class="fw-bold mb-3">Serviço de E-mail</h5>
-
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Servidor SMTP</label>
-                                <input class="form-control">
+                                <input class="form-control" name="mailer_server">
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">Porta</label>
-                                <input class="form-control">
+                                <input class="form-control" name="mailer_port">
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">Criptografia</label>
-                                <select class="form-select">
+                                <select class="form-select" name="mailer_crypt">
                                     <option>TLS</option>
                                     <option>SSL</option>
                                 </select>
                             </div>
                         </div>
-
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Usuario / E-mail</label>
+                                <input class="form-control" name="mailer_user">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Senha</label>
+                                <input class="form-control" name="mailer_paswd">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Nome Remetente</label>
+                                <input class="form-control" name="mailer_remetente">
+                            </div>
+                        </div>
                         <button class="btn btn-sm btn-success float-end">Saltar alterações</button>
                     </div>
-
                     <!-- IA -->
                     <div class="tab-pane fade" id="ia">
                         <h5 class="fw-bold mb-3">Configurações de IA</h5>
-
                         <div class="mb-3">
                             <label class="form-label">API Key da IA</label>
                             <input class="form-control">
                         </div>
-
                         <button class="btn btn-sm btn-success float-end">Saltar alterações</button>
                     </div>
-
                     <!-- USUÁRIOS -->
                     <div class="tab-pane fade" id="usuarios">
                         <h5 class="fw-bold mb-3">Permissões & Perfis</h5>
-
                         <div class="mb-3">
                             <label class="form-label">Modelo de Permissões</label>
                             <select class="form-select">
@@ -255,44 +250,32 @@
                                 <option>Financeiro</option>
                             </select>
                         </div>
-
                         <button class="btn btn-sm btn-success float-end">Saltar alterações</button>
                     </div>
-
                     <!-- MARKETING -->
                     <div class="tab-pane fade" id="marketing">
                         <h5 class="fw-bold mb-3">Pixels & Inbound</h5>
-
                         <div class="mb-3">
                             <label class="form-label">Facebook Pixel</label>
                             <input class="form-control">
                         </div>
-
                         <div class="mb-3">
                             <label class="form-label">Google Tag Manager</label>
                             <input class="form-control">
                         </div>
-
                         <button class="btn btn-sm btn-success float-end">Saltar alterações</button>
                     </div>
-
                     <!-- INTEGRAÇÕES -->
                     <div class="tab-pane fade" id="integracoes">
                         <h5 class="fw-bold mb-3">Conexões Externas & APIs</h5>
-
                         <div class="mb-3">
                             <label class="form-label">Webhook URL</label>
                             <input class="form-control">
                         </div>
-
                         <button class="btn btn-sm btn-success float-end">Saltar alterações</button>
                     </div>
-
                 </div>
-
             </div>
         </div>
-
     </div>
-
 {% endblock %}
