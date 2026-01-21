@@ -318,7 +318,7 @@
                                 <div>
                                     <small class="text-white-50 d-block">Pendentes</small>
                                     {% set total_pendente = 0 %}
-                                    {% for item in pendentes %}{% set total_pendente = total_pendente + item.valor %}{% endfor %}
+                                    {% for item in pendentes %}{% set total_pendente = total_pendente + item.total %}{% endfor %}
                                     <h4 class="mb-0 fw-bold">R$ {{ total_pendente|number_format(2, ',', '.') }}</h4>
                                 </div>
                             </div>
@@ -359,21 +359,21 @@
                 <button class="nav-link {% if not app.request.query.get('aba') or app.request.query.get('aba') == 'diario' %}active{% endif %}"
                         id="diario-tab" data-bs-toggle="tab" data-bs-target="#diario" type="button" role="tab"
                         aria-controls="diario" aria-selected="true">
-                    <i class="bi bi-calendar-event me-2"></i>Diário
+                    <i class="bi bi-calendar-event me-2"></i>Caixa diário
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link {% if app.request.query.get('aba') == 'pendente' %}active{% endif %}"
                         id="pendente-tab" data-bs-toggle="tab" data-bs-target="#pendente" type="button" role="tab"
                         aria-controls="pendente" aria-selected="false">
-                    <i class="bi bi-clock me-2"></i>Pendente
+                    <i class="bi bi-clock me-2"></i>Caixa da Clinca
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link {% if app.request.query.get('aba') == 'relatorio' %}active{% endif %}"
                         id="relatorio-tab" data-bs-toggle="tab" data-bs-target="#relatorio" type="button" role="tab"
                         aria-controls="relatorio" aria-selected="false">
-                    <i class="bi bi-graph-up me-2"></i>Relatório
+                    <i class="bi bi-graph-up me-2"></i>Caixa do Banho e Tosa
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -393,9 +393,9 @@
         </ul>
 
         <div class="d-flex gap-2">
-            <a href="{{ path('financeiro_novo') }}" class="btn btn-primary">
+           {#  <a href="{{ path('financeiro_novo') }}" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-2"></i>Novo Lançamento
-            </a>
+            </a> #}
             <a href="{{ path('clinica_pdv_index') }}" class="btn btn-success">
                 <i class="bi bi-cash-coin me-2"></i>PDV
             </a>
@@ -474,7 +474,7 @@
              id="pendente" role="tabpanel">
             {# Card de resumo #}
             {% set total_pendente = 0 %}
-            {% for item in pendentes %}{% set total_pendente = total_pendente + item.valor %}{% endfor %}
+            {% for item in pendentes %}{% set total_pendente = total_pendente + item.total %}{% endfor %}
 
             <div class="row mb-4">
                 <div class="col-md-4 offset-md-4">
@@ -496,7 +496,7 @@
             <div id="cardContainerPendente" class="row gy-3">
                 {% for item in pendentes %}
                     <div class="col-12 card-item"
-                         data-search="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.valor }}">
+                         data-search="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.total }}">
                         <div class="card shadow-sm border-0 rounded-3 border-start border-warning border-3">
                             <div class="card-body p-3">
                                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
@@ -513,7 +513,7 @@
                                             <i class="bi bi-calendar me-1"></i>{{ item.data|date('d/m/Y') }}
                                         </p>
                                         <h4 class="text-warning mb-0">
-                                            R$ {{ item.valor|number_format(2, ',', '.') }}</h4>
+                                            R$ {{ item.total|number_format(2, ',', '.') }}</h4>
                                     </div>
                                     <div class="dropdown">
                                         <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -532,7 +532,7 @@
                                                 <a href="javascript:void(0);" class="dropdown-item text-danger btn-excluir-pendente"
                                                    data-id="{{ item.id }}"
                                                    data-descricao="{{ item.descricao }}"
-                                                   data-valor="{{ item.valor|number_format(2, ',', '.') }}">
+                                                   data-valor="{{ item.total|number_format(2, ',', '.') }}">
                                                     <i class="bi bi-trash me-2"></i> Excluir
                                                 </a>
                                             </li>
@@ -638,7 +638,7 @@
              id="inativos" role="tabpanel">
             {# Card de resumo #}
             {% set total_inativos = 0 %}
-            {% for item in inativos %}{% set total_inativos = total_inativos + item.valor %}{% endfor %}
+            {% for item in inativos %}{% set total_inativos = total_inativos + item.total %}{% endfor %}
 
             <div class="row mb-4">
                 <div class="col-md-4 offset-md-4">
@@ -660,7 +660,7 @@
             <div id="cardContainerInativos" class="row gy-3">
                 {% for item in inativos %}
                     <div class="col-12 card-item"
-                         data-search="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.valor }}">
+                         data-search="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.total }}">
                         <div class="card shadow-sm border-0 rounded-3 border-start border-danger border-3">
                             <div class="card-body p-3">
                                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -678,7 +678,7 @@
                                         </p>
                                     </div>
                                     <div class="text-end">
-                                        <span class="fw-bold text-danger fs-5">R$ {{ item.valor|number_format(2, ',', '.') }}</span>
+                                        <span class="fw-bold text-danger fs-5">R$ {{ item.total|number_format(2, ',', '.') }}</span>
                                     </div>
                                 </div>
                             </div>

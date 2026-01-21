@@ -28,12 +28,14 @@ class FinanceiroController extends DefaultController
     public function index(Request $request, FinanceiroRepository $financeiroRepo, FinanceiroPendenteRepository $financeiroPendenteRepo): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->session->get('estabelecimentoId');     
 
         // --- Aba Diário ---
-        $dataDiario = $request->query->get('data') ? new \DateTime($request->query->get('data')) : new \DateTime();
+        $dataDiario = $request->query->get('data') ? date('Y-m-d', strtotime($request->query->get('data'))) : date('Y-m-d');
         $financeirosDiarios = $financeiroRepo->findTotalByDate($baseId, $dataDiario);
-
+        // $financeirosDiarios = $this->getRepositorio(\App\Entity\Venda::class)->findBy(['origem' => 'clinica']);
+        // dd($financeirosDiarios, $dataDiario);
+        // 
         // --- Aba Pendente ---
         $financeirosPendentes = $financeiroPendenteRepo->findAllPendentes($baseId);
 

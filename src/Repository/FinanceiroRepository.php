@@ -27,7 +27,7 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function findFinanceiro($baseId, int $financeiroId): ?Financeiro
     {
         $sql = "SELECT * 
-            FROM {$_ENV['DBNAMETENANT']}.financeiro 
+            FROM {$_ENV['DBNAMETENANT']}.venda 
             WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $stmt = $this->conn->executeQuery($sql, ['id' => $financeiroId]);
@@ -37,6 +37,7 @@ class FinanceiroRepository extends ServiceEntityRepository
             return null; // Retorna null se não encontrar o registro
         }
 
+/*
         // Criando e preenchendo um objeto da entidade `Financeiro`
         $financeiro = new Financeiro();
         $financeiro->setId($dados['id']);
@@ -46,13 +47,15 @@ class FinanceiroRepository extends ServiceEntityRepository
         $financeiro->setPetId($dados['pet_id']);
 
         return $financeiro; // Retorna um objeto válido
+        */
     }
 
 
     public function findAllFinanceiro($baseId, $financeiroId): array
     {
-        $sql = "SELECT id, descricao, valor, data, pet_id, pet_nome
-                FROM {$_ENV['DBNAMETENANT']}.financeiro
+        $sql = "SELECT id, descricao, toal, data, pet_id, pet_nome
+                FROM {$_ENV['DBNAMETENANT']}.venda
+                LEFT JOIN pet ON (pet.id = venda.pet_id)
                 WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $stmt = $this->conn->executeQuery($sql, ['id' => $financeiroId]);
@@ -65,9 +68,9 @@ class FinanceiroRepository extends ServiceEntityRepository
                     MIN(f.id) as id, 
                     c.nome AS dono_nome,
                     GROUP_CONCAT(DISTINCT p.nome SEPARATOR ', ') AS pets,
-                    SUM(f.valor) AS total_valor,
+                    SUM(f.total) AS total_valor,
                     DATE(f.data) AS data
-                FROM {$_ENV['DBNAMETENANT']}.financeiro f
+                FROM {$_ENV['DBNAMETENANT']}.venda f
                 LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
                 LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
                 WHERE f.estabelecimento_id = :baseId 
@@ -86,8 +89,8 @@ class FinanceiroRepository extends ServiceEntityRepository
 
    public function getRelatorioPorPeriodo($baseId, \DateTime $dataInicio, \DateTime $dataFim): array
     {
-        $sql = "SELECT DATE(f.data) as data, SUM(f.valor) as total
-                FROM {$_ENV['DBNAMETENANT']}.financeiro f
+        $sql = "SELECT DATE(f.data) as data, SUM(f.total) as total
+                FROM {$_ENV['DBNAMETENANT']}.venda f
                 WHERE f.estabelecimento_id = :baseId 
                   AND f.data BETWEEN :dataInicio AND :dataFim
                   AND (f.status IS NULL OR f.status != 'inativo')
@@ -222,8 +225,8 @@ class FinanceiroRepository extends ServiceEntityRepository
         $mes = $mes ?? date('m');
         $ano = $ano ?? date('Y');
 
-        $sql = "SELECT SUM(valor) AS lucroTotal
-                FROM {$_ENV['DBNAMETENANT']}.financeiro
+        $sql = "SELECT SUM(total) AS lucroTotal
+                FROM {$_ENV['DBNAMETENANT']}.venda
                 WHERE estabelecimento_id = :baseId
                   AND MONTH(data) = :mes
                   AND YEAR(data) = :ano
@@ -242,8 +245,8 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function lucroDiario($baseId)
     {
-        $sql = "SELECT SUM(valor) as valor, data
-        FROM {$_ENV['DBNAMETENANT']}.financeiro 
+        $sql = "SELECT SUM(total) as valor, data
+        FROM {$_ENV['DBNAMETENANT']}.venda
         WHERE estabelecimento_id = '{$baseId}'
         GROUP BY data";
 
@@ -297,24 +300,19 @@ class FinanceiroRepository extends ServiceEntityRepository
         return $stmt->executeQuery()->fetchAllAssociative();
     }
 
-    public function findTotalByDate(int $baseId, \DateTime $data): array
+    public function findTotalByDate(int $baseId, $data): array
     {
-        $sql = "SELECT MIN(f.id) AS id, DATE(f.data) AS data, SUM(f.valor) AS total_valor, c.nome AS dono_nome, GROUP_CONCAT(p.nome SEPARATOR ', ') AS pets
-            FROM {$_ENV['DBNAMETENANT']}.financeiro f
+        $sql = "SELECT f.id, DATE(f.data) AS data, SUM(f.total) AS total_valor, c.nome AS dono_nome, GROUP_CONCAT(p.nome SEPARATOR ', ') AS pets
+            FROM {$_ENV['DBNAMETENANT']}.venda f
             LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
             LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
-            WHERE f.estabelecimento_id = :baseId
-              AND DATE(f.data) = :data
-              AND (f.status IS NULL OR f.status != 'inativo')
+            WHERE f.estabelecimento_id = $baseId
+              AND DATE(f.data) = DATE('{$data}') AND f.origem = 'pdv'
+              #AND (f.status IS NULL OR f.status != 'Pendente')
             GROUP BY f.pet_id, c.id, DATE(f.data)
             ORDER BY data DESC";
 
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue('baseId', $baseId);
-        $stmt->bindValue('data', $data->format('Y-m-d'));
-        
-        $result = $stmt->executeQuery();
-
+        $result = $this->conn->executeQuery($sql);        
         return $result->fetchAllAssociative();
     }
 
@@ -322,8 +320,8 @@ class FinanceiroRepository extends ServiceEntityRepository
 
 public function inativar($baseId, int $id): void
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.financeiro 
-                SET status = 'inativo', inativar = 1
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.venda 
+                SET status = 'Pendente', inativar = 1
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
         $this->conn->executeQuery($sql, [
@@ -335,13 +333,13 @@ public function inativar($baseId, int $id): void
 
     public function findInativos(int $baseId, ?int $petId = null): array
     {
-        $sql = "SELECT f.id, f.descricao, f.valor, f.data, f.pet_id, 
+        $sql = "SELECT f.id, 'f.' AS descricao, f.total, f.data, f.pet_id, 
                        p.nome AS pet_nome, c.nome AS dono_nome, COALESCE(metodo_pagamento, 'Dinheiro') AS metodo_pagamento
-                  FROM {$_ENV['DBNAMETENANT']}.financeiro f
+                  FROM {$_ENV['DBNAMETENANT']}.venda f
              LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
              LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
                  WHERE f.estabelecimento_id = :baseId
-                   AND (f.status = 'inativo' OR f.inativar = 1)"; // 🔥 aceita os dois
+                   AND (f.status = 'Pendente')"; // 🔥 aceita os dois
 
         $params = ['baseId' => $baseId];
 
@@ -359,7 +357,7 @@ public function inativar($baseId, int $id): void
     public function buscarAtivosPorPet(int $baseId, int $petId): array
     {
         $sql = "SELECT * 
-                FROM {$_ENV['DBNAMETENANT']}.financeiro 
+                FROM {$_ENV['DBNAMETENANT']}.venda 
                 WHERE estabelecimento_id = :baseId 
                   AND pet_id = :petId
                   AND (status IS NULL OR status != 'inativo')
