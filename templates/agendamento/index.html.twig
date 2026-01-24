@@ -1,66 +1,83 @@
 {% extends 'baseTable.html.twig' %}
-{% block title2 %}Agendamentos{% endblock %}
+{% block titlebread %}Agendamentos{% endblock %}
+{% block linkbread %}{% endblock %}
+{% block breadActive %}
+    <li class="breadcrumb-item">Atendimento</li>
+    <li class="breadcrumb-item active">Novo Agendamento</li>
+{% endblock %}
+{#{% block title2 %}Agendamentos{% endblock %}#}
 {% block subtitle %}{{ data|date('d/m/Y') }} - {{ totalAgendamentos }} agendamento(s){% endblock %}
 {% block stylesheets %}
     {{ parent() }}
     <style>
-    .agenda-card {
-    transition: all .25s ease;
-    background: #fff;
-    }
-    .agenda-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, .08);
-    }
-    .agenda-date {
-    width: 70px;
-    min-width: 70px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
-    padding: .5rem;
-    color: #fff;
-    text-align: center;
-    }
-    .agenda-date.pendente {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    }
-    .agenda-date.concluido {
-    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
-    }
-    .info-group {
-    margin-bottom: 1rem;
-    }
-    .info-label {
-    font-size: .8rem;
-    color: #6c757d;
-    }
-    .info-box {
-    background: #fff;
-    border-radius: 12px;
-    padding: .6rem .9rem;
-    font-weight: 500;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
-    }
-    .filter-tabs {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-    }
-    .filter-tabs .btn {
-    border-radius: 20px;
-    padding: 5px 15px;
-    font-size: 0.85rem;
-    }
-    .filter-tabs .btn.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: transparent;
-    color: #fff;
-    }
-    .badge-metodo {
-    font-size: 0.75rem;
-    padding: 4px 8px;
-    border-radius: 12px;
-    }
+        .agenda-card {
+            transition: all .25s ease;
+            background: #fff;
+        }
+
+        .agenda-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, .08);
+        }
+
+        .agenda-date {
+            width: 70px;
+            min-width: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: .5rem;
+            color: #fff;
+            text-align: center;
+        }
+
+        .agenda-date.pendente {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .agenda-date.concluido {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+
+        .info-group {
+            margin-bottom: 1rem;
+        }
+
+        .info-label {
+            font-size: .8rem;
+            color: #6c757d;
+        }
+
+        .info-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: .6rem .9rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tabs .btn {
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 0.85rem;
+        }
+
+        .filter-tabs .btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: #fff;
+        }
+
+        .badge-metodo {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
     </style>
 {% endblock %}
 {% block buttonLeft %}
@@ -85,36 +102,36 @@
                 <div class="col-md-2">
                     <label class="form-label small text-muted mb-1">Data</label>
                     <input type="date" class="form-control form-control-sm" name="data" id="filtroData"
-                    value="{{ data|date('Y-m-d') }}" onchange="this.form.submit()">
+                           value="{{ data|date('Y-m-d') }}" onchange="this.form.submit()">
                 </div>
-                
+
                 <!-- Atalhos de Data -->
                 <div class="col-md-5">
                     <label class="form-label small text-muted mb-1">Atalhos</label>
                     <div class="filter-tabs">
                         <a href="{{ path('agendamento_index') }}?data={{ 'yesterday'|date('Y-m-d') }}"
-                            class="btn btn-outline-secondary btn-sm {% if data|date('Y-m-d') == 'yesterday'|date('Y-m-d') %}active{% endif %}">
+                           class="btn btn-outline-secondary btn-sm {% if data|date('Y-m-d') == 'yesterday'|date('Y-m-d') %}active{% endif %}">
                             Ontem
                         </a>
                         <a href="{{ path('agendamento_index') }}?data={{ 'now'|date('Y-m-d') }}"
-                            class="btn btn-outline-secondary btn-sm {% if data|date('Y-m-d') == 'now'|date('Y-m-d') %}active{% endif %}">
+                           class="btn btn-outline-secondary btn-sm {% if data|date('Y-m-d') == 'now'|date('Y-m-d') %}active{% endif %}">
                             Hoje
                         </a>
                         <a href="{{ path('agendamento_index') }}?data={{ 'tomorrow'|date('Y-m-d') }}"
-                            class="btn btn-outline-secondary btn-sm {% if data|date('Y-m-d') == 'tomorrow'|date('Y-m-d') %}active{% endif %}">
+                           class="btn btn-outline-secondary btn-sm {% if data|date('Y-m-d') == 'tomorrow'|date('Y-m-d') %}active{% endif %}">
                             Amanhã
                         </a>
                         <a href="{{ path('agendamento_index') }}?data={{ data|date_modify('-1 day')|date('Y-m-d') }}"
-                            class="btn btn-outline-secondary btn-sm" title="Dia anterior">
+                           class="btn btn-outline-secondary btn-sm" title="Dia anterior">
                             ◀ Anterior
                         </a>
                         <a href="{{ path('agendamento_index') }}?data={{ data|date_modify('+1 day')|date('Y-m-d') }}"
-                            class="btn btn-outline-secondary btn-sm" title="Próximo dia">
+                           class="btn btn-outline-secondary btn-sm" title="Próximo dia">
                             Próximo ▶
                         </a>
                     </div>
                 </div>
-                
+
                 <!-- Filtro por Status -->
                 <div class="col-md-2">
                     <label class="form-label small text-muted mb-1">Status</label>
@@ -125,12 +142,12 @@
                         <option value="pendente">Pendentes</option>
                     </select>
                 </div>
-                
+
                 <!-- Busca -->
                 <div class="col-md-3">
                     <label class="form-label small text-muted mb-1">Buscar</label>
                     <input type="text" class="form-control form-control-sm" id="filtroBusca"
-                    placeholder="Pet, cliente, serviço..." onkeyup="filtrarAgendamentos()">
+                           placeholder="Pet, cliente, serviço..." onkeyup="filtrarAgendamentos()">
                 </div>
             </div>
         </form>
@@ -150,13 +167,13 @@
             {% else %}
                 {% set status = 'aguardando' %}
             {% endif %}
-            
+
             <div class="card agenda-card border-0 rounded-3 shadow-sm mb-3 agendamento-item"
-                data-status="{{ status }}"
-                data-busca="{{ agendamento.pet_nome|lower }} {{ agendamento.dono_nome|lower }} {{ agendamento.servico_nome|lower }}">
+                 data-status="{{ status }}"
+                 data-busca="{{ agendamento.pet_nome|lower }} {{ agendamento.dono_nome|lower }} {{ agendamento.servico_nome|lower }}">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center gap-3">
-                        
+
                         <!-- Data/Hora -->
                         <div class="agenda-date {{ status }}">
                             <div class="fs-5 fw-bold">
@@ -166,15 +183,15 @@
                                 {{ agendamento.horaChegada ? agendamento.horaChegada|date('d/m') : '--/--' }}
                             </div>
                         </div>
-                        
+
                         <!-- Conteúdo -->
                         <div class="flex-grow-1">
                             <div class="d-flex align-items-center gap-2 mb-1">
                                 <h6 class="mb-0">
-                                <i class="bi bi-scissors text-primary me-1"></i>
-                                {{ agendamento.servico_nome }}
+                                    <i class="bi bi-scissors text-primary me-1"></i>
+                                    {{ agendamento.servico_nome }}
                                 </h6>
-                                
+
                                 <!-- Badge de Status -->
                                 {% if status == 'pendente' %}
                                     <span class="badge bg-danger badge-metodo">Pendente</span>
@@ -183,7 +200,7 @@
                                 {% else %}
                                     <span class="badge bg-warning text-dark badge-metodo">Aguardando</span>
                                 {% endif %}
-                                
+
                                 <!-- Badge Pagamento -->
                                 {% if agendamento.metodo_pagamento and agendamento.metodo_pagamento != 'pendente' %}
                                     <span class="badge bg-info badge-metodo">
@@ -191,7 +208,7 @@
                                     </span>
                                 {% endif %}
                             </div>
-                            
+
                             <div class="d-flex flex-wrap gap-3 text-muted small">
                                 <span>
                                     <i class="bi bi-heart-fill me-1"></i>
@@ -200,7 +217,7 @@
                                 <span>
                                     <i class="bi bi-person me-1"></i>
                                     <a href="javascript:void(0);" class="buscar-cliente text-decoration-none"
-                                        data-dono-id="{{ agendamento.dono_id }}">
+                                       data-dono-id="{{ agendamento.dono_id }}">
                                         {{ agendamento.dono_nome }}
                                     </a>
                                 </span>
@@ -212,28 +229,28 @@
                                 {% endif %}
                             </div>
                         </div>
-                        
+
                         <!-- Ações -->
                         <div class="d-flex gap-2">
                             <a href="{{ path('agendamento_editar', {'id': agendamento.id}) }}"
-                                class="btn btn-outline-primary btn-sm" title="Editar">
+                               class="btn btn-outline-primary btn-sm" title="Editar">
                                 <i class="bi bi-pencil me-1"></i> Editar
                             </a>
-                            
+
                             {% if not agendamento.concluido %}
                                 <button type="button" class="btn btn-outline-success btn-sm open-concluir-modal"
-                                data-id="{{ agendamento.id }}"
-                                data-action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}"
-                                title="Concluir">
-                                <i class="bi bi-check-lg me-1"></i> Concluir
+                                        data-id="{{ agendamento.id }}"
+                                        data-action="{{ path('agendamento_concluir', {'id': agendamento.id}) }}"
+                                        title="Concluir">
+                                    <i class="bi bi-check-lg me-1"></i> Concluir
                                 </button>
                             {% endif %}
-                            
+
                             <button type="button" class="btn btn-outline-danger btn-sm reload-form"
-                            data-id="{{ agendamento.id }}"
-                            data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao': 'deletar'}) }}"
-                            title="Deletar">
-                            <i class="bi bi-trash me-1"></i> Excluir
+                                    data-id="{{ agendamento.id }}"
+                                    data-action="{{ path('agendamento_executar_acao', {'id': agendamento.id, 'acao': 'deletar'}) }}"
+                                    title="Deletar">
+                                <i class="bi bi-trash me-1"></i> Excluir
                             </button>
                         </div>
                     </div>
@@ -241,37 +258,37 @@
             </div>
         {% else %}
             <div class="card agenda-card border-0 rounded-4 shadow-sm mb-4 agendamento-item"
-     data-status="VAZIO"
-     data-busca="NONE">
+                 data-status="VAZIO"
+                 data-busca="NONE">
 
-    <div class="card-body p-4 text-center">
+                <div class="card-body p-4 text-center">
 
-        <div class="empty-state d-flex flex-column align-items-center justify-content-center gap-3"
-             id="emptyState">
+                    <div class="empty-state d-flex flex-column align-items-center justify-content-center gap-3"
+                         id="emptyState">
 
-            <div class="icon-wrapper bg-light rounded-circle d-flex align-items-center justify-content-center mb-2"
-                 style="width: 96px; height: 96px;">
-                <i class="bi bi-calendar-x text-primary" style="font-size: 3rem;"></i>
+                        <div class="icon-wrapper bg-light rounded-circle d-flex align-items-center justify-content-center mb-2"
+                             style="width: 96px; height: 96px;">
+                            <i class="bi bi-calendar-x text-primary" style="font-size: 3rem;"></i>
+                        </div>
+
+                        <h5 class="fw-semibold mb-1">
+                            Nenhum agendamento para {{ data|date('d/m/Y') }}
+                        </h5>
+
+                        <p class="text-muted mb-3">
+                            Não há agendamentos registrados para esta data.
+                        </p>
+
+                        <a href="{{ path('agendamento_novo') }}"
+                           class="btn btn-primary px-4 py-2 rounded-pill shadow-sm">
+                            <i class="bi bi-plus-lg me-1"></i>
+                            Novo Agendamento
+                        </a>
+
+                    </div>
+
+                </div>
             </div>
-
-            <h5 class="fw-semibold mb-1">
-                Nenhum agendamento para {{ data|date('d/m/Y') }}
-            </h5>
-
-            <p class="text-muted mb-3">
-                Não há agendamentos registrados para esta data.
-            </p>
-
-            <a href="{{ path('agendamento_novo') }}"
-               class="btn btn-primary px-4 py-2 rounded-pill shadow-sm">
-                <i class="bi bi-plus-lg me-1"></i>
-                Novo Agendamento
-            </a>
-
-        </div>
-
-    </div>
-</div>
 
         {% endfor %}
     </div>
@@ -281,9 +298,10 @@
     <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 rounded-4 shadow">
-                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="modal-header"
+                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <h5 class="modal-title fw-bold">
-                    <i class="bi bi-person-circle me-2"></i> Informações do Cliente
+                        <i class="bi bi-person-circle me-2"></i> Informações do Cliente
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -326,21 +344,22 @@
     <div class="modal fade" id="modalConcluir" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="modal-header"
+                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Concluir Agendamento</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <h6><i class="bi bi-list-ul me-1"></i> Serviços Prestados</h6>
                     <div id="servicos-list" class="mb-3 p-3 bg-light rounded"></div>
-                    
+
                     <h6><i class="bi bi-clock me-1"></i> Financeiro Pendente</h6>
                     <div id="pendentes-list" class="mb-3 p-3 bg-light rounded">
                         <p class="text-muted mb-0">Nenhum registro pendente encontrado.</p>
                     </div>
-                    
+
                     <hr>
-                    
+
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label for="desconto" class="form-label">Desconto (R$)</label>
@@ -369,12 +388,12 @@
                 </div>
                 <div class="modal-footer d-flex justify-content-between">
                     <button type="button" class="btn btn-warning" id="btn-marcar-pendente" data-id="">
-                    <i class="bi bi-clock-history me-1"></i> Pagamento Pendente
+                        <i class="bi bi-clock-history me-1"></i> Pagamento Pendente
                     </button>
                     <div>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
                         <button type="button" class="btn btn-success" id="btn-concluir-pagamento">
-                        <i class="bi bi-check-lg me-1"></i> Concluir Pagamento
+                            <i class="bi bi-check-lg me-1"></i> Concluir Pagamento
                         </button>
                     </div>
                 </div>
@@ -387,7 +406,7 @@
             <div class="modal-content border-0 rounded-4 shadow">
                 <div class="modal-header" id="modalNotificacaoHeader">
                     <h5 class="modal-title" id="modalNotificacaoTitulo">
-                    <i class="bi bi-info-circle me-2"></i> Mensagem
+                        <i class="bi bi-info-circle me-2"></i> Mensagem
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -396,7 +415,9 @@
                     <p id="modalNotificacaoMensagem" class="mb-0 fs-5"></p>
                 </div>
                 <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal" id="btnNotificacaoOk">OK</button>
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal" id="btnNotificacaoOk">
+                        OK
+                    </button>
                 </div>
             </div>
         </div>
@@ -405,261 +426,264 @@
 {% block javascripts %}
     {{ parent() }}
     <script>
-    let agendamentosPendentesMarcados = new Set();
-    let totalOriginal = 0;
-    let modalConcluir = null;
-    let modalCliente = null;
-    let modalNotificacao = null;
-    // Função para mostrar notificação em modal
-    function mostrarNotificacao(mensagem, tipo = 'info', callback = null) {
-    const modal = document.getElementById('modalNotificacao');
-    const header = document.getElementById('modalNotificacaoHeader');
-    const titulo = document.getElementById('modalNotificacaoTitulo');
-    const icone = document.getElementById('modalNotificacaoIcone');
-    const msg = document.getElementById('modalNotificacaoMensagem');
-    const btnOk = document.getElementById('btnNotificacaoOk');
-    
-    // Configurar cores e ícones baseado no tipo
-    const configs = {
-    success: {
-    bg: 'linear-gradient(135deg, #28a745 0%, #1e7e34 100%)',
-    icon: '<i class="bi bi-check-circle-fill text-success"></i>',
-    titulo: '<i class="bi bi-check-circle me-2"></i> Sucesso'
-    },
-    error: {
-    bg: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
-    icon: '<i class="bi bi-x-circle-fill text-danger"></i>',
-    titulo: '<i class="bi bi-exclamation-triangle me-2"></i> Erro'
-    },
-    warning: {
-    bg: 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)',
-    icon: '<i class="bi bi-exclamation-triangle-fill text-warning"></i>',
-    titulo: '<i class="bi bi-exclamation-triangle me-2"></i> Atenção'
-    },
-    info: {
-    bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    icon: '<i class="bi bi-info-circle-fill text-primary"></i>',
-    titulo: '<i class="bi bi-info-circle me-2"></i> Informação'
-    }
-    };
-    
-    const config = configs[tipo] || configs.info;
-    
-    header.style.background = config.bg;
-    header.style.color = 'white';
-    titulo.innerHTML = config.titulo;
-    icone.innerHTML = config.icon;
-    msg.textContent = mensagem;
-    
-    // Callback ao fechar
-    if (callback) {
-    btnOk.onclick = function() {
-    modalNotificacao.hide();
-    callback();
-    };
-    modal.addEventListener('hidden.bs.modal', callback, { once: true });
-    } else {
-    btnOk.onclick = null;
-    }
-    
-    if (!modalNotificacao) {
-    modalNotificacao = new bootstrap.Modal(modal);
-    }
-    modalNotificacao.show();
-    }
-    function filtrarAgendamentos() {
-    const status = document.getElementById('filtroStatus').value;
-    const busca = document.getElementById('filtroBusca').value.toLowerCase();
-    const items = document.querySelectorAll('.agendamento-item');
-    let visivel = 0;
-    
-    items.forEach(item => {
-    const itemStatus = item.dataset.status || '';
-    const itemBusca = item.dataset.busca || '';
-    
-    const matchStatus = !status || itemStatus === status;
-    const matchBusca = !busca || itemBusca.includes(busca);
-    
-    if (matchStatus && matchBusca) {
-    item.style.display = '';
-    visivel++;
-    } else {
-    item.style.display = 'none';
-    }
-    });
-    
-    document.getElementById('contadorAgendamentos').textContent = visivel + ' agendamento(s) exibido(s)';
-    }
-    document.addEventListener('DOMContentLoaded', function () {
-    // Inicializa os modais
-    const modalConcluirEl = document.getElementById('modalConcluir');
-    const modalClienteEl = document.getElementById('modalCliente');
-    
-    if (modalConcluirEl) {
-    modalConcluir = new bootstrap.Modal(modalConcluirEl);
-    }
-    if (modalClienteEl) {
-    modalCliente = new bootstrap.Modal(modalClienteEl);
-    }
-    // Modal concluir
-    $(document).on('click', '.open-concluir-modal', function (e) {
-    e.preventDefault();
-    const rota = $(this).data('action');
-    const agendamentoId = $(this).data('id');
-    $('#btn-marcar-pendente').data('id', agendamentoId);
-    fetch(rota, {method: "GET"})
-    .then(response => response.json())
-    .then(data => {
-    if (data.status === "success") {
-    const servicosList = $('#servicos-list');
-    const pendentesList = $('#pendentes-list');
-    const totalInput = $('#total');
-    servicosList.empty();
-    pendentesList.empty();
-    $.each(data.clientes, function (clienteNome, info) {
-    servicosList.append(`<h6 class="mb-2"><i class="fas fa-user me-1"></i>${clienteNome}</h6>`);
-const ul = $('<ul class="mb-0"></ul>');
-$.each(info.servicos, function (index, servico) {
-ul.append(`<li>${servico.servico_nome} para <strong>${servico.pet_nome}</strong>: <span class="text-success">R$ ${servico.valor.toFixed(2)}</span></li>`);
-});
-if (data.agendamento.taxi_dog) {
-const taxaTaxiDog = parseFloat(data.agendamento.taxa_taxi_dog) || 0;
-ul.append(`<li>Táxi Dog: <span class="text-success">R$ ${taxaTaxiDog.toFixed(2)}</span></li>`);
-}
-servicosList.append(ul);
-});
-if (data.pendentes && data.pendentes.length > 0) {
-const ul = $('<ul class="mb-0"></ul>');
-$.each(data.pendentes, function (index, pendente) {
-const valorPendente = parseFloat(pendente.valor) || 0;
-ul.append(`<li>${pendente.descricao}: <span class="text-danger">R$ ${valorPendente.toFixed(2)}</span></li>`);
-});
-pendentesList.html(ul);
-} else {
-pendentesList.html('<p class="text-muted mb-0">Nenhum registro pendente encontrado.</p>');
-}
-totalOriginal = parseFloat(data.total_geral) || 0;
-totalInput.val('R$ ' + totalOriginal.toFixed(2).replace('.', ','));
-if (modalConcluir) {
-modalConcluir.show();
-}
-} else {
-mostrarNotificacao("Erro: " + data.mensagem, 'error');
-}
-})
-.catch(error => {
-console.error('Erro:', error);
-mostrarNotificacao("Erro ao carregar os dados do agendamento.", 'error');
-});
-});
+        let agendamentosPendentesMarcados = new Set();
+        let totalOriginal = 0;
+        let modalConcluir = null;
+        let modalCliente = null;
+        let modalNotificacao = null;
+
+        // Função para mostrar notificação em modal
+        function mostrarNotificacao(mensagem, tipo = 'info', callback = null) {
+            const modal = document.getElementById('modalNotificacao');
+            const header = document.getElementById('modalNotificacaoHeader');
+            const titulo = document.getElementById('modalNotificacaoTitulo');
+            const icone = document.getElementById('modalNotificacaoIcone');
+            const msg = document.getElementById('modalNotificacaoMensagem');
+            const btnOk = document.getElementById('btnNotificacaoOk');
+
+            // Configurar cores e ícones baseado no tipo
+            const configs = {
+                success: {
+                    bg: 'linear-gradient(135deg, #28a745 0%, #1e7e34 100%)',
+                    icon: '<i class="bi bi-check-circle-fill text-success"></i>',
+                    titulo: '<i class="bi bi-check-circle me-2"></i> Sucesso'
+                },
+                error: {
+                    bg: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
+                    icon: '<i class="bi bi-x-circle-fill text-danger"></i>',
+                    titulo: '<i class="bi bi-exclamation-triangle me-2"></i> Erro'
+                },
+                warning: {
+                    bg: 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)',
+                    icon: '<i class="bi bi-exclamation-triangle-fill text-warning"></i>',
+                    titulo: '<i class="bi bi-exclamation-triangle me-2"></i> Atenção'
+                },
+                info: {
+                    bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    icon: '<i class="bi bi-info-circle-fill text-primary"></i>',
+                    titulo: '<i class="bi bi-info-circle me-2"></i> Informação'
+                }
+            };
+
+            const config = configs[tipo] || configs.info;
+
+            header.style.background = config.bg;
+            header.style.color = 'white';
+            titulo.innerHTML = config.titulo;
+            icone.innerHTML = config.icon;
+            msg.textContent = mensagem;
+
+            // Callback ao fechar
+            if (callback) {
+                btnOk.onclick = function () {
+                    modalNotificacao.hide();
+                    callback();
+                };
+                modal.addEventListener('hidden.bs.modal', callback, {once: true});
+            } else {
+                btnOk.onclick = null;
+            }
+
+            if (!modalNotificacao) {
+                modalNotificacao = new bootstrap.Modal(modal);
+            }
+            modalNotificacao.show();
+        }
+
+        function filtrarAgendamentos() {
+            const status = document.getElementById('filtroStatus').value;
+            const busca = document.getElementById('filtroBusca').value.toLowerCase();
+            const items = document.querySelectorAll('.agendamento-item');
+            let visivel = 0;
+
+            items.forEach(item => {
+                const itemStatus = item.dataset.status || '';
+                const itemBusca = item.dataset.busca || '';
+
+                const matchStatus = !status || itemStatus === status;
+                const matchBusca = !busca || itemBusca.includes(busca);
+
+                if (matchStatus && matchBusca) {
+                    item.style.display = '';
+                    visivel++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            document.getElementById('contadorAgendamentos').textContent = visivel + ' agendamento(s) exibido(s)';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Inicializa os modais
+            const modalConcluirEl = document.getElementById('modalConcluir');
+            const modalClienteEl = document.getElementById('modalCliente');
+
+            if (modalConcluirEl) {
+                modalConcluir = new bootstrap.Modal(modalConcluirEl);
+            }
+            if (modalClienteEl) {
+                modalCliente = new bootstrap.Modal(modalClienteEl);
+            }
+            // Modal concluir
+            $(document).on('click', '.open-concluir-modal', function (e) {
+                e.preventDefault();
+                const rota = $(this).data('action');
+                const agendamentoId = $(this).data('id');
+                $('#btn-marcar-pendente').data('id', agendamentoId);
+                fetch(rota, {method: "GET"})
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            const servicosList = $('#servicos-list');
+                            const pendentesList = $('#pendentes-list');
+                            const totalInput = $('#total');
+                            servicosList.empty();
+                            pendentesList.empty();
+                            $.each(data.clientes, function (clienteNome, info) {
+                                servicosList.append(`<h6 class="mb-2"><i class="fas fa-user me-1"></i>${clienteNome}</h6>`);
+                                const ul = $('<ul class="mb-0"></ul>');
+                                $.each(info.servicos, function (index, servico) {
+                                    ul.append(`<li>${servico.servico_nome} para <strong>${servico.pet_nome}</strong>: <span class="text-success">R$ ${servico.valor.toFixed(2)}</span></li>`);
+                                });
+                                if (data.agendamento.taxi_dog) {
+                                    const taxaTaxiDog = parseFloat(data.agendamento.taxa_taxi_dog) || 0;
+                                    ul.append(`<li>Táxi Dog: <span class="text-success">R$ ${taxaTaxiDog.toFixed(2)}</span></li>`);
+                                }
+                                servicosList.append(ul);
+                            });
+                            if (data.pendentes && data.pendentes.length > 0) {
+                                const ul = $('<ul class="mb-0"></ul>');
+                                $.each(data.pendentes, function (index, pendente) {
+                                    const valorPendente = parseFloat(pendente.valor) || 0;
+                                    ul.append(`<li>${pendente.descricao}: <span class="text-danger">R$ ${valorPendente.toFixed(2)}</span></li>`);
+                                });
+                                pendentesList.html(ul);
+                            } else {
+                                pendentesList.html('<p class="text-muted mb-0">Nenhum registro pendente encontrado.</p>');
+                            }
+                            totalOriginal = parseFloat(data.total_geral) || 0;
+                            totalInput.val('R$ ' + totalOriginal.toFixed(2).replace('.', ','));
+                            if (modalConcluir) {
+                                modalConcluir.show();
+                            }
+                        } else {
+                            mostrarNotificacao("Erro: " + data.mensagem, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                        mostrarNotificacao("Erro ao carregar os dados do agendamento.", 'error');
+                    });
+            });
 // Concluir pagamento
-$('#btn-concluir-pagamento').off('click').on('click', function () {
-const agendamentoId = $('#btn-marcar-pendente').data('id');
-const desconto = parseFloat($('#desconto').val()) || 0;
-const metodoPagamento = $('#metodo_pagamento').val();
-const url = "{{ path('agendamento_concluir_pagamento', {'id': 'AGENDAMENTO_ID'}) }}".replace('AGENDAMENTO_ID', agendamentoId);
-fetch(url, {
-method: "POST",
-headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-body: new URLSearchParams({'desconto': desconto, 'metodo_pagamento': metodoPagamento})
-})
-.then(response => response.json())
-.then(data => {
-if (data.status === "success") {
-if (modalConcluir) modalConcluir.hide();
-mostrarNotificacao(data.mensagem || "Pagamento concluído com sucesso!", 'success', function() {
-location.reload();
-});
-} else {
-mostrarNotificacao(data.mensagem || "Erro ao processar o pagamento.", 'error');
-}
-})
-.catch(error => {
-mostrarNotificacao("Erro ao processar o pagamento: " + error.message, 'error');
-});
-});
+            $('#btn-concluir-pagamento').off('click').on('click', function () {
+                const agendamentoId = $('#btn-marcar-pendente').data('id');
+                const desconto = parseFloat($('#desconto').val()) || 0;
+                const metodoPagamento = $('#metodo_pagamento').val();
+                const url = "{{ path('agendamento_concluir_pagamento', {'id': 'AGENDAMENTO_ID'}) }}".replace('AGENDAMENTO_ID', agendamentoId);
+                fetch(url, {
+                    method: "POST",
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: new URLSearchParams({'desconto': desconto, 'metodo_pagamento': metodoPagamento})
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            if (modalConcluir) modalConcluir.hide();
+                            mostrarNotificacao(data.mensagem || "Pagamento concluído com sucesso!", 'success', function () {
+                                location.reload();
+                            });
+                        } else {
+                            mostrarNotificacao(data.mensagem || "Erro ao processar o pagamento.", 'error');
+                        }
+                    })
+                    .catch(error => {
+                        mostrarNotificacao("Erro ao processar o pagamento: " + error.message, 'error');
+                    });
+            });
 // Atualiza total ao mudar desconto
-$('#desconto').on('input', function () {
-const desconto = parseFloat($(this).val()) || 0;
-const total = totalOriginal - desconto;
-$('#total').val('R$ ' + total.toFixed(2).replace('.', ','));
-});
+            $('#desconto').on('input', function () {
+                const desconto = parseFloat($(this).val()) || 0;
+                const total = totalOriginal - desconto;
+                $('#total').val('R$ ' + total.toFixed(2).replace('.', ','));
+            });
 // Modal buscar cliente
-$(document).on('click', '.buscar-cliente', function () {
-var donoId = $(this).data('dono-id');
-if (!donoId) {
-mostrarNotificacao("Erro: Dono ID não encontrado.", 'error');
-return;
-}
-if (modalCliente) {
-modalCliente.show();
-}
-$.ajax({
-type: 'POST',
-url: "{{ absolute_url(path('api_buscar_cliente')) }}",
-data: {dono_id: donoId},
-dataType: 'json',
-success: function (data) {
-if (data.status === "sucesso") {
-$('#clienteNome').html(data.cliente.nome || '-');
-$('#clienteEmail').html(data.cliente.email || '-');
-$('#clienteTelefone').html(data.cliente.telefone || data.cliente.whatsapp || '-');
-const endereco = [data.cliente.rua, data.cliente.numero, data.cliente.complemento].filter(Boolean).join(', ');
-$('#clienteEndereco').html(endereco || '-');
-$('#clienteBairro').html(data.cliente.bairro || '-');
-$('#clienteCidade').html(data.cliente.cidade || '-');
-} else {
-if (modalCliente) modalCliente.hide();
-mostrarNotificacao("Erro: " + data.mensagem, 'error');
-}
-},
-error: function (xhr, status, error) {
-if (modalCliente) modalCliente.hide();
-mostrarNotificacao("Erro na requisição: " + error, 'error');
-}
-});
-});
+            $(document).on('click', '.buscar-cliente', function () {
+                var donoId = $(this).data('dono-id');
+                if (!donoId) {
+                    mostrarNotificacao("Erro: Dono ID não encontrado.", 'error');
+                    return;
+                }
+                if (modalCliente) {
+                    modalCliente.show();
+                }
+                $.ajax({
+                    type: 'POST',
+                    url: "{{ absolute_url(path('api_buscar_cliente')) }}",
+                    data: {dono_id: donoId},
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.status === "sucesso") {
+                            $('#clienteNome').html(data.cliente.nome || '-');
+                            $('#clienteEmail').html(data.cliente.email || '-');
+                            $('#clienteTelefone').html(data.cliente.telefone || data.cliente.whatsapp || '-');
+                            const endereco = [data.cliente.rua, data.cliente.numero, data.cliente.complemento].filter(Boolean).join(', ');
+                            $('#clienteEndereco').html(endereco || '-');
+                            $('#clienteBairro').html(data.cliente.bairro || '-');
+                            $('#clienteCidade').html(data.cliente.cidade || '-');
+                        } else {
+                            if (modalCliente) modalCliente.hide();
+                            mostrarNotificacao("Erro: " + data.mensagem, 'error');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        if (modalCliente) modalCliente.hide();
+                        mostrarNotificacao("Erro na requisição: " + error, 'error');
+                    }
+                });
+            });
 // Deletar agendamento
-$(document).on('click', '.reload-form', function () {
-if (!confirm('Tem certeza que deseja deletar este agendamento?')) return;
-var rota = $(this).data('action');
-fetch(rota, {method: "POST"})
-.then(response => response.json())
-.then(data => {
-if (data.status === "sucesso" || data.status === "success") {
-mostrarNotificacao(data.mensagem || "Agendamento deletado!", 'success', function() {
-location.reload();
-});
-} else {
-mostrarNotificacao("Erro: " + data.mensagem, 'error');
-}
-})
-.catch(error => mostrarNotificacao("Erro na requisição: " + error, 'error'));
-});
+            $(document).on('click', '.reload-form', function () {
+                if (!confirm('Tem certeza que deseja deletar este agendamento?')) return;
+                var rota = $(this).data('action');
+                fetch(rota, {method: "POST"})
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "sucesso" || data.status === "success") {
+                            mostrarNotificacao(data.mensagem || "Agendamento deletado!", 'success', function () {
+                                location.reload();
+                            });
+                        } else {
+                            mostrarNotificacao("Erro: " + data.mensagem, 'error');
+                        }
+                    })
+                    .catch(error => mostrarNotificacao("Erro na requisição: " + error, 'error'));
+            });
 // Marcar pagamento pendente
-$('#btn-marcar-pendente').off('click').on('click', function () {
-const botao = $(this);
-const agendamentoId = botao.data('id');
-if (agendamentosPendentesMarcados.has(agendamentoId)) {
-mostrarNotificacao("Este agendamento já foi marcado como pendente.", 'warning');
-return;
-}
-const rota = "{{ path('agendamento_executar_acao', {'id': 'ID_PLACEHOLDER', 'acao': 'pendente'}) }}".replace('ID_PLACEHOLDER', agendamentoId);
-fetch(rota, {method: "POST"})
-.then(response => response.json())
-.then(data => {
-if (data.status === "sucesso") {
-agendamentosPendentesMarcados.add(agendamentoId);
-if (modalConcluir) modalConcluir.hide();
-mostrarNotificacao(data.mensagem, 'success', function() {
-location.reload();
-});
-} else {
-mostrarNotificacao(data.mensagem || "Erro ao marcar como pendente.", 'error');
-}
-})
-.catch(error => mostrarNotificacao("Erro na requisição: " + error.message, 'error'));
-});
-});
-</script>
+            $('#btn-marcar-pendente').off('click').on('click', function () {
+                const botao = $(this);
+                const agendamentoId = botao.data('id');
+                if (agendamentosPendentesMarcados.has(agendamentoId)) {
+                    mostrarNotificacao("Este agendamento já foi marcado como pendente.", 'warning');
+                    return;
+                }
+                const rota = "{{ path('agendamento_executar_acao', {'id': 'ID_PLACEHOLDER', 'acao': 'pendente'}) }}".replace('ID_PLACEHOLDER', agendamentoId);
+                fetch(rota, {method: "POST"})
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "sucesso") {
+                            agendamentosPendentesMarcados.add(agendamentoId);
+                            if (modalConcluir) modalConcluir.hide();
+                            mostrarNotificacao(data.mensagem, 'success', function () {
+                                location.reload();
+                            });
+                        } else {
+                            mostrarNotificacao(data.mensagem || "Erro ao marcar como pendente.", 'error');
+                        }
+                    })
+                    .catch(error => mostrarNotificacao("Erro na requisição: " + error.message, 'error'));
+            });
+        });
+    </script>
 {% endblock %}

@@ -101,11 +101,23 @@
 {% endblock %}
 
 {% block body %}
+    <div class="pagetitle">
+        <h1>
+            {% block titlebread %}{% endblock %}
+            {% block linkbread %}{% endblock %}
+        </h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+                {% block breadActive %}{% endblock %}
+            </ol>
+        </nav>
+    </div>
 <div class="container-fluid">
     <!-- Header da Página -->
     <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
         <div>
-            <h4>{% block title2 %}Listagem{% endblock %}</h4>
+            <h4>{% block title2 %}{% endblock %}</h4>
             <span class="subtitle">{% block subtitle %}{% endblock %}</span>
         </div>
         <div class="d-flex gap-2 align-items-center flex-wrap">
