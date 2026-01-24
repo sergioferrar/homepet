@@ -70,12 +70,10 @@ class CustomAuthenticator extends AbstractAuthenticator
         // Recarregar as configurações do env no $_SERVER e $_ENV
         // dd($_ENV, $_SERVER);
         $configs = $this->entityManager->getRepository(\App\Entity\Config::class)->findBy(['estabelecimento_id' => $user->getPetshopId()]);
-        dump($_ENV);
+
+        // Configura
         $this->loadSettingsMailer($configs);
         $this->loadGatewayPayments($configs);
-        dump($_ENV);
-        dd([]);
-        // Configura
 
         $response = new JsonResponse($data);
         $response->headers->setCookie(
