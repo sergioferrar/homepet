@@ -30,7 +30,7 @@ $(function() {
                     }
 
                     if (result.direcionaHome) {
-                        Notify.toast(result.message, 'success');
+                        Notify.toast(result.message, 'success', 1500);
                         $('.toast').on('hidden.bs.toast', function() {
                             window.location.href = result.redireciona
                         });

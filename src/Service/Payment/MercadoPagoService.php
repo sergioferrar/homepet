@@ -34,8 +34,8 @@ class MercadoPagoService
 	public function oauthMPOriginal()
 	{
 		$data = [];
-		$data["client_secret"] = $_ENV['MERCADO_PAGO_CLIENT_SECRET'];
-		$data["client_id"] = $_ENV['MERCADO_PAGO_CLIENT_ID'];
+		$data["client_secret"] = $_ENV['GATEWAY_PAYMENT_KEY_SECRET'];
+		$data["client_id"] = $_ENV['GATEWAY_PAYMENT_KEY_PUBLIC'];
 		$data["grant_type"] = "client_credentials";
 		$data["code"] = "TG-XXXXXXXX-241983636";
 		$data["code_verifier"] = "47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU";
@@ -43,7 +43,7 @@ class MercadoPagoService
 		$data["refresh_token"] = "TG-XXXXXXXX-241983636";
 		$data["test_token"] = "false";
 		
-		if($_ENV['MERCADO_PAGO_ENV'] == 'sandbox'){
+		if($_ENV['GATEWAY_PAYMENT_ENV'] == 'sandbox'){
 			$data["test_token"] = "true";
 		}
 

@@ -67,6 +67,16 @@ class CustomAuthenticator extends AbstractAuthenticator
         $data['direcionaHome'] = true;
         $data['redireciona'] = $this->urlGenerator->generate('app_login_valida');
 
+        // Recarregar as configurações do env no $_SERVER e $_ENV
+        // dd($_ENV, $_SERVER);
+        $configs = $this->entityManager->getRepository(\App\Entity\Config::class)->findBy(['estabelecimento_id' => $user->getPetshopId()]);
+        dump($_ENV);
+        $this->loadSettingsMailer($configs);
+        $this->loadGatewayPayments($configs);
+        dump($_ENV);
+        dd([]);
+        // Configura
+
         $response = new JsonResponse($data);
         $response->headers->setCookie(
             Cookie::create('AUTH_TOKEN')
@@ -82,5 +92,34 @@ class CustomAuthenticator extends AbstractAuthenticator
     {
         //dd($exception);
         return new JsonResponse(['error' => true, 'status' => 'danger', 'message' => 'E-mail ou senha inválidos'], Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function loadSettingsMailer($config)
+    {
+        $data=[];
+        foreach($config as $row){
+            if($row->getTipo() == 'mailer'){
+                if($row->getChave() == 'mailer_server'){$data['host'] = $row->getValor();}
+                if($row->getChave() == 'mailer_user'){$data['user'] = $row->getValor();}
+                if($row->getChave() == 'mailer_paswd'){$data['pswd'] = $row->getValor();}
+                if($row->getChave() == 'mailer_port'){$data['port'] = $row->getValor();}
+                if($row->getChave() == 'mailer_crypt'){$data['crypt'] = ($row->getValor() == 'ssl'?'smtps':'smpt');}
+            }
+        }
+        
+        $_ENV['MAILER_DSN'] = "{$data['crypt']}://{$data['user']}:{$data['pswd']}@{$data['host']}:{$data['port']}";
+        $_SERVER['MAILER_DSN'] = $_ENV['MAILER_DSN'];
+    }
+
+    private function loadGatewayPayments($config)
+    {
+        $data=[];
+        foreach($config as $row){
+            if($row->getTipo() == 'gateway_payment'){
+                $_ENV[strtoupper($row->getChave())] = $row->getValor();
+                $_SERVER[strtoupper($row->getChave())] = $row->getValor();
+            }
+        }
+        
     }
 }
