@@ -118,12 +118,15 @@ class PdvController extends DefaultController
         }
 
         // 🔹 Cria venda com informações adicionais
+        
         $venda = new Venda();
         $venda->setEstabelecimentoId($baseId);
         $venda->setCliente($cliente ? $cliente->getNome() : 'Consumidor Final');
         $venda->setTotal($dados['total']);
         $venda->setMetodoPagamento($dados['metodo']);
         $venda->setData(new \DateTime());
+        $venda->setOrigem($dados['origem']);
+
 
         // 🔹 Campos adicionais (troco, bandeira, parcelas, observação, pet)
         if (!empty($dados['troco'])) {

@@ -170,11 +170,11 @@
 		`;
     }
 
-    var toastComponent = function (id, body, status = 'default') {
+    var toastComponent = function (id, body, status = 'default', delay=1500) {
         let bgToast = `text-bg-${status}`;
 
         return `<div class="toast-container position-fixed top-0 end-0 p-3">
-				  <div id=${id} class="toast align-items-center ${bgToast} border-0" role="alert" aria-live="assertive" data-bs-config='{"delay":1500}' aria-atomic="true">
+				  <div id=${id} class="toast align-items-center ${bgToast} border-0" role="alert" aria-live="assertive" data-bs-config='{"delay":${delay}}' aria-atomic="true">
 				    <div class="d-flex">
 					    <div class="toast-body">
 					      ${body}
@@ -293,9 +293,9 @@
         return new SignotifyElement(id, hideModal);
     }
 
-    var toast = function (body, status) {
+    var toast = function (body, status, delay=30000) {
         let id = generateRandomId();
-        $('body').append(toastComponent(id, body, status));
+        $('body').append(toastComponent(id, body, status, delay));
         //hideToast
         const toastElList = $('.toast')
         // const toastList = [...toastElList].map(toastEl => new bootstrap.Toast(toastEl))
