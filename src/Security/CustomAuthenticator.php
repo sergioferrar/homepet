@@ -95,27 +95,32 @@ class CustomAuthenticator extends AbstractAuthenticator
     public function loadSettingsMailer($config)
     {
         $data=[];
-        foreach($config as $row){
-            if($row->getTipo() == 'mailer'){
-                if($row->getChave() == 'mailer_server'){$data['host'] = $row->getValor();}
-                if($row->getChave() == 'mailer_user'){$data['user'] = $row->getValor();}
-                if($row->getChave() == 'mailer_paswd'){$data['pswd'] = $row->getValor();}
-                if($row->getChave() == 'mailer_port'){$data['port'] = $row->getValor();}
-                if($row->getChave() == 'mailer_crypt'){$data['crypt'] = ($row->getValor() == 'ssl'?'smtps':'smpt');}
+        if(!empty($config)){
+
+            foreach($config as $row){
+                if($row->getTipo() == 'mailer'){
+                    if($row->getChave() == 'mailer_server'){$data['host'] = $row->getValor();}
+                    if($row->getChave() == 'mailer_user'){$data['user'] = $row->getValor();}
+                    if($row->getChave() == 'mailer_paswd'){$data['pswd'] = $row->getValor();}
+                    if($row->getChave() == 'mailer_port'){$data['port'] = $row->getValor();}
+                    if($row->getChave() == 'mailer_crypt'){$data['crypt'] = ($row->getValor() == 'ssl'?'smtps':'smpt');}
+                }
             }
+            
+            $_ENV['MAILER_DSN'] = "{$data['crypt']}://{$data['user']}:{$data['pswd']}@{$data['host']}:{$data['port']}";
+            $_SERVER['MAILER_DSN'] = $_ENV['MAILER_DSN'];
         }
-        
-        $_ENV['MAILER_DSN'] = "{$data['crypt']}://{$data['user']}:{$data['pswd']}@{$data['host']}:{$data['port']}";
-        $_SERVER['MAILER_DSN'] = $_ENV['MAILER_DSN'];
     }
 
     private function loadGatewayPayments($config)
     {
         $data=[];
-        foreach($config as $row){
-            if($row->getTipo() == 'gateway_payment'){
-                $_ENV[strtoupper($row->getChave())] = $row->getValor();
-                $_SERVER[strtoupper($row->getChave())] = $row->getValor();
+        if(!empty($config)){
+            foreach($config as $row){
+                if($row->getTipo() == 'gateway_payment'){
+                    $_ENV[strtoupper($row->getChave())] = $row->getValor();
+                    $_SERVER[strtoupper($row->getChave())] = $row->getValor();
+                }
             }
         }
         
