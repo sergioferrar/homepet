@@ -194,7 +194,7 @@ class DefaultController extends AbstractController
      */
     public function getIdBase(): int
     {
-        return (int)$this->session->get('userId');
+        return (int)$this->session->get('estabelecimento_id');
     }
     
 

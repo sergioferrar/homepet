@@ -362,61 +362,61 @@ function adicionarProduto(p) {
     });
 
        // ==================== CARREGAR PETS DO CLIENTE (jQuery) ====================
-function carregarPetsDoCliente(clienteId) {
-    const $petSelect = $('#petSelect');
-    const baseUrl = $('meta[name="base"]').attr('content');
+    function carregarPetsDoCliente(clienteId) {
+        const $petSelect = $('#petSelect');
+        const baseUrl = $('meta[name="base"]').attr('content');
 
-    // Nenhum cliente selecionado
-    if (!clienteId) {
+        // Nenhum cliente selecionado
+        if (!clienteId) {
+            $petSelect
+                .html('<option value="">Selecione um cliente primeiro</option>')
+                .prop('disabled', true);
+            return;
+        }
+
+        // Loading
         $petSelect
-            .html('<option value="">Selecione um cliente primeiro</option>')
+            .html('<option value="">Carregando pets...</option>')
             .prop('disabled', true);
-        return;
+
+        $.ajax({
+            url: `${baseUrl}/orcamento/api/cliente/${clienteId}/pets`,
+            method: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                // Nenhum pet
+                if (!data.success || !data.pets || data.pets.length === 0) {
+                    $petSelect.html('<option value="">Nenhum pet cadastrado</option>');
+                    return;
+                }
+
+                // Opção padrão
+                $petSelect.html('<option value="">Nenhum (venda geral)</option>');
+
+                $.each(data.pets, function (_, pet) {
+                    const info = (pet.especie || pet.raca)
+                        ? ` (${pet.especie || ''}${pet.especie && pet.raca ? ' - ' : ''}${pet.raca || ''})`
+                        : '';
+
+                    $('<option>', {
+                        value: pet.id,
+                        text: `${pet.nome}${info}`
+                    }).appendTo($petSelect);
+                });
+
+                $petSelect.prop('disabled', false);
+            },
+            error: function (xhr, status, error) {
+                console.error('Erro ao carregar pets:', error);
+                $petSelect.html('<option value="">Erro ao carregar pets</option>');
+            }
+        });
     }
 
-    // Loading
-    $petSelect
-        .html('<option value="">Carregando pets...</option>')
-        .prop('disabled', true);
 
-    $.ajax({
-        url: `${baseUrl}/orcamento/api/cliente/${clienteId}/pets`,
-        method: 'GET',
-        dataType: 'json',
-        success: function (data) {
-            // Nenhum pet
-            if (!data.success || !data.pets || data.pets.length === 0) {
-                $petSelect.html('<option value="">Nenhum pet cadastrado</option>');
-                return;
-            }
-
-            // Opção padrão
-            $petSelect.html('<option value="">Nenhum (venda geral)</option>');
-
-            $.each(data.pets, function (_, pet) {
-                const info = (pet.especie || pet.raca)
-                    ? ` (${pet.especie || ''}${pet.especie && pet.raca ? ' - ' : ''}${pet.raca || ''})`
-                    : '';
-
-                $('<option>', {
-                    value: pet.id,
-                    text: `${pet.nome}${info}`
-                }).appendTo($petSelect);
-            });
-
-            $petSelect.prop('disabled', false);
-        },
-        error: function (xhr, status, error) {
-            console.error('Erro ao carregar pets:', error);
-            $petSelect.html('<option value="">Erro ao carregar pets</option>');
-        }
-    });
-}
-
-
-        document.addEventListener('click', e => {
-            if (!listaTutor.contains(e.target) && e.target !== inputTutor) listaTutor.innerHTML = '';
-        });
+        // document.addEventListener('click', e => {
+        //     if (!listaTutor.contains(e.target) && e.target !== inputTutor) listaTutor.innerHTML = '';
+        // });
 
         // ==================== CALCULAR TROCO ====================
         function atualizarResumo() {
