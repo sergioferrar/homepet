@@ -317,7 +317,8 @@ class AgendamentoController extends DefaultController
                         $clientes[$clienteId]['petIds'][] = $row['petId'];
                     }
 
-                    // Agora, cria APENAS UM REGISTRO NO FINANCEIRO POR CLIENTE
+                    // Agora, cria APENAS UM REGISTRO DE VENDA POR CLIENTE
+                    $em = $this->getDoctrine()->getManager();
                     foreach ($clientes as $clienteNome => $info) {
                         $descricaoFinal = implode(', ', $info['descricao']);
 
@@ -327,14 +328,19 @@ class AgendamentoController extends DefaultController
                             $descricaoFinal .= ' + Táxi Dog';
                         }
 
-                        $financeiro = new Financeiro();
-                        $financeiro->setDescricao($descricaoFinal);
-                        $financeiro->setValor($info['valor_total']);
-                        $financeiro->setData(new \DateTime());
-                        $financeiro->setPetId($info['petIds'][0]); // Aqui você pode deixar o primeiro pet ou nulo.
+                        $venda = new \App\Entity\Venda();
+                        $venda->setEstabelecimentoId($this->getIdBase());
+                        $venda->setCliente($clienteNome);
+                        $venda->setTotal($info['valor_total']);
+                        $venda->setMetodoPagamento($dados['metodo_pagamento'] ?? 'dinheiro');
+                        $venda->setData(new \DateTime());
+                        $venda->setOrigem('banho_tosa');
+                        $venda->setStatus('Aberta');
+                        $venda->setPetId($info['petIds'][0]);
 
-                        $this->getRepositorio(Financeiro::class)->save($this->getIdBase(), $financeiro);
+                        $em->persist($venda);
                     }
+                    $em->flush();
                 }
 
                 $repo->updateConcluido($this->getIdBase(), $id);
@@ -388,6 +394,9 @@ class AgendamentoController extends DefaultController
                         $financeiroPendente->setData(new \DateTime());
                         $financeiroPendente->setPetId($info['petIds'][0]); // Usa o primeiro pet do cliente
                         $financeiroPendente->setAgendamentoId($id);
+                        $financeiroPendente->setEstabelecimentoId($this->getIdBase());
+                        $financeiroPendente->setMetodoPagamento('pendente');
+                        $financeiroPendente->setOrigem('banho_tosa'); // Define origem como banho e tosa
 
                         try {
                             $financeiroRepo->savePendente($this->getIdBase(), $financeiroPendente);
@@ -580,15 +589,21 @@ class AgendamentoController extends DefaultController
             $cliente['valor_total'] -= $descontoPorCliente;
         }
 
-        // Removida criação no financeiro pendente aqui. Apenas registra financeiro real.
+        // Removida criação no financeiro pendente aqui. Apenas registra venda real.
         foreach ($clientes as $clienteNome => $info) {
-            $financeiro = new Financeiro();
-            $financeiro->setDescricao(implode(', ', $info['descricao']));
-            $financeiro->setValor($info['valor_total']);
-            $financeiro->setData(new \DateTime());
-            $financeiro->setPetId($info['petIds'][0]);
+            $venda = new \App\Entity\Venda();
+            $venda->setEstabelecimentoId($this->getIdBase());
+            $venda->setCliente($clienteNome);
+            $venda->setTotal($info['valor_total']);
+            $venda->setMetodoPagamento($metodoPagamento);
+            $venda->setData(new \DateTime());
+            $venda->setOrigem('banho_tosa');
+            $venda->setStatus('Aberta');
+            $venda->setPetId($info['petIds'][0]);
 
-            $this->getRepositorio(Financeiro::class)->save($this->getIdBase(), $financeiro);
+            $em = $this->getDoctrine()->getManager();
+            $em->persist($venda);
+            $em->flush();
         }
 
         $agendamento = new Agendamento();

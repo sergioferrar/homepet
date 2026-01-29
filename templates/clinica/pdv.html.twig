@@ -151,8 +151,16 @@
                         <p class="fw-bold text-success">Troco: R$ <span id="valorTroco">0,00</span></p>
                     </div>
 
+                    <div class="mb-3">
+                        <label>Origem da Venda:</label>
+                        <select name="origem" id="origem" class="form-select">
+                            <option value="clinica">Clínica Veterinária</option>
+                            <option value="banho_tosa">Banho e Tosa</option>
+                            <option value="hospedagem">Hospedagem</option>
+                        </select>
+                    </div>
+
                     <div class="mt-3">
-                        <input type="hidden" name="origem" value="pdv">
                         <button class="btn btn-success w-100" id="btnFinalizar">
                             <i class="bi bi-check-lg"></i> Finalizar Venda
                         </button>
@@ -447,7 +455,7 @@ $(function () {
         const pet_id      = $('#petSelect').val() || null;
         const desconto    = parseFloat($('#desconto').val()) || 0;
         const recebido    = parseFloat($('#valorRecebido').val()) || 0;
-        const origem      = $('input[name="origem"]').val() || 'pdv';
+        const origem      = $('#origem').val() || 'clinica';
 
         // 2️⃣ Cálculo de totais (seguro)
         const total = itens.reduce(function (s, i) {

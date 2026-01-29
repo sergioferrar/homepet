@@ -61,6 +61,7 @@ class VendaController extends DefaultController
         $venda->setOrigem($origem);
         $venda->setMetodoPagamento($metodoPagamento);
         $venda->setStatus($metodoPagamento === 'pendente' ? 'Pendente' : 'Aberta');
+        $venda->setData(new \DateTime()); // Adiciona a data atual
 
         $em->persist($venda);
 
@@ -107,19 +108,23 @@ class VendaController extends DefaultController
         // $venda->setDescontoTotal($descontoTotal);
         // $venda->setValorFinal($valorTotal);
 
-        // 4️⃣ Se não for pendente, cria financeiro
-        if ($metodoPagamento !== 'pendente') {
-            $financeiro = new \App\Entity\Financeiro();
-            $financeiro->setVenda($venda->getTotal());
-            $financeiro->setEstabelecimentoId($baseId);
-            $financeiro->setValor($valorTotal);
-            $financeiro->setMetodoPagamento($metodoPagamento);
-            $financeiro->setStatus('concluido');
-
-            $em->persist($financeiro);
-        }
-
         $em->flush();
+
+        // 4️⃣ Se for pendente, cria no financeiro pendente
+        if ($metodoPagamento === 'pendente') {
+            $financeiroPendente = new FinanceiroPendente();
+            $financeiroPendente->setDescricao('Venda Clínica - ' . $pet->getNome());
+            $financeiroPendente->setValor($valorTotal);
+            $financeiroPendente->setData(new \DateTime());
+            $financeiroPendente->setPetId($pet->getId());
+            $financeiroPendente->setEstabelecimentoId($baseId);
+            $financeiroPendente->setMetodoPagamento('pendente');
+            $financeiroPendente->setStatus('Pendente');
+            $financeiroPendente->setOrigem('clinica'); // Define origem como clínica
+            
+            $em->persist($financeiroPendente);
+            $em->flush();
+        }
 
         return $this->json([
             'status' => 'success',

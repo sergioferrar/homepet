@@ -33,10 +33,17 @@ class FinanceiroController extends DefaultController
         // --- Aba Diário ---
         $dataDiario = $request->query->get('data') ? date('Y-m-d', strtotime($request->query->get('data'))) : date('Y-m-d');
         $financeirosDiarios = $financeiroRepo->findTotalByDate($baseId, $dataDiario);
-        // $financeirosDiarios = $this->getRepositorio(\App\Entity\Venda::class)->findBy(['origem' => 'clinica']);
-        // dd($financeirosDiarios, $dataDiario);
-        // 
-        // --- Aba Pendente ---
+        
+        // --- Aba Caixa da Clínica ---
+        $financeirosClinica = $financeiroRepo->findTotalByDateAndOrigem($baseId, $dataDiario, 'clinica');
+        
+        // --- Aba Caixa do Banho e Tosa ---
+        $financeirosBanhoTosa = $financeiroRepo->findTotalByDateAndOrigem($baseId, $dataDiario, 'banho_tosa');
+        
+        // --- Aba Caixa da Hospedagem ---
+        $financeirosHospedagem = $financeiroRepo->findTotalByDateAndOrigem($baseId, $dataDiario, 'hospedagem');
+        
+        // --- Aba Pendente (mantém para compatibilidade) ---
         $financeirosPendentes = $financeiroPendenteRepo->findAllClinica($baseId);
 
         // --- Aba Relatório ---
@@ -55,6 +62,9 @@ class FinanceiroController extends DefaultController
 
         return $this->render('financeiro/index.html.twig', [
             'financeiros' => $financeirosDiarios,
+            'financeiros_clinica' => $financeirosClinica,
+            'financeiros_banho_tosa' => $financeirosBanhoTosa,
+            'financeiros_hospedagem' => $financeirosHospedagem,
             'data' => $dataDiario,
             'pendentes' => $financeirosPendentes,
             'mes_inicio' => $mesInicio,
@@ -141,7 +151,7 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/pendente/confirmar/{id}", name="financeiro_confirmar_pagamento", methods={"POST"})
      */
-    public function confirmarPagamento(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository, FinanceiroRepository $financeiroRepo): Response
+    public function confirmarPagamento(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -152,20 +162,12 @@ class FinanceiroController extends DefaultController
             throw $this->createNotFoundException('Registro financeiro pendente não encontrado.');
         }
 
-        $financeiro = new Financeiro();
-        $financeiro->setEstabelecimentoId($baseId);
-        $financeiro->setDescricao($financeiroPendente['descricao']);
-        $financeiro->setValor($financeiroPendente['valor']);
-        $financeiro->setData(new \DateTime());
-        $financeiro->setPetId($financeiroPendente['pet_id']);
+        // Usa o método do repository que já cria a venda com origem correta
+        $financeiroPendenteRepository->confirmarPagamento($baseId, $id);
 
-        $financeiroRepo->save($baseId, $financeiro);
+        $this->addFlash('success', 'Pagamento confirmado e movido para o caixa correspondente.');
 
-        $financeiroPendenteRepository->deletePendente($baseId, $id);
-
-        $this->addFlash('success', 'Pagamento confirmado e movido para o Financeiro Diário.');
-
-        return $this->redirectToRoute('financeiro_index', ['aba' => 'pendente']);
+        return $this->redirectToRoute('financeiro_index', ['aba' => 'fiado']);
     }
 
     /**
@@ -258,39 +260,21 @@ class FinanceiroController extends DefaultController
 
         $em = $this->getDoctrine()->getManager();
 
-        // 🔹 1. Busca ENTRADAS do Financeiro (tipo ENTRADA ou NULL para compatibilidade)
-        $entradasFinanceiro = $em->getRepository(Financeiro::class)
-            ->createQueryBuilder('f')
-            ->where('f.estabelecimentoId = :estab')
-            ->andWhere('f.data BETWEEN :inicio AND :fim')
-            ->andWhere('f.inativar = :inativo')
-            ->andWhere('(f.tipo = :tipo OR f.tipo IS NULL OR f.tipo = :vazio)')
+        // 🔹 1. Busca ENTRADAS da tabela venda (todas as vendas pagas)
+        $entradasVenda = $em->getRepository(\App\Entity\Venda::class)
+            ->createQueryBuilder('v')
+            ->where('v.estabelecimentoId = :estab')
+            ->andWhere('v.data BETWEEN :inicio AND :fim')
+            ->andWhere('(v.status IS NULL OR v.status != :pendente)')
             ->setParameter('estab', $baseId)
             ->setParameter('inicio', $inicioDia)
             ->setParameter('fim', $fimDia)
-            ->setParameter('tipo', 'ENTRADA')
-            ->setParameter('vazio', '')
-            ->setParameter('inativo', false)
-            ->orderBy('f.data', 'ASC')
+            ->setParameter('pendente', 'Pendente')
+            ->orderBy('v.data', 'ASC')
             ->getQuery()
             ->getResult();
 
-        // 🔹 2. Busca SAÍDAS do Financeiro (tipo SAIDA)
-        $saidasFinanceiro = $em->getRepository(Financeiro::class)
-            ->createQueryBuilder('f')
-            ->where('f.estabelecimentoId = :estab')
-            ->andWhere('f.data BETWEEN :inicio AND :fim')
-            ->andWhere('f.tipo = :tipo')
-            ->setParameter('estab', $baseId)
-            ->setParameter('inicio', $inicioDia)
-            ->setParameter('fim', $fimDia)
-            ->setParameter('tipo', 'SAIDA')
-            ->orderBy('f.data', 'ASC')
-            ->getQuery()
-            ->getResult();
-
-        // 🔹 3. Busca movimentos do Caixa (PDV) - APENAS SAÍDAS
-        // As vendas (entradas) já estão no Financeiro, então buscamos apenas saídas manuais
+        // 🔹 2. Busca movimentos do Caixa (PDV) - APENAS SAÍDAS
         $movimentosCaixa = $em->getRepository(\App\Entity\CaixaMovimento::class)
             ->createQueryBuilder('c')
             ->where('c.estabelecimentoId = :estab')
@@ -304,38 +288,22 @@ class FinanceiroController extends DefaultController
             ->getQuery()
             ->getResult();
 
-        // 🔹 4. Consolida tudo em um array único
+        // 🔹 3. Consolida tudo em um array único
         $movimentos = [];
         $totalEntradas = 0;
         $totalSaidas = 0;
 
-        // Adiciona entradas do financeiro
-        foreach ($entradasFinanceiro as $f) {
-            $valor = floatval($f->getValor());
+        // Adiciona entradas das vendas
+        foreach ($entradasVenda as $v) {
+            $valor = floatval($v->getTotal());
             if ($valor > 0) {
                 $totalEntradas += $valor;
                 $movimentos[] = [
-                    'data' => $f->getData(),
-                    'descricao' => $f->getDescricao(),
-                    'origem' => $f->getOrigem() ?? 'Financeiro',
-                    'metodo' => $f->getMetodoPagamento() ?? '-',
+                    'data' => $v->getData(),
+                    'descricao' => $v->getCliente() . ' - ' . ucfirst($v->getOrigem()),
+                    'origem' => ucfirst(str_replace('_', ' ', $v->getOrigem())),
+                    'metodo' => $v->getMetodoPagamento() ?? '-',
                     'tipo' => 'ENTRADA',
-                    'valor' => $valor
-                ];
-            }
-        }
-
-        // Adiciona saídas do financeiro
-        foreach ($saidasFinanceiro as $f) {
-            $valor = floatval($f->getValor());
-            if ($valor > 0) {
-                $totalSaidas += $valor;
-                $movimentos[] = [
-                    'data' => $f->getData(),
-                    'descricao' => $f->getDescricao(),
-                    'origem' => $f->getOrigem() ?? 'Financeiro',
-                    'metodo' => $f->getMetodoPagamento() ?? '-',
-                    'tipo' => 'SAIDA',
                     'valor' => $valor
                 ];
             }
@@ -357,7 +325,7 @@ class FinanceiroController extends DefaultController
             }
         }
 
-        // 🔹 5. Ordena por data
+        // 🔹 4. Ordena por data
         usort($movimentos, function ($a, $b) {
             return $a['data'] <=> $b['data'];
         });

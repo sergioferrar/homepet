@@ -42,20 +42,30 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
             throw new \Exception('Registro financeiro pendente não encontrado.');
         }
 
-        // Inserir no Financeiro Diário
-        $sqlInsert = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiro (estabelecimento_id, descricao, valor, data, pet_id) 
-                      VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id)";
+        // Inserir na tabela venda com a origem correta
+        $sqlInsert = "INSERT INTO {$_ENV['DBNAMETENANT']}.venda 
+                      (estabelecimento_id, cliente, total, data, pet_id, metodo_pagamento, origem, status) 
+                      VALUES (:estabelecimento_id, :cliente, :total, :data, :pet_id, :metodo_pagamento, :origem, :status)";
+        
+        // Buscar nome do cliente através do pet
+        $sqlCliente = "SELECT c.nome FROM {$_ENV['DBNAMETENANT']}.pet p 
+                       LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id 
+                       WHERE p.id = :pet_id";
+        $clienteNome = $this->conn->executeQuery($sqlCliente, ['pet_id' => $registroPendente['pet_id']])->fetchOne();
         
         $this->conn->executeQuery($sqlInsert, [
             'estabelecimento_id' => $baseId,
-            'descricao' => $registroPendente['descricao'],
-            'valor' => $registroPendente['valor'],
+            'cliente' => $clienteNome ?: 'Cliente',
+            'total' => $registroPendente['valor'],
             'data' => $registroPendente['data'],
             'pet_id' => $registroPendente['pet_id'],
+            'metodo_pagamento' => $registroPendente['metodo_pagamento'],
+            'origem' => $registroPendente['origem'] ?? 'clinica',
+            'status' => 'Aberta',
         ]);
 
-        // Remover do Financeiropendente
-        $sqlDelete = "DELETE FROM {$_ENV['DBNAMETENANT']}.Financeiropendente 
+        // Remover do financeiropendente
+        $sqlDelete = "DELETE FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
             WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $this->conn->executeQuery($sqlDelete, ['id' => $id]);
@@ -98,14 +108,15 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         $petId = $financeiro->getPetId() ?? null;
         $agendamentoId = $financeiro->getAgendamentoId() ?? null;
         $metodo = $financeiro->getMetodoPagamento() ?? 'pendente';
+        $origem = $financeiro->getOrigem() ?? 'clinica';
 
         $qtdDiarias = method_exists($financeiro, 'getQuantidadeDiarias')
             ? (int) $financeiro->getQuantidadeDiarias()
             : (int) ($_POST['quantidade_diarias'] ?? 1);
 
         $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiropendente 
-                (estabelecimento_id, descricao, valor, data, pet_id, metodo_pagamento, agendamento_id) 
-                VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id, :metodo_pagamento, :agendamento_id)";
+                (estabelecimento_id, descricao, valor, data, pet_id, metodo_pagamento, agendamento_id, origem) 
+                VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id, :metodo_pagamento, :agendamento_id, :origem)";
 
         // Se for internação com várias diárias → insere várias linhas
         if (stripos($descricao, 'internação') !== false && $qtdDiarias > 1) {
@@ -119,6 +130,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
                     'pet_id'             => $petId,
                     'metodo_pagamento'   => $metodo,
                     'agendamento_id'     => $agendamentoId,
+                    'origem'             => $origem,
                 ]);
             }
             return;
@@ -133,6 +145,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
             'pet_id'             => $petId,
             'metodo_pagamento'   => $metodo,
             'agendamento_id'     => $agendamentoId,
+            'origem'             => $origem,
         ]);
     }
 
@@ -177,11 +190,12 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
     public function findAllClinica(int $baseId): array
     {
-        $sql = "SELECT f.id, '' AS descricao, f.total AS valor, f.total, f.data, p.nome AS pet_nome, c.nome AS dono_nome 
-            FROM {$_ENV['DBNAMETENANT']}.venda f
+        $sql = "SELECT f.id, f.descricao, f.valor, f.valor AS total, f.data, p.nome AS pet_nome, c.nome AS dono_nome 
+            FROM {$_ENV['DBNAMETENANT']}.financeiropendente f
             LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
             LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
-            WHERE f.estabelecimento_id = :baseId AND f.origem = 'clinica'
+            WHERE f.estabelecimento_id = :baseId
+              AND (f.status IS NULL OR f.status != 'inativo')
             ORDER BY f.data DESC";
             
         return $this->conn->fetchAllAssociative($sql, [
@@ -206,7 +220,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function inativar($baseId, int $id): void
     {
         $sql = "UPDATE {$_ENV['DBNAMETENANT']}.financeiropendente 
-                SET status = 'inativo', inativar = 1
+                SET status = 'inativo'
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
         $this->conn->executeQuery($sql, [

@@ -112,29 +112,29 @@ class FinanceiroRepository extends ServiceEntityRepository
         $petId = $financeiro->getPetId() ?? null;
         $status = $inativo ? 'inativo' : ($financeiro->getStatus() ?? null);
         $inativar = $inativo ? 1 : 0;
+        $origem = $financeiro->getOrigem() ?? 'pdv'; // Define origem padrão como pdv
 
         // tenta ler quantidade de diárias do objeto ou do POST
         $qtdDiarias = method_exists($financeiro, 'getQuantidadeDiarias')
             ? (int) $financeiro->getQuantidadeDiarias()
             : (int) ($_POST['quantidade_diarias'] ?? 1);
 
-        // SQL base
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiro 
-                (estabelecimento_id, descricao, valor, data, pet_id, status, inativar) 
-                VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id, :status, :inativar)";
+        // SQL base - insere na tabela venda
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.venda 
+                (estabelecimento_id, pet_id, total, data, status, inativar, origem) 
+                VALUES (:estabelecimento_id, :pet_id, :total, :data, :status, :inativar, :origem)";
 
         // se for internação com várias diárias → cria vários registros
         if (stripos($descricao, 'internação') !== false && $qtdDiarias > 1) {
             for ($i = 1; $i <= $qtdDiarias; $i++) {
-                $desc = "{$descricao} (Diária {$i}/{$qtdDiarias})";
                 $this->conn->executeQuery($sql, [
                     'estabelecimento_id' => $baseId,
-                    'descricao' => $desc,
-                    'valor' => $valor,
-                    'data' => $data,
                     'pet_id' => $petId,
+                    'total' => $valor,
+                    'data' => $data,
                     'status' => $status,
                     'inativar' => $inativar,
+                    'origem' => $origem,
                 ]);
             }
             return; // encerra aqui
@@ -143,12 +143,12 @@ class FinanceiroRepository extends ServiceEntityRepository
         // se não for internação ou só 1 diária → grava normalmente
         $this->conn->executeQuery($sql, [
             'estabelecimento_id' => $baseId,
-            'descricao' => $descricao,
-            'valor' => $valor,
-            'data' => $data,
             'pet_id' => $petId,
+            'total' => $valor,
+            'data' => $data,
             'status' => $status,
             'inativar' => $inativar,
+            'origem' => $origem,
         ]);
     }
 
@@ -302,17 +302,34 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function findTotalByDate(int $baseId, $data): array
     {
-        $sql = "SELECT f.id, DATE(f.data) AS data, SUM(f.total) AS total_valor, c.nome AS dono_nome, GROUP_CONCAT(p.nome SEPARATOR ', ') AS pets
+        $sql = "SELECT f.id, DATE(f.data) AS data, SUM(f.total) AS total_valor, c.nome AS dono_nome, GROUP_CONCAT(DISTINCT p.nome SEPARATOR ', ') AS pets
             FROM {$_ENV['DBNAMETENANT']}.venda f
             LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
             LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
             WHERE f.estabelecimento_id = $baseId
-              AND DATE(f.data) = DATE('{$data}') AND f.origem = 'pdv'
-              #AND (f.status IS NULL OR f.status != 'Pendente')
-            GROUP BY f.pet_id, c.id, DATE(f.data)
+              AND DATE(f.data) = DATE('{$data}')
+              AND (f.status IS NULL OR f.status != 'Pendente')
+            GROUP BY c.id, DATE(f.data)
             ORDER BY data DESC";
 
         $result = $this->conn->executeQuery($sql);        
+        return $result->fetchAllAssociative();
+    }
+
+    public function findTotalByDateAndOrigem(int $baseId, $data, string $origem): array
+    {
+        $sql = "SELECT f.id, DATE(f.data) AS data, SUM(f.total) AS total_valor, c.nome AS dono_nome, GROUP_CONCAT(DISTINCT p.nome SEPARATOR ', ') AS pets, f.origem
+            FROM {$_ENV['DBNAMETENANT']}.venda f
+            LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
+            LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+            WHERE f.estabelecimento_id = $baseId
+              AND DATE(f.data) = DATE('{$data}')
+              AND f.origem = :origem
+              AND (f.status IS NULL OR f.status != 'Pendente')
+            GROUP BY c.id, DATE(f.data)
+            ORDER BY data DESC";
+
+        $result = $this->conn->executeQuery($sql, ['origem' => $origem]);        
         return $result->fetchAllAssociative();
     }
 
