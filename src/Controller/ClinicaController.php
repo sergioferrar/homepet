@@ -98,7 +98,7 @@ class ClinicaController extends DefaultController
     public function apiPetsPorCliente(int $clienteId): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
 
         $pets = $this->getRepositorio(Pet::class)->buscarPetsPorCliente($baseId, $clienteId);
 

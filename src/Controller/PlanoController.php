@@ -20,7 +20,7 @@ class PlanoController extends DefaultController
         $data = [];
 
         $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanos();
-        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($this->session->get('userId'));
+        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($this->getIdBase());
         $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
 
         $data['planos'] = $planos;

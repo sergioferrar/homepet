@@ -140,6 +140,7 @@ class ClienteRepository extends ServiceEntityRepository
         }
 
         $sql = "SELECT * FROM {$_ENV['DBNAMETENANT']}.cliente $where";
+        // die($sql);
         $stmt = $this->conn->executeQuery($sql, $params);
         return $stmt->fetchAllAssociative();
     }

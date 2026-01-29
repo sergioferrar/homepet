@@ -26,7 +26,7 @@ class PetController extends DefaultController
     public function index(): Response
     {
         $this->switchDB();
-        $pets = $this->getRepositorio(Pet::class)->findAllPets($this->session->get('userId'));
+        $pets = $this->getRepositorio(Pet::class)->findAllPets($this->getIdBase());
         return $this->render('pet/index.html.twig', ['pets' => $pets]);
     }
 
@@ -56,12 +56,12 @@ class PetController extends DefaultController
                 $pet->setDataNascimento(new \DateTime($dataNascimento));
             }
 
-            $this->getRepositorio(Pet::class)->save($this->session->get('userId'), $pet);
+            $this->getRepositorio(Pet::class)->save($this->getIdBase(), $pet);
 
             return $this->redirectToRoute('pet_index');
         }
 
-        $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($this->session->get('userId'));
+        $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($this->getIdBase());
 
         // raças já carregadas
         $racas = ["Border Collie", "Poodle", "Pastor Alemão", "Golden Retriever", "Doberman Pinscher",
@@ -106,12 +106,12 @@ class PetController extends DefaultController
     public function editar(Request $request, int $id): Response
     {
         $this->switchDB();
-        $pet = $this->getRepositorio(Pet::class)->findPetById($this->session->get('userId'), $id);
+        $pet = $this->getRepositorio(Pet::class)->findPetById($this->getIdBase(), $id);
         if (!$pet) {
             throw $this->createNotFoundException('O pet não foi encontrado');
         }
 
-        $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($this->session->get('userId'));
+        $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($this->getIdBase());
 
         $racas = ["Border Collie", "Poodle", "Pastor Alemão", "Golden Retriever", "Doberman Pinscher",
             "Pastor de Shetland", "Labrador Retriever", "Papillion", "Rottweiler", "Cão de gado australiano",
@@ -144,7 +144,7 @@ class PetController extends DefaultController
         if ($request->isMethod('POST')) {
             $donoId = $request->get('dono_id');
 
-            $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->session->get('userId'), $donoId);
+            $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->getIdBase(), $donoId);
             if (!$cliente) {
                 throw $this->createNotFoundException('O cliente não foi encontrado');
             }
@@ -165,7 +165,7 @@ class PetController extends DefaultController
                 $pets->setDataNascimento(new \DateTime($dataNascimento));
             }
 
-            $this->getRepositorio(Pet::class)->update($this->session->get('userId'), $pets);
+            $this->getRepositorio(Pet::class)->update($this->getIdBase(), $pets);
             return $this->redirectToRoute('pet_index');
         }
 

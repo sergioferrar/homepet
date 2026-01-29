@@ -22,7 +22,7 @@ class ClienteController extends DefaultController
     {
         $this->switchDB();
         $search = $request->query->get('search');
-        $clientes = $this->getRepositorio(Cliente::class)->search($this->session->get('userId'), $search);
+        $clientes = $this->getRepositorio(Cliente::class)->search($this->getIdBase(), $search);
 
         return $this->render('cliente/index.html.twig', ['clientes' => $clientes]);
     }
@@ -44,7 +44,7 @@ class ClienteController extends DefaultController
                 ->setBairro($request->request->get('bairro'))
                 ->setCidade($request->request->get('cidade'));
 
-            $this->getRepositorio(Cliente::class)->save($this->session->get('userId'), [
+            $this->getRepositorio(Cliente::class)->save($this->getIdBase(), [
                 'nome' => $cliente->getNome(),
                 'cpf' => $request->request->get('cpf'),
                 'email' => $cliente->getEmail(),
@@ -73,7 +73,7 @@ class ClienteController extends DefaultController
     ): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
 
         // Busca cliente pelo ID
         $cliente = $clienteRepository->localizaTodosClientePorID($baseId, $id);
@@ -115,7 +115,7 @@ class ClienteController extends DefaultController
     public function deletar(Request $request, int $id): Response
     {
         $this->switchDB();
-        $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->session->get('userId'), $id);
+        $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->getIdBase(), $id);
 
         if (!$cliente) {
             throw $this->createNotFoundException('O cliente não foi encontrado');
@@ -126,7 +126,7 @@ class ClienteController extends DefaultController
             return $this->redirectToRoute('cliente_index');
         }
 
-        $this->getRepositorio(Cliente::class)->delete($this->session->get('userId'), $id);
+        $this->getRepositorio(Cliente::class)->delete($this->getIdBase(), $id);
         return $this->redirectToRoute('cliente_index');
     }
 
@@ -136,7 +136,7 @@ class ClienteController extends DefaultController
     public function agendamentos(Request $request, int $id): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
 
         $clienteData = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($baseId, $id);
 
@@ -167,7 +167,7 @@ class ClienteController extends DefaultController
     public function detalhes(Request $request, int $id): JsonResponse
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
 
         $repo = $this->getRepositorio(Cliente::class);
         $cliente = $repo->localizaTodosClientePorID($baseId, $id);

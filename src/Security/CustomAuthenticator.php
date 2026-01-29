@@ -74,6 +74,7 @@ class CustomAuthenticator extends AbstractAuthenticator
         // Configura
         $this->loadSettingsMailer($configs);
         $this->loadGatewayPayments($configs);
+        $request->getSession()->set('estabelecimento_id', $user->getPetshopId());
 
         $response = new JsonResponse($data);
         $response->headers->setCookie(

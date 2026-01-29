@@ -60,7 +60,7 @@ class DefaultController extends AbstractController
         $this->session = $this->request->getSession();
         $this->tempDirManager = $tempDirManager;
         $this->databaseBkp = $databaseBkp;
-        $this->estabelecimentoId = $this->session->get('estabelecimentoId');
+        $this->estabelecimentoId = $this->getIdBase();
     }
 
     public function switchDB(): void

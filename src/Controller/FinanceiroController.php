@@ -28,7 +28,7 @@ class FinanceiroController extends DefaultController
     public function index(Request $request, FinanceiroRepository $financeiroRepo, FinanceiroPendenteRepository $financeiroPendenteRepo): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('estabelecimentoId');     
+        $baseId = $this->getIdBase();     
 
         // --- Aba Diário ---
         $dataDiario = $request->query->get('data') ? date('Y-m-d', strtotime($request->query->get('data'))) : date('Y-m-d');
@@ -72,7 +72,7 @@ class FinanceiroController extends DefaultController
     public function novo(Request $request, FinanceiroRepository $financeiroRepo, PetRepository $petRepo): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
 
         if ($request->isMethod('POST')) {
             $financeiro = new Financeiro();
@@ -97,7 +97,7 @@ class FinanceiroController extends DefaultController
     public function editar(Request $request, int $id, FinanceiroRepository $financeiroRepo, PetRepository $petRepo): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
         $financeiro = $financeiroRepo->findFinanceiro($baseId, $id);
 
         if (!$financeiro) {
@@ -126,7 +126,7 @@ class FinanceiroController extends DefaultController
     public function deletar(int $id, FinanceiroRepository $financeiroRepo): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
 
         $financeiro = $financeiroRepo->findFinanceiro($baseId, $id);
 
@@ -144,7 +144,7 @@ class FinanceiroController extends DefaultController
     public function confirmarPagamento(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository, FinanceiroRepository $financeiroRepo): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
 
         $financeiroPendente = $financeiroPendenteRepository->findPendenteById($baseId, $id);
 
@@ -174,7 +174,7 @@ class FinanceiroController extends DefaultController
     public function deletarPendente(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
 
         $financeiroPendente = $financeiroPendenteRepository->findPendenteById($baseId, $id);
 
@@ -195,7 +195,7 @@ class FinanceiroController extends DefaultController
     public function exportRelatorioExcel(Request $request, FinanceiroRepository $financeiroRepo): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
 
         $mesInicio = $request->query->get('mes_inicio');
         $mesFim = $request->query->get('mes_fim');
@@ -234,7 +234,7 @@ class FinanceiroController extends DefaultController
     public function debugFluxo(Request $request): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
         $data = new \DateTime();
 
         $fluxo = $this->getFluxoCaixa($baseId, $data);

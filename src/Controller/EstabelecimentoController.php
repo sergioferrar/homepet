@@ -23,10 +23,10 @@ class EstabelecimentoController extends DefaultController
     public function index(): Response
     {
         if ($this->security->getUser()->getAccessLevel() == 'Admin') {
-            return $this->redirectToRoute('petshop_edit', ['eid' => $this->security->getUser()->getId()]);
+            return $this->redirectToRoute('petshop_edit', ['eid' => $this->getIdBase()]);
         }
 
-        $estabelecimentos = $this->getRepositorio(\App\Entity\Estabelecimento::class)->listaEstabelecimentos($this->session->get('userId'));
+        $estabelecimentos = $this->getRepositorio(\App\Entity\Estabelecimento::class)->listaEstabelecimentos($this->getIdBase());
 
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
             ->findById($this->security->getUser()->getPetshopId())[0];
@@ -54,7 +54,7 @@ class EstabelecimentoController extends DefaultController
         $dataFinal = $dataAtual->format('Y-m-d H:i:s'); // ou 'Y-m-d H:i:s' se precisar da hora
 
         $this->getRepositorio(\App\Entity\Estabelecimento::class)
-            ->renovacao($this->session->get('userId'), $request->get('eid'), (new \DateTime())->format('Y-m-d H:i:s'), $dataFinal);
+            ->renovacao($this->getIdBase(), $request->get('eid'), (new \DateTime())->format('Y-m-d H:i:s'), $dataFinal);
 
         return $this->redirectToRoute('app_estabelecimento');
     }

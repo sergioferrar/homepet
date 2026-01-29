@@ -43,7 +43,7 @@ class HistoricoController extends DefaultController
     public function documentos(Request $request, int $petId): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
 
         $repoDoc = $this->getRepositorio(DocumentoModelo::class);
         $petRepo = $this->getRepositorio(Pet::class);
@@ -82,7 +82,7 @@ class HistoricoController extends DefaultController
     public function editarDocumento(Request $request, int $id): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
 
         $repoDoc = $this->getRepositorio(DocumentoModelo::class);
         $documento = $repoDoc->buscarPorId($baseId, $id);
@@ -119,7 +119,7 @@ class HistoricoController extends DefaultController
     ): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        $baseId = $this->getIdBase();
 
         $pet = $petRepo->find($petId);
         if (!$pet) {

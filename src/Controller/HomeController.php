@@ -24,11 +24,11 @@ class HomeController extends DefaultController
         }
 
         $this->switchDB();
-        $agendamento = $this->getRepositorio(Financeiro::class)->totalAgendamento($this->estabelecimentoId);
-        $agendamentoDia = $this->getRepositorio(Financeiro::class)->totalAgendamentoDia($this->estabelecimentoId);
-        $animais = $this->getRepositorio(Financeiro::class)->totalAnimais($this->estabelecimentoId);
-        $lucrototal = $this->getRepositorio(Financeiro::class)->totalLucroPorMes($this->estabelecimentoId);
-        $valores = $this->getRepositorio(Financeiro::class)->lucroDiario($this->estabelecimentoId);
+        $agendamento = $this->getRepositorio(Financeiro::class)->totalAgendamento($this->getIdBase());
+        $agendamentoDia = $this->getRepositorio(Financeiro::class)->totalAgendamentoDia($this->getIdBase());
+        $animais = $this->getRepositorio(Financeiro::class)->totalAnimais($this->getIdBase());
+        $lucrototal = $this->getRepositorio(Financeiro::class)->totalLucroPorMes($this->getIdBase());
+        $valores = $this->getRepositorio(Financeiro::class)->lucroDiario($this->getIdBase());
 //        dd($agendamento);
         $data = [];
         $data['agendamento'] = $agendamento['totalAgendamento'];

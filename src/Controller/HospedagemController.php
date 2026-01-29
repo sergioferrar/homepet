@@ -22,7 +22,7 @@ class HospedagemController extends DefaultController
     public function agendar(Request $request): Response
     {
         $this->switchDB();
-        $baseId = $this->estabelecimentoId;
+        $baseId = $this->getIdBase();
 
         if ($request->isMethod('POST')) {
             $clienteId = $request->request->get('cliente_id');
@@ -60,7 +60,7 @@ class HospedagemController extends DefaultController
     public function listar(Request $request): Response
     {
         $this->switchDB();
-        $baseId = $this->estabelecimentoId;
+        $baseId = $this->getIdBase();
 
         $dataFiltro = $request->query->get('data');
         if ($dataFiltro) {
@@ -82,7 +82,7 @@ class HospedagemController extends DefaultController
     public function deletar(Request $request, int $id): Response
     {
         $this->switchDB();
-        $baseId = $this->estabelecimentoId;
+        $baseId = $this->getIdBase();
 
         if (!$this->getRepositorio(HospedagemCaes::class)->localizaPorId($baseId, $id)) {
             throw $this->createNotFoundException('Hospedagem não encontrada');
@@ -98,7 +98,7 @@ class HospedagemController extends DefaultController
     public function editar(Request $request, int $id): Response
     {
         $this->switchDB();
-        $baseId = $this->estabelecimentoId;
+        $baseId = $this->getIdBase();
         $dados = $this->getRepositorio(HospedagemCaes::class)->localizaPorId($baseId, $id);
 
         if (!$dados) {
@@ -143,7 +143,7 @@ class HospedagemController extends DefaultController
     public function concluirPagamento(Request $request, int $id): Response
     {
         $this->switchDB();
-        $baseId = $this->estabelecimentoId;
+        $baseId = $this->getIdBase();
         $dados = $this->getRepositorio(HospedagemCaes::class)->localizaPorId($baseId, $id);
 
         if (!$dados) {

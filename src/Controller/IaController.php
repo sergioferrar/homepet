@@ -38,7 +38,7 @@ class IaController extends AbstractController
         $pergunta = $data['pergunta'] ?? '';
 
         $session = $request->getSession();
-        $baseId = $session->get('baseId');
+        $baseId = $this->getIdBase();
         $usuario = $session->get('user');
 
         $pet = $this->petRepository->buscarUltimoPorUsuario($baseId, $usuario);

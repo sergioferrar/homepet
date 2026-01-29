@@ -20,7 +20,7 @@ class ProntuarioController extends DefaultController
     public function prontuarioPet(int $petId, Request $request): Response
     {
         $this->switchDB();
-        $baseId = $this->getUser()->getId();
+        $baseId = $this->getIdBase();
         $repo = new ProntuarioPetRepository($this->getDoctrine()->getConnection());
 
         if ($request->isMethod('POST')) {
@@ -56,7 +56,7 @@ class ProntuarioController extends DefaultController
     public function prontuarioAjax(int $petId): Response
     {
         $this->switchDB();
-        $baseId = $this->getUser()->getId();
+        $baseId = $this->getIdBase();
         $repo = new ProntuarioPetRepository($this->getDoctrine()->getConnection());
 
         $registros = $repo->listarPorPet($baseId, $petId);
