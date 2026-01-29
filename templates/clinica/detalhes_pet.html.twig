@@ -494,24 +494,26 @@
                                     </p>
                                     {# LISTA DE ITENS #}
                                     <div class="border rounded-3 p-2 bg-light">
-                                        {% for vitem in vendas_items[v.id] %}
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <div class="text-truncate">
-                                                    <span class="fw-semibold">
-                                                        {{ vitem.item }}
-                                                    </span>
-                                                    <small class="text-muted d-block">
-                                                    {{ vitem.quantidade }} ×
-                                                    R$ {{ vitem.valor|number_format(2, ',', '.') }}
-                                                    </small>
+                                        {% if vendas_items[v.id] is defined %}
+                                            {% for vitem in vendas_items[v.id] %}
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <div class="text-truncate">
+                                                        <span class="fw-semibold">
+                                                            {{ vitem.item }}
+                                                        </span>
+                                                        <small class="text-muted d-block">
+                                                        {{ vitem.quantidade }} ×
+                                                        R$ {{ vitem.valor|number_format(2, ',', '.') }}
+                                                        </small>
+                                                    </div>
+                                                    <div class="text-end fw-semibold">
+                                                        R$ {{ vitem.subtotal|number_format(2, ',', '.') }}
+                                                    </div>
                                                 </div>
-                                                <div class="text-end fw-semibold">
-                                                    R$ {{ vitem.subtotal|number_format(2, ',', '.') }}
-                                                </div>
-                                            </div>
-                                        {% else %}
-                                            <p class="text-muted mb-0">Nenhum item na venda.</p>
-                                        {% endfor %}
+                                            {% else %}
+                                                <p class="text-muted mb-0">Nenhum item na venda.</p>
+                                            {% endfor %}
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {# COLUNA DIREITA — TOTAL E AÇÕES #}

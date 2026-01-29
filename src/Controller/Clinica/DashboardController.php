@@ -303,7 +303,7 @@ class DashboardController extends DefaultController
                 'tipo'        => 'Débito',
                 'resumo'      => 'Venda pendente',
                 'observacoes' => 'Pagamento pendente',
-                'valor'       => $venda->getValorFinal(),
+                'valor'       => $venda->getTotal(),
                 'status'      => 'pendente',
                 'cor'         => '#dc3545',
             ];
@@ -318,7 +318,7 @@ class DashboardController extends DefaultController
         // --- TOTAL DE DÉBITOS ---
         $totalDebitos = 0;
         foreach ($vendasPendentes as $venda) {
-            $totalDebitos += $venda->getValorFinal();
+            $totalDebitos += $venda->getTotal();
         }
 
         // --- DATA PARA VIEW ---

@@ -271,7 +271,7 @@
                                             <div class="flex-grow-1">
                                                 <h6 class="mb-2 fw-bold">
                                                     <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}"
-                                                       class="text-decoration-none text-dark stretched-link">
+                                                       class="text-decoration-none text-consulta dark stretched-link">
                                                         {{ pet.nome }}
                                                     </a>
                                                 </h6>
@@ -459,7 +459,7 @@
                                 </div>
                                 <div>
                                     <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}"
-                                       class="fw-bold text-decoration-none text-dark d-block">
+                                       class="fw-bold text-decoration-none consulta text-dark d-block">
                                         {{ petNome }}
                                     </a>
                                     <small class="text-muted">{{ clienteNome }}</small>
@@ -501,7 +501,7 @@
                                 <div>
                                     {% if petId is defined and petId is not null and petId > 0 %}
                                         <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}"
-                                           class="fw-bold text-decoration-none text-dark d-block">
+                                           class="fw-bold text-decoration-none consulta text-dark d-block">
                                             {{ petNome }}
                                         </a>
                                     {% else %}
@@ -546,7 +546,7 @@
                                 </div>
                                 <div>
                                     <a href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}"
-                                       class="fw-bold text-decoration-none text-dark d-block">
+                                       class="fw-bold text-decoration-none consulta text-dark d-block">
                                         {{ animal.nome }}
                                     </a>
                                     <small class="text-muted">{{ animal.tutor }}</small>
@@ -606,7 +606,7 @@
                                         <div>
                                             {% if petId is not null %}
                                                 <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}"
-                                                   class="fw-bold text-decoration-none text-dark d-block">
+                                                   class="fw-bold text-decoration-none consulta text-dark d-block">
                                                     {{ petNome }}
                                                 </a>
                                             {% else %}
@@ -641,7 +641,7 @@
                                         <div>
                                             {% if petId is not null %}
                                                 <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}"
-                                                   class="fw-bold text-decoration-none text-dark d-block">
+                                                   class="fw-bold text-decoration-none consulta text-dark d-block">
                                                     {{ petNome }}
                                                 </a>
                                             {% else %}
