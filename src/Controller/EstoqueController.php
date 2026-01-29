@@ -30,28 +30,33 @@ class EstoqueController extends DefaultController
     }
 
     /**
-     * @Route("/cadastrar", name="clinica_estoque_cadastrar", methods={"POST"})
+     * @Route("/cadastrar", name="clinica_estoque_cadastrar", methods={"GET", "POST"})
      */
     public function cadastrar(Request $request, EntityManagerInterface $em): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        $dados = $request->request->all();
+        if ($request->isMethod('POST')) {
+            $dados = $request->request->all();
 
-        $produto = new Produto();
-        $produto->setEstabelecimentoId($baseId);
-        $produto->setNome($dados['nome']);
-        $produto->setPrecoCusto($dados['preco_custo'] ?: 0);
-        $produto->setPrecoVenda($dados['preco_venda'] ?: 0);
-        $produto->setEstoqueAtual($dados['estoque_atual'] ?: 0);
-        $produto->setUnidade($dados['unidade'] ?: 'un');
-        $produto->setDataCadastro(new \DateTime());
+            $produto = new Produto();
+            $produto->setEstabelecimentoId($baseId);
+            $produto->setNome($dados['nome']);
+            $produto->setPrecoCusto($dados['preco_custo'] ?: 0);
+            $produto->setPrecoVenda($dados['preco_venda'] ?: 0);
+            $produto->setEstoqueAtual($dados['estoque_atual'] ?: 0);
+            $produto->setUnidade($dados['unidade'] ?: 'un');
+            $produto->setDataCadastro(new \DateTime());
 
-        $em->persist($produto);
-        $em->flush();
+            $em->persist($produto);
+            $em->flush();
 
-        $this->addFlash('success', 'Produto cadastrado com sucesso!');
+            $this->addFlash('success', 'Produto cadastrado com sucesso!');
+            return $this->redirectToRoute('clinica_estoque_index');
+        }
+
+        // GET - Redireciona para a página principal de estoque
         return $this->redirectToRoute('clinica_estoque_index');
     }
 
