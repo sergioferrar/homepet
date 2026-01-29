@@ -37,7 +37,7 @@ class FinanceiroController extends DefaultController
         // dd($financeirosDiarios, $dataDiario);
         // 
         // --- Aba Pendente ---
-        $financeirosPendentes = $financeiroPendenteRepo->findAllPendentes($baseId);
+        $financeirosPendentes = $financeiroPendenteRepo->findAllClinica($baseId);
 
         // --- Aba Relatório ---
         $mesInicio = $request->query->get('mes_inicio', (new \DateTime('first day of this month'))->format('Y-m'));

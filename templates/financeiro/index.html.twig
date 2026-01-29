@@ -5,6 +5,8 @@
 
 {% block list_stylesheets %}
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+
+
     <style>
 
         .blinking-text {
@@ -288,536 +290,593 @@
     {# Deixa vazio - botões serão movidos para as abas #}
 {% endblock %}
 {% block list_content %}
-    <div class="text-center border blinking-text mb-4">
-        <small class="text-muted d-block fs-5">Acompanhe entradas, saídas e fluxo de caixa em tempo real</small>
+<!-- LAYOUT MODERNIZADO - Sistema Financeiro -->
+<div class="container-fluid p-0">
+    
+    <!-- Header com Resumo Compacto -->
+    <div class="bg-dark p-4 mb-4 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 text-white">
+            <div>
+                <h4 class="mb-1 fw-bold"><i class="bi bi-cash-stack me-2"></i>Dashboard Financeiro</h4>
+                <small class="opacity-75">Acompanhe entradas, saídas e fluxo de caixa em tempo real</small>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ path('clinica_pdv_index') }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-cash-coin me-1"></i>PDV
+                </a>
+            </div>
+        </div>
     </div>
-    {# === RESUMO GERAL === #}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+
+    <!-- Layout Principal: Sidebar + Conteúdo -->
+    <div class="row g-0">
+        
+        <!-- SIDEBAR ESQUERDA - Cards de Resumo e Navegação -->
+        <div class="col-lg-3 col-md-4 pe-md-3 mb-4 mb-md-0">
+            
+            <!-- Cards de Métricas Principais -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-3">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3">
+                        <i class="bi bi-speedometer2 me-1"></i>Resumo Rápido
+                    </h6>
+                    
+                    <!-- Hoje -->
+                    <div class="d-flex align-items-center justify-content-between p-3 mb-2 rounded" style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);">
+                        <div>
+                            <small class="text-muted d-block mb-1">Hoje</small>
+                            {% set total_diario = 0 %}
+                            {% for item in financeiros %}{% set total_diario = total_diario + item.total_valor %}{% endfor %}
+                            <h5 class="mb-0 fw-bold text-primary">R$ {{ total_diario|number_format(2, ',', '.') }}</h5>
+                        </div>
+                        <div class="text-primary">
+                            <i class="bi bi-calendar-event fs-3"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Pendentes -->
+                    <div class="d-flex align-items-center justify-content-between p-3 mb-2 bg-warning bg-opacity-10 rounded">
+                        <div>
+                            <small class="text-muted d-block mb-1">Pendentes</small>
+                            {% set total_pendente = 0 %}
+                            {% for item in pendentes %}{% set total_pendente = total_pendente + item.total %}{% endfor %}
+                            <h5 class="mb-0 fw-bold text-warning">R$ {{ total_pendente|number_format(2, ',', '.') }}</h5>
+                        </div>
+                        <div class="text-warning">
+                            <i class="bi bi-clock fs-3"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Mês Atual -->
+                    <div class="d-flex align-items-center justify-content-between p-3 mb-2 bg-success bg-opacity-10 rounded">
+                        <div>
+                            <small class="text-muted d-block mb-1">Mês Atual</small>
+                            {% set somaTotal = 0 %}
+                            {% for item in relatorio %}{% set somaTotal = somaTotal + item.total %}{% endfor %}
+                            <h5 class="mb-0 fw-bold text-success">R$ {{ somaTotal|number_format(2, ',', '.') }}</h5>
+                        </div>
+                        <div class="text-success">
+                            <i class="bi bi-graph-up fs-3"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Fluxo Hoje -->
+                    <div class="d-flex align-items-center justify-content-between p-3 bg-info bg-opacity-10 rounded">
+                        <div>
+                            <small class="text-muted d-block mb-1">Fluxo Hoje</small>
+                            <h5 class="mb-0 fw-bold text-info">R$ {{ fluxo_caixa.saldo|number_format(2, ',', '.') }}</h5>
+                        </div>
+                        <div class="text-info">
+                            <i class="bi bi-arrow-left-right fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu de Navegação Vertical -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-2">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-2 px-2">
+                        <i class="bi bi-list-ul me-1"></i>Navegação
+                    </h6>
+                    <div class="nav flex-column nav-pills" id="financeiroTabs" role="tablist">
+                        <button class="nav-link {% if not app.request.query.get('aba') or app.request.query.get('aba') == 'diario' %}active{% endif %} text-start mb-1"
+                                id="diario-tab" data-bs-toggle="tab" data-bs-target="#diario" type="button" role="tab"
+                                aria-controls="diario" aria-selected="true">
+                            <i class="bi bi-calendar-event me-2"></i>Caixa Diário
+                        </button>
+                        <button class="nav-link {% if app.request.query.get('aba') == 'pendente' %}active{% endif %} text-start mb-1"
+                                id="pendente-tab" data-bs-toggle="tab" data-bs-target="#pendente" type="button" role="tab"
+                                aria-controls="pendente" aria-selected="false">
+                            <i class="bi bi-bandaid me-2"></i>Caixa da Clínica
+                        </button>
+                        <button class="nav-link {% if app.request.query.get('aba') == 'relatorio' %}active{% endif %} text-start mb-1"
+                                id="relatorio-tab" data-bs-toggle="tab" data-bs-target="#relatorio" type="button" role="tab"
+                                aria-controls="relatorio" aria-selected="false">
+                            <i class="bi bi-graph-up me-2"></i>Caixa do Banho e Tosa
+                        </button>
+                        <button class="nav-link {% if app.request.query.get('aba') == 'inativos' %}active{% endif %} text-start mb-1"
+                                id="inativos-tab" data-bs-toggle="tab" data-bs-target="#inativos" type="button" role="tab"
+                                aria-controls="inativos" aria-selected="false">
+                            <i class="bi bi-ban me-2"></i>Inativos
+                        </button>
+                        <button class="nav-link {% if app.request.query.get('aba') == 'fluxo' %}active{% endif %} text-start"
+                                id="fluxo-tab" data-bs-toggle="tab" data-bs-target="#fluxo" type="button" role="tab"
+                                aria-controls="fluxo" aria-selected="false">
+                            <i class="bi bi-arrow-left-right me-2"></i>Fluxo de Caixa
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ÁREA PRINCIPAL DE CONTEÚDO -->
+        <div class="col-lg-9 col-md-8">
+            <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <div class="row text-white">
-                        <div class="col-md-3 col-6 mb-3 mb-md-0">
-                            <div class="d-flex align-items-center">
-                                <div class="badge bg-white bg-opacity-25 rounded-circle p-4 me-3">
-                                    <i class="bi bi-calendar-event fs-2"></i>
-                                </div>
+                    
+                    <div class="tab-content">
+
+                        {# === ABA DIÁRIO === #}
+                        <div class="tab-pane fade {% if not app.request.query.get('aba') or app.request.query.get('aba') == 'diario' %}show active{% endif %}"
+                             id="diario" role="tabpanel">
+                            
+                            <!-- Header da Aba -->
+                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                                 <div>
-                                    <small class="text-white-50 d-block">Hoje</small>
+                                    <h5 class="mb-1 fw-bold"><i class="bi bi-calendar-event text-primary me-2"></i>Caixa Diário</h5>
+                                    <small class="text-muted">Movimentações do dia selecionado</small>
+                                </div>
+                                <div class="text-end">
                                     {% set total_diario = 0 %}
                                     {% for item in financeiros %}{% set total_diario = total_diario + item.total_valor %}{% endfor %}
-                                    <h4 class="mb-0 fw-bold">R$ {{ total_diario|number_format(2, ',', '.') }}</h4>
+                                    <small class="text-muted d-block">Total</small>
+                                    <h4 class="mb-0 text-primary fw-bold">R$ {{ total_diario|number_format(2, ',', '.') }}</h4>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-3 col-6 mb-3 mb-md-0">
-                            <div class="d-flex align-items-center">
-                                <div class="badge bg-white bg-opacity-25 rounded-circle p-4 me-3">
-                                    <i class="bi bi-clock fs-2"></i>
+
+                            <!-- Filtro -->
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label for="data_filtro" class="form-label fw-semibold small">
+                                        <i class="bi bi-funnel me-1"></i>Filtrar por Data
+                                    </label>
+                                    <input type="date" id="data_filtro" class="form-control" value="{{ data|date('Y-m-d') }}">
                                 </div>
+                            </div>
+
+                            <!-- Lista de Movimentações -->
+                            <div id="cardContainerDiario" class="row g-3">
+                                {% for item in financeiros %}
+                                    <div class="col-12 card-item"
+                                         data-search="{{ item.dono_nome }} {{ item.pets|join(' ') }} {{ item.total_valor }}">
+                                        <div class="card border-0 shadow-sm hover-shadow transition-all">
+                                            <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                                                <div class="d-flex align-items-center flex-grow-1">
+                                                    <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                                                        <i class="bi bi-person-check text-primary fs-5"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-1 fw-semibold">{{ item.dono_nome }}</h6>
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-heart-fill text-danger me-1"></i>{{ item.pets|join(', ') }}
+                                                            <span class="mx-2">•</span>
+                                                            <i class="bi bi-calendar3 me-1"></i>{{ item.data|date('d/m/Y') }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end ms-3">
+                                                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 fs-6 fw-semibold">
+                                                        R$ {{ item.total_valor|number_format(2, ',', '.') }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="col-12">
+                                        <div class="alert alert-light border text-center py-5 mb-0">
+                                            <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                                            <p class="text-muted mb-0">Nenhum lançamento encontrado nesta data.</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <ul id="paginationDiario" class="pagination justify-content-center mt-4"></ul>
+                        </div>
+
+                        {# === ABA PENDENTE === #}
+                        <div class="tab-pane fade {% if app.request.query.get('aba') == 'pendente' %}show active{% endif %}"
+                             id="pendente" role="tabpanel">
+                            
+                            <!-- Header da Aba -->
+                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                                 <div>
-                                    <small class="text-white-50 d-block">Pendentes</small>
+                                    <h5 class="mb-1 fw-bold"><i class="bi bi-bandaid text-warning me-2"></i>Caixa da Clínica</h5>
+                                    <small class="text-muted">Pagamentos aguardando confirmação</small>
+                                </div>
+                                <div class="text-end">
                                     {% set total_pendente = 0 %}
                                     {% for item in pendentes %}{% set total_pendente = total_pendente + item.total %}{% endfor %}
-                                    <h4 class="mb-0 fw-bold">R$ {{ total_pendente|number_format(2, ',', '.') }}</h4>
+                                    <small class="text-muted d-block">Total Pendente</small>
+                                    <h4 class="mb-0 text-warning fw-bold">R$ {{ total_pendente|number_format(2, ',', '.') }}</h4>
                                 </div>
                             </div>
+
+                            <!-- Lista de Pendentes -->
+                            <div id="cardContainerPendente" class="row g-3">
+                                {% for item in pendentes %}
+                                    <div class="col-12 card-item"
+                                         data-search="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.total }}">
+                                        <div class="card border-0 shadow-sm hover-shadow transition-all">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="d-flex align-items-start flex-grow-1">
+                                                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                                                            <i class="bi bi-hourglass-split text-warning fs-5"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                                <span class="badge bg-warning text-dark">
+                                                                    <i class="bi bi-bandaid me-1"></i>Clínica
+                                                                </span>
+                                                                <h6 class="mb-0 fw-semibold">{{ item.dono_nome }}</h6>
+                                                            </div>
+                                                            <p class="text-muted mb-2 small">
+                                                                <i class="bi bi-heart-fill text-danger me-1"></i>{{ item.pet_nome }}
+                                                                <span class="mx-2">•</span>
+                                                                <i class="bi bi-calendar3 me-1"></i>{{ item.data|date('d/m/Y') }}
+                                                            </p>
+                                                            <h5 class="text-warning mb-0 fw-bold">
+                                                                R$ {{ item.total|number_format(2, ',', '.') }}
+                                                            </h5>
+                                                        </div>
+                                                    </div>
+                                                    <div class="dropdown ms-3">
+                                                        <button class="btn btn-outline-secondary btn-sm rounded-pill" type="button" data-bs-toggle="dropdown">
+                                                            <i class="bi bi-three-dots-vertical"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                                            <li>
+                                                                <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': item.id}) }}">
+                                                                    <button type="submit" class="dropdown-item">
+                                                                        <i class="bi bi-check-circle text-success me-2"></i> Confirmar Pagamento
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li>
+                                                                <a href="javascript:void(0);" class="dropdown-item text-danger btn-excluir-pendente"
+                                                                   data-id="{{ item.id }}"
+                                                                   data-descricao="{{ item.descricao }}"
+                                                                   data-valor="{{ item.total|number_format(2, ',', '.') }}">
+                                                                    <i class="bi bi-trash me-2"></i> Excluir
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="col-12">
+                                        <div class="alert alert-success border-0 text-center py-5 mb-0">
+                                            <i class="bi bi-check-circle fs-1 d-block mb-3"></i>
+                                            <p class="mb-0">Nenhum pagamento pendente. Tudo em dia!</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <ul id="paginationPendente" class="pagination justify-content-center mt-4"></ul>
                         </div>
-                        <div class="col-md-3 col-6">
-                            <div class="d-flex align-items-center">
-                                <div class="badge bg-white bg-opacity-25 rounded-circle p-4 me-3">
-                                    <i class="bi bi-graph-up fs-2"></i>
-                                </div>
+
+                        {# === ABA RELATÓRIO === #}
+                        <div class="tab-pane fade {% if app.request.query.get('aba') == 'relatorio' %}show active{% endif %}"
+                             id="relatorio" role="tabpanel">
+                            
+                            <!-- Header da Aba -->
+                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                                 <div>
-                                    <small class="text-white-50 d-block">Mês Atual</small>
-                                    {% set somaTotal = 0 %}
-                                    {% for item in relatorio %}{% set somaTotal = somaTotal + item.total %}{% endfor %}
-                                    <h4 class="mb-0 fw-bold">R$ {{ somaTotal|number_format(2, ',', '.') }}</h4>
+                                    <h5 class="mb-1 fw-bold"><i class="bi bi-graph-up text-success me-2"></i>Caixa do Banho e Tosa</h5>
+                                    <small class="text-muted">Análise por período</small>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <div class="d-flex align-items-center">
-                                <div class="badge bg-white bg-opacity-25 rounded-circle p-4 me-3">
-                                    <i class="bi bi-arrow-left-right fs-2"></i>
+
+                            <!-- Formulário de Filtro -->
+                            <form method="GET" action="{{ path('financeiro_index') }}" class="mb-4">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-4">
+                                        <label for="mes_inicio" class="form-label fw-semibold small">
+                                            <i class="bi bi-calendar-range me-1"></i>Mês Inicial
+                                        </label>
+                                        <input type="month" id="mes_inicio" name="mes_inicio" class="form-control" value="{{ mes_inicio }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="mes_fim" class="form-label fw-semibold small">
+                                            <i class="bi bi-calendar-range me-1"></i>Mês Final
+                                        </label>
+                                        <input type="month" id="mes_fim" name="mes_fim" class="form-control" value="{{ mes_fim }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="hidden" name="aba" value="relatorio">
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                                <i class="bi bi-funnel me-1"></i>Filtrar
+                                            </button>
+                                            <a href="{{ path('financeiro_relatorio_export', {'mes_inicio': mes_inicio, 'mes_fim': mes_fim}) }}"
+                                               class="btn btn-success">
+                                                <i class="bi bi-file-earmark-excel me-1"></i>Excel
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
+                            </form>
+
+                            {% set somaTotal = 0 %}
+                            {% for item in relatorio %}
+                                {% set somaTotal = somaTotal + item.total %}
+                            {% endfor %}
+
+                            {% if relatorio is not empty %}
+                                <!-- Card Total do Período -->
+                                <div class="alert alert-success bg-success bg-opacity-10 border-0 mb-4">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-success text-uppercase fw-bold mb-1">
+                                                <i class="bi bi-graph-up me-1"></i> Total do Período
+                                            </h6>
+                                            <small class="text-muted">{{ relatorio|length }} dia(s) com movimentação</small>
+                                        </div>
+                                        <h3 class="fw-bold text-success mb-0">
+                                            R$ {{ somaTotal|number_format(2, ',', '.') }}
+                                        </h3>
+                                    </div>
+                                </div>
+
+                                <!-- Grid de Dias -->
+                                <div id="cardContainerRelatorio" class="row g-3">
+                                    {% for item in relatorio %}
+                                        <div class="col-xl-3 col-lg-4 col-md-6 card-item"
+                                             data-search="{{ item.data|date('d/m/Y') }} {{ item.total }}">
+                                            <div class="card border-0 shadow-sm hover-shadow transition-all h-100">
+                                                <div class="card-body text-center p-4">
+                                                    <div class="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                                                        <i class="bi bi-calendar-check text-success fs-4"></i>
+                                                    </div>
+                                                    <h6 class="text-muted mb-2 small">
+                                                        {{ item.data|date('d/m/Y') }}
+                                                    </h6>
+                                                    <h5 class="text-success fw-bold mb-0">
+                                                        R$ {{ item.total|number_format(2, ',', '.') }}
+                                                    </h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-light border text-center py-5 mb-0">
+                                    <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                                    <p class="text-muted mb-0">Nenhum registro encontrado no período selecionado.</p>
+                                </div>
+                            {% endif %}
+
+                            <ul id="paginationRelatorio" class="pagination justify-content-center mt-4"></ul>
+                        </div>
+
+                        {# === ABA INATIVOS === #}
+                        <div class="tab-pane fade {% if app.request.query.get('aba') == 'inativos' %}show active{% endif %}"
+                             id="inativos" role="tabpanel">
+                            
+                            <!-- Header da Aba -->
+                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                                 <div>
-                                    <small class="text-white-50 d-block">Fluxo Hoje</small>
-                                    <h4 class="mb-0 fw-bold">R$ {{ fluxo_caixa.saldo|number_format(2, ',', '.') }}</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <ul class="nav nav-tabs border-0 mb-0" id="financeiroTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link {% if not app.request.query.get('aba') or app.request.query.get('aba') == 'diario' %}active{% endif %}"
-                        id="diario-tab" data-bs-toggle="tab" data-bs-target="#diario" type="button" role="tab"
-                        aria-controls="diario" aria-selected="true">
-                    <i class="bi bi-calendar-event me-2"></i>Caixa diário
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link {% if app.request.query.get('aba') == 'pendente' %}active{% endif %}"
-                        id="pendente-tab" data-bs-toggle="tab" data-bs-target="#pendente" type="button" role="tab"
-                        aria-controls="pendente" aria-selected="false">
-                    <i class="bi bi-clock me-2"></i>Caixa da Clinca
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link {% if app.request.query.get('aba') == 'relatorio' %}active{% endif %}"
-                        id="relatorio-tab" data-bs-toggle="tab" data-bs-target="#relatorio" type="button" role="tab"
-                        aria-controls="relatorio" aria-selected="false">
-                    <i class="bi bi-graph-up me-2"></i>Caixa do Banho e Tosa
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link {% if app.request.query.get('aba') == 'inativos' %}active{% endif %}"
-                        id="inativos-tab" data-bs-toggle="tab" data-bs-target="#inativos" type="button" role="tab"
-                        aria-controls="inativos" aria-selected="false">
-                    <i class="bi bi-ban me-2"></i>Inativos
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link {% if app.request.query.get('aba') == 'fluxo' %}active{% endif %}"
-                        id="fluxo-tab" data-bs-toggle="tab" data-bs-target="#fluxo" type="button" role="tab"
-                        aria-controls="fluxo" aria-selected="false">
-                    <i class="bi bi-arrow-left-right me-2"></i>Fluxo de Caixa
-                </button>
-            </li>
-        </ul>
-
-        <div class="d-flex gap-2">
-           {#  <a href="{{ path('financeiro_novo') }}" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-2"></i>Novo Lançamento
-            </a> #}
-            <a href="{{ path('clinica_pdv_index') }}" class="btn btn-success">
-                <i class="bi bi-cash-coin me-2"></i>PDV
-            </a>
-        </div>
-    </div>
-
-    <div class="tab-content border border-top-0 p-3">
-
-        {# === ABA DIÁRIO === #}
-        <div class="tab-pane fade {% if not app.request.query.get('aba') or app.request.query.get('aba') == 'diario' %}show active{% endif %}"
-             id="diario" role="tabpanel">
-            {# Card de resumo #}
-            {% set total_diario = 0 %}
-            {% for item in financeiros %}{% set total_diario = total_diario + item.total_valor %}{% endfor %}
-
-            <div class="row mb-4">
-                <div class="col-md-4 offset-md-4">
-                    <div class="card shadow-sm border-0 bg-light">
-                        <div class="card-body text-center py-4">
-                            <h6 class="text-primary text-uppercase fw-bold mb-3">
-                                <i class="bi bi-calendar-event me-1"></i> Total do Dia
-                            </h6>
-                            <h3 class="fw-bold text-primary mb-2">
-                                R$ {{ total_diario|number_format(2, ',', '.') }}
-                            </h3>
-                            <small class="text-muted">{{ data|date('d/m/Y') }}</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <label for="data_filtro" class="form-label fw-bold mb-2">
-                        <i class="bi bi-funnel me-1"></i>Filtrar por Data
-                    </label>
-                    <input type="date" id="data_filtro" class="form-control" value="{{ data|date('Y-m-d') }}">
-                </div>
-            </div>
-
-            <div id="cardContainerDiario" class="row gy-3">
-                {% for item in financeiros %}
-                    <div class="col-12 card-item"
-                         data-search="{{ item.dono_nome }} {{ item.pets|join(' ') }} {{ item.total_valor }}">
-                        <div class="card shadow-sm border-0 rounded-3 border-start border-primary border-3">
-                            <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <div class="flex-grow-1">
-                                    <h5 class="card-title mb-1">
-                                        <i class="bi bi-person me-2 text-primary"></i>{{ item.dono_nome }}
-                                    </h5>
-                                    <p class="text-muted mb-0 small">
-                                        <i class="bi bi-heart me-1"></i>{{ item.pets|join(', ') }}
-                                        <span class="mx-2 text-secondary">|</span>
-                                        <i class="bi bi-calendar me-1"></i>{{ item.data|date('d/m/Y') }}
-                                    </p>
+                                    <h5 class="mb-1 fw-bold"><i class="bi bi-slash-circle text-danger me-2"></i>Lançamentos Inativos</h5>
+                                    <small class="text-muted">Registros desativados do sistema</small>
                                 </div>
                                 <div class="text-end">
-                                    <span class="fw-bold text-primary fs-5">R$ {{ item.total_valor|number_format(2, ',', '.') }}</span>
+                                    {% set total_inativos = 0 %}
+                                    {% for item in inativos %}{% set total_inativos = total_inativos + item.total %}{% endfor %}
+                                    <small class="text-muted d-block">Total Inativo</small>
+                                    <h4 class="mb-0 text-danger fw-bold">R$ {{ total_inativos|number_format(2, ',', '.') }}</h4>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="col-12">
-                        <div class="alert alert-info text-center mb-0">
-                            <i class="bi bi-info-circle me-2"></i>Nenhum lançamento encontrado nesta data.
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <ul id="paginationDiario" class="pagination justify-content-center mt-3"></ul>
-        </div>
 
-        {# === ABA PENDENTE === #}
-        <div class="tab-pane fade {% if app.request.query.get('aba') == 'pendente' %}show active{% endif %}"
-             id="pendente" role="tabpanel">
-            {# Card de resumo #}
-            {% set total_pendente = 0 %}
-            {% for item in pendentes %}{% set total_pendente = total_pendente + item.total %}{% endfor %}
-
-            <div class="row mb-4">
-                <div class="col-md-4 offset-md-4">
-                    <div class="card shadow-sm border-0 bg-light">
-                        <div class="card-body text-center py-4">
-                            <h6 class="text-warning text-uppercase fw-bold mb-3">
-                                <i class="bi bi-clock me-1"></i> Total Pendente
-                            </h6>
-                            <h3 class="fw-bold text-warning mb-2">
-                                R$ {{ total_pendente|number_format(2, ',', '.') }}
-                            </h3>
-                            <small class="text-muted">{{ pendentes|length }} pagamento(s) aguardando</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-            <div id="cardContainerPendente" class="row gy-3">
-                {% for item in pendentes %}
-                    <div class="col-12 card-item"
-                         data-search="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.total }}">
-                        <div class="card shadow-sm border-0 rounded-3 border-start border-warning border-3">
-                            <div class="card-body p-3">
-                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <span class="badge bg-warning text-dark me-2">
-                                                <i class="bi bi-clock me-1"></i>PENDENTE
-                                            </span>
-                                            <h5 class="card-title mb-0">{{ item.dono_nome }}</h5>
+                            <!-- Lista de Inativos -->
+                            <div id="cardContainerInativos" class="row g-3">
+                                {% for item in inativos %}
+                                    <div class="col-12 card-item"
+                                         data-search="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.total }}">
+                                        <div class="card border-0 shadow-sm hover-shadow transition-all">
+                                            <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                                                <div class="d-flex align-items-center flex-grow-1">
+                                                    <div class="bg-danger bg-opacity-10 rounded-circle p-3 me-3">
+                                                        <i class="bi bi-x-circle text-danger fs-5"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                                            <span class="badge bg-danger">
+                                                                <i class="bi bi-slash-circle me-1"></i>INATIVO
+                                                            </span>
+                                                            <h6 class="mb-0 fw-semibold">{{ item.dono_nome }}</h6>
+                                                        </div>
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-heart-fill text-danger me-1"></i>{{ item.pet_nome }}
+                                                            <span class="mx-2">•</span>
+                                                            <i class="bi bi-calendar3 me-1"></i>{{ item.data|date('d/m/Y') }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end ms-3">
+                                                    <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 fs-6 fw-semibold">
+                                                        R$ {{ item.total|number_format(2, ',', '.') }}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <p class="text-muted mb-2 small">
-                                            <i class="bi bi-heart me-1"></i>{{ item.pet_nome }}
-                                            <span class="mx-2 text-secondary">|</span>
-                                            <i class="bi bi-calendar me-1"></i>{{ item.data|date('d/m/Y') }}
-                                        </p>
-                                        <h4 class="text-warning mb-0">
-                                            R$ {{ item.total|number_format(2, ',', '.') }}</h4>
                                     </div>
-                                    <div class="dropdown">
-                                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                            <i class="bi bi-three-dots-vertical"></i> Ação
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
-                                            <li>
-                                                <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': item.id}) }}">
-                                                    <button type="submit" class="dropdown-item text-success">
-                                                        <i class="bi bi-check-circle me-2"></i> Confirmar Pagamento
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <a href="javascript:void(0);" class="dropdown-item text-danger btn-excluir-pendente"
-                                                   data-id="{{ item.id }}"
-                                                   data-descricao="{{ item.descricao }}"
-                                                   data-valor="{{ item.total|number_format(2, ',', '.') }}">
-                                                    <i class="bi bi-trash me-2"></i> Excluir
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="col-12">
-                        <div class="alert alert-success text-center mb-0">
-                            <i class="bi bi-check-circle me-2"></i>Nenhum pagamento pendente. Tudo em dia!
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <ul id="paginationPendente" class="pagination justify-content-center mt-3"></ul>
-        </div>
-
-        {# === ABA RELATÓRIO === #}
-        <div class="tab-pane fade {% if app.request.query.get('aba') == 'relatorio' %}show active{% endif %}"
-             id="relatorio" role="tabpanel">
-            <form method="GET" action="{{ path('financeiro_index') }}" class="mb-4">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label for="mes_inicio" class="form-label fw-bold">Mês Inicial</label>
-                        <input type="month" id="mes_inicio" name="mes_inicio" class="form-control"
-                               value="{{ mes_inicio }}">
-                    </div>
-                    <div class="col-md-4">
-                        <label for="mes_fim" class="form-label fw-bold">Mês Final</label>
-                        <input type="month" id="mes_fim" name="mes_fim" class="form-control" value="{{ mes_fim }}">
-                    </div>
-                    <div class="col-md-4 d-flex align-items-end gap-2">
-                        <input type="hidden" name="aba" value="relatorio">
-                        <button type="submit" class="btn btn-primary flex-grow-1">
-                            <i class="bi bi-funnel me-1"></i>Filtrar
-                        </button>
-                        <a href="{{ path('financeiro_relatorio_export', {'mes_inicio': mes_inicio, 'mes_fim': mes_fim}) }}"
-                           class="btn btn-success">
-                            <i class="bi bi-file-earmark-excel me-1"></i>Excel
-                        </a>
-                    </div>
-                </div>
-            </form>
-
-            {# --- Cálculo da soma total dos dias --- #}
-            {% set somaTotal = 0 %}
-            {% for item in relatorio %}
-                {% set somaTotal = somaTotal + item.total %}
-            {% endfor %}
-
-            {% if relatorio is not empty %}
-                <!-- Card de total do período -->
-                <div class="row mb-4">
-                    <div class="col-md-6 offset-md-3">
-                        <div class="card shadow-sm border-0 bg-light">
-                            <div class="card-body text-center">
-                                <h6 class="text-success text-uppercase fw-bold">
-                                    <i class="bi bi-graph-up me-1"></i> Total do Período
-                                </h6>
-                                <h3 class="fw-bold text-success mt-2 mb-1">
-                                    R$ {{ somaTotal|number_format(2, ',', '.') }}
-                                </h3>
-                                <small class="text-muted">{{ relatorio|length }} dia(s) com movimentação</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-
-                <!-- Cards de cada dia -->
-                <div id="cardContainerRelatorio" class="row gy-3">
-                    {% for item in relatorio %}
-                        <div class="col-md-4 col-12 card-item"
-                             data-search="{{ item.data|date('d/m/Y') }} {{ item.total }}">
-                            <div class="card shadow-sm border-0 rounded-3 border-start border-success border-3">
-                                <div class="card-body p-3 text-center">
-                                    <h6 class="text-muted mb-2">
-                                        <i class="bi bi-calendar-event me-1"></i>{{ item.data|date('d/m/Y') }}
-                                    </h6>
-                                    <h4 class="text-success fw-bold mb-0">
-                                        R$ {{ item.total|number_format(2, ',', '.') }}</h4>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="alert alert-info text-center mb-0">
-                    <i class="bi bi-info-circle me-2"></i>Nenhum registro encontrado no período selecionado.
-                </div>
-            {% endif %}
-
-            <ul id="paginationRelatorio" class="pagination justify-content-center mt-3"></ul>
-        </div>
-
-
-        {# === ABA INATIVOS === #}
-        <div class="tab-pane fade {% if app.request.query.get('aba') == 'inativos' %}show active{% endif %}"
-             id="inativos" role="tabpanel">
-            {# Card de resumo #}
-            {% set total_inativos = 0 %}
-            {% for item in inativos %}{% set total_inativos = total_inativos + item.total %}{% endfor %}
-
-            <div class="row mb-4">
-                <div class="col-md-4 offset-md-4">
-                    <div class="card shadow-sm border-0 bg-light">
-                        <div class="card-body text-center py-4">
-                            <h6 class="text-danger text-uppercase fw-bold mb-3">
-                                <i class="bi bi-slash-circle me-1"></i> Total Inativo
-                            </h6>
-                            <h3 class="fw-bold text-danger mb-2">
-                                R$ {{ total_inativos|number_format(2, ',', '.') }}
-                            </h3>
-                            <small class="text-muted">{{ inativos|length }} lançamento(s) inativo(s)</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-            <div id="cardContainerInativos" class="row gy-3">
-                {% for item in inativos %}
-                    <div class="col-12 card-item"
-                         data-search="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.total }}">
-                        <div class="card shadow-sm border-0 rounded-3 border-start border-danger border-3">
-                            <div class="card-body p-3">
-                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <span class="badge bg-danger me-2">
-                                                <i class="bi bi-slash-circle me-1"></i>INATIVO
-                                            </span>
-                                            <h5 class="card-title mb-0">{{ item.dono_nome }}</h5>
+                                {% else %}
+                                    <div class="col-12">
+                                        <div class="alert alert-success border-0 text-center py-5 mb-0">
+                                            <i class="bi bi-check-circle fs-1 d-block mb-3"></i>
+                                            <p class="mb-0">Nenhum lançamento inativo. Tudo ativo!</p>
                                         </div>
-                                        <p class="text-muted mb-0 small">
-                                            <i class="bi bi-heart me-1"></i>{{ item.pet_nome }}
-                                            <span class="mx-2 text-secondary">|</span>
-                                            <i class="bi bi-calendar me-1"></i>{{ item.data|date('d/m/Y') }}
-                                        </p>
                                     </div>
-                                    <div class="text-end">
-                                        <span class="fw-bold text-danger fs-5">R$ {{ item.total|number_format(2, ',', '.') }}</span>
+                                {% endfor %}
+                            </div>
+                            <ul id="paginationInativos" class="pagination justify-content-center mt-4"></ul>
+                        </div>
+
+                        {# === ABA FLUXO DE CAIXA === #}
+                        <div class="tab-pane fade {% if app.request.query.get('aba') == 'fluxo' %}show active{% endif %}" 
+                             id="fluxo" role="tabpanel">
+                            
+                            <!-- Header da Aba -->
+                            <div class="mb-4 pb-3 border-bottom">
+                                <h5 class="mb-1 fw-bold"><i class="bi bi-arrow-left-right text-info me-2"></i>Fluxo de Caixa</h5>
+                                <small class="text-muted">Controle de entradas e saídas do dia</small>
+                            </div>
+
+                            <!-- Cards de Resumo do Fluxo -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <div class="card border-0 bg-success bg-opacity-10 h-100">
+                                        <div class="card-body text-center p-4">
+                                            <i class="bi bi-arrow-up-circle text-success fs-2 d-block mb-2"></i>
+                                            <small class="text-muted d-block mb-1">Total Entradas</small>
+                                            <h4 class="fw-bold text-success mb-0">
+                                                R$ {{ fluxo_caixa.total_entradas|number_format(2, ',', '.') }}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-0 bg-danger bg-opacity-10 h-100">
+                                        <div class="card-body text-center p-4">
+                                            <i class="bi bi-arrow-down-circle text-danger fs-2 d-block mb-2"></i>
+                                            <small class="text-muted d-block mb-1">Total Saídas</small>
+                                            <h4 class="fw-bold text-danger mb-0">
+                                                - R$ {{ fluxo_caixa.total_saidas|number_format(2, ',', '.') }}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-0 bg-dark bg-opacity-10 h-100">
+                                        <div class="card-body text-center p-4">
+                                            <i class="bi bi-wallet2 {% if fluxo_caixa.saldo < 0 %}text-danger{% else %}text-success{% endif %} fs-2 d-block mb-2"></i>
+                                            <small class="text-muted d-block mb-1">Saldo do Dia</small>
+                                            <h4 class="fw-bold {% if fluxo_caixa.saldo < 0 %}text-danger{% else %}text-success{% endif %} mb-0">
+                                                R$ {{ fluxo_caixa.saldo|number_format(2, ',', '.') }}
+                                            </h4>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="col-12">
-                        <div class="alert alert-success text-center mb-0">
-                            <i class="bi bi-check-circle me-2"></i>Nenhum lançamento inativo. Tudo ativo!
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <ul id="paginationInativos" class="pagination justify-content-center mt-3"></ul>
-        </div>
 
-        {# === ABA FLUXO DE CAIXA === #}
-        <div class="tab-pane fade {% if app.request.query.get('aba') == 'fluxo' %}show active{% endif %}" id="fluxo"
-             role="tabpanel">
-            {# Cards de resumo #}
-            <div class="row mb-4 g-3">
-                <div class="col-md-4">
-                    <div class="card shadow-sm border-0 bg-light">
-                        <div class="card-body text-center py-4">
-                            <h6 class="text-success text-uppercase fw-bold mb-3">
-                                <i class="bi bi-arrow-up me-1"></i> Total Entradas
-                            </h6>
-                            <h3 class="fw-bold text-success mb-2">
-                                R$ {{ fluxo_caixa.total_entradas|number_format(2, ',', '.') }}
-                            </h3>
-                            <small class="text-muted">Vendas e recebimentos</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card shadow-sm border-0 bg-light">
-                        <div class="card-body text-center py-4">
-                            <h6 class="text-danger text-uppercase fw-bold mb-3">
-                                <i class="bi bi-arrow-down me-1"></i> Total Saídas
-                            </h6>
-                            <h3 class="fw-bold text-danger mb-2">
-                                - R$ {{ fluxo_caixa.total_saidas|number_format(2, ',', '.') }}
-                            </h3>
-                            <small class="text-muted">Despesas e pagamentos</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card shadow-sm border-0 bg-light">
-                        <div class="card-body text-center py-4">
-                            <h6 class="text-dark text-uppercase fw-bold mb-3">
-                                <i class="bi bi-scale me-1"></i> Saldo do Dia
-                            </h6>
-                            <h3 class="fw-bold {% if fluxo_caixa.saldo < 0 %}text-danger{% else %}text-success{% endif %} mb-2">
-                                R$ {{ fluxo_caixa.saldo|number_format(2, ',', '.') }}
-                            </h3>
-                            <small class="text-muted">Entradas - Saídas</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <label for="data_filtro_fluxo" class="form-label fw-bold mb-2">
-                        <i class="bi bi-funnel me-1"></i>Filtrar por Data
-                    </label>
-                    <input type="date" id="data_filtro_fluxo" class="form-control"
-                           value="{{ data_fluxo|date('Y-m-d') }}">
-                </div>
-            </div>
-
-            <div id="cardContainerFluxo" class="row gy-3">
-                {% for mov in fluxo_caixa.movimentos %}
-                    <div class="col-12 card-item"
-                         data-search="{{ mov.descricao }} {{ mov.origem }} {{ mov.metodo }} {{ mov.valor }}">
-                        <div class="card shadow-sm border-0 rounded-3 {% if mov.tipo == 'SAIDA' %}border-start border-danger border-3{% else %}border-start border-success border-3{% endif %}">
-                            <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <div class="flex-grow-1">
-                                    <h5 class="card-title mb-1">{{ mov.descricao }}</h5>
-                                    <p class="text-muted mb-0 small">
-                                        <i class="bi bi-clock me-1"></i>{{ mov.data|date('H:i') }}
-                                        <span class="mx-2 text-secondary">|</span>
-                                        <i class="bi bi-tag me-1"></i>{{ mov.origem }}
-                                        <span class="mx-2 text-secondary">|</span>
-                                        <i class="bi bi-cash-stack me-1"></i>{{ mov.metodo }}
-                                    </p>
-                                </div>
-                                <div class="text-end">
-                                    {% if mov.tipo == 'SAIDA' %}
-                                        <span class="fw-bold text-danger fs-5">- R$ {{ mov.valor|number_format(2, ',', '.') }}</span>
-                                        <br><small class="badge bg-danger">SAÍDA</small>
-                                    {% else %}
-                                        <span class="fw-bold text-success fs-5">+ R$ {{ mov.valor|number_format(2, ',', '.') }}</span>
-                                        <br><small class="badge bg-success">ENTRADA</small>
-                                    {% endif %}
+                            <!-- Filtro -->
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label for="data_filtro_fluxo" class="form-label fw-semibold small">
+                                        <i class="bi bi-funnel me-1"></i>Filtrar por Data
+                                    </label>
+                                    <input type="date" id="data_filtro_fluxo" class="form-control" value="{{ data_fluxo|date('Y-m-d') }}">
                                 </div>
                             </div>
+
+                            <!-- Lista de Movimentos -->
+                            <div id="cardContainerFluxo" class="row g-3">
+                                {% for mov in fluxo_caixa.movimentos %}
+                                    <div class="col-12 card-item"
+                                         data-search="{{ mov.descricao }} {{ mov.origem }} {{ mov.metodo }} {{ mov.valor }}">
+                                        <div class="card border-0 shadow-sm hover-shadow transition-all">
+                                            <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                                                <div class="d-flex align-items-center flex-grow-1">
+                                                    <div class="{% if mov.tipo == 'SAIDA' %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10 rounded-circle p-3 me-3">
+                                                        <i class="bi {% if mov.tipo == 'SAIDA' %}bi-arrow-down-circle text-danger{% else %}bi-arrow-up-circle text-success{% endif %} fs-5"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-1 fw-semibold">{{ mov.descricao }}</h6>
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-clock me-1"></i>{{ mov.data|date('H:i') }}
+                                                            <span class="mx-2">•</span>
+                                                            <i class="bi bi-tag me-1"></i>{{ mov.origem }}
+                                                            <span class="mx-2">•</span>
+                                                            <i class="bi bi-credit-card me-1"></i>{{ mov.metodo }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end ms-3">
+                                                    {% if mov.tipo == 'SAIDA' %}
+                                                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 fs-6 fw-semibold">
+                                                            - R$ {{ mov.valor|number_format(2, ',', '.') }}
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 fs-6 fw-semibold">
+                                                            + R$ {{ mov.valor|number_format(2, ',', '.') }}
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="col-12">
+                                        <div class="alert alert-light border text-center py-5 mb-0">
+                                            <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                                            <p class="text-muted mb-0">Nenhum movimento encontrado nesta data.</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <ul id="paginationFluxo" class="pagination justify-content-center mt-4"></ul>
                         </div>
+
                     </div>
-                {% else %}
-                    <div class="col-12">
-                        <div class="alert alert-info text-center mb-0">
-                            <i class="bi bi-info-circle me-2"></i>Nenhum movimento encontrado nesta data.
-                        </div>
-                    </div>
-                {% endfor %}
+                </div>
             </div>
-            <ul id="paginationFluxo" class="pagination justify-content-center mt-3"></ul>
         </div>
+
     </div>
+</div>
 
-    <!-- Modal Confirmar Exclusão Pendente -->
-    <div class="modal fade" id="modalExcluirPendente" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 rounded-4 shadow">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-exclamation-triangle me-2"></i> Confirmar Exclusão
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<!-- Modal Confirmar Exclusão Pendente -->
+<div class="modal fade" id="modalExcluirPendente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <div class="bg-danger bg-opacity-10 rounded-circle p-4 d-inline-flex mb-3">
+                    <i class="bi bi-trash text-danger" style="font-size: 3rem;"></i>
                 </div>
-                <div class="modal-body text-center py-4">
-                    <i class="bi bi-trash" style="font-size: 3rem; color: #dc3545;"></i>
-                    <p class="mt-3 mb-1">Tem certeza que deseja excluir este registro pendente?</p>
-                    <p class="text-muted small" id="pendente-info"></p>
-                    <p class="text-danger small"><strong>Esta ação não pode ser desfeita.</strong></p>
+                <p class="mt-3 mb-2 fw-semibold">Tem certeza que deseja excluir este registro pendente?</p>
+                <p class="text-muted small mb-3" id="pendente-info"></p>
+                <div class="alert alert-danger bg-danger bg-opacity-10 border-0 small">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    <strong>Atenção:</strong> Esta ação não pode ser desfeita.
                 </div>
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form method="post" id="formExcluirPendente" class="d-inline">
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-trash me-1"></i> Sim, Excluir
-                        </button>
-                    </form>
-                </div>
+            </div>
+            <div class="modal-footer border-0 justify-content-center gap-2">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-1"></i>Cancelar
+                </button>
+                <form method="post" id="formExcluirPendente" class="d-inline">
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="bi bi-trash me-1"></i> Sim, Excluir
+                    </button>
+                </form>
             </div>
         </div>
     </div>
+</div>
+
 {% endblock %}
 
 {% block list_javascripts %}
