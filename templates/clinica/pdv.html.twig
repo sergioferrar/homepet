@@ -22,7 +22,7 @@
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             z-index: 1000;
             position: absolute;
-            width: 100%;
+            width: auto;
         }
 
         .autocomplete-suggestion {
@@ -384,7 +384,8 @@
 
         // ==================== FUNÇÕES DE CÁLCULO ====================
         function formatarMoeda(valor) {
-            return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
+            console.log(valor)
+            return 'R$ ' + valor;//parseFloat(valor).toFixed(2).replace('.', ',');
         }
 
         function calcularTotais() {

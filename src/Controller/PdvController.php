@@ -49,7 +49,7 @@ class PdvController extends DefaultController
                 "valor" => $p->getPrecoVenda() ?? 0.0, // Usa 'valor' como campo unificado
                 "estoque" => $p->getEstoqueAtual() ?? 0,
                 "tipo" => "Produto",
-                "descricao" => $p->getDescricao() ?? "", // Adiciona descrição para o modal
+                "descricao" => $p->getNome() ?? "", // Adiciona descrição para o modal
             ];
         }
 

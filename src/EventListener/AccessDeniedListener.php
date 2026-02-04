@@ -17,6 +17,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\Security;
+use Doctrine\Persistence\ManagerRegistry;
+use App\Service\DynamicConnectionManager;
 
 class AccessDeniedListener implements EventSubscriberInterface
 {
@@ -26,13 +28,14 @@ class AccessDeniedListener implements EventSubscriberInterface
     private $entityManager;
     private $router;
 
-    public function __construct(EntityManagerInterface $entityManager, ?Security $security, UrlGeneratorInterface $urlGenerator, RouterInterface $router, RequestStack $request)
+    public function __construct(EntityManagerInterface $entityManager, ?Security $security, UrlGeneratorInterface $urlGenerator, RouterInterface $router, ManagerRegistry $managerRegistry, RequestStack $request)
     {
         $this->entityManager = $entityManager;
         $this->security = $security;
         $this->urlGenerator = $urlGenerator;
         $this->router = $router;
         $this->request = $request->getCurrentRequest();
+        $this->managerRegistry = $managerRegistry;
 
     }
 
@@ -109,6 +112,8 @@ class AccessDeniedListener implements EventSubscriberInterface
             return $response;
         }
 
+        (new DynamicConnectionManager($this->managerRegistry))->restoreOriginal();
+        
         $estabelecimento = $this->entityManager
         ->getRepository(\App\Entity\Estabelecimento::class)
         ->findOneById($this->security->getUser()->getPetshopId());
