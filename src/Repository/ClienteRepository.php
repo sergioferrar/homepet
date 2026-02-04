@@ -253,4 +253,13 @@ class ClienteRepository extends ServiceEntityRepository
         return (int) $this->conn->fetchOne($sql, ['baseId' => $baseId]);
     }
 
+    public function findByNomeLike($baseId, string $query): array
+    {
+        $sql = "SELECT * 
+            FROM {$_ENV['DBNAMETENANT']}.cliente 
+            WHERE nome like '%{$query}%' AND estabelecimento_id = {$baseId}";
+        $query = $this->conn->executeQuery($sql);
+        return $this->conn->fetchAllAssociative();
+    }
+
 }

@@ -4,129 +4,244 @@
 
 {% block stylesheets %}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <!-- Bootstrap Icons CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     
 {% endblock %}
 
 {% block body %}
     <style>
-/* Container do autocomplete (opcional, mas recomendado) */
-#autocomplete-tutor, #autocomplete-list {
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    margin-top: -2px;
-    background-color: #fff;
-    max-height: 220px;
-    overflow-y: auto;
-    box-shadow: 0 4px 10px rgba(0,0,0,.08);
-    z-index: 1000;
-}
+        /* Estilos personalizados para o autocomplete */
+        .autocomplete-suggestions {
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            margin-top: 0.25rem;
+            background-color: #fff;
+            max-height: 220px;
+            overflow-y: auto;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            z-index: 1000;
+            position: absolute;
+            width: 100%;
+        }
 
-/* Item da sugestão */
-.autocomplete-suggestion {
-    padding: 10px 14px;
-    cursor: pointer;
-    border-bottom: 1px solid #f1f1f1;
-    font-size: 14px;
-    transition: background-color .2s ease;
-}
+        .autocomplete-suggestion {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease;
+        }
 
-/* Remove a borda do último item */
-.autocomplete-suggestion:last-child {
-    border-bottom: none;
-}
+        .autocomplete-suggestion:last-child {
+            border-bottom: none;
+        }
 
-/* Hover */
-.autocomplete-suggestion:hover {
-    background-color: #f8f9fa;
-}
-#petSelect:disabled {
-    background-color: #f8f9fa;
-    cursor: not-allowed;
-    opacity: 0.8;
-}
+        .autocomplete-suggestion:hover,
+        .autocomplete-suggestion.active {
+            background-color: #e2e6ea;
+        }
+
+        #petSelect:disabled {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        /* Ajustes para o layout geral */
+        .pdv {
+            background-color: #fff;
+            padding: 2rem;
+            margin-top: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .pagetitle {
+            padding-bottom: 1rem;
+        }
+
+        .pagetitle h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            color: #343a40;
+        }
+
+        .breadcrumb {
+            background-color: transparent;
+            padding: 0;
+            margin-bottom: 0;
+        }
+
+        .breadcrumb-item a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+
+        .breadcrumb-item.active {
+            color: #6c757d;
+        }
+
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #495057;
+        }
+
+        .btn-outline-dark {
+            color: #343a40;
+            border-color: #343a40;
+        }
+
+        .btn-outline-dark:hover {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        .table thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .summary-section {
+            padding-left: 1.5rem;
+            border-left: 1px solid #dee2e6;
+        }
+
+        .summary-section h5 {
+            margin-bottom: 1rem;
+            color: #343a40;
+        }
+
+        .summary-section p {
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-section strong {
+            color: #212529;
+        }
+
+        .total-display {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+
+        .troco-display {
+            font-size: 1.35rem;
+            font-weight: bold;
+            color: #198754;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #dee2e6;
+        }
     </style>
-    <div class="container-fluid ">
+ <div class="container-fluid">
         <div class="pagetitle">
             <h1>Ponto de Venda</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
                     <li class="breadcrumb-item">Atendimento</li>
-                    <li class="breadcrumb-item active">PDF - Venda</li>
+                    <li class="breadcrumb-item active">PDV - Venda</li>
                 </ol>
             </nav>
         </div>
-        <div class="bg-white p-4 mt-4 rounded shadow-sm pdv">
-            <!-- 🔹 Cabeçalho -->
+
+        <div class="pdv">
+            <!-- 🔹 Cabeçalho da Seção -->
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="mb-0"><i class="bi bi-cash me-2"></i> Ponto de Venda</h3>
-                <div class="d-flex gap-2">
-                    <a href="{{ path('clinica_estoque_index') }}" class="btn btn-outline-dark">
-                        <i class="bi bi-box-seam"></i> Estoque
+                <h3 class="mb-0 text-primary"><i class="bi bi-cash-coin me-2"></i> Ponto de Venda</h3>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ path('clinica_estoque_index') }}" class="btn btn-outline-secondary d-flex align-items-center">
+                        <i class="bi bi-box-seam me-2"></i> Estoque
                     </a>
-                    <a href="{{ path('clinica_pdv_listar') }}" class="btn btn-outline-primary">
-                        <i class="bi bi-card-checklist"></i> Listagem
+                    <a href="{{ path('clinica_pdv_listar') }}" class="btn btn-outline-info d-flex align-items-center">
+                        <i class="bi bi-card-checklist me-2"></i> Listagem
                     </a>
-                    <button class="btn btn-outline-danger" id="btnSaidaHeader">
-                        <i class="bi bi-upload"></i> Registrar Saída
+                    <button class="btn btn-outline-danger d-flex align-items-center" id="btnSaidaHeader">
+                        <i class="bi bi-box-arrow-up me-2"></i> Registrar Saída
                     </button>
-                    <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-success">
-                        <i class="bi bi-wallet2"></i> Caixa
+                    <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-success d-flex align-items-center">
+                        <i class="bi bi-wallet2 me-2"></i> Caixa
                     </a>
                 </div>
             </div>
-            <hr>
+            <hr class="mb-4">
 
             <!-- 🔹 Tutor/Cliente -->
-            <div class="mb-3 position-relative">
-                <label class="fw-bold mb-2">Tutor/Cliente:</label>
-                <input type="text" id="inputTutor" class="form-control" autocomplete="false" placeholder="Comece a digitar o nome...">
+            <div class="mb-4 position-relative">
+                <label for="inputTutor" class="form-label">Tutor/Cliente:</label>
+                <input type="text" id="inputTutor" class="form-control" autocomplete="off" placeholder="Comece a digitar o nome...">
                 <div id="autocomplete-tutor" class="autocomplete-suggestions"></div>
             </div>
 
             <!-- 🐕 Pet (opcional) -->
-            <div class="mb-3">
-                <label class="fw-bold mb-2">Pet <small class="text-muted">(opcional - para aparecer na
-                        ficha)</small>:</label>
+            <div class="mb-4">
+                <label for="petSelect" class="form-label">Pet <small class="text-muted">(opcional - para aparecer na ficha)</small>:</label>
                 <select id="petSelect" class="form-select" disabled>
                     <option value="">Selecione um cliente primeiro</option>
                 </select>
             </div>
 
-            <div class="row">
-                <!-- Coluna esquerda -->
-                <div class="col-md-8 position-relative">
-
+            <div class="row g-4">
+                <!-- Coluna esquerda: Produtos e Tabela -->
+                <div class="col-md-8">
                     <!-- 🔍 Campo de produto com autocomplete -->
-                    <div class="d-flex mb-3">
-                        <input type="text" id="inputProduto" class="form-control me-2"
-                               placeholder="Digite o nome do produto ou serviço...">
-                        <button class="btn btn-primary" id="btnAddProduto"><i class="bi bi-plus-lg"></i></button>
+                    <div class="mb-3">
+                        <label for="inputProduto" class="form-label">Adicionar Produto/Serviço:</label>
+                        <div class="input-group">
+                            <input type="text" id="inputProduto" class="form-control" autocomplete="off" placeholder="Digite o nome do produto ou serviço...">
+                            <button class="btn btn-primary" id="btnAddProduto" type="button"><i class="bi bi-plus-lg"></i></button>
+                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalSelecionarProduto">
+                                <i class="bi bi-search"></i> Selecionar
+                            </button>
+                        </div>
+                        <div id="autocomplete-list" class="autocomplete-suggestions"></div>
                     </div>
-                    <div id="autocomplete-list" class="autocomplete-suggestions"></div>
 
-                    <table class="table table-sm table-striped align-middle" id="tabelaItens">
-                        <thead class="table-light">
-                        <tr>
-                            <th>Produto</th>
-                            <th width="90">Qtd</th>
-                            <th width="100">Preço</th>
-                            <th width="100">Subtotal</th>
-                            <th width="50"></th>
-                        </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped align-middle" id="tabelaItens">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Produto</th>
+                                    <th style="width: 100px;">Qtd</th>
+                                    <th style="width: 120px;">Preço Unit.</th>
+                                    <th style="width: 120px;">Subtotal</th>
+                                    <th style="width: 60px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Itens da venda serão adicionados aqui via JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <!-- Coluna direita -->
-                <div class="col-md-4 border-start">
-                    <h5>Resumo</h5>
-                    <p>Itens: <span id="totalItens">0</span></p>
-                    <p>Total: <strong id="totalVenda">R$ 0,00</strong></p>
+                <!-- Coluna direita: Resumo e Pagamento -->
+                <div class="col-md-4 summary-section">
+                    <h5 class="mb-3">Resumo da Venda</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Itens:</span>
+                        <span id="totalItens" class="fw-bold">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Total Bruto:</span>
+                        <span id="totalVenda" class="total-display">R$ 0,00</span>
+                    </div>
 
                     <div class="mb-3">
-                        <label>Forma de Pagamento:</label>
+                        <label for="metodo" class="form-label">Forma de Pagamento:</label>
                         <select id="metodo" class="form-select">
                             <option value="dinheiro">Dinheiro</option>
                             <option value="pix">PIX</option>
@@ -137,22 +252,28 @@
                     </div>
 
                     <div class="mb-3">
-                        <label>Desconto (%):</label>
+                        <label for="desconto" class="form-label">Desconto (%):</label>
                         <input type="number" id="desconto" min="0" max="100" value="0" class="form-control">
                     </div>
 
                     <div class="mb-3">
-                        <label>Valor Recebido:</label>
+                        <label for="valorRecebido" class="form-label">Valor Recebido:</label>
                         <input type="number" step="0.01" id="valorRecebido" class="form-control">
                     </div>
 
-                    <div class="border-top pt-2">
-                        <p><strong>Total com desconto:</strong> R$ <span id="totalComDesconto">0,00</span></p>
-                        <p class="fw-bold text-success">Troco: R$ <span id="valorTroco">0,00</span></p>
+                    <hr class="my-3">
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total com Desconto:</span>
+                        <span id="totalComDesconto" class="total-display">R$ 0,00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-4">
+                        <span>Troco:</span>
+                        <span id="valorTroco" class="troco-display">R$ 0,00</span>
                     </div>
 
-                    <div class="mb-3">
-                        <label>Origem da Venda:</label>
+                    <div class="mb-4">
+                        <label for="origem" class="form-label">Origem da Venda:</label>
                         <select name="origem" id="origem" class="form-select">
                             <option value="clinica">Clínica Veterinária</option>
                             <option value="banho_tosa">Banho e Tosa</option>
@@ -160,9 +281,9 @@
                         </select>
                     </div>
 
-                    <div class="mt-3">
-                        <button class="btn btn-success w-100" id="btnFinalizar">
-                            <i class="bi bi-check-lg"></i> Finalizar Venda
+                    <div class="d-grid">
+                        <button class="btn btn-success btn-lg" id="btnFinalizar">
+                            <i class="bi bi-check-circle-fill me-2"></i> Finalizar Venda
                         </button>
                     </div>
                 </div>
@@ -171,26 +292,78 @@
     </div>
 
     <!-- 🔹 Modal Saída -->
-    <div class="modal fade" id="modalSaida" tabindex="-1">
-        <div class="modal-dialog">
+    <div class="modal fade" id="modalSaida" tabindex="-1" aria-labelledby="modalSaidaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Registrar Saída</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="modalSaidaLabel"><i class="bi bi-box-arrow-up me-2"></i> Registrar Saída</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <label>Descrição:</label>
-                    <input type="text" id="saidaDescricao" class="form-control mb-3" placeholder="Ex: Compra de café">
-                    <label>Valor (R$):</label>
-                    <input type="number" step="0.01" id="saidaValor" class="form-control mb-3">
+                    <div class="mb-3">
+                        <label for="saidaDescricao" class="form-label">Descrição:</label>
+                        <input type="text" id="saidaDescricao" class="form-control" placeholder="Ex: Compra de café">
+                    </div>
+                    <div class="mb-3">
+                        <label for="saidaValor" class="form-label">Valor (R$):</label>
+                        <input type="number" step="0.01" id="saidaValor" class="form-control">
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button class="btn btn-danger" id="confirmarSaida">Registrar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmarSaida">Registrar Saída</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- 🔹 Novo Modal para Seleção de Produtos/Serviços -->
+    <div class="modal fade" id="modalSelecionarProduto" tabindex="-1" aria-labelledby="modalSelecionarProdutoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalSelecionarProdutoLabel"><i class="bi bi-box-seam me-2"></i> Selecionar Produto/Serviço</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="text" id="inputSearchProdutoModal" class="form-control" placeholder="Buscar produto ou serviço...">
+                    </div>
+                    <div class="list-group" id="listProdutosModal">
+                        <!-- Produtos serão carregados aqui via JS -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Confirmar Quantidade e Adicionar -->
+    <div class="modal fade" id="modalConfirmarAdicao" tabindex="-1" aria-labelledby="modalConfirmarAdicaoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalConfirmarAdicaoLabel"><i class="bi bi-cart-plus me-2"></i> Adicionar Item</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Produto/Serviço: <strong id="produtoNomeConfirmacao"></strong></p>
+                    <p>Preço Unitário: <strong id="produtoPrecoConfirmacao"></strong></p>
+                    <div class="mb-3">
+                        <label for="inputQuantidadeConfirmacao" class="form-label">Quantidade:</label>
+                        <input type="number" id="inputQuantidadeConfirmacao" class="form-control" value="1" min="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btnAdicionarItemConfirmado">Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block javascripts %}
@@ -202,314 +375,335 @@
         const produtos = {{ produtos|json_encode|raw }};
         let itens = [];
         let tutorSelecionado = null;
+        let produtoSelecionadoModal = null; // Variável para armazenar o produto selecionado no modal
 
         // ==================== TOAST ====================
         function showToast(msg, tipo = 'info') {
             Notify.toast(msg, tipo, 5000);
-            // const cor = tipo === 'success' ? 'alert-success' : tipo === 'error' ? 'alert-danger' : 'alert-warning';
-            // const toast = document.createElement('div');
-            // toast.className = `alert ${cor} position-fixed top-0 end-0 m-3 shadow`;
-            // toast.innerHTML = msg;
-            // document.body.appendChild(toast);
-            // setTimeout(() => toast.remove(), 3000);
         }
 
-        // ==================== TABELA ====================
-        function atualizarTabela() {
-            const tbody = document.querySelector('#tabelaItens tbody');
-            tbody.innerHTML = '';
-            let total = 0;
-            itens.forEach((item, i) => {
-                const subtotal = item.quantidade * item.valor;
-                total += subtotal;
-                tbody.innerHTML += `
-            <tr>
-                <td>${item.nome}</td>
-                <td><input type="number" min="1" value="${item.quantidade}" class="form-control form-control-sm" onchange="alterarQtd(${i}, this.value)"></td>
-                <td>R$ ${item.valor.toFixed(2)}</td>
-                <td>R$ ${subtotal.toFixed(2)}</td>
-                <td><button class="btn btn-danger btn-sm" onclick="remover(${i})"><i class="bi bi-x-circle"></i></button></td>
-            </tr>`;
+        // ==================== FUNÇÕES DE CÁLCULO ====================
+        function formatarMoeda(valor) {
+            return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
+        }
+
+        function calcularTotais() {
+            let totalVenda = 0;
+            itens.forEach(item => {
+                totalVenda += item.quantidade * item.preco;
             });
-            document.getElementById('totalVenda').innerText = 'R$ ' + total.toFixed(2);
             document.getElementById('totalItens').innerText = itens.length;
+            document.getElementById('totalVenda').innerText = formatarMoeda(totalVenda);
+
+            let desconto = parseFloat(document.getElementById('desconto').value) || 0;
+            let valorRecebido = parseFloat(document.getElementById('valorRecebido').value) || 0;
+
+            let totalComDesconto = totalVenda * (1 - (desconto / 100));
+            document.getElementById('totalComDesconto').innerText = formatarMoeda(totalComDesconto);
+
+            let troco = valorRecebido - totalComDesconto;
+            document.getElementById('valorTroco').innerText = formatarMoeda(troco);
         }
 
-        function alterarQtd(i, qtd) {
-            itens[i].quantidade = parseInt(qtd);
-            atualizarTabela();
+        // ==================== ADICIONAR/REMOVER ITENS ====================
+        function adicionarItem(produto, quantidade = 1) {
+            const itemExistente = itens.find(item => item.id === produto.id);
+            if (itemExistente) {
+                itemExistente.quantidade += quantidade;
+            } else {
+                itens.push({ ...produto, quantidade: quantidade });
+            }
+            renderizarItens();
+            calcularTotais();
+            showToast('Item adicionado!', 'success');
         }
 
-        function remover(i) {
-            itens.splice(i, 1);
-            atualizarTabela();
-        }
-    const $inputProduto = $('#inputProduto');
-    const $list         = $('#autocomplete-list');
-    const $btnAdd       = $('#btnAddProduto');
-
-    // Autocomplete
-    $inputProduto.on('input', function () {
-        const termo = $.trim($(this).val()).toLowerCase();
-
-        $list.empty();
-
-        if (!termo || termo.length < 1) {
-            return;
+        function removerItem(id) {
+            itens = itens.filter(item => item.id !== id);
+            renderizarItens();
+            calcularTotais();
+            showToast('Item removido!', 'info');
         }
 
-        const filtrados = produtos.filter(function (p) {
-            return p.nome.toLowerCase().includes(termo);
+        function atualizarQuantidade(id, novaQuantidade) {
+            const item = itens.find(item => item.id === id);
+            if (item) {
+                item.quantidade = parseInt(novaQuantidade);
+                if (item.quantidade <= 0) {
+                    removerItem(id);
+                } else {
+                    renderizarItens();
+                    calcularTotais();
+                }
+            }
+        }
+
+        function renderizarItens() {
+            const tabelaItensBody = document.querySelector('#tabelaItens tbody');
+            tabelaItensBody.innerHTML = '';
+            itens.forEach(item => {
+                const subtotal = item.quantidade * item.preco;
+                const row = `
+                    <tr>
+                        <td>${item.nome}</td>
+                        <td><input type="number" class="form-control form-control-sm" value="${item.quantidade}" min="1" data-id="${item.id}" onchange="atualizarQuantidade(${item.id}, this.value)"></td>
+                        <td>${formatarMoeda(item.preco)}</td>
+                        <td>${formatarMoeda(subtotal)}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="removerItem(${item.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tabelaItensBody.innerHTML += row;
+            });
+        }
+
+        // ==================== AUTOCOMPLETE TUTOR ====================
+        let timeoutTutor = null;
+        document.getElementById('inputTutor').addEventListener('input', function () {
+            clearTimeout(timeoutTutor);
+            const input = this.value;
+            const autocompleteDiv = document.getElementById('autocomplete-tutor');
+            autocompleteDiv.innerHTML = '';
+            autocompleteDiv.style.display = 'none';
+
+            if (input.length < 3) return;
+
+            timeoutTutor = setTimeout(async () => {
+                try {
+                    const response = await fetch(`{{ path('clinica_autocomplete_tutor') }}?query=${input}`);
+                    const data = await response.json();
+
+                    if (data.length > 0) {
+                        data.forEach(tutor => {
+                            const suggestionDiv = document.createElement('div');
+                            suggestionDiv.classList.add('autocomplete-suggestion');
+                            suggestionDiv.innerText = tutor.nome;
+                            suggestionDiv.addEventListener('click', () => {
+                                document.getElementById('inputTutor').value = tutor.nome;
+                                tutorSelecionado = tutor;
+                                autocompleteDiv.innerHTML = '';
+                                autocompleteDiv.style.display = 'none';
+                                carregarPetsDoTutor(tutor.id);
+                            });
+                            autocompleteDiv.appendChild(suggestionDiv);
+                        });
+                        autocompleteDiv.style.display = 'block';
+                    } else {
+                        autocompleteDiv.innerHTML = '<div class="autocomplete-suggestion">Nenhum tutor encontrado</div>';
+                        autocompleteDiv.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Erro ao buscar tutores:', error);
+                    showToast('Erro ao buscar tutores.', 'danger');
+                }
+            }, 300);
         });
 
-        $.each(filtrados, function (_, p) {
-            $('<div>', {
-                class: 'autocomplete-suggestion',
-                text: `${p.nome} — R$ ${p.valor.toFixed(2)}`
-            })
-            .on('click', function () {
-                adicionarProduto(p);
-                $inputProduto.val('');
-                $list.empty();
-            })
-            .appendTo($list);
-        });
-    });
-
-    // Botão adicionar produto
-    $btnAdd.on('click', function () {
-        const termo = $.trim($inputProduto.val()).toLowerCase();
-
-        if (!termo) {
-            showToast('Informe um produto', 'warning');
-            return;
-        }
-
-        const produto = produtos.find(function (p) {
-            return p.nome.toLowerCase() === termo;
-        });
-
-        if (produto) {
-            adicionarProduto(produto);
-            $inputProduto.val('');
-            $list.empty();
-        } else {
-            showToast('Produto não encontrado!', 'danger');
-        }
-    });
-
-// ==================== ADICIONAR PRODUTO ====================
-function adicionarProduto(p) {
-    const existente = itens.find(function (i) {
-        return i.id === p.id;
-    });
-
-    if (existente) {
-        existente.quantidade++;
-    } else {
-        itens.push({
-            id: p.id,
-            nome: p.nome,
-            valor: p.valor,
-            quantidade: 1,
-            tipo: p.tipo
-        });
-    }
-
-    atualizarTabela();
-}
-
-        const $inputTutor  = $('#inputTutor');
-    const $listaTutor  = $('#autocomplete-tutor');
-    const $petSelect   = $('#petSelect');
-
-    $inputTutor.on('input', function () {
-        const termo = $.trim($(this).val()).toLowerCase();
-
-        // Reset estado
-        $listaTutor.empty();
-        tutorSelecionado = null;
-
-        // Limpar pets quando mudar cliente
-        $petSelect
-            .html('<option value="">Selecione um cliente primeiro</option>')
-            .prop('disabled', true);
-
-        if (termo.length < 2) {
-            return;
-        }
-
-        $.ajax({
-            url: '{{ path("clinica_pdv_clientes_listar") }}',
-            method: 'GET',
-            dataType: 'json',
-            success: function (data) {
-                const clientes   = data.results || [];
-                const filtrados  = clientes.filter(function (c) {
-                    return c.text.toLowerCase().includes(termo);
-                });
-
-                $.each(filtrados, function (_, c) {
-                    $('<div>', {
-                        class: 'autocomplete-suggestion',
-                        text: c.text
-                    })
-                    .on('click', function () {
-                        $inputTutor.val(c.text);
-                        tutorSelecionado = c.id;
-                        $listaTutor.empty();
-                        carregarPetsDoCliente(c.id);
-                    })
-                    .appendTo($listaTutor);
-                });
-            },
-            error: function (xhr, status, error) {
-                console.error('Erro ao carregar tutores:', error);
+        document.addEventListener('click', function (e) {
+            if (!document.getElementById('inputTutor').contains(e.target) && !document.getElementById('autocomplete-tutor').contains(e.target)) {
+                document.getElementById('autocomplete-tutor').style.display = 'none';
             }
         });
-    });
 
-       // ==================== CARREGAR PETS DO CLIENTE (jQuery) ====================
-    function carregarPetsDoCliente(clienteId) {
-        const $petSelect = $('#petSelect');
-        const baseUrl = $('meta[name="base"]').attr('content');
+        // ==================== CARREGAR PETS ====================
+        async function carregarPetsDoTutor(tutorId) {
+            const petSelect = document.getElementById('petSelect');
+            petSelect.innerHTML = '<option value="">Carregando pets...</option>';
+            petSelect.disabled = true;
+            try {
+                const response = await fetch(`{{ path('clinica_pets_by_tutor', {'id': 'TUTOR_ID'}) }}`.replace('TUTOR_ID', tutorId));
+                const pets = await response.json();
 
-        // Nenhum cliente selecionado
-        if (!clienteId) {
-            $petSelect
-                .html('<option value="">Selecione um cliente primeiro</option>')
-                .prop('disabled', true);
-            return;
-        }
-
-        // Loading
-        $petSelect
-            .html('<option value="">Carregando pets...</option>')
-            .prop('disabled', true);
-
-        $.ajax({
-            url: `${baseUrl}/orcamento/api/cliente/${clienteId}/pets`,
-            method: 'GET',
-            dataType: 'json',
-            success: function (data) {
-                // Nenhum pet
-                if (!data.success || !data.pets || data.pets.length === 0) {
-                    $petSelect.html('<option value="">Nenhum pet cadastrado</option>');
-                    return;
+                petSelect.innerHTML = '<option value="">Selecione um pet (opcional)</option>';
+                if (pets.length > 0) {
+                    pets.forEach(pet => {
+                        const option = document.createElement('option');
+                        option.value = pet.id;
+                        option.innerText = pet.nome;
+                        petSelect.appendChild(option);
+                    });
+                    petSelect.disabled = false;
+                } else {
+                    petSelect.innerHTML = '<option value="">Nenhum pet encontrado para este tutor</option>';
                 }
-
-                // Opção padrão
-                $petSelect.html('<option value="">Nenhum (venda geral)</option>');
-
-                $.each(data.pets, function (_, pet) {
-                    const info = (pet.especie || pet.raca)
-                        ? ` (${pet.especie || ''}${pet.especie && pet.raca ? ' - ' : ''}${pet.raca || ''})`
-                        : '';
-
-                    $('<option>', {
-                        value: pet.id,
-                        text: `${pet.nome}${info}`
-                    }).appendTo($petSelect);
-                });
-
-                $petSelect.prop('disabled', false);
-            },
-            error: function (xhr, status, error) {
+            } catch (error) {
                 console.error('Erro ao carregar pets:', error);
-                $petSelect.html('<option value="">Erro ao carregar pets</option>');
+                showToast('Erro ao carregar pets.', 'danger');
+                petSelect.innerHTML = '<option value="">Erro ao carregar pets</option>';
             }
-        });
-    }
-
-
-        // document.addEventListener('click', e => {
-        //     if (!listaTutor.contains(e.target) && e.target !== inputTutor) listaTutor.innerHTML = '';
-        // });
-
-        // ==================== CALCULAR TROCO ====================
-        function atualizarResumo() {
-            const total = itens.reduce((s, i) => s + i.valor * i.quantidade, 0);
-            const desconto = parseFloat(document.getElementById('desconto').value || 0);
-            const totalDesc = total - (total * desconto / 100);
-            const recebido = parseFloat(document.getElementById('valorRecebido').value || 0);
-            const troco = recebido - totalDesc;
-            document.getElementById('totalComDesconto').innerText = totalDesc.toFixed(2);
-            document.getElementById('valorTroco').innerText = troco.toFixed(2);
         }
 
-        document.getElementById('desconto').addEventListener('input', atualizarResumo);
-        document.getElementById('valorRecebido').addEventListener('input', atualizarResumo);
+        // ==================== AUTOCOMPLETE PRODUTO (EXISTENTE) ====================
+        let timeoutProduto = null;
+        document.getElementById('inputProduto').addEventListener('input', function () {
+            clearTimeout(timeoutProduto);
+            const input = this.value.toLowerCase();
+            const autocompleteDiv = document.getElementById('autocomplete-list');
+            autocompleteDiv.innerHTML = '';
+            autocompleteDiv.style.display = 'none';
 
-        // ==================== FINALIZAR VENDA (jQuery) ====================
-$(function () {
-    $('#btnFinalizar').on('click', function () {
+            if (input.length < 2) return;
 
-        // 1️⃣ Validação básica
-        if (!itens || itens.length === 0) {
-            showToast('Nenhum item na venda.', 'warning');
-            return;
-        }
+            timeoutProduto = setTimeout(() => {
+                const resultados = produtos.filter(p => p.nome.toLowerCase().includes(input));
 
-        const metodo      = $('#metodo').val();
-        const cliente_id  = tutorSelecionado || null;
-        const pet_id      = $('#petSelect').val() || null;
-        const desconto    = parseFloat($('#desconto').val()) || 0;
-        const recebido    = parseFloat($('#valorRecebido').val()) || 0;
-        const origem      = $('#origem').val() || 'clinica';
-
-        // 2️⃣ Cálculo de totais (seguro)
-        const total = itens.reduce(function (s, i) {
-            return s + (parseFloat(i.valor) * parseInt(i.quantidade));
-        }, 0);
-
-        const totalDesc = Math.max(total - (total * desconto / 100), 0);
-        const troco     = Math.max(recebido - totalDesc, 0);
-
-        // 3️⃣ Validações críticas de PDV
-        if (!metodo) {
-            showToast('Selecione a forma de pagamento.', 'warning');
-            return;
-        }
-
-        if (recebido < totalDesc && metodo !== 'credito') {
-            showToast('Valor recebido insuficiente.', 'danger');
-            return;
-        }
-
-        // 4️⃣ Payload
-        const payload = {
-            metodo: metodo,
-            cliente_id: cliente_id,
-            pet_id: pet_id,
-            total: totalDesc,
-            desconto: desconto,
-            itens: itens,
-            troco: troco,
-            origem: origem
-        };
-
-        // 5️⃣ Envio
-        $.ajax({
-            url: '{{ path("clinica_pdv_registrar") }}',
-            method: 'POST',
-            contentType: 'application/json',
-            dataType: 'json',
-            data: JSON.stringify(payload),
-            success: function (json) {
-                showToast(json.msg, json.ok ? 'success' : 'danger');
-
-                if (json.ok) {
-                    setTimeout(function () {
-                        location.reload();
-                    }, 2000);
+                if (resultados.length > 0) {
+                    resultados.forEach(produto => {
+                        const suggestionDiv = document.createElement('div');
+                        suggestionDiv.classList.add('autocomplete-suggestion');
+                        suggestionDiv.innerText = `${produto.nome} (R$ ${produto.preco.toFixed(2).replace('.', ',')})`;
+                        suggestionDiv.addEventListener('click', () => {
+                            adicionarItem(produto);
+                            document.getElementById('inputProduto').value = '';
+                            autocompleteDiv.innerHTML = '';
+                            autocompleteDiv.style.display = 'none';
+                        });
+                        autocompleteDiv.appendChild(suggestionDiv);
+                    });
+                    autocompleteDiv.style.display = 'block';
+                } else {
+                    autocompleteDiv.innerHTML = '<div class="autocomplete-suggestion">Nenhum produto/serviço encontrado</div>';
+                    autocompleteDiv.style.display = 'block';
                 }
-            },
-            error: function () {
-                showToast('Erro ao comunicar com o servidor.', 'danger');
+            }, 300);
+        });
+
+        document.getElementById('btnAddProduto').addEventListener('click', () => {
+            const input = document.getElementById('inputProduto').value;
+            const produtoEncontrado = produtos.find(p => p.nome.toLowerCase() === input.toLowerCase());
+            if (produtoEncontrado) {
+                adicionarItem(produtoEncontrado);
+                document.getElementById('inputProduto').value = '';
+                document.getElementById('autocomplete-list').style.display = 'none';
+            } else {
+                showToast('Produto não encontrado ou inválido.', 'warning');
             }
         });
-    });
-});
+
+        document.addEventListener('click', function (e) {
+            if (!document.getElementById('inputProduto').contains(e.target) && !document.getElementById('autocomplete-list').contains(e.target)) {
+                document.getElementById('autocomplete-list').style.display = 'none';
+            }
+        });
+
+        // ==================== LÓGICA DO NOVO MODAL DE SELEÇÃO DE PRODUTOS ====================
+        const modalSelecionarProduto = new bootstrap.Modal(document.getElementById('modalSelecionarProduto'));
+        const modalConfirmarAdicao = new bootstrap.Modal(document.getElementById('modalConfirmarAdicao'));
+
+        document.getElementById('inputSearchProdutoModal').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const listProdutosModal = document.getElementById('listProdutosModal');
+            listProdutosModal.innerHTML = '';
+
+            const filteredProdutos = produtos.filter(p => p.nome.toLowerCase().includes(searchTerm));
+
+            if (filteredProdutos.length > 0) {
+                filteredProdutos.forEach(produto => {
+                    const itemDiv = document.createElement('a');
+                    itemDiv.href = '#';
+                    itemDiv.classList.add('list-group-item', 'list-group-item-action');
+                    itemDiv.innerHTML = `
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">${produto.nome}</h6>
+                            <small class="text-muted">${formatarMoeda(produto.preco)}</small>
+                        </div>
+                        <p class="mb-1 text-muted">${produto.descricao || 'Sem descrição.'}</p>
+                    `;
+                    itemDiv.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        produtoSelecionadoModal = produto;
+                        document.getElementById('produtoNomeConfirmacao').innerText = produto.nome;
+                        document.getElementById('produtoPrecoConfirmacao').innerText = formatarMoeda(produto.preco);
+                        document.getElementById('inputQuantidadeConfirmacao').value = 1;
+                        modalSelecionarProduto.hide();
+                        modalConfirmarAdicao.show();
+                    });
+                    listProdutosModal.appendChild(itemDiv);
+                });
+            } else {
+                listProdutosModal.innerHTML = '<div class="list-group-item">Nenhum produto ou serviço encontrado.</div>';
+            }
+        });
+
+        // Carregar todos os produtos no modal ao abrir (ou quando o input de busca estiver vazio)
+        document.getElementById('modalSelecionarProduto').addEventListener('shown.bs.modal', () => {
+            document.getElementById('inputSearchProdutoModal').value = '';
+            document.getElementById('inputSearchProdutoModal').dispatchEvent(new Event('input')); // Dispara o evento para carregar a lista completa
+            document.getElementById('inputSearchProdutoModal').focus();
+        });
+
+        document.getElementById('btnAdicionarItemConfirmado').addEventListener('click', () => {
+            const quantidade = parseInt(document.getElementById('inputQuantidadeConfirmacao').value);
+            if (produtoSelecionadoModal && quantidade > 0) {
+                adicionarItem(produtoSelecionadoModal, quantidade);
+                modalConfirmarAdicao.hide();
+            } else {
+                showToast('Quantidade inválida.', 'warning');
+            }
+        });
+
+        // ==================== EVENTOS GERAIS ====================
+        document.getElementById('desconto').addEventListener('input', calcularTotais);
+        document.getElementById('valorRecebido').addEventListener('input', calcularTotais);
+
+        // ==================== FINALIZAR VENDA ====================
+        document.getElementById('btnFinalizar').addEventListener('click', function () {
+            if (itens.length === 0) {
+                return showToast('Adicione pelo menos um item à venda.', 'warning');
+            }
+            if (!tutorSelecionado) {
+                return showToast('Selecione um tutor/cliente.', 'warning');
+            }
+
+            const metodo = document.getElementById('metodo').value;
+            const cliente_id = tutorSelecionado.id;
+            const pet_id = document.getElementById('petSelect').value || null;
+            const desconto = parseFloat(document.getElementById('desconto').value) || 0;
+            const valorRecebido = parseFloat(document.getElementById('valorRecebido').value) || 0;
+            const origem = document.getElementById('origem').value;
+
+            let totalVenda = 0;
+            itens.forEach(item => {
+                totalVenda += item.quantidade * item.preco;
+            });
+            const totalDesc = totalVenda * (1 - (desconto / 100));
+            const troco = valorRecebido - totalDesc;
+
+            const payload = {
+                metodo: metodo,
+                cliente_id: cliente_id,
+                pet_id: pet_id,
+                total: totalDesc,
+                desconto: desconto,
+                itens: itens,
+                troco: troco,
+                origem: origem
+            };
+
+            // 5️⃣ Envio
+            $.ajax({
+                url: '{{ path("clinica_pdv_registrar") }}',
+                method: 'POST',
+                contentType: 'application/json',
+                dataType: 'json',
+                data: JSON.stringify(payload),
+                success: function (json) {
+                    showToast(json.msg, json.ok ? 'success' : 'danger');
+
+                    if (json.ok) {
+                        setTimeout(function () {
+                            location.reload();
+                        }, 2000);
+                    }
+                },
+                error: function () {
+                    showToast('Erro ao comunicar com o servidor.', 'danger');
+                }
+            });
+        });
 
 
         // ==================== SAÍDA DE DINHEIRO ====================

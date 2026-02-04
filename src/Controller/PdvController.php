@@ -35,36 +35,46 @@ class PdvController extends DefaultController
         $repoServicos = $this->getRepositorio(Servico::class);
         $repoClientes = $this->getRepositorio(Cliente::class);
 
-        $produtos = $repoProdutos->findBy(['estabelecimentoId' => $baseId]);
-        $servicos = $repoServicos->findBy(['estabelecimentoId' => $baseId]);
-        $clientes = $repoClientes->findBy(['estabelecimentoId' => $baseId]);
+        $produtosEntities = $repoProdutos->findBy(["estabelecimentoId" => $baseId]);
+        $servicosEntities = $repoServicos->findBy(["estabelecimentoId" => $baseId]);
+        $clientes = $repoClientes->findBy(["estabelecimentoId" => $baseId]);
 
-        $itens = [];
+        $itensNormalizados = [];
 
-        foreach ($produtos as $p) {
-            $itens[] = [
-                'id' => $p->getId(),
-                'nome' => $p->getNome(),
-                'valor' => $p->getPrecoVenda() ?? 0,
-                'estoque' => $p->getEstoqueAtual() ?? 0,
-                'tipo' => 'Produto',
+        // Normaliza produtos
+        foreach ($produtosEntities as $p) {
+            $itensNormalizados[] = [
+                "id" => "prod_" . $p->getId(), // Prefixo para diferenciar de serviços
+                "nome" => $p->getNome(),
+                "valor" => $p->getPrecoVenda() ?? 0.0, // Usa 'valor' como campo unificado
+                "estoque" => $p->getEstoqueAtual() ?? 0,
+                "tipo" => "Produto",
+                "descricao" => $p->getDescricao() ?? "", // Adiciona descrição para o modal
             ];
         }
 
-        foreach ($servicos as $s) {
-            $itens[] = [
-                'id' => $s->getId(),
-                'nome' => $s->getNome(),
-                'valor' => $s->getValor() ?? 0,
-                'estoque' => null,
-                'tipo' => 'Serviço',
+        // Normaliza serviços
+        foreach ($servicosEntities as $s) {
+            $itensNormalizados[] = [
+                "id" => "serv_" . $s->getId(), // Prefixo para diferenciar de produtos
+                "nome" => $s->getNome(),
+                "valor" => $s->getValor() ?? 0.0, // Usa 'valor' como campo unificado
+                "estoque" => null, // Serviços geralmente não têm estoque
+                "tipo" => "Serviço",
+                "descricao" => $s->getDescricao() ?? "", // Adiciona descrição para o modal
             ];
         }
 
-        return $this->render('clinica/pdv.html.twig', [
-            'produtos' => $itens,
-            'clientes' => $clientes,
+        // Opcional: Ordenar os itens por nome para melhor UX no modal de seleção
+        usort($itensNormalizados, function($a, $b) {
+            return strcmp($a["nome"], $b["nome"]);
+        });
+
+        return $this->render("clinica/pdv.html.twig", [
+            "produtos" => $itensNormalizados, // Passa a lista normalizada para a view
+            "clientes" => $clientes,
         ]);
+    
     }
 
     /**
@@ -807,5 +817,62 @@ class PdvController extends DefaultController
         } catch (\Exception $e) {
             return new JsonResponse(['ok' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * @Route("/clinica/autocomplete/tutor", name="clinica_autocomplete_tutor", methods={"GET"})
+     */
+    public function autocompleteTutor(Request $request, TutorRepository $tutorRepository): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+        $query = $request->query->get('query');
+
+        if (empty($query) || strlen($query) < 3) {
+            return new JsonResponse([]);
+        }
+
+        // Busca por tutores cujo nome contenha a query
+        // Assumindo que você tem um método findByNomeLike no seu TutorRepository
+        $tutores = $this->getRepositorio(Cliente::class)->findByNomeLike($query);
+
+        $results = [];
+        foreach ($tutores as $tutor) {
+            $results[] = [
+                'id' => $tutor->getId(),
+                'nome' => $tutor->getNome(),
+                // Adicione outros campos relevantes se necessário
+            ];
+        }
+
+        return new JsonResponse($results);
+    }
+
+    /**
+     * @Route("/clinica/pets-by-tutor/{id}", name="clinica_pets_by_tutor", methods={"GET"})
+     */
+    public function getPetsByTutor(int $id, Request $request): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $tutor = $this->entityManager->getRepository(Cliente::class)->listarPetsDoCliente($id);
+
+        if (!$tutor) {
+            return new JsonResponse([], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $pets = $tutor->getPets(); // Assumindo que Tutor tem um método getPets() que retorna uma Collection de Pet
+
+        $results = [];
+        foreach ($pets as $pet) {
+            $results[] = [
+                'id' => $pet->getId(),
+                'nome' => $pet->getNome(),
+                // Adicione outros campos relevantes do Pet se necessário
+            ];
+        }
+
+        return new JsonResponse($results);
     }
 }

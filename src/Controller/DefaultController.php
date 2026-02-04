@@ -12,6 +12,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Security;
 use Doctrine\Persistence\ManagerRegistry;
 use App\Service\DynamicConnectionManager;
@@ -47,10 +49,21 @@ class DefaultController extends AbstractController
         'clínicaVeterinária' => 'Clínica Veterinária',
     ];
 
+    public EntityManagerInterface $entityManager;
+    public LoggerInterface $logger;
+
     /**
      * @param Security $security
      */
-    public function __construct(?Security $security, ManagerRegistry $managerRegistry, RequestStack $request, TempDirManager $tempDirManager, DatabaseBkp $databaseBkp)
+    public function __construct(
+        ?Security $security, 
+        ManagerRegistry $managerRegistry, 
+        RequestStack $request, 
+        TempDirManager $tempDirManager, 
+        DatabaseBkp $databaseBkp,
+        EntityManagerInterface $entityManager,
+        LoggerInterface $logger
+    )
     {
         date_default_timezone_set('America/Sao_Paulo');  
         $this->security = $security;
@@ -61,6 +74,8 @@ class DefaultController extends AbstractController
         $this->tempDirManager = $tempDirManager;
         $this->databaseBkp = $databaseBkp;
         $this->estabelecimentoId = $this->getIdBase();
+        $this->entityManager = $entityManager;
+        $this->logger = $logger;
     }
 
     public function switchDB(): void

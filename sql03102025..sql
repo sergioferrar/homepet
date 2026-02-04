@@ -69,3 +69,24 @@ ADD COLUMN `tipo` ENUM('servico', 'produto', 'medicamento') NULL DEFAULT 'produt
 ALTER TABLE `financeiro` 
 ADD COLUMN `venda` INT NULL DEFAULT NULL AFTER `parcelas`;
 
+
+CREATE TABLE `estoque` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `produtoId` INT NULL,
+  `estabelecimento_id` INT NULL,
+  `local_estoque_id` VARCHAR(45) NULL,
+  `quantidade_atual` INT NULL,
+  `quantidade_reserva` INT NULL,
+  `quantidade_disponivel` INT NULL,
+  `estoque_minimo` INT NULL,
+  `etoque_maximo` INT NULL,
+  `custo_medio` DOUBLE NULL,
+  `custo_ultima_compra` DOUBLE NULL,
+  `refrigerado` INT NULL,
+  `controla_lote` INT NULL,
+  `controla_validade` INT NULL,
+  `status` ENUM('ativo', 'inativo', 'suspenso') NULL,
+  `created_at` DATETIME NULL,
+  `updated_at` DATETIME NULL,
+  `updated_by` DATETIME NULL,
+  PRIMARY KEY (`id`));

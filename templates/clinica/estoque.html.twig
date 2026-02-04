@@ -1,260 +1,1028 @@
 {% extends 'base.html.twig' %}
-{% block title %}Ponto de Venda - Controle de Estoque{% endblock %}
+{% block title %}Controle de Estoque - PDV{% endblock %}
 {% block page_title %}Controle de Estoque{% endblock %}
-{% block body %}
-    <div class="pagetitle">
-        <h1>Ponto de Venda - Controle de Estoque
-            <a class="me-md-5 mt-sm-3 btn btn-primary btm-sm mb-3 float-md-end" href="{{ url('clinica_pdv_index') }}"><i
-                        class="bi bi-arrow-left me-1"></i>Voltar</a>
-        </h1>
-        <nav>
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
-                <li class="breadcrumb-item">Atendimento</li>
-                <li class="breadcrumb-item active">PDV - Controle de estoque</li>
-            </ol>
-        </nav>
-    </div>
-    <div class="container-fluid bg-white p-4 mt-4 rounded shadow-sm">
-        <!-- 🔹 Barra de navegação -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0"><i class="fas fa-boxes me-2"></i> Controle de Estoque</h3>
-            <div class="d-flex gap-2">
-                <a href="{{ path('clinica_pdv_index') }}" class="btn btn-outline-success">
-                    <i class="bx bx-calculator"></i> PDV
-                </a>
-                <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-primary">
-                    <i class="bx bx-wallet"></i> Caixa
-                </a>
-                <a href="javascript:void(0);" class="btn btn-outline-primary novoProd">
-                    <i class="bx bx-plus"></i> Novo Produto
-                </a>
-            </div>
-        </div>
-        <hr>
-        <div class="d-none formProd">
-            <div class="tabsProd">
-                <ul class="nav nav-tabs gap-2 mb-4" role="tablist">
-                    <li class="nav-item">
-                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dados">Produto</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#classificacao">Classificação Fiscal
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#impostos">Impostos Atuais</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reforma">Reforma Tributária</button>
-                    </li>
-                </ul>
-                <form>
-                    <div class="tab-content">
-                        <!-- PRODUTO -->
-                        <div class="tab-pane fade show active" id="dados">
-                            <div class="row g-3">
-                                <div class="col-md-8">
-                                    <label class="form-label">Nome do Produto</label>
-                                    <input type="text" class="form-control" placeholder="Ex: Ração Premium Adulto">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Tipo</label>
-                                    <select class="form-select">
-                                        <option value="produto">Produto</option>
-                                        <option value="servico">Serviço</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Preço de Venda</label>
-                                    <input type="number" step="0.01" class="form-control">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Custo</label>
-                                    <input type="number" step="0.01" class="form-control">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Estoque</label>
-                                    <input type="number" class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                        <!-- CLASSIFICAÇÃO FISCAL -->
-                        <div class="tab-pane fade" id="classificacao">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">NCM</label>
-                                    <input type="text" class="form-control" placeholder="0000.00.00">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">CFOP</label>
-                                    <input type="text" class="form-control" placeholder="5102">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">CEST (opcional)</label>
-                                    <input type="text" class="form-control">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Código de Serviço Municipal (NFS-e)</label>
-                                    <input type="text" class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                        <!-- IMPOSTOS ATUAIS -->
-                        <div class="tab-pane fade" id="impostos">
-                            <div class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label">ICMS (%)</label>
-                                    <input type="number" step="0.01" class="form-control">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">ISS (%)</label>
-                                    <input type="number" step="0.01" class="form-control">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">IPI (%)</label>
-                                    <input type="number" step="0.01" class="form-control">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">PIS (%)</label>
-                                    <input type="number" step="0.01" class="form-control">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">COFINS (%)</label>
-                                    <input type="number" step="0.01" class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                        <!-- REFORMA TRIBUTÁRIA -->
-                        <div class="tab-pane fade" id="reforma">
-                            <div class="alert alert-info">
-                                <strong>Reforma Tributária</strong><br>
-                                Campos válidos a partir de 01/01/2026 (fase de transição).
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label">IBS (%)</label>
-                                    <input type="number" step="0.01" class="form-control">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">CBS (%)</label>
-                                    <input type="number" step="0.01" class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <!-- Modal -->
-        <div class="modal fade" id="novoProduto" tabindex="-1" aria-labelledby="novoProdutoLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="novoProdutoLabel">Cadastro de novo Produto</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
 
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Save changes</button>
+{% block stylesheets %}
+<style>
+    .stat-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .stat-card-primary { border-left-color: #0d6efd; }
+    .stat-card-warning { border-left-color: #ffc107; }
+    .stat-card-success { border-left-color: #198754; }
+    .stat-card-info { border-left-color: #0dcaf0; }
+    
+    .action-btn-group {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+    
+    .product-row {
+        transition: background-color 0.2s ease;
+    }
+    .product-row:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .badge-stock {
+        font-size: 0.875rem;
+        padding: 0.35rem 0.65rem;
+        font-weight: 500;
+    }
+    
+    .nav-pills-custom .nav-link {
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-pills-custom .nav-link:hover {
+        background-color: #e9ecef;
+    }
+    
+    .nav-pills-custom .nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .quick-add-form {
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        border: 2px dashed #dee2e6;
+    }
+    
+    .table-custom thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .info-card {
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        border-left: 4px solid #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-box-seam text-primary me-2"></i>
+                Controle de Estoque
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ url('home') }}"><i class="bi bi-house-door"></i> Home</a></li>
+                    <li class="breadcrumb-item">Atendimento</li>
+                    <li class="breadcrumb-item active">Controle de Estoque</li>
+                </ol>
+            </nav>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <a href="{{ path('clinica_pdv_index') }}" class="btn btn-outline-success">
+                <i class="bi bi-calculator"></i> PDV
+            </a>
+            <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-primary">
+                <i class="bi bi-wallet2"></i> Caixa
+            </a>
+            <button class="btn btn-primary novoProd">
+                <i class="bi bi-plus-circle me-1"></i> Novo Produto
+            </button>
+        </div>
+    </div>
+
+    <!-- Cards de Estatísticas Rápidas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card stat-card-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Total de Produtos</p>
+                            <h3 class="mb-0 fw-bold">{{ produtos|length }}</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-box-seam fs-4 text-primary"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Formulário de cadastro -->
-        <h5 class="mt-3 mb-3 text-primary">Cadastrar novo produto</h5>
-        <form method="post" action="{{ path('clinica_estoque_cadastrar') }}" class="row g-3">
-            <div class="col-md-3">
-                <input type="text" name="nome" class="form-control" placeholder="Nome do produto" required>
+        
+        <div class="col-md-3">
+            <div class="card stat-card stat-card-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Estoque Baixo</p>
+                            <h3 class="mb-0 fw-bold">0</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-exclamation-triangle fs-4 text-warning"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-2">
-                <input type="number" step="0.01" name="preco_custo" class="form-control" placeholder="Preço de custo">
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stat-card stat-card-success h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Valor Total</p>
+                            <h3 class="mb-0 fw-bold">R$ 0,00</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-currency-dollar fs-4 text-success"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-2">
-                <input type="number" step="0.01" name="preco_venda" class="form-control" placeholder="Preço de venda">
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stat-card stat-card-info h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Movimentos Hoje</p>
+                            <h3 class="mb-0 fw-bold">0</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-arrow-left-right fs-4 text-info"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-2">
-                <input type="number" name="estoque_atual" class="form-control" placeholder="Qtd inicial">
+        </div>
+    </div>
+
+    <!-- Formulário de Cadastro Rápido -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">
+                <i class="bi bi-lightning-charge text-warning me-2"></i>
+                Cadastro Rápido
+            </h5>
+            
+            <form method="post" action="{{ path('clinica_estoque_cadastrar') }}" class="quick-add-form">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            <i class="bi bi-tag"></i> Nome do Produto
+                        </label>
+                        <input type="text" name="nome" class="form-control" placeholder="Digite o nome" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold">
+                            <i class="bi bi-cash-stack"></i> Preço Custo
+                        </label>
+                        <input type="number" step="0.01" name="preco_custo" class="form-control" placeholder="0,00">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold">
+                            <i class="bi bi-currency-dollar"></i> Preço Venda
+                        </label>
+                        <input type="number" step="0.01" name="preco_venda" class="form-control" placeholder="0,00">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold">
+                            <i class="bi bi-123"></i> Quantidade
+                        </label>
+                        <input type="number" name="estoque_atual" class="form-control" placeholder="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold">
+                            <i class="bi bi-rulers"></i> Unidade
+                        </label>
+                        <input type="text" name="unidade" class="form-control" placeholder="un, cx, kg" value="un">
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Produtos -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ul me-2"></i>
+                    Produtos Cadastrados
+                </h5>
+                <div class="input-group" style="width: 300px;">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" placeholder="Buscar produto...">
+                </div>
             </div>
-            <div class="col-md-2">
-                <input type="text" name="unidade" class="form-control" placeholder="Unidade (ex: un, cx)">
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-custom">
+                        <tr>
+                            <th class="ps-4">
+                                <i class="bi bi-box-seam me-1"></i> Produto
+                            </th>
+                            <th>
+                                <i class="bi bi-currency-dollar me-1"></i> Preço Venda
+                            </th>
+                            <th class="text-center">
+                                <i class="bi bi-stack me-1"></i> Estoque
+                            </th>
+                            <th>
+                                <i class="bi bi-rulers me-1"></i> Unidade
+                            </th>
+                            <th class="text-center" width="280">
+                                <i class="bi bi-gear me-1"></i> Ações
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in produtos %}
+                        <tr class="product-row">
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 rounded p-2 me-2">
+                                        <i class="bi bi-box text-primary"></i>
+                                    </div>
+                                    <span class="fw-semibold">{{ p.nome }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-success">
+                                    R$ {{ p.precoVenda|number_format(2, ',', '.') }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge badge-stock bg-primary">
+                                    {{ p.estoqueAtual }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ p.unidade|default('un') }}</span>
+                            </td>
+                            <td>
+                                <div class="action-btn-group justify-content-center">
+                                    <form method="post" action="{{ path('clinica_estoque_entrada', {'id': p.id}) }}" 
+                                          class="d-flex gap-1">
+                                        <input type="number" name="quantidade" 
+                                               class="form-control form-control-sm" 
+                                               min="1" placeholder="+Qtd" 
+                                               style="width: 70px;" title="Quantidade a adicionar">
+                                        <button type="submit" class="btn btn-sm btn-success" title="Adicionar ao estoque">
+                                            <i class="bi bi-plus-circle"></i>
+                                        </button>
+                                    </form>
+                                    
+                                    <button class="btn btn-sm btn-info text-white btn-gerenciar-estoque" 
+                                            data-produto-id="{{ p.id }}" 
+                                            data-produto-nome="{{ p.nome }}"
+                                            title="Gerenciar Estoque">
+                                        <i class="bi bi-gear-fill"></i>
+                                    </button>
+                                    
+                                    <a href="{{ path('clinica_estoque_movimentos', {'id': p.id}) }}" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="Histórico de Movimentações">
+                                        <i class="bi bi-clock-history"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                <p class="mb-0">Nenhum produto cadastrado ainda.</p>
+                                <small>Use o formulário acima para adicionar seu primeiro produto.</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <div class="col-md-1">
-                <button class="btn btn-sm btn-success p-2 w-100"><i class="bx bx-plus"></i></button>
+        </div>
+    </div>
+</div>
+
+<!-- Conteúdo oculto para o modal de cadastro -->
+<div class="d-none formProd">
+    <div class="tabsProd">
+        <ul class="nav nav-pills nav-pills-custom gap-2 mb-4" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dados">
+                    <i class="bi bi-box-seam me-1"></i> Produto
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#classificacao">
+                    <i class="bi bi-file-earmark-text me-1"></i> Classificação Fiscal
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#impostos">
+                    <i class="bi bi-percent me-1"></i> Impostos Atuais
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reforma">
+                    <i class="bi bi-calendar-check me-1"></i> Reforma Tributária
+                </button>
+            </li>
+        </ul>
+        
+        <form>
+            <div class="tab-content">
+                <!-- PRODUTO -->
+                <div class="tab-pane fade show active" id="dados">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-tag text-primary me-1"></i> Nome do Produto
+                            </label>
+                            <input type="text" class="form-control" placeholder="Ex: Ração Premium Adulto">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-upc-scan text-primary me-1"></i> Código EAN
+                            </label>
+                            <input type="text" class="form-control" placeholder="Ex: 7894561234567">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-diagram-3 text-primary me-1"></i> Tipo
+                            </label>
+                            <select class="form-select">
+                                <option value="produto">Produto</option>
+                                <option value="servico">Serviço</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-currency-dollar text-success me-1"></i> Preço de Venda
+                            </label>
+                            <input type="number" step="0.01" class="form-control" placeholder="0,00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-cash-stack text-warning me-1"></i> Custo
+                            </label>
+                            <input type="number" step="0.01" class="form-control" placeholder="0,00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-stack text-info me-1"></i> Estoque Inicial
+                            </label>
+                            <input type="number" class="form-control" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- CLASSIFICAÇÃO FISCAL -->
+                <div class="tab-pane fade" id="classificacao">
+                    <div class="info-card mb-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Informação:</strong> Dados fiscais necessários para emissão de notas fiscais.
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">NCM</label>
+                            <input type="text" class="form-control" placeholder="0000.00.00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">CFOP</label>
+                            <input type="text" class="form-control" placeholder="5102">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">CEST (opcional)</label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Código de Serviço Municipal (NFS-e)</label>
+                            <input type="text" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- IMPOSTOS ATUAIS -->
+                <div class="tab-pane fade" id="impostos">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">ICMS (%)</label>
+                            <input type="number" step="0.01" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">ISS (%)</label>
+                            <input type="number" step="0.01" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">IPI (%)</label>
+                            <input type="number" step="0.01" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">PIS (%)</label>
+                            <input type="number" step="0.01" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">COFINS (%)</label>
+                            <input type="number" step="0.01" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- REFORMA TRIBUTÁRIA -->
+                <div class="tab-pane fade" id="reforma">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Reforma Tributária</strong><br>
+                        Campos válidos a partir de 01/01/2026 (fase de transição).
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">IBS (%)</label>
+                            <input type="number" step="0.01" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">CBS (%)</label>
+                            <input type="number" step="0.01" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 pt-3 border-top">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="bi bi-check-circle me-1"></i> Salvar Produto
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                </button>
             </div>
         </form>
-        <hr>
-        <!-- Tabela de produtos -->
-        <h5 class="mt-4 mb-3 text-primary">Produtos cadastrados</h5>
-        <table class="table table-striped align-middle">
-            <thead class="table-light">
-            <tr>
-                <th>Produto</th>
-                <th>Preço Venda</th>
-                <th>Estoque Atual</th>
-                <th>Unidade</th>
-                <th width="180">Ações</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for p in produtos %}
-                <tr>
-                    <td>{{ p.nome }}</td>
-                    <td>R$ {{ p.precoVenda|number_format(2, ',', '.') }}</td>
-                    <td><span class="badge bg-info">{{ p.estoqueAtual }}</span></td>
-                    <td>{{ p.unidade|default('un') }}</td>
-                    <td>
-                        <form method="post" action="{{ path('clinica_estoque_entrada', {'id': p.id}) }}" class="d-flex">
-                            <input type="number" name="quantidade" class="form-control form-control-sm me-2" min="1"
-                                   placeholder="+QTD">
-                            <button class="btn btn-sm btn-success"><i class="bi bi-arrow-up"></i></button>
-                        </form>
-                        <a href="{{ path('clinica_estoque_movimentos', {'id': p.id}) }}"
-                           class="btn btn-sm btn-outline-secondary mt-1 w-100">
-                            <i class="fas fa-history"></i> Mov.
-                        </a>
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="5" class="text-center text-muted">Nenhum produto cadastrado.</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
     </div>
+</div>
+
+<!-- Modal Novo Produto -->
+<div class="modal fade" id="novoProduto" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Cadastro de Novo Produto
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Gerenciar Estoque -->
+<div class="modal fade" id="modalEstoque" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-box-seam me-2"></i>
+                    Gerenciamento de Estoque - <span class="produto-nome-modal">Produto</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Navegação em Pills -->
+                <ul class="nav nav-pills nav-pills-custom gap-2 mb-4" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#visao">
+                            <i class="bi bi-graph-up me-1"></i> Visão Geral
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#edicao">
+                            <i class="bi bi-pencil-square me-1"></i> Editar
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#movimento">
+                            <i class="bi bi-arrow-left-right me-1"></i> Movimentar
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#historico">
+                            <i class="bi bi-clock-history me-1"></i> Histórico
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- VISÃO GERAL -->
+                    <div class="tab-pane fade show active" id="visao">
+                        <!-- Cards de Estatísticas -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <div class="card stat-card stat-card-primary h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-box-seam fs-1 text-primary mb-2"></i>
+                                        <h6 class="text-muted mb-2">Quantidade Atual</h6>
+                                        <h2 class="mb-0 fw-bold text-primary" id="qtd-atual">0</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card stat-card stat-card-warning h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-lock fs-1 text-warning mb-2"></i>
+                                        <h6 class="text-muted mb-2">Reservado</h6>
+                                        <h2 class="mb-0 fw-bold text-warning" id="qtd-reserva">0</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card stat-card stat-card-success h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-check-circle fs-1 text-success mb-2"></i>
+                                        <h6 class="text-muted mb-2">Disponível</h6>
+                                        <h2 class="mb-0 fw-bold text-success" id="qtd-disponivel">0</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card stat-card stat-card-info h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-exclamation-triangle fs-1 text-info mb-2"></i>
+                                        <h6 class="text-muted mb-2">Estoque Mínimo</h6>
+                                        <h2 class="mb-0 fw-bold text-info" id="estoque-minimo">0</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informações Detalhadas -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-header bg-primary bg-opacity-10">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-cash-stack text-primary me-2"></i>
+                                            Informações Financeiras
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                            <span class="text-muted">
+                                                <i class="bi bi-graph-up me-2"></i>Custo Médio
+                                            </span>
+                                            <strong class="text-success fs-5" id="custo-medio">R$ 0,00</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                            <span class="text-muted">
+                                                <i class="bi bi-cart-check me-2"></i>Última Compra
+                                            </span>
+                                            <strong class="text-primary fs-5" id="custo-ultima">R$ 0,00</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted">
+                                                <i class="bi bi-layers me-2"></i>Estoque Máximo
+                                            </span>
+                                            <strong class="fs-5" id="estoque-maximo">0</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-header bg-info bg-opacity-10">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-gear text-info me-2"></i>
+                                            Configurações
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                            <span class="text-muted">
+                                                <i class="bi bi-thermometer-snow me-2"></i>Refrigerado
+                                            </span>
+                                            <span class="badge bg-secondary" id="refrigerado">Não</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                            <span class="text-muted">
+                                                <i class="bi bi-box2 me-2"></i>Controla Lote
+                                            </span>
+                                            <span class="badge bg-secondary" id="controla-lote">Não</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                            <span class="text-muted">
+                                                <i class="bi bi-calendar-event me-2"></i>Controla Validade
+                                            </span>
+                                            <span class="badge bg-secondary" id="controla-validade">Não</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted">
+                                                <i class="bi bi-activity me-2"></i>Status
+                                            </span>
+                                            <span class="badge bg-success" id="status-estoque">Ativo</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alerta -->
+                        <div class="alert alert-warning d-none mt-4" id="alerta-estoque-baixo">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Atenção!</strong> O estoque está abaixo do mínimo configurado.
+                        </div>
+                    </div>
+
+                    <!-- EDIÇÃO -->
+                    <div class="tab-pane fade" id="edicao">
+                        <form id="formEditarEstoque">
+                            <input type="hidden" id="edit-estoque-id" name="id">
+                            <input type="hidden" id="edit-produto-id" name="produtoId">
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-box-seam text-primary me-1"></i> Quantidade Atual
+                                    </label>
+                                    <input type="number" class="form-control" id="edit-qtd-atual" readonly>
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Use "Movimentar" para alterar
+                                    </small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-arrow-down-circle text-warning me-1"></i> Estoque Mínimo
+                                    </label>
+                                    <input type="number" class="form-control" id="edit-estoque-minimo" name="estoque_minimo">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-arrow-up-circle text-success me-1"></i> Estoque Máximo
+                                    </label>
+                                    <input type="number" class="form-control" id="edit-estoque-maximo" name="etoque_maximo">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-graph-up text-info me-1"></i> Custo Médio
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" id="edit-custo-medio" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-cart-check text-primary me-1"></i> Custo Última Compra
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" id="edit-custo-ultima" name="custo_ultima_compra">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-activity text-success me-1"></i> Status
+                                    </label>
+                                    <select class="form-select" id="edit-status" name="status">
+                                        <option value="ativo">Ativo</option>
+                                        <option value="inativo">Inativo</option>
+                                        <option value="suspenso">Suspenso</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-12 mt-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="mb-3">
+                                                <i class="bi bi-toggles me-2"></i>
+                                                Controles Especiais
+                                            </h6>
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="edit-refrigerado" 
+                                                               name="refrigerado" value="1">
+                                                        <label class="form-check-label" for="edit-refrigerado">
+                                                            <i class="bi bi-thermometer-snow me-1"></i> Refrigerado
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="edit-controla-lote" 
+                                                               name="controla_lote" value="1">
+                                                        <label class="form-check-label" for="edit-controla-lote">
+                                                            <i class="bi bi-box2 me-1"></i> Controla Lote
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="edit-controla-validade" 
+                                                               name="controla_validade" value="1">
+                                                        <label class="form-check-label" for="edit-controla-validade">
+                                                            <i class="bi bi-calendar-event me-1"></i> Controla Validade
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-1"></i> Salvar Alterações
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- MOVIMENTO -->
+                    <div class="tab-pane fade" id="movimento">
+                        <form id="formLancarMovimento">
+                            <input type="hidden" id="mov-produto-id" name="produtoId">
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-arrow-left-right text-primary me-1"></i> Tipo de Movimento
+                                    </label>
+                                    <select class="form-select" id="tipo-movimento" name="tipo" required>
+                                        <option value="">Selecione o tipo...</option>
+                                        <option value="entrada">
+                                            <i class="bi bi-arrow-down-circle"></i> Entrada (+)
+                                        </option>
+                                        <option value="saida">Saída (-)</option>
+                                        <option value="ajuste">Ajuste de Inventário</option>
+                                        <option value="devolucao">Devolução</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-123 text-primary me-1"></i> Quantidade
+                                    </label>
+                                    <input type="number" class="form-control" id="qtd-movimento" name="quantidade" 
+                                           min="1" placeholder="Digite a quantidade" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-currency-dollar text-success me-1"></i> Custo Unitário (opcional)
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" id="custo-movimento" 
+                                           name="custo" placeholder="0,00">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-calendar-event text-info me-1"></i> Data do Movimento
+                                    </label>
+                                    <input type="datetime-local" class="form-control" id="data-movimento" 
+                                           name="data_movimento" required>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-chat-left-text text-secondary me-1"></i> Observações
+                                    </label>
+                                    <textarea class="form-control" id="obs-movimento" name="observacao" 
+                                              rows="3" placeholder="Digite observações sobre este movimento (opcional)"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info mt-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Estoque Atual:</strong> <span id="info-qtd-atual" class="fs-5 fw-bold">0</span> unidades
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle me-1"></i> Lançar Movimento
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- HISTÓRICO -->
+                    <div class="tab-pane fade" id="historico">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>
+                                            <i class="bi bi-calendar3 me-1"></i> Data
+                                        </th>
+                                        <th>
+                                            <i class="bi bi-tag me-1"></i> Tipo
+                                        </th>
+                                        <th>
+                                            <i class="bi bi-123 me-1"></i> Quantidade
+                                        </th>
+                                        <th>
+                                            <i class="bi bi-currency-dollar me-1"></i> Custo
+                                        </th>
+                                        <th>
+                                            <i class="bi bi-box-seam me-1"></i> Saldo
+                                        </th>
+                                        <th>
+                                            <i class="bi bi-chat-left-text me-1"></i> Observação
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-historico">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            <i class="bi bi-hourglass-split fs-3 d-block mb-2"></i>
+                                            Carregando histórico...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
+
 {% block javascripts %}
-    <script>
-        function initBootstrapUI(container) {
-            container = container || $(document);
-
-            container.find('[data-bs-toggle="tab"]').each(function () {
-                new bootstrap.Tab(this);
-            });
-        }
-
-
-        $(function () {
-            $('.novoProd').on('click', function () {
-                var modal = Utils.modal($('.formProd').html(), 'secondary', function () {
-                    Utils.modal('Atenção, você está executando um formulario sem fazer os devidos tratamentos de seus campos.')
-                }, 'lg');
-                
-
-                // $('#'+modal.id+'.modal .nav-tabs button').on('click', function (e) {
-                //     e.preventDefault();
-                // });
-
-                return false;
-            });
-            
-            $('.modal').on('shown.bs.modal', function () {
-                initBootstrapUI($(this));
+<script>
+$(function () {
+    // ========== MODAL NOVO PRODUTO ==========
+    $('.novoProd').on('click', function () {
+        var $modal = $('#novoProduto');
+        var $conteudoForm = $('.formProd').clone().removeClass('d-none');
+        
+        $modal.find('.modal-body').html($conteudoForm.html());
+        
+        var modalInstance = new bootstrap.Modal($modal[0]);
+        modalInstance.show();
+        
+        $modal.one('shown.bs.modal', function () {
+            $modal.find('[data-bs-toggle="tab"]').each(function() {
+                $(this).off('click').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    $modal.find('.nav-link').removeClass('active');
+                    $modal.find('.tab-pane').removeClass('show active');
+                    
+                    $(this).addClass('active');
+                    var target = $(this).data('bs-target');
+                    $modal.find(target).addClass('show active');
+                });
             });
         });
-    </script>
+        
+        return false;
+    });
+
+    // ========== MODAL GERENCIAR ESTOQUE ==========
+    $('.btn-gerenciar-estoque').on('click', function() {
+        var produtoId = $(this).data('produto-id');
+        var produtoNome = $(this).data('produto-nome');
+        
+        var $modal = $('#modalEstoque');
+        var modalInstance = new bootstrap.Modal($modal[0]);
+        
+        $('.produto-nome-modal').text(produtoNome);
+        
+        carregarDadosEstoque(produtoId);
+        
+        modalInstance.show();
+        
+        var now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        $('#data-movimento').val(now.toISOString().slice(0, 16));
+    });
+
+    function carregarDadosEstoque(produtoId) {
+        // Dados mockados para demonstração
+        var mockData = {
+            id: 1,
+            produtoId: produtoId,
+            quantidade_atual: 50,
+            quantidade_reserva: 5,
+            quantidade_disponivel: 45,
+            estoque_minimo: 10,
+            etoque_maximo: 100,
+            custo_medio: 15.50,
+            custo_ultima_compra: 16.00,
+            refrigerado: 0,
+            controla_lote: 1,
+            controla_validade: 1,
+            status: 'ativo'
+        };
+        
+        preencherDadosEstoque(mockData);
+    }
+
+    function preencherDadosEstoque(data) {
+        $('#qtd-atual').text(data.quantidade_atual || 0);
+        $('#qtd-reserva').text(data.quantidade_reserva || 0);
+        $('#qtd-disponivel').text(data.quantidade_disponivel || 0);
+        $('#estoque-minimo').text(data.estoque_minimo || 0);
+        $('#estoque-maximo').text(data.etoque_maximo || 0);
+        $('#custo-medio').text('R$ ' + (data.custo_medio || 0).toFixed(2).replace('.', ','));
+        $('#custo-ultima').text('R$ ' + (data.custo_ultima_compra || 0).toFixed(2).replace('.', ','));
+        
+        $('#refrigerado').text(data.refrigerado ? 'Sim' : 'Não')
+            .removeClass('bg-secondary bg-success').addClass(data.refrigerado ? 'bg-success' : 'bg-secondary');
+        $('#controla-lote').text(data.controla_lote ? 'Sim' : 'Não')
+            .removeClass('bg-secondary bg-success').addClass(data.controla_lote ? 'bg-success' : 'bg-secondary');
+        $('#controla-validade').text(data.controla_validade ? 'Sim' : 'Não')
+            .removeClass('bg-secondary bg-success').addClass(data.controla_validade ? 'bg-success' : 'bg-secondary');
+        
+        var statusClass = data.status === 'ativo' ? 'bg-success' : (data.status === 'suspenso' ? 'bg-warning' : 'bg-danger');
+        $('#status-estoque').text(data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Ativo')
+            .removeClass('bg-success bg-warning bg-danger').addClass(statusClass);
+        
+        if (data.quantidade_atual < data.estoque_minimo) {
+            $('#alerta-estoque-baixo').removeClass('d-none');
+        } else {
+            $('#alerta-estoque-baixo').addClass('d-none');
+        }
+        
+        $('#edit-estoque-id').val(data.id);
+        $('#edit-produto-id').val(data.produtoId);
+        $('#edit-qtd-atual').val(data.quantidade_atual);
+        $('#edit-estoque-minimo').val(data.estoque_minimo);
+        $('#edit-estoque-maximo').val(data.etoque_maximo);
+        $('#edit-custo-medio').val(data.custo_medio);
+        $('#edit-custo-ultima').val(data.custo_ultima_compra);
+        $('#edit-status').val(data.status || 'ativo');
+        $('#edit-refrigerado').prop('checked', data.refrigerado == 1);
+        $('#edit-controla-lote').prop('checked', data.controla_lote == 1);
+        $('#edit-controla-validade').prop('checked', data.controla_validade == 1);
+        
+        $('#mov-produto-id').val(data.produtoId);
+        $('#info-qtd-atual').text(data.quantidade_atual || 0);
+        
+        carregarHistorico(data.produtoId);
+    }
+
+    function carregarHistorico(produtoId) {
+        // Mock de histórico
+        var mockHistorico = [
+            { data: '02/02/2026 10:30', tipo: 'entrada', quantidade: 20, custo: 15.50, saldo: 50, observacao: 'Compra fornecedor X' },
+            { data: '01/02/2026 14:15', tipo: 'saida', quantidade: 5, custo: 0, saldo: 30, observacao: 'Venda PDV' }
+        ];
+        
+        if (mockHistorico.length > 0) {
+            var html = '';
+            mockHistorico.forEach(function(mov) {
+                var tipoClass = mov.tipo === 'entrada' ? 'success' : 'danger';
+                var tipoIcon = mov.tipo === 'entrada' ? 'arrow-down-circle' : 'arrow-up-circle';
+                var sinal = mov.tipo === 'entrada' ? '+' : '-';
+                
+                html += '<tr>';
+                html += '<td><i class="bi bi-calendar3 me-1"></i>' + mov.data + '</td>';
+                html += '<td><span class="badge bg-' + tipoClass + '"><i class="bi bi-' + tipoIcon + ' me-1"></i>' + mov.tipo.toUpperCase() + '</span></td>';
+                html += '<td class="text-' + tipoClass + ' fw-bold">' + sinal + mov.quantidade + '</td>';
+                html += '<td>R$ ' + (mov.custo || 0).toFixed(2).replace('.', ',') + '</td>';
+                html += '<td><span class="badge bg-primary">' + mov.saldo + '</span></td>';
+                html += '<td><small class="text-muted">' + (mov.observacao || '-') + '</small></td>';
+                html += '</tr>';
+            });
+            $('#tabela-historico').html(html);
+        } else {
+            $('#tabela-historico').html('<tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhum movimento registrado</td></tr>');
+        }
+    }
+
+    $('#formEditarEstoque').on('submit', function(e) {
+        e.preventDefault();
+        alert('Funcionalidade de atualização será implementada no backend');
+    });
+
+    $('#formLancarMovimento').on('submit', function(e) {
+        e.preventDefault();
+        alert('Funcionalidade de movimento será implementada no backend');
+    });
+});
+</script>
 {% endblock %}
