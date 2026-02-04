@@ -54,7 +54,31 @@ class FinanceiroController extends DefaultController
         $relatorioData = $financeiroRepo->getRelatorioPorPeriodo($baseId, $dataInicio, $dataFim);
 
         // --- Aba Inativos ---
-        $financeirosInativos = $financeiroRepo->findInativos($baseId);
+        // Busca vendas inativas da tabela venda
+        $vendasInativas = $financeiroRepo->findInativos($baseId);
+        
+        // Busca registros inativos do financeiro_pendente
+        $conn = $this->getDoctrine()->getConnection();
+        $sqlPendentesInativos = "SELECT fp.id, fp.descricao, fp.valor AS total, fp.data, fp.pet_id,
+                                        p.nome AS pet_nome, c.nome AS dono_nome, 
+                                        COALESCE(fp.metodo_pagamento, 'pendente') AS metodo_pagamento,
+                                        'financeiro_pendente' AS tipo
+                                 FROM {$_ENV['DBNAMETENANT']}.financeiropendente fp
+                                 LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON fp.pet_id = p.id
+                                 LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                                 WHERE fp.estabelecimento_id = :baseId
+                                   AND fp.status = 'inativo'
+                                 ORDER BY fp.data DESC";
+        
+        $pendentesInativos = $conn->fetchAllAssociative($sqlPendentesInativos, ['baseId' => $baseId]);
+        
+        // Mescla vendas inativas e pendentes inativos
+        $financeirosInativos = array_merge($vendasInativas, $pendentesInativos);
+        
+        // Ordena por data decrescente
+        usort($financeirosInativos, function($a, $b) {
+            return strtotime($b['data']) - strtotime($a['data']);
+        });
 
         // --- Aba Fluxo de Caixa ---
         $dataFluxo = $request->query->get('data_fluxo') ? new \DateTime($request->query->get('data_fluxo')) : new \DateTime();
@@ -260,16 +284,16 @@ class FinanceiroController extends DefaultController
 
         $em = $this->getDoctrine()->getManager();
 
-        // 🔹 1. Busca ENTRADAS da tabela venda (todas as vendas pagas)
+        // 🔹 1. Busca ENTRADAS da tabela venda (todas as vendas pagas - exclui Pendente, Inativa e Carrinho)
         $entradasVenda = $em->getRepository(\App\Entity\Venda::class)
             ->createQueryBuilder('v')
             ->where('v.estabelecimentoId = :estab')
             ->andWhere('v.data BETWEEN :inicio AND :fim')
-            ->andWhere('(v.status IS NULL OR v.status != :pendente)')
+            ->andWhere('v.status NOT IN (:statusExcluidos)')
             ->setParameter('estab', $baseId)
             ->setParameter('inicio', $inicioDia)
             ->setParameter('fim', $fimDia)
-            ->setParameter('pendente', 'Pendente')
+            ->setParameter('statusExcluidos', ['Pendente', 'Inativa', 'Carrinho'])
             ->orderBy('v.data', 'ASC')
             ->getQuery()
             ->getResult();

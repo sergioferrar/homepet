@@ -30,11 +30,8 @@ class ServicoController extends DefaultController
         // Captura o parâmetro 'tipo' da query string para filtrar a listagem
         $tipoFiltro = $request->query->get('tipo');
         if ($tipoFiltro) {
-            // Ajuste findAllService para aceitar o parâmetro de filtro ou use findBy
-            $servicos = $repo->findBy([
-                'estabelecimento_id' => $userId,
-                'tipo' => $tipoFiltro
-            ]);
+            // Usa o método customizado do repositório com filtro de tipo
+            $servicos = $repo->findAllService($userId, $tipoFiltro);
         } else {
             $servicos = $repo->findAllService($userId);
         }

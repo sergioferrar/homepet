@@ -461,15 +461,17 @@
                 </button>
             </div>
             <div class="vendas-lista-scroll" style="max-height: 480px; overflow-y: auto;">
-                {# Junta vendas pagas + pendentes e ordena por data #}
-                {% set todas_vendas = (vendas_pagas|merge(vendas_pendentes)) %}
+                {# Junta vendas pagas + pendentes + carrinho e ordena por data #}
+                {% set todas_vendas = (vendas_pagas|merge(vendas_pendentes)|merge(vendas_carrinho|default([]))) %}
                 {% for v in todas_vendas %}
                     {% set status = v.status %}
                     <div class="card shadow-sm mb-2 rounded-4 border-start border-5
-                        {% if status == 'paga' %}
+                        {% if status == 'Paga' or status == 'Aberta' %}
                             border-success
-                        {% elseif status == 'pendente' %}
+                        {% elseif status == 'Pendente' %}
                             border-warning
+                        {% elseif status == 'Carrinho' %}
+                            border-info
                         {% else %}
                             border-secondary
                         {% endif %}">
@@ -479,6 +481,11 @@
                                 <div class="flex-grow-1 pe-3">
                                     <p class="mb-2 fw-bold">
                                         Venda #{{ v.id }}
+                                        {% if status == 'Carrinho' %}
+                                            <span class="badge bg-info text-dark ms-2">
+                                                <i class="bi bi-cart-check me-1"></i>Aguardando Finalização no PDV
+                                            </span>
+                                        {% endif %}
                                         <small class="ms-3 fw-normal">
                                         Pagamento via:
                                         {% if v.metodoPagamento %}

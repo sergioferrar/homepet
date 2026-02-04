@@ -257,9 +257,14 @@ class ClienteRepository extends ServiceEntityRepository
     {
         $sql = "SELECT * 
             FROM {$_ENV['DBNAMETENANT']}.cliente 
-            WHERE nome like '%{$query}%' AND estabelecimento_id = {$baseId}";
-        $query = $this->conn->executeQuery($sql);
-        return $this->conn->fetchAllAssociative();
+            WHERE nome like :query AND estabelecimento_id = :baseId";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('query', '%' . $query . '%');
+        $stmt->bindValue('baseId', $baseId);
+        $result = $stmt->executeQuery();
+        
+        return $result->fetchAllAssociative();
     }
 
 }

@@ -225,12 +225,76 @@
                                 <!-- Itens da venda serão adicionados aqui via JS -->
                             </tbody>
                         </table>
+
+                        <!-- 🛒 VENDAS AGUARDANDO FINALIZAÇÃO -->
+                        {% if vendas_carrinho is defined and vendas_carrinho|length > 0 %}
+                        <div class="alert alert-warning mt-4 mb-0" role="alert">
+                            <h6 class="alert-heading mb-3">
+                                <i class="bi bi-cart-check me-2"></i>
+                                Vendas Aguardando Finalização ({{ vendas_carrinho|length }})
+                            </h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered mb-0" id="tabelaCarrinho">
+                                    <thead class="table-warning">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Cliente</th>
+                                            <th>Pet</th>
+                                            <th>Origem</th>
+                                            <th>Itens</th>
+                                            <th>Total</th>
+                                            <th>Data</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for venda in vendas_carrinho %}
+                                        <tr class="venda-carrinho-item" 
+                                            data-venda-id="{{ venda.id }}"
+                                            data-venda-total="{{ venda.total }}">
+                                            <td><strong>#{{ venda.id }}</strong></td>
+                                            <td>{{ venda.cliente_nome|default('Cliente') }}</td>
+                                            <td>{{ venda.pet_nome|default('-') }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ venda.origem == 'clinica' ? 'primary' : (venda.origem == 'banho_tosa' ? 'info' : 'success') }}">
+                                                    {{ venda.origem|replace({'_': ' '})|title }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {% if venda.itens is defined %}
+                                                        {% for item in venda.itens %}
+                                                            {{ item.quantidade }}x {{ item.descricao }}
+                                                            {% if not loop.last %}<br>{% endif %}
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                            <td><strong>R$ {{ venda.total|number_format(2, ',', '.') }}</strong></td>
+                                            <td><small>{{ venda.data|date('d/m/Y H:i') }}</small></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
                 <!-- Coluna direita: Resumo e Pagamento -->
                 <div class="col-md-4 summary-section">
                     <h5 class="mb-3">Resumo da Venda</h5>
+                    
+                    <!-- Resumo do Carrinho -->
+                    <div id="resumoCarrinho" class="mb-3" style="display: none;">
+                        <div class="alert alert-info">
+                            <strong><i class="bi bi-cart-check me-1"></i> Vendas no Carrinho:</strong>
+                            <div id="listaVendasCarrinho" class="mt-2"></div>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-between mb-2">
                         <span>Itens:</span>
                         <span id="totalItens" class="fw-bold">0</span>
@@ -249,6 +313,26 @@
                             <option value="debito">Cartão Débito</option>
                             <option value="pendente">Fiado</option>
                         </select>
+                    </div>
+
+                    <div id="cartaoOpcoes" class="d-none mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">Bandeira</label>
+                                <select id="bandeiraCartao" class="form-select">
+                                    <option value="">Selecione...</option>
+                                    <option value="Visa">Visa</option>
+                                    <option value="Mastercard">Mastercard</option>
+                                    <option value="Elo">Elo</option>
+                                    <option value="American Express">American Express</option>
+                                    <option value="Hipercard">Hipercard</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">Parcelas</label>
+                                <input type="number" id="parcelas" class="form-control" min="1" max="12" value="1">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -283,7 +367,7 @@
 
                     <div class="d-grid">
                         <button class="btn btn-success btn-lg" id="btnFinalizar">
-                            <i class="bi bi-check-circle-fill me-2"></i> Finalizar Venda
+                            <i class="bi bi-check-circle-fill me-2"></i> Finalizar Vendas do Carrinho
                         </button>
                     </div>
                 </div>
@@ -375,7 +459,52 @@
         const produtos = {{ produtos|json_encode|raw }};
         let itens = [];
         let tutorSelecionado = null;
-        let produtoSelecionadoModal = null; // Variável para armazenar o produto selecionado no modal
+        let produtoSelecionadoModal = null;
+        let vendasCarrinho = []; // Array para armazenar vendas do carrinho
+
+        // ==================== CARREGAR VENDAS DO CARRINHO ====================
+        function carregarVendasCarrinho() {
+            vendasCarrinho = [];
+            const linhasCarrinho = document.querySelectorAll('.venda-carrinho-item');
+            
+            linhasCarrinho.forEach(linha => {
+                const vendaId = linha.getAttribute('data-venda-id');
+                const vendaTotal = parseFloat(linha.getAttribute('data-venda-total'));
+                
+                vendasCarrinho.push({
+                    id: vendaId,
+                    total: vendaTotal
+                });
+            });
+
+            atualizarResumoCarrinho();
+        }
+
+        function atualizarResumoCarrinho() {
+            const resumoDiv = document.getElementById('resumoCarrinho');
+            const listaDiv = document.getElementById('listaVendasCarrinho');
+            
+            if (vendasCarrinho.length > 0) {
+                resumoDiv.style.display = 'block';
+                
+                let html = '<ul class="mb-0">';
+                vendasCarrinho.forEach(venda => {
+                    html += `<li>Venda #${venda.id}: R$ ${venda.total.toFixed(2).replace('.', ',')}</li>`;
+                });
+                html += '</ul>';
+                
+                listaDiv.innerHTML = html;
+            } else {
+                resumoDiv.style.display = 'none';
+            }
+            
+            calcularTotais();
+        }
+
+        // Carrega vendas do carrinho ao iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarVendasCarrinho();
+        });
 
         // ==================== TOAST ====================
         function showToast(msg, tipo = 'info') {
@@ -384,22 +513,32 @@
 
         // ==================== FUNÇÕES DE CÁLCULO ====================
         function formatarMoeda(valor) {
-            console.log(valor)
-            return 'R$ ' + valor;//parseFloat(valor).toFixed(2).replace('.', ',');
+            return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
         }
 
         function calcularTotais() {
+            // Calcula total dos itens normais
             let totalVenda = 0;
             itens.forEach(item => {
                 totalVenda += item.quantidade * item.preco;
             });
-            document.getElementById('totalItens').innerText = itens.length;
-            document.getElementById('totalVenda').innerText = formatarMoeda(totalVenda);
+
+            // Adiciona total das vendas do carrinho
+            let totalCarrinho = 0;
+            vendasCarrinho.forEach(venda => {
+                totalCarrinho += venda.total;
+            });
+
+            const totalGeral = totalVenda + totalCarrinho;
+            const quantidadeItens = itens.length + vendasCarrinho.length;
+
+            document.getElementById('totalItens').innerText = quantidadeItens;
+            document.getElementById('totalVenda').innerText = formatarMoeda(totalGeral);
 
             let desconto = parseFloat(document.getElementById('desconto').value) || 0;
             let valorRecebido = parseFloat(document.getElementById('valorRecebido').value) || 0;
 
-            let totalComDesconto = totalVenda * (1 - (desconto / 100));
+            let totalComDesconto = totalGeral * (1 - (desconto / 100));
             document.getElementById('totalComDesconto').innerText = formatarMoeda(totalComDesconto);
 
             let troco = valorRecebido - totalComDesconto;
@@ -412,11 +551,66 @@
             if (itemExistente) {
                 itemExistente.quantidade += quantidade;
             } else {
-                itens.push({ ...produto, quantidade: quantidade });
+                itens.push({ 
+                    id: produto.id,
+                    nome: produto.nome, 
+                    preco: produto.valor,
+                    quantidade: quantidade 
+                });
             }
             renderizarItens();
             calcularTotais();
-            showToast('Item adicionado!', 'success');
+            showToast('Item adicionado! Clique em "Adicionar ao Carrinho" para salvar.', 'success');
+        }
+
+        // ==================== ADICIONAR ITEM DIRETO AO CARRINHO ====================
+        async function adicionarItemAoCarrinho(produto, quantidade = 1) {
+            if (!tutorSelecionado) {
+                showToast('Selecione um tutor/cliente primeiro.', 'warning');
+                return;
+            }
+
+            const cliente_id = tutorSelecionado.id;
+            const pet_id = document.getElementById('petSelect').value || null;
+            const origem = document.getElementById('origem').value;
+            const total = produto.valor * quantidade;
+
+            const payload = {
+                metodo: 'dinheiro', // Temporário, será definido na finalização
+                cliente_id: cliente_id,
+                pet_id: pet_id,
+                total: total,
+                desconto: 0,
+                itens: [{
+                    id: produto.id,
+                    nome: produto.nome,
+                    valor: produto.valor,
+                    quantidade: quantidade,
+                    tipo: produto.tipo
+                }],
+                troco: 0,
+                origem: origem
+            };
+
+            try {
+                const response = await fetch('{{ path("clinica_pdv_registrar") }}', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                
+                const json = await response.json();
+                
+                if (json.ok) {
+                    showToast('Item adicionado ao carrinho!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(json.msg, 'danger');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showToast('Erro ao adicionar ao carrinho.', 'danger');
+            }
         }
 
         function removerItem(id) {
@@ -555,9 +749,9 @@
                     resultados.forEach(produto => {
                         const suggestionDiv = document.createElement('div');
                         suggestionDiv.classList.add('autocomplete-suggestion');
-                        suggestionDiv.innerText = `${produto.nome} (R$ ${produto.preco.toFixed(2).replace('.', ',')})`;
+                        suggestionDiv.innerText = `${produto.nome} (R$ ${produto.valor.toFixed(2).replace('.', ',')})`;
                         suggestionDiv.addEventListener('click', () => {
-                            adicionarItem(produto);
+                            adicionarItemAoCarrinho(produto, 1);
                             document.getElementById('inputProduto').value = '';
                             autocompleteDiv.innerHTML = '';
                             autocompleteDiv.style.display = 'none';
@@ -576,7 +770,7 @@
             const input = document.getElementById('inputProduto').value;
             const produtoEncontrado = produtos.find(p => p.nome.toLowerCase() === input.toLowerCase());
             if (produtoEncontrado) {
-                adicionarItem(produtoEncontrado);
+                adicionarItemAoCarrinho(produtoEncontrado, 1);
                 document.getElementById('inputProduto').value = '';
                 document.getElementById('autocomplete-list').style.display = 'none';
             } else {
@@ -609,7 +803,7 @@
                     itemDiv.innerHTML = `
                         <div class="d-flex w-100 justify-content-between">
                             <h6 class="mb-1">${produto.nome}</h6>
-                            <small class="text-muted">${formatarMoeda(produto.preco)}</small>
+                            <small class="text-muted">${formatarMoeda(produto.valor)}</small>
                         </div>
                         <p class="mb-1 text-muted">${produto.descricao || 'Sem descrição.'}</p>
                     `;
@@ -617,7 +811,7 @@
                         e.preventDefault();
                         produtoSelecionadoModal = produto;
                         document.getElementById('produtoNomeConfirmacao').innerText = produto.nome;
-                        document.getElementById('produtoPrecoConfirmacao').innerText = formatarMoeda(produto.preco);
+                        document.getElementById('produtoPrecoConfirmacao').innerText = formatarMoeda(produto.valor);
                         document.getElementById('inputQuantidadeConfirmacao').value = 1;
                         modalSelecionarProduto.hide();
                         modalConfirmarAdicao.show();
@@ -639,7 +833,7 @@
         document.getElementById('btnAdicionarItemConfirmado').addEventListener('click', () => {
             const quantidade = parseInt(document.getElementById('inputQuantidadeConfirmacao').value);
             if (produtoSelecionadoModal && quantidade > 0) {
-                adicionarItem(produtoSelecionadoModal, quantidade);
+                adicionarItemAoCarrinho(produtoSelecionadoModal, quantidade);
                 modalConfirmarAdicao.hide();
             } else {
                 showToast('Quantidade inválida.', 'warning');
@@ -650,60 +844,68 @@
         document.getElementById('desconto').addEventListener('input', calcularTotais);
         document.getElementById('valorRecebido').addEventListener('input', calcularTotais);
 
+        // Mostrar/ocultar campos de cartão
+        document.getElementById('metodo').addEventListener('change', function() {
+            const metodo = this.value;
+            const cartaoOpcoes = document.getElementById('cartaoOpcoes');
+            
+            if (metodo === 'credito' || metodo === 'debito') {
+                cartaoOpcoes.classList.remove('d-none');
+            } else {
+                cartaoOpcoes.classList.add('d-none');
+            }
+        });
+
         // ==================== FINALIZAR VENDA ====================
-        document.getElementById('btnFinalizar').addEventListener('click', function () {
-            if (itens.length === 0) {
-                return showToast('Adicione pelo menos um item à venda.', 'warning');
-            }
-            if (!tutorSelecionado) {
-                return showToast('Selecione um tutor/cliente.', 'warning');
-            }
-
+        document.getElementById('btnFinalizar').addEventListener('click', async function () {
             const metodo = document.getElementById('metodo').value;
-            const cliente_id = tutorSelecionado.id;
-            const pet_id = document.getElementById('petSelect').value || null;
-            const desconto = parseFloat(document.getElementById('desconto').value) || 0;
-            const valorRecebido = parseFloat(document.getElementById('valorRecebido').value) || 0;
-            const origem = document.getElementById('origem').value;
 
-            let totalVenda = 0;
-            itens.forEach(item => {
-                totalVenda += item.quantidade * item.preco;
-            });
-            const totalDesc = totalVenda * (1 - (desconto / 100));
-            const troco = valorRecebido - totalDesc;
+            // Verifica se há vendas no carrinho
+            if (vendasCarrinho.length === 0) {
+                return showToast('Não há vendas no carrinho para finalizar. Adicione produtos primeiro.', 'warning');
+            }
 
-            const payload = {
-                metodo: metodo,
-                cliente_id: cliente_id,
-                pet_id: pet_id,
-                total: totalDesc,
-                desconto: desconto,
-                itens: itens,
-                troco: troco,
-                origem: origem
-            };
-
-            // 5️⃣ Envio
-            $.ajax({
-                url: '{{ path("clinica_pdv_registrar") }}',
-                method: 'POST',
-                contentType: 'application/json',
-                dataType: 'json',
-                data: JSON.stringify(payload),
-                success: function (json) {
-                    showToast(json.msg, json.ok ? 'success' : 'danger');
-
-                    if (json.ok) {
-                        setTimeout(function () {
-                            location.reload();
-                        }, 2000);
-                    }
-                },
-                error: function () {
-                    showToast('Erro ao comunicar com o servidor.', 'danger');
+            // Se for cartão, valida bandeira
+            if ((metodo === 'credito' || metodo === 'debito')) {
+                const bandeira = document.getElementById('bandeiraCartao').value;
+                if (!bandeira) {
+                    return showToast('Selecione a bandeira do cartão.', 'warning');
                 }
-            });
+            }
+
+            // Prepara dados para envio
+            const bandeiraCartao = document.getElementById('bandeiraCartao').value || null;
+            const parcelas = document.getElementById('parcelas').value || 1;
+
+            // Finaliza todas as vendas do carrinho
+            try {
+                const promises = vendasCarrinho.map(venda => {
+                    const formData = new FormData();
+                    formData.append('metodo_pagamento', metodo);
+                    if (bandeiraCartao) formData.append('bandeira_cartao', bandeiraCartao);
+                    if (parcelas) formData.append('parcelas', parcelas);
+
+                    return fetch(`{{ path('pdv_finalizar_carrinho', {'id': 'VENDA_ID'}) }}`.replace('VENDA_ID', venda.id), {
+                        method: 'POST',
+                        body: formData
+                    });
+                });
+
+                const responses = await Promise.all(promises);
+                const results = await Promise.all(responses.map(r => r.json()));
+
+                const erros = results.filter(r => r.status !== 'success');
+                
+                if (erros.length > 0) {
+                    showToast('Erro ao finalizar algumas vendas: ' + erros[0].mensagem, 'danger');
+                } else {
+                    showToast('Todas as vendas foram finalizadas com sucesso!', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showToast('Erro ao comunicar com o servidor.', 'danger');
+            }
         });
 
 

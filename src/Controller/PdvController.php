@@ -34,10 +34,31 @@ class PdvController extends DefaultController
         $repoProdutos = $this->getRepositorio(Produto::class);
         $repoServicos = $this->getRepositorio(Servico::class);
         $repoClientes = $this->getRepositorio(Cliente::class);
+        $repoVendas = $this->getRepositorio(Venda::class);
+        $repoVendaItem = $this->getRepositorio(VendaItem::class);
 
         $produtosEntities = $repoProdutos->findBy(["estabelecimentoId" => $baseId]);
         $servicosEntities = $repoServicos->findBy(["estabelecimentoId" => $baseId]);
         $clientes = $repoClientes->findBy(["estabelecimentoId" => $baseId]);
+
+        // 🔹 Busca vendas em carrinho (aguardando finalização)
+        $vendasCarrinho = $repoVendas->findCarrinho($baseId);
+        
+        // Busca itens de cada venda em carrinho
+        foreach ($vendasCarrinho as &$venda) {
+            $itens = $repoVendaItem->findBy(['venda' => $venda['id']]);
+            $venda['itens'] = [];
+            
+            foreach ($itens as $item) {
+                $servico = $repoServicos->find($item->getProduto());
+                $venda['itens'][] = [
+                    'descricao' => $servico ? $servico->getNome() : 'Serviço',
+                    'quantidade' => $item->getQuantidade(),
+                    'valor_unitario' => $item->getValorUnitario(),
+                    'subtotal' => $item->getSubtotal(),
+                ];
+            }
+        }
 
         $itensNormalizados = [];
 
@@ -73,6 +94,7 @@ class PdvController extends DefaultController
         return $this->render("clinica/pdv.html.twig", [
             "produtos" => $itensNormalizados, // Passa a lista normalizada para a view
             "clientes" => $clientes,
+            "vendas_carrinho" => $vendasCarrinho, // Passa vendas em carrinho
         ]);
     
     }
@@ -105,8 +127,11 @@ class PdvController extends DefaultController
         $produtosValidados = [];
         foreach ($dados['itens'] as $item) {
             if ($item['tipo'] === 'Produto') {
+                // Extrai o ID numérico removendo o prefixo "prod_"
+                $produtoId = str_replace('prod_', '', $item['id']);
+                
                 $produto = $em->getRepository(Produto::class)
-                    ->findOneBy(['id' => $item['id'], 'estabelecimentoId' => $baseId]);
+                    ->findOneBy(['id' => (int)$produtoId, 'estabelecimentoId' => $baseId]);
 
                 if (!$produto) {
                     return new JsonResponse([
@@ -123,7 +148,7 @@ class PdvController extends DefaultController
                     ], 400);
                 }
 
-                $produtosValidados[$item['id']] = $produto;
+                $produtosValidados[$produtoId] = $produto;
             }
         }
 
@@ -136,6 +161,7 @@ class PdvController extends DefaultController
         $venda->setMetodoPagamento($dados['metodo']);
         $venda->setData(new \DateTime());
         $venda->setOrigem($dados['origem']);
+        $venda->setStatus('Carrinho'); // Define status como Carrinho para finalizar depois
 
 
         // 🔹 Campos adicionais (troco, bandeira, parcelas, observação, pet)
@@ -171,25 +197,30 @@ class PdvController extends DefaultController
             $em->persist($itemVenda);
 
             // 🔹 Baixa estoque se for produto
-            if ($item['tipo'] === 'Produto' && isset($produtosValidados[$item['id']])) {
-                $produto = $produtosValidados[$item['id']];
-                $estoqueAnterior = $produto->getEstoqueAtual() ?? 0;
-                $novoEstoque = max(0, $estoqueAnterior - $item['quantidade']);
-                $produto->setEstoqueAtual($novoEstoque);
+            if ($item['tipo'] === 'Produto') {
+                // Extrai o ID numérico removendo o prefixo "prod_"
+                $produtoId = str_replace('prod_', '', $item['id']);
+                
+                if (isset($produtosValidados[$produtoId])) {
+                    $produto = $produtosValidados[$produtoId];
+                    $estoqueAnterior = $produto->getEstoqueAtual() ?? 0;
+                    $novoEstoque = max(0, $estoqueAnterior - $item['quantidade']);
+                    $produto->setEstoqueAtual($novoEstoque);
 
-                // 🔹 Registra movimento de estoque detalhado
-                $mov = new EstoqueMovimento();
-                $mov->setProduto($produto);
-                $mov->setEstabelecimentoId($baseId);
-                $mov->setTipo('SAIDA');
-                $mov->setOrigem('Venda PDV #' . ($venda->getId() ?? 'novo'));
-                $mov->setQuantidade($item['quantidade']);
-                $mov->setData(new \DateTime());
-                $mov->setObservacao("Venda para: " . ($cliente ? $cliente->getNome() : 'Consumidor Final') .
-                    " | Estoque anterior: {$estoqueAnterior} | Novo estoque: {$novoEstoque}");
+                    // 🔹 Registra movimento de estoque detalhado
+                    $mov = new EstoqueMovimento();
+                    $mov->setProduto($produto);
+                    $mov->setEstabelecimentoId($baseId);
+                    $mov->setTipo('SAIDA');
+                    $mov->setOrigem('Venda PDV #' . ($venda->getId() ?? 'novo'));
+                    $mov->setQuantidade($item['quantidade']);
+                    $mov->setData(new \DateTime());
+                    $mov->setObservacao("Venda para: " . ($cliente ? $cliente->getNome() : 'Consumidor Final') .
+                        " | Estoque anterior: {$estoqueAnterior} | Novo estoque: {$novoEstoque}");
 
-                $em->persist($produto);
-                $em->persist($mov);
+                    $em->persist($produto);
+                    $em->persist($mov);
+                }
             }
         }
 
@@ -701,14 +732,16 @@ class PdvController extends DefaultController
         $inicioDia = (new \DateTime('today'))->setTime(0, 0, 0);
         $fimDia = (new \DateTime('today'))->setTime(23, 59, 59);
 
-        // 🔹 Busca vendas do dia
+        // 🔹 Busca vendas do dia (exclui Pendente, Inativa e Carrinho)
         $vendas = $em->getRepository(Venda::class)
             ->createQueryBuilder('v')
             ->where('v.estabelecimentoId = :estab')
             ->andWhere('v.data BETWEEN :inicio AND :fim')
+            ->andWhere('v.status NOT IN (:statusExcluidos)')
             ->setParameter('estab', $baseId)
             ->setParameter('inicio', $inicioDia)
             ->setParameter('fim', $fimDia)
+            ->setParameter('statusExcluidos', ['Pendente', 'Inativa', 'Carrinho'])
             ->getQuery()
             ->getResult();
 
@@ -820,9 +853,9 @@ class PdvController extends DefaultController
     }
 
     /**
-     * @Route("/clinica/autocomplete/tutor", name="clinica_autocomplete_tutor", methods={"GET"})
+     * @Route("/autocomplete/tutor", name="clinica_autocomplete_tutor", methods={"GET"})
      */
-    public function autocompleteTutor(Request $request, TutorRepository $tutorRepository): JsonResponse
+    public function autocompleteTutor(Request $request): JsonResponse
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -832,16 +865,15 @@ class PdvController extends DefaultController
             return new JsonResponse([]);
         }
 
-        // Busca por tutores cujo nome contenha a query
-        // Assumindo que você tem um método findByNomeLike no seu TutorRepository
-        $tutores = $this->getRepositorio(Cliente::class)->findByNomeLike($query);
+        // Busca por clientes cujo nome contenha a query
+        $clienteRepo = $this->getRepositorio(Cliente::class);
+        $clientes = $clienteRepo->findByNomeLike($baseId, $query);
 
         $results = [];
-        foreach ($tutores as $tutor) {
+        foreach ($clientes as $cliente) {
             $results[] = [
-                'id' => $tutor->getId(),
-                'nome' => $tutor->getNome(),
-                // Adicione outros campos relevantes se necessário
+                'id' => $cliente['id'],
+                'nome' => $cliente['nome'],
             ];
         }
 
@@ -849,30 +881,86 @@ class PdvController extends DefaultController
     }
 
     /**
-     * @Route("/clinica/pets-by-tutor/{id}", name="clinica_pets_by_tutor", methods={"GET"})
+     * @Route("/pets-by-tutor/{id}", name="clinica_pets_by_tutor", methods={"GET"})
      */
-    public function getPetsByTutor(int $id, Request $request): JsonResponse
+    public function getPetsByTutor(int $id): JsonResponse
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        $tutor = $this->entityManager->getRepository(Cliente::class)->listarPetsDoCliente($id);
-
-        if (!$tutor) {
-            return new JsonResponse([], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        $pets = $tutor->getPets(); // Assumindo que Tutor tem um método getPets() que retorna uma Collection de Pet
+        $clienteRepo = $this->getRepositorio(Cliente::class);
+        $pets = $clienteRepo->listarPetsDoCliente($baseId, $id);
 
         $results = [];
         foreach ($pets as $pet) {
             $results[] = [
-                'id' => $pet->getId(),
-                'nome' => $pet->getNome(),
-                // Adicione outros campos relevantes do Pet se necessário
+                'id' => $pet['id'],
+                'nome' => $pet['nome'],
             ];
         }
 
         return new JsonResponse($results);
+    }
+
+    /**
+     * @Route("/carrinho/finalizar/{id}", name="pdv_finalizar_carrinho", methods={"POST"})
+     */
+    public function finalizarCarrinho(Request $request, int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        try {
+            $repoVendas = $this->getRepositorio(Venda::class);
+            
+            // Busca a venda em carrinho
+            $venda = $repoVendas->findOneBy([
+                'id' => $id,
+                'estabelecimentoId' => $baseId,
+                'status' => 'Carrinho'
+            ]);
+
+            if (!$venda) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'mensagem' => 'Venda não encontrada ou já finalizada.'
+                ], 404);
+            }
+
+            // Pega dados do formulário
+            $metodoPagamento = $request->request->get('metodo_pagamento');
+            $bandeiraCartao = $request->request->get('bandeira_cartao');
+            $parcelas = $request->request->get('parcelas');
+
+            // Finaliza a venda
+            $repoVendas->finalizarVenda($baseId, $id, $metodoPagamento, $bandeiraCartao, $parcelas);
+
+            // Se for pendente, cria no financeiro_pendente
+            if ($metodoPagamento === 'pendente') {
+                $financeiroPendente = new FinanceiroPendente();
+                $financeiroPendente->setDescricao('Venda ' . ucfirst($venda->getOrigem()) . ' - Pet ID: ' . $venda->getPetId());
+                $financeiroPendente->setValor($venda->getTotal());
+                $financeiroPendente->setData(new \DateTime());
+                $financeiroPendente->setPetId($venda->getPetId());
+                $financeiroPendente->setEstabelecimentoId($baseId);
+                $financeiroPendente->setMetodoPagamento('pendente');
+                $financeiroPendente->setStatus('Pendente');
+                $financeiroPendente->setOrigem($venda->getOrigem());
+                
+                $em->persist($financeiroPendente);
+                $em->flush();
+            }
+
+            return new JsonResponse([
+                'status' => 'success',
+                'mensagem' => 'Venda finalizada com sucesso!'
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'mensagem' => 'Erro ao finalizar venda: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

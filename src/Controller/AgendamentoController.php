@@ -335,7 +335,7 @@ class AgendamentoController extends DefaultController
                         $venda->setMetodoPagamento($dados['metodo_pagamento'] ?? 'dinheiro');
                         $venda->setData(new \DateTime());
                         $venda->setOrigem('banho_tosa');
-                        $venda->setStatus('Aberta');
+                        $venda->setStatus('Carrinho'); // Alterado para Carrinho - finalizar no PDV
                         $venda->setPetId($info['petIds'][0]);
 
                         $em->persist($venda);
@@ -347,7 +347,7 @@ class AgendamentoController extends DefaultController
 
                 return $this->json([
                     'status' => 'success',
-                    'mensagem' => 'Agendamento concluído com sucesso.',
+                    'mensagem' => 'Agendamento adicionado ao carrinho! Finalize no PDV.',
                     'id' => $id,
                     'concluido' => true,
                 ]);
@@ -598,7 +598,7 @@ class AgendamentoController extends DefaultController
             $venda->setMetodoPagamento($metodoPagamento);
             $venda->setData(new \DateTime());
             $venda->setOrigem('banho_tosa');
-            $venda->setStatus('Aberta');
+            $venda->setStatus('Carrinho'); // Alterado para Carrinho - finalizar no PDV
             $venda->setPetId($info['petIds'][0]);
 
             $em = $this->getDoctrine()->getManager();

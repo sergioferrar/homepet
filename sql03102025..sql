@@ -90,3 +90,8 @@ CREATE TABLE `estoque` (
   `updated_at` DATETIME NULL,
   `updated_by` DATETIME NULL,
   PRIMARY KEY (`id`));
+
+
+ALTER TABLE venda 
+MODIFY COLUMN status ENUM('Aberta', 'Pendente', 'Paga', 'Inativa', 'Carrinho') 
+DEFAULT 'Carrinho';

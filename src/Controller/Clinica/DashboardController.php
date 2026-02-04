@@ -181,21 +181,38 @@ class DashboardController extends DefaultController
         $internacoesPet     = $internacaoRepo->listarInternacoesPorPet($baseId, $pet['id']);
 
         // --- Serviços da clínica ---
-        $servicosClinica = $servicoRepo->findBy([
-            'estabelecimentoId' => $baseId,
-        ]);
+        // Usa o método customizado do repositório para garantir que busca apenas serviços da clínica
+        $servicosClinica = $servicoRepo->findAllService($baseId, 'clinica');
 
         // --- VENDAS ---
-        $vendasPagas = $vendasRepo->findBy([
+        // Busca vendas pagas (status 'Aberta' ou 'Paga') - exclui Inativa
+        $vendasPagasAberta = $vendasRepo->findBy([
             'estabelecimentoId' => $baseId,
             'petId'             => $pet['id'],
             'status'            => 'Aberta',
         ]);
 
+        $vendasPagasPaga = $vendasRepo->findBy([
+            'estabelecimentoId' => $baseId,
+            'petId'             => $pet['id'],
+            'status'            => 'Paga',
+        ]);
+
+        // Mescla as vendas pagas
+        $vendasPagas = array_merge($vendasPagasAberta, $vendasPagasPaga);
+
+        // Busca apenas vendas pendentes (não inativas) para calcular débito
         $vendasPendentes = $vendasRepo->findBy([
             'estabelecimentoId' => $baseId,
             'petId'             => $pet['id'],
             'status'            => 'Pendente',
+        ]);
+
+        // Busca vendas em carrinho (aguardando finalização no PDV)
+        $vendasCarrinho = $vendasRepo->findBy([
+            'estabelecimentoId' => $baseId,
+            'petId'             => $pet['id'],
+            'status'            => 'Carrinho',
         ]);
 
         // --- TIMELINE ---
@@ -337,6 +354,7 @@ class DashboardController extends DefaultController
         $data['vacinas']              = $vacinas;
         $data['vendas_pagas']         = $vendasPagas;
         $data['vendas_pendentes']     = $vendasPendentes;
+        $data['vendas_carrinho']      = $vendasCarrinho;
         $data['vendas_items']         = $resumoVentaItem;
         // dd($data['vendas_pagas'],$resumoItens);
         return $this->render('clinica/detalhes_pet.html.twig', $data);

@@ -50,9 +50,9 @@ class VendaController extends DefaultController
         $pet = $this->getRepositorio(\App\Entity\Pet::class)->find($request->get('pet_id'));
 
         $metodoPagamento = $request->get('metodo_pagamento');
-        $origem = 'clinica';
+        $origem = $request->get('origem', 'clinica'); // Pega a origem da requisição
 
-        // 1️⃣ Cria a VENDA
+        // 1️⃣ Cria a VENDA com status 'Carrinho' (será finalizada no PDV)
         $venda = new Venda();
         $venda->setEstabelecimentoId($baseId);
         $venda->setCliente($pet->getDono_Id());
@@ -60,8 +60,9 @@ class VendaController extends DefaultController
         $venda->setParcelas($request->get('parcelas'));
         $venda->setOrigem($origem);
         $venda->setMetodoPagamento($metodoPagamento);
-        $venda->setStatus($metodoPagamento === 'pendente' ? 'Pendente' : 'Aberta');
-        $venda->setData(new \DateTime()); // Adiciona a data atual
+        $venda->setStatus('Carrinho'); // Status inicial é sempre 'Carrinho'
+        $venda->setData(new \DateTime());
+        $venda->setObservacao($request->get('observacao')); // Salva observação se houver
 
         $em->persist($venda);
 
@@ -101,34 +102,17 @@ class VendaController extends DefaultController
             $descontoTotal += $desconto;
         }
 
-        
-
         // 3️⃣ Finaliza venda
         $venda->setTotal($valorTotal + $descontoTotal);
-        // $venda->setDescontoTotal($descontoTotal);
-        // $venda->setValorFinal($valorTotal);
 
         $em->flush();
 
-        // 4️⃣ Se for pendente, cria no financeiro pendente
-        if ($metodoPagamento === 'pendente') {
-            $financeiroPendente = new FinanceiroPendente();
-            $financeiroPendente->setDescricao('Venda Clínica - ' . $pet->getNome());
-            $financeiroPendente->setValor($valorTotal);
-            $financeiroPendente->setData(new \DateTime());
-            $financeiroPendente->setPetId($pet->getId());
-            $financeiroPendente->setEstabelecimentoId($baseId);
-            $financeiroPendente->setMetodoPagamento('pendente');
-            $financeiroPendente->setStatus('Pendente');
-            $financeiroPendente->setOrigem('clinica'); // Define origem como clínica
-            
-            $em->persist($financeiroPendente);
-            $em->flush();
-        }
+        // NÃO cria mais no financeiro_pendente aqui
+        // A venda fica em carrinho até ser finalizada no PDV
 
         return $this->json([
             'status' => 'success',
-            'mensagem' => 'Venda registrada com sucesso!',
+            'mensagem' => 'Venda adicionada ao carrinho! Finalize no PDV.',
             'venda_id' => $venda->getId()
         ]);
     }
@@ -136,16 +120,26 @@ class VendaController extends DefaultController
     /**
      * @Route("/pet/{petId}/venda/{id}/inativar", name="clinica_inativar_venda", methods={"POST"})
      */
-    public function inativarVenda(Request $request, FinanceiroRepository $financeiroRepository, FinanceiroPendenteRepository $pendenteRepository, int $petId, int $id): Response
+    public function inativarVenda(Request $request, int $petId, int $id, EntityManagerInterface $em): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-
         try {
-            $financeiroRepository->inativar($baseId, $id);
+            // Busca a venda
+            $vendaRepo = $this->getRepositorio(Venda::class);
+            $venda = $vendaRepo->findOneBy([
+                'id' => $id,
+                'estabelecimentoId' => $baseId
+            ]);
 
-            $pendenteRepository->inativar($baseId, $id);
+            if (!$venda) {
+                $this->addFlash('danger', 'Venda não encontrada.');
+                return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+            }
+
+            // Inativa a venda
+            $vendaRepo->inativar($baseId, $id);
 
             $this->addFlash('success', 'Venda inativada com sucesso.');
             return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);

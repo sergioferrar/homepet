@@ -42,27 +42,59 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
             throw new \Exception('Registro financeiro pendente não encontrado.');
         }
 
-        // Inserir na tabela venda com a origem correta
-        $sqlInsert = "INSERT INTO {$_ENV['DBNAMETENANT']}.venda 
-                      (estabelecimento_id, cliente, total, data, pet_id, metodo_pagamento, origem, status) 
-                      VALUES (:estabelecimento_id, :cliente, :total, :data, :pet_id, :metodo_pagamento, :origem, :status)";
+        // Verificar se existe uma venda pendente correspondente
+        $sqlVendaPendente = "SELECT id FROM {$_ENV['DBNAMETENANT']}.venda 
+                            WHERE estabelecimento_id = :baseId 
+                              AND pet_id = :pet_id 
+                              AND status = 'Pendente'
+                              AND origem = :origem
+                              AND ABS(total - :valor) < 0.01
+                            ORDER BY data DESC
+                            LIMIT 1";
         
-        // Buscar nome do cliente através do pet
-        $sqlCliente = "SELECT c.nome FROM {$_ENV['DBNAMETENANT']}.pet p 
-                       LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id 
-                       WHERE p.id = :pet_id";
-        $clienteNome = $this->conn->executeQuery($sqlCliente, ['pet_id' => $registroPendente['pet_id']])->fetchOne();
-        
-        $this->conn->executeQuery($sqlInsert, [
-            'estabelecimento_id' => $baseId,
-            'cliente' => $clienteNome ?: 'Cliente',
-            'total' => $registroPendente['valor'],
-            'data' => $registroPendente['data'],
+        $vendaExistente = $this->conn->executeQuery($sqlVendaPendente, [
+            'baseId' => $baseId,
             'pet_id' => $registroPendente['pet_id'],
-            'metodo_pagamento' => $registroPendente['metodo_pagamento'],
             'origem' => $registroPendente['origem'] ?? 'clinica',
-            'status' => 'Aberta',
-        ]);
+            'valor' => $registroPendente['valor']
+        ])->fetchOne();
+
+        if ($vendaExistente) {
+            // Atualiza a venda existente para 'Paga'
+            $sqlUpdate = "UPDATE {$_ENV['DBNAMETENANT']}.venda 
+                         SET status = 'Paga', 
+                             metodo_pagamento = :metodo_pagamento,
+                             data = NOW()
+                         WHERE id = :venda_id AND estabelecimento_id = :baseId";
+            
+            $this->conn->executeQuery($sqlUpdate, [
+                'metodo_pagamento' => $registroPendente['metodo_pagamento'],
+                'venda_id' => $vendaExistente,
+                'baseId' => $baseId
+            ]);
+        } else {
+            // Se não existe venda pendente, cria uma nova venda com status 'Paga'
+            $sqlInsert = "INSERT INTO {$_ENV['DBNAMETENANT']}.venda 
+                          (estabelecimento_id, cliente, total, data, pet_id, metodo_pagamento, origem, status) 
+                          VALUES (:estabelecimento_id, :cliente, :total, :data, :pet_id, :metodo_pagamento, :origem, :status)";
+            
+            // Buscar nome do cliente através do pet
+            $sqlCliente = "SELECT c.nome FROM {$_ENV['DBNAMETENANT']}.pet p 
+                           LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id 
+                           WHERE p.id = :pet_id";
+            $clienteNome = $this->conn->executeQuery($sqlCliente, ['pet_id' => $registroPendente['pet_id']])->fetchOne();
+            
+            $this->conn->executeQuery($sqlInsert, [
+                'estabelecimento_id' => $baseId,
+                'cliente' => $clienteNome ?: 'Cliente',
+                'total' => $registroPendente['valor'],
+                'data' => date('Y-m-d H:i:s'),
+                'pet_id' => $registroPendente['pet_id'],
+                'metodo_pagamento' => $registroPendente['metodo_pagamento'],
+                'origem' => $registroPendente['origem'] ?? 'clinica',
+                'status' => 'Paga',
+            ]);
+        }
 
         // Remover do financeiropendente
         $sqlDelete = "DELETE FROM {$_ENV['DBNAMETENANT']}.financeiropendente 

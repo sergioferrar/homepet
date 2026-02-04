@@ -34,13 +34,17 @@ class ServicoRepository extends ServiceEntityRepository
         return $query->fetch();
     }
 
-    public function findAllService($baseId): array
+    public function findAllService($baseId, $tipo = null): array
     {
         $sql = "SELECT * 
             FROM {$_ENV['DBNAMETENANT']}.servico 
-            WHERE estabelecimento_id = '{$baseId}'"; // Tabela com 's' minúsculo
+            WHERE estabelecimento_id = '{$baseId}'";
+        
+        if ($tipo !== null) {
+            $sql .= " AND tipo = :tipo";
+        }
 
-        $stmt = $this->conn->executeQuery($sql);
+        $stmt = $this->conn->executeQuery($sql, $tipo !== null ? ['tipo' => $tipo] : []);
         return $stmt->fetchAllAssociative();
     }
 

@@ -75,7 +75,7 @@ class FinanceiroRepository extends ServiceEntityRepository
                 LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
                 WHERE f.estabelecimento_id = :baseId 
                   AND DATE(f.data) = :data
-                  AND (f.status IS NULL OR f.status != 'inativo')
+                  AND f.status NOT IN ('Inativa', 'Pendente', 'Carrinho')
                 GROUP BY c.id, DATE(f.data)
                 ORDER BY c.nome";
 
@@ -93,7 +93,7 @@ class FinanceiroRepository extends ServiceEntityRepository
                 FROM {$_ENV['DBNAMETENANT']}.venda f
                 WHERE f.estabelecimento_id = :baseId 
                   AND f.data BETWEEN :dataInicio AND :dataFim
-                  AND (f.status IS NULL OR f.status != 'inativo')
+                  AND f.status NOT IN ('Inativa', 'Pendente', 'Carrinho')
                 GROUP BY DATE(f.data)
                 ORDER BY DATE(f.data) DESC";
 
@@ -230,7 +230,7 @@ class FinanceiroRepository extends ServiceEntityRepository
                 WHERE estabelecimento_id = :baseId
                   AND MONTH(data) = :mes
                   AND YEAR(data) = :ano
-                  AND (status IS NULL OR status != 'inativo')";
+                  AND status NOT IN ('Inativa', 'Pendente', 'Carrinho')";
 
         $stmt = $this->conn->prepare($sql);
         $result = $stmt->executeQuery([
@@ -308,7 +308,7 @@ class FinanceiroRepository extends ServiceEntityRepository
             LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
             WHERE f.estabelecimento_id = $baseId
               AND DATE(f.data) = DATE('{$data}')
-              AND (f.status IS NULL OR f.status != 'Pendente')
+              AND f.status NOT IN ('Inativa', 'Pendente', 'Carrinho')
             GROUP BY c.id, DATE(f.data)
             ORDER BY data DESC";
 
@@ -325,7 +325,7 @@ class FinanceiroRepository extends ServiceEntityRepository
             WHERE f.estabelecimento_id = $baseId
               AND DATE(f.data) = DATE('{$data}')
               AND f.origem = :origem
-              AND (f.status IS NULL OR f.status != 'Pendente')
+              AND f.status NOT IN ('Inativa', 'Pendente', 'Carrinho')
             GROUP BY c.id, DATE(f.data)
             ORDER BY data DESC";
 
@@ -350,13 +350,14 @@ public function inativar($baseId, int $id): void
 
     public function findInativos(int $baseId, ?int $petId = null): array
     {
-        $sql = "SELECT f.id, 'f.' AS descricao, f.total, f.data, f.pet_id, 
-                       p.nome AS pet_nome, c.nome AS dono_nome, COALESCE(metodo_pagamento, 'Dinheiro') AS metodo_pagamento
+        $sql = "SELECT f.id, f.observacao AS descricao, f.total, f.data, f.pet_id, 
+                       p.nome AS pet_nome, c.nome AS dono_nome, COALESCE(f.metodo_pagamento, 'Dinheiro') AS metodo_pagamento,
+                       'venda' AS tipo
                   FROM {$_ENV['DBNAMETENANT']}.venda f
              LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
              LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
                  WHERE f.estabelecimento_id = :baseId
-                   AND (f.status = 'Pendente')"; // 🔥 aceita os dois
+                   AND f.status = 'Inativa'";
 
         $params = ['baseId' => $baseId];
 
@@ -377,7 +378,7 @@ public function inativar($baseId, int $id): void
                 FROM {$_ENV['DBNAMETENANT']}.venda 
                 WHERE estabelecimento_id = :baseId 
                   AND pet_id = :petId
-                  AND (status IS NULL OR status != 'inativo')
+                  AND status NOT IN ('Inativa', 'Pendente', 'Carrinho')
                 ORDER BY data DESC";
 
         return $this->conn->fetchAllAssociative($sql, [

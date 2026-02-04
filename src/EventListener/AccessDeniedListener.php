@@ -72,7 +72,7 @@ class AccessDeniedListener implements EventSubscriberInterface
     {
         // echo "onKernelException"; exit;
         $exception = $event->getThrowable();
-        // dd($exception);
+        dd($exception);
         $request = $event->getRequest();
         $mensagem = '';
 
