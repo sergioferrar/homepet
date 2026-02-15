@@ -5,6 +5,9 @@ namespace App\Controller;
 use App\Entity\Usuario;
 use App\Service\DatabaseBkp;
 use App\Service\TempDirManager;
+use App\Service\CaixaService;
+use App\Service\PdvService;
+use App\Service\TenantContext;
 use Doctrine\Persistence\ObjectRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,9 +23,6 @@ use App\Service\DynamicConnectionManager;
 
 class DefaultController extends AbstractController
 {
-    private $status;
-    private $message;
-    private $error;
 
     public $data;
     public $user;
@@ -52,6 +52,12 @@ class DefaultController extends AbstractController
     public EntityManagerInterface $entityManager;
     public LoggerInterface $logger;
 
+    protected PdvService $pdvService;
+    protected CaixaService $caixaService;
+    protected TenantContext $tenantContext;
+
+    protected EntityManagerInterface $em;
+
     /**
      * @param Security $security
      */
@@ -62,7 +68,11 @@ class DefaultController extends AbstractController
         TempDirManager $tempDirManager, 
         DatabaseBkp $databaseBkp,
         EntityManagerInterface $entityManager,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        PdvService $pdvService,
+        CaixaService $caixaService,
+        EntityManagerInterface $em,
+        TenantContext $tenantContext
     )
     {
         date_default_timezone_set('America/Sao_Paulo');  
@@ -76,6 +86,11 @@ class DefaultController extends AbstractController
         $this->estabelecimentoId = $this->getIdBase();
         $this->entityManager = $entityManager;
         $this->logger = $logger;
+
+        $this->pdvService = $pdvService;
+        $this->caixaService = $caixaService;
+        $this->tenantContext = $tenantContext;
+        $this->em = $em;
     }
 
     public function switchDB(): void
@@ -252,6 +267,11 @@ class DefaultController extends AbstractController
         }
 
         return $html;
+    }
+
+    protected function utils()
+    {
+        return new \App\Service\Utils();
     }
 
     protected function infor($message)

@@ -1,0 +1,44 @@
+# config/services_pdv.yaml
+# Configuração dos services do módulo PDV refatorado
+
+services:
+    # Service de contexto de tenant
+    App\Service\TenantContext:
+        arguments:
+            $requestStack: '@request_stack'
+
+    # Service de gerenciamento de estoque
+    App\Service\EstoqueService:
+        arguments:
+            $em: '@doctrine.orm.entity_manager'
+            $tenantContext: '@App\Service\TenantContext'
+
+    # Interface de Nota Fiscal (preparação para futura integração)
+    App\Service\NotaFiscal\NotaFiscalServiceInterface:
+        class: App\Service\NotaFiscal\NotaFiscalService
+        arguments:
+            $logger: '@logger'
+
+    # Service principal do PDV
+    App\Service\PdvService:
+        arguments:
+            $em: '@doctrine.orm.entity_manager'
+            $tenantContext: '@App\Service\TenantContext'
+            $estoqueService: '@App\Service\EstoqueService'
+            $notaFiscalService: '@App\Service\NotaFiscal\NotaFiscalServiceInterface'
+            $logger: '@logger'
+
+    # Service de gerenciamento de caixa
+    App\Service\CaixaService:
+        arguments:
+            $em: '@doctrine.orm.entity_manager'
+            $tenantContext: '@App\Service\TenantContext'
+            $logger: '@logger'
+
+    # Controller do PDV (autowiring habilitado)
+    App\Controller\PdvController:
+        arguments:
+            $pdvService: '@App\Service\PdvService'
+            $caixaService: '@App\Service\CaixaService'
+            $tenantContext: '@App\Service\TenantContext'
+        tags: ['controller.service_arguments']

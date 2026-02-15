@@ -95,3 +95,42 @@ CREATE TABLE `estoque` (
 ALTER TABLE venda 
 MODIFY COLUMN status ENUM('Aberta', 'Pendente', 'Paga', 'Inativa', 'Carrinho') 
 DEFAULT 'Carrinho';
+
+INSERT INTO estoque (
+    produtoId,
+    estabelecimento_id,
+    quantidade_atual,
+    quantidade_reserva,
+    quantidade_disponivel,
+    estoque_minimo,
+    custo_medio,
+    custo_ultima_compra,
+    refrigerado,
+    controla_lote,
+    controla_validade,
+    status,
+    created_at,
+    updated_at
+)
+SELECT 
+    p.id AS produtoId,
+    p.estabelecimento_id,
+    COALESCE(p.estoque_atual, 0) AS quantidade_atual,
+    0 AS quantidade_reserva,
+    COALESCE(p.estoque_atual, 0) AS quantidade_disponivel,
+    0 AS estoque_minimo,
+    COALESCE(p.preco_custo, 0) AS custo_medio,
+    COALESCE(p.preco_custo, 0) AS custo_ultima_compra,
+    CASE WHEN p.refrigerado = 'Sim' THEN 1 ELSE 0 END AS refrigerado,
+    0 AS controla_lote,
+    CASE WHEN p.data_validade IS NOT NULL THEN 1 ELSE 0 END AS controla_validade,
+    'ativo' AS status,
+    NOW() AS created_at,
+    NOW() AS updated_at
+FROM produto p
+WHERE NOT EXISTS (
+    -- Evita duplicação se já existir registro
+    SELECT 1 FROM estoque e 
+    WHERE e.produtoId = p.id 
+    AND e.estabelecimento_id = p.estabelecimento_id
+);

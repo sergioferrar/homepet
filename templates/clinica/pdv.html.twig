@@ -3,932 +3,818 @@
 {% block page_title %}Ponto de Venda{% endblock %}
 
 {% block stylesheets %}
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
-    <!-- Bootstrap Icons CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
 {% endblock %}
 
 {% block body %}
     <style>
-        /* Estilos personalizados para o autocomplete */
-        .autocomplete-suggestions {
-            border: 1px solid #ced4da;
-            border-radius: 0.375rem;
-            margin-top: 0.25rem;
-            background-color: #fff;
-            max-height: 220px;
-            overflow-y: auto;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            z-index: 1000;
-            position: absolute;
-            width: auto;
-        }
+    /* Estilos do PDV */
+    .pdv-container {
+        background-color: #fff;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
 
-        .autocomplete-suggestion {
-            padding: 0.75rem 1rem;
-            cursor: pointer;
-            border-bottom: 1px solid #e9ecef;
-            font-size: 0.9rem;
-            transition: background-color 0.2s ease;
-        }
+    .autocomplete-suggestions {
+        position: absolute;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        background-color: #fff;
+        max-height: 250px;
+        overflow-y: auto;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        width: 100%;
+    }
 
-        .autocomplete-suggestion:last-child {
-            border-bottom: none;
-        }
+    .autocomplete-suggestion {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s;
+    }
 
-        .autocomplete-suggestion:hover,
-        .autocomplete-suggestion.active {
-            background-color: #e2e6ea;
-        }
+    .autocomplete-suggestion:hover {
+        background-color: #f8f9fa;
+    }
 
-        #petSelect:disabled {
-            background-color: #e9ecef;
-            cursor: not-allowed;
-            opacity: 0.8;
-        }
+    .autocomplete-suggestion:last-child {
+        border-bottom: none;
+    }
 
-        /* Ajustes para o layout geral */
-        .pdv {
-            background-color: #fff;
-            padding: 2rem;
-            margin-top: 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
+    .item-carrinho {
+        padding: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        margin-bottom: 0.75rem;
+        background-color: #f8f9fa;
+        transition: all 0.2s;
+    }
 
-        .pagetitle {
-            padding-bottom: 1rem;
-        }
+    .item-carrinho:hover {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-        .pagetitle h1 {
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-            color: #343a40;
-        }
+    .resumo-venda {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 0.375rem;
+        border: 2px solid #dee2e6;
+    }
 
-        .breadcrumb {
-            background-color: transparent;
-            padding: 0;
-            margin-bottom: 0;
-        }
+    .total-valor {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #0d6efd;
+    }
 
-        .breadcrumb-item a {
-            color: #0d6efd;
-            text-decoration: none;
-        }
+    .troco-valor {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #198754;
+    }
 
-        .breadcrumb-item.active {
-            color: #6c757d;
-        }
+    .badge-produto {
+        background-color: #0d6efd;
+    }
 
-        .form-label {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #495057;
-        }
+    .badge-servico {
+        background-color: #6f42c1;
+    }
 
-        .btn-outline-dark {
-            color: #343a40;
-            border-color: #343a40;
-        }
+    .btn-remover-item {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
 
-        .btn-outline-dark:hover {
-            background-color: #343a40;
-            color: #fff;
-        }
+    .quantidade-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
 
-        .table thead th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-            color: #495057;
-        }
+    .quantidade-controls input {
+        width: 60px;
+        text-align: center;
+    }
 
-        .table tbody tr:hover {
-            background-color: #f1f1f1;
-        }
+    .quantidade-controls button {
+        padding: 0.25rem 0.5rem;
+    }
 
-        .summary-section {
-            padding-left: 1.5rem;
-            border-left: 1px solid #dee2e6;
-        }
+    #carrinhoItens {
+        min-height: 200px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
 
-        .summary-section h5 {
-            margin-bottom: 1rem;
-            color: #343a40;
-        }
+    .empty-cart {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
 
-        .summary-section p {
-            margin-bottom: 0.5rem;
-        }
+    .empty-cart i {
+        font-size: 4rem;
+        opacity: 0.3;
+    }
+</style>
+<div class="container-fluid">
+    <div class="pagetitle">
+        <h1>Ponto de Venda</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+                <li class="breadcrumb-item">Atendimento</li>
+                <li class="breadcrumb-item active">PDV</li>
+            </ol>
+        </nav>
+    </div>
 
-        .summary-section strong {
-            color: #212529;
-        }
-
-        .total-display {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: #0d6efd;
-        }
-
-        .troco-display {
-            font-size: 1.35rem;
-            font-weight: bold;
-            color: #198754;
-        }
-
-        .modal-header {
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .modal-footer {
-            border-top: 1px solid #dee2e6;
-        }
-    </style>
- <div class="container-fluid">
-        <div class="pagetitle">
-            <h1>Ponto de Venda</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
-                    <li class="breadcrumb-item">Atendimento</li>
-                    <li class="breadcrumb-item active">PDV - Venda</li>
-                </ol>
-            </nav>
+    <div class="pdv-container">
+        <!-- Cabeçalho -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0"><i class="bi bi-cart-check text-primary"></i> Ponto de Venda</h3>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ path('clinica_estoque_index') }}" class="btn btn-outline-secondary d-flex align-items-center">
+                    <i class="bi bi-box-seam me-2"></i> Estoque
+                </a>
+                <a href="{{ path('clinica_pdv_listar') }}" class="btn btn-outline-info d-flex align-items-center">
+                    <i class="bi bi-card-checklist me-2"></i> Listagem
+                </a>
+                <button class="btn btn-outline-danger d-flex align-items-center" id="btnSaidaHeader">
+                    <i class="bi bi-box-arrow-up me-2"></i> Registrar Saída
+                </button>
+                <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-success d-flex align-items-center">
+                    <i class="bi bi-wallet2 me-2"></i> Caixa
+                </a>
+            </div>
         </div>
 
-        <div class="pdv">
-            <!-- 🔹 Cabeçalho da Seção -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="mb-0 text-primary"><i class="bi bi-cash-coin me-2"></i> Ponto de Venda</h3>
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="{{ path('clinica_estoque_index') }}" class="btn btn-outline-secondary d-flex align-items-center">
-                        <i class="bi bi-box-seam me-2"></i> Estoque
-                    </a>
-                    <a href="{{ path('clinica_pdv_listar') }}" class="btn btn-outline-info d-flex align-items-center">
-                        <i class="bi bi-card-checklist me-2"></i> Listagem
-                    </a>
-                    <button class="btn btn-outline-danger d-flex align-items-center" id="btnSaidaHeader">
-                        <i class="bi bi-box-arrow-up me-2"></i> Registrar Saída
-                    </button>
-                    <a href="{{ path('clinica_pdv_caixa') }}" class="btn btn-outline-success d-flex align-items-center">
-                        <i class="bi bi-wallet2 me-2"></i> Caixa
-                    </a>
-                </div>
-            </div>
-            <hr class="mb-4">
+        <hr class="mb-4">
 
-            <!-- 🔹 Tutor/Cliente -->
-            <div class="mb-4 position-relative">
-                <label for="inputTutor" class="form-label">Tutor/Cliente:</label>
-                <input type="text" id="inputTutor" class="form-control" autocomplete="off" placeholder="Comece a digitar o nome...">
-                <div id="autocomplete-tutor" class="autocomplete-suggestions"></div>
-            </div>
-
-            <!-- 🐕 Pet (opcional) -->
-            <div class="mb-4">
-                <label for="petSelect" class="form-label">Pet <small class="text-muted">(opcional - para aparecer na ficha)</small>:</label>
-                <select id="petSelect" class="form-select" disabled>
-                    <option value="">Selecione um cliente primeiro</option>
-                </select>
-            </div>
-
-            <div class="row g-4">
-                <!-- Coluna esquerda: Produtos e Tabela -->
-                <div class="col-md-8">
-                    <!-- 🔍 Campo de produto com autocomplete -->
-                    <div class="mb-3">
-                        <label for="inputProduto" class="form-label">Adicionar Produto/Serviço:</label>
-                        <div class="input-group">
-                            <input type="text" id="inputProduto" class="form-control" autocomplete="off" placeholder="Digite o nome do produto ou serviço...">
-                            <button class="btn btn-primary" id="btnAddProduto" type="button"><i class="bi bi-plus-lg"></i></button>
-                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalSelecionarProduto">
-                                <i class="bi bi-search"></i> Selecionar
-                            </button>
-                        </div>
-                        <div id="autocomplete-list" class="autocomplete-suggestions"></div>
+        <div class="row g-4">
+            <!-- Coluna Esquerda: Seleção e Carrinho -->
+            <div class="col-lg-7">
+                <!-- Cliente/Tutor -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Cliente/Tutor:</label>
+                    <div class="position-relative">
+                        <input type="text" 
+                               id="inputTutor" 
+                               class="form-control" 
+                               placeholder="Digite o nome do cliente..."
+                               autocomplete="off">
+                        <div id="autocompleteTutor" class="autocomplete-suggestions" style="display: none;"></div>
                     </div>
+                    <small class="text-muted">Opcional - deixe em branco para "Consumidor Final"</small>
+                </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped align-middle" id="tabelaItens">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Produto</th>
-                                    <th style="width: 100px;">Qtd</th>
-                                    <th style="width: 120px;">Preço Unit.</th>
-                                    <th style="width: 120px;">Subtotal</th>
-                                    <th style="width: 60px;">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Itens da venda serão adicionados aqui via JS -->
-                            </tbody>
-                        </table>
+                <!-- Pet (opcional) -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Pet:</label>
+                    <select id="petSelect" class="form-select" disabled>
+                        <option value="">Selecione um cliente primeiro</option>
+                    </select>
+                    <small class="text-muted">Opcional - selecione se a venda for para um pet</small>
+                </div>
 
-                        <!-- 🛒 VENDAS AGUARDANDO FINALIZAÇÃO -->
-                        {% if vendas_carrinho is defined and vendas_carrinho|length > 0 %}
-                        <div class="alert alert-warning mt-4 mb-0" role="alert">
-                            <h6 class="alert-heading mb-3">
-                                <i class="bi bi-cart-check me-2"></i>
-                                Vendas Aguardando Finalização ({{ vendas_carrinho|length }})
-                            </h6>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-bordered mb-0" id="tabelaCarrinho">
-                                    <thead class="table-warning">
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Cliente</th>
-                                            <th>Pet</th>
-                                            <th>Origem</th>
-                                            <th>Itens</th>
-                                            <th>Total</th>
-                                            <th>Data</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for venda in vendas_carrinho %}
-                                        <tr class="venda-carrinho-item" 
-                                            data-venda-id="{{ venda.id }}"
-                                            data-venda-total="{{ venda.total }}">
-                                            <td><strong>#{{ venda.id }}</strong></td>
-                                            <td>{{ venda.cliente_nome|default('Cliente') }}</td>
-                                            <td>{{ venda.pet_nome|default('-') }}</td>
-                                            <td>
-                                                <span class="badge bg-{{ venda.origem == 'clinica' ? 'primary' : (venda.origem == 'banho_tosa' ? 'info' : 'success') }}">
-                                                    {{ venda.origem|replace({'_': ' '})|title }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <small>
-                                                    {% if venda.itens is defined %}
-                                                        {% for item in venda.itens %}
-                                                            {{ item.quantidade }}x {{ item.descricao }}
-                                                            {% if not loop.last %}<br>{% endif %}
-                                                        {% endfor %}
-                                                    {% else %}
-                                                        -
-                                                    {% endif %}
-                                                </small>
-                                            </td>
-                                            <td><strong>R$ {{ venda.total|number_format(2, ',', '.') }}</strong></td>
-                                            <td><small>{{ venda.data|date('d/m/Y H:i') }}</small></td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        {% endif %}
+                <!-- Produtos/Serviços -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Adicionar Produto/Serviço:</label>
+                    <div class="input-group position-relative">
+                        <input type="text" 
+                               id="inputProduto" 
+                               class="form-control" 
+                               placeholder="Digite o nome do produto ou serviço..."
+                               autocomplete="off">
+                        <button class="btn btn-primary" id="btnAddProduto" type="button">
+                            <i class="bi bi-plus-lg"></i> Adicionar
+                        </button>
+                        <div id="autocompleteProduto" class="autocomplete-suggestions" style="display: none;"></div>
                     </div>
                 </div>
 
-                <!-- Coluna direita: Resumo e Pagamento -->
-                <div class="col-md-4 summary-section">
-                    <h5 class="mb-3">Resumo da Venda</h5>
-                    
-                    <!-- Resumo do Carrinho -->
-                    <div id="resumoCarrinho" class="mb-3" style="display: none;">
-                        <div class="alert alert-info">
-                            <strong><i class="bi bi-cart-check me-1"></i> Vendas no Carrinho:</strong>
-                            <div id="listaVendasCarrinho" class="mt-2"></div>
+                <!-- Carrinho de Itens -->
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-cart3"></i> Itens da Venda</h5>
+                    </div>
+                    <div class="card-body" id="carrinhoItens">
+                        <div class="empty-cart">
+                            <i class="bi bi-cart-x"></i>
+                            <p class="mt-3">Nenhum item adicionado</p>
+                            <small>Pesquise e adicione produtos ou serviços acima</small>
                         </div>
                     </div>
+                </div>
+            </div>
 
+            <!-- Coluna Direita: Resumo e Pagamento -->
+            <div class="col-lg-5">
+                <div class="resumo-venda">
+                    <h4 class="mb-3"><i class="bi bi-calculator"></i> Resumo da Venda</h4>
+
+                    <!-- Subtotal -->
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Itens:</span>
-                        <span id="totalItens" class="fw-bold">0</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-3">
-                        <span>Total Bruto:</span>
-                        <span id="totalVenda" class="total-display">R$ 0,00</span>
+                        <span>Subtotal:</span>
+                        <span class="fw-bold" id="subtotalValor">R$ 0,00</span>
                     </div>
 
+                    <!-- Desconto -->
                     <div class="mb-3">
-                        <label for="metodo" class="form-label">Forma de Pagamento:</label>
+                        <label class="form-label">Desconto (R$):</label>
+                        <input type="number" 
+                               id="desconto" 
+                               class="form-control" 
+                               value="0" 
+                               min="0" 
+                               step="0.01">
+                    </div>
+
+                    <!-- Total -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 pt-3 border-top">
+                        <span class="fs-5 fw-bold">Total:</span>
+                        <span class="total-valor" id="totalValor">R$ 0,00</span>
+                    </div>
+
+                    <!-- Método de Pagamento -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Método de Pagamento:</label>
                         <select id="metodo" class="form-select">
                             <option value="dinheiro">Dinheiro</option>
+                            <option value="debito">Débito</option>
+                            <option value="credito">Crédito</option>
                             <option value="pix">PIX</option>
-                            <option value="credito">Cartão Crédito</option>
-                            <option value="debito">Cartão Débito</option>
-                            <option value="pendente">Fiado</option>
+                            <option value="pendente">Pendente</option>
                         </select>
                     </div>
 
-                    <div id="cartaoOpcoes" class="d-none mb-3">
-                        <div class="row">
-                            <div class="col-md-6 mb-2">
-                                <label class="form-label">Bandeira</label>
-                                <select id="bandeiraCartao" class="form-select">
-                                    <option value="">Selecione...</option>
-                                    <option value="Visa">Visa</option>
-                                    <option value="Mastercard">Mastercard</option>
-                                    <option value="Elo">Elo</option>
-                                    <option value="American Express">American Express</option>
-                                    <option value="Hipercard">Hipercard</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-2">
-                                <label class="form-label">Parcelas</label>
-                                <input type="number" id="parcelas" class="form-control" min="1" max="12" value="1">
-                            </div>
+                    <!-- Opções de Cartão (oculto por padrão) -->
+                    <div id="opcoesCartao" class="mb-3" style="display: none;">
+                        <label class="form-label">Bandeira do Cartão:</label>
+                        <select id="bandeiraCartao" class="form-select mb-2">
+                            <option value="">Selecione...</option>
+                            <option value="visa">Visa</option>
+                            <option value="mastercard">Mastercard</option>
+                            <option value="elo">Elo</option>
+                            <option value="amex">American Express</option>
+                        </select>
+
+                        <label class="form-label">Parcelas:</label>
+                        <select id="parcelas" class="form-select">
+                            <option value="1">1x sem juros</option>
+                            <option value="2">2x sem juros</option>
+                            <option value="3">3x sem juros</option>
+                            <option value="4">4x</option>
+                            <option value="5">5x</option>
+                            <option value="6">6x</option>
+                        </select>
+                    </div>
+
+                    <!-- Valor Recebido (apenas para dinheiro) -->
+                    <div id="opcoesDinheiro" class="mb-3">
+                        <label class="form-label">Valor Recebido (R$):</label>
+                        <input type="number" 
+                               id="valorRecebido" 
+                               class="form-control" 
+                               value="0" 
+                               min="0" 
+                               step="0.01">
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span class="fw-bold">Troco:</span>
+                            <span class="troco-valor" id="trocoValor">R$ 0,00</span>
                         </div>
                     </div>
 
+                    <!-- Observação -->
                     <div class="mb-3">
-                        <label for="desconto" class="form-label">Desconto (%):</label>
-                        <input type="number" id="desconto" min="0" max="100" value="0" class="form-control">
+                        <label class="form-label">Observação:</label>
+                        <textarea id="observacao" 
+                                  class="form-control" 
+                                  rows="2" 
+                                  placeholder="Informações adicionais..."></textarea>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="valorRecebido" class="form-label">Valor Recebido:</label>
-                        <input type="number" step="0.01" id="valorRecebido" class="form-control">
-                    </div>
-
-                    <hr class="my-3">
-
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Total com Desconto:</span>
-                        <span id="totalComDesconto" class="total-display">R$ 0,00</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-4">
-                        <span>Troco:</span>
-                        <span id="valorTroco" class="troco-display">R$ 0,00</span>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="origem" class="form-label">Origem da Venda:</label>
-                        <select name="origem" id="origem" class="form-select">
-                            <option value="clinica">Clínica Veterinária</option>
-                            <option value="banho_tosa">Banho e Tosa</option>
-                            <option value="hospedagem">Hospedagem</option>
-                        </select>
-                    </div>
-
-                    <div class="d-grid">
-                        <button class="btn btn-success btn-lg" id="btnFinalizar">
-                            <i class="bi bi-check-circle-fill me-2"></i> Finalizar Vendas do Carrinho
-                        </button>
-                    </div>
+                    <!-- Botão Finalizar -->
+                    <button id="btnSalvarVenda" class="btn btn-success w-100 btn-sm">
+                        <i class="bi bi-check-circle"></i> Salvar Venda
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- 🔹 Modal Saída -->
-    <div class="modal fade" id="modalSaida" tabindex="-1" aria-labelledby="modalSaidaLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="modalSaidaLabel"><i class="bi bi-box-arrow-up me-2"></i> Registrar Saída</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="saidaDescricao" class="form-label">Descrição:</label>
-                        <input type="text" id="saidaDescricao" class="form-control" placeholder="Ex: Compra de café">
-                    </div>
-                    <div class="mb-3">
-                        <label for="saidaValor" class="form-label">Valor (R$):</label>
-                        <input type="number" step="0.01" id="saidaValor" class="form-control">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger" id="confirmarSaida">Registrar Saída</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 🔹 Novo Modal para Seleção de Produtos/Serviços -->
-    <div class="modal fade" id="modalSelecionarProduto" tabindex="-1" aria-labelledby="modalSelecionarProdutoLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="modalSelecionarProdutoLabel"><i class="bi bi-box-seam me-2"></i> Selecionar Produto/Serviço</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <input type="text" id="inputSearchProdutoModal" class="form-control" placeholder="Buscar produto ou serviço...">
-                    </div>
-                    <div class="list-group" id="listProdutosModal">
-                        <!-- Produtos serão carregados aqui via JS -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para Confirmar Quantidade e Adicionar -->
-    <div class="modal fade" id="modalConfirmarAdicao" tabindex="-1" aria-labelledby="modalConfirmarAdicaoLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="modalConfirmarAdicaoLabel"><i class="bi bi-cart-plus me-2"></i> Adicionar Item</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Produto/Serviço: <strong id="produtoNomeConfirmacao"></strong></p>
-                    <p>Preço Unitário: <strong id="produtoPrecoConfirmacao"></strong></p>
-                    <div class="mb-3">
-                        <label for="inputQuantidadeConfirmacao" class="form-label">Quantidade:</label>
-                        <input type="number" id="inputQuantidadeConfirmacao" class="form-control" value="1" min="1">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success" id="btnAdicionarItemConfirmado">Adicionar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
+<!-- Container para Toast Notifications -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
+    <div id="toastContainer"></div>
+</div>
 {% endblock %}
 
 {% block javascripts %}
-    <script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
-        $('.search-bar').addClass('d-none');
+<script>
+// ==================== DADOS INICIAIS ====================
+const produtos = {{ produtos|json_encode|raw }};
+const clientes = {{ clientes|json_encode|raw }};
 
+// Debug - você pode remover após confirmar que está funcionando
+console.log('=== DEBUG PDV ===');
+console.log('Total de produtos:', produtos.length);
+console.log('Total de clientes:', clientes.length);
+console.log('Exemplo de produto:', produtos[0]);
+console.log('Exemplo de cliente:', clientes[0]);
 
-        const produtos = {{ produtos|json_encode|raw }};
-        let itens = [];
-        let tutorSelecionado = null;
-        let produtoSelecionadoModal = null;
-        let vendasCarrinho = []; // Array para armazenar vendas do carrinho
+// Estado da aplicação
+let clienteSelecionado = null;
+let petSelecionado = null;
+let carrinhoItens = [];
 
-        // ==================== CARREGAR VENDAS DO CARRINHO ====================
-        function carregarVendasCarrinho() {
-            vendasCarrinho = [];
-            const linhasCarrinho = document.querySelectorAll('.venda-carrinho-item');
-            
-            linhasCarrinho.forEach(linha => {
-                const vendaId = linha.getAttribute('data-venda-id');
-                const vendaTotal = parseFloat(linha.getAttribute('data-venda-total'));
-                
-                vendasCarrinho.push({
-                    id: vendaId,
-                    total: vendaTotal
-                });
+// ==================== INICIALIZAÇÃO ====================
+$(document).ready(function() {
+    inicializarEventos();
+    atualizarResumo();
+});
+
+// ==================== FUNÇÕES DE TOAST ====================
+function showToast(mensagem, tipo = 'info') {
+    const bgClass = {
+        'success': 'bg-success',
+        'danger': 'bg-danger',
+        'warning': 'bg-warning',
+        'info': 'bg-info'
+    }[tipo] || 'bg-info';
+
+    const toast = $(`
+        <div class="toast align-items-center text-white ${bgClass} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">${mensagem}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `);
+
+    $('#toastContainer').append(toast);
+    const bsToast = new bootstrap.Toast(toast[0], { delay: 3000 });
+    bsToast.show();
+
+    toast.on('hidden.bs.toast', function() {
+        $(this).remove();
+    });
+}
+
+// ==================== AUTOCOMPLETE TUTOR/CLIENTE ====================
+let timeoutTutor = null;
+
+function inicializarAutocompleteTutor() {
+    const $input = $('#inputTutor');
+    const $autocomplete = $('#autocompleteTutor');
+
+    $input.on('input', function() {
+        clearTimeout(timeoutTutor);
+        const termo = $(this).val().trim();
+
+        if (termo.length < 2) {
+            $autocomplete.hide().empty();
+            return;
+        }
+
+        timeoutTutor = setTimeout(function() {
+            const termoLower = termo.toLowerCase();
+            const resultados = clientes.filter(function(c) {
+                return c.nome.toLowerCase().includes(termoLower);
             });
 
-            atualizarResumoCarrinho();
-        }
+            $autocomplete.empty();
 
-        function atualizarResumoCarrinho() {
-            const resumoDiv = document.getElementById('resumoCarrinho');
-            const listaDiv = document.getElementById('listaVendasCarrinho');
-            
-            if (vendasCarrinho.length > 0) {
-                resumoDiv.style.display = 'block';
-                
-                let html = '<ul class="mb-0">';
-                vendasCarrinho.forEach(venda => {
-                    html += `<li>Venda #${venda.id}: R$ ${venda.total.toFixed(2).replace('.', ',')}</li>`;
+            if (resultados.length > 0) {
+                resultados.forEach(function(cliente) {
+                    const $item = $('<div>')
+                        .addClass('autocomplete-suggestion')
+                        .html(`
+                            <strong>${cliente.nome}</strong>
+                            ${cliente.telefone ? `<br><small class="text-muted">${cliente.telefone}</small>` : ''}
+                        `)
+                        .on('click', function() {
+                            selecionarCliente(cliente);
+                        });
+                    $autocomplete.append($item);
                 });
-                html += '</ul>';
-                
-                listaDiv.innerHTML = html;
+                $autocomplete.show();
             } else {
-                resumoDiv.style.display = 'none';
+                $autocomplete.html('<div class="autocomplete-suggestion">Nenhum cliente encontrado</div>').show();
             }
-            
-            calcularTotais();
+        }, 300);
+    });
+
+    // Fechar ao clicar fora
+    $(document).on('click', function(e) {
+        if (!$input.is(e.target) && !$autocomplete.is(e.target)) {
+            $autocomplete.hide();
+        }
+    });
+}
+
+function selecionarCliente(cliente) {
+    clienteSelecionado = cliente;
+    $('#inputTutor').val(cliente.nome);
+    $('#autocompleteTutor').hide();
+
+    // Buscar pets do cliente
+    carregarPetsDoCliente(cliente.id);
+}
+
+function carregarPetsDoCliente(clienteId) {
+    $.ajax({
+        url: '{{ path("clinica_pets_by_tutor", {"id": "ID_PLACEHOLDER"}) }}'.replace('ID_PLACEHOLDER', clienteId),
+        method: 'GET',
+        success: function(pets) {
+            const $petSelect = $('#petSelect');
+            $petSelect.empty().append('<option value="">Nenhum (venda avulsa)</option>');
+
+            pets.forEach(pet => {
+                $petSelect.append($('<option>').val(pet.id).text(pet.nome));
+            });
+
+            $petSelect.prop('disabled', false);
+        },
+        error: function() {
+            showToast('Erro ao carregar pets do cliente', 'danger');
+        }
+    });
+}
+
+$('#petSelect').on('change', function() {
+    petSelecionado = $(this).val() || null;
+});
+
+// ==================== AUTOCOMPLETE PRODUTO ====================
+let timeoutProduto = null;
+
+function inicializarAutocompleteProduto() {
+    const $input = $('#inputProduto');
+    const $autocomplete = $('#autocompleteProduto');
+
+    $input.on('input', function() {
+        clearTimeout(timeoutProduto);
+        const termo = $(this).val().trim();
+
+        if (termo.length < 2) {
+            $autocomplete.hide().empty();
+            return;
         }
 
-        // Carrega vendas do carrinho ao iniciar
-        document.addEventListener('DOMContentLoaded', function() {
-            carregarVendasCarrinho();
+        timeoutProduto = setTimeout(function() {
+            const termoLower = termo.toLowerCase();
+            const resultados = produtos.filter(function(p) {
+                return p.nome.toLowerCase().includes(termoLower);
+            });
+
+            $autocomplete.empty();
+
+            if (resultados.length > 0) {
+                resultados.forEach(function(produto) {
+                    const badge = produto.tipo === 'Produto' 
+                        ? '<span class="badge badge-produto">Produto</span>' 
+                        : '<span class="badge badge-servico">Serviço</span>';
+                    
+                    const estoqueTexto = (produto.estoque !== null && produto.estoque !== undefined)
+                        ? ` | Estoque: ${produto.estoque}` 
+                        : '';
+
+                    const $item = $('<div>')
+                        .addClass('autocomplete-suggestion')
+                        .html(`
+                            ${badge} ${produto.nome} - <strong>R$ ${formatarMoeda(produto.valor)}</strong>${estoqueTexto}
+                        `)
+                        .on('click', function() {
+                            adicionarItemCarrinho(produto);
+                        });
+                    $autocomplete.append($item);
+                });
+                $autocomplete.show();
+            } else {
+                $autocomplete.html('<div class="autocomplete-suggestion">Nenhum produto/serviço encontrado</div>').show();
+            }
+        }, 300);
+    });
+
+    $('#btnAddProduto').on('click', function() {
+        const termo = $input.val().trim().toLowerCase();
+        const produto = produtos.find(function(p) {
+            return p.nome.toLowerCase() === termo;
         });
 
-        // ==================== TOAST ====================
-        function showToast(msg, tipo = 'info') {
-            Notify.toast(msg, tipo, 5000);
+        if (produto) {
+            adicionarItemCarrinho(produto);
+        } else {
+            showToast('Produto não encontrado', 'warning');
         }
+    });
 
-        // ==================== FUNÇÕES DE CÁLCULO ====================
-        function formatarMoeda(valor) {
-            return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
+    // Fechar ao clicar fora
+    $(document).on('click', function(e) {
+        if (!$input.is(e.target) && !$autocomplete.is(e.target)) {
+            $autocomplete.hide();
         }
+    });
+}
 
-        function calcularTotais() {
-            // Calcula total dos itens normais
-            let totalVenda = 0;
-            itens.forEach(item => {
-                totalVenda += item.quantidade * item.preco;
-            });
+// ==================== GERENCIAMENTO DO CARRINHO ====================
+function adicionarItemCarrinho(produto) {
+    // Verifica se já existe no carrinho
+    const itemExistente = carrinhoItens.find(item => item.id === produto.id);
 
-            // Adiciona total das vendas do carrinho
-            let totalCarrinho = 0;
-            vendasCarrinho.forEach(venda => {
-                totalCarrinho += venda.total;
-            });
-
-            const totalGeral = totalVenda + totalCarrinho;
-            const quantidadeItens = itens.length + vendasCarrinho.length;
-
-            document.getElementById('totalItens').innerText = quantidadeItens;
-            document.getElementById('totalVenda').innerText = formatarMoeda(totalGeral);
-
-            let desconto = parseFloat(document.getElementById('desconto').value) || 0;
-            let valorRecebido = parseFloat(document.getElementById('valorRecebido').value) || 0;
-
-            let totalComDesconto = totalGeral * (1 - (desconto / 100));
-            document.getElementById('totalComDesconto').innerText = formatarMoeda(totalComDesconto);
-
-            let troco = valorRecebido - totalComDesconto;
-            document.getElementById('valorTroco').innerText = formatarMoeda(troco);
-        }
-
-        // ==================== ADICIONAR/REMOVER ITENS ====================
-        function adicionarItem(produto, quantidade = 1) {
-            const itemExistente = itens.find(item => item.id === produto.id);
-            if (itemExistente) {
-                itemExistente.quantidade += quantidade;
-            } else {
-                itens.push({ 
-                    id: produto.id,
-                    nome: produto.nome, 
-                    preco: produto.valor,
-                    quantidade: quantidade 
-                });
-            }
-            renderizarItens();
-            calcularTotais();
-            showToast('Item adicionado! Clique em "Adicionar ao Carrinho" para salvar.', 'success');
-        }
-
-        // ==================== ADICIONAR ITEM DIRETO AO CARRINHO ====================
-        async function adicionarItemAoCarrinho(produto, quantidade = 1) {
-            if (!tutorSelecionado) {
-                showToast('Selecione um tutor/cliente primeiro.', 'warning');
+    if (itemExistente) {
+        // Se for produto, verifica estoque
+        if (produto.tipo === 'Produto' && produto.estoque !== null && produto.estoque !== undefined) {
+            if (itemExistente.quantidade >= produto.estoque) {
+                showToast('Estoque insuficiente!', 'warning');
                 return;
             }
-
-            const cliente_id = tutorSelecionado.id;
-            const pet_id = document.getElementById('petSelect').value || null;
-            const origem = document.getElementById('origem').value;
-            const total = produto.valor * quantidade;
-
-            const payload = {
-                metodo: 'dinheiro', // Temporário, será definido na finalização
-                cliente_id: cliente_id,
-                pet_id: pet_id,
-                total: total,
-                desconto: 0,
-                itens: [{
-                    id: produto.id,
-                    nome: produto.nome,
-                    valor: produto.valor,
-                    quantidade: quantidade,
-                    tipo: produto.tipo
-                }],
-                troco: 0,
-                origem: origem
-            };
-
-            try {
-                const response = await fetch('{{ path("clinica_pdv_registrar") }}', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
-                });
-                
-                const json = await response.json();
-                
-                if (json.ok) {
-                    showToast('Item adicionado ao carrinho!', 'success');
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showToast(json.msg, 'danger');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showToast('Erro ao adicionar ao carrinho.', 'danger');
-            }
         }
+        itemExistente.quantidade++;
+    } else {
+        // Adiciona novo item
+        carrinhoItens.push({
+            id: produto.id,
+            nome: produto.nome,
+            valor: parseFloat(produto.valor),
+            quantidade: 1,
+            tipo: produto.tipo,
+            estoque: produto.estoque
+        });
+    }
 
-        function removerItem(id) {
-            itens = itens.filter(item => item.id !== id);
-            renderizarItens();
-            calcularTotais();
-            showToast('Item removido!', 'info');
+    $('#inputProduto').val('');
+    $('#autocompleteProduto').hide();
+    
+    renderizarCarrinho();
+    atualizarResumo();
+    showToast('Item adicionado ao carrinho', 'success');
+}
+
+function removerItemCarrinho(itemId) {
+    carrinhoItens = carrinhoItens.filter(item => item.id !== itemId);
+    renderizarCarrinho();
+    atualizarResumo();
+    showToast('Item removido', 'info');
+}
+
+function alterarQuantidade(itemId, novaQuantidade) {
+    const item = carrinhoItens.find(i => i.id === itemId);
+    
+    if (!item) return;
+
+    if (novaQuantidade <= 0) {
+        removerItemCarrinho(itemId);
+        return;
+    }
+
+    // Verifica estoque se for produto
+    if (item.tipo === 'Produto' && item.estoque !== null) {
+        if (novaQuantidade > item.estoque) {
+            showToast('Estoque insuficiente!', 'warning');
+            return;
         }
+    }
 
-        function atualizarQuantidade(id, novaQuantidade) {
-            const item = itens.find(item => item.id === id);
-            if (item) {
-                item.quantidade = parseInt(novaQuantidade);
-                if (item.quantidade <= 0) {
-                    removerItem(id);
-                } else {
-                    renderizarItens();
-                    calcularTotais();
-                }
-            }
+    item.quantidade = novaQuantidade;
+    renderizarCarrinho();
+    atualizarResumo();
+}
+
+function renderizarCarrinho() {
+    const $container = $('#carrinhoItens');
+    $container.empty();
+
+    if (carrinhoItens.length === 0) {
+        $container.html(`
+            <div class="empty-cart">
+                <i class="bi bi-cart-x"></i>
+                <p class="mt-3">Nenhum item adicionado</p>
+                <small>Pesquise e adicione produtos ou serviços acima</small>
+            </div>
+        `);
+        return;
+    }
+
+    carrinhoItens.forEach(item => {
+        const badge = item.tipo === 'Produto' 
+            ? '<span class="badge badge-produto">Produto</span>' 
+            : '<span class="badge badge-servico">Serviço</span>';
+
+        const subtotal = item.quantidade * item.valor;
+
+        const $itemDiv = $(`
+            <div class="item-carrinho">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        ${badge}
+                        <h6 class="mb-1 mt-1">${item.nome}</h6>
+                        <small class="text-muted">R$ ${formatarMoeda(item.valor)} cada</small>
+                    </div>
+                    <button class="btn btn-sm btn-danger btn-remover-item" data-id="${item.id}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="quantidade-controls">
+                        <button class="btn btn-sm btn-outline-secondary btn-decrementar" data-id="${item.id}">
+                            <i class="bi bi-dash"></i>
+                        </button>
+                        <input type="number" 
+                               class="form-control form-control-sm input-quantidade" 
+                               data-id="${item.id}"
+                               value="${item.quantidade}" 
+                               min="1"
+                               ${item.estoque !== null ? `max="${item.estoque}"` : ''}>
+                        <button class="btn btn-sm btn-outline-secondary btn-incrementar" data-id="${item.id}">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    </div>
+                    <strong>R$ ${formatarMoeda(subtotal)}</strong>
+                </div>
+            </div>
+        `);
+
+        $container.append($itemDiv);
+    });
+
+    // Eventos dos botões
+    $('.btn-remover-item').on('click', function() {
+        const itemId = $(this).data('id');
+        removerItemCarrinho(itemId);
+    });
+
+    $('.btn-incrementar').on('click', function() {
+        const itemId = $(this).data('id');
+        const item = carrinhoItens.find(i => i.id === itemId);
+        alterarQuantidade(itemId, item.quantidade + 1);
+    });
+
+    $('.btn-decrementar').on('click', function() {
+        const itemId = $(this).data('id');
+        const item = carrinhoItens.find(i => i.id === itemId);
+        alterarQuantidade(itemId, item.quantidade - 1);
+    });
+
+    $('.input-quantidade').on('change', function() {
+        const itemId = $(this).data('id');
+        const novaQuantidade = parseInt($(this).val());
+        alterarQuantidade(itemId, novaQuantidade);
+    });
+}
+
+// ==================== CÁLCULOS ====================
+function calcularSubtotal() {
+    return carrinhoItens.reduce((total, item) => {
+        return total + (item.quantidade * item.valor);
+    }, 0);
+}
+
+function atualizarResumo() {
+    const subtotal = calcularSubtotal();
+    const desconto = parseFloat($('#desconto').val()) || 0;
+    const total = Math.max(0, subtotal - desconto);
+    const valorRecebido = parseFloat($('#valorRecebido').val()) || 0;
+    const troco = Math.max(0, valorRecebido - total);
+
+    $('#subtotalValor').text('R$ ' + formatarMoeda(subtotal));
+    $('#totalValor').text('R$ ' + formatarMoeda(total));
+    $('#trocoValor').text('R$ ' + formatarMoeda(troco));
+}
+
+function formatarMoeda(valor) {
+    return parseFloat(valor).toFixed(2).replace('.', ',');
+}
+
+// ==================== EVENTOS GERAIS ====================
+function inicializarEventos() {
+    inicializarAutocompleteTutor();
+    inicializarAutocompleteProduto();
+
+    // Atualizar cálculos
+    $('#desconto, #valorRecebido').on('input', atualizarResumo);
+
+    // Método de pagamento
+    $('#metodo').on('change', function() {
+        const metodo = $(this).val();
+
+        if (metodo === 'credito' || metodo === 'debito') {
+            $('#opcoesCartao').show();
+            $('#opcoesDinheiro').hide();
+        } else if (metodo === 'dinheiro') {
+            $('#opcoesCartao').hide();
+            $('#opcoesDinheiro').show();
+        } else {
+            $('#opcoesCartao').hide();
+            $('#opcoesDinheiro').hide();
         }
+    });
 
-        function renderizarItens() {
-            const tabelaItensBody = document.querySelector('#tabelaItens tbody');
-            tabelaItensBody.innerHTML = '';
-            itens.forEach(item => {
-                const subtotal = item.quantidade * item.preco;
-                const row = `
-                    <tr>
-                        <td>${item.nome}</td>
-                        <td><input type="number" class="form-control form-control-sm" value="${item.quantidade}" min="1" data-id="${item.id}" onchange="atualizarQuantidade(${item.id}, this.value)"></td>
-                        <td>${formatarMoeda(item.preco)}</td>
-                        <td>${formatarMoeda(subtotal)}</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="removerItem(${item.id})">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                tabelaItensBody.innerHTML += row;
-            });
-        }
+    // Salvar venda
+    $('#btnSalvarVenda').on('click', salvarVenda);
+}
 
-        // ==================== AUTOCOMPLETE TUTOR ====================
-        let timeoutTutor = null;
-        document.getElementById('inputTutor').addEventListener('input', function () {
-            clearTimeout(timeoutTutor);
-            const input = this.value;
-            const autocompleteDiv = document.getElementById('autocomplete-tutor');
-            autocompleteDiv.innerHTML = '';
-            autocompleteDiv.style.display = 'none';
+// ==================== SALVAR VENDA ====================
+async function salvarVenda() {
+    // Validações
+    if (carrinhoItens.length === 0) {
+        showToast('Adicione pelo menos um item à venda!', 'warning');
+        return;
+    }
 
-            if (input.length < 3) return;
+    const metodo = $('#metodo').val();
+    const subtotal = calcularSubtotal();
+    const desconto = parseFloat($('#desconto').val()) || 0;
+    const total = Math.max(0, subtotal - desconto);
 
-            timeoutTutor = setTimeout(async () => {
-                try {
-                    const response = await fetch(`{{ path('clinica_autocomplete_tutor') }}?query=${input}`);
-                    const data = await response.json();
+    if (total <= 0) {
+        showToast('O total da venda deve ser maior que zero!', 'warning');
+        return;
+    }
 
-                    if (data.length > 0) {
-                        data.forEach(tutor => {
-                            const suggestionDiv = document.createElement('div');
-                            suggestionDiv.classList.add('autocomplete-suggestion');
-                            suggestionDiv.innerText = tutor.nome;
-                            suggestionDiv.addEventListener('click', () => {
-                                document.getElementById('inputTutor').value = tutor.nome;
-                                tutorSelecionado = tutor;
-                                autocompleteDiv.innerHTML = '';
-                                autocompleteDiv.style.display = 'none';
-                                carregarPetsDoTutor(tutor.id);
-                            });
-                            autocompleteDiv.appendChild(suggestionDiv);
-                        });
-                        autocompleteDiv.style.display = 'block';
-                    } else {
-                        autocompleteDiv.innerHTML = '<div class="autocomplete-suggestion">Nenhum tutor encontrado</div>';
-                        autocompleteDiv.style.display = 'block';
-                    }
-                } catch (error) {
-                    console.error('Erro ao buscar tutores:', error);
-                    showToast('Erro ao buscar tutores.', 'danger');
-                }
-            }, 300);
+    // Validar cartão
+    if ((metodo === 'credito' || metodo === 'debito') && !$('#bandeiraCartao').val()) {
+        showToast('Selecione a bandeira do cartão!', 'warning');
+        return;
+    }
+
+    // Preparar dados
+    const dados = {
+        itens: carrinhoItens.map(item => ({
+            id: item.id,
+            nome: item.nome,
+            quantidade: item.quantidade,
+            valor: item.valor,
+            tipo: item.tipo
+        })),
+        total: total,
+        metodo: metodo,
+        origem: 'PDV',
+        cliente_id: clienteSelecionado ? clienteSelecionado.id : null,
+        pet_id: petSelecionado,
+        bandeira: $('#bandeiraCartao').val() || null,
+        parcelas: parseInt($('#parcelas').val()) || null,
+        troco: metodo === 'dinheiro' ? (parseFloat($('#valorRecebido').val()) - total) : null,
+        observacao: $('#observacao').val().trim() || null
+    };
+
+    // Desabilitar botão
+    const $btn = $('#btnSalvarVenda');
+    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Salvando...');
+
+    try {
+        const response = await $.ajax({
+            url: '{{ path("clinica_pdv_registrar") }}',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(dados)
         });
 
-        document.addEventListener('click', function (e) {
-            if (!document.getElementById('inputTutor').contains(e.target) && !document.getElementById('autocomplete-tutor').contains(e.target)) {
-                document.getElementById('autocomplete-tutor').style.display = 'none';
-            }
-        });
-
-        // ==================== CARREGAR PETS ====================
-        async function carregarPetsDoTutor(tutorId) {
-            const petSelect = document.getElementById('petSelect');
-            petSelect.innerHTML = '<option value="">Carregando pets...</option>';
-            petSelect.disabled = true;
-            try {
-                const response = await fetch(`{{ path('clinica_pets_by_tutor', {'id': 'TUTOR_ID'}) }}`.replace('TUTOR_ID', tutorId));
-                const pets = await response.json();
-
-                petSelect.innerHTML = '<option value="">Selecione um pet (opcional)</option>';
-                if (pets.length > 0) {
-                    pets.forEach(pet => {
-                        const option = document.createElement('option');
-                        option.value = pet.id;
-                        option.innerText = pet.nome;
-                        petSelect.appendChild(option);
-                    });
-                    petSelect.disabled = false;
-                } else {
-                    petSelect.innerHTML = '<option value="">Nenhum pet encontrado para este tutor</option>';
-                }
-            } catch (error) {
-                console.error('Erro ao carregar pets:', error);
-                showToast('Erro ao carregar pets.', 'danger');
-                petSelect.innerHTML = '<option value="">Erro ao carregar pets</option>';
-            }
-        }
-
-        // ==================== AUTOCOMPLETE PRODUTO (EXISTENTE) ====================
-        let timeoutProduto = null;
-        document.getElementById('inputProduto').addEventListener('input', function () {
-            clearTimeout(timeoutProduto);
-            const input = this.value.toLowerCase();
-            const autocompleteDiv = document.getElementById('autocomplete-list');
-            autocompleteDiv.innerHTML = '';
-            autocompleteDiv.style.display = 'none';
-
-            if (input.length < 2) return;
-
-            timeoutProduto = setTimeout(() => {
-                const resultados = produtos.filter(p => p.nome.toLowerCase().includes(input));
-
-                if (resultados.length > 0) {
-                    resultados.forEach(produto => {
-                        const suggestionDiv = document.createElement('div');
-                        suggestionDiv.classList.add('autocomplete-suggestion');
-                        suggestionDiv.innerText = `${produto.nome} (R$ ${produto.valor.toFixed(2).replace('.', ',')})`;
-                        suggestionDiv.addEventListener('click', () => {
-                            adicionarItemAoCarrinho(produto, 1);
-                            document.getElementById('inputProduto').value = '';
-                            autocompleteDiv.innerHTML = '';
-                            autocompleteDiv.style.display = 'none';
-                        });
-                        autocompleteDiv.appendChild(suggestionDiv);
-                    });
-                    autocompleteDiv.style.display = 'block';
-                } else {
-                    autocompleteDiv.innerHTML = '<div class="autocomplete-suggestion">Nenhum produto/serviço encontrado</div>';
-                    autocompleteDiv.style.display = 'block';
-                }
-            }, 300);
-        });
-
-        document.getElementById('btnAddProduto').addEventListener('click', () => {
-            const input = document.getElementById('inputProduto').value;
-            const produtoEncontrado = produtos.find(p => p.nome.toLowerCase() === input.toLowerCase());
-            if (produtoEncontrado) {
-                adicionarItemAoCarrinho(produtoEncontrado, 1);
-                document.getElementById('inputProduto').value = '';
-                document.getElementById('autocomplete-list').style.display = 'none';
-            } else {
-                showToast('Produto não encontrado ou inválido.', 'warning');
-            }
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!document.getElementById('inputProduto').contains(e.target) && !document.getElementById('autocomplete-list').contains(e.target)) {
-                document.getElementById('autocomplete-list').style.display = 'none';
-            }
-        });
-
-        // ==================== LÓGICA DO NOVO MODAL DE SELEÇÃO DE PRODUTOS ====================
-        const modalSelecionarProduto = new bootstrap.Modal(document.getElementById('modalSelecionarProduto'));
-        const modalConfirmarAdicao = new bootstrap.Modal(document.getElementById('modalConfirmarAdicao'));
-
-        document.getElementById('inputSearchProdutoModal').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const listProdutosModal = document.getElementById('listProdutosModal');
-            listProdutosModal.innerHTML = '';
-
-            const filteredProdutos = produtos.filter(p => p.nome.toLowerCase().includes(searchTerm));
-
-            if (filteredProdutos.length > 0) {
-                filteredProdutos.forEach(produto => {
-                    const itemDiv = document.createElement('a');
-                    itemDiv.href = '#';
-                    itemDiv.classList.add('list-group-item', 'list-group-item-action');
-                    itemDiv.innerHTML = `
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">${produto.nome}</h6>
-                            <small class="text-muted">${formatarMoeda(produto.valor)}</small>
-                        </div>
-                        <p class="mb-1 text-muted">${produto.descricao || 'Sem descrição.'}</p>
-                    `;
-                    itemDiv.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        produtoSelecionadoModal = produto;
-                        document.getElementById('produtoNomeConfirmacao').innerText = produto.nome;
-                        document.getElementById('produtoPrecoConfirmacao').innerText = formatarMoeda(produto.valor);
-                        document.getElementById('inputQuantidadeConfirmacao').value = 1;
-                        modalSelecionarProduto.hide();
-                        modalConfirmarAdicao.show();
-                    });
-                    listProdutosModal.appendChild(itemDiv);
-                });
-            } else {
-                listProdutosModal.innerHTML = '<div class="list-group-item">Nenhum produto ou serviço encontrado.</div>';
-            }
-        });
-
-        // Carregar todos os produtos no modal ao abrir (ou quando o input de busca estiver vazio)
-        document.getElementById('modalSelecionarProduto').addEventListener('shown.bs.modal', () => {
-            document.getElementById('inputSearchProdutoModal').value = '';
-            document.getElementById('inputSearchProdutoModal').dispatchEvent(new Event('input')); // Dispara o evento para carregar a lista completa
-            document.getElementById('inputSearchProdutoModal').focus();
-        });
-
-        document.getElementById('btnAdicionarItemConfirmado').addEventListener('click', () => {
-            const quantidade = parseInt(document.getElementById('inputQuantidadeConfirmacao').value);
-            if (produtoSelecionadoModal && quantidade > 0) {
-                adicionarItemAoCarrinho(produtoSelecionadoModal, quantidade);
-                modalConfirmarAdicao.hide();
-            } else {
-                showToast('Quantidade inválida.', 'warning');
-            }
-        });
-
-        // ==================== EVENTOS GERAIS ====================
-        document.getElementById('desconto').addEventListener('input', calcularTotais);
-        document.getElementById('valorRecebido').addEventListener('input', calcularTotais);
-
-        // Mostrar/ocultar campos de cartão
-        document.getElementById('metodo').addEventListener('change', function() {
-            const metodo = this.value;
-            const cartaoOpcoes = document.getElementById('cartaoOpcoes');
+        if (response.ok) {
+            showToast('Venda registrada com sucesso!', 'success');
             
-            if (metodo === 'credito' || metodo === 'debito') {
-                cartaoOpcoes.classList.remove('d-none');
-            } else {
-                cartaoOpcoes.classList.add('d-none');
-            }
-        });
+            // Limpar formulário
+            setTimeout(function() {
+                limparFormulario();
+                location.reload();
+            }, 1500);
+        } else {
+            showToast(response.msg || 'Erro ao salvar venda', 'danger');
+            $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Venda');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        const mensagem = error.responseJSON?.msg || 'Erro ao comunicar com o servidor';
+        showToast(mensagem, 'danger');
+        $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Venda');
+    }
+}
 
-        // ==================== FINALIZAR VENDA ====================
-        document.getElementById('btnFinalizar').addEventListener('click', async function () {
-            const metodo = document.getElementById('metodo').value;
-
-            // Verifica se há vendas no carrinho
-            if (vendasCarrinho.length === 0) {
-                return showToast('Não há vendas no carrinho para finalizar. Adicione produtos primeiro.', 'warning');
-            }
-
-            // Se for cartão, valida bandeira
-            if ((metodo === 'credito' || metodo === 'debito')) {
-                const bandeira = document.getElementById('bandeiraCartao').value;
-                if (!bandeira) {
-                    return showToast('Selecione a bandeira do cartão.', 'warning');
-                }
-            }
-
-            // Prepara dados para envio
-            const bandeiraCartao = document.getElementById('bandeiraCartao').value || null;
-            const parcelas = document.getElementById('parcelas').value || 1;
-
-            // Finaliza todas as vendas do carrinho
-            try {
-                const promises = vendasCarrinho.map(venda => {
-                    const formData = new FormData();
-                    formData.append('metodo_pagamento', metodo);
-                    if (bandeiraCartao) formData.append('bandeira_cartao', bandeiraCartao);
-                    if (parcelas) formData.append('parcelas', parcelas);
-
-                    return fetch(`{{ path('pdv_finalizar_carrinho', {'id': 'VENDA_ID'}) }}`.replace('VENDA_ID', venda.id), {
-                        method: 'POST',
-                        body: formData
-                    });
-                });
-
-                const responses = await Promise.all(promises);
-                const results = await Promise.all(responses.map(r => r.json()));
-
-                const erros = results.filter(r => r.status !== 'success');
-                
-                if (erros.length > 0) {
-                    showToast('Erro ao finalizar algumas vendas: ' + erros[0].mensagem, 'danger');
-                } else {
-                    showToast('Todas as vendas foram finalizadas com sucesso!', 'success');
-                    setTimeout(() => location.reload(), 1500);
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showToast('Erro ao comunicar com o servidor.', 'danger');
-            }
-        });
-
-
-        // ==================== SAÍDA DE DINHEIRO ====================
-        document.getElementById('btnSaidaHeader').addEventListener('click', () => {
-            new bootstrap.Modal(document.getElementById('modalSaida')).show();
-        });
-        document.getElementById('confirmarSaida').addEventListener('click', async () => {
-            const descricao = document.getElementById('saidaDescricao').value.trim();
-            const valor = parseFloat(document.getElementById('saidaValor').value);
-            if (!descricao || isNaN(valor) || valor <= 0) return showToast('Preencha os campos.', 'warning');
-            try {
-                const res = await fetch('{{ path("clinica_pdv_saida") }}', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({descricao, valor})
-                });
-                const json = await res.json();
-                showToast(json.msg, json.ok ? 'success' : 'danger');
-                if (json.ok) setTimeout(() => location.reload(), 1000);
-            } catch {
-                showToast('Erro ao registrar saída.', 'danger');
-            }
-        });
-    </script>
+function limparFormulario() {
+    carrinhoItens = [];
+    clienteSelecionado = null;
+    petSelecionado = null;
+    
+    $('#inputTutor').val('');
+    $('#inputProduto').val('');
+    $('#petSelect').empty().append('<option value="">Selecione um cliente primeiro</option>').prop('disabled', true);
+    $('#desconto').val(0);
+    $('#valorRecebido').val(0);
+    $('#observacao').val('');
+    $('#metodo').val('dinheiro').trigger('change');
+    
+    renderizarCarrinho();
+    atualizarResumo();
+}
+</script>
 {% endblock %}

@@ -21,7 +21,7 @@ class Estoque
     private ?int $id = null;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=true, name="produtoId")
      */
     private ?int $produtoId = null;
 

@@ -7,8 +7,9 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
+ * Repositório de Vendas com isolamento por tenant
+ * 
  * @extends ServiceEntityRepository<Venda>
- *
  * @method Venda|null find($id, $lockMode = null, $lockVersion = null)
  * @method Venda|null findOneBy(array $criteria, array $orderBy = null)
  * @method Venda[]    findAll()
@@ -22,28 +23,22 @@ class VendaRepository extends ServiceEntityRepository
     }
 
     /**
-     * 🔹 Retorna todas as vendas de um estabelecimento por data (formato YYYY-MM-DD)
+     * Busca vendas por data com isolamento de tenant
      */
     public function findByData(int $estabelecimentoId, \DateTime $data): array
     {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "
-            SELECT *
-            FROM venda
-            WHERE estabelecimento_id = :baseId
-              AND DATE(data) = :hoje
-            ORDER BY id DESC
-        ";
-
-        return $conn->fetchAllAssociative($sql, [
-            'baseId' => $estabelecimentoId,
-            'hoje'   => $data->format('Y-m-d'),
-        ]);
+        return $this->createQueryBuilder('v')
+            ->where('v.estabelecimentoId = :estab')
+            ->andWhere('DATE(v.data) = :data')
+            ->setParameter('estab', $estabelecimentoId)
+            ->setParameter('data', $data->format('Y-m-d'))
+            ->orderBy('v.id', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 
     /**
-     * 🔹 Retorna o total de vendas agrupado por forma de pagamento no dia informado
+     * Retorna total por forma de pagamento no dia
      */
     public function totalPorFormaPagamento(int $estabelecimentoId, \DateTime $data): array
     {
@@ -55,107 +50,75 @@ class VendaRepository extends ServiceEntityRepository
                 COALESCE(SUM(total), 0) AS total
             FROM venda
             WHERE estabelecimento_id = :baseId
-              AND DATE(data) = :hoje
+              AND DATE(data) = :data
+              AND status NOT IN ('Carrinho', 'Cancelada')
             GROUP BY metodo_pagamento
             ORDER BY metodo_pagamento ASC
         ";
 
         return $conn->fetchAllAssociative($sql, [
             'baseId' => $estabelecimentoId,
-            'hoje'   => $data->format('Y-m-d'),
+            'data' => $data->format('Y-m-d'),
         ]);
     }
 
     /**
-     * 🔹 Retorna o total geral das vendas do dia (soma de todas)
+     * Total geral do dia
      */
     public function totalGeralDoDia(int $estabelecimentoId, \DateTime $data): float
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $result = $this->createQueryBuilder('v')
+            ->select('COALESCE(SUM(v.total), 0) as total')
+            ->where('v.estabelecimentoId = :estab')
+            ->andWhere('DATE(v.data) = :data')
+            ->andWhere('v.status NOT IN (:statusExcluidos)')
+            ->setParameter('estab', $estabelecimentoId)
+            ->setParameter('data', $data->format('Y-m-d'))
+            ->setParameter('statusExcluidos', ['Carrinho', 'Cancelada'])
+            ->getQuery()
+            ->getSingleScalarResult();
 
-        $sql = "
-            SELECT 
-                COALESCE(SUM(total), 0) AS total
-            FROM venda
-            WHERE estabelecimento_id = :baseId
-              AND DATE(data) = :hoje
-        ";
-
-        $result = $conn->fetchAssociative($sql, [
-            'baseId' => $estabelecimentoId,
-            'hoje'   => $data->format('Y-m-d'),
-        ]);
-
-        return $result && isset($result['total']) ? (float)$result['total'] : 0.0;
+        return (float)$result;
     }
 
     /**
-     * 🔹 Retorna todas as vendas entre duas datas (para relatórios)
+     * Vendas por período
      */
     public function findByPeriodo(int $estabelecimentoId, \DateTime $inicio, \DateTime $fim): array
     {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "
-            SELECT *
-            FROM venda
-            WHERE estabelecimento_id = :baseId
-              AND DATE(data) BETWEEN :inicio AND :fim
-            ORDER BY data DESC
-        ";
-
-        return $conn->fetchAllAssociative($sql, [
-            'baseId' => $estabelecimentoId,
-            'inicio' => $inicio->format('Y-m-d'),
-            'fim'    => $fim->format('Y-m-d'),
-        ]);
+        return $this->createQueryBuilder('v')
+            ->where('v.estabelecimentoId = :estab')
+            ->andWhere('DATE(v.data) BETWEEN :inicio AND :fim')
+            ->setParameter('estab', $estabelecimentoId)
+            ->setParameter('inicio', $inicio->format('Y-m-d'))
+            ->setParameter('fim', $fim->format('Y-m-d'))
+            ->orderBy('v.data', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 
     /**
-     * 🔹 Retorna o total consolidado de vendas no período informado
+     * Total por período
      */
     public function totalPorPeriodo(int $estabelecimentoId, \DateTime $inicio, \DateTime $fim): float
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $result = $this->createQueryBuilder('v')
+            ->select('COALESCE(SUM(v.total), 0) as total')
+            ->where('v.estabelecimentoId = :estab')
+            ->andWhere('DATE(v.data) BETWEEN :inicio AND :fim')
+            ->andWhere('v.status NOT IN (:statusExcluidos)')
+            ->setParameter('estab', $estabelecimentoId)
+            ->setParameter('inicio', $inicio->format('Y-m-d'))
+            ->setParameter('fim', $fim->format('Y-m-d'))
+            ->setParameter('statusExcluidos', ['Carrinho', 'Cancelada'])
+            ->getQuery()
+            ->getSingleScalarResult();
 
-        $sql = "
-            SELECT COALESCE(SUM(total), 0) AS total
-            FROM venda
-            WHERE estabelecimento_id = :baseId
-              AND DATE(data) BETWEEN :inicio AND :fim
-        ";
-
-        $result = $conn->fetchAssociative($sql, [
-            'baseId' => $estabelecimentoId,
-            'inicio' => $inicio->format('Y-m-d'),
-            'fim'    => $fim->format('Y-m-d'),
-        ]);
-
-        return $result && isset($result['total']) ? (float)$result['total'] : 0.0;
+        return (float)$result;
     }
 
     /**
-     * 🔹 Inativa uma venda (muda o status para 'Inativa')
-     */
-    public function inativar(int $estabelecimentoId, int $vendaId): void
-    {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "
-            UPDATE venda
-            SET status = 'Inativa'
-            WHERE estabelecimento_id = :baseId
-              AND id = :vendaId
-        ";
-
-        $conn->executeStatement($sql, [
-            'baseId' => $estabelecimentoId,
-            'vendaId' => $vendaId,
-        ]);
-    }
-
-    /**
-     * 🔹 Busca vendas em carrinho (aguardando finalização no PDV)
+     * Busca vendas em carrinho aguardando finalização
      */
     public function findCarrinho(int $estabelecimentoId): array
     {
@@ -178,32 +141,108 @@ class VendaRepository extends ServiceEntityRepository
     }
 
     /**
-     * 🔹 Finaliza uma venda do carrinho (muda status para Aberta ou Pendente)
+     * Inativa uma venda (cancelamento)
      */
-    public function finalizarVenda(int $estabelecimentoId, int $vendaId, string $metodoPagamento, ?string $bandeiraCartao = null, ?int $parcelas = null): void
+    public function inativar(int $estabelecimentoId, int $vendaId): bool
+    {
+        $qb = $this->createQueryBuilder('v')
+            ->update()
+            ->set('v.status', ':status')
+            ->where('v.id = :id')
+            ->andWhere('v.estabelecimentoId = :estab')
+            ->setParameter('status', 'Cancelada')
+            ->setParameter('id', $vendaId)
+            ->setParameter('estab', $estabelecimentoId);
+
+        return $qb->getQuery()->execute() > 0;
+    }
+
+    /**
+     * Finaliza venda do carrinho
+     */
+    public function finalizarVenda(
+        int $estabelecimentoId,
+        int $vendaId,
+        string $metodoPagamento,
+        ?string $bandeiraCartao = null,
+        ?int $parcelas = null
+    ): bool {
+        $status = ($metodoPagamento === 'pendente') ? 'Pendente' : 'Aberta';
+
+        $qb = $this->createQueryBuilder('v')
+            ->update()
+            ->set('v.status', ':status')
+            ->set('v.metodoPagamento', ':metodo')
+            ->set('v.data', ':data')
+            ->where('v.id = :id')
+            ->andWhere('v.estabelecimentoId = :estab')
+            ->andWhere('v.status = :statusAtual')
+            ->setParameter('status', $status)
+            ->setParameter('metodo', $metodoPagamento)
+            ->setParameter('data', new \DateTime())
+            ->setParameter('id', $vendaId)
+            ->setParameter('estab', $estabelecimentoId)
+            ->setParameter('statusAtual', 'Carrinho');
+
+        if ($bandeiraCartao !== null) {
+            $qb->set('v.bandeiraCartao', ':bandeira')
+               ->setParameter('bandeira', $bandeiraCartao);
+        }
+
+        if ($parcelas !== null) {
+            $qb->set('v.parcelas', ':parcelas')
+               ->setParameter('parcelas', $parcelas);
+        }
+
+        return $qb->getQuery()->execute() > 0;
+    }
+
+    /**
+     * Busca vendas de um pet específico
+     */
+    public function findByPet(int $estabelecimentoId, int $petId): array
+    {
+        return $this->createQueryBuilder('v')
+            ->where('v.estabelecimentoId = :estab')
+            ->andWhere('v.petId = :petId')
+            ->andWhere('v.status NOT IN (:statusExcluidos)')
+            ->setParameter('estab', $estabelecimentoId)
+            ->setParameter('petId', $petId)
+            ->setParameter('statusExcluidos', ['Carrinho', 'Cancelada'])
+            ->orderBy('v.data', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Resumo de vendas do dia
+     */
+    public function getResumoDoDia(int $estabelecimentoId, \DateTime $data): array
     {
         $conn = $this->getEntityManager()->getConnection();
 
-        $status = ($metodoPagamento === 'pendente') ? 'Pendente' : 'Aberta';
-
         $sql = "
-            UPDATE venda
-            SET status = :status,
-                metodo_pagamento = :metodoPagamento,
-                bandeira_cartao = :bandeiraCartao,
-                parcelas = :parcelas,
-                data = NOW()
+            SELECT 
+                COUNT(*) as quantidade,
+                COALESCE(SUM(total), 0) as total
+            FROM venda
             WHERE estabelecimento_id = :baseId
-              AND id = :vendaId
+              AND DATE(data) = :data
+              AND status NOT IN ('Carrinho', 'Cancelada')
         ";
 
-        $conn->executeStatement($sql, [
-            'status' => $status,
-            'metodoPagamento' => $metodoPagamento,
-            'bandeiraCartao' => $bandeiraCartao,
-            'parcelas' => $parcelas,
+        $result = $conn->fetchAssociative($sql, [
             'baseId' => $estabelecimentoId,
-            'vendaId' => $vendaId,
+            'data' => $data->format('Y-m-d'),
         ]);
+
+        $quantidade = (int)($result['quantidade'] ?? 0);
+        $total = (float)($result['total'] ?? 0);
+
+        return [
+            'quantidade_vendas' => $quantidade,
+            'total_vendas' => $total,
+            'ticket_medio' => $quantidade > 0 ? $total / $quantidade : 0
+        ];
     }
 }
