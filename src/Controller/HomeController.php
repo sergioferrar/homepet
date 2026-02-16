@@ -29,6 +29,7 @@ class HomeController extends DefaultController
         }
 
         $this->switchDB();
+        // dd($this);
         $agendamento = $this->getRepositorio(Financeiro::class)->totalAgendamento($this->getIdBase());
         $agendamentoDia = $this->getRepositorio(Financeiro::class)->totalAgendamentoDia($this->getIdBase());
         $animais = $this->getRepositorio(Financeiro::class)->totalAnimais($this->getIdBase());
@@ -36,7 +37,10 @@ class HomeController extends DefaultController
         $valores = $this->getRepositorio(Financeiro::class)->lucroDiario($this->getIdBase());
 
         // Verificar se a assinatura está próxima de expirar
+        $this->restauraLoginDB();
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($this->getIdBase());
+        
+        $this->switchDB();
         $diasParaExpirar = null;
         $assinaturaExpirada = false;
         $avisoExpiracao = false;
