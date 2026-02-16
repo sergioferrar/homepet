@@ -67,14 +67,24 @@ class CustomAuthenticator extends AbstractAuthenticator
         $data['direcionaHome'] = true;
         $data['redireciona'] = $this->urlGenerator->generate('app_login_valida');
 
-        // Recarregar as configurações do env no $_SERVER e $_ENV
-        // dd($_ENV, $_SERVER);
-        $configs = $this->entityManager->getRepository(\App\Entity\Config::class)->findBy(['estabelecimento_id' => $user->getPetshopId()]);
+        // ============================================================
+        // CORREÇÃO: Verificar se é Super Admin ANTES de buscar configs
+        // ============================================================
+        $petshopId = $user->getPetshopId();
+        
+        // Super Admin não tem petshop_id, então não carrega configs
+        if ($petshopId !== null && $petshopId > 0) {
+            // Recarregar as configurações do env no $_SERVER e $_ENV (apenas para usuários normais)
+            $configs = $this->entityManager->getRepository(\App\Entity\Config::class)->findBy(['estabelecimento_id' => $petshopId]);
 
-        // Configura
-        $this->loadSettingsMailer($configs);
-        $this->loadGatewayPayments($configs);
-        $request->getSession()->set('estabelecimento_id', $user->getPetshopId());
+            // Configura
+            $this->loadSettingsMailer($configs);
+            $this->loadGatewayPayments($configs);
+            $request->getSession()->set('estabelecimento_id', $petshopId);
+        } else {
+            // Super Admin - não define estabelecimento_id
+            $request->getSession()->set('estabelecimento_id', null);
+        }
 
         $response = new JsonResponse($data);
         $response->headers->setCookie(

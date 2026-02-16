@@ -37,14 +37,44 @@ class PagamentoController extends DefaultController
             
             // Só aprova se o pagamento foi confirmado
             if ($payment['status'] === 'approved' || $status === 'approved') {
+                $sessionData = $request->getSession()->get('finaliza');
+                
                 $this->getRepositorio(\App\Entity\Estabelecimento::class)
                     ->aprovacao(
-                        $request->getSession()->get('finaliza')['uid'],
-                        $request->getSession()->get('finaliza')['eid']
+                        $sessionData['uid'],
+                        $sessionData['eid']
                     );
+
+                // Se tiver invoice_id na sessão, marca como pago
+                if (isset($sessionData['invoice_id'])) {
+                    $invoiceService = $this->container->get(\App\Service\InvoiceService::class);
+                    $invoice = $this->getRepositorio(\App\Entity\Invoice::class)->find($sessionData['invoice_id']);
+                    
+                    if ($invoice) {
+                        $invoiceService->markAsPaid($invoice, [
+                            'payment_id' => $paymentId,
+                            'payment_status' => $payment['status'],
+                            'payment_method' => $payment['payment_method_id'] ?? null,
+                        ]);
+
+                        // Enviar email de confirmação
+                        $usuario = $emUsuario->find($sessionData['uid']);
+                        if ($usuario) {
+                            $emailService = $this->container->get(\App\Service\EmailService::class);
+                            $emailService->sendEmail(
+                                $usuario->getEmail(),
+                                'Assinatura Confirmada - Sistema HomePet',
+                                $this->renderView('emails/assinatura_confirmada.html.twig', [
+                                    'invoice' => $invoice,
+                                    'usuario' => $usuario,
+                                ])
+                            );
+                        }
+                    }
+                }
                 
                 return $this->render('pagamento/confirmacao.html.twig', [
-                    'estabelecimento' => $request->getSession()->get('finaliza')['eid'],
+                    'estabelecimento' => $sessionData['eid'],
                     'status' => 'aprovado',
                 ]);
             } else {
@@ -58,6 +88,69 @@ class PagamentoController extends DefaultController
             return $this->render('pagamento/falha.html.twig', [
                 'erro' => 'Erro ao processar pagamento: ' . $e->getMessage(),
             ]);
+        }
+    }
+
+    /**
+     * @Route("/pagamento/webhook/mercadopago", name="pagamento_webhook_mercadopago", methods={"POST"})
+     */
+    public function webhookMercadoPago(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        
+        if (!$data) {
+            return new Response('Invalid payload', 400);
+        }
+
+        try {
+            $paymentGatewayFactory = $this->container->get(\App\Service\Payment\PaymentGatewayFactory::class);
+            $gateway = $paymentGatewayFactory->getGateway('mercadopago');
+            
+            $result = $gateway->processWebhook($data);
+
+            if ($result['success']) {
+                // Se for pagamento de invoice
+                if (isset($result['external_reference'])) {
+                    $invoiceId = $result['external_reference'];
+                    $invoice = $this->getRepositorio(\App\Entity\Invoice::class)->find($invoiceId);
+
+                    if ($invoice && $result['status'] === 'approved') {
+                        $invoiceService = $this->container->get(\App\Service\InvoiceService::class);
+                        $invoiceService->markAsPaid($invoice, $result);
+
+                        // Ativar estabelecimento se estava inativo
+                        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
+                            ->find($invoice->getEstabelecimentoId());
+                        
+                        if ($estabelecimento && $estabelecimento->getStatus() !== 'Ativo') {
+                            $estabelecimento->setStatus('Ativo');
+                            $estabelecimento->setDataAtualizacao(new \DateTime());
+                            $this->getRepositorio(\App\Entity\Estabelecimento::class)->add($estabelecimento, true);
+                        }
+
+                        // Enviar email de renovação
+                        $usuario = $this->getRepositorio(\App\Entity\Usuario::class)
+                            ->findOneBy(['petshop_id' => $estabelecimento->getId()]);
+                        
+                        if ($usuario) {
+                            $emailService = $this->container->get(\App\Service\EmailService::class);
+                            $emailService->sendEmail(
+                                $usuario->getEmail(),
+                                'Assinatura Renovada - Sistema HomePet',
+                                $this->renderView('emails/assinatura_renovada.html.twig', [
+                                    'invoice' => $invoice,
+                                    'estabelecimento' => $estabelecimento,
+                                ])
+                            );
+                        }
+                    }
+                }
+            }
+
+            return new Response('OK', 200);
+        } catch (\Exception $e) {
+            error_log('Erro no webhook: ' . $e->getMessage());
+            return new Response('Error', 500);
         }
     }
 

@@ -79,26 +79,65 @@ class LoginController extends DefaultController
             return $this->redirectToRoute('app_login');
         }
 
-//        if ($this->security->getUser()) {
-//            if ($this->security->getUser()->getStatus() == "Inativo") {
-//                $error = 'Usuário-Inativo';
-//                throw new \Exception($error, 404);
-//            }
-//        }
+        // Flag para evitar loop - se já passou por aqui, não processa novamente
+        if ($request->getSession()->get('valida_login_processado') === true) {
+            // Já foi processado, redireciona direto
+            if ($this->isGranted('ROLE_SUPER_ADMIN')) {
+                return $this->redirectToRoute('superadmin_dashboard');
+            }
+            return $this->redirectToRoute('home');
+        }
 
+        // Marcar que já processou para evitar loop
+        $request->getSession()->set('valida_login_processado', true);
+
+        // Configurar sessão básica SEMPRE
         $request->getSession()->set('login', true);
         $request->getSession()->set('user', $this->security->getUser()->getNomeUsuario());
         $request->getSession()->set('accessLevel', $this->security->getUser()->getAccessLevel());
         $request->getSession()->set('userId', $this->security->getUser()->getId());
-        $request->getSession()->set('estabelecimentoId', $this->security->getUser()->getPetshopId());
 
-        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
-            ->findById($this->security->getUser()->getPetshopId())[0];
+        // ============================================================
+        // SUPER ADMIN: Sem validações
+        // ============================================================
+        if ($this->isGranted('ROLE_SUPER_ADMIN')) {
+            $request->getSession()->set('estabelecimentoId', null);
+            $request->getSession()->set('isSuperAdmin', true);
+            return $this->redirectToRoute('superadmin_dashboard');
+        }
 
-            // Verifica se o estabelecimento está ativo (pagamento confirmado)
+        // ============================================================
+        // USUÁRIOS NORMAIS: Validar estabelecimento e plano
+        // ============================================================
+        $request->getSession()->set('isSuperAdmin', false);
+        
+        $petshopId = $this->security->getUser()->getPetshopId();
+        
+        if (!$petshopId) {
+            $request->getSession()->invalidate();
+            $this->addFlash('error', 'Usuário sem estabelecimento vinculado. Contate o administrador.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $request->getSession()->set('estabelecimentoId', $petshopId);
+
+        $estabelecimentos = $this->getRepositorio(\App\Entity\Estabelecimento::class)
+            ->findById($petshopId);
+
+        if (empty($estabelecimentos)) {
+            $request->getSession()->invalidate();
+            $this->addFlash('error', 'Estabelecimento não encontrado. Contate o administrador.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $estabelecimento = $estabelecimentos[0];
+
         if ($estabelecimento->getStatus() === 'Inativo') {                
-
-            $confirmationUrl = $this->generateUrl('confirma_cadastro', ['estabelecimento' => $this->security->getUser()->getPetshopId()],UrlGeneratorInterface::ABSOLUTE_URL);
+            $confirmationUrl = $this->generateUrl(
+                'confirma_cadastro', 
+                ['estabelecimento' => $petshopId],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            );
 
             $html = $this->render('landingpage/efetuarpagamento.html.twig', [
                 'payment_link' => $confirmationUrl,
@@ -114,15 +153,16 @@ class LoginController extends DefaultController
             return $this->redirectToRoute('app_login_pagamento_pendente', ['link' => base64_encode($confirmationUrl)]);
         }
 
-        $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
+        $validaPlano = $this->verificarPlanoPorPeriodo(
+            $estabelecimento->getDataPlanoInicio(), 
+            $estabelecimento->getDataPlanoFim()
+        );
 
-        //dd($validaPlano);
         if ($validaPlano) {
             $mensagem = str_replace(' ', '-', $validaPlano);
             return $this->redirectToRoute('logout', ['error' => $mensagem]);
         }
-//        dd($request->getSession()->all());
-        // dd($this->security->getUser());
+
         return $this->redirectToRoute('home');
     }
 
@@ -131,6 +171,8 @@ class LoginController extends DefaultController
      */
     public function logout(Request $request): Response
     {
+        // Limpar flag de processamento
+        $request->getSession()->remove('valida_login_processado');
         // Valida se existe sessão expired
         $request->getSession()->invalidate();
         return $this->redirectToRoute('app_login');

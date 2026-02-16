@@ -188,8 +188,11 @@ class LandingpageController extends DefaultController
     /**
      * @Route("/assinatura/pagamento/efetuar/{estabelecimento}", name="confirma_cadastro")
      */
-    public function confirmacaoCadastro(Request $request, MercadoPagoService $mercadoPagoService): Response
-    {
+    public function confirmacaoCadastro(
+        Request $request,
+        \App\Service\Payment\PaymentGatewayFactory $paymentGatewayFactory,
+        \App\Service\InvoiceService $invoiceService
+    ): Response {
         try {
             $eid = $request->get('estabelecimento');
             $uid = $this->session->get('userId');
@@ -201,6 +204,17 @@ class LandingpageController extends DefaultController
             // Buscar o plano que o estabelecimento está assinando
             $plano = $this->getRepositorio(\App\Entity\Plano::class)->find($estabelecimento->getPlanoId());
 
+            // Criar invoice para esta assinatura
+            $invoice = $invoiceService->createInvoice($estabelecimento, [
+                'tipo' => 'assinatura',
+                'valor_total' => $plano->getValor(),
+                'plano_id' => $plano->getId(),
+                'data_vencimento' => $estabelecimento->getDataPlanoFim(),
+            ]);
+
+            // Obter gateway de pagamento
+            $gateway = $paymentGatewayFactory->getDefaultGateway();
+
             // pra salvar o cadastro original
             $endpoint = "https://viacep.com.br/ws/{$estabelecimento->getCep()}/json";
             $endereco = json_decode(file_get_contents($endpoint), true);
@@ -208,21 +222,14 @@ class LandingpageController extends DefaultController
             $comprador = [
                 'name' => $usario->getNomeUsuario(),
                 'email' => $usario->getEmail(),
-                'rua' => $endereco['logradouro'],
+                'rua' => $endereco['logradouro'] ?? '',
                 'numero' => $estabelecimento->getNumero(),
-                'bairro' => $endereco['bairro'],
-                'cidade' => $endereco['localidade'],
-                'estado' => $endereco['uf'],
+                'bairro' => $endereco['bairro'] ?? '',
+                'cidade' => $endereco['localidade'] ?? '',
+                'estado' => $endereco['uf'] ?? '',
                 'idUsuario' => $usario->getId(),
                 'cnpj' => $estabelecimento->getCNPJ(),
-                'cep' => $endereco['cep'],
-            ];
-
-            $produto = [
-                'id' => $plano->getId(),
-                'titulo' => $plano->getTitulo(),
-                'qtd' => 1,
-                'valor' => $plano->getValor(),
+                'cep' => $endereco['cep'] ?? '',
             ];
 
             $dataPagamento = [
@@ -231,28 +238,34 @@ class LandingpageController extends DefaultController
                 'title' => $plano->getTitulo(),
                 'price' => (float)$plano->getValor(),
                 'email' => $usario->getEmail(),
+                'external_reference' => $invoice->getId(),
             ];
 
             // Salva na sessão para usar após pagamento
             $request->getSession()->set('finaliza', [
                 'uid' => $usario->getId(),
-                'eid' => $eid
+                'eid' => $eid,
+                'invoice_id' => $invoice->getId(),
             ]);
 
-            return $this->render('pagamento/pagamento.html.twig', $dataPagamento);
-            // $code = $mercadoPagoService->createPayment($dataPagamento);
-            // $code = $mercadoPagoService->createPreference($dataPagamento);
-            // dd($code);
-            // return $this->redirect($code['init_point']);
-            // } catch(\Exception $e){
-            //     dd($e);
-            // }
-            // return $this->render('estabelecimento/confirmacao.html.twig', [
-            //     'estabelecimento' => $request->get('estabelecimento'),
-            // ]);
+            // Criar assinatura recorrente
+            $result = $gateway->createSubscription($dataPagamento);
+
+            if ($result['success']) {
+                // Atualizar invoice com subscription_id
+                $invoice->setSubscriptionId($result['subscription_id']);
+                $invoice->setPaymentGateway($gateway->getGatewayName());
+                $this->getRepositorio(\App\Entity\Invoice::class)->add($invoice, true);
+
+                // Redirecionar para página de pagamento do gateway
+                return $this->redirect($result['init_point']);
+            } else {
+                throw new \Exception($result['error'] ?? 'Erro ao criar assinatura');
+            }
+
         } catch (\Exception $e) {
-            // Trate o erro conforme necessário
-            throw $e;
+            $this->addFlash('error', 'Erro ao processar pagamento: ' . $e->getMessage());
+            return $this->redirectToRoute('landing_home');
         }
     }
 }

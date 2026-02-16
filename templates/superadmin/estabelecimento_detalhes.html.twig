@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detalhes{% endblock %}
+
+{% block body %}
+<div class="container">
+
+    <h2>{{ estabelecimento.razaoSocial }}</h2>
+
+    <ul class="list-group mb-3">
+        <li class="list-group-item"><strong>Plano:</strong> {{ estabelecimento.planoId }}</li>
+        <li class="list-group-item"><strong>Status:</strong> {{ estabelecimento.status ? 'Ativo' : 'Bloqueado' }}</li>
+        <li class="list-group-item"><strong>Expira em:</strong> {{ estabelecimento.dataPlanoFim|date('d/m/Y') }}</li>
+    </ul>
+
+    <a href="{{ path('superadmin_estabelecimentos') }}" class="btn btn-secondary">Voltar</a>
+
+</div>
+{% endblock %}

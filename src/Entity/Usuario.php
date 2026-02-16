@@ -97,7 +97,7 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
 //        $this->roles;
-        return ['ROLE_USER'];
+        return $this->roles;//['ROLE_USER'];
     }
 
     public function eraseCredentials()

@@ -108,16 +108,21 @@ class MenuController extends DefaultController
         // Usuario logado
         $usuarioLogado = $this->getRepositorio(\App\Entity\Usuario::class)->find($request->getSession()->get('userId'));
         // dd($usuarioLogado, $request->getSession()->get('userId'));
-        // Pegar o estabelecimento a qual pertence o usuario loado
-        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($usuarioLogado->getPetshopId());
-        // Pegar o plano que o estabelecimento do usuario logado pertence
-        $getPlanoLogado = $this->getRepositorio(\App\Entity\Plano::class)->find($estabelecimento->getPlanoId());
-
-        $plano = json_decode($getPlanoLogado->getDescricao(), true);
-
         $modulo = [];
-        foreach ($plano as $row) {
-            $modulo[] = $this->getRepositorio(\App\Entity\Modulo::class)->findOneBy(['descricao' => $row])->getId();
+        $estabelecimento = [];
+        $getPlanoLogado = [];
+        $plano = [];
+        if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
+            // Pegar o estabelecimento a qual pertence o usuario loado
+            $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($usuarioLogado->getPetshopId());
+            // Pegar o plano que o estabelecimento do usuario logado pertence
+            $getPlanoLogado = $this->getRepositorio(\App\Entity\Plano::class)->find($estabelecimento->getPlanoId());
+
+            $plano = json_decode($getPlanoLogado->getDescricao(), true);
+
+            foreach ($plano as $row) {
+                $modulo[] = $this->getRepositorio(\App\Entity\Modulo::class)->findOneBy(['descricao' => $row])->getId();
+            }
         }
 
         $listaMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => null], ['ordem' => 'ASC']);
@@ -125,7 +130,7 @@ class MenuController extends DefaultController
         foreach ($listaMenu as $menu) {
             $dataS = [];
 
-            if (in_array($menu->getModulo(), $modulo)) {
+            if (in_array($menu->getModulo(), $modulo) && !$this->isGranted('ROLE_SUPER_ADMIN')) {
                 $listaSubMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => $menu->getId()], ['ordem' => 'ASC']);
                 if ($listaSubMenu) {
                     foreach ($listaSubMenu as $submenu) {

@@ -1,0 +1,281 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard Super Admin - Sistema HomePet{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Dashboard Super Admin</h1>
+        </div>
+    </div>
+
+    <!-- Cards de Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Estabelecimentos</h5>
+                    <h2>{{ total_estabelecimentos }}</h2>
+                    <p class="mb-0"><small>Cadastrados no sistema</small></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Novos Cadastros</h5>
+                    <h2>{{ novos_cadastros }}</h2>
+                    <p class="mb-0"><small>Últimos 30 dias</small></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Próximos a Vencer</h5>
+                    <h2>{{ proximos_vencer }}</h2>
+                    <p class="mb-0"><small>Expira em até 15 dias</small></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Expirados</h5>
+                    <h2>{{ expirados }}</h2>
+                    <p class="mb-0"><small>Assinatura vencida</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Receita -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Receita do Mês</h5>
+                    <h2 class="text-success">R$ {{ receita_mes }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Valores Pendentes</h5>
+                    <h2 class="text-warning">R$ {{ valor_pendente }}</h2>
+                    <p class="mb-0"><small>{{ invoices_pendentes }} invoices</small></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Recebido</h5>
+                    <h2 class="text-info">R$ {{ valor_recebido }}</h2>
+                    <p class="mb-0"><small>{{ invoices_pagos }} invoices pagos</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#novos">Novos Cadastros</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#proximos-vencer">Próximos a Vencer</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#expirados">Expirados</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#invoices">Últimos Invoices</a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Tab Novos Cadastros -->
+        <div id="novos" class="tab-pane fade show active">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Novos Cadastros (Últimos 30 dias)</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Razão Social</th>
+                                <th>CNPJ</th>
+                                <th>Data Cadastro</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for est in estabelecimentos_novos %}
+                            <tr>
+                                <td>{{ est.id }}</td>
+                                <td>{{ est.razaoSocial }}</td>
+                                <td>{{ est.cnpj }}</td>
+                                <td>{{ est.dataCadastro|date('d/m/Y') }}</td>
+                                <td>
+                                    <span class="badge bg-{{ est.status == 'Ativo' ? 'success' : 'secondary' }}">
+                                        {{ est.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: est.id}) }}" class="btn btn-sm btn-info">
+                                        Ver Detalhes
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">Nenhum novo cadastro nos últimos 30 dias</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Próximos a Vencer -->
+        <div id="proximos-vencer" class="tab-pane fade">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="text-white">Assinaturas Próximas do Vencimento</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Razão Social</th>
+                                <th>Data Fim</th>
+                                <th>Dias Restantes</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for est in estabelecimentos_proximos_vencer %}
+                            <tr>
+                                <td>{{ est.id }}</td>
+                                <td>{{ est.razaoSocial }}</td>
+                                <td>{{ est.dataPlanoFim|date('d/m/Y') }}</td>
+                                <td>
+                                    <span class="badge bg-warning">
+                                        {{ date().diff(est.dataPlanoFim).days }} dias
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: est.id}) }}" class="btn btn-sm btn-info">
+                                        Ver Detalhes
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">Nenhuma assinatura próxima do vencimento</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Expirados -->
+        <div id="expirados" class="tab-pane fade">
+            <div class="card">
+                <div class="card-header bg-danger">
+                    <h5 class="text-white">Assinaturas Expiradas</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Razão Social</th>
+                                <th>Data Fim</th>
+                                <th>Dias Expirados</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for est in estabelecimentos_expirados %}
+                            <tr>
+                                <td>{{ est.id }}</td>
+                                <td>{{ est.razaoSocial }}</td>
+                                <td>{{ est.dataPlanoFim|date('d/m/Y') }}</td>
+                                <td>
+                                    <span class="badge bg-danger">
+                                        {{ date().diff(est.dataPlanoFim).days }} dias atrás
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: est.id}) }}" class="btn btn-sm btn-info">
+                                        Ver Detalhes
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">Nenhuma assinatura expirada</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Invoices -->
+        <div id="invoices" class="tab-pane fade">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Últimos Invoices</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Número</th>
+                                <th>Estabelecimento</th>
+                                <th>Tipo</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                                <th>Data Emissão</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in ultimos_invoices %}
+                            <tr>
+                                <td>{{ invoice.numeroInvoice }}</td>
+                                <td>#{{ invoice.estabelecimentoId }}</td>
+                                <td>{{ invoice.tipo }}</td>
+                                <td>R$ {{ invoice.valorLiquido|number_format(2, ',', '.') }}</td>
+                                <td>
+                                    <span class="badge bg-{{ invoice.status == 'pago' ? 'success' : (invoice.status == 'pendente' ? 'warning' : 'danger') }}">
+                                        {{ invoice.status }}
+                                    </span>
+                                </td>
+                                <td>{{ invoice.dataEmissao|date('d/m/Y') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">Nenhum invoice encontrado</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

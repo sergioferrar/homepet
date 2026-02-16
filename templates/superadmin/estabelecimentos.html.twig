@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Estabelecimentos{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+
+    <h1 class="mb-4">Estabelecimentos</h1>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Plano</th>
+                <th>Status</th>
+                <th>Expiração</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for est in estabelecimentos %}
+            <tr>
+                <td>{{ est.nome }}</td>
+                <td>{{ est.email }}</td>
+                <td>{{ est.plano.nome }}</td>
+                <td>
+                    {% if est.ativo %}
+                        <span class="badge bg-success">Ativo</span>
+                    {% else %}
+                        <span class="badge bg-danger">Bloqueado</span>
+                    {% endif %}
+                </td>
+                <td>{{ est.dataExpiracao|date('d/m/Y') }}</td>
+                <td>
+                    <a href="{{ path('superadmin_estabelecimento_show', {id: est.id}) }}" class="btn btn-sm btn-primary">Ver</a>
+                    <a href="{{ path('superadmin_estabelecimento_edit', {id: est.id}) }}" class="btn btn-sm btn-warning">Editar</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="6">Nenhum registro encontrado</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+{% endblock %}
