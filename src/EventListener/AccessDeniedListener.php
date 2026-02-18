@@ -73,7 +73,7 @@ class AccessDeniedListener implements EventSubscriberInterface
         $exception = $event->getThrowable();
         $request = $event->getRequest();
         $mensagem = '';
-        // dd($exception);
+        dd($exception);
         
         // ============================================================
         // ROTAS QUE NÃO DEVEM SER INTERCEPTADAS
