@@ -4,10 +4,11 @@
 
 {% block body %}
 <div class="container-fluid py-4">
-    <!-- Cabeçalho com botão voltar -->
+
+    <!-- Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="mb-0">
+            <h2 class="mb-1 fw-bold">
                 <i class="bi bi-shop text-primary me-2"></i>
                 Gerenciar Estabelecimentos
             </h2>
@@ -19,32 +20,32 @@
     </div>
 
     <!-- Filtros -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <div class="row g-2">
-                <div class="col-12 col-md-auto">
-                    <label class="form-label fw-bold text-muted small">FILTRAR POR:</label>
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-3">
+            <div class="row align-items-center g-2">
+                <div class="col-auto">
+                    <span class="text-muted fw-bold small text-uppercase">Filtrar:</span>
                 </div>
-                <div class="col-12 col-md">
-                    <div class="btn-group w-100" role="group">
-                        <a href="{{ path('superadmin_estabelecimentos', {filtro: 'todos'}) }}" 
-                           class="btn btn-outline-primary {{ filtro_atual == 'todos' ? 'active' : '' }}">
+                <div class="col">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ path('superadmin_estabelecimentos', {filtro: 'todos'}) }}"
+                           class="btn btn-sm {{ filtro_atual == 'todos' ? 'btn-primary' : 'btn-outline-primary' }}">
                             <i class="bi bi-list me-1"></i>Todos
                         </a>
-                        <a href="{{ path('superadmin_estabelecimentos', {filtro: 'ativos'}) }}" 
-                           class="btn btn-outline-success {{ filtro_atual == 'ativos' ? 'active' : '' }}">
+                        <a href="{{ path('superadmin_estabelecimentos', {filtro: 'ativos'}) }}"
+                           class="btn btn-sm {{ filtro_atual == 'ativos' ? 'btn-success' : 'btn-outline-success' }}">
                             <i class="bi bi-check-circle me-1"></i>Ativos
                         </a>
-                        <a href="{{ path('superadmin_estabelecimentos', {filtro: 'novos'}) }}" 
-                           class="btn btn-outline-info {{ filtro_atual == 'novos' ? 'active' : '' }}">
+                        <a href="{{ path('superadmin_estabelecimentos', {filtro: 'novos'}) }}"
+                           class="btn btn-sm {{ filtro_atual == 'novos' ? 'btn-info text-white' : 'btn-outline-info' }}">
                             <i class="bi bi-star me-1"></i>Novos (30 dias)
                         </a>
-                        <a href="{{ path('superadmin_estabelecimentos', {filtro: 'proximos_vencer'}) }}" 
-                           class="btn btn-outline-warning {{ filtro_atual == 'proximos_vencer' ? 'active' : '' }}">
+                        <a href="{{ path('superadmin_estabelecimentos', {filtro: 'proximos_vencer'}) }}"
+                           class="btn btn-sm {{ filtro_atual == 'proximos_vencer' ? 'btn-warning' : 'btn-outline-warning' }}">
                             <i class="bi bi-exclamation-triangle me-1"></i>A Vencer (15 dias)
                         </a>
-                        <a href="{{ path('superadmin_estabelecimentos', {filtro: 'expirados'}) }}" 
-                           class="btn btn-outline-danger {{ filtro_atual == 'expirados' ? 'active' : '' }}">
+                        <a href="{{ path('superadmin_estabelecimentos', {filtro: 'expirados'}) }}"
+                           class="btn btn-sm {{ filtro_atual == 'expirados' ? 'btn-danger' : 'btn-outline-danger' }}">
                             <i class="bi bi-x-circle me-1"></i>Expirados
                         </a>
                     </div>
@@ -53,11 +54,11 @@
         </div>
     </div>
 
-    <!-- Tabela de Estabelecimentos -->
-    <div class="card shadow-sm">
+    <!-- Tabela -->
+    <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3">
             <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
+                <h5 class="mb-0 fw-bold">
                     <i class="bi bi-table me-2 text-primary"></i>
                     Lista de Estabelecimentos
                     <span class="badge bg-primary ms-2">{{ estabelecimentos|length }}</span>
@@ -74,51 +75,44 @@
                             <th>Razão Social</th>
                             <th>CNPJ</th>
                             <th class="text-center">Status</th>
-                            <th>Plano</th>
                             <th>Cadastro</th>
-                            <th>Validade</th>
+                            <th>Validade do Plano</th>
                             <th class="text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for est in estabelecimentos %}
-                        {% set hoje = date() %}
-                        {% set dias_expiracao = date(hoje).diff(est.dataPlanoFim).days %}
-                        {% set expirado = est.dataPlanoFim < hoje %}
-                        
-                        <tr>
+                        {#
+                            CORREÇÃO: Aqui o controller retorna objetos Doctrine (getResult()),
+                            então est.dataPlanoFim já é um objeto DateTimeInterface.
+                            O diff() funciona diretamente sem necessidade de conversão.
+                        #}
+                        {% set hoje = date('now') %}
+                        {% set dataFim = est.dataPlanoFim %}
+                        {% set expirado = dataFim < hoje %}
+                        {% set diasDiff = hoje.diff(dataFim).days %}
+
+                        <tr class="{{ expirado ? 'table-danger' : '' }}">
                             <td class="px-4 fw-bold text-primary">{{ est.id }}</td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar-initial rounded-circle bg-primary text-white me-2" 
-                                         style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                                        {{ est.razaoSocial|slice(0, 1)|upper }}
+                                    <div class="rounded-circle bg-primary text-white me-3 d-flex align-items-center justify-content-center fw-bold"
+                                         style="width:38px;height:38px;font-size:1rem;flex-shrink:0;">
+                                        {{ est.razaoSocial|slice(0,1)|upper }}
                                     </div>
                                     <div>
-                                        <div class="fw-bold">{{ est.razaoSocial }}</div>
+                                        <div class="fw-semibold">{{ est.razaoSocial }}</div>
                                         <small class="text-muted">{{ est.cidade }}</small>
                                     </div>
                                 </div>
                             </td>
-                            <td>
-                                <span class="font-monospace">{{ est.cnpj }}</span>
-                            </td>
+                            <td><span class="font-monospace small">{{ est.cnpj }}</span></td>
                             <td class="text-center">
                                 {% if est.status == 'Ativo' %}
-                                    <span class="badge bg-success">
-                                        <i class="bi bi-check-circle me-1"></i>Ativo
-                                    </span>
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Ativo</span>
                                 {% else %}
-                                    <span class="badge bg-secondary">
-                                        <i class="bi bi-pause-circle me-1"></i>Inativo
-                                    </span>
+                                    <span class="badge bg-secondary"><i class="bi bi-dash-circle me-1"></i>{{ est.status }}</span>
                                 {% endif %}
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-calendar-event text-primary me-2"></i>
-                                    <span class="fw-bold">Plano Ativo</span>
-                                </div>
                             </td>
                             <td>
                                 <small class="text-muted">
@@ -129,32 +123,27 @@
                             <td>
                                 {% if expirado %}
                                     <span class="badge bg-danger">
-                                        <i class="bi bi-exclamation-circle me-1"></i>
-                                        Expirado há {{ dias_expiracao }} dias
+                                        <i class="bi bi-exclamation-circle me-1"></i>Expirado há {{ diasDiff }} dia(s)
                                     </span>
-                                {% elseif dias_expiracao <= 15 %}
+                                {% elseif diasDiff <= 15 %}
                                     <span class="badge bg-warning text-dark">
-                                        <i class="bi bi-clock me-1"></i>
-                                        Vence em {{ dias_expiracao }} dias
+                                        <i class="bi bi-clock me-1"></i>Vence em {{ diasDiff }} dia(s)
                                     </span>
                                 {% else %}
-                                    <small class="text-success">
-                                        <i class="bi bi-check me-1"></i>
-                                        {{ est.dataPlanoFim|date('d/m/Y') }}
-                                    </small>
+                                    <span class="text-success small">
+                                        <i class="bi bi-check me-1"></i>{{ dataFim|date('d/m/Y') }}
+                                    </span>
                                 {% endif %}
                             </td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">
-                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: est.id}) }}" 
-                                       class="btn btn-sm btn-outline-info" 
-                                       data-bs-toggle="tooltip" 
-                                       title="Ver detalhes completos">
+                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: est.id}) }}"
+                                       class="btn btn-sm btn-outline-info"
+                                       title="Ver detalhes">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{{ path('superadmin_acessar_estabelecimento', {id: est.id}) }}" 
-                                       class="btn btn-sm btn-outline-primary" 
-                                       data-bs-toggle="tooltip" 
+                                    <a href="{{ path('superadmin_acessar_estabelecimento', {id: est.id}) }}"
+                                       class="btn btn-sm btn-outline-primary"
                                        title="Acessar como este estabelecimento">
                                         <i class="bi bi-box-arrow-in-right"></i>
                                     </a>
@@ -167,22 +156,13 @@
             </div>
             {% else %}
             <div class="text-center py-5">
-                <i class="bi bi-inbox bi-3x text-muted mb-3"></i>
+                <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
                 <h5 class="text-muted">Nenhum estabelecimento encontrado</h5>
                 <p class="text-muted">Nenhum estabelecimento corresponde ao filtro selecionado.</p>
             </div>
             {% endif %}
         </div>
     </div>
-</div>
 
-<script>
-// Inicializar tooltips
-document.addEventListener('DOMContentLoaded', function() {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-});
-</script>
+</div>
 {% endblock %}

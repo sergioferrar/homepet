@@ -53,7 +53,7 @@ class EstabelecimentoRepository extends ServiceEntityRepository
     public function listaEstabelecimentosGestao()
     {
         $sql = "SELECT 
-                e.id, e.razaoSocial, e.dataCadastro, e.dataPlanoInicio, e.dataPlanoFim, p.titulo AS plano_nome,
+                e.id, e.razaoSocial, e.dataCadastro, e.dataPlanoInicio, e.dataPlanoFim, p.titulo AS plano_nome, e.cidade,
                 p.valor AS plano_valor, COUNT(u.id) AS total_usuarios
             FROM estabelecimento e
             INNER JOIN planos p ON p.id = e.planoId

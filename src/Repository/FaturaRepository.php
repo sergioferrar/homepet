@@ -35,7 +35,7 @@ class FaturaRepository extends ServiceEntityRepository
     public function findByEstabelecimento(int $estabelecimentoId): array
     {
         $sql = "SELECT i.id, i.estabelecimento_id, i.status, i.valor_total, i.valor_desconto,
-                       i.data_emissao, i.data_vencimento, i.data_pagamento, i.referencia,
+                       i.data_emissao, i.data_vencimento, i.data_pagamento,
                        e.razaoSocial AS estabelecimento_nome, e.cnpj,
                        p.titulo AS plano_nome, p.valor AS plano_valor
                 FROM invoice i

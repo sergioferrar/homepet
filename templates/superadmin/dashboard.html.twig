@@ -1,284 +1,411 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dashboard Super Admin - Sistema HomePet{% endblock %}
+{% block title %}Dashboard Super Admin - HomePet{% endblock %}
 
 {% block body %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Dashboard Super Admin</h1>
+<div class="container-fluid py-4">
+
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1 fw-bold">
+                <i class="bi bi-speedometer2 text-primary me-2"></i>
+                Dashboard Super Admin
+            </h2>
+            <p class="text-muted mb-0">Visão geral do sistema HomePet</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ path('superadmin_estabelecimentos') }}" class="btn btn-outline-primary">
+                <i class="bi bi-shop me-2"></i>Estabelecimentos
+            </a>
+            <a href="{{ path('superadmin_invoices') }}" class="btn btn-outline-success">
+                <i class="bi bi-receipt me-2"></i>Faturas
+            </a>
+            <a href="{{ path('superadmin_relatorios') }}" class="btn btn-outline-info">
+                <i class="bi bi-bar-chart me-2"></i>Relatórios
+            </a>
         </div>
     </div>
 
     <!-- Cards de Estatísticas -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #0d6efd !important;">
                 <div class="card-body">
-                    <h5 class="card-title">Total Estabelecimentos</h5>
-                    <h2>{{ total_estabelecimentos }}</h2>
-                    <p class="mb-0"><small>Cadastrados no sistema</small></p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="mt-4">
+                            <small class="text-muted small fw-bold text-uppercase mb-1">Estabelecimentos</small>
+                            <h3 class="mb-0 fw-bold text-primary">{{ total_estabelecimentos }}</h3>
+                            <small class="text-muted">Cadastrados no sistema</small>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-shop fs-3 text-primary"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #198754 !important;">
                 <div class="card-body">
-                    <h5 class="card-title">Novos Cadastros</h5>
-                    <h2>{{ novos_cadastros }}</h2>
-                    <p class="mb-0"><small>Últimos 30 dias</small></p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="mt-4">
+                            <p class="text-muted small fw-bold text-uppercase mb-1">Novos Cadastros</p>
+                            <h3 class="mb-0 fw-bold text-success">{{ novos_cadastros }}</h3>
+                            <small class="text-muted">Últimos 30 dias</small>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-person-plus fs-3 text-success"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #ffc107 !important;">
                 <div class="card-body">
-                    <h5 class="card-title">Próximos a Vencer</h5>
-                    <h2>{{ proximos_vencer }}</h2>
-                    <p class="mb-0"><small>Expira em até 15 dias</small></p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="mt-4">
+                            <p class="text-muted small fw-bold text-uppercase mb-1">Próximos a Vencer</p>
+                            <h3 class="mb-0 fw-bold text-warning">{{ proximos_vencer }}</h3>
+                            <small class="text-muted">Expiram em até 15 dias</small>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-clock-history fs-3 text-warning"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #dc3545 !important;">
                 <div class="card-body">
-                    <h5 class="card-title">Expirados</h5>
-                    <h2>{{ expirados }}</h2>
-                    <p class="mb-0"><small>Assinatura vencida</small></p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="mt-4">
+                            <p class="text-muted small fw-bold text-uppercase mb-1">Expirados</p>
+                            <h3 class="mb-0 fw-bold text-danger">{{ expirados }}</h3>
+                            <small class="text-muted">Assinatura vencida</small>
+                        </div>
+                        <div class="bg-danger bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-x-circle fs-3 text-danger"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Cards de Receita -->
-    <div class="row mb-4">
+    <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Receita do Mês</h5>
-                    <h2 class="text-success">R$ {{ receita_mes }}</h2>
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #198754, #20c997);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-white-50 small fw-bold text-uppercase mb-1">Receita do Mês</p>
+                            <h3 class="mb-0 fw-bold">R$ {{ receita_mes }}</h3>
+                        </div>
+                        <i class="bi bi-cash-coin fs-1 text-white-50"></i>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Valores Pendentes</h5>
-                    <h2 class="text-warning">R$ {{ valor_pendente }}</h2>
-                    <p class="mb-0"><small>{{ invoices_pendentes }} invoices</small></p>
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-white-50 small fw-bold text-uppercase mb-1">Valores Pendentes</p>
+                            <h3 class="mb-0 fw-bold">R$ {{ valor_pendente }}</h3>
+                            <small class="text-white-50">{{ invoices_pendentes }} fatura(s)</small>
+                        </div>
+                        <i class="bi bi-hourglass-split fs-1 text-white-50"></i>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Total Recebido</h5>
-                    <h2 class="text-info">R$ {{ valor_recebido }}</h2>
-                    <p class="mb-0"><small>{{ invoices_pagos }} invoices pagos</small></p>
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #0d6efd, #6610f2);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-white-50 small fw-bold text-uppercase mb-1">Total Recebido</p>
+                            <h3 class="mb-0 fw-bold">R$ {{ valor_recebido }}</h3>
+                            <small class="text-white-50">{{ invoices_pagos }} fatura(s) paga(s)</small>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 text-white-50"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Tabs -->
-    <ul class="nav nav-tabs mb-3" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" data-bs-toggle="tab" href="#novos">Novos Cadastros</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#proximos-vencer">Próximos a Vencer</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#expirados">Expirados</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#invoices">Últimos Invoices</a>
-        </li>
-    </ul>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom-0 pt-3">
+            <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#novos">
+                        <i class="bi bi-star me-1 text-success"></i>
+                        Novos Cadastros
+                        {% if estabelecimentos_novos|length > 0 %}
+                            <span class="badge bg-success ms-1">{{ estabelecimentos_novos|length }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#proximos-vencer">
+                        <i class="bi bi-exclamation-triangle me-1 text-warning"></i>
+                        Próximos a Vencer
+                        {% if estabelecimentos_proximos_vencer|length > 0 %}
+                            <span class="badge bg-warning text-dark ms-1">{{ estabelecimentos_proximos_vencer|length }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#expirados">
+                        <i class="bi bi-x-circle me-1 text-danger"></i>
+                        Expirados
+                        {% if estabelecimentos_expirados|length > 0 %}
+                            <span class="badge bg-danger ms-1">{{ estabelecimentos_expirados|length }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#invoices">
+                        <i class="bi bi-receipt me-1 text-primary"></i>
+                        Últimas Faturas
+                    </a>
+                </li>
+            </ul>
+        </div>
 
-    <div class="tab-content">
-        <!-- Tab Novos Cadastros -->
-        <div id="novos" class="tab-pane fade show active">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Novos Cadastros (Últimos 30 dias)</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped">
-                        <thead>
+        <div class="tab-content">
+
+            {# ── Tab Novos Cadastros ── #}
+            <div id="novos" class="tab-pane fade show active p-3">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
                             <tr>
-                                <th>ID</th>
+                                <th class="px-3">ID</th>
                                 <th>Razão Social</th>
                                 <th>CNPJ</th>
                                 <th>Data Cadastro</th>
-                                <th>Status</th>
-                                <th>Ações</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for est in estabelecimentos_novos %}
                             <tr>
-                                <td>{{ est.id }}</td>
-                                <td>{{ est.razaoSocial }}</td>
-                                <td>{{ est.cnpj }}</td>
-                                <td>{{ est.dataCadastro|date('d/m/Y') }}</td>
+                                <td class="px-3 fw-bold text-primary">{{ est.id }}</td>
                                 <td>
-                                    <span class="badge bg-{{ est.status == 'Ativo' ? 'success' : 'secondary' }}">
-                                        {{ est.status }}
-                                    </span>
+                                    <div class="fw-semibold">{{ est.razaoSocial }}</div>
+                                    <small class="text-muted">{{ est.cidade }}</small>
                                 </td>
-                                <td>
-                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: est.id}) }}" class="btn btn-sm btn-info">
-                                        Ver Detalhes
+                                <td><span class="font-monospace small">{{ est.cnpj }}</span></td>
+                                {#
+                                    CORREÇÃO: O controller retorna arrays (getArrayResult), então
+                                    est.dataCadastro é string. Usamos o filtro |date() diretamente,
+                                    que o Twig consegue converter de string para data.
+                                #}
+                                <td>{{ est.dataCadastro|date('d/m/Y') }}</td>
+                                <td class="text-center">
+                                    {% if est.status == 'Ativo' %}
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Ativo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary"><i class="bi bi-dash-circle me-1"></i>{{ est.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: est.id}) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Ver
                                     </a>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="6" class="text-center">Nenhum novo cadastro nos últimos 30 dias</td>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                    Nenhum novo cadastro nos últimos 30 dias
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
 
-        <!-- Tab Próximos a Vencer -->
-        <div id="proximos-vencer" class="tab-pane fade">
-            <div class="card">
-                <div class="card-header bg-warning">
-                    <h5 class="text-white">Assinaturas Próximas do Vencimento</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped">
-                        <thead>
+            {# ── Tab Próximos a Vencer ── #}
+            <div id="proximos-vencer" class="tab-pane fade p-3">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
                             <tr>
-                                <th>ID</th>
+                                <th class="px-3">ID</th>
                                 <th>Razão Social</th>
-                                <th>Data Fim</th>
-                                <th>Dias Restantes</th>
-                                <th>Ações</th>
+                                <th>Data Fim do Plano</th>
+                                <th class="text-center">Dias Restantes</th>
+                                <th class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for est in estabelecimentos_proximos_vencer %}
                             <tr>
-                                <td>{{ est.id }}</td>
-                                <td>{{ est.razaoSocial }}</td>
-                                <td>{{ est.dataPlanoFim|date('d/m/Y') }}</td>
+                                <td class="px-3 fw-bold text-primary">{{ est.id }}</td>
                                 <td>
-                                    <span class="badge bg-warning">
-                                        {# {{ date().diff(est.dataPlanoFim).days }} dias #}
-                                        {{ est.dataPlanoFim }} dias
+                                    <div class="fw-semibold">{{ est.razaoSocial }}</div>
+                                    <small class="text-muted">{{ est.cidade }}</small>
+                                </td>
+                                <td>{{ est.dataPlanoFim|date('d/m/Y') }}</td>
+                                <td class="text-center">
+                                    {#
+                                        CORREÇÃO: est.dataPlanoFim é string (array result do Doctrine).
+                                        Convertemos com date(est.dataPlanoFim) para obter DateTimeInterface
+                                        e calculamos a diferença em relação a date('now').
+                                    #}
+                                    {% set dias = date(est.dataPlanoFim).diff(date('now')).days %}
+                                    <span class="badge bg-warning text-dark fs-6">
+                                        <i class="bi bi-clock me-1"></i>{{ dias }} dia(s)
                                     </span>
                                 </td>
-                                <td>
-                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: est.id}) }}" class="btn btn-sm btn-info">
-                                        Ver Detalhes
+                                <td class="text-center">
+                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: est.id}) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Ver
                                     </a>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="5" class="text-center">Nenhuma assinatura próxima do vencimento</td>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-check-circle fs-3 d-block mb-2 text-success"></i>
+                                    Nenhuma assinatura próxima do vencimento
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
 
-        <!-- Tab Expirados -->
-        <div id="expirados" class="tab-pane fade">
-            <div class="card">
-                <div class="card-header bg-danger">
-                    <h5 class="text-white">Assinaturas Expiradas</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped">
-                        <thead>
+            {# ── Tab Expirados ── #}
+            <div id="expirados" class="tab-pane fade p-3">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
                             <tr>
-                                <th>ID</th>
+                                <th class="px-3">ID</th>
                                 <th>Razão Social</th>
-                                <th>Data Fim</th>
-                                <th>Dias Expirados</th>
-                                <th>Ações</th>
+                                <th>Data Fim do Plano</th>
+                                <th class="text-center">Dias Expirado</th>
+                                <th class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for est in estabelecimentos_expirados %}
-                            <tr>
-                                <td>{{ est.id }}</td>
-                                <td>{{ est.razaoSocial }}</td>
-                                <td>{{ est.dataPlanoFim|date('d/m/Y') }}</td>
+                            <tr class="table-danger table-danger-subtle">
+                                <td class="px-3 fw-bold text-danger">{{ est.id }}</td>
                                 <td>
-                                    <span class="badge bg-danger">
-                                        {# {{ date().diff(est.dataPlanoFim).days }} dias atrás #}
-                                        {# {{ date().diff(est.dataPlanoFim).days }} dias #}
-                                        {{ est.dataPlanoFim }} dias atrás
+                                    <div class="fw-semibold">{{ est.razaoSocial }}</div>
+                                    <small class="text-muted">{{ est.cidade }}</small>
+                                </td>
+                                <td>{{ est.dataPlanoFim|date('d/m/Y') }}</td>
+                                <td class="text-center">
+                                    {#
+                                        CORREÇÃO: mesmo fix — date(string) para obter objeto DateTime,
+                                        depois diff contra date('now'). Como o plano já expirou,
+                                        a ordem do diff é invertida para obter valor positivo.
+                                    #}
+                                    {% set dias = date('now').diff(date(est.dataPlanoFim)).days %}
+                                    <span class="badge bg-danger fs-6">
+                                        <i class="bi bi-exclamation-circle me-1"></i>{{ dias }} dia(s) atrás
                                     </span>
                                 </td>
-                                <td>
-                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: est.id}) }}" class="btn btn-sm btn-info">
-                                        Ver Detalhes
+                                <td class="text-center">
+                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: est.id}) }}" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-eye"></i> Ver
                                     </a>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="5" class="text-center">Nenhuma assinatura expirada</td>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-check-all fs-3 d-block mb-2 text-success"></i>
+                                    Nenhuma assinatura expirada
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
 
-        <!-- Tab Invoices -->
-        <div id="invoices" class="tab-pane fade">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Últimos Invoices</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped">
-                        <thead>
+            {# ── Tab Últimas Faturas ── #}
+            <div id="invoices" class="tab-pane fade p-3">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
                             <tr>
-                                <th>Número</th>
+                                <th class="px-3">Número</th>
                                 <th>Estabelecimento</th>
-                                <th>Tipo</th>
-                                <th>Valor</th>
-                                <th>Status</th>
+                                <th class="text-end">Valor</th>
+                                <th class="text-center">Status</th>
                                 <th>Data Emissão</th>
+                                <th>Vencimento</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for invoice in ultimos_invoices %}
                             <tr>
-                                <td>{{ invoice.numeroInvoice }}</td>
-                                <td>#{{ invoice.estabelecimentoId }}</td>
-                                <td>{{ invoice.tipo }}</td>
-                                <td>R$ {{ invoice.valorLiquido|number_format(2, ',', '.') }}</td>
+                                <td class="px-3 font-monospace fw-bold text-primary">{{ invoice.numeroInvoice }}</td>
+                                {#
+                                    CORREÇÃO: Fatura não possui relação @ORM\ManyToOne com Estabelecimento,
+                                    só tem o campo estabelecimentoId (inteiro). Exibimos o ID direto.
+                                    Se precisar do nome, usar o método findUltimos() do repository
+                                    que já faz o JOIN e retorna o campo estabelecimento_nome.
+                                #}
                                 <td>
-                                    <span class="badge bg-{{ invoice.status == 'pago' ? 'success' : (invoice.status == 'pendente' ? 'warning' : 'danger') }}">
-                                        {{ invoice.status }}
-                                    </span>
+                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: invoice.estabelecimentoId}) }}" class="text-decoration-none">
+                                        <i class="bi bi-shop me-1 text-muted"></i>
+                                        ID #{{ invoice.estabelecimentoId }}
+                                    </a>
+                                </td>
+                                <td class="text-end fw-bold">R$ {{ invoice.valorLiquido|number_format(2, ',', '.') }}</td>
+                                <td class="text-center">
+                                    {% if invoice.status == 'pago' %}
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Pago</span>
+                                    {% elseif invoice.status == 'pendente' %}
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Pendente</span>
+                                    {% elseif invoice.status == 'cancelado' %}
+                                        <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Cancelado</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ invoice.status }}</span>
+                                    {% endif %}
                                 </td>
                                 <td>{{ invoice.dataEmissao|date('d/m/Y') }}</td>
+                                <td>{{ invoice.dataVencimento|date('d/m/Y') }}</td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="6" class="text-center">Nenhum invoice encontrado</td>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="bi bi-receipt fs-3 d-block mb-2"></i>
+                                    Nenhuma fatura encontrada
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                <div class="text-end mt-2">
+                    <a href="{{ path('superadmin_invoices') }}" class="btn btn-sm btn-outline-primary">
+                        Ver todas as faturas <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
             </div>
-        </div>
+
+        </div>{# end tab-content #}
     </div>
+
 </div>
 {% endblock %}

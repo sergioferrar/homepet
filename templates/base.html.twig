@@ -446,7 +446,13 @@
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                     <li class="dropdown-header">
                         <h6>{{ app.session.get('user') }}</h6>
-                        <span>{{ app.session.get('accessLevel') }}</span>
+                        {% if is_granted('ROLE_SUPER_ADMIN') %}
+                            <span class="badge" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                                <i class="bi bi-shield-lock me-1"></i>Super Admin
+                            </span>
+                        {% else %}
+                            <span>{{ app.session.get('accessLevel') }}</span>
+                        {% endif %}
                     </li>
                     <li>
                         <hr class="dropdown-divider">
@@ -478,6 +484,28 @@
                     <li>
                         <hr class="dropdown-divider">
                     </li>
+                    {% if is_granted('ROLE_SUPER_ADMIN') %}
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center text-primary" href="{{ path('superadmin_dashboard') }}">
+                            <i class="bi bi-speedometer2 me-2"></i>
+                            <span>Dashboard Super Admin</span>
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    {% endif %}
+                    {% if app.session.get('impersonating_establishment') %}
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center text-warning fw-bold" href="{{ path('superadmin_voltar') }}">
+                            <i class="bi bi-arrow-return-left me-2"></i>
+                            <span>Voltar ao Super Admin</span>
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    {% endif %}
                     <li>
                         <a class="dropdown-item d-flex align-items-center" href="{{ url('logout') }}">
                             <i class="bi bi-box-arrow-right"></i>
@@ -511,44 +539,116 @@
         
         {% include 'left-menu.html.twig' %}
 
-            <li class="nav-item">
-                <a class="nav-link {% if app.request.attributes.get('_route') == 'app_plano' or app.request.attributes.get('_route') == 'app_estabelecimento' %} {% else %} collapsed {% endif %}"
-                   data-bs-target="#administracao" data-bs-toggle="collapse" href="#">
-                    <i class="bi bi-sliders"></i><span>Configurações</span><i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <ul id="administracao"
-                    class="nav-content collapse {% if app.request.attributes.get('_route') == 'app_plano' or app.request.attributes.get('_route') == 'app_estabelecimento' %} show {% endif %}"
-                    data-bs-parent="#sidebar-nav">
+        {# ═══════════════════════════════════════════════════════════
+           MENU EXCLUSIVO SUPER ADMIN
+           Exibido apenas para usuários com ROLE_SUPER_ADMIN.
+           Usa is_granted() — fonte de verdade do Symfony Security —
+           em vez de app.session.get('accessLevel') que pode estar
+           desatualizado ou ausente após troca de contexto.
+        ═══════════════════════════════════════════════════════════ #}
+        {% if is_granted('ROLE_SUPER_ADMIN') %}
 
-                    {% if app.session.get('accessLevel') == 'Super Admin' %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if app.request.attributes.get('_route') != 'app_plano' %} collapsed {% endif %}"
-                               href="{{ url('app_plano') }}">
-                                <i class="bi bi-exclamation-square"></i><span>Planos</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if app.request.attributes.get('_route') != 'app_estabelecimento' %} collapsed {% endif %}"
-                               href="{{ url('app_estabelecimento') }}">
-                                <i class="bi bi-shop"></i><span>Estabelecimento</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if app.request.attributes.get('_route') != 'menu_index' %} collapsed {% endif %}"
-                               href="{{ url('menu_index') }}">
-                                <i class="bi bi-shop"></i><span>Menus</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if app.request.attributes.get('_route') != 'app_settings' %} collapsed {% endif %}"
-                           href="{{ url('app_settings') }}">
-                            <i class="bi bi-shop"></i><span>Configturações so sistema</span>
+            {% set superRoutes = [
+                'superadmin_dashboard',
+                'superadmin_estabelecimentos',
+                'superadmin_estabelecimento_detalhes',
+                'superadmin_invoices',
+                'superadmin_relatorios'
+            ] %}
+            {% set superMenuAberto = route in superRoutes %}
+
+            <li class="nav-item">
+                <a class="nav-link {{ not superMenuAberto ? 'collapsed' : '' }}"
+                   data-bs-target="#menu-superadmin" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-shield-lock"></i>
+                    <span>Super Admin</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="menu-superadmin"
+                    class="nav-content collapse {{ superMenuAberto ? 'show' : '' }}"
+                    data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a href="{{ path('superadmin_dashboard') }}"
+                           class="{{ route == 'superadmin_dashboard' ? 'active' : '' }}">
+                            <i class="bi bi-speedometer2"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ path('superadmin_estabelecimentos') }}"
+                           class="{{ route starts with 'superadmin_estabelecimento' ? 'active' : '' }}">
+                            <i class="bi bi-shop"></i>
+                            <span>Estabelecimentos</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ path('superadmin_invoices') }}"
+                           class="{{ route == 'superadmin_invoices' ? 'active' : '' }}">
+                            <i class="bi bi-receipt-cutoff"></i>
+                            <span>Faturas</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ path('superadmin_relatorios') }}"
+                           class="{{ route == 'superadmin_relatorios' ? 'active' : '' }}">
+                            <i class="bi bi-bar-chart-line"></i>
+                            <span>Relatórios</span>
                         </a>
                     </li>
                 </ul>
             </li>
-        
+
+        {% endif %}
+
+        {# ═══════════════════════════════════════════════════════════
+           CONFIGURAÇÕES
+           Itens internos de planos/menus/estabelecimento visíveis
+           apenas para ROLE_SUPER_ADMIN. "Configurações do sistema"
+           é visível para todos os perfis autenticados.
+        ═══════════════════════════════════════════════════════════ #}
+        {% set configRoutes = ['app_plano', 'app_estabelecimento', 'menu_index', 'app_settings'] %}
+        {% set configAberto = route in configRoutes %}
+
+        <li class="nav-item">
+            <a class="nav-link {{ not configAberto ? 'collapsed' : '' }}"
+               data-bs-target="#administracao" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-sliders"></i>
+                <span>Configurações</span>
+                <i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="administracao"
+                class="nav-content collapse {{ configAberto ? 'show' : '' }}"
+                data-bs-parent="#sidebar-nav">
+
+                {% if is_granted('ROLE_SUPER_ADMIN') %}
+                    <li>
+                        <a href="{{ url('app_plano') }}"
+                           class="{{ route == 'app_plano' ? 'active' : '' }}">
+                            <i class="bi bi-tags"></i><span>Planos</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url('app_estabelecimento') }}"
+                           class="{{ route == 'app_estabelecimento' ? 'active' : '' }}">
+                            <i class="bi bi-building"></i><span>Estabelecimentos</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url('menu_index') }}"
+                           class="{{ route == 'menu_index' ? 'active' : '' }}">
+                            <i class="bi bi-layout-text-sidebar"></i><span>Menus</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li>
+                    <a href="{{ url('app_settings') }}"
+                       class="{{ route == 'app_settings' ? 'active' : '' }}">
+                        <i class="bi bi-gear"></i><span>Configurações do sistema</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
 
         <li class="nav-item">
             <a class="nav-link collapsed" href="#">
@@ -573,13 +673,16 @@
     </div>
 </footer><!-- End Footer -->
 
-<!-- Botão flutuante para IA -->
+<!-- Botão flutuante para IA — oculto para Super Admin (não tem contexto de estabelecimento) -->
+{% if not is_granted('ROLE_SUPER_ADMIN') %}
 <button id="btnChatIA" class="btn rounded-circle"
         style="position: fixed; bottom: 80px; right: 20px; z-index: 1050; width: 60px; height: 60px; font-size: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
     <i class="bi bi-robot"></i>
 </button>
+{% endif %}
 
 <!-- Modal da IA -->
+{% if not is_granted('ROLE_SUPER_ADMIN') %}
 <div class="modal fade" id="chatIaModal" tabindex="-1" aria-labelledby="chatIaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
@@ -600,6 +703,8 @@
         </div>
     </div>
 </div>
+{% endif %}{# fim modal IA - oculto para ROLE_SUPER_ADMIN #}
+
 <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
             class="bi bi-arrow-up-short"></i></a>
 
@@ -638,6 +743,7 @@
     });
 </script>
 
+{% if not is_granted('ROLE_SUPER_ADMIN') %}
 <script>
     document.getElementById("btnChatIA").addEventListener("click", () => {
         new bootstrap.Modal(document.getElementById('chatIaModal')).show();
@@ -694,7 +800,9 @@
 
         document.getElementById("inputPerguntaIa").value = '';
     });
-
+</script>
+{% endif %}{# fim script IA - oculto para ROLE_SUPER_ADMIN #}
+<script>
     // 🔔 SISTEMA DE NOTIFICAÇÕES - Medicamentos pendentes
     async function carregarNotificacoes() {
         try {

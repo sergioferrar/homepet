@@ -4,139 +4,174 @@
 
 {% block body %}
 <div class="container-fluid py-4">
+
     <!-- Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="mb-1">
-                <i class="fas fa-building text-primary me-2"></i>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{{ path('superadmin_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('superadmin_estabelecimentos') }}">Estabelecimentos</a></li>
+                    <li class="breadcrumb-item active">{{ estabelecimento.razaoSocial }}</li>
+                </ol>
+            </nav>
+            <h2 class="mb-0 fw-bold">
+                <i class="bi bi-building text-primary me-2"></i>
                 {{ estabelecimento.razaoSocial }}
             </h2>
-            <p class="text-muted mb-0">{{ estabelecimento.cidade }} - {{ estabelecimento.cnpj }}</p>
+            <p class="text-muted mb-0">
+                {{ estabelecimento.cidade }}
+                {% if estabelecimento.cnpj %} &bull; CNPJ: {{ estabelecimento.cnpj }}{% endif %}
+            </p>
         </div>
-        <div>
-            <a href="{{ path('superadmin_estabelecimentos') }}" class="btn btn-outline-secondary me-2">
-                <i class="fas fa-arrow-left me-2"></i>Voltar
+        <div class="d-flex gap-2">
+            <a href="{{ path('superadmin_estabelecimentos') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Voltar
             </a>
             <a href="{{ path('superadmin_acessar_estabelecimento', {id: estabelecimento.id}) }}" class="btn btn-primary">
-                <i class="fas fa-sign-in-alt me-2"></i>Acessar Estabelecimento
+                <i class="bi bi-box-arrow-in-right me-2"></i>Acessar Estabelecimento
             </a>
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- Coluna Esquerda - Informações -->
+
+        <!-- Coluna Principal -->
         <div class="col-lg-8">
-            <!-- Status do Plano -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Status da Assinatura
+
+            <!-- Status da Assinatura -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-patch-check me-2"></i>Status da Assinatura
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
-                                    <i class="fas fa-calendar-check fa-2x text-primary"></i>
-                                </div>
-                                <div>
-                                    <small class="text-muted d-block">Plano Atual</small>
-                                    <h4 class="mb-0">{{ estabelecimento.plano.titulo}}</h4>
-                                </div>
+                    <div class="row g-3 text-center">
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded-3">
+                                <small class="text-muted d-block fw-bold text-uppercase mb-1">Início do Plano</small>
+                                <strong class="fs-5">
+                                    {% if estabelecimento.dataPlanoInicio %}
+                                        {{ estabelecimento.dataPlanoInicio|date('d/m/Y') }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </strong>
                             </div>
                         </div>
-                        
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="rounded-circle {% if expirado %}bg-danger{% elseif dias_expiracao <= 15 %}bg-warning{% else %}bg-success{% endif %} bg-opacity-10 p-3 me-3">
-                                    <i class="fas fa-clock fa-2x {% if expirado %}text-danger{% elseif dias_expiracao <= 15 %}text-warning{% else %}text-success{% endif %}"></i>
-                                </div>
-                                <div>
-                                    <small class="text-muted d-block">Status</small>
-                                    {% if expirado %}
-                                        <h5 class="mb-0 text-danger">
-                                            <i class="fas fa-times-circle me-1"></i>
-                                            Expirado há {{ dias_expiracao }} dias
-                                        </h5>
-                                    {% elseif dias_expiracao <= 15 %}
-                                        <h5 class="mb-0 text-warning">
-                                            <i class="fas fa-exclamation-triangle me-1"></i>
-                                            Vence em {{ dias_expiracao }} dias
-                                        </h5>
-                                    {% else %}
-                                        <h5 class="mb-0 text-success">
-                                            <i class="fas fa-check-circle me-1"></i>
-                                            Ativo
-                                        </h5>
-                                    {% endif %}
-                                </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded-3">
+                                <small class="text-muted d-block fw-bold text-uppercase mb-1">Fim do Plano</small>
+                                <strong class="fs-5">{{ estabelecimento.dataPlanoFim|date('d/m/Y') }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 {% if expirado %}bg-danger bg-opacity-10{% elseif dias_expiracao <= 15 %}bg-warning bg-opacity-10{% else %}bg-success bg-opacity-10{% endif %} rounded-3">
+                                <small class="text-muted d-block fw-bold text-uppercase mb-1">Situação</small>
+                                {% if expirado %}
+                                    <span class="badge bg-danger fs-6">
+                                        <i class="bi bi-x-circle me-1"></i>Expirado há {{ dias_expiracao }} dia(s)
+                                    </span>
+                                {% elseif dias_expiracao <= 15 %}
+                                    <span class="badge bg-warning text-dark fs-6">
+                                        <i class="bi bi-clock me-1"></i>Vence em {{ dias_expiracao }} dia(s)
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success fs-6">
+                                        <i class="bi bi-check-circle me-1"></i>Ativo — {{ dias_expiracao }} dias restantes
+                                    </span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
 
-                    <hr>
+                    <hr class="my-3">
 
-                    <div class="row text-center">
-                        <div class="col-md-4">
-                            <small class="text-muted d-block">Início do Plano</small>
-                            <strong>{{ estabelecimento.dataPlanoInicio|date('d/m/Y') }}</strong>
-                        </div>
-                        <div class="col-md-4">
-                            <small class="text-muted d-block">Fim do Plano</small>
-                            <strong>{{ estabelecimento.dataPlanoFim|date('d/m/Y') }}</strong>
-                        </div>
-                        <div class="col-md-4">
-                            <small class="text-muted d-block">Status do Sistema</small>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <small class="text-muted fw-bold text-uppercase d-block">Status Geral</small>
                             {% if estabelecimento.status == 'Ativo' %}
-                                <span class="badge bg-success">Ativo</span>
+                                <span class="badge bg-success fs-6 mt-1">Ativo</span>
                             {% else %}
-                                <span class="badge bg-secondary">Inativo</span>
+                                <span class="badge bg-secondary fs-6 mt-1">{{ estabelecimento.status }}</span>
                             {% endif %}
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted fw-bold text-uppercase d-block">ID do Plano</small>
+                            {#
+                                CORREÇÃO: Estabelecimento não tem relação @ORM com Plano,
+                                apenas o campo planoId (inteiro). Exibimos o ID do plano diretamente.
+                                Se precisar do nome, injete o PlanoRepository no controller e passe
+                                o objeto Plano como variável separada para o template.
+                            #}
+                            <strong class="mt-1 d-block">
+                                {% if estabelecimento.planoId %}
+                                    Plano #{{ estabelecimento.planoId }}
+                                {% else %}
+                                    <span class="text-muted">Sem plano vinculado</span>
+                                {% endif %}
+                            </strong>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Dados Cadastrais -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-file-alt me-2 text-primary"></i>
-                        Dados Cadastrais
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-file-text me-2 text-primary"></i>Dados Cadastrais
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="text-muted small fw-bold">CNPJ</label>
-                            <p class="mb-0 font-monospace">{{ estabelecimento.cnpj }}</p>
+                            <label class="text-muted small fw-bold text-uppercase">Razão Social</label>
+                            <p class="mb-0 fw-semibold">{{ estabelecimento.razaoSocial }}</p>
                         </div>
                         <div class="col-md-6">
-                            <label class="text-muted small fw-bold">Razão Social</label>
-                            <p class="mb-0">{{ estabelecimento.razaoSocial }}</p>
+                            <label class="text-muted small fw-bold text-uppercase">CNPJ</label>
+                            <p class="mb-0 font-monospace">{{ estabelecimento.cnpj ?: '—' }}</p>
                         </div>
                         <div class="col-md-6">
-                            <label class="text-muted small fw-bold">Cidade</label>
-                            <p class="mb-0">{{ estabelecimento.cidade }}</p>
+                            <label class="text-muted small fw-bold text-uppercase">Cidade</label>
+                            <p class="mb-0">{{ estabelecimento.cidade ?: '—' }}</p>
                         </div>
                         <div class="col-md-6">
-                            <label class="text-muted small fw-bold">Data de Cadastro</label>
-                            <p class="mb-0">{{ estabelecimento.dataCadastro|date('d/m/Y H:i') }}</p>
+                            <label class="text-muted small fw-bold text-uppercase">Endereço</label>
+                            <p class="mb-0">
+                                {{ estabelecimento.rua ?: '' }}
+                                {% if estabelecimento.numero %}, {{ estabelecimento.numero }}{% endif %}
+                                {% if estabelecimento.bairro %} — {{ estabelecimento.bairro }}{% endif %}
+                                {% if not estabelecimento.rua and not estabelecimento.bairro %}—{% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small fw-bold text-uppercase">CEP</label>
+                            <p class="mb-0 font-monospace">{{ estabelecimento.cep ?: '—' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small fw-bold text-uppercase">Data de Cadastro</label>
+                            <p class="mb-0">
+                                {% if estabelecimento.dataCadastro %}
+                                    {{ estabelecimento.dataCadastro|date('d/m/Y H:i') }}
+                                {% else %}—{% endif %}
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Histórico de Pagamentos -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-receipt me-2 text-primary"></i>
-                        Histórico de Pagamentos
-                        <span class="badge bg-primary ms-2">{{ invoices|length }}</span>
-                    </h5>
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="bi bi-receipt me-2 text-primary"></i>Histórico de Pagamentos
+                            <span class="badge bg-primary ms-2">{{ invoices|length }}</span>
+                        </h5>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     {% if invoices|length > 0 %}
@@ -144,8 +179,8 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-light">
                                 <tr>
-                                    <th class="px-4 py-3">Número</th>
-                                    <th>Data Emissão</th>
+                                    <th class="px-4 py-3">Nº Invoice</th>
+                                    <th>Emissão</th>
                                     <th>Vencimento</th>
                                     <th class="text-end">Valor</th>
                                     <th class="text-center">Status</th>
@@ -153,34 +188,44 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                {#
+                                    CORREÇÃO: findByEstabelecimento() retorna SQL raw via fetchAllAssociative(),
+                                    portanto invoices é array de arrays associativos com chaves snake_case,
+                                    NÃO objetos Doctrine. Usamos invoice.id, invoice.status, invoice.valor_total etc.
+                                #}
                                 {% for invoice in invoices %}
-                                <tr>
-                                    <td class="px-4 font-monospace fw-bold">{{ invoice.numeroInvoice }}</td>
-                                    <td>
-                                        <small>
-                                            <i class="far fa-calendar me-1"></i>
-                                            {{ invoice.dataEmissao|date('d/m/Y') }}
-                                        </small>
+                                {% set vencido = invoice.data_vencimento < date('now')|date('Y-m-d') and invoice.status == 'pendente' %}
+                                <tr class="{{ vencido ? 'table-warning' : '' }}">
+                                    <td class="px-4 font-monospace fw-bold">
+                                        {{ invoice.id }}
                                     </td>
                                     <td>
-                                        <small>
-                                            <i class="far fa-calendar-times me-1"></i>
-                                            {{ invoice.dataVencimento|date('d/m/Y') }}
+                                        <small><i class="bi bi-calendar me-1"></i>{{ invoice.data_emissao|date('d/m/Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="{{ vencido ? 'text-danger fw-bold' : '' }}">
+                                            <i class="bi bi-calendar-x me-1"></i>{{ invoice.data_vencimento|date('d/m/Y') }}
+                                            {% if vencido %}<span class="badge bg-danger ms-1">Vencido</span>{% endif %}
                                         </small>
                                     </td>
-                                    <td class="text-end fw-bold">R$ {{ invoice.valorTotal|number_format(2, ',', '.') }}</td>
+                                    <td class="text-end fw-bold">
+                                        R$ {{ (invoice.valor_total - (invoice.valor_desconto ?? 0))|number_format(2, ',', '.') }}
+                                    </td>
                                     <td class="text-center">
                                         {% if invoice.status == 'pago' %}
                                             <span class="badge bg-success">
-                                                <i class="fas fa-check me-1"></i>Pago
+                                                <i class="bi bi-check-circle me-1"></i>Pago
                                             </span>
+                                            {% if invoice.data_pagamento %}
+                                                <br><small class="text-muted">{{ invoice.data_pagamento|date('d/m/Y') }}</small>
+                                            {% endif %}
                                         {% elseif invoice.status == 'pendente' %}
                                             <span class="badge bg-warning text-dark">
-                                                <i class="fas fa-clock me-1"></i>Pendente
+                                                <i class="bi bi-clock me-1"></i>Pendente
                                             </span>
                                         {% elseif invoice.status == 'cancelado' %}
                                             <span class="badge bg-danger">
-                                                <i class="fas fa-times me-1"></i>Cancelado
+                                                <i class="bi bi-x-circle me-1"></i>Cancelado
                                             </span>
                                         {% else %}
                                             <span class="badge bg-secondary">{{ invoice.status }}</span>
@@ -188,14 +233,13 @@
                                     </td>
                                     <td class="text-center">
                                         {% if invoice.status == 'pendente' %}
-                                        <button class="btn btn-sm btn-success" 
+                                        <button class="btn btn-sm btn-outline-success"
                                                 onclick="marcarComoPago({{ invoice.id }})"
-                                                data-bs-toggle="tooltip"
                                                 title="Marcar como pago manualmente">
-                                            <i class="fas fa-check"></i>
+                                            <i class="bi bi-check-lg"></i>
                                         </button>
                                         {% else %}
-                                        <span class="text-muted">-</span>
+                                        <span class="text-muted">—</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -204,135 +248,150 @@
                         </table>
                     </div>
                     {% else %}
-                    <div class="text-center py-4">
-                        <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                    <div class="text-center py-5">
+                        <i class="bi bi-receipt fs-1 text-muted mb-3 d-block"></i>
                         <p class="text-muted mb-0">Nenhum pagamento registrado ainda</p>
                     </div>
                     {% endif %}
                 </div>
             </div>
-        </div>
 
-        <!-- Coluna Direita - Resumo e Ações -->
+        </div>{# /col-lg-8 #}
+
+        <!-- Coluna Lateral -->
         <div class="col-lg-4">
-            <!-- Card de Ações Rápidas -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-bolt me-2 text-warning"></i>
-                        Ações Rápidas
+
+            <!-- Ações Rápidas -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-lightning-charge me-2 text-warning"></i>Ações Rápidas
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ path('superadmin_acessar_estabelecimento', {id: estabelecimento.id}) }}" 
+                        <a href="{{ path('superadmin_acessar_estabelecimento', {id: estabelecimento.id}) }}"
                            class="btn btn-primary">
-                            <i class="fas fa-sign-in-alt me-2"></i>
-                            Acessar como Estabelecimento
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Acessar como Estabelecimento
                         </a>
                         <button class="btn btn-outline-success" onclick="alert('Funcionalidade em desenvolvimento')">
-                            <i class="fas fa-paper-plane me-2"></i>
-                            Enviar Notificação
+                            <i class="bi bi-send me-2"></i>Enviar Notificação
                         </button>
                         <button class="btn btn-outline-info" onclick="alert('Funcionalidade em desenvolvimento')">
-                            <i class="fas fa-sync-alt me-2"></i>
-                            Renovar Plano
+                            <i class="bi bi-arrow-clockwise me-2"></i>Renovar Plano
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Card de Estatísticas -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-chart-pie me-2 text-success"></i>
-                        Estatísticas
+            <!-- Estatísticas -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-pie-chart me-2 text-success"></i>Estatísticas
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted">
-                                <i class="fas fa-receipt me-2"></i>
-                                Total de Invoices
-                            </span>
-                            <span class="badge bg-primary fs-6">{{ invoices|length }}</span>
-                        </div>
+
+                    {% set total_invoices = invoices|length %}
+                    {% set pagos = 0 %}
+                    {% set pendentes = 0 %}
+                    {% set cancelados = 0 %}
+                    {% set valor_total_pago = 0 %}
+
+                    {% for inv in invoices %}
+                        {% if inv.status == 'pago' %}
+                            {% set pagos = pagos + 1 %}
+                            {% set valor_total_pago = valor_total_pago + (inv.valor_total - (inv.valor_desconto ?? 0)) %}
+                        {% elseif inv.status == 'pendente' %}
+                            {% set pendentes = pendentes + 1 %}
+                        {% elseif inv.status == 'cancelado' %}
+                            {% set cancelados = cancelados + 1 %}
+                        {% endif %}
+                    {% endfor %}
+
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="bi bi-receipt me-2"></i>Total de Faturas</span>
+                        <span class="badge bg-primary fs-6">{{ total_invoices }}</span>
+                    </div>
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="bi bi-check-circle me-2 text-success"></i>Pagas</span>
+                        <span class="badge bg-success fs-6">{{ pagos }}</span>
+                    </div>
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="bi bi-clock me-2 text-warning"></i>Pendentes</span>
+                        <span class="badge bg-warning text-dark fs-6">{{ pendentes }}</span>
+                    </div>
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="bi bi-x-circle me-2 text-danger"></i>Canceladas</span>
+                        <span class="badge bg-danger fs-6">{{ cancelados }}</span>
                     </div>
 
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted">
-                                <i class="fas fa-check-circle me-2"></i>
-                                Pagos
-                            </span>
-                            <span class="badge bg-success fs-6">
-                                {{ invoices|filter(i => i.status == 'pago')|length }}
-                            </span>
-                        </div>
-                    </div>
+                    <hr>
 
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted">
-                                <i class="fas fa-clock me-2"></i>
-                                Pendentes
-                            </span>
-                            <span class="badge bg-warning text-dark fs-6">
-                                {{ invoices|filter(i => i.status == 'pendente')|length }}
-                            </span>
-                        </div>
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <span class="text-muted fw-semibold">Total Recebido</span>
+                        <span class="fw-bold text-success">R$ {{ valor_total_pago|number_format(2, ',', '.') }}</span>
                     </div>
 
                     <hr>
 
                     <div class="text-center">
-                        <small class="text-muted">Cliente desde</small>
-                        <div class="fw-bold">{{ estabelecimento.dataCadastro|date('d/m/Y') }}</div>
+                        <small class="text-muted d-block mb-1">Cliente desde</small>
+                        <div class="fw-bold fs-5">
+                            {% if estabelecimento.dataCadastro %}
+                                {{ estabelecimento.dataCadastro|date('d/m/Y') }}
+                            {% else %}—{% endif %}
+                        </div>
+                        {% if estabelecimento.dataCadastro %}
                         <small class="text-muted">
-                            ({{ date().diff(estabelecimento.dataCadastro).days }} dias)
+                            {# CORREÇÃO: dataCadastro é objeto DateTimeInterface — diff funciona direto #}
+                            ({{ date('now').diff(estabelecimento.dataCadastro).days }} dias)
                         </small>
+                        {% endif %}
                     </div>
+
                 </div>
             </div>
-        </div>
+
+        </div>{# /col-lg-4 #}
     </div>
+
 </div>
 
 <script>
 function marcarComoPago(invoiceId) {
-    if (!confirm('Deseja marcar este invoice como pago manualmente?')) {
-        return;
-    }
+    if (!confirm('Deseja marcar este invoice como pago manualmente?')) return;
+
+    const btn = event.target.closest('button');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
     fetch(`/superadmin/invoice/${invoiceId}/marcar-pago`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        }
+        headers: { 'Content-Type': 'application/json' }
     })
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
         if (data.success) {
-            alert('Invoice marcado como pago com sucesso!');
-            location.reload();
+            const toast = document.createElement('div');
+            toast.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-3 shadow';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `<i class="bi bi-check-circle me-2"></i>${data.message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => location.reload(), 1200);
         } else {
             alert('Erro: ' + data.error);
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
         }
     })
-    .catch(error => {
-        alert('Erro ao processar requisição');
-        console.error('Error:', error);
+    .catch(() => {
+        alert('Erro ao processar a requisição.');
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
     });
 }
-
-// Inicializar tooltips
-document.addEventListener('DOMContentLoaded', function() {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-});
 </script>
 {% endblock %}
