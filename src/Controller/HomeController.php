@@ -24,7 +24,7 @@ class HomeController extends DefaultController
         }
 
         // Redireciona Super Admin para dashboard específico
-        if ($this->isGranted('ROLE_SUPER_ADMIN')) {
+        if ($this->isGranted('ROLE_SUPER_ADMIN') && $request->getSession()->get('estabelecimentoId') == null) {
             return $this->redirectToRoute('superadmin_dashboard');
         }
 

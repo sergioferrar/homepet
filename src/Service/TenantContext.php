@@ -24,8 +24,13 @@ class TenantContext
     {
         $session = $this->requestStack->getSession();
         if ($session) {
-            $this->estabelecimentoId = (int)$session->get('estabelecimento_id');
-            $this->isSuperAdmin = $session->get('user_status') === 'Super Admin';
+            // Lê snake_case (CustomAuthenticator / DefaultController) com
+            // fallback para camelCase (LoginController / SuperAdminController)
+            $id = $session->get('estabelecimento_id') ?? $session->get('estabelecimentoId');
+            $this->estabelecimentoId = $id ? (int) $id : null;
+
+            $this->isSuperAdmin = $session->get('user_status') === 'Super Admin'
+                               || $session->get('accessLevel') === 'Super Admin';
         }
     }
 

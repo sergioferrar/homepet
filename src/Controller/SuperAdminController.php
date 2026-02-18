@@ -334,18 +334,51 @@ class SuperAdminController extends DefaultController
             return $this->redirectToRoute('superadmin_dashboard');
         }
 
-        // Salvar contexto original do Super Admin
+        // Salvar TODAS as chaves do contexto original do Super Admin
+        // para restauração fiel ao sair do modo impersonation
         $request->getSession()->set('superadmin_original_context', [
-            'estabelecimentoId' => $request->getSession()->get('estabelecimentoId'),
-            'isSuperAdmin' => true,
-            'accessLevel' => $request->getSession()->get('accessLevel'),
+            // chave camelCase usada pelo LoginController
+            'estabelecimentoId'   => $request->getSession()->get('estabelecimentoId'),
+            // chave snake_case usada por DefaultController::getIdBase() e TenantContext
+            'estabelecimento_id'  => $request->getSession()->get('estabelecimento_id'),
+            'isSuperAdmin'        => true,
+            'accessLevel'         => $request->getSession()->get('accessLevel'),
+            'user_status'         => $request->getSession()->get('user_status'),
         ]);
 
-        // Temporariamente "se passar" por um usuário do estabelecimento
-        $request->getSession()->set('estabelecimentoId', $id);
-        $request->getSession()->set('isSuperAdmin', false);
-        $request->getSession()->set('accessLevel', 'Admin');
+        // Carregar configurações do estabelecimento impersonado (mailer, gateway, etc.)
+        $configs = $this->getRepositorio(\App\Entity\Config::class)
+            ->findBy(['estabelecimento_id' => $id]);
+
+        
+        $_ENV['DBNAMETENANT'] = "homepet_{$id}";
+
+        if (!empty($configs)) {
+            foreach ($configs as $config) {
+                if ($config->getTipo() === 'mailer') {
+                    // reaproveitamos os setters de ambiente que o authenticator usa
+                }
+                // Configurações de gateway de pagamento
+                if ($config->getTipo() === 'gateway_payment') {
+                    $_ENV[strtoupper($config->getChave())]    = $config->getValor();
+                    $_SERVER[strtoupper($config->getChave())] = $config->getValor();
+                }
+            }
+        }
+
+        // Gravar nas DUAS chaves que o sistema consome:
+        //   - estabelecimentoId  (camelCase) → lida pelo LoginController e template Twig
+        //   - estabelecimento_id (snake_case) → lida por DefaultController::getIdBase()
+        //                                       e TenantContext::loadFromSession()
+        $request->getSession()->set('estabelecimentoId',  $id);
+        $request->getSession()->set('estabelecimento_id', $id);
+
+        // Demais flags de contexto
+        $request->getSession()->set('isSuperAdmin',              false);
+        $request->getSession()->set('accessLevel',               'Admin');
+        $request->getSession()->set('user_status',               'Admin');
         $request->getSession()->set('impersonating_establishment', true);
+        $request->getSession()->set('impersonating_name',        $estabelecimento->getRazaoSocial());
 
         $this->addFlash('info', "Você está acessando o estabelecimento: {$estabelecimento->getRazaoSocial()}");
 
@@ -361,13 +394,19 @@ class SuperAdminController extends DefaultController
             return $this->redirectToRoute('superadmin_dashboard');
         }
 
-        // Restaurar contexto original
+        // Restaurar TODAS as chaves do contexto original do Super Admin
         $originalContext = $request->getSession()->get('superadmin_original_context');
-        
-        $request->getSession()->set('estabelecimentoId', $originalContext['estabelecimentoId']);
-        $request->getSession()->set('isSuperAdmin', $originalContext['isSuperAdmin']);
-        $request->getSession()->set('accessLevel', $originalContext['accessLevel']);
+
+        // Restaura as duas variantes de chave usadas pelo sistema
+        $request->getSession()->set('estabelecimentoId',  $originalContext['estabelecimentoId']  ?? null);
+        $request->getSession()->set('estabelecimento_id', $originalContext['estabelecimento_id'] ?? null);
+
+        $request->getSession()->set('isSuperAdmin',  $originalContext['isSuperAdmin']  ?? true);
+        $request->getSession()->set('accessLevel',   $originalContext['accessLevel']   ?? 'Super Admin');
+        $request->getSession()->set('user_status',   $originalContext['user_status']   ?? 'Super Admin');
+
         $request->getSession()->remove('impersonating_establishment');
+        $request->getSession()->remove('impersonating_name');
         $request->getSession()->remove('superadmin_original_context');
 
         $this->addFlash('success', 'Você voltou para a visualização de Super Admin.');

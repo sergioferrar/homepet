@@ -2,88 +2,134 @@
 
 namespace App\Service;
 
-
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Security;
 
-class MenuService{
+class MenuService
+{
+    private EntityManagerInterface $em;
+    private Security $security;
+    private ManagerRegistry $managerRegistry;
+    private RequestStack $requestStack;
 
+    public function __construct(
+        Security $security,
+        EntityManagerInterface $em,
+        ManagerRegistry $managerRegistry,
+        RequestStack $requestStack
+    ) {
+        $this->security        = $security;
+        $this->em              = $em;
+        $this->managerRegistry = $managerRegistry;
+        $this->requestStack    = $requestStack;
+    }
 
-	private EntityManagerInterface $em;
-	private Security $security;
-	private ManagerRegistry $managerRegistry;
-	
-	public function __construct(Security $security, EntityManagerInterface $em, ManagerRegistry $managerRegistry) {
-		$this->security = $security; // ← CORRIGIDO: minúsculo
-		$this->em = $em;
-		$this->managerRegistry = $managerRegistry;
-	}
-
-	public function getUser()
+    public function getUser()
     {
         return $this->security->getUser();
     }
 
-	public function getMenu()
+    /**
+     * Retorna true quando o Super Admin está navegando COMO um estabelecimento.
+     * Nesse caso o menu deve ser o do estabelecimento alvo, não o menu vazio do SA.
+     */
+    private function isImpersonating(): bool
+    {
+        $session = $this->requestStack->getSession();
+        return (bool) $session->get('impersonating_establishment');
+    }
+
+    /**
+     * ID do estabelecimento que o SA está acessando no momento.
+     * Lê as duas variantes de chave para compatibilidade.
+     */
+    private function getImpersonatingId(): ?int
+    {
+        $session = $this->requestStack->getSession();
+        $id = $session->get('estabelecimento_id') ?? $session->get('estabelecimentoId');
+        return $id ? (int) $id : null;
+    }
+
+    public function getMenu(): array
     {
         $user = $this->security->getUser();
 
-        // Se não há usuário, retornar vazio
         if (!$user) {
             return [];
         }
 
-        $data = [];
+        $isSuperAdmin  = in_array('ROLE_SUPER_ADMIN', $user->getRoles());
+        $impersonating = $this->isImpersonating();
 
-        // Verificar se é Super Admin
-        if (in_array('ROLE_SUPER_ADMIN', $user->getRoles())) {
-            // Super Admin: retornar vazio (menu é carregado no template próprio)
+        // SA puro (sem impersonation): sem menu dinamico - usa menu proprio da sidebar
+        if ($isSuperAdmin && !$impersonating) {
             return [];
         }
-        
+
+        // Garante que estamos lendo da base principal (nao de um tenant)
         (new DynamicConnectionManager($this->managerRegistry))->restoreOriginal();
-        
-        // Usuários normais: buscar usuário completo
-        $usuarioLogado = $this->em->getRepository(\App\Entity\Usuario::class)->find($user->getId());
-        
-        if (!$usuarioLogado) {
-            return [];
+
+        // Resolve o ID do estabelecimento
+        // Impersonation: ID vem da sessao (estabelecimento alvo do SA)
+        // Usuario normal: ID vem do petshop_id do proprio usuario no banco
+        if ($isSuperAdmin && $impersonating) {
+            $petshopId = $this->getImpersonatingId();
+
+            if (!$petshopId) {
+                return [];
+            }
+        } else {
+            $usuarioLogado = $this->em
+                ->getRepository(\App\Entity\Usuario::class)
+                ->find($user->getId());
+
+            if (!$usuarioLogado) {
+                return [];
+            }
+
+            $petshopId = $usuarioLogado->getPetshopId();
+
+            if (!$petshopId) {
+                return [];
+            }
         }
-        
-        $modulo = [];
-        
-        // Pegar o estabelecimento a qual pertence o usuario logado
-        $petshopId = $usuarioLogado->getPetshopId();
-        
-        if (!$petshopId) {
-            return [];
-        }
-        
-        $estabelecimento = $this->em->getRepository(\App\Entity\Estabelecimento::class)->find($petshopId);
-        
+
+        // Carrega estabelecimento e plano
+        $estabelecimento = $this->em
+            ->getRepository(\App\Entity\Estabelecimento::class)
+            ->find($petshopId);
+
         if (!$estabelecimento) {
             return [];
         }
-        
-        // Pegar o plano que o estabelecimento do usuario logado pertence
+
         $planoId = $estabelecimento->getPlanoId();
-        
+
         if (!$planoId) {
             return [];
         }
-        
-        $getPlanoLogado = $this->em->getRepository(\App\Entity\Plano::class)->find($planoId);
 
-        if ($getPlanoLogado) {
-            $descricao = $getPlanoLogado->getDescricao();
-            
+        $plano = $this->em
+            ->getRepository(\App\Entity\Plano::class)
+            ->find($planoId);
+
+        // Monta lista de modulos habilitados pelo plano
+        $modulo = [];
+
+        if ($plano) {
+            $descricao = $plano->getDescricao();
+
             if ($descricao) {
-                $plano = json_decode($descricao, true);
+                $modulosPlano = json_decode($descricao, true);
 
-                if (is_array($plano)) {
-                    foreach ($plano as $row) {
-                        $moduloEntity = $this->em->getRepository(\App\Entity\Modulo::class)->findOneBy(['descricao' => $row]);
+                if (is_array($modulosPlano)) {
+                    foreach ($modulosPlano as $row) {
+                        $moduloEntity = $this->em
+                            ->getRepository(\App\Entity\Modulo::class)
+                            ->findOneBy(['descricao' => $row]);
+
                         if ($moduloEntity) {
                             $modulo[] = $moduloEntity->getId();
                         }
@@ -92,30 +138,35 @@ class MenuService{
             }
         }
 
-        // Se não tem módulos, retornar vazio
         if (empty($modulo)) {
             return [];
         }
 
-        $listaMenu = $this->em->getRepository(\App\Entity\Menu::class)->findBy(['parent' => null], ['ordem' => 'ASC']);
-        
+        // Monta a arvore de menus
+        $data      = [];
+        $listaMenu = $this->em
+            ->getRepository(\App\Entity\Menu::class)
+            ->findBy(['parent' => null], ['ordem' => 'ASC']);
+
         foreach ($listaMenu as $menu) {
-            $dataS = [];
-
-            if (in_array($menu->getModulo(), $modulo)) {
-                $listaSubMenu = $this->em->getRepository(\App\Entity\Menu::class)->findBy(['parent' => $menu->getId()], ['ordem' => 'ASC']);
-                if ($listaSubMenu) {
-                    foreach ($listaSubMenu as $submenu) {
-                        $dataS[] = $submenu;
-                    }
-                }
-
-                $data[] = [
-                    'menu' => $menu,
-                    'submenu' => (!empty($dataS) ? $dataS : false),
-                    'rota' => null
-                ];
+            if (!in_array($menu->getModulo(), $modulo)) {
+                continue;
             }
+
+            $dataS        = [];
+            $listaSubMenu = $this->em
+                ->getRepository(\App\Entity\Menu::class)
+                ->findBy(['parent' => $menu->getId()], ['ordem' => 'ASC']);
+
+            foreach ($listaSubMenu as $submenu) {
+                $dataS[] = $submenu;
+            }
+
+            $data[] = [
+                'menu'    => $menu,
+                'submenu' => !empty($dataS) ? $dataS : false,
+                'rota'    => null,
+            ];
         }
 
         return $data;

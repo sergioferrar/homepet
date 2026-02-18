@@ -539,14 +539,9 @@
         
         {% include 'left-menu.html.twig' %}
 
-        {# ═══════════════════════════════════════════════════════════
-           MENU EXCLUSIVO SUPER ADMIN
-           Exibido apenas para usuários com ROLE_SUPER_ADMIN.
-           Usa is_granted() — fonte de verdade do Symfony Security —
-           em vez de app.session.get('accessLevel') que pode estar
-           desatualizado ou ausente após troca de contexto.
-        ═══════════════════════════════════════════════════════════ #}
-        {% if is_granted('ROLE_SUPER_ADMIN') %}
+        {# SA puro: exibe o menu de navegação do painel Super Admin
+           Durante impersonation: oculta pois o SA está usando o sistema como estabelecimento #}
+        {% if is_granted('ROLE_SUPER_ADMIN') and not app.session.get('impersonating_establishment') %}
 
             {% set superRoutes = [
                 'superadmin_dashboard',
@@ -600,12 +595,12 @@
 
         {% endif %}
 
-        {# ═══════════════════════════════════════════════════════════
-           CONFIGURAÇÕES
-           Itens internos de planos/menus/estabelecimento visíveis
-           apenas para ROLE_SUPER_ADMIN. "Configurações do sistema"
-           é visível para todos os perfis autenticados.
-        ═══════════════════════════════════════════════════════════ #}
+        {# Configurações: itens de Planos/Menus/Estabelecimentos visíveis apenas
+           para o SA puro. Durante impersonation o SA usa o sistema como Admin
+           do estabelecimento, portanto esses itens não fazem sentido. #}
+        {% set isSuperAdminPuro = is_granted('ROLE_SUPER_ADMIN')
+            and not app.session.get('impersonating_establishment') %}
+
         {% set configRoutes = ['app_plano', 'app_estabelecimento', 'menu_index', 'app_settings'] %}
         {% set configAberto = route in configRoutes %}
 
@@ -620,7 +615,7 @@
                 class="nav-content collapse {{ configAberto ? 'show' : '' }}"
                 data-bs-parent="#sidebar-nav">
 
-                {% if is_granted('ROLE_SUPER_ADMIN') %}
+                {% if isSuperAdminPuro %}
                     <li>
                         <a href="{{ url('app_plano') }}"
                            class="{{ route == 'app_plano' ? 'active' : '' }}">
@@ -660,6 +655,28 @@
 
 
 <main id="main" class="main">
+
+    {# ── Banner de modo impersonation ──────────────────────────────────
+       Visível quando o Super Admin está navegando como um estabelecimento.
+       Usa is_granted para garantir que só o SA real veja isso,
+       mesmo que a flag de sessão exista por engano em outro contexto.
+    ─────────────────────────────────────────────────────────────────── #}
+    {% if is_granted('ROLE_SUPER_ADMIN') and app.session.get('impersonating_establishment') %}
+    <div class="alert alert-warning mb-0 rounded-0 border-0 border-bottom d-flex align-items-center justify-content-between py-2 px-4"
+         style="background: linear-gradient(90deg, #fff3cd, #ffe69c); position: sticky; top: 60px; z-index: 1000;">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-eye-fill text-warning fs-5"></i>
+            <strong>Modo visualização:</strong>
+            <span>Você está navegando como
+                <strong>{{ app.session.get('impersonating_name') ?? 'Estabelecimento #' ~ app.session.get('estabelecimentoId') }}</strong>
+            </span>
+        </div>
+        <a href="{{ path('superadmin_voltar') }}" class="btn btn-sm btn-warning fw-bold">
+            <i class="bi bi-arrow-return-left me-1"></i>Voltar ao Super Admin
+        </a>
+    </div>
+    {% endif %}
+
     {% block body %}{% endblock %}
 </main><!-- End #main -->
 

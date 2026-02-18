@@ -119,7 +119,12 @@ class LoginController extends DefaultController
             return $this->redirectToRoute('app_login');
         }
 
-        $request->getSession()->set('estabelecimentoId', $petshopId);
+        // Grava nas DUAS variantes de chave usadas pelo sistema:
+        //   - estabelecimentoId  (camelCase) → lida pelos templates Twig e partes legadas
+        //   - estabelecimento_id (snake_case) → lida por DefaultController::getIdBase()
+        //                                       e TenantContext::loadFromSession()
+        $request->getSession()->set('estabelecimentoId',  $petshopId);
+        $request->getSession()->set('estabelecimento_id', $petshopId);
 
         $estabelecimentos = $this->getRepositorio(\App\Entity\Estabelecimento::class)
             ->findById($petshopId);

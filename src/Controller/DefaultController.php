@@ -96,11 +96,15 @@ class DefaultController extends AbstractController
 
     public function switchDB(): void
     {
-        $conexao = $this->managerRegistry->getConnection()->getParams();
+        // Resolve o ID do tenant a partir da sessão.
+        // No modo normal: ID do petshop do usuário logado.
+        // No modo impersonation do Super Admin: ID do estabelecimento acessado.
+        $tenantId = 'homepet_'.$this->session->get('estabelecimento_id')
+                 ?? $this->session->get('estabelecimentoId')
+                 ?? $_ENV['DBNAMETENANT'];
 
-        $estabelecimentoId = "{$_ENV['DBNAMETENANT']}";
-
-        (new DynamicConnectionManager($this->managerRegistry))->switchDatabase($estabelecimentoId, $estabelecimentoId);
+        (new DynamicConnectionManager($this->managerRegistry))
+            ->switchDatabase((string) $tenantId, (string) $tenantId);
     }
 
     public function restauraLoginDB(): void
@@ -221,14 +225,31 @@ class DefaultController extends AbstractController
     }
 
     /**
-     * Retorna o ID base da sessão (estabelecimento/usuário)
-     * CORRIGIDO: Lazy loading - carrega o ID quando solicitado
+     * Retorna o ID do estabelecimento da sessão.
+     *
+     * Lê as duas variantes de chave que coexistem no sistema:
+     *   - 'estabelecimento_id' (snake_case) → gravada pelo CustomAuthenticator
+     *                                          e pelo TenantContext
+     *   - 'estabelecimentoId'  (camelCase)  → gravada pelo LoginController
+     *                                          e pelo SuperAdminController
+     *
+     * No modo impersonation do Super Admin, ambas são populadas
+     * pelo acessarEstabelecimento() com o ID do estabelecimento alvo.
      */
     public function getIdBase(): int
     {
         if ($this->estabelecimentoId === null) {
-            $this->estabelecimentoId = (int)$this->session->get('estabelecimento_id', 0);
+            // Tenta snake_case primeiro (usado por getIdBase e TenantContext)
+            $id = $this->session->get('estabelecimento_id');
+
+            // Fallback camelCase (usado pelo LoginController)
+            if (!$id) {
+                $id = $this->session->get('estabelecimentoId');
+            }
+
+            $this->estabelecimentoId = (int) ($id ?? 0);
         }
+
         return $this->estabelecimentoId;
     }
     
