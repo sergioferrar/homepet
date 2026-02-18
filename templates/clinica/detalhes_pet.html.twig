@@ -1,702 +1,788 @@
 {% extends 'baseClinica.html.twig' %}
-{% block title %}
-    Ficha de Internação - {{ pet.nome }}
-{% endblock %}
+{% block title %}Ficha do Pet — {{ pet.nome }}{% endblock %}
+
 {% block body %}
-    {% set total_debitos = total_debitos|default(0) %}
-    <div class="container-fluid bg-white p-3 my-4">
-        <div class="row">
-            <div class="col-2">
-                <a href="{{ path('clinica_dashboard') }}" class="btn btn-outline-secondary voltar-dash">
-                    <i class="bi bi-arrow-left me-1"></i>Voltar para o Dashboard
-                </a>
+{% set total_debitos = total_debitos|default(0) %}
+
+<style>
+/* ═══════════════════════════════════════════════
+   DETALHES PET — Design System
+   Paleta: Teal clínico + Cinza sofisticado
+═══════════════════════════════════════════════ */
+:root {
+    --dp-teal:       #3d8b85;
+    --dp-teal-dark:  #2a6762;
+    --dp-teal-light: #eef6f5;
+    --dp-teal-mid:   #c5e5e3;
+    --dp-slate:      #3d4f5c;
+    --dp-muted:      #7a8fa0;
+    --dp-border:     #dde8e7;
+    --dp-bg:         #f4f7f7;
+    --dp-surface:    #ffffff;
+    --dp-shadow-sm:  0 1px 4px rgba(42, 103, 98, 0.08);
+    --dp-shadow-md:  0 4px 16px rgba(42, 103, 98, 0.12);
+    --dp-radius:     12px;
+    --dp-radius-lg:  18px;
+}
+
+.dp-page { background: var(--dp-bg); min-height: 100vh; padding: 0 0 3rem; }
+
+.dp-hero {
+    background: linear-gradient(135deg, var(--dp-teal) 0%, var(--dp-teal-dark) 100%);
+    padding: 1.5rem 2rem 3.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.dp-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3Ccircle cx='0' cy='0' r='10'/%3E%3Ccircle cx='60' cy='60' r='10'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+}
+.btn-outline-secondary.voltar-dash {
+    font-size: 0.78rem; padding: 0.3rem 0.8rem; border-radius: 8px;
+    color: rgba(255,255,255,0.85) !important; border-color: rgba(255,255,255,0.35) !important;
+    background: transparent !important;
+}
+
+.dp-profile-wrap {
+    margin-top: -2.5rem; padding: 0 1.5rem; position: relative; z-index: 10;
+}
+.dp-profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 767px) { .dp-profile-grid { grid-template-columns: 1fr; } }
+
+.dp-card {
+    background: var(--dp-surface); border: 1px solid var(--dp-border);
+    border-radius: var(--dp-radius-lg); box-shadow: var(--dp-shadow-md); overflow: hidden;
+}
+
+.dp-owner-header {
+    padding: 1.25rem 1.5rem 0.75rem; border-bottom: 1px solid var(--dp-border);
+    display: flex; align-items: center; gap: 0.75rem;
+}
+.dp-owner-avatar {
+    width: 40px; height: 40px; background: var(--dp-teal-light); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--dp-teal); font-size: 1.1rem; flex-shrink: 0;
+}
+.dp-owner-name { font-size: 1rem; font-weight: 700; color: var(--dp-slate); line-height: 1.2; margin: 0; }
+.dp-owner-id { font-size: 0.72rem; color: var(--dp-muted); }
+.dp-owner-body { padding: 1rem 1.5rem 1.25rem; }
+.dp-info-row {
+    display: flex; align-items: baseline; gap: 0.5rem;
+    padding: 0.35rem 0; border-bottom: 1px solid #f0f4f4; font-size: 0.85rem;
+}
+.dp-info-row:last-child { border-bottom: none; }
+.dp-info-label {
+    font-weight: 600; color: var(--dp-muted); min-width: 80px;
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0;
+}
+.dp-info-value { color: var(--dp-slate); }
+.dp-debt-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: #fff1f1; border: 1px solid #f5c6c6; color: #c0392b;
+    border-radius: 8px; padding: 0.4rem 0.9rem;
+    font-size: 0.82rem; font-weight: 600; margin: 0.5rem 1.5rem 1rem;
+}
+
+.dp-pet-header {
+    padding: 1.25rem 1.5rem 0.75rem; border-bottom: 1px solid var(--dp-border);
+    display: flex; align-items: center; gap: 1rem;
+}
+.dp-pet-img {
+    width: 72px; height: 72px; border-radius: 50%; object-fit: cover;
+    border: 3px solid var(--dp-teal-light);
+    box-shadow: 0 2px 8px rgba(42,103,98,0.15); flex-shrink: 0;
+}
+.dp-pet-name { font-size: 1.3rem; font-weight: 800; color: var(--dp-slate); line-height: 1.1; margin: 0; }
+.dp-pet-id { font-size: 0.72rem; color: var(--dp-muted); }
+.dp-castrado-badge {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    border-radius: 20px; padding: 0.25rem 0.7rem;
+    font-size: 0.72rem; font-weight: 600;
+}
+.dp-pet-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    padding: 1rem 1.5rem 1.25rem; gap: 0.5rem;
+}
+@media (max-width: 575px) { .dp-pet-stats { grid-template-columns: repeat(2, 1fr); } }
+.dp-stat { text-align: center; background: var(--dp-teal-light); border-radius: 10px; padding: 0.6rem 0.5rem; }
+.dp-stat-label {
+    font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--dp-teal-dark); display: block;
+}
+.dp-stat-value { font-size: 0.9rem; font-weight: 700; color: var(--dp-slate); display: block; margin-top: 0.15rem; }
+
+.dp-content { padding: 1.5rem 1.5rem 0; }
+
+.dp-tabs-card {
+    background: var(--dp-surface); border: 1px solid var(--dp-border);
+    border-radius: var(--dp-radius-lg); box-shadow: var(--dp-shadow-sm); overflow: hidden;
+}
+.dp-nav-tabs {
+    display: flex; flex-wrap: nowrap; overflow-x: auto;
+    background: #f9fbfb; border-bottom: 1px solid var(--dp-border);
+    padding: 0 0.5rem; scrollbar-width: none;
+}
+.dp-nav-tabs::-webkit-scrollbar { display: none; }
+.dp-nav-tabs .nav-item { flex-shrink: 0; }
+.dp-nav-tabs .nav-link {
+    border: none !important; border-radius: 0 !important;
+    padding: 0.9rem 1.1rem; font-size: 0.82rem; font-weight: 600;
+    color: var(--dp-muted) !important; letter-spacing: 0.01em; white-space: nowrap;
+    border-bottom: 2.5px solid transparent !important; background: transparent !important;
+}
+.dp-nav-tabs .nav-link.active {
+    color: var(--dp-teal) !important;
+    border-bottom-color: var(--dp-teal) !important;
+    background: transparent !important;
+}
+.dp-nav-tabs .nav-link i, .dp-nav-tabs .nav-link .bi { margin-right: 0.3rem; font-size: 0.85rem; }
+.dp-nav-tabs .dropdown-menu {
+    border-radius: var(--dp-radius); border: 1px solid var(--dp-border);
+    box-shadow: var(--dp-shadow-md); font-size: 0.83rem;
+}
+
+.dp-tab-body { padding: 1.5rem; }
+
+#action-buttons-view .card-title {
+    font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--dp-muted); margin-bottom: 1rem !important;
+}
+.dp-action-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.5rem; border-radius: var(--dp-radius) !important;
+    padding: 1rem 0.75rem !important; font-size: 0.78rem !important;
+    font-weight: 700 !important; letter-spacing: 0.02em;
+    border: none !important; color: #fff !important; min-height: 90px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+.dp-action-btn i, .dp-action-btn .bi { font-size: 1.5rem !important; }
+
+.form-view-container {
+    background: var(--dp-teal-light); border: 1px solid var(--dp-teal-mid);
+    border-radius: var(--dp-radius); padding: 1.5rem;
+}
+.form-view-header { font-size: 0.95rem; font-weight: 700; color: var(--dp-teal-dark); }
+#service-display-container { border: 1px solid var(--dp-border) !important; border-radius: var(--dp-radius-lg) !important; }
+
+.timeline { list-style: none; padding: 0; margin: 0; position: relative; }
+.timeline::before {
+    content: ''; position: absolute; left: 18px; top: 0; bottom: 0; width: 2px;
+    background: linear-gradient(180deg, var(--dp-teal-mid) 0%, #e0eded 100%);
+}
+.timeline li { position: relative; padding: 0 0 1rem 3rem; }
+.timeline-badge {
+    position: absolute; left: 6px; top: 4px; width: 26px; height: 26px;
+    border-radius: 50%; background: var(--dp-teal); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; z-index: 1; box-shadow: 0 0 0 3px var(--dp-teal-light);
+}
+.timeline-panel {
+    background: var(--dp-surface); border-radius: var(--dp-radius) !important;
+    padding: 0.9rem 1.1rem !important; box-shadow: var(--dp-shadow-sm);
+    border-left: none !important;
+}
+.timeline-panel.border-start { border-left: 3px solid !important; }
+.timeline-panel.border-primary  { border-left-color: var(--dp-teal) !important; }
+.timeline-panel.border-success  { border-left-color: #2b9e82 !important; }
+.timeline-panel.border-warning  { border-left-color: #d4960a !important; }
+.timeline-panel.border-dark     { border-left-color: var(--dp-slate) !important; }
+.timeline-title { font-size: 0.88rem !important; font-weight: 700; color: var(--dp-slate); margin: 0; }
+.timeline-link { text-decoration: none; color: inherit; }
+.timeline-body { margin-top: 0.5rem; }
+.timeline-body .btn-primary {
+    font-size: 0.75rem !important; padding: 0.25rem 0.7rem !important;
+    border-radius: 6px !important;
+    background: var(--dp-teal) !important; border-color: var(--dp-teal) !important;
+}
+
+.venda-card {
+    border-radius: var(--dp-radius) !important; border-left-width: 4px !important;
+    box-shadow: var(--dp-shadow-sm) !important; margin-bottom: 0.75rem;
+}
+.vendas-total-bar {
+    background: var(--dp-teal-light); border-radius: var(--dp-radius);
+    padding: 0.75rem 1.1rem;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.9rem; font-weight: 700; color: var(--dp-slate); margin-top: 1rem;
+}
+.vendas-total-bar .total-val { color: #2b9e82; font-size: 1.1rem; }
+
+.dp-table { font-size: 0.83rem; }
+.dp-table thead th {
+    background: var(--dp-teal-light) !important; color: var(--dp-teal-dark) !important;
+    font-weight: 700; border-bottom: 2px solid var(--dp-teal-mid) !important;
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+.badge.bg-secondary { background: #7a8fa0 !important; font-size: 0.7rem; }
+.modal-content { border-radius: var(--dp-radius-lg) !important; border: none; }
+.modal-header.bg-primary {
+    background: linear-gradient(135deg, var(--dp-teal) 0%, var(--dp-teal-dark) 100%) !important;
+    border-radius: var(--dp-radius-lg) var(--dp-radius-lg) 0 0 !important;
+}
+.modal-header.bg-warning { border-radius: var(--dp-radius-lg) var(--dp-radius-lg) 0 0 !important; }
+</style>
+
+<div class="dp-page">
+
+    {# ══ HERO ══ #}
+    <div class="dp-hero">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+            <a href="{{ path('clinica_dashboard') }}" class="btn btn-outline-secondary voltar-dash">
+                <i class="bi bi-arrow-left me-1"></i>Voltar ao Dashboard
+            </a>
+            <div class="d-none d-md-flex align-items-center gap-2 text-white" style="opacity:.7;font-size:.75rem;">
+                <i class="bi bi-calendar3 me-1"></i>{{ "now"|date("d/m/Y") }}
             </div>
-            <div class="col-10"></div>
         </div>
-        <div class="d-flex justify-content-between align-items-center mb-3 d-none">
-        </div>
-        <hr>
-        <div class="row mb-4">
-            <div class="col-lg-6 mb-4 mb-lg-0">
-                <div class="info-card">
-                    <h5>
-                    {{ pet.dono_nome|default('Tutor não vinculado') }}
-                    {% if pet.dono_nome %}
-                        <small class="text-muted fw-normal">({{ pet.dono_id }})</small>
-                    {% endif %}
-                    </h5>
-                    <table class="table table-sm mb-2">
-                        <tbody>
-                            <tr>
-                                <th>Telefone:</th>
-                                <td>{{ pet.dono_telefone|default('-') }}</td>
-                            </tr>
-                            <tr>
-                                <th>Email:</th>
-                                <td>{{ pet.dono_email|default('-') }}</td>
-                            </tr>
-                            <tr>
-                                <th>Endereço:</th>
-                                <td>{{ pet.dono_endereco|default('-') }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    {% if total_debitos > 0 %}
-                        <span class="badge text-bg-danger">
-                            Saldo devedor de R$ {{ total_debitos|number_format(2, ',', '.') }}
-                        </span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="info-card d-flex justify-content-between align-items-center">
-                    <div class="col-3">
-                        <img width="" src="{{ asset('images/pet.jpeg') }}" alt="Avatar do Pet"
-                        class="pet-avatar img-responsive border float-start me-4" onerror="this.style.display='none'">
-                    </div>
-                    <div class="col-9">
-                        <table class="table table-sm" width="100%">
-                            <thead>
-                                <tr>
-                                    <th>Nome</th>
-                                    <th>Raça</th>
-                                    <th>Sexo</th>
-                                    <th>Idade</th>
-                                    <th>Peso</th>
-                                    <th>Castração</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>{{ pet.nome }}
-                                    <small class="text-muted fw-normal">({{ pet.id }})</small></td>
-                                    <td>{{ pet.raca }}</td>
-                                    <td>{{ pet.sexo }}</td>
-                                    <td>{{ pet.dataNascimento ? pet.dataNascimento|idadeFormatada : 'Não informada' }}</td>
-                                    <td>{{ pet.peso }} KG</td>
-                                    <td>
-                                        <span class="p-2 badge {% if pet.castrado == 1 %} text-bg-success {% else %} text-bg-danger {% endif %}">
-                                        {% if pet.castrado == 1 %} Castrado {% else %} Não é Castrado {% endif %}
-                                    </span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="mt-2 text-white" style="opacity:.85;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;">
+            <i class="bi bi-hospital me-1"></i> Clínica Veterinária &nbsp;/&nbsp; Ficha do Paciente
         </div>
     </div>
-    <hr>
-    <div class="row g-3">
-        <div class="col-lg-12 col-sm-12">
-            <div class="main-card">
-                <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="historico-tab" data-bs-toggle="tab"
-                        data-bs-target="#historico" type="button" role="tab" aria-controls="historico"
-                        aria-selected="true">
-                        <i class="fas fa-history me-1"></i> Histórico
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline"
-                        type="button" role="tab" aria-controls="timeline" aria-selected="false">
-                        <i class="fas fa-stream me-1"></i> Linha do Tempo
-                        </button>
-                    </li>
-                    {# Decide destino principal: ativa > última > nova #}
-                    {% set href_internacao = internacao_ativa_id
+
+    {# ══ PROFILE CARDS ══ #}
+    <div class="dp-profile-wrap">
+        <div class="dp-profile-grid">
+
+            {# TUTOR #}
+            <div class="dp-card">
+                <div class="dp-owner-header">
+                    <div class="dp-owner-avatar"><i class="bi bi-person-fill"></i></div>
+                    <div>
+                        <p class="dp-owner-name">{{ pet.dono_nome|default('Tutor não vinculado') }}</p>
+                        {% if pet.dono_nome %}<span class="dp-owner-id">#{{ pet.dono_id }}</span>{% endif %}
+                    </div>
+                </div>
+                <div class="dp-owner-body">
+                    <div class="dp-info-row">
+                        <span class="dp-info-label"><i class="bi bi-telephone me-1"></i>Tel.</span>
+                        <span class="dp-info-value">{{ pet.dono_telefone|default('—') }}</span>
+                    </div>
+                    <div class="dp-info-row">
+                        <span class="dp-info-label"><i class="bi bi-envelope me-1"></i>Email</span>
+                        <span class="dp-info-value">{{ pet.dono_email|default('—') }}</span>
+                    </div>
+                    <div class="dp-info-row">
+                        <span class="dp-info-label"><i class="bi bi-geo-alt me-1"></i>End.</span>
+                        <span class="dp-info-value">{{ pet.dono_endereco|default('—') }}</span>
+                    </div>
+                </div>
+                {% if total_debitos > 0 %}
+                    <div class="dp-debt-badge">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Débito: R$ {{ total_debitos|number_format(2, ',', '.') }}
+                    </div>
+                {% endif %}
+            </div>
+
+            {# PET #}
+            <div class="dp-card">
+                <div class="dp-pet-header">
+                    <img src="{{ asset('images/pet.jpeg') }}" alt="Foto do pet"
+                         class="dp-pet-img pet-avatar img-responsive border" onerror="this.style.display='none'">
+                    <div class="flex-grow-1">
+                        <p class="dp-pet-name">{{ pet.nome }}</p>
+                        <span class="dp-pet-id">#{{ pet.id }} &bull; {{ pet.raca }}</span>
+                        <div class="mt-1">
+                            <span class="dp-castrado-badge {% if pet.castrado == 1 %}bg-success text-white{% else %}bg-danger text-white{% endif %}">
+                                <i class="bi {% if pet.castrado == 1 %}bi-check-circle-fill{% else %}bi-x-circle-fill{% endif %} me-1"></i>
+                                {% if pet.castrado == 1 %}Castrado{% else %}Não castrado{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dp-pet-stats">
+                    <div class="dp-stat">
+                        <span class="dp-stat-label">Sexo</span>
+                        <span class="dp-stat-value">{{ pet.sexo }}</span>
+                    </div>
+                    <div class="dp-stat">
+                        <span class="dp-stat-label">Idade</span>
+                        <span class="dp-stat-value">{{ pet.dataNascimento ? pet.dataNascimento|idadeFormatada : '—' }}</span>
+                    </div>
+                    <div class="dp-stat">
+                        <span class="dp-stat-label">Peso</span>
+                        <span class="dp-stat-value">{{ pet.peso }} kg</span>
+                    </div>
+                    <div class="dp-stat">
+                        <span class="dp-stat-label">Raça</span>
+                        <span class="dp-stat-value" style="font-size:.78rem;">{{ pet.raca }}</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {# ══ TABS ══ #}
+    <div class="dp-content">
+        <div class="dp-tabs-card">
+
+            <ul class="nav dp-nav-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="historico-tab" data-bs-toggle="tab"
+                            data-bs-target="#historico" type="button" role="tab"
+                            aria-controls="historico" aria-selected="true">
+                        <i class="bi bi-clock-history"></i>Histórico
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="timeline-tab" data-bs-toggle="tab"
+                            data-bs-target="#timeline" type="button" role="tab"
+                            aria-controls="timeline" aria-selected="false">
+                        <i class="bi bi-activity"></i>Linha do Tempo
+                    </button>
+                </li>
+                {% set href_internacao = internacao_ativa_id
                     ? path('clinica_ficha_internacao', {'id': internacao_ativa_id})
                     : (ultima_internacao_id
-                    ? path('clinica_ficha_internacao', {'id': ultima_internacao_id})
-                    : path('clinica_nova_internacao', {'petId': pet.id})
+                        ? path('clinica_ficha_internacao', {'id': ultima_internacao_id})
+                        : path('clinica_nova_internacao', {'petId': pet.id})
                     ) %}
-                    {% set texto_internacao = internacao_ativa_id
-                    ? 'Ficha de Internação (ativa)'
-                    : (ultima_internacao_id ? 'Ver última Ficha de Internação' : 'Nova Internação') %}
-                    <li class="nav-item" role="presentation">
-                        <a href="{{ href_internacao }}" id="btn-internacao-aba"
-                            class="nav-link d-flex align-items-center" title="{{ texto_internacao }}">
-                            <i class="bi bi-hospital me-1"></i>
-                            <span>{{ texto_internacao }}</span>
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown" role="presentation">
-                        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
-                            aria-expanded="false" title="Todas as internações">
-                            Histórico de internações
-                            {% if internacoes_pet is defined and internacoes_pet|length %}
-                                <span class="badge bg-secondary ms-1">{{ internacoes_pet|length }}</span>
-                            {% endif %}
-                        </a>
-                        <ul class="dropdown-menu">
-                            {% if internacoes_pet is defined and internacoes_pet|length %}
-                                {% for i in internacoes_pet %}
-                                    <li>
-                                        <a class="dropdown-item d-flex justify-content-between align-items-center"
-                                            href="{{ path('clinica_ficha_internacao', {'id': i.id}) }}">
-                                            <span>#{{ i.id }} — {{ i.status|capitalize }}</span>
-                                            <small class="text-muted">{{ i.data_inicio|date('d/m/Y H:i') }}</small>
-                                        </a>
-                                    </li>
-                                {% endfor %}
+                {% set texto_internacao = internacao_ativa_id
+                    ? 'Internação (ativa)'
+                    : (ultima_internacao_id ? 'Última Internação' : 'Nova Internação') %}
+                <li class="nav-item" role="presentation">
+                    <a href="{{ href_internacao }}" id="btn-internacao-aba"
+                       class="nav-link d-flex align-items-center" title="{{ texto_internacao }}">
+                        <i class="bi bi-hospital"></i><span>{{ texto_internacao }}</span>
+                        {% if internacao_ativa_id %}
+                            <span class="badge ms-1 rounded-pill" style="background:#2b9e82;font-size:.6rem;">●</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item dropdown" role="presentation">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#"
+                       role="button" aria-expanded="false">
+                        <i class="bi bi-folder2-open"></i>Histórico de internações
+                        {% if internacoes_pet is defined and internacoes_pet|length %}
+                            <span class="badge bg-secondary ms-1">{{ internacoes_pet|length }}</span>
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu">
+                        {% if internacoes_pet is defined and internacoes_pet|length %}
+                            {% for i in internacoes_pet %}
                                 <li>
-                                    <hr class="dropdown-divider">
+                                    <a class="dropdown-item d-flex justify-content-between align-items-center"
+                                       href="{{ path('clinica_ficha_internacao', {'id': i.id}) }}">
+                                        <span><i class="bi bi-hospital me-1 text-muted"></i>#{{ i.id }} — {{ i.status|capitalize }}</span>
+                                        <small class="text-muted ms-3">{{ i.data_inicio|date('d/m/Y H:i') }}</small>
+                                    </a>
                                 </li>
-                            {% else %}
-                                <li><span class="dropdown-item-text text-muted">Nenhuma internação anterior</span>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
+                            {% endfor %}
+                            <li><hr class="dropdown-divider"></li>
+                        {% else %}
+                            <li><span class="dropdown-item-text text-muted small">Nenhuma internação anterior</span></li>
+                            <li><hr class="dropdown-divider"></li>
                         {% endif %}
                         <li>
-                            <a class="dropdown-item"
-                                href="{{ path('clinica_nova_internacao', {'petId': pet.id}) }}">
-                                <i class="bi bi-plus-circle me-1"></i> Nova Internação
+                            <a class="dropdown-item text-primary"
+                               href="{{ path('clinica_nova_internacao', {'petId': pet.id}) }}">
+                                <i class="bi bi-plus-circle me-1"></i>Nova Internação
                             </a>
                         </li>
                     </ul>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="venda-tab" data-bs-toggle="tab" data-bs-target="#venda"
-                    type="button" role="tab" aria-controls="venda" aria-selected="false">
-                    <i class="fas fa-dollar-sign me-1"></i> Venda
+                    <button class="nav-link" id="venda-tab" data-bs-toggle="tab"
+                            data-bs-target="#venda" type="button" role="tab"
+                            aria-controls="venda" aria-selected="false">
+                        <i class="bi bi-receipt"></i>Venda
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="vacinas-tab" data-bs-toggle="tab"
-                    data-bs-target="#vacinas"
-                    type="button" role="tab" aria-controls="vacinas"
-                    aria-selected="false">
-                    <i class="fas fa-syringe me-1 "></i> Vacinas
+                            data-bs-target="#vacinas" type="button" role="tab"
+                            aria-controls="vacinas" aria-selected="false">
+                        <i class="bi bi-capsule"></i>Vacinas
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="orcamentos-tab" data-bs-toggle="tab"
-                    data-bs-target="#orcamentos"
-                    type="button" role="tab" aria-controls="orcamentos" aria-selected="false">
-                    <i class="fas fa-file-invoice-dollar me-1"></i> Orçamentos
+                            data-bs-target="#orcamentos" type="button" role="tab"
+                            aria-controls="orcamentos" aria-selected="false">
+                        <i class="bi bi-file-earmark-text"></i>Orçamentos
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="agenda-tab" data-bs-toggle="tab" data-bs-target="#agenda"
-                    type="button" role="tab" aria-controls="agenda" aria-selected="false">
-                    <i class="bi bi-calendar me-1"></i> Agenda
+                    <button class="nav-link" id="agenda-tab" data-bs-toggle="tab"
+                            data-bs-target="#agenda" type="button" role="tab"
+                            aria-controls="agenda" aria-selected="false">
+                        <i class="bi bi-calendar3"></i>Agenda
                     </button>
                 </li>
             </ul>
+
             <div class="tab-content pt-4" id="consolidatedTabsContent">
-                {# HISTÓRICO + AÇÕES #}
-                <div class="tab-pane fade show active" id="historico" role="tabpanel"
-                    aria-labelledby="historico-tab">
-                    <div id="action-buttons-view" class=" p-4">
-                        <h5 class="card-title mb-3">Adicionar Novo Registro</h5>
-                        <div class="row action-grid g-3">
-                            <div class="col-6 col-md-4 col-lg-3">
-                                <a href="#" id="btn-novo-atendimento"
-                                    class="btn btn-primary btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white p-3">
-                                    <i class="bi bi-heart-pulse fs-2 mb-2"></i>
-                                    <span>Atendimento</span>
-                                </a>
-                            </div>
-                            <div class="col-6 col-md-4 col-lg-3">
-                                <a href="#" id="btn-nova-receita"
-                                    class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
-                                    style="background-color: #6f42c1;">
-                                    <i class="bi bi-file-earmark-text fs-2 mb-2"></i>
-                                    <span>Receita</span>
-                                </a>
-                            </div>
-                            <div class="col-6 col-md-4 col-lg-3">
-                                <a href="{{ path('clinica_nova_internacao', {'petId': pet.id}) }}"
-                                    id="btn-nova-internacao"
-                                    class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
-                                    style="background-color: #20c997;">
-                                    <i class="bi bi-hospital fs-2 mb-2"></i>
-                                    <span>Internação</span>
-                                </a>
-                            </div>
-                            <div class="col-6 col-md-4 col-lg-3">
-                                <a href="#" id="btn-novo-peso"
-                                    class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
-                                    style="background-color: #e85d6c;">
-                                    <i class="bi bi-rulers fs-2 mb-2"></i>
-                                    <span>Peso</span>
-                                </a>
-                            </div>
-                            <div class="col-6 col-md-4 col-lg-3">
-                                <a href="#" id="btn-novo-exame"
-                                    class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
-                                    style="background-color: #e83e8c;">
-                                    <i class="bi bi-eyedropper fs-2 mb-2"></i>
-                                    <span>Exame</span>
-                                </a>
-                            </div>
-                            <div class="col-6 col-md-4 col-lg-3">
-                                <a href="{{ path('clinica_documentos', {'petId': pet.id}) }}"
-                                    class="btn btn-success btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white">
-                                    <i class="bi bi-file-earmark-text fs-2 mb-2"></i>
-                                    <span>Documento</span>
-                                </a>
-                            </div>
-                            <div class="col-6 col-md-4 col-lg-3">
-                                <a href="#" id="btn-novas-fotos"
-                                    class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
-                                    style="background-color: #17a2b8;">
-                                    <i class="bi bi-camera fs-2 mb-2"></i>
-                                    <span>Fotos</span>
-                                </a>
-                            </div>
-                            <div class="col-6 col-md-4 col-lg-3">
-                                <a href="#" id="btn-nova-vacina"
-                                    class="btn btn-block h-100 d-flex flex-column justify-content-center align-items-center"
-                                    style="background-color: #ffc107; color: #212529 !important;">
-                                    <i class="bi bi-capsule fs-2 mb-2"></i>
-                                    <span>Vacina</span>
-                                </a>
+
+                {# ━━ HISTÓRICO ━━ #}
+                <div class="tab-pane fade show active" id="historico" role="tabpanel" aria-labelledby="historico-tab">
+                    <div class="dp-tab-body" style="padding-top:0;">
+
+                        <div id="action-buttons-view" class="p-4">
+                            <h5 class="card-title mb-3">Adicionar Novo Registro</h5>
+                            <div class="row action-grid g-3">
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <a href="#" id="btn-novo-atendimento"
+                                       class="btn dp-action-btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white p-3"
+                                       style="background:var(--dp-teal);">
+                                        <i class="bi bi-heart-pulse fs-2 mb-2"></i><span>Atendimento</span>
+                                    </a>
+                                </div>
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <a href="#" id="btn-nova-receita"
+                                       class="btn dp-action-btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
+                                       style="background-color: #6f42c1;">
+                                        <i class="bi bi-file-earmark-text fs-2 mb-2"></i><span>Receita</span>
+                                    </a>
+                                </div>
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <a href="{{ path('clinica_nova_internacao', {'petId': pet.id}) }}"
+                                       id="btn-nova-internacao"
+                                       class="btn dp-action-btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
+                                       style="background-color: #20c997;">
+                                        <i class="bi bi-hospital fs-2 mb-2"></i><span>Internação</span>
+                                    </a>
+                                </div>
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <a href="#" id="btn-novo-peso"
+                                       class="btn dp-action-btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
+                                       style="background-color: #e85d6c;">
+                                        <i class="bi bi-rulers fs-2 mb-2"></i><span>Peso</span>
+                                    </a>
+                                </div>
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <a href="#" id="btn-novo-exame"
+                                       class="btn dp-action-btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
+                                       style="background-color: #e83e8c;">
+                                        <i class="bi bi-eyedropper fs-2 mb-2"></i><span>Exame</span>
+                                    </a>
+                                </div>
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <a href="{{ path('clinica_documentos', {'petId': pet.id}) }}"
+                                       class="btn dp-action-btn btn-success btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white">
+                                        <i class="bi bi-file-earmark-text fs-2 mb-2"></i><span>Documento</span>
+                                    </a>
+                                </div>
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <a href="#" id="btn-novas-fotos"
+                                       class="btn dp-action-btn btn-block h-100 d-flex flex-column justify-content-center align-items-center text-white"
+                                       style="background-color: #17a2b8;">
+                                        <i class="bi bi-camera fs-2 mb-2"></i><span>Fotos</span>
+                                    </a>
+                                </div>
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <a href="#" id="btn-nova-vacina"
+                                       class="btn dp-action-btn btn-block h-100 d-flex flex-column justify-content-center align-items-center"
+                                       style="background-color: #ffc107; color: #212529 !important;">
+                                        <i class="bi bi-capsule fs-2 mb-2"></i><span>Vacina</span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    {# FORM ATENDIMENTO #}
-                    <div id="atendimento-view" style="display: none;">
-                        <form id="form-atendimento" method="POST"
-                            action="{{ path('clinica_novo_atendimento', {'petId': pet.id}) }}">
-                            <div class="form-view-container">
+
+                        {# FORM ATENDIMENTO #}
+                        <div id="atendimento-view" style="display: none;">
+                            <form id="form-atendimento" method="POST"
+                                  action="{{ path('clinica_novo_atendimento', {'petId': pet.id}) }}">
+                                <div class="form-view-container">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="form-view-header"><i class="bi bi-heart-pulse me-2"></i>Novo Atendimento</h5>
+                                        <button type="button" class="btn-close" id="btn-fechar-atendimento" aria-label="Fechar"></button>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3"><label class="form-label">Tipo*</label><select class="form-select" name="tipo"><option value="Consulta" selected>Consulta</option><option value="Retorno">Retorno</option></select></div>
+                                        <div class="col-md-6 mb-3"><label class="form-label">Resumo (Observações)</label><input type="text" class="form-control" name="observacoes"></div>
+                                    </div>
+                                    <div class="mb-3"><label class="form-label">Anamnese / Exame Clínico</label><div id="atendimento-editor"></div><input type="hidden" name="anamnese_delta" id="anamnese-input"></div>
+                                    <input type="hidden" name="pet_id" value="{{ pet.id }}">
+                                    <input type="hidden" name="cliente_id" value="{{ pet.dono_id }}">
+                                    <input type="hidden" name="data" value="{{ "now"|date("Y-m-d") }}">
+                                    <input type="hidden" name="hora" value="{{ "now"|date("H:i:s") }}">
+                                    <div class="d-flex justify-content-end"><button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Salvar Atendimento</button></div>
+                                </div>
+                            </form>
+                        </div>
+
+                        {# FORM RECEITA #}
+                        <div id="receita-view" style="display: none;">
+                            <form id="form-receita" method="POST" action="{{ path('clinica_nova_receita', {'petId': pet.id}) }}">
+                                <div class="form-view-container">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="form-view-header">Emitir Receita</h5>
+                                        <button type="button" class="btn-close" id="btn-fechar-receita" aria-label="Fechar"></button>
+                                    </div>
+                                    <div class="mb-3"><label class="form-label">Conteúdo da Receita</label><div id="editor-conteudo"></div><input type="hidden" name="conteudo" id="conteudo-input"></div>
+                                    <div class="d-flex justify-content-end"><button type="submit" class="btn btn-primary"><i class="fas fa-print me-1"></i>Gerar PDF e Salvar</button></div>
+                                </div>
+                            </form>
+                        </div>
+
+                        {# FORM VACINA #}
+                        <div id="vacina-view" style="display: none;">
+                            <form id="formNovaVacina" method="POST" action="{{ path('clinica_vacina_nova', {'petId': pet.id}) }}">
+                                <div class="form-view-container">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="form-view-header">Registrar Vacina</h5>
+                                        <button type="button" class="btn-close" id="btn-fechar-vacina" aria-label="Fechar"></button>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3"><label class="form-label">Tipo da Vacina*</label><input type="text" class="form-control" name="tipo" required></div>
+                                        <div class="col-md-3 mb-3"><label class="form-label">Data de Aplicação*</label><input type="date" class="form-control" name="data_aplicacao" value="{{ "now"|date("Y-m-d") }}" required></div>
+                                        <div class="col-md-3 mb-3"><label class="form-label">Validade*</label><input type="date" class="form-control" name="data_validade" required></div>
+                                        <div class="col-md-6 mb-3"><label class="form-label">Lote</label><input type="text" class="form-control" name="lote"></div>
+                                    </div>
+                                    <input type="hidden" name="pet_id" value="{{ pet.id }}">
+                                    <div class="d-flex justify-content-end"><button type="submit" class="btn btn-warning"><i class="bi bi-capsule me-1"></i>Salvar Vacina</button></div>
+                                </div>
+                            </form>
+                        </div>
+
+                        {# VISUALIZAÇÃO DETALHES #}
+                        <div id="service-display-container" class="card border border-dark bg-white rounded-4 mt-4" style="display: none;">
+                            <div class="card-body p-4">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="form-view-header">Novo Atendimento</h5>
-                                    <button type="button" class="btn-close" id="btn-fechar-atendimento"
-                                    aria-label="Fechar"></button>
+                                    <h5 class="card-title mb-0 d-none" id="service-display-title">Detalhes do Registro</h5>
+                                    <button type="button" class="btn-close d-none" id="btn-fechar-service-display" aria-label="Fechar"></button>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3"><label class="form-label">Tipo*</label><select
-                                    class="form-select" name="tipo">
-                                    <option value="Consulta" selected>Consulta</option>
-                                    <option value="Retorno">Retorno</option>
-                                </select></div>
-                                <div class="col-md-6 mb-3"><label class="form-label">Resumo
-                                (Observações)</label><input type="text" class="form-control"
-                            name="observacoes"></div>
-                        </div>
-                        <div class="mb-3"><label class="form-label">Anamnese / Exame Clínico</label>
-                        <div id="atendimento-editor"></div>
-                        <input type="hidden" name="anamnese_delta" id="anamnese-input"></div>
-                        <input type="hidden" name="pet_id" value="{{ pet.id }}">
-                        <input type="hidden" name="cliente_id" value="{{ pet.dono_id }}">
-                        <input type="hidden" name="data" value="{{ "now"|date("Y-m-d") }}">
-                        <input type="hidden" name="hora" value="{{ "now"|date("H:i:s") }}">
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-success"><i
-                            class="fas fa-save me-1"></i>
-                            Salvar Atendimento
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            {# FORM RECEITA #}
-            <div id="receita-view" style="display: none;">
-                <form id="form-receita" method="POST"
-                    action="{{ path('clinica_nova_receita', {'petId': pet.id}) }}">
-                    <div class="form-view-container">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="form-view-header">Emitir Receita</h5>
-                            <button type="button" class="btn-close" id="btn-fechar-receita"
-                            aria-label="Fechar"></button>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Conteúdo da Receita</label>
-                            <div id="editor-conteudo"></div>
-                            <input type="hidden" name="conteudo" id="conteudo-input">
-                        </div>
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary"><i
-                            class="fas fa-print me-1"></i>
-                            Gerar PDF e Salvar
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            {# FORM VACINA #}
-            <div id="vacina-view" style="display: none;">
-                <form id="formNovaVacina" method="POST"
-                    action="{{ path('clinica_vacina_nova', {'petId': pet.id}) }}">
-                    <div class="form-view-container">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="form-view-header">Registrar Vacina</h5>
-                            <button type="button" class="btn-close" id="btn-fechar-vacina"
-                            aria-label="Fechar"></button>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Tipo da Vacina*</label>
-                                <input type="text" class="form-control" name="tipo" required>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label">Data de Aplicação*</label>
-                                <input type="date" class="form-control" name="data_aplicacao"
-                                value="{{ "now"|date("Y-m-d") }}" required>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label">Validade*</label>
-                                <input type="date" class="form-control" name="data_validade" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Lote</label>
-                                <input type="text" class="form-control" name="lote">
+                                <div id="service-details-content"></div>
                             </div>
                         </div>
-                        <input type="hidden" name="pet_id" value="{{ pet.id }}">
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-warning">
-                            <i class="bi bi-capsule me-1"></i> Salvar Vacina
-                            </button>
-                        </div>
+
                     </div>
-                </form>
-            </div>
-            {# VISUALIZAÇÃO DETALHES #}
-            <div id="service-display-container"
-                class="card border border-dark bg-white rounded-4  mt-4" style="display: none;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="card-title mb-0 d-none" id="service-display-title">Detalhes do
-                        Registro</h5>
-                        <button type="button" class="btn-close d-none" id="btn-fechar-service-display"
-                        aria-label="Fechar"></button>
-                    </div>
-                    <div id="service-details-content"></div>
                 </div>
-            </div>
-        </div>
-        {# LINHA DO TEMPO #}
-        {# LINHA DO TEMPO #}
-        <div class="tab-pane fade" id="timeline" role="tabpanel" aria-labelledby="timeline-tab"
-            style="max-height: 440px; overflow-y: auto;">
-            <ul class="timeline">
-                {% for item in timeline_items %}
-                    {% set borderClass =
-                    'Consulta' in item.tipo ? 'border-start border-5 border-primary ps-3' :
-                    'Retorno' in item.tipo ? 'border-start border-5 border-success ps-3' :
-                    'Vacina' in item.tipo  ? 'border-start border-5 border-warning ps-3' :
-                    'Receita' in item.tipo ? 'border-start border-5 ps-3' :
-                    'border-start border-5 border-dark ps-3'
-                    %}
-                    {% set borderStyle =
-                    'Receita' in item.tipo ? 'border-left: 5px solid #6f42c1 !important;' : ''
-                    %}
-                    {% set dataFormatada = item.data|date('d/m/Y \\à\\s H:i') %}
-                    <li>
-                        <div class="timeline-badge ">
-                            <i class="fas fa-calendar"></i>
+
+                {# ━━ LINHA DO TEMPO ━━ #}
+                <div class="tab-pane fade" id="timeline" role="tabpanel" aria-labelledby="timeline-tab"
+                     style="max-height: 440px; overflow-y: auto;">
+                    <div class="dp-tab-body">
+                        <ul class="timeline">
+                            {% for item in timeline_items %}
+                                {% set borderClass =
+                                    'Consulta' in item.tipo ? 'border-start border-5 border-primary ps-3' :
+                                    'Retorno'  in item.tipo ? 'border-start border-5 border-success ps-3' :
+                                    'Vacina'   in item.tipo ? 'border-start border-5 border-warning ps-3' :
+                                    'Receita'  in item.tipo ? 'border-start border-5 ps-3' :
+                                    'border-start border-5 border-dark ps-3'
+                                %}
+                                {% set borderStyle = 'Receita' in item.tipo ? 'border-left: 5px solid #6f42c1 !important;' : '' %}
+                                {% set dataFormatada = item.data|date('d/m/Y \\às H:i') %}
+                                <li>
+                                    <div class="timeline-badge"><i class="fas fa-calendar"></i></div>
+                                    <div class="timeline-panel border {{ borderClass }}" {% if borderStyle %}style="{{ borderStyle }}"{% endif %}>
+                                        <div class="timeline-heading">
+                                            <h4 class="timeline-title">
+                                                <a href="#" class="timeline-link timeline-text d-flex justify-content-between align-items-center"
+                                                   data-tipo="{{ item.tipo }}"
+                                                   data-observacoes="{{ item.observacoes|default('') }}"
+                                                   data-data="{{ dataFormatada }}"
+                                                   data-resumo="{{ item.resumo|raw }}"
+                                                   {% if item.anamnese is defined %}data-atendimento-delta="{{ item.anamnese|e('html_attr') }}"{% endif %}
+                                                   {% if item.receita_cabecalho is defined %}data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}"{% endif %}
+                                                   {% if item.receita_conteudo is defined %}data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}"{% endif %}
+                                                   {% if item.receita_rodape is defined %}data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}"{% endif %}>
+                                                    <span>{{ item.tipo }}</span>
+                                                </a>
+                                            </h4>
+                                            <p><small class="text-muted">{{ dataFormatada }}</small></p>
+                                        </div>
+                                        <div class="timeline-body">
+                                            <a href="#" class="timeline-link timeline-text btn btn-sm btn-primary"
+                                               data-tipo="{{ item.tipo }}"
+                                               data-observacoes="{{ item.observacoes|default('') }}"
+                                               data-data="{{ dataFormatada }}"
+                                               data-resumo="{{ item.resumo|raw }}"
+                                               {% if item.anamnese is defined %}data-atendimento-delta="{{ item.anamnese|e('html_attr') }}"{% endif %}
+                                               {% if item.receita_cabecalho is defined %}data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}"{% endif %}
+                                               {% if item.receita_conteudo is defined %}data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}"{% endif %}
+                                               {% if item.receita_rodape is defined %}data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}"{% endif %}>
+                                                <span>Ver detalhes</span>
+                                            </a>
+                                            <p class="text-muted d-none">{{ item.resumo|raw }}</p>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                {# ━━ VENDAS ━━ #}
+                <div class="tab-pane fade" id="venda" role="tabpanel" aria-labelledby="venda-tab">
+                    <div class="dp-tab-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-bold" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--dp-muted);">Lançamentos</span>
+                            <button class="btn btn-success btn-sm d-flex align-items-center gap-1" id="btn-adicionar-servico">
+                                <i class="bi bi-plus-lg me-1"></i>Adicionar
+                            </button>
                         </div>
-                        <div class="timeline-panel border {{ borderClass }}"
-                            {% if borderStyle %}style="{{ borderStyle }}"{% endif %}>
-                            <div class="timeline-heading">
-                                <h4 class="timeline-title">
-                                <a href="#"
-                                    class="timeline-link timeline-text d-flex justify-content-between align-items-center"
-                                    data-tipo="{{ item.tipo }}"
-                                    data-observacoes="{{ item.observacoes|default('') }}"
-                                    data-data="{{ dataFormatada }}"
-                                    data-resumo="{{ item.resumo|raw }}"
-                                    {% if item.anamnese is defined %}
-                                        data-atendimento-delta="{{ item.anamnese|e('html_attr') }}"
-                                    {% endif %}
-                                    {% if item.receita_cabecalho is defined %}
-                                        data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}"
-                                    {% endif %}
-                                    {% if item.receita_conteudo is defined %}
-                                        data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}"
-                                    {% endif %}
-                                    {% if item.receita_rodape is defined %}
-                                        data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}"
-                                    {% endif %}>
-                                    <span>{{ item.tipo }}</span>
-                                </a>
-                                </h4>
-                                <p>
-                                    <small class="text-muted">
-                                    {{ dataFormatada }}
-                                    </small>
-                                </p>
-                            </div>
-                            <div class="timeline-body">
-                                <a href="#"
-                                    class="timeline-link timeline-text btn btn-sm btn-primary"
-                                    data-tipo="{{ item.tipo }}"
-                                    data-observacoes="{{ item.observacoes|default('') }}"
-                                    data-data="{{ dataFormatada }}"
-                                    data-resumo="{{ item.resumo|raw }}"
-                                    {% if item.anamnese is defined %}
-                                        data-atendimento-delta="{{ item.anamnese|e('html_attr') }}"
-                                    {% endif %}
-                                    {% if item.receita_cabecalho is defined %}
-                                        data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}"
-                                    {% endif %}
-                                    {% if item.receita_conteudo is defined %}
-                                        data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}"
-                                    {% endif %}
-                                    {% if item.receita_rodape is defined %}
-                                        data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}"
-                                    {% endif %}>
-                                    <span>Ver detalhes</span>
-                                </a>
-                                <p class="text-muted d-none">
-                                    {{ item.resumo|raw }}
-                                </p>
-                            </div>
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
-            
-        </div>
-        {# VENDAS #}
-        <div class="tab-pane fade" id="venda" role="tabpanel" aria-labelledby="venda-tab">
-            <div class="d-flex justify-content-end my-2">
-                <button class="btn btn-success btn-sm" id="btn-adicionar-servico">
-                <i class="bi bi-plus-lg me-1"></i> Adicionar
-                </button>
-            </div>
-            <div class="vendas-lista-scroll" style="max-height: 480px; overflow-y: auto;">
-                {# Junta vendas pagas + pendentes + carrinho e ordena por data #}
-                {% set todas_vendas = (vendas_pagas|merge(vendas_pendentes)|merge(vendas_carrinho|default([]))) %}
-                {% for v in todas_vendas %}
-                    {% set status = v.status %}
-                    <div class="card shadow-sm mb-2 rounded-4 border-start border-5
-                        {% if status == 'Paga' or status == 'Aberta' %}
-                            border-success
-                        {% elseif status == 'Pendente' %}
-                            border-warning
-                        {% elseif status == 'Carrinho' %}
-                            border-info
-                        {% else %}
-                            border-secondary
-                        {% endif %}">
-                        <div class="card-body py-2">
-                            <div class="d-flex justify-content-between align-items-start">
-                                {# COLUNA ESQUERDA — ITENS DA VENDA #}
-                                <div class="flex-grow-1 pe-3">
-                                    <p class="mb-2 fw-bold">
-                                        Venda #{{ v.id }}
-                                        {% if status == 'Carrinho' %}
-                                            <span class="badge bg-info text-dark ms-2">
-                                                <i class="bi bi-cart-check me-1"></i>Aguardando Finalização no PDV
-                                            </span>
-                                        {% endif %}
-                                        <small class="ms-3 fw-normal">
-                                        Pagamento via:
-                                        {% if v.metodoPagamento %}
-                                            {{ v.metodoPagamento|metodoPagamento|raw }}
-                                        {% else %}
-                                            <span class="badge bg-warning text-dark">Pendente</span>
-                                        {% endif %}
-                                        </small>
-                                    </p>
-                                    {# MÉTODO DE PAGAMENTO #}
-                                    <p class="mt-2 mb-0">
-                                        
-                                    </p>
-                                    {# LISTA DE ITENS #}
-                                    <div class="border rounded-3 p-2 bg-light">
-                                        {% if vendas_items[v.id] is defined %}
-                                            {% for vitem in vendas_items[v.id] %}
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <div class="text-truncate">
-                                                        <span class="fw-semibold">
-                                                            {{ vitem.item }}
-                                                        </span>
-                                                        <small class="text-muted d-block">
-                                                        {{ vitem.quantidade }} ×
-                                                        R$ {{ vitem.valor|number_format(2, ',', '.') }}
-                                                        </small>
-                                                    </div>
-                                                    <div class="text-end fw-semibold">
-                                                        R$ {{ vitem.subtotal|number_format(2, ',', '.') }}
-                                                    </div>
+                        <div class="vendas-lista-scroll" style="max-height: 480px; overflow-y: auto;">
+                            {% set todas_vendas = (vendas_pagas|merge(vendas_pendentes)|merge(vendas_carrinho|default([]))) %}
+                            {% for v in todas_vendas %}
+                                {% set status = v.status %}
+                                <div class="card shadow-sm mb-2 rounded-4 border-start border-5 venda-card
+                                    {% if status == 'Paga' or status == 'Aberta' %}border-success
+                                    {% elseif status == 'Pendente' %}border-warning
+                                    {% elseif status == 'Carrinho' %}border-info
+                                    {% else %}border-secondary{% endif %}">
+                                    <div class="card-body py-2">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1 pe-3">
+                                                <p class="mb-2 fw-bold">
+                                                    Venda #{{ v.id }}
+                                                    {% if status == 'Carrinho' %}
+                                                        <span class="badge bg-info text-dark ms-2"><i class="bi bi-cart-check me-1"></i>Aguardando Finalização no PDV</span>
+                                                    {% endif %}
+                                                    <small class="ms-3 fw-normal">Pagamento via:
+                                                        {% if v.metodoPagamento %}{{ v.metodoPagamento|metodoPagamento|raw }}{% else %}<span class="badge bg-warning text-dark">Pendente</span>{% endif %}
+                                                    </small>
+                                                </p>
+                                                <p class="mt-2 mb-0"></p>
+                                                <div class="border rounded-3 p-2 bg-light">
+                                                    {% if vendas_items[v.id] is defined %}
+                                                        {% for vitem in vendas_items[v.id] %}
+                                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                <div class="text-truncate">
+                                                                    <span class="fw-semibold">{{ vitem.item }}</span>
+                                                                    <small class="text-muted d-block">{{ vitem.quantidade }} × R$ {{ vitem.valor|number_format(2, ',', '.') }}</small>
+                                                                </div>
+                                                                <div class="text-end fw-semibold">R$ {{ vitem.subtotal|number_format(2, ',', '.') }}</div>
+                                                            </div>
+                                                        {% else %}
+                                                            <p class="text-muted mb-0">Nenhum item na venda.</p>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 </div>
-                                            {% else %}
-                                                <p class="text-muted mb-0">Nenhum item na venda.</p>
-                                            {% endfor %}
-                                        {% endif %}
+                                            </div>
+                                            <div class="text-end" style="min-width: 140px;">
+                                                <p class="mb-1 text-muted small">Total</p>
+                                                <p class="mb-2 fw-bold fs-6 text-success">R$ {{ v.total|number_format(2, ',', '.') }}</p>
+                                                <div class="d-flex justify-content-end gap-1">
+                                                    <button type="button" class="btn btn-sm btn-primary btn-editar-venda"
+                                                            data-id="{{ v.id }}" data-valor="{{ v.total }}"
+                                                            data-metodo="{{ v.metodoPagamento|default('') }}"
+                                                            data-status="{{ v.status }}"
+                                                            data-bs-toggle="modal" data-bs-target="#modalEditarVenda">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <form method="POST" action="{{ path('clinica_inativar_venda', { petId: pet.id, id: v.id }) }}">
+                                                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-slash-circle"></i></button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                {# COLUNA DIREITA — TOTAL E AÇÕES #}
-                                <div class="text-end" style="min-width: 140px;">
-                                    <p class="mb-1 text-muted small">Total</p>
-                                    <p class="mb-2 fw-bold fs-6 text-success">
-                                        R$ {{ v.total|number_format(2, ',', '.') }}
-                                    </p>
-                                    <div class="d-flex justify-content-end gap-1">
-                                        {# Editar venda #}
-                                        <button type="button"
-                                        class="btn btn-sm btn-primary btn-editar-venda"
-                                        data-id="{{ v.id }}"
-                                        data-valor="{{ v.total }}"
-                                        data-metodo="{{ v.metodoPagamento|default('') }}"
-                                        data-status="{{ v.status }}"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#modalEditarVenda">
-                                        <i class="fas fa-edit"></i>
-                                        </button>
-                                        {# Inativar venda #}
-                                        <form method="POST"
-                                            action="{{ path('clinica_inativar_venda', { petId: pet.id, id: v.id }) }}">
-                                            <button type="submit" class="btn btn-sm btn-danger">
-                                            <i class="bi bi-slash-circle"></i>
-                                            </button>
-                                        </form>
+                            {% else %}
+                                <p class="text-muted text-center mt-3">Nenhuma venda registrada.</p>
+                            {% endfor %}
+                        </div>
+                        {% set total_vendas = 0 %}
+                        {% for v in todas_vendas %}{% set total_vendas = total_vendas + (v.total ?? v.valorFinal ?? 0) %}{% endfor %}
+                        <div class="vendas-total-bar">
+                            <span>Total geral</span>
+                            <span class="total-val">R$ {{ total_vendas|number_format(2, ',', '.') }}</span>
+                        </div>
+
+                        {# MODAL EDITAR VENDA #}
+                        <div class="modal fade" id="modalEditarVenda" tabindex="-1" aria-hidden="false">
+                            <div class="modal-dialog">
+                                <form id="form-editar-venda" method="POST" class="modal-content">
+                                    <div class="modal-header"><h5 class="modal-title">Editar Venda</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                                    <div class="modal-body">
+                                        <input type="hidden" id="editar-id" name="id">
+                                        <div class="mb-2"><label class="form-label">Descrição</label><input type="text" id="editar-descricao" name="descricao" class="form-control"></div>
+                                        <div class="mb-2"><label class="form-label">Valor</label><input type="number" step="0.01" id="editar-valor" name="valor" class="form-control"></div>
+                                        <div class="mb-2"><label class="form-label">Data</label><input type="date" id="editar-data" name="data" class="form-control"></div>
+                                        <div class="mb-2"><label class="form-label">Método de Pagamento</label><input type="text" id="editar-metodo" name="metodo_pagamento" class="form-control"></div>
+                                        <div class="mb-2"><label class="form-label">Observação</label><textarea id="editar-observacao" name="observacao" class="form-control"></textarea></div>
                                     </div>
-                                </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-primary">Salvar</button>
+                                        <button type="button" class="btn btn-secondary" id="btn-cancelar-editar">Cancelar</button>
+                                    </div>
+                                    <button type="button" class="btn btn-primary add-servico"><i class="bi bi-plus-lg"></i> Adicionar novo serviço</button>
+                                </form>
                             </div>
                         </div>
+
+                        {# ORÇAMENTOS #}
+                        <div class="tab-pane fade" id="orcamentos" role="tabpanel" aria-labelledby="orcamentos-tab">
+                            <p class="text-muted text-center mt-4">Nenhum orçamento registrado.</p>
+                        </div>
+                        {# AGENDA #}
+                        <div class="tab-pane fade" id="agenda" role="tabpanel" aria-labelledby="agenda-tab">
+                            <p class="text-muted text-center mt-4">Conteúdo da Agenda.</p>
+                        </div>
                     </div>
-                {% else %}
-                    <p class="text-muted text-center mt-3">Nenhuma venda registrada.</p>
-                {% endfor %}
-            </div>
-           {# TOTAL DAS VENDAS (pagas + pendentes) #}
-{% set total_vendas = 0 %}
-
-{% for v in todas_vendas %}
-    {% set total_vendas = total_vendas + (v.total ?? v.valorFinal ?? 0) %}
-{% endfor %}
-
-<div class="d-flex justify-content-between mt-3">
-    <h5 class="mb-0">Total</h5>
-    <h5 class="mb-0 text-success fw-bold">
-        R$ {{ total_vendas|number_format(2, ',', '.') }}
-    </h5>
-</div>
-
-            {# 🧬 VACINAS #}
-            <div class="tab-pane fade" id="vacinas" role="tabpanel" aria-labelledby="vacinas-tab">
-                <div class="d-flex justify-content-between align-items-center my-3">
-                    <h5 class="mb-0"><i class="fas fa-syringe text-warning me-1"></i> Vacinas Aplicadas</h5>
-                    {#                             <a href="#" id="btn-nova-vacina" class="btn btn-warning btn-sm text-dark">
-                        <i class="bi bi-capsule me-1"></i> Registrar Nova Vacina
-                    </a> #}
                 </div>
-                {% if vacinas is defined and vacinas|length > 0 %}
-                    <div class="table-responsive">
-                        <table id="tabelaVacinas" class="table table-striped table-bordered align-middle">
-                            <thead class="table-warning text-center">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Tipo</th>
-                                    <th>Data Aplicação</th>
-                                    <th>Validade</th>
-                                    <th>Lote</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for v in vacinas %}
-                                    <tr>
-                                        <td class="text-center">{{ loop.index }}</td>
-                                        <td>{{ v.tipo }}</td>
-                                        <td class="text-center">{{ v.data_aplicacao ? v.data_aplicacao|date('d/m/Y') : '—' }}</td>
-                                        <td class="text-center">{{ v.data_validade ? v.data_validade|date('d/m/Y') : '—' }}</td>
-                                        <td class="text-center">{{ v.lote ?: '—' }}</td>
-                                        <td class="text-center">
-                                            <form method="POST"
-                                                action="{{ path('clinica_vacina_remover', {petId: pet.id, id: v.id}) }}"
-                                                onsubmit="return confirm('Remover esta vacina?');">
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+
+                {# ━━ VACINAS ━━ #}
+                <div class="tab-pane fade" id="vacinas" role="tabpanel" aria-labelledby="vacinas-tab">
+                    <div class="dp-tab-body">
+                        <div class="d-flex justify-content-between align-items-center my-3">
+                            <h5 class="mb-0"><i class="fas fa-syringe text-warning me-1"></i> Vacinas Aplicadas</h5>
+                        </div>
+                        {% if vacinas is defined and vacinas|length > 0 %}
+                            <div class="table-responsive">
+                                <table id="tabelaVacinas" class="table table-striped table-bordered align-middle dp-table">
+                                    <thead class="table-warning text-center">
+                                        <tr><th>#</th><th>Tipo</th><th>Data Aplicação</th><th>Validade</th><th>Lote</th><th>Ações</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for v in vacinas %}
+                                            <tr>
+                                                <td class="text-center">{{ loop.index }}</td>
+                                                <td>{{ v.tipo }}</td>
+                                                <td class="text-center">{{ v.data_aplicacao ? v.data_aplicacao|date('d/m/Y') : '—' }}</td>
+                                                <td class="text-center">{{ v.data_validade ? v.data_validade|date('d/m/Y') : '—' }}</td>
+                                                <td class="text-center">{{ v.lote ?: '—' }}</td>
+                                                <td class="text-center">
+                                                    <form method="POST" action="{{ path('clinica_vacina_remover', {petId: pet.id, id: v.id}) }}" onsubmit="return confirm('Remover esta vacina?');">
+                                                        <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-secondary text-center mt-3">Nenhuma vacina registrada para este pet.</div>
+                        {% endif %}
                     </div>
-                {% else %}
-                    <div class="alert alert-secondary text-center mt-3">
-                        Nenhuma vacina registrada para este pet.
-                    </div>
-                {% endif %}
-            </div>
-            {# 🔹 MODAL ÚNICO DE EDIÇÃO DE VENDA #}
-            <div class="modal fade" id="modalEditarVenda" tabindex="-1" aria-hidden="false">
-                <div class="modal-dialog">
-                    <form id="form-editar-venda" method="POST" class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Editar Venda</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <input type="hidden" id="editar-id" name="id">
-                            <div class="mb-2">
-                                <label class="form-label">Descrição</label>
-                                <input type="text" id="editar-descricao" name="descricao"
-                                class="form-control">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label">Valor</label>
-                                <input type="number" step="0.01" id="editar-valor" name="valor"
-                                class="form-control">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label">Data</label>
-                                <input type="date" id="editar-data" name="data" class="form-control">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label">Método de Pagamento</label>
-                                <input type="text" id="editar-metodo" name="metodo_pagamento"
-                                class="form-control">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label">Observação</label>
-                                <textarea id="editar-observacao" name="observacao"
-                                class="form-control"></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Salvar</button>
-                            <button type="button" class="btn btn-secondary" id="btn-cancelar-editar">
-                            Cancelar
-                            </button>
-                        </div>
-                        <button type="button" class="btn btn-primary add-servico">
-                        <i class="bi bi-plus-lg"></i> Adicionar novo serviço
-                        </button>
-                    </form>
                 </div>
-            </div>
-            {# ORÇAMENTOS #}
-            <div class="tab-pane fade" id="orcamentos" role="tabpanel" aria-labelledby="orcamentos-tab">
-                <p class="text-muted text-center mt-4">Nenhum orçamento registrado.</p>
-            </div>
-            {# AGENDA #}
-            <div class="tab-pane fade" id="agenda" role="tabpanel" aria-labelledby="agenda-tab">
-                <p class="text-muted text-center mt-4">Conteúdo da Agenda.</p>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
-</div>
-{# MODAL ADICIONAR SERVIÇO #}
-<div class="modal fade" id="modalAdicionarServico" tabindex="-1" aria-labelledby="modalAdicionarServicoLabel"
-aria-hidden="false">
+
+                {# ━━ ORÇAMENTOS ━━ #}
+                <div class="tab-pane fade" id="orcamentos" role="tabpanel" aria-labelledby="orcamentos-tab">
+                    <div class="dp-tab-body"><p class="text-muted text-center mt-4">Nenhum orçamento registrado.</p></div>
+                </div>
+
+                {# ━━ AGENDA ━━ #}
+                <div class="tab-pane fade" id="agenda" role="tabpanel" aria-labelledby="agenda-tab">
+                    <div class="dp-tab-body"><p class="text-muted text-center mt-4">Conteúdo da Agenda.</p></div>
+                </div>
+
+            </div>{# /tab-content #}
+        </div>{# /dp-tabs-card #}
+    </div>{# /dp-content #}
+</div>{# /dp-page #}
+
+{# ══ MODAL ADICIONAR SERVIÇO ══ #}
+<div class="modal fade" id="modalAdicionarServico" tabindex="-1" aria-labelledby="modalAdicionarServicoLabel" aria-hidden="false">
 <div class="modal-dialog modal-lg modal-dialog-centered">
-<form class="modal-content" id="form-novo-servico" method="post"
-    action="{{ path('clinica_concluir_venda', {'petId': pet.id}) }}">
+<form class="modal-content" id="form-novo-servico" method="post" action="{{ path('clinica_concluir_venda', {'petId': pet.id}) }}">
     <div class="modal-header bg-primary text-white">
         <div class="d-flex flex-column w-100">
             <h5 class="modal-title mb-2" id="modalAdicionarServicoLabel">Adicionar Serviço / Lançamento</h5>
             <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-light text-dark fs-6 px-3 py-2">
-                    <i class="fas fa-calculator me-2"></i>Total: R$ <span id="total-servicos">0,00</span>
-                </span>
+                <span class="badge bg-light text-dark fs-6 px-3 py-2"><i class="fas fa-calculator me-2"></i>Total: R$ <span id="total-servicos">0,00</span></span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-        aria-label="Fechar"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
     </div>
     <div class="modal-body">
         <div class="mb-3">
@@ -704,17 +790,11 @@ aria-hidden="false">
             <select class="form-select" id="servico-descricao-1" name="descricao[]" required>
                 <option value="">Selecione um serviço...</option>
                 {% for servico in servicos_clinica %}
-                    <option value="{{ servico.id }}" data-valor="{{ servico.valor }}">
-                        {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
-                    </option>
+                    <option value="{{ servico.id }}" data-valor="{{ servico.valor }}">{{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="mb-3">
-            <label for="servico-desconto" class="form-label">Desconto (R$)</label>
-            <input type="number" step="0.01" class="form-control" id="servico-desconto" name="desconto[]"
-            value="0">
-        </div>
+        <div class="mb-3"><label for="servico-desconto" class="form-label">Desconto (R$)</label><input type="number" step="0.01" class="form-control" id="servico-desconto" name="desconto[]" value="0"></div>
         <div id="servicos-container"></div>
         <div class="mb-3">
             <label for="servico-metodo" class="form-label">Método de Pagamento*</label>
@@ -727,75 +807,39 @@ aria-hidden="false">
             </select>
         </div>
         <div id="cartao-opcoes" class="row d-none">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Bandeira do Cartão</label>
-                <select name="bandeira_cartao" class="form-select">
-                    <option value="">Selecione...</option>
-                    <option value="Visa">Visa</option>
-                    <option value="Mastercard">Mastercard</option>
-                    <option value="Elo">Elo</option>
-                    <option value="American Express">American Express</option>
-                    <option value="Hipercard">Hipercard</option>
-                </select>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Quantidade de Parcelas</label>
-                <input type="number" name="parcelas" class="form-control" min="1" max="12" value="1">
-            </div>
+            <div class="col-md-6 mb-3"><label class="form-label">Bandeira do Cartão</label><select name="bandeira_cartao" class="form-select"><option value="">Selecione...</option><option value="Visa">Visa</option><option value="Mastercard">Mastercard</option><option value="Elo">Elo</option><option value="American Express">American Express</option><option value="Hipercard">Hipercard</option></select></div>
+            <div class="col-md-6 mb-3"><label class="form-label">Quantidade de Parcelas</label><input type="number" name="parcelas" class="form-control" min="1" max="12" value="1"></div>
         </div>
-        <div class="mb-3">
-            <label for="servico-data" class="form-label">Data</label>
-            <input type="date" class="form-control" id="servico-data" name="data"
-            value="{{ "now"|date("Y-m-d") }}">
-        </div>
-        <div class="mb-3">
-            <label for="servico-observacao" class="form-label">Observação</label>
-            <textarea class="form-control" id="servico-observacao" name="observacao" rows="2"></textarea>
-        </div>
+        <div class="mb-3"><label for="servico-data" class="form-label">Data</label><input type="date" class="form-control" id="servico-data" name="data" value="{{ "now"|date("Y-m-d") }}"></div>
+        <div class="mb-3"><label for="servico-observacao" class="form-label">Observação</label><textarea class="form-control" id="servico-observacao" name="observacao" rows="2"></textarea></div>
         <input type="hidden" name="origem" value="clinica">
         <input type="hidden" name="pet_id" value="{{ pet.id }}">
     </div>
     <div class="modal-footer d-flex justify-content-between align-items-center flex-wrap">
-        <button type="button" class="btn btn-secondary" id="btn-cancelar-servico">
-        Cancelar
-        </button>
+        <button type="button" class="btn btn-secondary" id="btn-cancelar-servico">Cancelar</button>
         <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-primary add-servico">
-            <i class="bi bi-plus-lg"></i> Adicionar novo serviço
-            </button>
-            <button type="submit" class="btn btn-success">
-            <i class="bi bi-check-lg"></i> Concluir / Salvar
-            </button>
+            <button type="button" class="btn btn-primary add-servico"><i class="bi bi-plus-lg"></i> Adicionar novo serviço</button>
+            <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Concluir / Salvar</button>
         </div>
     </div>
 </form>
 </div>
 </div>
-{# MODAL DE CONFIRMAÇÃO #}
+
+{# ══ MODAL CONFIRMAÇÃO ══ #}
 <div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-sm">
 <div class="modal-content border-0 shadow-lg">
-    <div class="modal-header bg-warning text-dark border-0">
-        <h5 class="modal-title">
-        <i class="fas fa-exclamation-triangle me-2"></i>Atenção
-        </h5>
-    </div>
-    <div class="modal-body text-center py-4">
-        <p class="mb-0" id="mensagem-confirmacao">
-            Você tem dados não salvos. Deseja realmente cancelar e perder as informações?
-        </p>
-    </div>
+    <div class="modal-header bg-warning text-dark border-0"><h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Atenção</h5></div>
+    <div class="modal-body text-center py-4"><p class="mb-0" id="mensagem-confirmacao">Você tem dados não salvos. Deseja realmente cancelar e perder as informações?</p></div>
     <div class="modal-footer border-0 justify-content-center">
-        <button type="button" class="btn btn-secondary" id="btn-nao-confirmar">
-        <i class="fas fa-times me-1"></i>Não
-        </button>
-        <button type="button" class="btn btn-danger" id="btn-sim-confirmar">
-        <i class="bi bi-check-lg me-1"></i>Sim, fechar
-        </button>
+        <button type="button" class="btn btn-secondary" id="btn-nao-confirmar"><i class="fas fa-times me-1"></i>Não</button>
+        <button type="button" class="btn btn-danger" id="btn-sim-confirmar"><i class="bi bi-check-lg me-1"></i>Sim, fechar</button>
     </div>
 </div>
 </div>
 </div>
+
 {% endblock %}
 {% block javascripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
@@ -819,76 +863,37 @@ const $btnFecharServiceDisplay = $('#btn-fechar-service-display');
 const $btnAdicionarServico = $('#btn-adicionar-servico');
 const historicoTabElement = $('button[data-bs-target="#historico"]')[0];
 let historicoTab = historicoTabElement ? new bootstrap.Tab(historicoTabElement) : null;
-// Torna as variáveis globais para acesso em outros handlers
-// backdrop: 'static' impede fechar ao clicar fora
-// keyboard: false impede fechar com ESC
-window.modalAdicionarServico = new bootstrap.Modal($('#modalAdicionarServico')[0], {
-backdrop: 'static',
-keyboard: false
-});
-window.modalEditarVenda = new bootstrap.Modal($('#modalEditarVenda')[0], {
-backdrop: 'static',
-keyboard: false
-});
+window.modalAdicionarServico = new bootstrap.Modal($('#modalAdicionarServico')[0], {backdrop: 'static', keyboard: false});
+window.modalEditarVenda = new bootstrap.Modal($('#modalEditarVenda')[0], {backdrop: 'static', keyboard: false});
 window.currentQuillDisplayEditors = [];
 const showView = (viewToShow) => {
-$actionButtonsView.hide();
-$atendimentoView.hide();
-$receitaView.hide();
-serviceDisplayContainer.hide();
+$actionButtonsView.hide();$atendimentoView.hide();$receitaView.hide();serviceDisplayContainer.hide();
 if (viewToShow) $(viewToShow).show();
 };
 const returnToActionGrid = (e) => {
 if (e) e.preventDefault();
-window.currentQuillDisplayEditors.forEach(editor => {
-if (editor.container && editor.container.parentNode) {
-editor.container.parentNode.removeChild(editor.container);
-}
-});
+window.currentQuillDisplayEditors.forEach(editor => { if (editor.container && editor.container.parentNode) { editor.container.parentNode.removeChild(editor.container); } });
 window.currentQuillDisplayEditors = [];
 showView($actionButtonsView);
 };
-// fechar janela
-$('.voltar-dash').on('click', function () {
-window.close();
-return false;
-});
-// === LISTENERS BÁSICOS ===
-$btnNovoAtendimento.on('click', function (e) {
-e.preventDefault();
-showView($atendimentoView);
-});
-$btnNovaReceita.on('click', function (e) {
-e.preventDefault();
-showView($receitaView);
-});
+$('.voltar-dash').on('click', function () { window.close(); return false; });
+$btnNovoAtendimento.on('click', function (e) { e.preventDefault(); showView($atendimentoView); });
+$btnNovaReceita.on('click', function (e) { e.preventDefault(); showView($receitaView); });
 const notImplementedButtons = ['btn-novo-peso', 'btn-novo-exame', 'btn-novas-fotos'];
 notImplementedButtons.forEach(id => {
 $(`#${id}`).on('click', function (e) {
 e.preventDefault();
 var modal = Notify.modal(`A funcionalidade de "${$(this).text().trim()}" não está implementada ainda.`, 'md', 'mensagem do sistema')
 $(`#${modal.id}`).find('.modal-header').addClass('text-bg-warning')
-// alert();
 });
 });
 $btnFecharAtendimento.on('click', returnToActionGrid);
 $btnFecharReceita.on('click', returnToActionGrid);
 $btnFecharServiceDisplay.on('click', returnToActionGrid);
-// === QUILL EDITORS ===
-const toolbarOptions = [
-[{'header': [1, 2, 3, false]}],
-['bold', 'italic', 'underline', 'strike'],
-[{'list': 'ordered'}, {'list': 'bullet'}],
-['link'],
-['clean']
-];
-const createQuillEditor = (selector, options = {}) => {
-const el = $(selector)[0];
-return el ? new Quill(selector, {theme: 'snow', modules: {toolbar: toolbarOptions}, ...options}) : null;
-};
+const toolbarOptions = [[{'header': [1, 2, 3, false]}],['bold', 'italic', 'underline', 'strike'],[{'list': 'ordered'}, {'list': 'bullet'}],['link'],['clean']];
+const createQuillEditor = (selector, options = {}) => { const el = $(selector)[0]; return el ? new Quill(selector, {theme: 'snow', modules: {toolbar: toolbarOptions}, ...options}) : null; };
 const quillAtendimento = createQuillEditor('#atendimento-editor');
 const quillConteudo = createQuillEditor('#editor-conteudo');
-// === TIMELINE (abre visualização) ===
 const timelineLinks = document.querySelectorAll('.timeline-link');
 timelineLinks.forEach(link => {
 link.addEventListener('click', function (e) {
@@ -898,302 +903,75 @@ const data = this.dataset.data;
 const resumo = this.dataset.resumo;
 const observacoes = this.dataset.observacoes;
 serviceDetailsContent.innerHTML = '';
-window.currentQuillDisplayEditors.forEach(editor => {
-if (editor.container && editor.container.parentNode) {
-editor.container.parentNode.removeChild(editor.container);
-}
-});
+window.currentQuillDisplayEditors.forEach(editor => { if (editor.container && editor.container.parentNode) { editor.container.parentNode.removeChild(editor.container); } });
 window.currentQuillDisplayEditors = [];
 document.getElementById('service-display-title').textContent = `Detalhes do Registro: ${tipo}`;
 const appendServiceDetailCard = (cardTitle, contentData, typeClass, isHtml = false) => {
-const cardDiv = document.createElement('div');
-cardDiv.className = ` ${typeClass}`;
-const cardHeader = document.createElement('h6');
-cardHeader.className = 'mb-2';
-cardHeader.textContent = cardTitle;
-cardDiv.appendChild(cardHeader);
-const cardDate = document.createElement('p');
-cardDate.className = 'text-muted mb-3';
-cardDate.innerHTML = ``;//`<small>Registrado em: ${data}</small>`;
-cardDiv.appendChild(cardDate);
-const contentDiv = document.createElement('div');
-contentDiv.className = 'service-detail-content';
-cardDiv.appendChild(contentDiv);
-serviceDetailsContent.appendChild(cardDiv);
+const cardDiv = document.createElement('div'); cardDiv.className = ` ${typeClass}`;
+const cardHeader = document.createElement('h6'); cardHeader.className = 'mb-2'; cardHeader.textContent = cardTitle; cardDiv.appendChild(cardHeader);
+const cardDate = document.createElement('p'); cardDate.className = 'text-muted mb-3'; cardDate.innerHTML = ``; cardDiv.appendChild(cardDate);
+const contentDiv = document.createElement('div'); contentDiv.className = 'service-detail-content'; cardDiv.appendChild(contentDiv); serviceDetailsContent.appendChild(cardDiv);
 if (contentData) {
-if (isHtml) {
-contentDiv.innerHTML = contentData;
-} else {
-const quillDisplay = new Quill(contentDiv, {
-theme: 'bubble',
-readOnly: true,
-modules: {toolbar: false}
-});
+if (isHtml) { contentDiv.innerHTML = contentData; } else {
+const quillDisplay = new Quill(contentDiv, {theme: 'bubble', readOnly: true, modules: {toolbar: false}});
 window.currentQuillDisplayEditors.push(quillDisplay);
-try {
-quillDisplay.setContents(contentData.ops[0].insert);
-$('.service-detail-content .ql-editor p').html(contentData.ops[0].insert)
-// $('.service-detail-content').removeClass('ql-disabled');
-} catch {
-quillDisplay.setText('Conteúdo não disponível ou formato inválido.');
+try { quillDisplay.setContents(contentData.ops[0].insert); $('.service-detail-content .ql-editor p').html(contentData.ops[0].insert) } catch { quillDisplay.setText('Conteúdo não disponível ou formato inválido.'); }
 }
-}
-} else {
-contentDiv.innerHTML = '<p>Nenhum detalhe disponível.</p>';
-}
+} else { contentDiv.innerHTML = '<p>Nenhum detalhe disponível.</p>'; }
 };
 if (tipo === 'Consulta' || tipo === 'Retorno') {
 const anamneseDeltaString = this.dataset.atendimentoDelta;
 const borderColorClass = (tipo === 'Consulta') ? 'border-primary' : 'border-success';
-
-// Monta o card com título e observações
-const cardDiv = document.createElement('div');
-cardDiv.className = `service-detail-card p-3 rounded ${borderColorClass} border-start border-4`;
-
-// Título com tipo e observações
-const cardHeader = document.createElement('h5');
-cardHeader.className = 'mb-2 text-primary';
-cardHeader.innerHTML = `<i class="fas fa-stethoscope me-2"></i>${tipo}`;
-cardDiv.appendChild(cardHeader);
-
-// Observações/Assunto
-if (observacoes) {
-const obsDiv = document.createElement('div');
-obsDiv.className = 'mb-3 p-2 bg-light rounded';
-obsDiv.innerHTML = `<strong>Assunto:</strong> ${observacoes}`;
-cardDiv.appendChild(obsDiv);
-}
-
-// Data
-const cardDate = document.createElement('p');
-cardDate.className = 'text-muted mb-3';
-cardDate.innerHTML = `<small><i class="fas fa-calendar me-1"></i>Registrado em: ${data}</small>`;
-cardDiv.appendChild(cardDate);
-
-// Conteúdo da anamnese
-const contentDiv = document.createElement('div');
-contentDiv.className = 'service-detail-content';
-cardDiv.appendChild(contentDiv);
-serviceDetailsContent.appendChild(cardDiv);
-
+const cardDiv = document.createElement('div'); cardDiv.className = `service-detail-card p-3 rounded ${borderColorClass} border-start border-4`;
+const cardHeader = document.createElement('h5'); cardHeader.className = 'mb-2 text-primary'; cardHeader.innerHTML = `<i class="fas fa-stethoscope me-2"></i>${tipo}`; cardDiv.appendChild(cardHeader);
+if (observacoes) { const obsDiv = document.createElement('div'); obsDiv.className = 'mb-3 p-2 bg-light rounded'; obsDiv.innerHTML = `<strong>Assunto:</strong> ${observacoes}`; cardDiv.appendChild(obsDiv); }
+const cardDate = document.createElement('p'); cardDate.className = 'text-muted mb-3'; cardDate.innerHTML = `<small><i class="fas fa-calendar me-1"></i>Registrado em: ${data}</small>`; cardDiv.appendChild(cardDate);
+const contentDiv = document.createElement('div'); contentDiv.className = 'service-detail-content'; cardDiv.appendChild(contentDiv); serviceDetailsContent.appendChild(cardDiv);
 if (anamneseDeltaString) {
-try {
-const anamneseData = JSON.parse(anamneseDeltaString);
-const quillDisplay = new Quill(contentDiv, {
-theme: 'bubble',
-readOnly: true,
-modules: {toolbar: false}
-});
-window.currentQuillDisplayEditors.push(quillDisplay);
-quillDisplay.setContents(anamneseData);
-} catch (e) {
-contentDiv.innerHTML = '<p class="text-muted">Conteúdo não disponível ou formato inválido.</p>';
-}
-} else {
-contentDiv.innerHTML = '<p class="text-muted">Nenhum detalhe de anamnese disponível.</p>';
-}
+try { const anamneseData = JSON.parse(anamneseDeltaString); const quillDisplay = new Quill(contentDiv, {theme: 'bubble', readOnly: true, modules: {toolbar: false}}); window.currentQuillDisplayEditors.push(quillDisplay); quillDisplay.setContents(anamneseData); }
+catch (e) { contentDiv.innerHTML = '<p class="text-muted">Conteúdo não disponível ou formato inválido.</p>'; }
+} else { contentDiv.innerHTML = '<p class="text-muted">Nenhum detalhe de anamnese disponível.</p>'; }
 } else if (tipo === 'Receita') {
 const cabecalhoHtmlString = this.dataset.receitaCabecalhoHtml;
 let conteudoDeltaString = null;
-try {
-conteudoDeltaString = JSON.parse(this.dataset.receitaConteudoDelta);
-} catch(e) {
-console.log('Erro ao parsear conteúdo da receita:', e);
-}
+try { conteudoDeltaString = JSON.parse(this.dataset.receitaConteudoDelta); } catch(e) { console.log('Erro ao parsear conteúdo da receita:', e); }
 const rodapeHtmlString = this.dataset.receitaRodapeHtml;
-
-// Cria container da receita para impressão
-const receitaContainer = document.createElement('div');
-receitaContainer.id = 'receita-para-impressao';
-receitaContainer.className = 'receita-container p-4';
-receitaContainer.style.cssText = 'border: 1px solid #ddd; border-radius: 12px; background: #fff;';
-
-// Cabeçalho
-if (cabecalhoHtmlString) {
-const cabecalhoDiv = document.createElement('div');
-cabecalhoDiv.className = 'receita-cabecalho text-center mb-4 pb-3 border-bottom';
-cabecalhoDiv.innerHTML = cabecalhoHtmlString;
-receitaContainer.appendChild(cabecalhoDiv);
-}
-
-// Conteúdo
-const conteudoDiv = document.createElement('div');
-conteudoDiv.className = 'receita-conteudo my-4';
-conteudoDiv.style.minHeight = '200px';
-receitaContainer.appendChild(conteudoDiv);
-
+const receitaContainer = document.createElement('div'); receitaContainer.id = 'receita-para-impressao'; receitaContainer.className = 'receita-container p-4'; receitaContainer.style.cssText = 'border: 1px solid #ddd; border-radius: 12px; background: #fff;';
+if (cabecalhoHtmlString) { const cabecalhoDiv = document.createElement('div'); cabecalhoDiv.className = 'receita-cabecalho text-center mb-4 pb-3 border-bottom'; cabecalhoDiv.innerHTML = cabecalhoHtmlString; receitaContainer.appendChild(cabecalhoDiv); }
+const conteudoDiv = document.createElement('div'); conteudoDiv.className = 'receita-conteudo my-4'; conteudoDiv.style.minHeight = '200px'; receitaContainer.appendChild(conteudoDiv);
 if (conteudoDeltaString) {
-const quillDisplay = new Quill(conteudoDiv, {
-theme: 'bubble',
-readOnly: true,
-modules: {toolbar: false}
-});
-window.currentQuillDisplayEditors.push(quillDisplay);
-try {
-quillDisplay.setContents(conteudoDeltaString);
-} catch(e) {
-conteudoDiv.innerHTML = '<p>Conteúdo não disponível.</p>';
-}
-} else {
-conteudoDiv.innerHTML = '<p class="text-muted">Nenhum conteúdo na receita.</p>';
-}
-
-// Rodapé
-if (rodapeHtmlString) {
-const rodapeDiv = document.createElement('div');
-rodapeDiv.className = 'receita-rodape text-center mt-4 pt-3 border-top';
-rodapeDiv.innerHTML = rodapeHtmlString;
-receitaContainer.appendChild(rodapeDiv);
-}
-
+const quillDisplay = new Quill(conteudoDiv, {theme: 'bubble', readOnly: true, modules: {toolbar: false}}); window.currentQuillDisplayEditors.push(quillDisplay);
+try { quillDisplay.setContents(conteudoDeltaString); } catch(e) { conteudoDiv.innerHTML = '<p>Conteúdo não disponível.</p>'; }
+} else { conteudoDiv.innerHTML = '<p class="text-muted">Nenhum conteúdo na receita.</p>'; }
+if (rodapeHtmlString) { const rodapeDiv = document.createElement('div'); rodapeDiv.className = 'receita-rodape text-center mt-4 pt-3 border-top'; rodapeDiv.innerHTML = rodapeHtmlString; receitaContainer.appendChild(rodapeDiv); }
 serviceDetailsContent.appendChild(receitaContainer);
-if (!cabecalhoHtmlString && !conteudoDeltaString && !rodapeHtmlString) {
-receitaContainer.innerHTML = `<div class="text-center p-4"><h6 class="mb-2">Receita Médica</h6><p class="text-muted mb-3"><small>Emitida em: ${data}</small></p><p>Nenhum detalhe de receita disponível.</p></div>`;
-}
+if (!cabecalhoHtmlString && !conteudoDeltaString && !rodapeHtmlString) { receitaContainer.innerHTML = `<div class="text-center p-4"><h6 class="mb-2">Receita Médica</h6><p class="text-muted mb-3"><small>Emitida em: ${data}</small></p><p>Nenhum detalhe de receita disponível.</p></div>`; }
 } else {
 const borderColorClass = 'border-secondary';
-const cardDiv = document.createElement('div');
-cardDiv.className = `service-detail-card ${borderColorClass}`;
+const cardDiv = document.createElement('div'); cardDiv.className = `service-detail-card ${borderColorClass}`;
 cardDiv.innerHTML = `<h6 class="mb-2">${tipo} - ${resumo}</h6><p class="text-muted mb-3"><small>Data: ${data}</small></p><p>Nenhum detalhe específico disponível para este tipo de registro no momento.</p>`;
 serviceDetailsContent.appendChild(cardDiv);
 }
 if (tipo === 'Receita') {
 Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html(), 'Imprimir Receita', 'Fechar', 'imprimir-receita');
 $(document).off('click', '.imprimir-receita').on('click', '.imprimir-receita', function () {
-// Encontra o container da receita
 var elementoParaImprimir = $(this).closest('.modal-content').find('#receita-para-impressao');
-if (!elementoParaImprimir.length) {
-elementoParaImprimir = $(this).closest('.modal-content').find('#service-details-content');
-}
-if (!elementoParaImprimir.length) {
-alert('Não foi possível encontrar o conteúdo da receita.');
-return;
-}
-// Remove qualquer iframe de impressão anterior, se existir
+if (!elementoParaImprimir.length) { elementoParaImprimir = $(this).closest('.modal-content').find('#service-details-content'); }
+if (!elementoParaImprimir.length) { alert('Não foi possível encontrar o conteúdo da receita.'); return; }
 $('#iframe-impressao-receita').remove();
-// Cria um novo iframe oculto
-var iframe = document.createElement('iframe');
-iframe.id = 'iframe-impressao-receita';
-iframe.style.position = 'fixed';
-iframe.style.right = '0';
-iframe.style.bottom = '0';
-iframe.style.width = '0';
-iframe.style.height = '0';
-iframe.style.border = '0';
-document.body.appendChild(iframe);
+var iframe = document.createElement('iframe'); iframe.id = 'iframe-impressao-receita'; iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0'; document.body.appendChild(iframe);
 var doc = iframe.contentWindow.document;
-// Escreve o conteúdo no iframe com estilos adequados para impressão
 doc.open();
-doc.write(`
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Receita Médica Veterinária</title>
-<style>
-* {
-margin: 0;
-padding: 0;
-box-sizing: border-box;
-}
-body {
-font-family: 'Times New Roman', Times, serif;
-font-size: 14pt;
-line-height: 1.6;
-padding: 20mm;
-color: #000;
-}
-.receita-container {
-max-width: 100%;
-border: none !important;
-padding: 0 !important;
-}
-.receita-cabecalho {
-text-align: center;
-margin-bottom: 30px;
-padding-bottom: 15px;
-border-bottom: 2px solid #333;
-}
-.receita-cabecalho h1,
-.receita-cabecalho h2,
-.receita-cabecalho h3 {
-margin-bottom: 5px;
-}
-.receita-conteudo {
-min-height: 300px;
-margin: 30px 0;
-padding: 20px 0;
-}
-.receita-conteudo .ql-editor {
-padding: 0 !important;
-}
-.receita-conteudo p {
-margin-bottom: 10px;
-}
-.receita-rodape {
-text-align: center;
-margin-top: 50px;
-padding-top: 20px;
-border-top: 1px solid #333;
-}
-/* Remove elementos desnecessários */
-.border, .border-bottom, .border-top {
-border: none !important;
-}
-.p-4, .p-3, .my-4, .mb-4, .mt-4, .pb-3, .pt-3 {
-padding: 0 !important;
-margin: 0 !important;
-}
-@media print {
-body {
--webkit-print-color-adjust: exact;
-print-color-adjust: exact;
-}
-@page {
-margin: 15mm;
-}
-}
-</style>
-</head>
-<body>
-${elementoParaImprimir.html()}
-</body>
-</html>
-`);
+doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receita Médica Veterinária</title><style>* {margin: 0;padding: 0;box-sizing: border-box;}body {font-family: 'Times New Roman', Times, serif;font-size: 14pt;line-height: 1.6;padding: 20mm;color: #000;}.receita-container {max-width: 100%;border: none !important;padding: 0 !important;}.receita-cabecalho {text-align: center;margin-bottom: 30px;padding-bottom: 15px;border-bottom: 2px solid #333;}.receita-cabecalho h1,.receita-cabecalho h2,.receita-cabecalho h3 {margin-bottom: 5px;}.receita-conteudo {min-height: 300px;margin: 30px 0;padding: 20px 0;}.receita-conteudo .ql-editor {padding: 0 !important;}.receita-conteudo p {margin-bottom: 10px;}.receita-rodape {text-align: center;margin-top: 50px;padding-top: 20px;border-top: 1px solid #333;}.border, .border-bottom, .border-top {border: none !important;}.p-4, .p-3, .my-4, .mb-4, .mt-4, .pb-3, .pt-3 {padding: 0 !important;margin: 0 !important;}@media print {body {-webkit-print-color-adjust: exact;print-color-adjust: exact;}@page {margin: 15mm;}}</style></head><body>${elementoParaImprimir.html()}</body></html>`);
 doc.close();
-// Função para remover o iframe com segurança
-const removerIframe = () => {
-if (iframe && iframe.parentNode) {
-document.body.removeChild(iframe);
-}
-};
-// Quando carregar, imprime
-iframe.onload = function () {
-setTimeout(() => {
-iframe.contentWindow.focus();
-iframe.contentWindow.print();
-// Detecta fechamento da caixa de impressão
-iframe.contentWindow.onafterprint = removerIframe;
-// Caso a impressão não seja concluída, remove depois de 10s por segurança
-setTimeout(removerIframe, 10000);
-}, 300);
-};
+const removerIframe = () => { if (iframe && iframe.parentNode) { document.body.removeChild(iframe); } };
+iframe.onload = function () { setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); iframe.contentWindow.onafterprint = removerIframe; setTimeout(removerIframe, 10000); }, 300); };
 });
-} else {
-Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html());
-}
-// if (historicoTab) historicoTab.show();
-// showView(serviceDisplayContainer);
+} else { Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html()); }
 });
 });
-// Mostrar formulário vacina
-$btnNovaVacina.on('click', function (e) {
-e.preventDefault();
-showView($vacinaView);
-});
-// Fechar formulário vacina
+$btnNovaVacina.on('click', function (e) { e.preventDefault(); showView($vacinaView); });
 $btnFecharVacina.on('click', returnToActionGrid);
-// Submeter vacina
 const formVac = document.querySelector('#formNovaVacina');
 if (formVac) {
 formVac.addEventListener('submit', async e => {
@@ -1201,35 +979,16 @@ e.preventDefault();
 try {
 const resp = await fetch(formVac.action, {method: 'POST', body: new FormData(formVac)});
 const data = await resp.json();
-if (data.ok) {
-if (window.Notify && Notify.toast) {
-Notify.toast(data.msg || "Vacina registrada!", "success");
-} else {
-alert(data.msg || "Vacina registrada!");
-}
-location.reload();
-} else {
-alert(data.msg || "Erro ao registrar vacina.");
-}
-} catch (err) {
-alert('Erro ao registrar vacina.');
-}
+if (data.ok) { if (window.Notify && Notify.toast) { Notify.toast(data.msg || "Vacina registrada!", "success"); } else { alert(data.msg || "Vacina registrada!"); } location.reload(); }
+else { alert(data.msg || "Erro ao registrar vacina."); }
+} catch (err) { alert('Erro ao registrar vacina.'); }
 });
 }
-// === SUBMIT DOS FORMULÁRIOS (captura Deltas Quill) ===
 const setupFormSubmission = (formId, editorsMap) => {
-$(`#${formId}`).on('submit', function () {
-$.each(editorsMap, (inputId, quillInstance) => {
-const $input = $(`#${inputId}`);
-if ($input.length && quillInstance) {
-$input.val(JSON.stringify(quillInstance.getContents()));
-}
-});
-});
+$(`#${formId}`).on('submit', function () { $.each(editorsMap, (inputId, quillInstance) => { const $input = $(`#${inputId}`); if ($input.length && quillInstance) { $input.val(JSON.stringify(quillInstance.getContents())); } }); });
 };
 setupFormSubmission('form-atendimento', {'anamnese-input': quillAtendimento});
 setupFormSubmission('form-receita', {'conteudo-input': quillConteudo});
-// === MODAL ADICIONAR SERVIÇO ===
 const $formNovoServico = $('#form-novo-servico');
 const $selectServico = $('#servico-descricao-1');
 const $inputValor = $('#servico-valor');
@@ -1239,165 +998,54 @@ servicosMap["{{ servico.nome|e('js') }}"] = {{ servico.valor|number_format(2, '.
 {% endfor %}
 $formNovoServico.on('submit', function (e) {
 e.preventDefault();
-fetch(this.action, {
-method: "POST",
-body: new FormData(this)
-})
+fetch(this.action, {method: "POST", body: new FormData(this)})
 .then(r => r.json())
 .then(data => {
 if (data.status === 'success') {
-if (window.Notify && Notify.toast) {
-Notify.toast(data.mensagem, "success");
-}
-// Limpa os dados antes de fechar
-$('#servico-descricao-1').val('').trigger('change');
-$('#servicos-container').empty();
-modalAdicionarServico.hide();
-setTimeout(() => location.reload(), 800);
-} else {
-if (window.Notify && Notify.toast) {
-Notify.toast(data.mensagem || "Erro ao registrar serviço.", "danger");
-} else {
-alert(data.mensagem || "Erro ao registrar serviço.");
-}
-}
+if (window.Notify && Notify.toast) { Notify.toast(data.mensagem, "success"); }
+$('#servico-descricao-1').val('').trigger('change'); $('#servicos-container').empty(); modalAdicionarServico.hide(); setTimeout(() => location.reload(), 800);
+} else { if (window.Notify && Notify.toast) { Notify.toast(data.mensagem || "Erro ao registrar serviço.", "danger"); } else { alert(data.mensagem || "Erro ao registrar serviço."); } }
 })
-.catch(err => {
-const errorMessage = (err.message.indexOf('<') === 0) ? "Erro no servidor (verifique logs do backend)." : err.message;
-if (window.Notify && Notify.toast) {
-Notify.toast(`Erro ao registrar serviço: ${errorMessage}`, "danger");
-} else {
-alert(`Erro ao registrar serviço: ${errorMessage}`);
-}
-});
+.catch(err => { const errorMessage = (err.message.indexOf('<') === 0) ? "Erro no servidor (verifique logs do backend)." : err.message; if (window.Notify && Notify.toast) { Notify.toast(`Erro ao registrar serviço: ${errorMessage}`, "danger"); } else { alert(`Erro ao registrar serviço: ${errorMessage}`); } });
 });
 $btnAdicionarServico.on('click', function () {
-// Limpa o formulário sem fechar o modal
-$('#servico-descricao-1').val('').trigger('change');
-$('#servicos-container').empty();
-$('#cartao-opcoes').addClass('d-none');
-$('#total-servicos').text('0,00');
-// Se o modal não estiver aberto, abre
-if (!$('#modalAdicionarServico').hasClass('show')) {
-modalAdicionarServico.show();
-}
+$('#servico-descricao-1').val('').trigger('change'); $('#servicos-container').empty(); $('#cartao-opcoes').addClass('d-none'); $('#total-servicos').text('0,00');
+if (!$('#modalAdicionarServico').hasClass('show')) { modalAdicionarServico.show(); }
 });
-$(document).on('change', '#servico-descricao', function () {
-const nomeServico = $(this).val();
-$(document).next('input[name="valor[]"]').val($(this).find('option:selected').data('valor'));
-// $inputValor.val(servicosMap.hasOwnProperty(nomeServico) ? servicosMap[nomeServico] : '').prop('readonly', false);
-});
-// === SELECT2 para serviço ===
-$('#servico-descricao-1').select2({
-dropdownParent: $('#modalAdicionarServico .modal-content'),
-placeholder: "Selecione ou pesquise um serviço...",
-allowClear: true,
-width: '100%',
-language: {
-noResults: function () {
-return "Nenhum serviço encontrado";
-}
-}
-});
-// aplica também aos selects adicionados dinamicamente
-$(document).on('focus', '.servico-item select', function () {
-if (!$(this).data('select2')) {
-$(this).select2({
-placeholder: "Selecione ou pesquise um serviço...",
-allowClear: true,
-width: '100%',
-dropdownParent: $('#modalAdicionarServico'),
-});
-}
-});
-// === CAMPO DE DIÁRIAS PARA INTERNAÇÃO ===
+$(document).on('change', '#servico-descricao', function () { const nomeServico = $(this).val(); $(document).next('input[name="valor[]"]').val($(this).find('option:selected').data('valor')); });
+$('#servico-descricao-1').select2({dropdownParent: $('#modalAdicionarServico .modal-content'), placeholder: "Selecione ou pesquise um serviço...", allowClear: true, width: '100%', language: {noResults: function () { return "Nenhum serviço encontrado"; }}});
+$(document).on('focus', '.servico-item select', function () { if (!$(this).data('select2')) { $(this).select2({placeholder: "Selecione ou pesquise um serviço...", allowClear: true, width: '100%', dropdownParent: $('#modalAdicionarServico')}); } });
 $(document).on('change', 'select[name="descricao[]"]', function () {
 const $select = $(this);
 const servicoSelecionado = $select.find('option:selected').text().toLowerCase();
 const valorBase = parseFloat($select.find('option:selected').data('valor')) || 0;
-// remove campo de diárias anterior desse serviço
 $select.closest('.servico-item, .modal-body').find('.diarias-container').remove();
 $select.closest('.servico-item, .modal-body').find('.preview-total').remove();
-// cria um id único baseado no select
 const index = $select.attr('id').replace(/\D/g, '') || '1';
 if (servicoSelecionado.includes('internação')) {
-const htmlDiarias = `
-<div class="diarias-container mb-3">
-<label for="quantidade-diarias-${index}" class="form-label">Quantidade de Diárias</label>
-<input type="number" class="form-control quantidade-diarias" id="quantidade-diarias-${index}"
-name="quantidade_diarias[]" min="1" value="1" data-valor-base="${valorBase}">
-<small class="text-muted">O valor total será calculado automaticamente (valor × diárias).</small>
-<input type="hidden" id="valor-total-${index}" name="valor_calculado[]" value="${valorBase.toFixed(2)}">
-<div id="preview-total-${index}" class="preview-total mt-2 fw-bold text-primary"></div>
-</div>
-`;
+const htmlDiarias = `<div class="diarias-container mb-3"><label for="quantidade-diarias-${index}" class="form-label">Quantidade de Diárias</label><input type="number" class="form-control quantidade-diarias" id="quantidade-diarias-${index}" name="quantidade_diarias[]" min="1" value="1" data-valor-base="${valorBase}"><small class="text-muted">O valor total será calculado automaticamente (valor × diárias).</small><input type="hidden" id="valor-total-${index}" name="valor_calculado[]" value="${valorBase.toFixed(2)}"><div id="preview-total-${index}" class="preview-total mt-2 fw-bold text-primary"></div></div>`;
 $select.closest('.mb-3').after(htmlDiarias);
-atualizarTotal($(`#quantidade-diarias-${index}`)); // já calcula
+atualizarTotal($(`#quantidade-diarias-${index}`));
 }
 });
-// função para recalcular automaticamente
 function atualizarTotal($input) {
-const qtd = parseInt($input.val()) || 1;
-const valorBase = parseFloat($input.data('valor-base')) || 0;
-const total = valorBase * qtd;
-const id = $input.attr('id').replace('quantidade-diarias-', '');
-$(`#valor-total-${id}`).val(total.toFixed(2));
-$(`#preview-total-${id}`).text(`💰 Total: R$ ${total.toFixed(2).replace('.', ',')}`);
+const qtd = parseInt($input.val()) || 1; const valorBase = parseFloat($input.data('valor-base')) || 0; const total = valorBase * qtd; const id = $input.attr('id').replace('quantidade-diarias-', '');
+$(`#valor-total-${id}`).val(total.toFixed(2)); $(`#preview-total-${id}`).text(`💰 Total: R$ ${total.toFixed(2).replace('.', ',')}`);
 }
-// escuta mudanças na quantidade de diárias
-$(document).on('input', '.quantidade-diarias', function () {
-atualizarTotal($(this));
-});
-// === MODAL EDITAR VENDA ===
+$(document).on('input', '.quantidade-diarias', function () { atualizarTotal($(this)); });
 $(".btn-editar-venda").on("click", function () {
-$("#editar-id").val($(this).data("id"));
-$("#editar-descricao").val($(this).data("descricao"));
-$("#editar-valor").val($(this).data("valor"));
-$("#editar-metodo").val($(this).data("metodo"));
-$("#editar-data").val($(this).data("data"));
-$("#editar-observacao").val($(this).data("observacao"));
-$("#form-editar-venda").attr("action",
-"{{ path('clinica_editar_venda', {petId: pet.id, id: 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', $(this).data("id"))
-);
+$("#editar-id").val($(this).data("id")); $("#editar-descricao").val($(this).data("descricao")); $("#editar-valor").val($(this).data("valor")); $("#editar-metodo").val($(this).data("metodo")); $("#editar-data").val($(this).data("data")); $("#editar-observacao").val($(this).data("observacao"));
+$("#form-editar-venda").attr("action", "{{ path('clinica_editar_venda', {petId: pet.id, id: 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', $(this).data("id")));
 modalEditarVenda.show();
 });
-// === INATIVAR VENDA ===
 $(".btn-inativar-venda").on("click", function () {
 if (!confirm("Tem certeza que deseja inativar esta venda?")) return;
-fetch(`/clinica/pet/{{ pet.id }}/venda/${$(this).data("id")}/inativar`, {
-method: "POST"
-})
-.then(r => r.json())
-.then(d => {
-if (d.status === "success") {
-location.reload();
-} else {
-alert(d.mensagem || "Erro ao inativar venda.");
-}
-})
-.catch(() => alert("Erro ao inativar venda."));
+fetch(`/clinica/pet/{{ pet.id }}/venda/${$(this).data("id")}/inativar`, {method: "POST"}).then(r => r.json()).then(d => { if (d.status === "success") { location.reload(); } else { alert(d.mensagem || "Erro ao inativar venda."); } }).catch(() => alert("Erro ao inativar venda."));
 });
 $("#form-editar-venda").on("submit", function (e) {
 e.preventDefault();
-fetch(this.action, {
-method: "POST",
-body: new FormData(this)
-})
-.then(r => r.json())
-.then(d => {
-if (d.status === "success") {
-// Limpa os dados antes de fechar
-$('#editar-descricao').val('');
-$('#editar-valor').val('');
-modalEditarVenda.hide();
-location.reload();
-} else {
-alert(d.mensagem);
-}
-})
-.catch(() => alert("Erro ao editar venda."));
+fetch(this.action, {method: "POST", body: new FormData(this)}).then(r => r.json()).then(d => { if (d.status === "success") { $('#editar-descricao').val(''); $('#editar-valor').val(''); modalEditarVenda.hide(); location.reload(); } else { alert(d.mensagem); } }).catch(() => alert("Erro ao editar venda."));
 });
-// Adicionar serviço ao pet correspondente
 });
 $(document).on("click", ".add-servico", function () {
 let index = $(".servico-item").length + 1;
@@ -1424,162 +1072,64 @@ let servicoHtml = `
 </div>
 `;
 $('#servicos-container').append(servicoHtml);
-// destrói qualquer instância antiga antes de recriar
 const $novoSelect = $(`#servico-descricao-${index}`);
-if ($novoSelect.data('select2')) {
-$novoSelect.select2('destroy');
-}
-// ativa o Select2 corretamente dentro do modal
-$novoSelect.select2({
-dropdownParent: $('#modalAdicionarServico .modal-content'),
-placeholder: "Selecione ou pesquise um serviço...",
-allowClear: true,
-width: '100%'
+if ($novoSelect.data('select2')) { $novoSelect.select2('destroy'); }
+$novoSelect.select2({dropdownParent: $('#modalAdicionarServico .modal-content'), placeholder: "Selecione ou pesquise um serviço...", allowClear: true, width: '100%'});
 });
-});
-// Remover serviço
-$(document).on("click", ".remove-servico", function () {
-$(this).closest(".servico-item").remove();
-calcularTotal();
-});
-// Função para calcular o total
+$(document).on("click", ".remove-servico", function () { $(this).closest(".servico-item").remove(); calcularTotal(); });
 function calcularTotal() {
 let total = 0;
-// Serviço principal
 const servicoPrincipal = $('#servico-descricao-1');
 if (servicoPrincipal.length && servicoPrincipal.val()) {
 let valorPrincipal = parseFloat(servicoPrincipal.find('option:selected').data('valor')) || 0;
 const descontoPrincipal = parseFloat($('#servico-desconto').val()) || 0;
-// Verifica se tem diárias para o serviço principal
 const diarias1 = $('#quantidade-diarias-1');
-if (diarias1.length && diarias1.val()) {
-const qtdDiarias = parseInt(diarias1.val()) || 1;
-valorPrincipal = valorPrincipal * qtdDiarias;
-}
+if (diarias1.length && diarias1.val()) { const qtdDiarias = parseInt(diarias1.val()) || 1; valorPrincipal = valorPrincipal * qtdDiarias; }
 total += (valorPrincipal - descontoPrincipal);
 }
-// Serviços adicionais
 $('.servico-item').each(function () {
-const select = $(this).find('.select-servico');
-const desconto = parseFloat($(this).find('input[name="desconto[]"]').val()) || 0;
-if (select.val()) {
-let valor = parseFloat(select.find('option:selected').data('valor')) || 0;
-// Verifica se tem diárias para este serviço
-const diariasInput = $(this).find('.quantidade-diarias');
-if (diariasInput.length && diariasInput.val()) {
-const qtdDiarias = parseInt(diariasInput.val()) || 1;
-valor = valor * qtdDiarias;
-}
-total += (valor - desconto);
-}
+const select = $(this).find('.select-servico'); const desconto = parseFloat($(this).find('input[name="desconto[]"]').val()) || 0;
+if (select.val()) { let valor = parseFloat(select.find('option:selected').data('valor')) || 0; const diariasInput = $(this).find('.quantidade-diarias'); if (diariasInput.length && diariasInput.val()) { const qtdDiarias = parseInt(diariasInput.val()) || 1; valor = valor * qtdDiarias; } total += (valor - desconto); }
 });
-// Atualiza o display
 $('#total-servicos').text(total.toFixed(2).replace('.', ','));
 }
-// Atualizar total quando mudar serviço, desconto ou diárias
-$(document).on('change input', '#servico-descricao-1, #servico-desconto, .select-servico, input[name="desconto[]"], .quantidade-diarias', function () {
-calcularTotal();
-});
-// Calcular total ao abrir o modal
-$('#modalAdicionarServico').on('shown.bs.modal', function () {
-calcularTotal();
-});
-$('.modal').on('hidden.modal.bs', function () {
-$('.modal-backdrop').remove()
-})
+$(document).on('change input', '#servico-descricao-1, #servico-desconto, .select-servico, input[name="desconto[]"], .quantidade-diarias', function () { calcularTotal(); });
+$('#modalAdicionarServico').on('shown.bs.modal', function () { calcularTotal(); });
+$('.modal').on('hidden.modal.bs', function () { $('.modal-backdrop').remove() })
 $(document).ready(function () {
-// Verifica se DataTable está disponível antes de inicializar
-if ($.fn.DataTable && $('#tabelaVacinas').length) {
-$('#tabelaVacinas').DataTable({
-language: {url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json'},
-order: [[2, 'desc']]
-});
-}
+if ($.fn.DataTable && $('#tabelaVacinas').length) { $('#tabelaVacinas').DataTable({language: {url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json'}, order: [[2, 'desc']]}); }
 });
 $(document).on('change', '#servico-metodo', function () {
 const metodo = $(this).val();
-if (metodo === 'credito' || metodo === 'debito') {
-$('#cartao-opcoes').removeClass('d-none');
-} else {
-$('#cartao-opcoes').addClass('d-none');
-}
+if (metodo === 'credito' || metodo === 'debito') { $('#cartao-opcoes').removeClass('d-none'); } else { $('#cartao-opcoes').addClass('d-none'); }
 });
-// === REMOVER VACINA DIRETO DO DASHBOARD ===
 $(document).on('submit', 'form[action*="vacina"][action*="remover"]', async function (e) {
 e.preventDefault();
 if (!confirm("Deseja remover esta vacina?")) return;
 const form = this;
 try {
-const resp = await fetch(form.action, {method: "POST"});
-const data = await resp.json();
-if (data.ok) {
-const row = form.closest("tr");
-if (row) {
-$(row).fadeOut(300, () => $(row).remove());
-}
-if (window.Notify && Notify.toast) {
-Notify.toast(data.msg || "Vacina removida com sucesso!", "success");
-} else {
-alert(data.msg || "Vacina removida com sucesso!");
-}
-} else {
-alert(data.msg || "Erro ao remover vacina.");
-}
-} catch (err) {
-alert("Erro ao remover vacina: " + err.message);
-}
+const resp = await fetch(form.action, {method: "POST"}); const data = await resp.json();
+if (data.ok) { const row = form.closest("tr"); if (row) { $(row).fadeOut(300, () => $(row).remove()); } if (window.Notify && Notify.toast) { Notify.toast(data.msg || "Vacina removida com sucesso!", "success"); } else { alert(data.msg || "Vacina removida com sucesso!"); } }
+else { alert(data.msg || "Erro ao remover vacina."); }
+} catch (err) { alert("Erro ao remover vacina: " + err.message); }
 });
-// === CONFIRMAÇÃO ANTES DE FECHAR MODAL ===
-// Remove o botão X (fechar) do modal para forçar uso do Cancelar
 $('#modalAdicionarServico .btn-close').remove();
-// Cria instância do modal de confirmação
 const modalConfirmacao = new bootstrap.Modal($('#modalConfirmacao')[0]);
 let acaoConfirmacao = null;
-// Handler APENAS para o botão Cancelar
 $('#btn-cancelar-servico').on('click', function (e) {
 e.preventDefault();
 const temDados = $('#servico-descricao-1').val() || $('.servico-item').length > 0;
-if (temDados) {
-// Define a ação a ser executada após confirmação
-acaoConfirmacao = function () {
-window.modalAdicionarServico.hide();
-};
-$('#mensagem-confirmacao').text('Você tem dados não salvos. Deseja realmente cancelar e perder as informações?');
-modalConfirmacao.show();
-} else {
-window.modalAdicionarServico.hide();
-}
+if (temDados) { acaoConfirmacao = function () { window.modalAdicionarServico.hide(); }; $('#mensagem-confirmacao').text('Você tem dados não salvos. Deseja realmente cancelar e perder as informações?'); modalConfirmacao.show(); }
+else { window.modalAdicionarServico.hide(); }
 });
-// Handler para o botão "Sim, fechar" do modal de confirmação
-$('#btn-sim-confirmar').on('click', function () {
-modalConfirmacao.hide();
-if (acaoConfirmacao) {
-acaoConfirmacao();
-acaoConfirmacao = null;
-}
-});
-// Handler para o botão "Não" do modal de confirmação
-$('#btn-nao-confirmar').on('click', function () {
-modalConfirmacao.hide();
-acaoConfirmacao = null;
-});
-// === CONFIRMAÇÃO PARA MODAL EDITAR VENDA ===
-// Remove o botão X do modal editar
+$('#btn-sim-confirmar').on('click', function () { modalConfirmacao.hide(); if (acaoConfirmacao) { acaoConfirmacao(); acaoConfirmacao = null; } });
+$('#btn-nao-confirmar').on('click', function () { modalConfirmacao.hide(); acaoConfirmacao = null; });
 $('#modalEditarVenda .btn-close').remove();
-// Handler APENAS para o botão Cancelar
 $('#btn-cancelar-editar').on('click', function (e) {
 e.preventDefault();
 const temDados = $('#editar-descricao').val() || $('#editar-valor').val();
-if (temDados) {
-// Define a ação a ser executada após confirmação
-acaoConfirmacao = function () {
-window.modalEditarVenda.hide();
-};
-$('#mensagem-confirmacao').text('Você tem alterações não salvas. Deseja realmente cancelar?');
-modalConfirmacao.show();
-} else {
-window.modalEditarVenda.hide();
-}
+if (temDados) { acaoConfirmacao = function () { window.modalEditarVenda.hide(); }; $('#mensagem-confirmacao').text('Você tem alterações não salvas. Deseja realmente cancelar?'); modalConfirmacao.show(); }
+else { window.modalEditarVenda.hide(); }
 });
 </script>
 {% endblock %}
