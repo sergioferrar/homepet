@@ -215,11 +215,21 @@ class SuperAdminController extends DefaultController
         $diasExpiracao = $hoje->diff($estabelecimento->getDataPlanoFim())->days;
         $expirado = $estabelecimento->getDataPlanoFim() < $hoje;
 
+        // Buscar usuário Admin do estabelecimento para exibir e-mail no modal
+        // O campo na entidade é 'accessLevel' (camelCase), não 'access_level'
+        $usuarioAdmin = $this->getRepositorio(\App\Entity\Usuario::class)
+            ->findOneBy(['petshop_id' => $id, 'accessLevel' => 'Admin']);
+        if (!$usuarioAdmin) {
+            $usuarioAdmin = $this->getRepositorio(\App\Entity\Usuario::class)
+                ->findOneBy(['petshop_id' => $id]);
+        }
+
         return $this->render('superadmin/estabelecimento_detalhes.html.twig', [
             'estabelecimento' => $estabelecimento,
-            'invoices' => $invoices,
-            'dias_expiracao' => $diasExpiracao,
-            'expirado' => $expirado,
+            'invoices'        => $invoices,
+            'dias_expiracao'  => $diasExpiracao,
+            'expirado'        => $expirado,
+            'usuario_email'   => $usuarioAdmin ? $usuarioAdmin->getEmail() : null,
         ]);
     }
 
@@ -350,9 +360,6 @@ class SuperAdminController extends DefaultController
         $configs = $this->getRepositorio(\App\Entity\Config::class)
             ->findBy(['estabelecimento_id' => $id]);
 
-        
-        $_ENV['DBNAMETENANT'] = "homepet_{$id}";
-
         if (!empty($configs)) {
             foreach ($configs as $config) {
                 if ($config->getTipo() === 'mailer') {
@@ -383,6 +390,92 @@ class SuperAdminController extends DefaultController
         $this->addFlash('info', "Você está acessando o estabelecimento: {$estabelecimento->getRazaoSocial()}");
 
         return $this->redirectToRoute('home');
+    }
+
+    /**
+     * @Route("/estabelecimento/{id}/enviar-notificacao", name="superadmin_enviar_notificacao", methods={"POST"})
+     *
+     * Envia e-mail de renovação de assinatura para o usuário Admin do estabelecimento.
+     * O link do e-mail aponta para confirma_cadastro, que cria a invoice e redireciona
+     * ao checkout de assinatura recorrente no Mercado Pago.
+     */
+    public function enviarNotificacaoRenovacao(
+        Request $request,
+        int $id,
+        \App\Service\EmailService $emailService,
+        \Symfony\Component\Routing\Generator\UrlGeneratorInterface $urlGenerator
+    ): JsonResponse {
+        if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
+            return $this->json(['success' => false, 'message' => 'Acesso negado.'], 403);
+        }
+
+        // ── 1. Carrega o estabelecimento ───────────────────────────────────
+        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($id);
+
+        if (!$estabelecimento) {
+            return $this->json(['success' => false, 'message' => 'Estabelecimento não encontrado.'], 404);
+        }
+
+        // ── 2. Busca o usuário Admin principal do estabelecimento ──────────
+        // Prioriza o Admin; se não existir, pega qualquer usuário vinculado
+        $usuario = $this->getRepositorio(\App\Entity\Usuario::class)
+            ->findOneBy(['petshop_id' => $id, 'accessLevel' => 'Admin']);
+
+        if (!$usuario) {
+            $usuario = $this->getRepositorio(\App\Entity\Usuario::class)
+                ->findOneBy(['petshop_id' => $id]);
+        }
+
+        if (!$usuario || !$usuario->getEmail()) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Nenhum usuário com e-mail cadastrado foi encontrado para este estabelecimento.',
+            ], 422);
+        }
+
+        // ── 3. Gera o link de renovação (absoluto) ─────────────────────────
+        // confirma_cadastro já monta a invoice + assinatura recorrente no MP
+        $paymentLink = $urlGenerator->generate(
+            'confirma_cadastro',
+            ['estabelecimento' => $id],
+            \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL
+        );
+
+        // ── 4. Calcula dias restantes para personalizar o tom do e-mail ────
+        $hoje         = new \DateTime();
+        $dataFim      = $estabelecimento->getDataPlanoFim();
+        $diff         = $hoje->diff($dataFim);
+        $diasRestantes = (int) $diff->days;
+        $expirado      = $dataFim < $hoje;
+
+        // ── 5. Renderiza o template de e-mail ─────────────────────────────
+        $html = $this->renderView('emails/renovacao_assinatura.html.twig', [
+            'estabelecimento'  => $estabelecimento,
+            'usuario'          => $usuario,
+            'payment_link'     => $paymentLink,
+            'dias_restantes'   => $diasRestantes,
+            'expirado'         => $expirado,
+            'data_expiracao'   => $dataFim,
+        ]);
+
+        // ── 6. Envia o e-mail ──────────────────────────────────────────────
+        try {
+            $assunto = $expirado
+                ? 'Sua assinatura expirou — Renove agora | System Home Pet'
+                : "Sua assinatura vence em {$diasRestantes} dia(s) — System Home Pet";
+
+            $emailService->sendEmail($usuario->getEmail(), $assunto, $html);
+
+            return $this->json([
+                'success' => true,
+                'message' => "E-mail de renovação enviado para <strong>{$usuario->getEmail()}</strong>.",
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Falha ao enviar e-mail: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

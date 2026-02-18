@@ -274,12 +274,45 @@
                            class="btn btn-primary">
                             <i class="bi bi-box-arrow-in-right me-2"></i>Acessar como Estabelecimento
                         </a>
-                        <button class="btn btn-outline-success" onclick="alert('Funcionalidade em desenvolvimento')">
-                            <i class="bi bi-send me-2"></i>Enviar Notificação
+
+                        {# Botão enviar notificação de renovação #}
+                        <button class="btn btn-outline-success" id="btnEnviarNotificacao"
+                                onclick="confirmarEnvioNotificacao()">
+                            <i class="bi bi-envelope-paper me-2"></i>Enviar Notificação de Renovação
                         </button>
-                        <button class="btn btn-outline-info" onclick="alert('Funcionalidade em desenvolvimento')">
-                            <i class="bi bi-arrow-clockwise me-2"></i>Renovar Plano
-                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {# Modal de confirmação antes de enviar o e-mail #}
+            <div class="modal fade" id="modalConfirmaNotificacao" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold">
+                                <i class="bi bi-envelope-paper text-success me-2"></i>
+                                Confirmar envio de notificação
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body pt-2">
+                            <p class="mb-2">Será enviado um e-mail de renovação de assinatura para:</p>
+                            <div class="alert alert-light border mb-2 py-2">
+                                <strong>🏪 {{ estabelecimento.razaoSocial }}</strong><br>
+                                <span class="text-muted" id="emailDestinatario">Buscando e-mail...</span>
+                            </div>
+                            <p class="mb-0 text-muted small">
+                                O e-mail conterá um botão que redireciona o estabelecimento diretamente
+                                para a tela de pagamento de assinatura recorrente no Mercado Pago.
+                            </p>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-success" id="btnConfirmaEnvio"
+                                    onclick="executarEnvioNotificacao()">
+                                <i class="bi bi-send me-2"></i>Enviar Agora
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -391,6 +424,62 @@ function marcarComoPago(invoiceId) {
         alert('Erro ao processar a requisição.');
         btn.disabled = false;
         btn.innerHTML = originalHtml;
+    });
+}
+
+// ── Notificação de renovação de assinatura ─────────────────────────────
+const ROTA_NOTIFICACAO = "{{ path('superadmin_enviar_notificacao', {id: estabelecimento.id}) }}";
+
+function confirmarEnvioNotificacao() {
+    // Busca o e-mail do estabelecimento via rota de detalhes (já temos no DOM)
+    // Como o PHP já passou os dados, exibimos direto
+    document.getElementById('emailDestinatario').textContent =
+        '{{ usuario_email|default('(buscando...)') }}';
+
+    const modal = new bootstrap.Modal(document.getElementById('modalConfirmaNotificacao'));
+    modal.show();
+}
+
+function executarEnvioNotificacao() {
+    const btn        = document.getElementById('btnConfirmaEnvio');
+    const btnOrig    = document.getElementById('btnEnviarNotificacao');
+    const originalHtml = btn.innerHTML;
+
+    btn.disabled    = true;
+    btnOrig.disabled = true;
+    btn.innerHTML   = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
+
+    fetch(ROTA_NOTIFICACAO, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        // Fecha o modal
+        bootstrap.Modal.getInstance(document.getElementById('modalConfirmaNotificacao')).hide();
+
+        // Toast de feedback
+        const toastEl = document.createElement('div');
+        toastEl.className = `alert alert-${data.success ? 'success' : 'danger'} shadow position-fixed`;
+        toastEl.style.cssText = 'bottom:24px;right:24px;z-index:9999;min-width:340px;';
+        toastEl.innerHTML = `<i class="bi bi-${data.success ? 'check-circle' : 'x-circle'} me-2"></i>${data.message}`;
+        document.body.appendChild(toastEl);
+
+        setTimeout(() => toastEl.remove(), 5000);
+
+        btn.disabled     = false;
+        btnOrig.disabled = false;
+        btn.innerHTML    = originalHtml;
+    })
+    .catch(() => {
+        bootstrap.Modal.getInstance(document.getElementById('modalConfirmaNotificacao')).hide();
+        alert('Erro de comunicação. Tente novamente.');
+        btn.disabled     = false;
+        btnOrig.disabled = false;
+        btn.innerHTML    = originalHtml;
     });
 }
 </script>
