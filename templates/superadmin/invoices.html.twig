@@ -1,0 +1,293 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gerenciar Faturas - Super Admin{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">
+                <i class="fas fa-file-invoice-dollar text-success me-2"></i>
+                Gerenciar Faturas
+            </h2>
+            <p class="text-muted mb-0">Visualize e gerencie todas as faturas do sistema</p>
+        </div>
+        <a href="{{ path('superadmin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar ao Dashboard
+        </a>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">TOTAL DE FATURAS</h6>
+                            <h3 class="mb-0 fw-bold">{{ invoices|length }}</h3>
+                        </div>
+                        <div class="opacity-50">
+                            <i class="fas fa-file-invoice fa-3x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">PAGAS</h6>
+                            <h3 class="mb-0 fw-bold">{{ invoices|filter(i => i.status == 'pago')|length }}</h3>
+                        </div>
+                        <div class="opacity-50">
+                            <i class="fas fa-check-circle fa-3x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">PENDENTES</h6>
+                            <h3 class="mb-0 fw-bold">{{ invoices|filter(i => i.status == 'pendente')|length }}</h3>
+                        </div>
+                        <div class="opacity-50">
+                            <i class="fas fa-clock fa-3x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-danger text-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-1">CANCELADAS</h6>
+                            <h3 class="mb-0 fw-bold">{{ invoices|filter(i => i.status == 'cancelado')|length }}</h3>
+                        </div>
+                        <div class="opacity-50">
+                            <i class="fas fa-times-circle fa-3x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-12 col-md-auto">
+                    <label class="form-label fw-bold text-muted small">FILTRAR POR STATUS:</label>
+                </div>
+                <div class="col-12 col-md">
+                    <div class="btn-group w-100" role="group">
+                        <a href="{{ path('superadmin_invoices', {status: 'todos'}) }}" 
+                           class="btn btn-outline-primary {{ status_atual == 'todos' ? 'active' : '' }}">
+                            <i class="fas fa-list me-1"></i>Todos
+                        </a>
+                        <a href="{{ path('superadmin_invoices', {status: 'pago'}) }}" 
+                           class="btn btn-outline-success {{ status_atual == 'pago' ? 'active' : '' }}">
+                            <i class="fas fa-check-circle me-1"></i>Pagos
+                        </a>
+                        <a href="{{ path('superadmin_invoices', {status: 'pendente'}) }}" 
+                           class="btn btn-outline-warning {{ status_atual == 'pendente' ? 'active' : '' }}">
+                            <i class="fas fa-clock me-1"></i>Pendentes
+                        </a>
+                        <a href="{{ path('superadmin_invoices', {status: 'cancelado'}) }}" 
+                           class="btn btn-outline-danger {{ status_atual == 'cancelado' ? 'active' : '' }}">
+                            <i class="fas fa-times-circle me-1"></i>Cancelados
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Invoices -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-table me-2 text-success"></i>
+                Lista de Faturas
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if invoices|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4 py-3">Número</th>
+                            <th>Estabelecimento</th>
+                            <th>Emissão</th>
+                            <th>Vencimento</th>
+                            <th class="text-end">Valor</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                        {% set hoje = date() %}
+                        {% set vencido = invoice.dataVencimento < hoje and invoice.status == 'pendente' %}
+                        
+                        <tr class="{% if vencido %}table-warning{% endif %}">
+                            <td class="px-4">
+                                <span class="font-monospace fw-bold text-primary">
+                                    {{ invoice.numeroInvoice }}
+                                </span>
+                            </td>
+                            <td>
+                                <div>
+                                    <div class="fw-bold">{{ invoice.estabelecimento.razaoSocial }}</div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-hashtag"></i>
+                                        ID: {{ invoice.estabelecimento.id }}
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <small>
+                                    <i class="far fa-calendar me-1"></i>
+                                    {{ invoice.dataEmissao|date('d/m/Y') }}
+                                </small>
+                            </td>
+                            <td>
+                                <small class="{% if vencido %}text-danger fw-bold{% endif %}">
+                                    <i class="far fa-calendar-times me-1"></i>
+                                    {{ invoice.dataVencimento|date('d/m/Y') }}
+                                    {% if vencido %}
+                                        <span class="badge bg-danger ms-1">Vencido</span>
+                                    {% endif %}
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <span class="fw-bold fs-6">R$ {{ invoice.valor|number_format(2, ',', '.') }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% if invoice.status == 'pago' %}
+                                    <span class="badge bg-success px-3 py-2">
+                                        <i class="fas fa-check-circle me-1"></i>Pago
+                                    </span>
+                                    {% if invoice.dataPagamento %}
+                                        <br>
+                                        <small class="text-muted">
+                                            {{ invoice.dataPagamento|date('d/m/Y') }}
+                                        </small>
+                                    {% endif %}
+                                {% elseif invoice.status == 'pendente' %}
+                                    <span class="badge bg-warning text-dark px-3 py-2">
+                                        <i class="fas fa-clock me-1"></i>Pendente
+                                    </span>
+                                {% elseif invoice.status == 'cancelado' %}
+                                    <span class="badge bg-danger px-3 py-2">
+                                        <i class="fas fa-times-circle me-1"></i>Cancelado
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary px-3 py-2">{{ invoice.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="{{ path('superadmin_estabelecimento_detalhes', {id: invoice.estabelecimento.id}) }}" 
+                                       class="btn btn-sm btn-outline-info"
+                                       data-bs-toggle="tooltip"
+                                       title="Ver estabelecimento">
+                                        <i class="fas fa-building"></i>
+                                    </a>
+                                    {% if invoice.status == 'pendente' %}
+                                    <button class="btn btn-sm btn-outline-success" 
+                                            onclick="marcarComoPago({{ invoice.id }})"
+                                            data-bs-toggle="tooltip"
+                                            title="Marcar como pago">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhuma fatura encontrada</h5>
+                <p class="text-muted">Nenhuma fatura corresponde ao filtro selecionado.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function marcarComoPago(invoiceId) {
+    if (!confirm('Deseja marcar esta fatura como paga manualmente?\n\nEsta ação irá atualizar o status e renovar o plano do estabelecimento.')) {
+        return;
+    }
+
+    // Mostrar loading
+    const btn = event.target.closest('button');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    fetch(`/superadmin/invoice/${invoiceId}/marcar-pago`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mostrar mensagem de sucesso
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                ${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alert);
+            
+            // Recarregar após 1 segundo
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            alert('Erro: ' + data.error);
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    })
+    .catch(error => {
+        alert('Erro ao processar requisição');
+        console.error('Error:', error);
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+    });
+}
+
+// Inicializar tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

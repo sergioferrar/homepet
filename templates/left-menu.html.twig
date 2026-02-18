@@ -1,59 +1,66 @@
 {% set rotaAtual = app.request.attributes.get('_route') %}
 
-{% for rows in menuLateral %}
-    {% if rows.submenu == false %}
+{# Verificar se é Super Admin - se for, não carregar menu dinâmico #}
+{% if app.user and 'ROLE_SUPER_ADMIN' in app.user.roles %}
+    {# Super Admin tem menu próprio no superadmin/dashboard.html.twig #}
+    {# Não carregar menu normal #}
+{% else %}
+    {# Usuários normais: carregar menu dinâmico #}
+    {% for rows in menuService.getMenu() %}
+        {% if rows.submenu == false %}
 
-        {% if rows.menu.status == 'ativo' %}
-            <li class="nav-item">
-                <a class="nav-link {% if rows.rota == rows.menu.rota %} active {% else %} collapsed {% endif %}"
-                        href="{% if rows.menu.rota != '#' %}{{ path(rows.menu.rota) }}{% endif %}">
-                    <i class="bi bi-{{ rows.menu.icone }}"></i>
-                    <span>{{ rows.menu.titulo }}</span>
-                </a>
-            </li>
+            {% if rows.menu.status == 'ativo' %}
+                <li class="nav-item">
+                    <a class="nav-link {% if rows.rota == rows.menu.rota %} active {% else %} collapsed {% endif %}"
+                            href="{% if rows.menu.rota != '#' %}{{ path(rows.menu.rota) }}{% endif %}">
+                        <i class="bi bi-{{ rows.menu.icone }}"></i>
+                        <span>{{ rows.menu.titulo }}</span>
+                    </a>
+                </li>
+            {% endif %}
+
+        {% else %}
+
+            {% if rows.menu.status == 'ativo' %}
+
+                {# verifica se algum submenu está ativo #}
+                {% set menuAberto = false %}
+                {% for sub in rows.submenu %}
+                    {% if sub.rota == rows.rota %}
+                        {% set menuAberto = true %}
+                    {% endif %}
+                {% endfor %}
+
+                <li class="nav-item">
+                    <a class="nav-link {% if not menuAberto %}collapsed {% else %} active {% endif %}"
+                       href="#"
+                       data-bs-toggle="collapse"
+                       data-bs-target="#menu-{{ rows.menu.id }}">
+                        <i class="bi bi-{{ rows.menu.icone }}"></i>
+                        <span>{{ rows.menu.titulo }}</span>
+                        <i class="bi bi-chevron-down ms-auto"></i>
+                    </a>
+
+                    <ul id="menu-{{ rows.menu.id }}"
+                        class="nav-content collapse {% if menuAberto %} show {% endif %}"
+                        data-bs-parent="#sidebar-nav">
+
+                        {% for sub in rows.submenu %}
+                            <li>
+                                <a href="{{ path(sub.rota) }}"
+                                   class="{% if rows.rota == sub.rota %}active{% endif %} {{ sub.rota }} {{ rows.rota }}">
+                                    <i class="bi bi-circle"></i>
+                                    <span>{{ sub.titulo }}</span>
+                                </a>
+                            </li>
+                        {% endfor %}
+
+                    </ul>
+                </li>
+
+            {% endif %}
+
         {% endif %}
 
-    {% else %}
-
-        {% if rows.menu.status == 'ativo' %}
-
-            {# verifica se algum submenu está ativo #}
-            {% set menuAberto = false %}
-            {% for sub in rows.submenu %}
-                {% if sub.rota == rows.rota %}
-                    {% set menuAberto = true %}
-                {% endif %}
-            {% endfor %}
-
-            <li class="nav-item">
-                <a class="nav-link {% if not menuAberto %}collapsed {% else %} active {% endif %}"
-                   href="#"
-                   data-bs-toggle="collapse"
-                   data-bs-target="#menu-{{ rows.menu.id }}">
-                    <i class="bi bi-{{ rows.menu.icone }}"></i>
-                    <span>{{ rows.menu.titulo }}</span>
-                    <i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-
-                <ul id="menu-{{ rows.menu.id }}"
-                    class="nav-content collapse {% if menuAberto %} show {% endif %}"
-                    data-bs-parent="#sidebar-nav">
-
-                    {% for sub in rows.submenu %}
-                        <li>
-                            <a href="{{ path(sub.rota) }}"
-                               class="{% if rows.rota == sub.rota %}active{% endif %} {{ sub.rota }} {{ rows.rota }}">
-                                <i class="bi bi-circle"></i>
-                                <span>{{ sub.titulo }}</span>
-                            </a>
-                        </li>
-                    {% endfor %}
-
-                </ul>
-            </li>
-
-        {% endif %}
-
-    {% endif %}
-
-{% endfor %}
+    {% endfor %}
+{% endif %}

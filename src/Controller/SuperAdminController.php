@@ -3,10 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Estabelecimento;
-use App\Entity\Invoice;
-use App\Repository\EstabelecimentoRepository;
+use App\Entity\Fatura;
 use App\Repository\InvoiceRepository;
-use App\Service\InvoiceService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,11 +15,10 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class SuperAdminController extends DefaultController
 {
-
     /**
      * @Route("/dashboard", name="superadmin_dashboard")
      */
-    public function index(Request $request, InvoiceService $invoiceService): Response
+    public function index(Request $request): Response
     {
         // Verifica se o usuário é super admin
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
@@ -32,8 +29,19 @@ class SuperAdminController extends DefaultController
         $inicioMes = new \DateTime('first day of this month');
         $fimMes = new \DateTime('last day of this month');
 
-        // Buscar todos estabelecimentos
-        $estabelecimentos = $this->getRepositorio(\App\Entity\Estabelecimento::class)->findAll();
+        // Buscar todos estabelecimentos usando método otimizado do repository
+        $estabelecimentoRepo = $this->getRepositorio(Estabelecimento::class);
+        
+        // Usa método customizado se existir, senão usa QueryBuilder
+        if (method_exists($estabelecimentoRepo, 'listaEstabelecimentosGestao')) {
+            $estabelecimentos = $estabelecimentoRepo->listaEstabelecimentosGestao();
+        } else {
+            $estabelecimentos = $estabelecimentoRepo
+                ->createQueryBuilder('e')
+                ->select('e.id, e.nome, e.dataCadastro, e.dataPlanoFim, e.status')
+                ->getQuery()
+                ->getArrayResult();
+        }
 
         // Separar estabelecimentos por status
         $novos = [];
@@ -42,9 +50,12 @@ class SuperAdminController extends DefaultController
         $proximos_vencer = [];
 
         foreach ($estabelecimentos as $est) {
-            $diasCadastro = $hoje->diff($est->getDataCadastro())->days;
-            $diasExpiracao = $hoje->diff($est->getDataPlanoFim())->days;
-            $dataPlanoFim = $est->getDataPlanoFim();
+            // Agora $est é um array, não objeto
+            $diasCadastro = $hoje->diff(new \DateTime($est['dataCadastro']))->days;
+            
+            $dataPlanoFim = new \DateTime($est['dataPlanoFim']);
+            $diasExpiracao = $hoje->diff($dataPlanoFim)->days;
+            
 
             // Novos (menos de 30 dias)
             if ($diasCadastro <= 30) {
@@ -65,18 +76,56 @@ class SuperAdminController extends DefaultController
             }
         }
 
-        // Estatísticas de invoices
-        $invoiceStats = $invoiceService->getInvoiceStats();
+        // Estatísticas de invoices (SIMPLIFICADO - sem InvoiceService)
+        $invoiceRepository = $this->getRepositorio(\App\Entity\Fatura::class);
+        
+        try {
+            // Buscar estatísticas direto do repository
+            $invoicesPorStatus = $invoiceRepository->getInvoicesPorStatus();
+            
+            $invoiceStats = [
+                'total_pendente' => 0,
+                'total_pago' => 0,
+                'valor_pendente' => 0,
+                'valor_recebido' => 0,
+            ];
+            
+            foreach ($invoicesPorStatus as $stat) {
+                if ($stat['status'] === 'pendente') {
+                    $invoiceStats['total_pendente'] = $stat['quantidade'];
+                    $invoiceStats['valor_pendente'] = $stat['total'] ?? 0;
+                } elseif ($stat['status'] === 'pago') {
+                    $invoiceStats['total_pago'] = $stat['quantidade'];
+                    $invoiceStats['valor_recebido'] = $stat['total'] ?? 0;
+                }
+            }
+        } catch (\Exception $e) {
+            // Se falhar, usar valores padrão
+            $invoiceStats = [
+                'total_pendente' => 0,
+                'total_pago' => 0,
+                'valor_pendente' => 0,
+                'valor_recebido' => 0,
+            ];
+        }
 
         // Receita do mês
-        $receitaMes = $this->getRepositorio(\App\Entity\Invoice::class)->getTotalReceitaMes($inicioMes, $fimMes);
+        try {
+            $receitaMes = $invoiceRepository->getTotalReceitaMes($inicioMes, $fimMes);
+        } catch (\Exception $e) {
+            $receitaMes = 0;
+        }
 
         // Últimos invoices
-        $ultimosInvoices = $this->getRepositorio(\App\Entity\Invoice::class)->createQueryBuilder('i')
-            ->orderBy('i.dataEmissao', 'DESC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult();
+        try {
+            $ultimosInvoices = $invoiceRepository->createQueryBuilder('i')
+                ->orderBy('i.dataEmissao', 'DESC')
+                ->setMaxResults(10)
+                ->getQuery()
+                ->getResult();
+        } catch (\Exception $e) {
+            $ultimosInvoices = [];
+        }
 
         $data = [
             'total_estabelecimentos' => count($estabelecimentos),
@@ -94,7 +143,6 @@ class SuperAdminController extends DefaultController
             'estabelecimentos_proximos_vencer' => $proximos_vencer,
             'ultimos_invoices' => $ultimosInvoices,
         ];
-        // dd($data);
 
         return $this->render('superadmin/dashboard.html.twig', $data);
     }
@@ -160,23 +208,19 @@ class SuperAdminController extends DefaultController
         }
 
         // Buscar invoices do estabelecimento
-        $invoices = $this->getRepositorio(\App\Entity\Invoice::class)->findByEstabelecimento($id);
+        $invoices = $this->getRepositorio(\App\Entity\Fatura::class)->findByEstabelecimento($id);
 
         // Calcular dias até expiração
         $hoje = new \DateTime();
         $diasExpiracao = $hoje->diff($estabelecimento->getDataPlanoFim())->days;
         $expirado = $estabelecimento->getDataPlanoFim() < $hoje;
 
-        $data = [
-
+        return $this->render('superadmin/estabelecimento_detalhes.html.twig', [
             'estabelecimento' => $estabelecimento,
             'invoices' => $invoices,
             'dias_expiracao' => $diasExpiracao,
             'expirado' => $expirado,
-        ];
-        // dd($data);
-
-        return $this->render('superadmin/estabelecimento_detalhes.html.twig', $data);
+        ]);
     }
 
     /**
@@ -190,7 +234,7 @@ class SuperAdminController extends DefaultController
 
         $status = $request->query->get('status', 'todos');
 
-        $qb = $this->getRepositorio(\App\Entity\Invoice::class)->createQueryBuilder('i');
+        $qb = $this->getRepositorio(\App\Entity\Fatura::class)->createQueryBuilder('i');
 
         if ($status !== 'todos') {
             $qb->where('i.status = :status')
@@ -215,17 +259,20 @@ class SuperAdminController extends DefaultController
             return new JsonResponse(['success' => false, 'error' => 'Acesso negado'], 403);
         }
 
-        $invoice = $this->getRepositorio(\App\Entity\Invoice::class)->find($id);
+        $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($id);
         
         if (!$invoice) {
             return new JsonResponse(['success' => false, 'error' => 'Invoice não encontrado'], 404);
         }
 
         try {
-            $this->invoiceService->markAsPaid($invoice, [
-                'payment_method' => 'manual',
-                'marked_by' => $this->getUser()->getId(),
-            ]);
+            // Marcar como pago manualmente (SEM InvoiceService)
+            $invoice->setStatus('pago');
+            $invoice->setDataPagamento(new \DateTime());
+            
+            $em = $this->getDoctrine()->getManager();
+            $em->persist($invoice);
+            $em->flush();
 
             return new JsonResponse(['success' => true, 'message' => 'Invoice marcado como pago']);
         } catch (\Exception $e) {
@@ -244,13 +291,20 @@ class SuperAdminController extends DefaultController
 
         $ano = $request->query->get('ano', date('Y'));
         
+        $invoiceRepository = $this->getRepositorio(\App\Entity\Fatura::class);
+        
         // Receita por mês do ano
         $receitaPorMes = [];
         for ($mes = 1; $mes <= 12; $mes++) {
             $inicio = new \DateTime("{$ano}-{$mes}-01");
             $fim = new \DateTime($inicio->format('Y-m-t'));
             
-            $receita = $this->getRepositorio(\App\Entity\Invoice::class)->getTotalReceitaMes($inicio, $fim);
+            try {
+                $receita = $invoiceRepository->getTotalReceitaMes($inicio, $fim);
+            } catch (\Exception $e) {
+                $receita = 0;
+            }
+            
             $receitaPorMes[] = [
                 'mes' => $mes,
                 'nome_mes' => $inicio->format('M'),
@@ -266,17 +320,14 @@ class SuperAdminController extends DefaultController
 
     /**
      * @Route("/acessar-estabelecimento/{id}", name="superadmin_acessar_estabelecimento")
-     * 
-     * Permite que o Super Admin acesse temporariamente um estabelecimento
-     * para visualizar/gerenciar como se fosse um usuário daquele estabelecimento
      */
-    public function acessarEstabelecimento(Request $request, int $id, EstabelecimentoRepository $estabelecimentoRepository): Response
+    public function acessarEstabelecimento(Request $request, int $id): Response
     {
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
             throw $this->createAccessDeniedException('Acesso negado');
         }
 
-        $estabelecimento = $estabelecimentoRepository->find($id);
+        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($id);
         
         if (!$estabelecimento) {
             $this->addFlash('error', 'Estabelecimento não encontrado.');
@@ -293,24 +344,20 @@ class SuperAdminController extends DefaultController
         // Temporariamente "se passar" por um usuário do estabelecimento
         $request->getSession()->set('estabelecimentoId', $id);
         $request->getSession()->set('isSuperAdmin', false);
-        $request->getSession()->set('accessLevel', 'Admin'); // Acesso como admin do estabelecimento
+        $request->getSession()->set('accessLevel', 'Admin');
         $request->getSession()->set('impersonating_establishment', true);
 
         $this->addFlash('info', "Você está acessando o estabelecimento: {$estabelecimento->getRazaoSocial()}");
 
-        // Redirecionar para o dashboard do estabelecimento
         return $this->redirectToRoute('home');
     }
 
     /**
      * @Route("/voltar-superadmin", name="superadmin_voltar")
-     * 
-     * Volta para o contexto original do Super Admin após acessar um estabelecimento
      */
     public function voltarSuperAdmin(Request $request): Response
     {
         if (!$request->getSession()->has('superadmin_original_context')) {
-            // Não estava acessando estabelecimento
             return $this->redirectToRoute('superadmin_dashboard');
         }
 

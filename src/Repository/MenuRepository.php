@@ -27,7 +27,6 @@ class MenuRepository extends ServiceEntityRepository
     public function add(Menu $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
-
         if ($flush) {
             $this->getEntityManager()->flush();
         }
@@ -36,48 +35,50 @@ class MenuRepository extends ServiceEntityRepository
     public function remove(Menu $entity, bool $flush = false): void
     {
         $this->getEntityManager()->remove($entity);
-
         if ($flush) {
             $this->getEntityManager()->flush();
         }
     }
 
-    public function update($data){
-        if($data['parent'] == null){
-            $data['parent'] = 'NULL';
-        } else{
-            $data['parent'] = "'{$data['parent']}'";
-        }
-      $sql = "UPDATE menu SET
-        titulo = '{$data['titulo']}', parent = {$data['parent']}, descricao = '{$data['descricao']}', 
-        rota = '{$data['rota']}', status = '{$data['status']}', icone = '{$data['icone']}', modulo = '{$data['modulo']}'
-        WHERE id = '{$data['id']}'";
+    /**
+     * Atualiza menu — parâmetros nomeados substituem interpolação direta (SQL injection)
+     */
+    public function update(array $data): void
+    {
+        $sql = "UPDATE menu
+                SET titulo    = :titulo,
+                    parent    = :parent,
+                    descricao = :descricao,
+                    rota      = :rota,
+                    status    = :status,
+                    icone     = :icone,
+                    modulo    = :modulo
+                WHERE id = :id";
 
-        $query = $this->conn->executeQuery($sql);
+        $this->conn->executeStatement($sql, [
+            'titulo'    => $data['titulo'],
+            'parent'    => $data['parent'] ?? null,
+            'descricao' => $data['descricao'],
+            'rota'      => $data['rota'],
+            'status'    => $data['status'],
+            'icone'     => $data['icone'],
+            'modulo'    => $data['modulo'],
+            'id'        => $data['id'],
+        ]);
     }
 
-//    /**
-//     * @return Menu[] Returns an array of Menu objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('m')
-//            ->andWhere('m.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('m.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * Lista todos os menus com seus módulos via LEFT JOIN
+     */
+    public function listarComModulos(): array
+    {
+        $sql = "SELECT m.id, m.titulo, m.parent, m.descricao, m.rota,
+                       m.status, m.icone, m.modulo,
+                       mod.titulo AS modulo_titulo
+                FROM menu m
+                LEFT JOIN modulo mod ON mod.id = m.modulo
+                ORDER BY m.parent ASC, m.titulo ASC";
 
-//    public function findOneBySomeField($value): ?Menu
-//    {
-//        return $this->createQueryBuilder('m')
-//            ->andWhere('m.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        return $this->conn->fetchAllAssociative($sql);
+    }
 }

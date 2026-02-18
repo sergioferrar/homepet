@@ -169,7 +169,8 @@
                                 <td>{{ est.dataPlanoFim|date('d/m/Y') }}</td>
                                 <td>
                                     <span class="badge bg-warning">
-                                        {{ date().diff(est.dataPlanoFim).days }} dias
+                                        {# {{ date().diff(est.dataPlanoFim).days }} dias #}
+                                        {{ est.dataPlanoFim }} dias
                                     </span>
                                 </td>
                                 <td>
@@ -214,7 +215,9 @@
                                 <td>{{ est.dataPlanoFim|date('d/m/Y') }}</td>
                                 <td>
                                     <span class="badge bg-danger">
-                                        {{ date().diff(est.dataPlanoFim).days }} dias atrás
+                                        {# {{ date().diff(est.dataPlanoFim).days }} dias atrás #}
+                                        {# {{ date().diff(est.dataPlanoFim).days }} dias #}
+                                        {{ est.dataPlanoFim }} dias atrás
                                     </span>
                                 </td>
                                 <td>

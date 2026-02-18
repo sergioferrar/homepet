@@ -1,0 +1,332 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Relatórios Financeiros - Super Admin{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">
+                <i class="fas fa-chart-line text-info me-2"></i>
+                Relatórios Financeiros
+            </h2>
+            <p class="text-muted mb-0">Análise de receita e desempenho do sistema</p>
+        </div>
+        <div>
+            <a href="{{ path('superadmin_dashboard') }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>Imprimir
+            </button>
+        </div>
+    </div>
+
+    <!-- Seletor de Ano -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-auto">
+                    <label class="form-label fw-bold text-muted mb-0">SELECIONAR ANO:</label>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="anoSelect" onchange="mudarAno()">
+                        {% for ano in range(2024, date().format('Y')|int + 1) %}
+                            <option value="{{ ano }}" {% if ano == ano_selecionado %}selected{% endif %}>
+                                {{ ano }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md">
+                    <div class="text-end">
+                        <span class="badge bg-info fs-6 px-3 py-2">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            Ano: {{ ano_selecionado }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Gráfico de Receita Mensal -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2 text-info"></i>
+                        Receita Mensal - {{ ano_selecionado }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="receitaMensalChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumo Financeiro -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4 bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white">
+                    <h6 class="text-white-50 mb-3">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        RESUMO ANUAL
+                    </h6>
+                    <h2 class="mb-0 fw-bold">
+                        R$ {{ receita_por_mes|map(m => m.receita)|reduce((a, b) => a + b, 0)|number_format(2, ',', '.') }}
+                    </h2>
+                    <p class="mb-0 text-white-50">Receita Total em {{ ano_selecionado }}</p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-calculator me-2"></i>
+                        ESTATÍSTICAS
+                    </h6>
+                    
+                    {% set receitas = receita_por_mes|map(m => m.receita) %}
+                    {% set total = receitas|reduce((a, b) => a + b, 0) %}
+                    {% set media = total / 12 %}
+                    {% set max = max(receitas) %}
+                    {% set min = min(receitas) %}
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">
+                                <i class="fas fa-chart-line me-2 text-success"></i>
+                                Média Mensal
+                            </span>
+                            <span class="fw-bold">R$ {{ media|number_format(2, ',', '.') }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">
+                                <i class="fas fa-arrow-up me-2 text-success"></i>
+                                Melhor Mês
+                            </span>
+                            <span class="fw-bold text-success">R$ {{ max|number_format(2, ',', '.') }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">
+                                <i class="fas fa-arrow-down me-2 text-danger"></i>
+                                Pior Mês
+                            </span>
+                            <span class="fw-bold text-danger">R$ {{ min|number_format(2, ',', '.') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-excel fa-3x text-success mb-3"></i>
+                    <h6 class="mb-2">Exportar Dados</h6>
+                    <p class="text-muted small mb-3">Baixe o relatório completo</p>
+                    <button class="btn btn-success btn-sm" onclick="alert('Funcionalidade em desenvolvimento')">
+                        <i class="fas fa-download me-2"></i>
+                        Exportar Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela Detalhada -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2 text-primary"></i>
+                        Detalhamento Mensal
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="px-4 py-3">Mês</th>
+                                    <th class="text-end">Receita</th>
+                                    <th class="text-center">% do Total</th>
+                                    <th class="text-center">Variação</th>
+                                    <th class="text-center">Gráfico</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'] %}
+                                {% set total_anual = receita_por_mes|map(m => m.receita)|reduce((a, b) => a + b, 0) %}
+                                
+                                {% for item in receita_por_mes %}
+                                {% set percentual = total_anual > 0 ? (item.receita / total_anual * 100) : 0 %}
+                                {% set mes_anterior = loop.index > 1 ? receita_por_mes[loop.index - 2].receita : 0 %}
+                                {% set variacao = mes_anterior > 0 ? ((item.receita - mes_anterior) / mes_anterior * 100) : 0 %}
+                                
+                                <tr>
+                                    <td class="px-4 fw-bold">
+                                        <i class="far fa-calendar me-2 text-primary"></i>
+                                        {{ meses[item.mes - 1] }}
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="fs-5 fw-bold">R$ {{ item.receita|number_format(2, ',', '.') }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary">{{ percentual|number_format(1) }}%</span>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if loop.index > 1 %}
+                                            {% if variacao > 0 %}
+                                                <span class="text-success fw-bold">
+                                                    <i class="fas fa-arrow-up"></i>
+                                                    {{ variacao|number_format(1) }}%
+                                                </span>
+                                            {% elseif variacao < 0 %}
+                                                <span class="text-danger fw-bold">
+                                                    <i class="fas fa-arrow-down"></i>
+                                                    {{ (variacao * -1)|number_format(1) }}%
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">
+                                                    <i class="fas fa-minus"></i>
+                                                    0%
+                                                </span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar bg-gradient" 
+                                                 style="width: {{ percentual }}%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);"
+                                                 role="progressbar">
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                
+                                <!-- Totais -->
+                                <tr class="table-primary fw-bold">
+                                    <td class="px-4">
+                                        <i class="fas fa-calculator me-2"></i>
+                                        TOTAL ANUAL
+                                    </td>
+                                    <td class="text-end fs-5">
+                                        R$ {{ total_anual|number_format(2, ',', '.') }}
+                                    </td>
+                                    <td class="text-center">100%</td>
+                                    <td class="text-center">-</td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<script>
+// Dados do gráfico
+const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+const receitas = [
+    {% for item in receita_por_mes %}
+        {{ item.receita }}{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+// Configurar gráfico
+const ctx = document.getElementById('receitaMensalChart').getContext('2d');
+const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+gradient.addColorStop(0, 'rgba(102, 126, 234, 0.8)');
+gradient.addColorStop(1, 'rgba(118, 75, 162, 0.2)');
+
+const receitaMensalChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: meses,
+        datasets: [{
+            label: 'Receita (R$)',
+            data: receitas,
+            backgroundColor: gradient,
+            borderColor: 'rgba(102, 126, 234, 1)',
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                titleFont: {
+                    size: 14,
+                    weight: 'bold'
+                },
+                bodyFont: {
+                    size: 13
+                },
+                callbacks: {
+                    label: function(context) {
+                        return 'R$ ' + context.parsed.y.toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return 'R$ ' + value.toLocaleString('pt-BR');
+                    }
+                },
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+function mudarAno() {
+    const ano = document.getElementById('anoSelect').value;
+    window.location.href = '{{ path('superadmin_relatorios') }}?ano=' + ano;
+}
+</script>
+
+<style>
+@media print {
+    .btn, .card-header h5 i {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

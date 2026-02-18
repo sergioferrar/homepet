@@ -7,8 +7,8 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * Repositório de Vendas com isolamento por tenant
- * 
+ * Repositório de Vendas com isolamento por tenant — SQL nativo com LEFT JOINs.
+ *
  * @extends ServiceEntityRepository<Venda>
  * @method Venda|null find($id, $lockMode = null, $lockVersion = null)
  * @method Venda|null findOneBy(array $criteria, array $orderBy = null)
@@ -17,24 +17,37 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class VendaRepository extends ServiceEntityRepository
 {
+    private $conn;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Venda::class);
+        $this->conn = $this->getEntityManager()->getConnection();
     }
 
     /**
-     * Busca vendas por data com isolamento de tenant
+     * Busca vendas por data com LEFT JOIN em pet e cliente — evita N+1 queries.
      */
     public function findByData(int $estabelecimentoId, \DateTime $data): array
     {
-        return $this->createQueryBuilder('v')
-            ->where('v.estabelecimentoId = :estab')
-            ->andWhere('DATE(v.data) = :data')
-            ->setParameter('estab', $estabelecimentoId)
-            ->setParameter('data', $data->format('Y-m-d'))
-            ->orderBy('v.id', 'DESC')
-            ->getQuery()
-            ->getResult();
+        $sql = "SELECT v.id, v.estabelecimento_id, v.pet_id, v.total, v.data,
+                       v.status, v.metodo_pagamento, v.bandeira_cartao, v.parcelas,
+                       v.origem, v.observacao, v.inativar,
+                       p.nome  AS pet_nome,
+                       c.id    AS cliente_id,
+                       c.nome  AS cliente_nome,
+                       c.telefone AS cliente_telefone
+                FROM {$_ENV['DBNAMETENANT']}.venda v
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.pet    p ON p.id = v.pet_id
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id
+                WHERE v.estabelecimento_id = :estab
+                  AND DATE(v.data) = :data
+                ORDER BY v.id DESC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'estab' => $estabelecimentoId,
+            'data'  => $data->format('Y-m-d'),
+        ]);
     }
 
     /**
@@ -42,123 +55,114 @@ class VendaRepository extends ServiceEntityRepository
      */
     public function totalPorFormaPagamento(int $estabelecimentoId, \DateTime $data): array
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $sql = "SELECT metodo_pagamento AS metodo,
+                       COALESCE(SUM(total), 0) AS total
+                FROM {$_ENV['DBNAMETENANT']}.venda
+                WHERE estabelecimento_id = :baseId
+                  AND DATE(data) = :data
+                  AND status NOT IN ('Carrinho', 'Cancelada')
+                GROUP BY metodo_pagamento
+                ORDER BY metodo_pagamento ASC";
 
-        $sql = "
-            SELECT 
-                metodo_pagamento AS metodo,
-                COALESCE(SUM(total), 0) AS total
-            FROM venda
-            WHERE estabelecimento_id = :baseId
-              AND DATE(data) = :data
-              AND status NOT IN ('Carrinho', 'Cancelada')
-            GROUP BY metodo_pagamento
-            ORDER BY metodo_pagamento ASC
-        ";
-
-        return $conn->fetchAllAssociative($sql, [
+        return $this->conn->fetchAllAssociative($sql, [
             'baseId' => $estabelecimentoId,
-            'data' => $data->format('Y-m-d'),
+            'data'   => $data->format('Y-m-d'),
         ]);
     }
 
     /**
-     * Total geral do dia
+     * Total geral do dia (escalar — não hidrata entidades)
      */
     public function totalGeralDoDia(int $estabelecimentoId, \DateTime $data): float
     {
-        $result = $this->createQueryBuilder('v')
-            ->select('COALESCE(SUM(v.total), 0) as total')
-            ->where('v.estabelecimentoId = :estab')
-            ->andWhere('DATE(v.data) = :data')
-            ->andWhere('v.status NOT IN (:statusExcluidos)')
-            ->setParameter('estab', $estabelecimentoId)
-            ->setParameter('data', $data->format('Y-m-d'))
-            ->setParameter('statusExcluidos', ['Carrinho', 'Cancelada'])
-            ->getQuery()
-            ->getSingleScalarResult();
+        $sql = "SELECT COALESCE(SUM(total), 0) AS total
+                FROM {$_ENV['DBNAMETENANT']}.venda
+                WHERE estabelecimento_id = :estab
+                  AND DATE(data) = :data
+                  AND status NOT IN ('Carrinho', 'Cancelada')";
 
-        return (float)$result;
-    }
-
-    /**
-     * Vendas por período
-     */
-    public function findByPeriodo(int $estabelecimentoId, \DateTime $inicio, \DateTime $fim): array
-    {
-        return $this->createQueryBuilder('v')
-            ->where('v.estabelecimentoId = :estab')
-            ->andWhere('DATE(v.data) BETWEEN :inicio AND :fim')
-            ->setParameter('estab', $estabelecimentoId)
-            ->setParameter('inicio', $inicio->format('Y-m-d'))
-            ->setParameter('fim', $fim->format('Y-m-d'))
-            ->orderBy('v.data', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    /**
-     * Total por período
-     */
-    public function totalPorPeriodo(int $estabelecimentoId, \DateTime $inicio, \DateTime $fim): float
-    {
-        $result = $this->createQueryBuilder('v')
-            ->select('COALESCE(SUM(v.total), 0) as total')
-            ->where('v.estabelecimentoId = :estab')
-            ->andWhere('DATE(v.data) BETWEEN :inicio AND :fim')
-            ->andWhere('v.status NOT IN (:statusExcluidos)')
-            ->setParameter('estab', $estabelecimentoId)
-            ->setParameter('inicio', $inicio->format('Y-m-d'))
-            ->setParameter('fim', $fim->format('Y-m-d'))
-            ->setParameter('statusExcluidos', ['Carrinho', 'Cancelada'])
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        return (float)$result;
-    }
-
-    /**
-     * Busca vendas em carrinho aguardando finalização
-     */
-    public function findCarrinho(int $estabelecimentoId): array
-    {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "
-            SELECT v.id, v.pet_id, v.total, v.data, v.origem, v.observacao,
-                   p.nome AS pet_nome, c.nome AS cliente_nome
-            FROM venda v
-            LEFT JOIN pet p ON v.pet_id = p.id
-            LEFT JOIN cliente c ON p.dono_id = c.id
-            WHERE v.estabelecimento_id = :baseId
-              AND v.status = 'Carrinho'
-            ORDER BY v.data DESC
-        ";
-
-        return $conn->fetchAllAssociative($sql, [
-            'baseId' => $estabelecimentoId,
+        return (float) $this->conn->fetchOne($sql, [
+            'estab' => $estabelecimentoId,
+            'data'  => $data->format('Y-m-d'),
         ]);
     }
 
     /**
-     * Inativa uma venda (cancelamento)
+     * Vendas por período com LEFT JOIN em pet e cliente
      */
-    public function inativar(int $estabelecimentoId, int $vendaId): bool
+    public function findByPeriodo(int $estabelecimentoId, \DateTime $inicio, \DateTime $fim): array
     {
-        $qb = $this->createQueryBuilder('v')
-            ->update()
-            ->set('v.status', ':status')
-            ->where('v.id = :id')
-            ->andWhere('v.estabelecimentoId = :estab')
-            ->setParameter('status', 'Cancelada')
-            ->setParameter('id', $vendaId)
-            ->setParameter('estab', $estabelecimentoId);
+        $sql = "SELECT v.id, v.pet_id, v.total, v.data, v.status,
+                       v.metodo_pagamento, v.origem, v.observacao,
+                       p.nome  AS pet_nome,
+                       c.nome  AS cliente_nome
+                FROM {$_ENV['DBNAMETENANT']}.venda v
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.pet    p ON p.id = v.pet_id
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id
+                WHERE v.estabelecimento_id = :estab
+                  AND DATE(v.data) BETWEEN :inicio AND :fim
+                ORDER BY v.data DESC";
 
-        return $qb->getQuery()->execute() > 0;
+        return $this->conn->fetchAllAssociative($sql, [
+            'estab'  => $estabelecimentoId,
+            'inicio' => $inicio->format('Y-m-d'),
+            'fim'    => $fim->format('Y-m-d'),
+        ]);
     }
 
     /**
-     * Finaliza venda do carrinho
+     * Total por período (escalar)
+     */
+    public function totalPorPeriodo(int $estabelecimentoId, \DateTime $inicio, \DateTime $fim): float
+    {
+        $sql = "SELECT COALESCE(SUM(total), 0) AS total
+                FROM {$_ENV['DBNAMETENANT']}.venda
+                WHERE estabelecimento_id = :estab
+                  AND DATE(data) BETWEEN :inicio AND :fim
+                  AND status NOT IN ('Carrinho', 'Cancelada')";
+
+        return (float) $this->conn->fetchOne($sql, [
+            'estab'  => $estabelecimentoId,
+            'inicio' => $inicio->format('Y-m-d'),
+            'fim'    => $fim->format('Y-m-d'),
+        ]);
+    }
+
+    /**
+     * Vendas em carrinho com dados de pet e cliente via LEFT JOIN
+     */
+    public function findCarrinho(int $estabelecimentoId): array
+    {
+        $sql = "SELECT v.id, v.pet_id, v.total, v.data, v.origem, v.observacao,
+                       p.nome AS pet_nome,
+                       c.nome AS cliente_nome
+                FROM {$_ENV['DBNAMETENANT']}.venda v
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.pet    p ON p.id = v.pet_id
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id
+                WHERE v.estabelecimento_id = :baseId
+                  AND v.status = 'Carrinho'
+                ORDER BY v.data DESC";
+
+        return $this->conn->fetchAllAssociative($sql, ['baseId' => $estabelecimentoId]);
+    }
+
+    /**
+     * Inativa (cancela) uma venda
+     */
+    public function inativar(int $estabelecimentoId, int $vendaId): bool
+    {
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.venda
+                SET status = 'Cancelada'
+                WHERE id = :id AND estabelecimento_id = :estab";
+
+        return $this->conn->executeStatement($sql, [
+            'id'    => $vendaId,
+            'estab' => $estabelecimentoId,
+        ]) > 0;
+    }
+
+    /**
+     * Finaliza venda do carrinho — update atômico com parâmetros opcionais
      */
     public function finalizarVenda(
         int $estabelecimentoId,
@@ -169,80 +173,80 @@ class VendaRepository extends ServiceEntityRepository
     ): bool {
         $status = ($metodoPagamento === 'pendente') ? 'Pendente' : 'Aberta';
 
-        $qb = $this->createQueryBuilder('v')
-            ->update()
-            ->set('v.status', ':status')
-            ->set('v.metodoPagamento', ':metodo')
-            ->set('v.data', ':data')
-            ->where('v.id = :id')
-            ->andWhere('v.estabelecimentoId = :estab')
-            ->andWhere('v.status = :statusAtual')
-            ->setParameter('status', $status)
-            ->setParameter('metodo', $metodoPagamento)
-            ->setParameter('data', new \DateTime())
-            ->setParameter('id', $vendaId)
-            ->setParameter('estab', $estabelecimentoId)
-            ->setParameter('statusAtual', 'Carrinho');
+        $set    = "status = :status, metodo_pagamento = :metodo, data = NOW()";
+        $params = [
+            'status' => $status,
+            'metodo' => $metodoPagamento,
+            'id'     => $vendaId,
+            'estab'  => $estabelecimentoId,
+        ];
 
         if ($bandeiraCartao !== null) {
-            $qb->set('v.bandeiraCartao', ':bandeira')
-               ->setParameter('bandeira', $bandeiraCartao);
+            $set .= ", bandeira_cartao = :bandeira";
+            $params['bandeira'] = $bandeiraCartao;
         }
 
         if ($parcelas !== null) {
-            $qb->set('v.parcelas', ':parcelas')
-               ->setParameter('parcelas', $parcelas);
+            $set .= ", parcelas = :parcelas";
+            $params['parcelas'] = $parcelas;
         }
 
-        return $qb->getQuery()->execute() > 0;
+        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.venda
+                SET {$set}
+                WHERE id = :id
+                  AND estabelecimento_id = :estab
+                  AND status = 'Carrinho'";
+
+        return $this->conn->executeStatement($sql, $params) > 0;
     }
 
     /**
-     * Busca vendas de um pet específico
+     * Busca vendas de um pet com LEFT JOIN em pet e cliente
      */
     public function findByPet(int $estabelecimentoId, int $petId): array
     {
-        return $this->createQueryBuilder('v')
-            ->where('v.estabelecimentoId = :estab')
-            ->andWhere('v.petId = :petId')
-            ->andWhere('v.status NOT IN (:statusExcluidos)')
-            ->setParameter('estab', $estabelecimentoId)
-            ->setParameter('petId', $petId)
-            ->setParameter('statusExcluidos', ['Carrinho', 'Cancelada'])
-            ->orderBy('v.data', 'DESC')
-            ->getQuery()
-            ->getResult();
+        $sql = "SELECT v.id, v.pet_id, v.total, v.data, v.status,
+                       v.metodo_pagamento, v.origem, v.observacao,
+                       p.nome  AS pet_nome,
+                       c.nome  AS cliente_nome
+                FROM {$_ENV['DBNAMETENANT']}.venda v
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.pet    p ON p.id = v.pet_id
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id
+                WHERE v.estabelecimento_id = :estab
+                  AND v.pet_id = :petId
+                  AND v.status NOT IN ('Carrinho', 'Cancelada')
+                ORDER BY v.data DESC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'estab' => $estabelecimentoId,
+            'petId' => $petId,
+        ]);
     }
 
     /**
-     * Resumo de vendas do dia
+     * Resumo de vendas do dia — COUNT e SUM em query única
      */
     public function getResumoDoDia(int $estabelecimentoId, \DateTime $data): array
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $sql = "SELECT COUNT(*) AS quantidade,
+                       COALESCE(SUM(total), 0) AS total
+                FROM {$_ENV['DBNAMETENANT']}.venda
+                WHERE estabelecimento_id = :baseId
+                  AND DATE(data) = :data
+                  AND status NOT IN ('Carrinho', 'Cancelada')";
 
-        $sql = "
-            SELECT 
-                COUNT(*) as quantidade,
-                COALESCE(SUM(total), 0) as total
-            FROM venda
-            WHERE estabelecimento_id = :baseId
-              AND DATE(data) = :data
-              AND status NOT IN ('Carrinho', 'Cancelada')
-        ";
-
-        $result = $conn->fetchAssociative($sql, [
+        $result    = $this->conn->fetchAssociative($sql, [
             'baseId' => $estabelecimentoId,
-            'data' => $data->format('Y-m-d'),
+            'data'   => $data->format('Y-m-d'),
         ]);
 
-        $quantidade = (int)($result['quantidade'] ?? 0);
-        $total = (float)($result['total'] ?? 0);
+        $quantidade = (int) ($result['quantidade'] ?? 0);
+        $total      = (float) ($result['total'] ?? 0);
 
         return [
             'quantidade_vendas' => $quantidade,
-            'total_vendas' => $total,
-            'ticket_medio' => $quantidade > 0 ? $total / $quantidade : 0
+            'total_vendas'      => $total,
+            'ticket_medio'      => $quantidade > 0 ? $total / $quantidade : 0,
         ];
     }
 }

@@ -86,11 +86,11 @@ class Estabelecimento
      * @ORM\Column(type="datetime", name="dataPlanoInicio")
      */
     private $dataPlanoInicio;
-
+    
     /**
-     * @ORM\Column(type="datetime", name="dataPlanoFim")
+     * @ORM\Column(type="datetime", nullable=true, name="dataPlanoFim")
      */
-    private $dataPlanoFim;
+    private ?\DateTimeInterface $dataPlanoFim = null;
 
     public function getId(): ?int
     {

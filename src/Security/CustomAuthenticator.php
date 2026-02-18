@@ -83,8 +83,10 @@ class CustomAuthenticator extends AbstractAuthenticator
             $request->getSession()->set('estabelecimento_id', $petshopId);
         } else {
             // Super Admin - não define estabelecimento_id
+            $request->getSession()->set('valida_login_processado', true);
             $request->getSession()->set('estabelecimento_id', null);
         }
+        $request->getSession()->set('login', true);
 
         $response = new JsonResponse($data);
         $response->headers->setCookie(

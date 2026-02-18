@@ -46,7 +46,7 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     private $accessLevel;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", nullable=true)
      */
     private $petshop_id;
 
@@ -96,8 +96,17 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-//        $this->roles;
-        return $this->roles;//['ROLE_USER'];
+        $roles = $this->roles;
+
+        // Garantir ROLE_SUPER_ADMIN baseado no accessLevel
+        if ($this->accessLevel === 'Super Admin') {
+            $roles[] = 'ROLE_SUPER_ADMIN';
+        }
+
+        // Garantir pelo menos ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
     }
 
     public function eraseCredentials()
@@ -158,7 +167,7 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->petshop_id;
     }
 
-    public function setPetshopId(int $petshop_id): self
+    public function setPetshopId(?int $petshop_id): self
     {
         $this->petshop_id = $petshop_id;
 

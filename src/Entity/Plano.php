@@ -29,7 +29,7 @@ class Plano
     private $descricao;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="decimal", precision=10, scale=2)
      */
     private $valor;
 
@@ -44,7 +44,7 @@ class Plano
     private $trial;
 
     /**
-     * @ORM\Column(type="datetime", name="dataTrial")
+     * @ORM\Column(type="datetime", name="dataTrial", nullable=true)
      */
     private $dataTrial;
 
@@ -128,7 +128,7 @@ class Plano
         return $this->dataTrial;
     }
 
-    public function setDataTrial(\DateTimeInterface $dataTrial): self
+    public function setDataTrial(?\DateTimeInterface $dataTrial): self
     {
         $this->dataTrial = $dataTrial;
 
@@ -155,6 +155,36 @@ class Plano
     public function setModulos(?string $modulos): self
     {
         $this->modulos = $modulos;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Estabelecimento[]
+     */
+    public function getEstabelecimentos(): Collection
+    {
+        return $this->estabelecimentos;
+    }
+
+    public function addEstabelecimento(Estabelecimento $estabelecimento): self
+    {
+        if (!$this->estabelecimentos->contains($estabelecimento)) {
+            $this->estabelecimentos[] = $estabelecimento;
+            $estabelecimento->setPlano($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEstabelecimento(Estabelecimento $estabelecimento): self
+    {
+        if ($this->estabelecimentos->removeElement($estabelecimento)) {
+            // set the owning side to null (unless already changed)
+            if ($estabelecimento->getPlano() === $this) {
+                $estabelecimento->setPlano(null);
+            }
+        }
 
         return $this;
     }

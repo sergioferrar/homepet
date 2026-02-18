@@ -78,7 +78,7 @@ class LoginController extends DefaultController
             $request->getSession()->invalidate();
             return $this->redirectToRoute('app_login');
         }
-
+        // dd($request->getSession()->all());
         // Flag para evitar loop - se já passou por aqui, não processa novamente
         if ($request->getSession()->get('valida_login_processado') === true) {
             // Já foi processado, redireciona direto

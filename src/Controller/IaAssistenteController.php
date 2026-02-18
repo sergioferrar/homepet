@@ -17,20 +17,7 @@ use App\Service\DatabaseBkp;
  */
 class IaAssistenteController extends DefaultController
 {
-    private $ems;
-
-    public function __construct(
-        ?Security              $security,
-        ManagerRegistry        $managerRegistry,
-        RequestStack           $request,
-        TempDirManager         $tempDirManager,
-        DatabaseBkp            $databaseBkp,
-        EntityManagerInterface $em
-    )
-    {
-        parent::__construct($security, $managerRegistry, $request, $tempDirManager, $databaseBkp);
-        $this->ems = $em;
-    }
+   
 
     /**
      * @Route("/executar", name="ia_assistente_executar", methods={"POST"})
@@ -203,7 +190,7 @@ class IaAssistenteController extends DefaultController
                 $petNome = trim($resposta);
 
                 // Buscar pet
-                $pet = $this->ems->getRepository(\App\Entity\Pet::class)
+                $pet = $this->em->getRepository(\App\Entity\Pet::class)
                     ->createQueryBuilder('p')
                     ->where('LOWER(p.nome) = :nome')
                     ->andWhere('p.estabelecimentoId = :baseId')
@@ -332,7 +319,7 @@ class IaAssistenteController extends DefaultController
     {
         try {
             // Buscar pet
-            $pet = $this->ems->getRepository(\App\Entity\Pet::class)->find($dados['pet_id']);
+            $pet = $this->em->getRepository(\App\Entity\Pet::class)->find($dados['pet_id']);
 
             if (!$pet) {
                 $session->remove('ia_contexto');
@@ -357,8 +344,8 @@ class IaAssistenteController extends DefaultController
                 $agendamento->setTaxaTaxiDog($dados['taxa_taxi']);
             }
 
-            $this->ems->persist($agendamento);
-            $this->ems->flush();
+            $this->em->persist($agendamento);
+            $this->em->flush();
 
             // Criar relação com serviço
             if (isset($dados['servico_id'])) {
@@ -368,8 +355,8 @@ class IaAssistenteController extends DefaultController
                 $agendamentoPetServico->setServicoId($dados['servico_id']);
                 $agendamentoPetServico->setEstabelecimentoId($baseId);
 
-                $this->ems->persist($agendamentoPetServico);
-                $this->ems->flush();
+                $this->em->persist($agendamentoPetServico);
+                $this->em->flush();
             }
 
             $session->remove('ia_contexto');
@@ -617,7 +604,7 @@ class IaAssistenteController extends DefaultController
             }
 
             // Verificar se cliente já existe
-            $clienteExistente = $this->ems->getRepository(\App\Entity\Cliente::class)
+            $clienteExistente = $this->em->getRepository(\App\Entity\Cliente::class)
                 ->createQueryBuilder('c')
                 ->where('LOWER(c.nome) = :nome')
                 ->andWhere('c.estabelecimentoId = :estab')
@@ -643,8 +630,8 @@ class IaAssistenteController extends DefaultController
                     $cliente->setEmail($info['email']);
                 }
 
-                $this->ems->persist($cliente);
-                $this->ems->flush();
+                $this->em->persist($cliente);
+                $this->em->flush();
 
                 $clienteId = $cliente->getId();
                 $mensagemCliente = "✅ Cliente cadastrado: {$info['tutor']} (ID: #{$clienteId})\n";
@@ -667,8 +654,8 @@ class IaAssistenteController extends DefaultController
                     $pet->setRaca($info['raca']);
                 }
 
-                $this->ems->persist($pet);
-                $this->ems->flush();
+                $this->em->persist($pet);
+                $this->em->flush();
 
                 $mensagemPet = "✅ Pet cadastrado: {$info['pet']} (ID: #{$pet->getId()})\n";
             } else {
@@ -766,7 +753,7 @@ class IaAssistenteController extends DefaultController
 
         try {
             // Buscar pet pelo nome
-            $pet = $this->ems->getRepository(\App\Entity\Pet::class)
+            $pet = $this->em->getRepository(\App\Entity\Pet::class)
                 ->createQueryBuilder('p')
                 ->where('LOWER(p.nome) LIKE :nome')
                 ->andWhere('p.estabelecimentoId = :estab')
@@ -778,7 +765,7 @@ class IaAssistenteController extends DefaultController
 
             // Se não encontrou pet, buscar pelo nome do tutor
             if (!$pet) {
-                $cliente = $this->ems->getRepository(\App\Entity\Cliente::class)
+                $cliente = $this->em->getRepository(\App\Entity\Cliente::class)
                     ->createQueryBuilder('c')
                     ->where('LOWER(c.nome) LIKE :nome')
                     ->andWhere('c.estabelecimentoId = :estab')
@@ -790,7 +777,7 @@ class IaAssistenteController extends DefaultController
 
                 if ($cliente) {
                     // Buscar pets do cliente
-                    $pets = $this->ems->getRepository(\App\Entity\Pet::class)
+                    $pets = $this->em->getRepository(\App\Entity\Pet::class)
                         ->createQueryBuilder('p')
                         ->where('p.dono_id = :donoId')
                         ->andWhere('p.estabelecimentoId = :estab')
@@ -812,7 +799,7 @@ class IaAssistenteController extends DefaultController
             }
 
             // Buscar serviço
-            $servicoObj = $this->ems->getRepository(\App\Entity\Servico::class)
+            $servicoObj = $this->em->getRepository(\App\Entity\Servico::class)
                 ->createQueryBuilder('s')
                 ->where('LOWER(s.nome) LIKE :nome')
                 ->andWhere('s.estabelecimentoId = :estab')
@@ -874,7 +861,7 @@ class IaAssistenteController extends DefaultController
 
         try {
             // Buscar pet pelo nome
-            $pet = $this->ems->getRepository(\App\Entity\Pet::class)
+            $pet = $this->em->getRepository(\App\Entity\Pet::class)
                 ->createQueryBuilder('p')
                 ->where('LOWER(p.nome) LIKE :nome')
                 ->andWhere('p.estabelecimentoId = :estab')
@@ -886,7 +873,7 @@ class IaAssistenteController extends DefaultController
 
             if (!$pet) {
                 // Tentar buscar cliente
-                $cliente = $this->ems->getRepository(\App\Entity\Cliente::class)
+                $cliente = $this->em->getRepository(\App\Entity\Cliente::class)
                     ->createQueryBuilder('c')
                     ->where('LOWER(c.nome) LIKE :nome')
                     ->andWhere('c.estabelecimentoId = :estab')
@@ -898,7 +885,7 @@ class IaAssistenteController extends DefaultController
 
                 if (!$cliente) {
                     // Sugerir pets/clientes similares
-                    $sugestoes = $this->ems->getRepository(\App\Entity\Pet::class)
+                    $sugestoes = $this->em->getRepository(\App\Entity\Pet::class)
                         ->createQueryBuilder('p')
                         ->where('p.estabelecimentoId = :estab')
                         ->setParameter('estab', $baseId)
@@ -929,7 +916,7 @@ class IaAssistenteController extends DefaultController
             }
 
             // Buscar serviço pelo nome
-            $servicoObj = $this->ems->getRepository(\App\Entity\Servico::class)
+            $servicoObj = $this->em->getRepository(\App\Entity\Servico::class)
                 ->createQueryBuilder('s')
                 ->where('LOWER(s.nome) LIKE :nome')
                 ->andWhere('s.estabelecimentoId = :estab')
@@ -954,10 +941,10 @@ class IaAssistenteController extends DefaultController
             $agendamento->setConcluido(false);
             $agendamento->setPronto(false);
 
-            $this->ems->persist($agendamento);
+            $this->em->persist($agendamento);
 
             // Flush para obter o ID do agendamento
-            $this->ems->flush();
+            $this->em->flush();
 
             // Criar relação com serviço se encontrado
             if ($servicoObj && $pet) {
@@ -967,10 +954,10 @@ class IaAssistenteController extends DefaultController
                 $agendamentoPetServico->setServicoId($servicoObj->getId());
                 $agendamentoPetServico->setEstabelecimentoId($baseId);
 
-                $this->ems->persist($agendamentoPetServico);
+                $this->em->persist($agendamentoPetServico);
             }
 
-            $this->ems->flush();
+            $this->em->flush();
 
             $message = "✅ Agendamento criado com sucesso!\n\n";
             $message .= "🐕 Pet/Cliente: {$nomeCompleto}\n";
@@ -1007,7 +994,7 @@ class IaAssistenteController extends DefaultController
 
         try {
             // Buscar pet
-            $pet = $this->ems->getRepository(\App\Entity\Pet::class)
+            $pet = $this->em->getRepository(\App\Entity\Pet::class)
                 ->createQueryBuilder('p')
                 ->where('LOWER(p.nome) LIKE :nome')
                 ->andWhere('p.estabelecimentoId = :estab')
@@ -1154,11 +1141,11 @@ class IaAssistenteController extends DefaultController
                 $internacao->setAnotacoes($dados['anotacoes']);
             }
 
-            $this->ems->persist($internacao);
-            $this->ems->flush();
+            $this->em->persist($internacao);
+            $this->em->flush();
 
             // Criar evento de internação na timeline
-            $internacaoRepo = $this->ems->getRepository(\App\Entity\Internacao::class);
+            $internacaoRepo = $this->em->getRepository(\App\Entity\Internacao::class);
             $descricaoEvento = "Motivo: {$dados['motivo']}";
             if (isset($dados['risco'])) {
                 $descricaoEvento .= " | Risco: {$dados['risco']}";
@@ -1228,7 +1215,7 @@ class IaAssistenteController extends DefaultController
 
         try {
             // Buscar pet
-            $pet = $this->ems->getRepository(\App\Entity\Pet::class)
+            $pet = $this->em->getRepository(\App\Entity\Pet::class)
                 ->createQueryBuilder('p')
                 ->where('LOWER(p.nome) LIKE :nome')
                 ->andWhere('p.estabelecimentoId = :estab')
@@ -1243,7 +1230,7 @@ class IaAssistenteController extends DefaultController
             }
 
             // Buscar internação ativa
-            $internacao = $this->ems->getRepository(\App\Entity\Internacao::class)
+            $internacao = $this->em->getRepository(\App\Entity\Internacao::class)
                 ->createQueryBuilder('i')
                 ->where('i.pet_id = :petId')
                 ->andWhere('i.estabelecimento_id = :estab')
@@ -1261,7 +1248,7 @@ class IaAssistenteController extends DefaultController
 
             // Dar alta
             $internacao->setStatus('alta');
-            $this->ems->flush();
+            $this->em->flush();
 
             $message = "✅ Alta médica registrada!\n\n";
             $message .= "🐕 Pet: {$pet->getNome()}\n";
@@ -1287,7 +1274,7 @@ class IaAssistenteController extends DefaultController
 
         try {
             // Buscar pet
-            $pet = $this->ems->getRepository(\App\Entity\Pet::class)
+            $pet = $this->em->getRepository(\App\Entity\Pet::class)
                 ->createQueryBuilder('p')
                 ->where('LOWER(p.nome) LIKE :nome')
                 ->andWhere('p.estabelecimentoId = :estab')
@@ -1302,7 +1289,7 @@ class IaAssistenteController extends DefaultController
             }
 
             // Buscar internação ativa
-            $internacao = $this->ems->getRepository(\App\Entity\Internacao::class)
+            $internacao = $this->em->getRepository(\App\Entity\Internacao::class)
                 ->createQueryBuilder('i')
                 ->where('i.pet_id = :petId')
                 ->andWhere('i.estabelecimento_id = :estab')
@@ -1421,7 +1408,7 @@ class IaAssistenteController extends DefaultController
     {
         try {
             // Buscar ou criar medicamento
-            $medicamentoObj = $this->ems->getRepository(\App\Entity\Medicamento::class)
+            $medicamentoObj = $this->em->getRepository(\App\Entity\Medicamento::class)
                 ->createQueryBuilder('m')
                 ->where('LOWER(m.nome) = :nome')
                 ->setParameter('nome', strtolower($dados['medicamento']))
@@ -1435,8 +1422,8 @@ class IaAssistenteController extends DefaultController
                 if (isset($dados['via'])) {
                     $medicamentoObj->setVia($dados['via']);
                 }
-                $this->ems->persist($medicamentoObj);
-                $this->ems->flush();
+                $this->em->persist($medicamentoObj);
+                $this->em->flush();
             }
 
             // Criar prescrição
@@ -1451,11 +1438,11 @@ class IaAssistenteController extends DefaultController
             $prescricao->setDataHora(new \DateTime());
             $prescricao->setCriadoEm(new \DateTime());
 
-            $this->ems->persist($prescricao);
-            $this->ems->flush();
+            $this->em->persist($prescricao);
+            $this->em->flush();
 
             // Criar eventos no calendário
-            $internacaoRepo = $this->ems->getRepository(\App\Entity\Internacao::class);
+            $internacaoRepo = $this->em->getRepository(\App\Entity\Internacao::class);
             $dataInicio = new \DateTime();
             $totalEventos = 0;
 
@@ -1533,7 +1520,7 @@ class IaAssistenteController extends DefaultController
 
         try {
             // Buscar pet
-            $pet = $this->ems->getRepository(\App\Entity\Pet::class)
+            $pet = $this->em->getRepository(\App\Entity\Pet::class)
                 ->createQueryBuilder('p')
                 ->where('LOWER(p.nome) LIKE :nome')
                 ->andWhere('p.estabelecimentoId = :estab')
@@ -1561,8 +1548,8 @@ class IaAssistenteController extends DefaultController
             $vacina->setDataAplicacao(new \DateTime());
             $vacina->setEstabelecimentoId($baseId);
 
-            $this->ems->persist($vacina);
-            $this->ems->flush();
+            $this->em->persist($vacina);
+            $this->em->flush();
 
             $message = "💉 Vacina aplicada!\n\n";
             $message .= "🐕 Pet: {$pet->getNome()}\n";
@@ -1588,7 +1575,7 @@ class IaAssistenteController extends DefaultController
 
         try {
             // Buscar pet
-            $pet = $this->ems->getRepository(\App\Entity\Pet::class)
+            $pet = $this->em->getRepository(\App\Entity\Pet::class)
                 ->createQueryBuilder('p')
                 ->where('LOWER(p.nome) LIKE :nome')
                 ->andWhere('p.estabelecimentoId = :estab')
@@ -1603,7 +1590,7 @@ class IaAssistenteController extends DefaultController
             }
 
             // Verificar se há internação ativa e finalizar
-            $internacao = $this->ems->getRepository(\App\Entity\Internacao::class)
+            $internacao = $this->em->getRepository(\App\Entity\Internacao::class)
                 ->createQueryBuilder('i')
                 ->where('i.pet_id = :petId')
                 ->andWhere('i.estabelecimento_id = :estab')
@@ -1617,7 +1604,7 @@ class IaAssistenteController extends DefaultController
 
             if ($internacao) {
                 $internacao->setStatus('obito');
-                $this->ems->flush();
+                $this->em->flush();
             }
 
             $message = "💔 Óbito registrado.\n\n";
@@ -1659,7 +1646,7 @@ class IaAssistenteController extends DefaultController
 
         try {
             // Buscar clientes
-            $clientes = $this->ems->getRepository(\App\Entity\Cliente::class)
+            $clientes = $this->em->getRepository(\App\Entity\Cliente::class)
                 ->createQueryBuilder('c')
                 ->where('LOWER(c.nome) LIKE :nome')
                 ->andWhere('c.estabelecimentoId = :estab')
@@ -1670,7 +1657,7 @@ class IaAssistenteController extends DefaultController
                 ->getResult();
 
             // Buscar pets
-            $pets = $this->ems->getRepository(\App\Entity\Pet::class)
+            $pets = $this->em->getRepository(\App\Entity\Pet::class)
                 ->createQueryBuilder('p')
                 ->where('LOWER(p.nome) LIKE :nome')
                 ->andWhere('p.estabelecimentoId = :estab')
@@ -1739,7 +1726,7 @@ class IaAssistenteController extends DefaultController
 
         try {
             // Buscar cliente
-            $cliente = $this->ems->getRepository(\App\Entity\Cliente::class)
+            $cliente = $this->em->getRepository(\App\Entity\Cliente::class)
                 ->createQueryBuilder('c')
                 ->where('LOWER(c.nome) LIKE :nome')
                 ->andWhere('c.estabelecimentoId = :estab')
@@ -1754,7 +1741,7 @@ class IaAssistenteController extends DefaultController
             }
 
             // Buscar débitos pendentes
-            $debitos = $this->ems->getRepository(\App\Entity\FinanceiroPendente::class)
+            $debitos = $this->em->getRepository(\App\Entity\FinanceiroPendente::class)
                 ->createQueryBuilder('f')
                 ->where('f.clienteId = :clienteId')
                 ->andWhere('f.estabelecimentoId = :estab')
@@ -1797,7 +1784,7 @@ class IaAssistenteController extends DefaultController
 
         try {
             // Buscar pet
-            $pet = $this->ems->getRepository(\App\Entity\Pet::class)
+            $pet = $this->em->getRepository(\App\Entity\Pet::class)
                 ->createQueryBuilder('p')
                 ->where('LOWER(p.nome) LIKE :nome')
                 ->andWhere('p.estabelecimentoId = :estab')
@@ -1822,7 +1809,7 @@ class IaAssistenteController extends DefaultController
             $message .= "\n";
 
             // Vacinas
-            $vacinas = $this->ems->getRepository(\App\Entity\Vacina::class)
+            $vacinas = $this->em->getRepository(\App\Entity\Vacina::class)
                 ->createQueryBuilder('v')
                 ->where('v.petId = :petId')
                 ->andWhere('v.estabelecimentoId = :estab')
@@ -1842,7 +1829,7 @@ class IaAssistenteController extends DefaultController
             }
 
             // Internações
-            $internacoes = $this->ems->getRepository(\App\Entity\Internacao::class)
+            $internacoes = $this->em->getRepository(\App\Entity\Internacao::class)
                 ->createQueryBuilder('i')
                 ->where('i.pet_id = :petId')
                 ->andWhere('i.estabelecimento_id = :estab')
@@ -1882,7 +1869,7 @@ class IaAssistenteController extends DefaultController
             $message .= "Data: " . $hoje->format('d/m/Y H:i') . "\n\n";
 
             // Pets cadastrados
-            $totalPets = $this->ems->getRepository(\App\Entity\Pet::class)
+            $totalPets = $this->em->getRepository(\App\Entity\Pet::class)
                 ->createQueryBuilder('p')
                 ->select('COUNT(p.id)')
                 ->where('p.estabelecimentoId = :estab')
@@ -1893,7 +1880,7 @@ class IaAssistenteController extends DefaultController
             $message .= "🐕 **Pets:** {$totalPets} cadastrados\n";
 
             // Clientes
-            $totalClientes = $this->ems->getRepository(\App\Entity\Cliente::class)
+            $totalClientes = $this->em->getRepository(\App\Entity\Cliente::class)
                 ->createQueryBuilder('c')
                 ->select('COUNT(c.id)')
                 ->where('c.estabelecimentoId = :estab')
@@ -1904,7 +1891,7 @@ class IaAssistenteController extends DefaultController
             $message .= "👥 **Clientes:** {$totalClientes} cadastrados\n\n";
 
             // Internações ativas
-            $internacoes = $this->ems->getRepository(\App\Entity\Internacao::class)
+            $internacoes = $this->em->getRepository(\App\Entity\Internacao::class)
                 ->createQueryBuilder('i')
                 ->select('COUNT(i.id)')
                 ->where('i.estabelecimento_id = :estab')
@@ -1920,7 +1907,7 @@ class IaAssistenteController extends DefaultController
             $inicioHoje = (clone $hoje)->setTime(0, 0, 0);
             $fimHoje = (clone $hoje)->setTime(23, 59, 59);
 
-            $agendamentosHoje = $this->ems->getRepository(\App\Entity\Agendamento::class)
+            $agendamentosHoje = $this->em->getRepository(\App\Entity\Agendamento::class)
                 ->createQueryBuilder('a')
                 ->select('COUNT(a.id)')
                 ->where('a.estabelecimentoId = :estab')
@@ -1936,7 +1923,7 @@ class IaAssistenteController extends DefaultController
             // Financeiro do mês
             $inicioMes = (clone $hoje)->modify('first day of this month')->setTime(0, 0, 0);
 
-            $entradas = $this->ems->getRepository(\App\Entity\Financeiro::class)
+            $entradas = $this->em->getRepository(\App\Entity\Financeiro::class)
                 ->createQueryBuilder('f')
                 ->select('SUM(f.valor)')
                 ->where('f.estabelecimentoId = :estab')
@@ -1952,7 +1939,7 @@ class IaAssistenteController extends DefaultController
             $message .= "R$ " . number_format($entradas ?? 0, 2, ',', '.') . "\n\n";
 
             // Débitos pendentes
-            $debitos = $this->ems->getRepository(\App\Entity\FinanceiroPendente::class)
+            $debitos = $this->em->getRepository(\App\Entity\FinanceiroPendente::class)
                 ->createQueryBuilder('f')
                 ->select('SUM(f.valor)')
                 ->where('f.estabelecimentoId = :estab')
@@ -2104,12 +2091,12 @@ class IaAssistenteController extends DefaultController
             }
 
             // Salvar usando o repositório
-            $consultaRepo = $this->ems->getRepository(\App\Entity\Consulta::class);
+            $consultaRepo = $this->em->getRepository(\App\Entity\Consulta::class);
             if (method_exists($consultaRepo, 'salvarConsulta')) {
                 $consultaRepo->salvarConsulta($consulta);
             } else {
-                $this->ems->persist($consulta);
-                $this->ems->flush();
+                $this->em->persist($consulta);
+                $this->em->flush();
             }
 
             $session->remove('ia_contexto');
@@ -2217,7 +2204,7 @@ class IaAssistenteController extends DefaultController
     private function buscarPetFlexivel(string $petNome, int $baseId)
     {
         // 1. Busca exata (case-insensitive)
-        $pet = $this->ems->getRepository(\App\Entity\Pet::class)
+        $pet = $this->em->getRepository(\App\Entity\Pet::class)
             ->createQueryBuilder('p')
             ->where('LOWER(p.nome) = :nome')
             ->andWhere('p.estabelecimentoId = :baseId')
@@ -2230,7 +2217,7 @@ class IaAssistenteController extends DefaultController
         if ($pet) return $pet;
 
         // 2. Busca com LIKE (contém)
-        $pet = $this->ems->getRepository(\App\Entity\Pet::class)
+        $pet = $this->em->getRepository(\App\Entity\Pet::class)
             ->createQueryBuilder('p')
             ->where('LOWER(p.nome) LIKE :nome')
             ->andWhere('p.estabelecimentoId = :baseId')
@@ -2243,7 +2230,7 @@ class IaAssistenteController extends DefaultController
         if ($pet) return $pet;
 
         // 3. Busca aproximada (Levenshtein)
-        $todosPets = $this->ems->getRepository(\App\Entity\Pet::class)
+        $todosPets = $this->em->getRepository(\App\Entity\Pet::class)
             ->createQueryBuilder('p')
             ->where('p.estabelecimentoId = :baseId')
             ->setParameter('baseId', $baseId)

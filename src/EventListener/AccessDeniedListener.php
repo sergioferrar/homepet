@@ -27,6 +27,10 @@ class AccessDeniedListener implements EventSubscriberInterface
     private $urlGenerator;
     private $entityManager;
     private $router;
+    private $managerRegistry;
+    
+    // Flag para prevenir recursão infinita
+    private static $processing = false;
 
     public function __construct(EntityManagerInterface $entityManager, ?Security $security, UrlGeneratorInterface $urlGenerator, RouterInterface $router, ManagerRegistry $managerRegistry, RequestStack $request)
     {
@@ -36,129 +40,180 @@ class AccessDeniedListener implements EventSubscriberInterface
         $this->router = $router;
         $this->request = $request->getCurrentRequest();
         $this->managerRegistry = $managerRegistry;
-
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
-            // the priority must be greater than the Security HTTP
-            // ExceptionListener, to make sure it's called before
-            // the default exception listener
-            KernelEvents::EXCEPTION => ['onKernelException'],
-            // KernelEvents::CONTROLLER_ARGUMENTS => ['onControllerException'],
-            // KernelEvents::HANDLE => ['handle'],
+            KernelEvents::EXCEPTION => ['onKernelException', -100], // Prioridade baixa
         ];
     }
 
-//    public function onControllerException(ControllerArgumentsEvent $eventController)
-//    {
-//        /**
-//         * CRUZAR AS INFORMAÇÕES DO GRUPO DE ACESSO COM O MENU ACESSADO
-//         * USAR O IDGRUPO PARA COMPARAR COM O IDGRUPO DO USUARIO X IDGRUPO_MENU
-//         * SE O MENU ACESSADO NÃO TIVER A ROTA CADASTRADA, FAZER VALIDAÇÃO
-//         * COM O MENU PAI
-//         */
-//        // echo "onControllerException";
-//        $controller = $eventController->getController();
-//        $request = $eventController->getRequest();
-//        // $currentPageRole = $controller[0];
-//        $route = $request->attributes->get('_route');
-//
-//        return !$this->existRoute($route);
-//    }
-
     public function onKernelException(ExceptionEvent $event)
     {
-        // echo "onKernelException"; exit;
+        // ============================================================
+        // PREVENIR RECURSÃO INFINITA
+        // ============================================================
+        if (self::$processing) {
+            // Já está processando, não fazer nada para evitar loop
+            return;
+        }
+        
+        self::$processing = true;
+        
+        try {
+            $this->handleException($event);
+        } finally {
+            self::$processing = false;
+        }
+    }
+    
+    private function handleException(ExceptionEvent $event)
+    {
         $exception = $event->getThrowable();
-        dd($exception);
         $request = $event->getRequest();
         $mensagem = '';
+        // dd($exception);
+        
+        // ============================================================
+        // ROTAS QUE NÃO DEVEM SER INTERCEPTADAS
+        // ============================================================
+        $route = $request->attributes->get('_route');
+        $ignoredRoutes = ['logout', 'app_login', 'api_login', '_wdt', '_profiler'];
+        
+        if (in_array($route, $ignoredRoutes)) {
+            return; // Não interceptar essas rotas
+        }
 
-
+        // ============================================================
+        // VERIFICAÇÃO DE SESSÃO E USUÁRIO
+        // ============================================================
         if (!$request->getSession()->has('login') && !$this->security->getUser()) {
-            $mensagem = '';//str_replace(' ', '-', 'Sua sessão expirou');
-            $param = ($mensagem != ''?['error' => $mensagem]:[]);
+            $mensagem = ($exception);//'';
+            $param = ($mensagem != '' ? ['error' => $mensagem] : []);
 
             $url = $this->router->generate('logout', $param);
             $event->getRequest()->getSession()->save();
             $response = new RedirectResponse($url);
             $event->setResponse($response);
             $event->stopPropagation();
-            return $response;
+            return;
         }
 
         if (!$request->getSession()->has('login') && $this->security->getUser()) {
-            $mensagem = 'A-sua-sessão-expirou';
-            if ($this->security->getUser()->getStatus() == "Inativo") {
-                $mensagem = 'Usuário-Inativo';
-            }
+            $mensagem = ($exception);//'A-sua-sessão-expirou';
+            // if ($this->security->getUser()->getStatus() == "Inativo") {
+            //     $mensagem = 'Usuário-Inativo';
+            // }
             $url = $this->router->generate('logout', ['error' => $mensagem]);
             $event->getRequest()->getSession()->save();
             $response = new RedirectResponse($url);
             $event->setResponse($response);
             $event->stopPropagation();
-            return $response;
+            return;
         }
 
         if (!$this->security->getUser()) {
-            $mensagem = 'A-sua-sessão-expirou';
+            $mensagem = ($exception);//'A-sua-sessão-expirou';
             $url = $this->router->generate('logout', ['error' => $mensagem]);
             $event->getRequest()->getSession()->save();
             $response = new RedirectResponse($url);
             $event->setResponse($response);
             $event->stopPropagation();
-            return $response;
+            return;
         }
 
-        (new DynamicConnectionManager($this->managerRegistry))->restoreOriginal();
+        // ============================================================
+        // PULAR VALIDAÇÕES PARA SUPER ADMIN
+        // ============================================================
+        $user = $this->security->getUser();
+        $roles = $user->getRoles();
         
-        $estabelecimento = $this->entityManager
-        ->getRepository(\App\Entity\Estabelecimento::class)
-        ->findOneById($this->security->getUser()->getPetshopId());
+        // // Se é Super Admin, NÃO valida plano nem estabelecimento
+        if ($user->getAccessLevel() === 'Super Admin') {
+            return;
+        }
 
-        $validaPlano = $this->verificarPlanoPorPeriodo($estabelecimento->getDataPlanoInicio(), $estabelecimento->getDataPlanoFim());
-        // dd($estabelecimento);
+        // ============================================================
+        // VERIFICAR IMPERSONATION
+        // ============================================================
+        $impersonating = $request->getSession()->get('impersonating_establishment', false);
+        if ($impersonating) {
+            // Super Admin acessando como estabelecimento, não validar
+            return;
+        }
+
+        // ============================================================
+        // VALIDAÇÕES APENAS PARA USUÁRIOS NORMAIS
+        // ============================================================
+        $petshopId = $user->getPetshopId();
         
-        if($validaPlano){
+        // Se não tem petshop_id, redireciona para login
+        if ($petshopId === null) {
+            $mensagem = ($exception);//'Usuário-sem-estabelecimento';
+            $url = $this->router->generate('logout', ['error' => $mensagem]);
+            $event->getRequest()->getSession()->save();
+            $response = new RedirectResponse($url);
+            $event->setResponse($response);
+            $event->stopPropagation();
+            return;
+        }
 
+        // Restaurar conexão original antes de buscar
+        try {
+            (new DynamicConnectionManager($this->managerRegistry))->restoreOriginal();
+        } catch (\Exception $e) {
+            // Se falhar ao restaurar conexão, apenas retornar
+            return;
+        }
+        
+        // Buscar estabelecimento
+        try {
+            $estabelecimento = $this->entityManager
+                ->getRepository(\App\Entity\Estabelecimento::class)
+                ->findOneById($petshopId);
+        } catch (\Exception $e) {
+            // Se falhar ao buscar, apenas retornar
+            return;
+        }
+
+        if (!$estabelecimento) {
+            $mensagem = ($exception);//'Estabelecimento-não-encontrado';
+            $url = $this->router->generate('logout', ['error' => $mensagem]);
+            $event->getRequest()->getSession()->save();
+            $response = new RedirectResponse($url);
+            $event->setResponse($response);
+            $event->stopPropagation();
+            return;
+        }
+
+        // Validar plano
+        $validaPlano = $this->verificarPlanoPorPeriodo(
+            $estabelecimento->getDataPlanoInicio(), 
+            $estabelecimento->getDataPlanoFim()
+        );
+        
+        if ($validaPlano) {
             $mensagem = str_replace(' ', '-', $validaPlano);
             $url = $this->router->generate('logout', ['error' => $mensagem]);
             $event->getRequest()->getSession()->save();
             $response = new RedirectResponse($url);
             $event->setResponse($response);
             $event->stopPropagation();
-            return $response;
+            return;
         }
 
-        if (!$exception instanceof AccessDeniedException && $mensagem !== '') {
-            $url = $this->router->generate('error_show', [$exception]);
-            $event->getRequest()->getSession()->save();
-            $response = new RedirectResponse($url);
-            $event->setResponse($response);
-            $event->stopPropagation();
-            return $response;
+        // Se não é AccessDeniedException, não fazer nada
+        if (!$exception instanceof AccessDeniedException) {
+            return;
         }
-
-        // $event->getRequest()->getSession()->save();
-
-        // dd($event, $request, $url, $mensagem, $exception);
-        // ... perform some action (e.g. logging)
-
-        // optionally set the custom response
-        // $event->setResponse($this->redirectToRoute('logout'), 403);
-
-        // or stop propagation (prevents the next exception listeners from being called)
     }
 
     public function verificarPlanoPorPeriodo($dataInicio, $dataFim)
     {
-        if($dataInicio && $dataFim){
-
+        if ($dataInicio && $dataFim) {
             $hoje = new \DateTime();
 
-            // dd($dataInicio, $dataFim    );
             if ($hoje > $dataFim) {
                 return "Seu plano expirou em " . $dataFim->format('d/m/Y') . ". Por favor, renove seu plano.";
             } 
@@ -167,17 +222,11 @@ class AccessDeniedListener implements EventSubscriberInterface
         return false;
     }
 
-    /**
-     * Returns a RedirectResponse to the given URL.
-     */
     protected function redirect(string $url, int $status = 301): RedirectResponse
     {
         return new RedirectResponse($url, $status);
     }
 
-    ## Existencia da rota - 404
-    ## Grupo de acesso da rota - 403
-    ## Grupo de acesso do usuario na rota - 403
     private function existRoute($route)
     {
         $repositoryMenu = $this->entityManager->getRepository(Menu::class);
@@ -206,5 +255,4 @@ class AccessDeniedListener implements EventSubscriberInterface
 
         return true;
     }
-
 }

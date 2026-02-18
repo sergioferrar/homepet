@@ -46,6 +46,34 @@ services:
         arguments:
             $apiKey: '%env(GEMINI_API_KEY)%'
 
+    # App\Service\Payment\MercadoPagoService:
+    #     arguments:
+    #         $mercadoPagoToken: '%mercado_pago_token%'
+
+
+    # ==========================================
+    # PAYMENT GATEWAY SYSTEM
+    # ==========================================
+    
+    # Interface e Factory para Gateways de Pagamento
+    App\Service\Payment\PaymentGatewayFactory:
+        arguments:
+            - '@service_container'
+        calls:
+            # Registrar MercadoPago como gateway disponível
+            - method: registerGateway
+              arguments:
+                  - 'mercadopago'
+                  - '@App\Service\Payment\MercadoPagoService'
+            # Adicione outros gateways aqui no futuro
+            # - method: registerGateway
+            #   arguments:
+            #       - 'pagseguro'
+            #       - '@App\Service\Payment\PagSeguroService'
+    
+    # MercadoPago Service (Nova implementação com interface)
     App\Service\Payment\MercadoPagoService:
         arguments:
-            $mercadoPagoToken: '%mercado_pago_token%'
+            - '@Symfony\Contracts\HttpClient\HttpClientInterface'
+            - '%env(MERCADOPAGO_ACCESS_TOKEN)%'
+    

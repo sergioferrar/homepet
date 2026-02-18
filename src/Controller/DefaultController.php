@@ -83,7 +83,8 @@ class DefaultController extends AbstractController
         $this->session = $this->request->getSession();
         $this->tempDirManager = $tempDirManager;
         $this->databaseBkp = $databaseBkp;
-        $this->estabelecimentoId = $this->getIdBase();
+        // CORRIGIDO: Lazy loading - só carrega quando necessário, evita problemas na autenticação
+        $this->estabelecimentoId = null;
         $this->entityManager = $entityManager;
         $this->logger = $logger;
 
@@ -221,10 +222,14 @@ class DefaultController extends AbstractController
 
     /**
      * Retorna o ID base da sessão (estabelecimento/usuário)
+     * CORRIGIDO: Lazy loading - carrega o ID quando solicitado
      */
     public function getIdBase(): int
     {
-        return (int)$this->session->get('estabelecimento_id');
+        if ($this->estabelecimentoId === null) {
+            $this->estabelecimentoId = (int)$this->session->get('estabelecimento_id', 0);
+        }
+        return $this->estabelecimentoId;
     }
     
 

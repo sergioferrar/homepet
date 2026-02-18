@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\Invoice;
+use App\Entity\Fatura;
 use App\Entity\Estabelecimento;
 use App\Repository\InvoiceRepository;
 use App\Repository\EstabelecimentoRepository;
@@ -33,7 +33,7 @@ class InvoiceController extends DefaultController
         // Buscar estabelecimento do usuário
         $estabelecimentoId = $user->getPetshopId();
         
-        $invoices = $this->getRepositorio(\App\Entity\Invoice::class)->findByEstabelecimento($estabelecimentoId);
+        $invoices = $this->getRepositorio(\App\Entity\Fatura::class)->findByEstabelecimento($estabelecimentoId);
 
         return $this->render('invoice/minhas.html.twig', [
             'invoices' => $invoices,
@@ -45,7 +45,7 @@ class InvoiceController extends DefaultController
      */
     public function detalhes(Request $request, int $id): Response
     {
-        $invoice = $this->getRepositorio(\App\Entity\Invoice::class)->find($id);
+        $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($id);
         
         if (!$invoice) {
             throw $this->createNotFoundException('Invoice não encontrado');
@@ -67,7 +67,7 @@ class InvoiceController extends DefaultController
      */
     public function pagar(Request $request, int $id, EstabelecimentoRepository $estabelecimentoRepository,PaymentGatewayFactory $paymentGatewayFactory): Response
     {
-        $invoice = $this->getRepositorio(\App\Entity\Invoice::class)->find($id);
+        $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($id);
         
         if (!$invoice) {
             throw $this->createNotFoundException('Invoice não encontrado');
@@ -102,7 +102,7 @@ class InvoiceController extends DefaultController
                 // Atualizar invoice com subscription_id
                 $invoice->setSubscriptionId($result['subscription_id']);
                 $invoice->setPaymentGateway($gateway->getGatewayName());
-                $this->getRepositorio(\App\Entity\Invoice::class)->add($invoice, true);
+                $this->getRepositorio(\App\Entity\Fatura::class)->add($invoice, true);
 
                 // Redirecionar para página de pagamento
                 return $this->redirect($result['init_point']);
@@ -189,7 +189,7 @@ class InvoiceController extends DefaultController
      */
     public function download(Request $request, int $id): Response
     {
-        $invoice = $this->getRepositorio(\App\Entity\Invoice::class)->find($id);
+        $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($id);
         
         if (!$invoice) {
             throw $this->createNotFoundException('Invoice não encontrado');

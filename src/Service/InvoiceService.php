@@ -2,9 +2,9 @@
 
 namespace App\Service;
 
-use App\Entity\Invoice;
+use App\Entity\Fatura;
 use App\Entity\Estabelecimento;
-use App\Repository\InvoiceRepository;
+use App\Repository\FaturaRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class InvoiceService
@@ -15,7 +15,7 @@ class InvoiceService
 
     public function __construct(
         EntityManagerInterface $em,
-        InvoiceRepository $invoiceRepository,
+        FaturaRepository $invoiceRepository,
         EmailService $emailService
     ) {
         $this->em = $em;
@@ -26,9 +26,9 @@ class InvoiceService
     /**
      * Cria um novo invoice para um estabelecimento
      */
-    public function createInvoice(Estabelecimento $estabelecimento, array $data): Invoice
+    public function createInvoice(Estabelecimento $estabelecimento, array $data): Fatura
     {
-        $invoice = new Invoice();
+        $invoice = new Fatura();
         $invoice->setEstabelecimentoId($estabelecimento->getId());
         $invoice->setNumeroInvoice($this->generateInvoiceNumber());
         $invoice->setTipo($data['tipo'] ?? 'assinatura');
@@ -135,7 +135,7 @@ class InvoiceService
     /**
      * Envia notificação de invoice criado
      */
-    public function sendInvoiceNotification(Invoice $invoice, string $email): void
+    public function sendInvoiceNotification(Fatura $invoice, string $email): void
     {
         // TODO: Implementar template de email
         $subject = "Nova fatura - " . $invoice->getNumeroInvoice();
@@ -161,7 +161,7 @@ class InvoiceService
     /**
      * Renova assinatura de um estabelecimento
      */
-    public function renewSubscription(Estabelecimento $estabelecimento, int $planoId, float $valor): Invoice
+    public function renewSubscription(Estabelecimento $estabelecimento, int $planoId, float $valor): Fatura
     {
         $dataVencimento = clone $estabelecimento->getDataPlanoFim();
         $dataVencimento->modify('+30 days');

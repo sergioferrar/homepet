@@ -255,7 +255,7 @@ class LandingpageController extends DefaultController
                 // Atualizar invoice com subscription_id
                 $invoice->setSubscriptionId($result['subscription_id']);
                 $invoice->setPaymentGateway($gateway->getGatewayName());
-                $this->getRepositorio(\App\Entity\Invoice::class)->add($invoice, true);
+                $this->getRepositorio(\App\Entity\Fatura::class)->add($invoice, true);
 
                 // Redirecionar para página de pagamento do gateway
                 return $this->redirect($result['init_point']);

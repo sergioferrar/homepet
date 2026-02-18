@@ -28,21 +28,23 @@ class FinanceiroController extends DefaultController
     public function index(Request $request, FinanceiroRepository $financeiroRepo, FinanceiroPendenteRepository $financeiroPendenteRepo): Response
     {
         $this->switchDB();
-        $baseId = $this->getIdBase();     
+        $baseId = $this->getIdBase();
 
         // --- Aba Diário ---
         $dataDiario = $request->query->get('data') ? date('Y-m-d', strtotime($request->query->get('data'))) : date('Y-m-d');
-        $financeirosDiarios = $financeiroRepo->findTotalByDate($baseId, $dataDiario);
         
+        // findTotalByDate agora retorna array com LEFT JOINs
+        $financeirosDiarios = $financeiroRepo->findTotalByDate($baseId, $dataDiario);
+
         // --- Aba Caixa da Clínica ---
         $financeirosClinica = $financeiroRepo->findTotalByDateAndOrigem($baseId, $dataDiario, 'clinica');
-        
+
         // --- Aba Caixa do Banho e Tosa ---
         $financeirosBanhoTosa = $financeiroRepo->findTotalByDateAndOrigem($baseId, $dataDiario, 'banho_tosa');
-        
+
         // --- Aba Caixa da Hospedagem ---
         $financeirosHospedagem = $financeiroRepo->findTotalByDateAndOrigem($baseId, $dataDiario, 'hospedagem');
-        
+
         // --- Aba Pendente (mantém para compatibilidade) ---
         $financeirosPendentes = $financeiroPendenteRepo->findAllClinica($baseId);
 
@@ -54,9 +56,9 @@ class FinanceiroController extends DefaultController
         $relatorioData = $financeiroRepo->getRelatorioPorPeriodo($baseId, $dataInicio, $dataFim);
 
         // --- Aba Inativos ---
-        // Busca vendas inativas da tabela venda
+        // findInativos agora retorna arrays com LEFT JOINs
         $vendasInativas = $financeiroRepo->findInativos($baseId);
-        
+
         // Busca registros inativos do financeiro_pendente
         $conn = $this->getDoctrine()->getConnection();
         $sqlPendentesInativos = "SELECT fp.id, fp.descricao, fp.valor AS total, fp.data, fp.pet_id,
@@ -69,14 +71,14 @@ class FinanceiroController extends DefaultController
                                  WHERE fp.estabelecimento_id = :baseId
                                    AND fp.status = 'inativo'
                                  ORDER BY fp.data DESC";
-        
+
         $pendentesInativos = $conn->fetchAllAssociative($sqlPendentesInativos, ['baseId' => $baseId]);
-        
+
         // Mescla vendas inativas e pendentes inativos
         $financeirosInativos = array_merge($vendasInativas, $pendentesInativos);
-        
+
         // Ordena por data decrescente
-        usort($financeirosInativos, function($a, $b) {
+        usort($financeirosInativos, function ($a, $b) {
             return strtotime($b['data']) - strtotime($a['data']);
         });
 
@@ -85,18 +87,18 @@ class FinanceiroController extends DefaultController
         $fluxoCaixa = $this->getFluxoCaixa($baseId, $dataFluxo);
 
         return $this->render('financeiro/index.html.twig', [
-            'financeiros' => $financeirosDiarios,
-            'financeiros_clinica' => $financeirosClinica,
-            'financeiros_banho_tosa' => $financeirosBanhoTosa,
-            'financeiros_hospedagem' => $financeirosHospedagem,
-            'data' => $dataDiario,
-            'pendentes' => $financeirosPendentes,
-            'mes_inicio' => $mesInicio,
-            'mes_fim' => $mesFim,
-            'relatorio' => $relatorioData,
-            'inativos' => $financeirosInativos,
-            'fluxo_caixa' => $fluxoCaixa,
-            'data_fluxo' => $dataFluxo,
+            'financeiros'              => $financeirosDiarios,
+            'financeiros_clinica'      => $financeirosClinica,
+            'financeiros_banho_tosa'   => $financeirosBanhoTosa,
+            'financeiros_hospedagem'   => $financeirosHospedagem,
+            'data'                     => $dataDiario,
+            'pendentes'                => $financeirosPendentes,
+            'mes_inicio'               => $mesInicio,
+            'mes_fim'                  => $mesFim,
+            'relatorio'                => $relatorioData,
+            'inativos'                 => $financeirosInativos,
+            'fluxo_caixa'              => $fluxoCaixa,
+            'data_fluxo'               => $dataFluxo,
         ]);
     }
 
@@ -111,9 +113,9 @@ class FinanceiroController extends DefaultController
         if ($request->isMethod('POST')) {
             $financeiro = new Financeiro();
             $financeiro->setDescricao($request->request->get('descricao'));
-            $financeiro->setValor((float)$request->request->get('valor'));
+            $financeiro->setValor((float) $request->request->get('valor'));
             $financeiro->setData(new \DateTime($request->request->get('data')));
-            $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int)$request->request->get('pet_id') : null);
+            $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int) $request->request->get('pet_id') : null);
             $financeiro->setEstabelecimentoId($baseId);
 
             $financeiroRepo->save($baseId, $financeiro);
@@ -127,30 +129,37 @@ class FinanceiroController extends DefaultController
 
     /**
      * @Route("/editar/{id}", name="financeiro_editar")
+     * 
+     * CORRIGIDO: findFinanceiro agora retorna array, não objeto
      */
     public function editar(Request $request, int $id, FinanceiroRepository $financeiroRepo, PetRepository $petRepo): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
-        $financeiro = $financeiroRepo->findFinanceiro($baseId, $id);
+        
+        // findFinanceiro agora retorna array (não objeto)
+        $financeiroData = $financeiroRepo->findFinanceiro($baseId, $id);
 
-        if (!$financeiro) {
+        if (!$financeiroData) {
             throw $this->createNotFoundException('O registro financeiro não foi encontrado');
         }
 
         if ($request->isMethod('POST')) {
+            // Reconstrói objeto Financeiro a partir do array
+            $financeiro = new Financeiro();
+            $financeiro->setId($id);
             $financeiro->setDescricao($request->request->get('descricao'));
-            $financeiro->setValor((float)$request->request->get('valor'));
+            $financeiro->setValor((float) $request->request->get('valor'));
             $financeiro->setData(new \DateTime($request->request->get('data')));
-            $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int)$request->request->get('pet_id') : null);
+            $financeiro->setPetId($request->request->get('pet_id') !== '' ? (int) $request->request->get('pet_id') : null);
 
             $financeiroRepo->update($baseId, $financeiro);
             return $this->redirectToRoute('financeiro_index');
         }
 
         return $this->render('financeiro/editar.html.twig', [
-            'financeiro' => $financeiro,
-            'pets' => $petRepo->findAllPets($baseId)
+            'financeiro' => $financeiroData,  // Passa array para view
+            'pets'       => $petRepo->findAllPets($baseId)
         ]);
     }
 
@@ -266,11 +275,11 @@ class FinanceiroController extends DefaultController
         $fluxo = $this->getFluxoCaixa($baseId, $data);
 
         return new JsonResponse([
-            'total_entradas' => $fluxo['total_entradas'],
-            'total_saidas' => $fluxo['total_saidas'],
-            'saldo' => $fluxo['saldo'],
+            'total_entradas'       => $fluxo['total_entradas'],
+            'total_saidas'         => $fluxo['total_saidas'],
+            'saldo'                => $fluxo['saldo'],
             'quantidade_movimentos' => count($fluxo['movimentos']),
-            'movimentos' => $fluxo['movimentos']
+            'movimentos'           => $fluxo['movimentos']
         ]);
     }
 
@@ -323,12 +332,12 @@ class FinanceiroController extends DefaultController
             if ($valor > 0) {
                 $totalEntradas += $valor;
                 $movimentos[] = [
-                    'data' => $v->getData(),
+                    'data'      => $v->getData(),
                     'descricao' => $v->getCliente() . ' - ' . ucfirst($v->getOrigem()),
-                    'origem' => ucfirst(str_replace('_', ' ', $v->getOrigem())),
-                    'metodo' => $v->getMetodoPagamento() ?? '-',
-                    'tipo' => 'ENTRADA',
-                    'valor' => $valor
+                    'origem'    => ucfirst(str_replace('_', ' ', $v->getOrigem())),
+                    'metodo'    => $v->getMetodoPagamento() ?? '-',
+                    'tipo'      => 'ENTRADA',
+                    'valor'     => $valor
                 ];
             }
         }
@@ -339,12 +348,12 @@ class FinanceiroController extends DefaultController
             if ($valor > 0) {
                 $totalSaidas += $valor;
                 $movimentos[] = [
-                    'data' => $c->getData(),
+                    'data'      => $c->getData(),
                     'descricao' => $c->getDescricao(),
-                    'origem' => 'PDV - Saída Manual',
-                    'metodo' => 'Caixa',
-                    'tipo' => 'SAIDA',
-                    'valor' => $valor
+                    'origem'    => 'PDV - Saída Manual',
+                    'metodo'    => 'Caixa',
+                    'tipo'      => 'SAIDA',
+                    'valor'     => $valor
                 ];
             }
         }
@@ -355,10 +364,10 @@ class FinanceiroController extends DefaultController
         });
 
         return [
-            'movimentos' => $movimentos,
+            'movimentos'     => $movimentos,
             'total_entradas' => $totalEntradas,
-            'total_saidas' => $totalSaidas,
-            'saldo' => $totalEntradas - $totalSaidas
+            'total_saidas'   => $totalSaidas,
+            'saldo'          => $totalEntradas - $totalSaidas
         ];
     }
 }

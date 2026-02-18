@@ -113,8 +113,10 @@ class MenuController extends DefaultController
         $getPlanoLogado = [];
         $plano = [];
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
+            
             // Pegar o estabelecimento a qual pertence o usuario loado
             $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($usuarioLogado->getPetshopId());
+
             // Pegar o plano que o estabelecimento do usuario logado pertence
             $getPlanoLogado = $this->getRepositorio(\App\Entity\Plano::class)->find($estabelecimento->getPlanoId());
 

@@ -14,65 +14,69 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class BoxRepository extends ServiceEntityRepository
 {
+    private $conn;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Box::class);
+        $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    /**
-     * Encontra um box disponível (não ocupado)
-     *
-     * @return Box|null
-     */
-    public function findBoxDisponivel(): ?Box
+    public function findBoxDisponivel(): ?array
     {
-        return $this->createQueryBuilder('b')
-            ->andWhere('b.ocupado = :ocupado')
-            ->setParameter('ocupado', false)
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
+        $sql = "SELECT b.id, b.numero, b.ocupado
+                FROM box b
+                WHERE b.ocupado = 0
+                ORDER BY b.numero ASC
+                LIMIT 1";
+        $result = $this->conn->fetchAssociative($sql);
+        return $result ?: null;
     }
 
-    /**
-     * Encontra todos os boxes ocupados
-     *
-     * @return Box[]
-     */
     public function findBoxesOcupados(): array
     {
-        return $this->createQueryBuilder('b')
-            ->andWhere('b.ocupado = :ocupado')
-            ->setParameter('ocupado', true)
-            ->getQuery()
-            ->getResult();
+        $sql = "SELECT b.id, b.numero, b.ocupado,
+                       h.id AS hospedagem_id, h.data_entrada, h.data_saida,
+                       p.id AS pet_id, p.nome AS pet_nome, p.especie,
+                       c.id AS cliente_id, c.nome AS cliente_nome, c.telefone
+                FROM box b
+                LEFT JOIN hospedagem_caes h ON h.box_id = b.id AND h.data_saida >= NOW()
+                LEFT JOIN pet p ON p.id = h.pet_id
+                LEFT JOIN cliente c ON c.id = h.cliente_id
+                WHERE b.ocupado = 1
+                ORDER BY b.numero ASC";
+        return $this->conn->fetchAllAssociative($sql);
     }
 
-    /**
-     * Encontra um box pelo número
-     *
-     * @param int $numero
-     * @return Box|null
-     */
-    public function findByNumero(int $numero): ?Box
+    public function findByNumero(int $numero): ?array
     {
-        return $this->createQueryBuilder('b')
-            ->andWhere('b.numero = :numero')
-            ->setParameter('numero', $numero)
-            ->getQuery()
-            ->getOneOrNullResult();
+        $sql = "SELECT id, numero, ocupado FROM box WHERE numero = :numero LIMIT 1";
+        $result = $this->conn->fetchAssociative($sql, ['numero' => $numero]);
+        return $result ?: null;
     }
 
-    /**
-     * Conta o número total de boxes
-     *
-     * @return int
-     */
     public function countBoxes(): int
     {
-        return $this->createQueryBuilder('b')
-            ->select('COUNT(b.id)')
-            ->getQuery()
-            ->getSingleScalarResult();
+        return (int) $this->conn->fetchOne("SELECT COUNT(id) FROM box");
+    }
+
+    public function findAllComStatus(): array
+    {
+        $sql = "SELECT b.id, b.numero, b.ocupado,
+                       p.nome AS pet_atual, c.nome AS cliente_atual
+                FROM box b
+                LEFT JOIN hospedagem_caes h ON h.box_id = b.id AND h.data_saida >= NOW()
+                LEFT JOIN pet p ON p.id = h.pet_id
+                LEFT JOIN cliente c ON c.id = h.cliente_id
+                ORDER BY b.numero ASC";
+        return $this->conn->fetchAllAssociative($sql);
+    }
+
+    public function atualizarOcupacao(int $boxId, bool $ocupado): void
+    {
+        $this->conn->executeQuery(
+            "UPDATE box SET ocupado = :ocupado WHERE id = :id",
+            ['ocupado' => (int) $ocupado, 'id' => $boxId]
+        );
     }
 }

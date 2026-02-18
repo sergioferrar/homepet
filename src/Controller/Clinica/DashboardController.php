@@ -164,7 +164,7 @@ class DashboardController extends DefaultController
         $vendaItemRepo  = $this->getRepositorio(\App\Entity\VendaItem::class);
         $servicoRepo    = $this->getRepositorio(\App\Entity\Servico::class);
 
-        // --- Pet ---
+        // --- Pet (agora retorna array) ---
         $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $id);
         if (! $pet) {
             throw $this->createNotFoundException('O pet não foi encontrado.');
@@ -180,35 +180,16 @@ class DashboardController extends DefaultController
         $ultimaInternacaoId = $internacaoRepo->findUltimaIdByPet($baseId, $pet['id']);
         $internacoesPet     = $internacaoRepo->listarInternacoesPorPet($baseId, $pet['id']);
 
-        // --- Serviços da clínica ---
-        // Usa o método customizado do repositório para garantir que busca apenas serviços da clínica
+        // --- Serviços da clínica (já retorna array) ---
         $servicosClinica = $servicoRepo->findAllService($baseId, 'clinica');
 
-        // --- VENDAS ---
-        // Busca vendas pagas (status 'Aberta' ou 'Paga') - exclui Inativa
-        $vendasPagasAberta = $vendasRepo->findBy([
-            'estabelecimentoId' => $baseId,
-            'petId'             => $pet['id'],
-            'status'            => 'Aberta',
-        ]);
-
-        $vendasPagasPaga = $vendasRepo->findBy([
-            'estabelecimentoId' => $baseId,
-            'petId'             => $pet['id'],
-            'status'            => 'Paga',
-        ]);
-
-        // Mescla as vendas pagas
-        $vendasPagas = array_merge($vendasPagasAberta, $vendasPagasPaga);
-
-        // Busca apenas vendas pendentes (não inativas) para calcular débito
+        // --- VENDAS (agora com método SQL otimizado) ---
+        $vendasPagas     = $vendasRepo->findByPet($baseId, $pet['id']);
         $vendasPendentes = $vendasRepo->findBy([
             'estabelecimentoId' => $baseId,
             'petId'             => $pet['id'],
             'status'            => 'Pendente',
         ]);
-
-        // Busca vendas em carrinho (aguardando finalização no PDV)
         $vendasCarrinho = $vendasRepo->findBy([
             'estabelecimentoId' => $baseId,
             'petId'             => $pet['id'],
@@ -279,51 +260,79 @@ class DashboardController extends DefaultController
             $itensVenda  = [];
             $resumoItens = [];
 
-            $itens = $vendaItemRepo->findBy(['venda' => $venda]);
+            // Se venda é objeto entity, adaptar
+            if (is_object($venda) && method_exists($venda, 'getId')) {
+                $vendaId = $venda->getId();
+                $vendaTotal = $venda->getTotal();
+                $vendaData = $venda->getData();
+            } else {
+                // Se é array do novo repository
+                $vendaId = $venda['id'];
+                $vendaTotal = $venda['total'];
+                $vendaData = new \DateTime($venda['data']);
+            }
+
+            $itens = $vendaItemRepo->findBy(['venda' => $vendaId]);
 
             foreach ($itens as $item) {
-                $servico = $servicoRepo->find($item->getProduto());
+                // Se item é array, adaptar
+                if (is_array($item)) {
+                    $servicoId = $item['produto_id'];
+                    $quantidade = $item['quantidade'];
+                    $valorUnitario = $item['preco_unitario'];
+                    $descricao = $item['produto'] ?? 'Produto';
+                } else {
+                    $servicoId = $item->getProduto();
+                    $quantidade = $item->getQuantidade();
+                    $valorUnitario = $item->getValorUnitario();
+                    
+                    $servico = $servicoRepo->find($servicoId);
+                    $descricao = is_object($servico) ? $servico->getDescricao() : 'Produto';
+                }
 
                 $itensVenda[] = [
-                    'descricao'      => $servico->getDescricao(),
-                    'quantidade'     => $item->getQuantidade(),
-                    'valor_unitario' => $item->getValorUnitario(),
-                    'subtotal'       => $item->getQuantidade() * $item->getValorUnitario(),
+                    'descricao'      => $descricao,
+                    'quantidade'     => $quantidade,
+                    'valor_unitario' => $valorUnitario,
+                    'subtotal'       => $quantidade * $valorUnitario,
                 ];
 
-                $resumoVentaItem[$venda->getId()][] = [
-                    'item'       => $servico->getDescricao(),
-                    'valor'      => $item->getValorUnitario(),
-                    'quantidade' => $item->getQuantidade(),
-                    'subtotal'   => $item->getQuantidade() * $item->getValorUnitario(),
+                $resumoVentaItem[$vendaId][] = [
+                    'item'       => $descricao,
+                    'valor'      => $valorUnitario,
+                    'quantidade' => $quantidade,
+                    'subtotal'   => $quantidade * $valorUnitario,
                 ];
 
-                $resumoItens[] = $servico->getDescricao();
+                $resumoItens[] = $descricao;
             }
 
             $timeline_items[] = [
-                'data'        => $venda->getData(),
+                'data'        => $vendaData,
                 'tipo'        => 'Venda',
                 'resumo'      => implode(' + ', $resumoItens),
                 'observacoes' => 'Venda concluída',
-                'valor'       => $venda->getTotal(),
+                'valor'       => $vendaTotal,
                 'status'      => 'paga',
                 'venda_itens' => $itensVenda,
-                'venda_id'    => $venda->getId(),
+                'venda_id'    => $vendaId,
             ];
         }
 
         // --- VENDAS PENDENTES ---
         foreach ($vendasPendentes as $venda) {
-            $timeline_items[] = [
-                'data'        => $venda->getData(),
-                'tipo'        => 'Débito',
-                'resumo'      => 'Venda pendente',
-                'observacoes' => 'Pagamento pendente',
-                'valor'       => $venda->getTotal(),
-                'status'      => 'pendente',
-                'cor'         => '#dc3545',
-            ];
+            // Adaptar para objetos entity
+            if (is_object($venda)) {
+                $timeline_items[] = [
+                    'data'        => $venda->getData(),
+                    'tipo'        => 'Débito',
+                    'resumo'      => 'Venda pendente',
+                    'observacoes' => 'Pagamento pendente',
+                    'valor'       => $venda->getTotal(),
+                    'status'      => 'pendente',
+                    'cor'         => '#dc3545',
+                ];
+            }
         }
 
         // --- AGRUPA TIMELINE ---
@@ -335,7 +344,7 @@ class DashboardController extends DefaultController
         // --- TOTAL DE DÉBITOS ---
         $totalDebitos = 0;
         foreach ($vendasPendentes as $venda) {
-            $totalDebitos += $venda->getTotal();
+            $totalDebitos += is_object($venda) ? $venda->getTotal() : ($venda['total'] ?? 0);
         }
 
         // --- DATA PARA VIEW ---
@@ -356,7 +365,7 @@ class DashboardController extends DefaultController
         $data['vendas_pendentes']     = $vendasPendentes;
         $data['vendas_carrinho']      = $vendasCarrinho;
         $data['vendas_items']         = $resumoVentaItem;
-        // dd($data['vendas_pagas'],$resumoItens);
+        
         return $this->render('clinica/detalhes_pet.html.twig', $data);
     }
 
@@ -374,6 +383,7 @@ class DashboardController extends DefaultController
         $inicioMes     = (clone $hoje)->modify('first day of this month')->setTime(0, 0);
         $semanaPassada = (clone $hoje)->modify('-7 days');
 
+        // Métodos retornam arrays agora
         $financeiroHoje   = $repoFinanceiro->findByDate($baseId, $hoje);
         $financeiroSemana = $repoFinanceiro->getRelatorioPorPeriodo($baseId, $semanaPassada, $hoje);
         $financeiroMes    = $repoFinanceiro->getRelatorioPorPeriodo($baseId, $inicioMes, $hoje);

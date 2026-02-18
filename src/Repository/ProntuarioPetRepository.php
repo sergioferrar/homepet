@@ -1,13 +1,19 @@
 <?php
 namespace App\Repository;
 
-use Doctrine\DBAL\Connection;
 use App\Entity\ProntuarioPet;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 
 class ProntuarioPetRepository
 {
     private $conn;
-    public function __construct(Connection $conn) { $this->conn = $conn; }
+
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, ProntuarioPet::class);
+        $this->conn = $this->getEntityManager()->getConnection();
+    }
 
     public function salvar(int $baseId, ProntuarioPet $r)
     {

@@ -55,7 +55,7 @@ class Agendamento
     /**
      * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true, name="taxa_taxi_dog")
      */
-    private ?float $taxa_taxi_dog = null;
+    private ?string $taxa_taxi_dog = null;
 
     /**
      * @ORM\Column(type="boolean", name="pacote_semanal", options={"default": false})

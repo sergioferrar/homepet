@@ -508,7 +508,8 @@
             </a>
         </li>
 
-        {{ render(path('leftMenu', {activeRoute : route})) }}
+        
+        {% include 'left-menu.html.twig' %}
 
             <li class="nav-item">
                 <a class="nav-link {% if app.request.attributes.get('_route') == 'app_plano' or app.request.attributes.get('_route') == 'app_estabelecimento' %} {% else %} collapsed {% endif %}"

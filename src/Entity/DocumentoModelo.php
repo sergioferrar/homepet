@@ -28,9 +28,9 @@ class DocumentoModelo
     private ?string $tipo = null; // ✅ novo campo
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private string $conteudo;
+    private ?string $conteudo;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -43,9 +43,9 @@ class DocumentoModelo
     private ?string $rodape = null;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="datetime", length=255)
      */
-    private ?\DateTime $criado_em = null;
+    private ?\DateTimeInterface $criado_em = null;
 
     public function getId(): ?int
     {
@@ -113,12 +113,12 @@ class DocumentoModelo
         return $this;
     }
 
-    public function getCriadoEm(): ?\DateTime
+    public function getCriadoEm(): ?\DateTimeInterface
     {
         return $this->criado_em;
     }
 
-    public function setCriadoEm(\DateTime $criado_em): self
+    public function setCriadoEm(?\DateTimeInterface $criado_em): self
     {
         $this->criado_em = $criado_em;
         return $this;

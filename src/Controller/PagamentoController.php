@@ -48,7 +48,7 @@ class PagamentoController extends DefaultController
                 // Se tiver invoice_id na sessão, marca como pago
                 if (isset($sessionData['invoice_id'])) {
                     $invoiceService = $this->container->get(\App\Service\InvoiceService::class);
-                    $invoice = $this->getRepositorio(\App\Entity\Invoice::class)->find($sessionData['invoice_id']);
+                    $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($sessionData['invoice_id']);
                     
                     if ($invoice) {
                         $invoiceService->markAsPaid($invoice, [
@@ -112,7 +112,7 @@ class PagamentoController extends DefaultController
                 // Se for pagamento de invoice
                 if (isset($result['external_reference'])) {
                     $invoiceId = $result['external_reference'];
-                    $invoice = $this->getRepositorio(\App\Entity\Invoice::class)->find($invoiceId);
+                    $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($invoiceId);
 
                     if ($invoice && $result['status'] === 'approved') {
                         $invoiceService = $this->container->get(\App\Service\InvoiceService::class);
@@ -167,7 +167,6 @@ class PagamentoController extends DefaultController
      */
     public function fail(Request $request): Response
     {
-        dd($request);
         return $this->render('pagamento/falha.html.twig', []);
     }
 

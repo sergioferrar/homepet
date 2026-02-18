@@ -16,218 +16,270 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class EstoqueRepository extends ServiceEntityRepository
 {
+    private $conn;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Estoque::class);
+        $this->conn = $this->getEntityManager()->getConnection();
     }
 
     /**
-     * Salvar estoque
+     * Persiste um novo estoque
      */
     public function save(Estoque $estoque, bool $flush = false): void
     {
         $this->getEntityManager()->persist($estoque);
-
         if ($flush) {
             $this->getEntityManager()->flush();
         }
     }
 
     /**
-     * Remover estoque
+     * Remove um estoque
      */
     public function remove(Estoque $estoque, bool $flush = false): void
     {
         $this->getEntityManager()->remove($estoque);
-
         if ($flush) {
             $this->getEntityManager()->flush();
         }
     }
 
     /**
-     * Buscar estoque por produto
+     * Busca estoque por produto com dados do produto via LEFT JOIN
      */
-    public function findByProduto(int $produtoId): ?Estoque
+    public function findByProduto(int $produtoId): ?array
     {
-        return $this->createQueryBuilder('e')
-            ->andWhere('e.produtoId = :produtoId')
-            ->setParameter('produtoId', $produtoId)
-            ->getQuery()
-            ->getOneOrNullResult();
+        $sql = "SELECT e.id, e.produto_id, e.estabelecimento_id, e.quantidade_atual,
+                       e.quantidade_disponivel, e.estoque_minimo, e.custo_medio,
+                       e.refrigerado, e.controla_lote, e.controla_validade,
+                       e.local_estoque_id, e.status,
+                       p.nome AS produto_nome, p.descricao AS produto_descricao,
+                       p.preco_venda, p.codigo_barras, p.categoria
+                FROM estoque e
+                LEFT JOIN produto p ON p.id = e.produto_id
+                WHERE e.produto_id = :produtoId
+                LIMIT 1";
+
+        $result = $this->conn->fetchAssociative($sql, ['produtoId' => $produtoId]);
+        return $result ?: null;
     }
 
     /**
-     * Buscar todos os estoques de um estabelecimento
+     * Busca todos os estoques ativos de um estabelecimento com dados do produto
      */
     public function findByEstabelecimento(int $estabelecimentoId): array
     {
-        return $this->createQueryBuilder('e')
-            ->andWhere('e.estabelecimentoId = :estabelecimentoId')
-            ->andWhere('e.status = :status')
-            ->setParameter('estabelecimentoId', $estabelecimentoId)
-            ->setParameter('status', 'ativo')
-            ->orderBy('e.quantidadeAtual', 'ASC')
-            ->getQuery()
-            ->getResult();
+        $sql = "SELECT e.id, e.produto_id, e.quantidade_atual, e.quantidade_disponivel,
+                       e.estoque_minimo, e.custo_medio, e.refrigerado, e.controla_lote,
+                       e.controla_validade, e.local_estoque_id, e.status,
+                       p.nome AS produto_nome, p.descricao AS produto_descricao,
+                       p.preco_venda, p.codigo_barras, p.categoria
+                FROM estoque e
+                LEFT JOIN produto p ON p.id = e.produto_id
+                WHERE e.estabelecimento_id = :estabelecimentoId
+                  AND e.status = 'ativo'
+                ORDER BY e.quantidade_atual ASC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'estabelecimentoId' => $estabelecimentoId,
+        ]);
     }
 
     /**
-     * Buscar produtos com estoque baixo
+     * Busca produtos com estoque abaixo do mínimo
      */
     public function findEstoqueBaixo(int $estabelecimentoId): array
     {
-        return $this->createQueryBuilder('e')
-            ->andWhere('e.estabelecimentoId = :estabelecimentoId')
-            ->andWhere('e.quantidadeDisponivel < e.estoqueMinimo')
-            ->andWhere('e.status = :status')
-            ->setParameter('estabelecimentoId', $estabelecimentoId)
-            ->setParameter('status', 'ativo')
-            ->orderBy('e.quantidadeDisponivel', 'ASC')
-            ->getQuery()
-            ->getResult();
+        $sql = "SELECT e.id, e.produto_id, e.quantidade_atual, e.quantidade_disponivel,
+                       e.estoque_minimo, e.custo_medio, e.status,
+                       p.nome AS produto_nome, p.codigo_barras, p.categoria
+                FROM estoque e
+                LEFT JOIN produto p ON p.id = e.produto_id
+                WHERE e.estabelecimento_id = :estabelecimentoId
+                  AND e.quantidade_disponivel < e.estoque_minimo
+                  AND e.status = 'ativo'
+                ORDER BY e.quantidade_disponivel ASC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'estabelecimentoId' => $estabelecimentoId,
+        ]);
     }
 
     /**
-     * Buscar produtos com estoque crítico (menos de 50% do mínimo)
+     * Busca produtos com estoque crítico (menos de 50% do mínimo)
      */
     public function findEstoqueCritico(int $estabelecimentoId): array
     {
-        return $this->createQueryBuilder('e')
-            ->andWhere('e.estabelecimentoId = :estabelecimentoId')
-            ->andWhere('e.quantidadeDisponivel < (e.estoqueMinimo * 0.5)')
-            ->andWhere('e.status = :status')
-            ->setParameter('estabelecimentoId', $estabelecimentoId)
-            ->setParameter('status', 'ativo')
-            ->orderBy('e.quantidadeDisponivel', 'ASC')
-            ->getQuery()
-            ->getResult();
+        $sql = "SELECT e.id, e.produto_id, e.quantidade_atual, e.quantidade_disponivel,
+                       e.estoque_minimo, e.custo_medio, e.status,
+                       p.nome AS produto_nome, p.codigo_barras, p.categoria
+                FROM estoque e
+                LEFT JOIN produto p ON p.id = e.produto_id
+                WHERE e.estabelecimento_id = :estabelecimentoId
+                  AND e.quantidade_disponivel < (e.estoque_minimo * 0.5)
+                  AND e.status = 'ativo'
+                ORDER BY e.quantidade_disponivel ASC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'estabelecimentoId' => $estabelecimentoId,
+        ]);
     }
 
     /**
-     * Buscar produtos refrigerados
+     * Busca produtos refrigerados com dados do produto
      */
     public function findRefrigerados(int $estabelecimentoId): array
     {
-        return $this->createQueryBuilder('e')
-            ->andWhere('e.estabelecimentoId = :estabelecimentoId')
-            ->andWhere('e.refrigerado = 1')
-            ->andWhere('e.status = :status')
-            ->setParameter('estabelecimentoId', $estabelecimentoId)
-            ->setParameter('status', 'ativo')
-            ->getQuery()
-            ->getResult();
+        $sql = "SELECT e.id, e.produto_id, e.quantidade_atual, e.quantidade_disponivel,
+                       e.estoque_minimo, e.custo_medio, e.refrigerado, e.status,
+                       p.nome AS produto_nome, p.codigo_barras, p.categoria
+                FROM estoque e
+                LEFT JOIN produto p ON p.id = e.produto_id
+                WHERE e.estabelecimento_id = :estabelecimentoId
+                  AND e.refrigerado = 1
+                  AND e.status = 'ativo'
+                ORDER BY p.nome ASC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'estabelecimentoId' => $estabelecimentoId,
+        ]);
     }
 
     /**
-     * Buscar produtos que controlam lote
+     * Busca produtos que controlam lote
      */
     public function findControlaLote(int $estabelecimentoId): array
     {
-        return $this->createQueryBuilder('e')
-            ->andWhere('e.estabelecimentoId = :estabelecimentoId')
-            ->andWhere('e.controlaLote = 1')
-            ->andWhere('e.status = :status')
-            ->setParameter('estabelecimentoId', $estabelecimentoId)
-            ->setParameter('status', 'ativo')
-            ->getQuery()
-            ->getResult();
+        $sql = "SELECT e.id, e.produto_id, e.quantidade_atual, e.quantidade_disponivel,
+                       e.estoque_minimo, e.controla_lote, e.status,
+                       p.nome AS produto_nome, p.codigo_barras, p.categoria
+                FROM estoque e
+                LEFT JOIN produto p ON p.id = e.produto_id
+                WHERE e.estabelecimento_id = :estabelecimentoId
+                  AND e.controla_lote = 1
+                  AND e.status = 'ativo'
+                ORDER BY p.nome ASC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'estabelecimentoId' => $estabelecimentoId,
+        ]);
     }
 
     /**
-     * Buscar produtos que controlam validade
+     * Busca produtos que controlam validade
      */
     public function findControlaValidade(int $estabelecimentoId): array
     {
-        return $this->createQueryBuilder('e')
-            ->andWhere('e.estabelecimentoId = :estabelecimentoId')
-            ->andWhere('e.controlaValidade = 1')
-            ->andWhere('e.status = :status')
-            ->setParameter('estabelecimentoId', $estabelecimentoId)
-            ->setParameter('status', 'ativo')
-            ->getQuery()
-            ->getResult();
+        $sql = "SELECT e.id, e.produto_id, e.quantidade_atual, e.quantidade_disponivel,
+                       e.estoque_minimo, e.controla_validade, e.status,
+                       p.nome AS produto_nome, p.codigo_barras, p.categoria
+                FROM estoque e
+                LEFT JOIN produto p ON p.id = e.produto_id
+                WHERE e.estabelecimento_id = :estabelecimentoId
+                  AND e.controla_validade = 1
+                  AND e.status = 'ativo'
+                ORDER BY p.nome ASC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'estabelecimentoId' => $estabelecimentoId,
+        ]);
     }
 
     /**
-     * Calcular valor total do estoque
+     * Calcula valor total do estoque de um estabelecimento
      */
     public function calcularValorTotalEstoque(int $estabelecimentoId): float
     {
-        $result = $this->createQueryBuilder('e')
-            ->select('SUM(e.quantidadeAtual * e.custoMedio) as valorTotal')
-            ->andWhere('e.estabelecimentoId = :estabelecimentoId')
-            ->andWhere('e.status = :status')
-            ->setParameter('estabelecimentoId', $estabelecimentoId)
-            ->setParameter('status', 'ativo')
-            ->getQuery()
-            ->getSingleScalarResult();
+        $sql = "SELECT COALESCE(SUM(e.quantidade_atual * e.custo_medio), 0) AS valor_total
+                FROM estoque e
+                WHERE e.estabelecimento_id = :estabelecimentoId
+                  AND e.status = 'ativo'";
 
-        return (float) ($result ?? 0);
+        return (float) $this->conn->fetchOne($sql, [
+            'estabelecimentoId' => $estabelecimentoId,
+        ]);
     }
 
     /**
-     * Contar produtos com estoque zerado
+     * Conta produtos com estoque zerado
      */
     public function countEstoqueZerado(int $estabelecimentoId): int
     {
-        return (int) $this->createQueryBuilder('e')
-            ->select('COUNT(e.id)')
-            ->andWhere('e.estabelecimentoId = :estabelecimentoId')
-            ->andWhere('e.quantidadeAtual = 0')
-            ->andWhere('e.status = :status')
-            ->setParameter('estabelecimentoId', $estabelecimentoId)
-            ->setParameter('status', 'ativo')
-            ->getQuery()
-            ->getSingleScalarResult();
+        $sql = "SELECT COUNT(e.id) AS total
+                FROM estoque e
+                WHERE e.estabelecimento_id = :estabelecimentoId
+                  AND e.quantidade_atual = 0
+                  AND e.status = 'ativo'";
+
+        return (int) $this->conn->fetchOne($sql, [
+            'estabelecimentoId' => $estabelecimentoId,
+        ]);
     }
 
     /**
-     * Buscar estoques por local
+     * Busca estoques por local de armazenamento
      */
     public function findByLocal(string $localEstoqueId): array
     {
-        return $this->createQueryBuilder('e')
-            ->andWhere('e.localEstoqueId = :localEstoqueId')
-            ->andWhere('e.status = :status')
-            ->setParameter('localEstoqueId', $localEstoqueId)
-            ->setParameter('status', 'ativo')
-            ->getQuery()
-            ->getResult();
+        $sql = "SELECT e.id, e.produto_id, e.quantidade_atual, e.quantidade_disponivel,
+                       e.estoque_minimo, e.local_estoque_id, e.status,
+                       p.nome AS produto_nome, p.codigo_barras, p.categoria
+                FROM estoque e
+                LEFT JOIN produto p ON p.id = e.produto_id
+                WHERE e.local_estoque_id = :localEstoqueId
+                  AND e.status = 'ativo'
+                ORDER BY p.nome ASC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'localEstoqueId' => $localEstoqueId,
+        ]);
     }
 
     /**
-     * Relatório de estoque com filtros avançados
+     * Relatório de estoque com filtros avançados — SQL puro, sem hydration de entidades
      */
     public function findComFiltros(array $filtros): array
     {
-        $qb = $this->createQueryBuilder('e');
+        $where  = ['1 = 1'];
+        $params = [];
 
         if (!empty($filtros['estabelecimento_id'])) {
-            $qb->andWhere('e.estabelecimentoId = :estabelecimentoId')
-               ->setParameter('estabelecimentoId', $filtros['estabelecimento_id']);
+            $where[]  = 'e.estabelecimento_id = :estabelecimentoId';
+            $params['estabelecimentoId'] = $filtros['estabelecimento_id'];
         }
 
         if (!empty($filtros['status'])) {
-            $qb->andWhere('e.status = :status')
-               ->setParameter('status', $filtros['status']);
+            $where[]  = 'e.status = :status';
+            $params['status'] = $filtros['status'];
         }
 
         if (!empty($filtros['refrigerado'])) {
-            $qb->andWhere('e.refrigerado = :refrigerado')
-               ->setParameter('refrigerado', $filtros['refrigerado']);
+            $where[]  = 'e.refrigerado = :refrigerado';
+            $params['refrigerado'] = $filtros['refrigerado'];
         }
 
-        if (isset($filtros['estoque_baixo']) && $filtros['estoque_baixo']) {
-            $qb->andWhere('e.quantidadeDisponivel < e.estoqueMinimo');
+        if (!empty($filtros['estoque_baixo'])) {
+            $where[] = 'e.quantidade_disponivel < e.estoque_minimo';
         }
 
-        if (isset($filtros['estoque_zerado']) && $filtros['estoque_zerado']) {
-            $qb->andWhere('e.quantidadeAtual = 0');
+        if (!empty($filtros['estoque_zerado'])) {
+            $where[] = 'e.quantidade_atual = 0';
         }
 
-        return $qb->orderBy('e.quantidadeAtual', 'ASC')
-                  ->getQuery()
-                  ->getResult();
+        $whereClause = implode(' AND ', $where);
+
+        $sql = "SELECT e.id, e.produto_id, e.quantidade_atual, e.quantidade_disponivel,
+                       e.estoque_minimo, e.custo_medio, e.refrigerado, e.controla_lote,
+                       e.controla_validade, e.local_estoque_id, e.status,
+                       p.nome AS produto_nome, p.descricao AS produto_descricao,
+                       p.preco_venda, p.codigo_barras, p.categoria
+                FROM estoque e
+                LEFT JOIN produto p ON p.id = e.produto_id
+                WHERE {$whereClause}
+                ORDER BY e.quantidade_atual ASC";
+
+        return $this->conn->fetchAllAssociative($sql, $params);
     }
 }

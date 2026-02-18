@@ -2,14 +2,14 @@
 
 namespace App\Entity;
 
-use App\Repository\InvoiceRepository;
+use App\Repository\FaturaRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=InvoiceRepository::class)
+ * @ORM\Entity(repositoryClass=FaturaRepository::class)
  * @ORM\Table(name="invoice")
  */
-class Invoice
+class Fatura
 {
     /**
      * @ORM\Id

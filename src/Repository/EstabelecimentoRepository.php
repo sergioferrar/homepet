@@ -41,6 +41,28 @@ class EstabelecimentoRepository extends ServiceEntityRepository
         }
     }
 
+    public function listaEstabelecimentosExpirados()
+    {
+        $sql = "SELECT e.id, e.razaoSocial, e.dataPlanoFim
+            FROM estabelecimento e
+            WHERE e.dataPlanoFim < CURDATE()";
+        $query = $this->conn->executeQuery($sql);
+        return $query->fetchAllAssociative();
+    }
+
+    public function listaEstabelecimentosGestao()
+    {
+        $sql = "SELECT 
+                e.id, e.razaoSocial, e.dataCadastro, e.dataPlanoInicio, e.dataPlanoFim, p.titulo AS plano_nome,
+                p.valor AS plano_valor, COUNT(u.id) AS total_usuarios
+            FROM estabelecimento e
+            INNER JOIN planos p ON p.id = e.planoId
+            LEFT JOIN usuario u ON u.petshop_id = e.id
+            GROUP BY  e.id, e.razaoSocial, e.dataCadastro, e.dataPlanoInicio, e.dataPlanoFim, p.titulo, p.valor ORDER BY e.dataCadastro DESC";
+        $query = $this->conn->executeQuery($sql);
+        return $query->fetchAllAssociative();
+    }
+
     public function listaEstabelecimentos($baseId)
     {
         $sql = "SELECT estabelecimento.id, razaoSocial, cnpj, rua, numero, complemento, bairro, cidade, pais, cep, estabelecimento.status, dataCadastro, dataAtualizacao, planoId, dataPlanoInicio, dataPlanoFim, titulo
