@@ -5,7 +5,7 @@ use App\Entity\ProntuarioPet;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-class ProntuarioPetRepository
+class ProntuarioPetRepository extends ServiceEntityRepository
 {
     private $conn;
 
@@ -14,6 +14,8 @@ class ProntuarioPetRepository
         parent::__construct($registry, ProntuarioPet::class);
         $this->conn = $this->getEntityManager()->getConnection();
     }
+
+
 
     public function salvar(int $baseId, ProntuarioPet $r)
     {
