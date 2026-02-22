@@ -2,6 +2,7 @@
 
 namespace App\Controller\Clinica;
 
+use App\Repository\BoxRepository;
 use App\Entity\Cliente;
 use App\Entity\Consulta;
 use App\Entity\DocumentoModelo;
@@ -41,12 +42,12 @@ class InternacaoController extends DefaultController
     /**
      * @Route("/pet/{petId}/internacao/nova", name="clinica_nova_internacao", methods={"GET", "POST"})
      */
-    public function novaInternacao(Request $request, int $petId): Response
+    public function novaInternacao(Request $request, int $petId, BoxRepository $boxRepo): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        $internacaoRepo = $this->getRepositorio(Internacao::class);
+        $internacaoRepo  = $this->getRepositorio(Internacao::class);
         $veterinarioRepo = $this->getRepositorio(Veterinario::class);
 
         $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
@@ -54,35 +55,29 @@ class InternacaoController extends DefaultController
             throw $this->createNotFoundException('Pet não encontrado.');
         }
 
-        // lista para o formulário
         $veterinarios = $veterinarioRepo->findBy(['estabelecimentoId' => $baseId]);
-        $boxes = [
-            ['id' => 1, 'nome' => 'Box 1'],
-            ['id' => 2, 'nome' => 'Box 2'],
-            ['id' => 3, 'nome' => 'Box 3'],
-        ];
 
-        // POST: salva e redireciona para a ficha criada
+        // ── REAL: busca boxes disponíveis do estabelecimento ──────────
+        $boxes = $boxRepo->findDisponiveisParaSelect($baseId);
+
         if ($request->isMethod('POST')) {
             $internacao = new Internacao();
-
-            $donoId = $pet['dono_id'] ?? null;
+            $donoId     = $pet['dono_id'] ?? null;
 
             $internacao->setPetId($petId);
             $internacao->setDonoId($donoId);
             $internacao->setEstabelecimentoId($baseId);
             $internacao->setDataInicio(new \DateTime());
             $internacao->setStatus('ativa');
-            $internacao->setMotivo((string)$request->get('queixa'));
+            $internacao->setMotivo((string) $request->get('queixa'));
+            $internacao->setSituacao((string) $request->get('situacao'));
+            $internacao->setRisco((string) $request->get('risco'));
+            $internacao->setVeterinarioId((int) $request->get('veterinario_id'));
 
-            // Campos adicionais
-            $internacao->setSituacao((string)$request->get('situacao'));
-            $internacao->setRisco((string)$request->get('risco'));
-            $internacao->setVeterinarioId((int)$request->get('veterinario_id'));
-            $internacao->setBox((string)$request->get('box'));
+            $boxNumero = (string) $request->get('box');
+            $internacao->setBox($boxNumero);
 
-            // Alta prevista (opcional)
-            $altaPrevistaStr = trim((string)$request->get('alta_prevista'));
+            $altaPrevistaStr = trim((string) $request->get('alta_prevista'));
             if ($altaPrevistaStr !== '') {
                 try {
                     $internacao->setAltaPrevista(new \DateTime($altaPrevistaStr));
@@ -91,26 +86,26 @@ class InternacaoController extends DefaultController
                 }
             }
 
-            $internacao->setDiagnostico((string)$request->get('diagnostico'));
-            $internacao->setPrognostico((string)$request->get('prognostico'));
-            $internacao->setAnotacoes((string)$request->get('alergias_marcacoes'));
+            $internacao->setDiagnostico((string) $request->get('diagnostico'));
+            $internacao->setPrognostico((string) $request->get('prognostico'));
+            $internacao->setAnotacoes((string) $request->get('alergias_marcacoes'));
 
-            // Salva e obtém o ID gerado
             $novoId = $internacaoRepo->inserirInternacao($baseId, $internacao);
 
-            // Cria um evento inicial na timeline da internação
+            // ── Marca o box como ocupado ──────────────────────────────
+            if ($boxNumero !== '') {
+                $boxRepo->ocupar($baseId, $boxNumero);
+            }
+
             $internacaoRepo->inserirEvento(
-                $baseId,
-                $novoId,
-                $petId,
-                'Internação',
-                'Internação iniciada',
+                $baseId, $novoId, $petId,
+                'Internação', 'Internação iniciada',
                 sprintf(
                     'Motivo: %s | Situação: %s | Risco: %s | Box: %s',
-                    (string)$internacao->getMotivo(),
-                    (string)$internacao->getSituacao(),
-                    (string)$internacao->getRisco(),
-                    (string)$internacao->getBox()
+                    (string) $internacao->getMotivo(),
+                    (string) $internacao->getSituacao(),
+                    (string) $internacao->getRisco(),
+                    $boxNumero ?: 'não definido'
                 ),
                 new \DateTime()
             );
@@ -119,14 +114,13 @@ class InternacaoController extends DefaultController
             return $this->redirectToRoute('clinica_ficha_internacao', ['id' => $novoId]);
         }
 
-        // GET: exibe o formulário
         return $this->render('clinica/nova_internacao.html.twig', [
-            'pet' => $pet,
+            'pet'          => $pet,
             'veterinarios' => $veterinarios,
-            'boxes' => $boxes,
+            'boxes'        => $boxes,
         ]);
     }
-    
+
 
 
 
@@ -235,29 +229,31 @@ class InternacaoController extends DefaultController
     /**
      * @Route("/internacao/{id}/acao/{acao}", name="clinica_internacao_acao", methods={"POST"})
      */
-    public function acaoInternacao(int $id, string $acao, Request $request, InternacaoRepository $internacaoRepo): JsonResponse
-    {
+    public function acaoInternacao(
+        int $id,
+        string $acao,
+        Request $request,
+        InternacaoRepository $internacaoRepo,
+        BoxRepository $boxRepo
+    ): JsonResponse {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        // Validar CSRF token (um único nome genérico)
         if (!$this->isCsrfTokenValid('internacao_acao_' . $id, $request->get('_token'))) {
             return $this->json(['ok' => false, 'msg' => 'Token inválido.'], 400);
         }
 
-        // Busca internação
         $internacao = $internacaoRepo->buscarPorId($baseId, $id);
         if (!$internacao) {
             return $this->json(['ok' => false, 'msg' => 'Internação não encontrada.'], 404);
         }
 
-        // Normaliza a ação
         $acoesValidas = [
-            'alta' => ['status' => 'finalizada', 'titulo' => 'Alta concedida', 'descricao' => 'Internação finalizada pelo sistema'],
-            'obito' => ['status' => 'obito', 'titulo' => 'Óbito registrado', 'descricao' => 'Internação encerrada por óbito'],
-            'cancelar' => ['status' => 'cancelada', 'titulo' => 'Internação cancelada', 'descricao' => 'Internação cancelada pelo sistema'],
-            'box' => ['status' => 'ativa', 'titulo' => 'Box alterado', 'descricao' => 'Box de internação atualizado'],
-            'editar' => ['status' => 'ativa', 'titulo' => 'Internação editada', 'descricao' => 'Dados da internação foram atualizados'],
+            'alta'     => ['status' => 'finalizada', 'titulo' => 'Alta concedida',      'descricao' => 'Internação finalizada pelo sistema'],
+            'obito'    => ['status' => 'obito',       'titulo' => 'Óbito registrado',    'descricao' => 'Internação encerrada por óbito'],
+            'cancelar' => ['status' => 'cancelada',   'titulo' => 'Internação cancelada','descricao' => 'Internação cancelada pelo sistema'],
+            'box'      => ['status' => 'ativa',       'titulo' => 'Box alterado',        'descricao' => 'Box de internação atualizado'],
+            'editar'   => ['status' => 'ativa',       'titulo' => 'Internação editada',  'descricao' => 'Dados da internação foram atualizados'],
         ];
 
         if (!isset($acoesValidas[$acao])) {
@@ -266,20 +262,25 @@ class InternacaoController extends DefaultController
 
         if (in_array($internacao['status'], ['alta', 'obito'])) {
             return $this->json([
-                'ok' => false,
-                'msg' => 'Esta internação já foi encerrada por ' . $internacao['status'] . '.'
+                'ok'  => false,
+                'msg' => 'Esta internação já foi encerrada por ' . $internacao['status'] . '.',
             ]);
         }
 
         $acaoInfo = $acoesValidas[$acao];
-
         $internacaoRepo->atualizarStatus($baseId, $id, $acaoInfo['status']);
 
-        // Cria evento na timeline
+        // ── Libera o box automaticamente ao encerrar a internação ─────
+        $statusFinais = ['finalizada', 'obito', 'cancelada'];
+        if (in_array($acaoInfo['status'], $statusFinais)) {
+            $boxNumero = $internacao['box'] ?? '';
+            if ($boxNumero !== '') {
+                $boxRepo->liberar($baseId, $boxNumero);
+            }
+        }
+
         $internacaoRepo->inserirEvento(
-            $baseId,
-            $id,
-            (int)$internacao['pet_id'],
+            $baseId, $id, (int) $internacao['pet_id'],
             ucfirst($acao),
             $acaoInfo['titulo'],
             $acaoInfo['descricao'],
@@ -288,6 +289,7 @@ class InternacaoController extends DefaultController
 
         return $this->json(['ok' => true]);
     }
+
 
 
     /**

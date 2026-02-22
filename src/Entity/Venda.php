@@ -11,10 +11,10 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Venda
 {
-    /** 
-     * @ORM\Id 
-     * @ORM\GeneratedValue 
-     * @ORM\Column(type="integer") 
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
      */
     private $id;
 
@@ -60,37 +60,120 @@ class Venda
 
     // --- Getters e Setters ---
 
-    public function getId(): ?int { return $this->id; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
 
-    public function getEstabelecimentoId(): ?int { return $this->estabelecimentoId; }
-    public function setEstabelecimentoId(int $id): self { $this->estabelecimentoId = $id; return $this; }
+    public function getEstabelecimentoId(): ?int
+    {
+        return $this->estabelecimentoId;
+    }
 
-    public function getCliente(): ?string { return $this->cliente; }
-    public function setCliente(string $cliente): self { $this->cliente = $cliente; return $this; }
+    public function setEstabelecimentoId(int $id): self
+    {
+        $this->estabelecimentoId = $id;
+        return $this;
+    }
 
-    public function getTotal(): ?float { return (float)$this->total; }
-    public function setTotal(float $total): self { $this->total = $total; return $this; }
+    public function getCliente(): ?string
+    {
+        return $this->cliente;
+    }
 
-    public function getTroco(): ?float { return (float)$this->troco; }
-    public function setTroco(?float $troco): self { $this->troco = $troco; return $this; }
+    public function setCliente(string $cliente): self
+    {
+        $this->cliente = $cliente;
+        return $this;
+    }
 
-    public function getMetodoPagamento(): ?string { return $this->metodoPagamento; }
-    public function setMetodoPagamento(string $metodo): self { $this->metodoPagamento = $metodo; return $this; }
+    public function getTotal(): ?float
+    {
+        return (float)$this->total;
+    }
 
-    public function getBandeiraCartao(): ?string { return $this->bandeiraCartao; }
-    public function setBandeiraCartao(?string $bandeira): self { $this->bandeiraCartao = $bandeira; return $this; }
+    public function setTotal(float $total): self
+    {
+        $this->total = $total;
+        return $this;
+    }
 
-    public function getParcelas(): ?int { return $this->parcelas; }
-    public function setParcelas(?int $parcelas): self { $this->parcelas = $parcelas; return $this; }
+    public function getTroco(): ?float
+    {
+        return (float)$this->troco;
+    }
 
-    public function getData(): ?\DateTimeInterface { return $this->data; }
-    public function setData(\DateTimeInterface $data): self { $this->data = $data; return $this; }
+    public function setTroco(?float $troco): self
+    {
+        $this->troco = $troco;
+        return $this;
+    }
 
-    public function getObservacao(): ?string { return $this->observacao; }
-    public function setObservacao(?string $obs): self { $this->observacao = $obs; return $this; }
+    public function getMetodoPagamento(): ?string
+    {
+        return $this->metodoPagamento;
+    }
 
-    public function getPetId(): ?int { return $this->petId; }
-    public function setPetId(?int $petId): self { $this->petId = $petId; return $this; }
+    public function setMetodoPagamento(string $metodo): self
+    {
+        $this->metodoPagamento = $metodo;
+        return $this;
+    }
+
+    public function getBandeiraCartao(): ?string
+    {
+        return $this->bandeiraCartao;
+    }
+
+    public function setBandeiraCartao(?string $bandeira): self
+    {
+        $this->bandeiraCartao = $bandeira;
+        return $this;
+    }
+
+    public function getParcelas(): ?int
+    {
+        return $this->parcelas;
+    }
+
+    public function setParcelas(?int $parcelas): self
+    {
+        $this->parcelas = $parcelas;
+        return $this;
+    }
+
+    public function getData(): ?\DateTimeInterface
+    {
+        return $this->data;
+    }
+
+    public function setData(\DateTimeInterface $data): self
+    {
+        $this->data = $data;
+        return $this;
+    }
+
+    public function getObservacao(): ?string
+    {
+        return $this->observacao;
+    }
+
+    public function setObservacao(?string $obs): self
+    {
+        $this->observacao = $obs;
+        return $this;
+    }
+
+    public function getPetId(): ?int
+    {
+        return $this->petId;
+    }
+
+    public function setPetId(?int $petId): self
+    {
+        $this->petId = $petId;
+        return $this;
+    }
 
     public function getOrigem(): ?string
     {

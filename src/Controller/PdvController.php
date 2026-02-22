@@ -35,7 +35,7 @@ class PdvController extends DefaultController
      * 
      * @Route("", name="clinica_pdv_index", methods={"GET"})
      */
-    public function index(EntityManagerInterface $em): Response
+    public function index(EntityManagerInterface $em, Request $request): Response
     {
         $this->switchDB();
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
@@ -64,20 +64,116 @@ class PdvController extends DefaultController
         }, $clientesEntities);
 
         // Busca vendas em carrinho
-        $vendas = $em->getRepository(Venda::class);
-        $vendasCarrinho = $vendas->findCarrinho($estabelecimentoId);
-        
-        // Carrega itens de cada venda em carrinho
-        foreach ($vendasCarrinho as &$venda) {
-            $venda['itens'] = $this->buscarItensVenda($em, $venda['id']);
+        $vendasCarrinho = $em->getRepository(Venda::class)
+            ->findCarrinho($estabelecimentoId);
+
+        // Lê (e consome) o payload da venda pré-carregada gravado por carregarVendaNopdv()
+        $session = $request->getSession();
+        $vendaPreCarregada = $session->get('pdv_venda_pre_carregada');
+        if ($vendaPreCarregada !== null) {
+            $session->remove('pdv_venda_pre_carregada');
         }
 
         return $this->render("clinica/pdv.html.twig", [
-            "produtos" => $itensNormalizados,
-            "clientes" => $clientesNormalizados,
-            "vendas_carrinho" => $vendasCarrinho,
+            'produtos'            => $itensNormalizados,
+            'clientes'            => $clientesNormalizados,
+            'vendas_carrinho'     => $vendasCarrinho ?? [],
+            'vendaPreCarregada'   => $vendaPreCarregada,   // null quando não há pré-carregamento
         ]);
     }
+
+    /**
+     * Carrega uma venda da clínica no PDV (Lançar no Caixa)
+     *
+     * @Route("/carregar/{id}", name="pdv_carregar", methods={"GET"})
+     */
+    public function carregarVendaNopdv(
+        int $id,
+        EntityManagerInterface $em,
+        Request $request
+    ): Response {
+        $this->switchDB();
+        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+
+        $session = $request->getSession();
+
+        // 1. Busca a venda garantindo que pertence ao estabelecimento
+        $venda = $em->getRepository(Venda::class)->findOneBy([
+            'id'                => $id,
+            'estabelecimentoId' => $estabelecimentoId,
+        ]);
+
+        if (!$venda) {
+            $this->addFlash('danger', 'Venda não encontrada.');
+            return $this->redirectToRoute('clinica_pdv_listar');
+        }
+
+        // 2. Valida status — só carrega vendas abertas / em carrinho
+        $statusPermitidos = ['Aberta', 'Carrinho', 'carrinho'];
+        if (!in_array($venda->getStatus(), $statusPermitidos, true)) {
+            $this->addFlash('warning', sprintf(
+                'A venda #%d não pode ser lançada no caixa (status: %s).',
+                $venda->getId(),
+                $venda->getStatus()
+            ));
+            return $this->redirectToRoute('clinica_pdv_listar');
+        }
+
+        // 3. Busca os itens da venda
+        $itensEntities = $em->getRepository(VendaItem::class)->findBy(['vendaId' => $venda->getId()]);
+
+        // 4. Monta payload de itens para a sessão
+        $itensNormalizados = [];
+        foreach ($itensEntities as $item) {
+            $tipo = strtolower($item->getTipo()); // 'produto' | 'servico'
+
+            // Monta o id no mesmo formato que o PDV usa: "prod_X" ou "serv_X"
+            $idFrontend = ($tipo === 'produto')
+                ? 'prod_' . $item->getProduto()
+                : 'serv_' . $item->getProduto();
+
+            $itensNormalizados[] = [
+                'id'            => $idFrontend,
+                'nome'          => $item->getProduto(),     // campo produto guarda ID ou nome, ajuste se necessário
+                'tipo'          => ucfirst($tipo),          // "Produto" | "Servico"
+                'quantidade'    => $item->getQuantidade(),
+                'valor_unitario'=> $item->getValorUnitario(),
+                'subtotal'      => $item->getSubtotal(),
+            ];
+        }
+
+        // 5. Resolve nome do cliente e pet
+        $nomeCliente = $venda->getCliente() ?? 'Consumidor Final';
+        $petId       = $venda->getPetId();
+        $nomePet     = null;
+
+        if ($petId) {
+            $pet = $em->getRepository(Pet::class)->find($petId);
+            if ($pet) {
+                $nomePet = $pet->getNome();
+            }
+        }
+
+        // 6. Grava tudo na sessão — o PDV lê via Twig/JS
+        $session->set('pdv_venda_pre_carregada', [
+            'venda_id'     => $venda->getId(),
+            'cliente_nome' => $nomeCliente,
+            'pet_id'       => $petId,
+            'pet_nome'     => $nomePet,
+            'itens'        => $itensNormalizados,
+            'total'        => $venda->getTotal(),
+            'observacao'   => $venda->getObservacao(),
+        ]);
+
+        $this->addFlash('success', sprintf(
+            'Venda #%d carregada no PDV. Revise os itens e finalize.',
+            $venda->getId()
+        ));
+
+        // 7. Redireciona para a tela principal do PDV
+        return $this->redirectToRoute('clinica_pdv_index',[ 'vendaId' => $venda->getId() ]);
+    }
+
 
     /**
      * Registra nova venda

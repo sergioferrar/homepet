@@ -1,0 +1,538 @@
+{% extends 'base.html.twig' %}
+{% block title %}Gestão de Boxes — Clínica{% endblock %}
+
+{% block body %}
+<style>
+    /* ═══════════════════════════════════════════════
+       BOXES — Design System (alinhado ao detalhes_pet)
+       Paleta: Teal clínico + Caramelo admin
+    ═══════════════════════════════════════════════ */
+    :root {
+        --bx-teal:       #4A6741;
+        --bx-teal-dark:  #3B5E37;
+        --bx-teal-light: #EBF2EA;
+        --bx-teal-mid:   #B8D4B4;
+        --bx-caramel:    #C97D3A;
+        --bx-bark:       #5C3D1E;
+        --bx-amber:      #F5C87A;
+        --bx-amber-pale: #FDF0D5;
+        --bx-slate:      #3d4f5c;
+        --bx-muted:      #7a8fa0;
+        --bx-border:     #dde8e7;
+        --bx-bg:         #f4f7f7;
+        --bx-surface:    #ffffff;
+        --bx-shadow-sm:  0 1px 4px rgba(42,103,98,.08);
+        --bx-shadow-md:  0 4px 16px rgba(42,103,98,.12);
+        --bx-radius:     12px;
+        --bx-radius-lg:  18px;
+    }
+
+
+    /* ── Hero ────────────────────────────────────────── */
+    .bx-hero {
+        background: linear-gradient(135deg, var(--bx-bark) 0%, var(--bx-caramel) 100%);
+        padding: 1.5rem 2rem 3.5rem;
+        position: relative; overflow: hidden;
+    }
+    .bx-hero::before {
+        content: '';
+        position: absolute; inset: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3Ccircle cx='0' cy='0' r='10'/%3E%3Ccircle cx='60' cy='60' r='10'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+    }
+    .bx-hero-content { position: relative; z-index: 1; color: #fff; }
+    .bx-hero-title   { font-size: 1.35rem; font-weight: 800; margin: 0 0 .2rem; display: flex; align-items: center; gap: .6rem; }
+    .bx-hero-sub     { font-size: .82rem; opacity: .75; margin: 0; }
+
+    /* ── Pull-up body ────────────────────────────────── */
+    .bx-body { margin-top: -2.5rem; padding: 0 1.5rem 3rem; position: relative; z-index: 10; }
+
+    /* ── Counters strip ──────────────────────────────── */
+    .bx-counters { display: grid; grid-template-columns: repeat(5, 1fr); gap: .75rem; margin-bottom: 1.25rem; }
+    @media (max-width: 767px) { .bx-counters { grid-template-columns: repeat(2, 1fr); } }
+    .bx-counter-card {
+        background: var(--bx-surface); border: 1px solid var(--bx-border);
+        border-radius: var(--bx-radius); padding: .85rem 1rem;
+        box-shadow: var(--bx-shadow-sm);
+        display: flex; align-items: center; gap: .75rem; cursor: pointer;
+        transition: transform .15s, box-shadow .15s;
+        border-left: 4px solid transparent;
+    }
+    .bx-counter-card:hover { transform: translateY(-2px); box-shadow: var(--bx-shadow-md); }
+    .bx-counter-card.filter-active { box-shadow: 0 0 0 2px var(--bx-caramel); }
+    .bx-counter-icon {
+        width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .bx-counter-num  { font-size: 1.4rem; font-weight: 800; color: var(--bx-slate); line-height: 1; }
+    .bx-counter-lbl  { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--bx-muted); }
+
+    /* status colors */
+    .cnt-disponivel   { border-left-color: #4A6741; }
+    .cnt-disponivel   .bx-counter-icon { background: #EBF2EA; color: #4A6741; }
+    .cnt-ocupado      { border-left-color: #C0392B; }
+    .cnt-ocupado      .bx-counter-icon { background: #fce4e4; color: #C0392B; }
+    .cnt-manutencao   { border-left-color: #e65100; }
+    .cnt-manutencao   .bx-counter-icon { background: #fff3e0; color: #e65100; }
+    .cnt-reservado    { border-left-color: #D4A017; }
+    .cnt-reservado    .bx-counter-icon { background: #fffde7; color: #D4A017; }
+    .cnt-higienizacao { border-left-color: #3A7CA5; }
+    .cnt-higienizacao .bx-counter-icon { background: #E8F2F8; color: #3A7CA5; }
+
+    /* ── Toolbar ─────────────────────────────────────── */
+    .bx-toolbar {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem;
+    }
+    .bx-search {
+        border: 1.5px solid var(--bx-border); border-radius: var(--bx-radius);
+        padding: .45rem .9rem; font-size: .85rem; color: var(--bx-slate);
+        min-width: 220px;
+        transition: border-color .18s, box-shadow .18s;
+    }
+    .bx-search:focus { border-color: var(--bx-teal); box-shadow: 0 0 0 3px rgba(74,103,65,.12); outline: none; }
+
+    .btn-bx-new {
+        background: linear-gradient(135deg, var(--bx-bark) 0%, var(--bx-caramel) 100%);
+        color: #fff; border: none; border-radius: var(--bx-radius);
+        padding: .5rem 1.2rem; font-size: .85rem; font-weight: 600;
+        display: inline-flex; align-items: center; gap: .4rem;
+        transition: transform .15s, box-shadow .15s;
+    }
+    .btn-bx-new:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(92,61,30,.3); color: #fff; }
+
+    /* ── Box Grid ────────────────────────────────────── */
+    .bx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+
+    .bx-card {
+        background: var(--bx-surface); border: 1px solid var(--bx-border);
+        border-radius: var(--bx-radius-lg); box-shadow: var(--bx-shadow-sm);
+        overflow: hidden; transition: transform .18s, box-shadow .18s;
+        position: relative;
+    }
+    .bx-card:hover { transform: translateY(-3px); box-shadow: var(--bx-shadow-md); }
+
+    /* status stripe */
+    .bx-card::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    }
+    .bx-card[data-status="disponivel"]   ::before,
+    .bx-card[data-status="disponivel"]::before   { background: #4A6741; }
+    .bx-card[data-status="ocupado"]::before      { background: #C0392B; }
+    .bx-card[data-status="manutencao"]::before   { background: #e65100; }
+    .bx-card[data-status="reservado"]::before    { background: #D4A017; }
+    .bx-card[data-status="higienizacao"]::before { background: #3A7CA5; }
+
+    .bx-card-header {
+        padding: .9rem 1rem .6rem 1.25rem;
+        display: flex; align-items: flex-start; justify-content: space-between;
+        border-bottom: 1px solid var(--bx-border);
+        background: #fafcfb;
+    }
+    .bx-card-numero { font-size: 1.1rem; font-weight: 800; color: var(--bx-slate); margin: 0; line-height: 1.1; }
+    .bx-card-tipo   { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--bx-muted); }
+
+    /* status pill */
+    .bx-status-pill {
+        display: inline-flex; align-items: center; gap: .3rem;
+        border-radius: 100px; padding: .22rem .65rem;
+        font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+        flex-shrink: 0;
+    }
+    .pill-disponivel   { background: #EBF2EA; color: #3B5E37; }
+    .pill-ocupado      { background: #fce4e4; color: #b71c1c; }
+    .pill-manutencao   { background: #fff3e0; color: #e65100; }
+    .pill-reservado    { background: #fffde7; color: #B8860B; }
+    .pill-higienizacao { background: #E8F2F8; color: #2C5F80; }
+
+    .bx-card-body   { padding: .85rem 1rem .85rem 1.25rem; }
+
+    .bx-prop-row {
+        display: flex; align-items: baseline; gap: .4rem;
+        font-size: .8rem; padding: .2rem 0;
+    }
+    .bx-prop-lbl  { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--bx-muted); min-width: 75px; flex-shrink: 0; }
+    .bx-prop-val  { color: var(--bx-slate); }
+
+    /* recurso chips */
+    .bx-recurso-chips { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .4rem; }
+    .bx-chip {
+        display: inline-flex; align-items: center; gap: .25rem;
+        background: var(--bx-teal-light); border: 1px solid var(--bx-teal-mid);
+        color: var(--bx-teal-dark); border-radius: 100px;
+        padding: .15rem .55rem; font-size: .68rem; font-weight: 600;
+    }
+    .bx-chip.chip-off { background: #f4f7f7; border-color: var(--bx-border); color: var(--bx-muted); }
+
+    /* internação ativa */
+    .bx-internacao-strip {
+        margin: 0; padding: .65rem 1rem .65rem 1.25rem;
+        background: #fce4e4; border-top: 1px solid #f5c6c6;
+        font-size: .78rem; color: #b71c1c;
+    }
+    .bx-internacao-strip a { color: #b71c1c; font-weight: 600; }
+    .bx-internacao-strip a:hover { color: #7b0d0d; }
+
+    /* footer actions */
+    .bx-card-footer {
+        padding: .6rem 1rem .7rem 1.25rem;
+        border-top: 1px solid var(--bx-border);
+        display: flex; gap: .5rem; justify-content: flex-end;
+        background: #fafcfb;
+    }
+    .btn-bx-sm {
+        display: inline-flex; align-items: center; gap: .25rem;
+        padding: .3rem .75rem; border-radius: 8px;
+        font-size: .75rem; font-weight: 600; border: none; cursor: pointer;
+        transition: transform .12s, opacity .12s;
+    }
+    .btn-bx-sm:hover { transform: translateY(-1px); opacity: .9; }
+    .btn-bx-edit    { background: var(--bx-amber-pale); color: var(--bx-bark); border: 1px solid #e5c97a; }
+    .btn-bx-del     { background: #fce4e4; color: #C0392B; border: 1px solid #f5c6c6; }
+    .btn-bx-status  { background: var(--bx-teal-light); color: var(--bx-teal-dark); border: 1px solid var(--bx-teal-mid); }
+
+    /* empty state */
+    .bx-empty { text-align: center; padding: 3rem 1rem; color: var(--bx-muted); }
+    .bx-empty i { font-size: 3rem; opacity: .3; display: block; margin-bottom: .75rem; }
+
+    /* section label */
+    .bx-section-heading {
+        font-size: .72rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .08em; color: var(--bx-muted);
+        margin: 1.25rem 0 .65rem;
+        display: flex; align-items: center; gap: .4rem;
+    }
+    .bx-section-heading::after { content: ''; flex: 1; height: 1px; background: var(--bx-border); }
+</style>
+
+<div style="background: var(--bx-bg); min-height: 100vh; padding-bottom: 3rem;">
+
+    {# ── Hero ──────────────────────────────────────────────────── #}
+    <div class="bx-hero">
+        <div class="bx-hero-content d-flex align-items-start justify-content-between flex-wrap gap-2">
+            <div>
+                <p class="bx-hero-title"><i class="bi bi-grid-3x3-gap-fill"></i>Gestão de Boxes</p>
+                <p class="bx-hero-sub">Crie, edite e monitore os espaços de internação da clínica</p>
+            </div>
+            <a href="{{ path('clinica_box_novo') }}" class="btn-bx-new">
+                <i class="bi bi-plus-lg"></i>Novo Box
+            </a>
+        </div>
+    </div>
+
+    <div class="bx-body">
+
+        {# Flash messages #}
+        {% for label, msgs in app.flashes %}
+            {% for msg in msgs %}
+                <div class="alert alert-{{ label }} alert-dismissible fade show mb-3" role="alert">
+                    {{ msg }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        {# ── Counters ──────────────────────────────────────────── #}
+        <div class="bx-counters">
+            {% set cnts = [
+                {key:'disponivel',   icon:'bi-check-circle-fill', label:'Disponíveis'},
+                {key:'ocupado',      icon:'bi-x-circle-fill',     label:'Ocupados'},
+                {key:'manutencao',   icon:'bi-tools',             label:'Manutenção'},
+                {key:'reservado',    icon:'bi-bookmark-fill',     label:'Reservados'},
+                {key:'higienizacao', icon:'bi-droplet-fill',      label:'Higienização'},
+            ] %}
+            {% for c in cnts %}
+            <div class="bx-counter-card cnt-{{ c.key }}" onclick="filtrarStatus('{{ c.key }}')" id="cnt-{{ c.key }}">
+                <div class="bx-counter-icon"><i class="bi {{ c.icon }}"></i></div>
+                <div>
+                    <div class="bx-counter-num">{{ contadores[c.key]|default(0) }}</div>
+                    <div class="bx-counter-lbl">{{ c.label }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {# ── Toolbar ───────────────────────────────────────────── #}
+        <div class="bx-toolbar">
+            <input type="text" class="bx-search" id="bxSearch"
+                   placeholder="🔍  Buscar por número, tipo, localização..."
+                   oninput="filtrarBusca(this.value)">
+            <div class="d-flex gap-2 align-items-center">
+                <span id="bxContagem" style="font-size:.78rem;color:var(--bx-muted);">
+                    {{ boxes|length }} box{{ boxes|length != 1 ? 'es' : '' }}
+                </span>
+                <button class="btn-bx-sm btn-bx-status" onclick="limparFiltro()" id="btnLimpar" style="display:none;">
+                    <i class="bi bi-x-circle"></i> Limpar filtro
+                </button>
+            </div>
+        </div>
+
+        {# ── Grid de boxes ─────────────────────────────────────── #}
+        {% if boxes is empty %}
+            <div class="bx-empty" style="background: var(--bx-surface); border-radius: var(--bx-radius-lg); border: 1px dashed var(--bx-border);">
+                <i class="bi bi-grid-3x3-gap"></i>
+                <p style="font-size:.95rem;font-weight:600;color:var(--bx-slate);">Nenhum box cadastrado</p>
+                <p style="font-size:.84rem;">Comece criando os espaços de internação da sua clínica.</p>
+                <a href="{{ path('clinica_box_novo') }}" class="btn-bx-new mt-2">
+                    <i class="bi bi-plus-lg"></i>Criar primeiro box
+                </a>
+            </div>
+        {% else %}
+
+            {# Agrupar por tipo #}
+            {% set tiposPresentes = [] %}
+            {% for box in boxes %}
+                {% if box.tipo not in tiposPresentes %}
+                    {% set tiposPresentes = tiposPresentes|merge([box.tipo]) %}
+                {% endif %}
+            {% endfor %}
+
+            {% for tipo in tiposPresentes %}
+                <p class="bx-section-heading">
+                    <i class="bi bi-tag-fill"></i>
+                    {{ tipoLabels[tipo]|default(tipo|capitalize) }}
+                </p>
+                <div class="bx-grid" id="grid-{{ tipo }}">
+                    {% for box in boxes %}
+                        {% if box.tipo == tipo %}
+                        <div class="bx-card"
+                             data-status="{{ box.status }}"
+                             data-tipo="{{ box.tipo }}"
+                             data-search="{{ (box.numero ~ ' ' ~ box.tipo ~ ' ' ~ box.localizacao)|lower }}"
+                             id="bxcard-{{ box.id }}">
+
+                            {# ── Card header ── #}
+                            <div class="bx-card-header">
+                                <div>
+                                    <p class="bx-card-numero">{{ box.numero }}</p>
+                                    <p class="bx-card-tipo mb-0">
+                                        {{ estruturaLabels[box.estrutura]|default(box.estrutura) }}
+                                        · {{ porteLabels[box.porte]|default(box.porte) }}
+                                    </p>
+                                </div>
+                                <span class="bx-status-pill pill-{{ box.status }}">
+                                    <i class="bi bi-circle-fill" style="font-size:.4rem;"></i>
+                                    {{ statusLabels[box.status]|default(box.status) }}
+                                </span>
+                            </div>
+
+                            {# ── Card body ── #}
+                            <div class="bx-card-body">
+                                {% if box.localizacao %}
+                                <div class="bx-prop-row">
+                                    <span class="bx-prop-lbl"><i class="bi bi-geo-alt"></i></span>
+                                    <span class="bx-prop-val">{{ box.localizacao }}</span>
+                                </div>
+                                {% endif %}
+                                {% if box.peso_maximo_kg %}
+                                <div class="bx-prop-row">
+                                    <span class="bx-prop-lbl">Peso máx.</span>
+                                    <span class="bx-prop-val">{{ box.peso_maximo_kg }} kg</span>
+                                </div>
+                                {% endif %}
+                                {% if box.valor_diaria %}
+                                <div class="bx-prop-row">
+                                    <span class="bx-prop-lbl">Diária</span>
+                                    <span class="bx-prop-val">R$ {{ box.valor_diaria|number_format(2, ',', '.') }}</span>
+                                </div>
+                                {% endif %}
+
+                                {# Recursos clínicos #}
+                                <div class="bx-recurso-chips mt-2">
+                                    <span class="bx-chip {{ not box.suporte_soro ? 'chip-off' : '' }}">
+                                        <i class="bi bi-droplet{{ box.suporte_soro ? '-half' : '' }}"></i> Soro IV
+                                    </span>
+                                    <span class="bx-chip {{ not box.suporte_oxigenio ? 'chip-off' : '' }}">
+                                        <i class="bi bi-wind"></i> O₂
+                                    </span>
+                                    <span class="bx-chip {{ not box.tem_aquecimento ? 'chip-off' : '' }}">
+                                        <i class="bi bi-thermometer-half"></i> Aquec.
+                                    </span>
+                                    <span class="bx-chip {{ not box.tem_camera ? 'chip-off' : '' }}">
+                                        <i class="bi bi-camera-video{{ box.tem_camera ? '-fill' : '' }}"></i> Câmera
+                                    </span>
+                                </div>
+
+                                {% if box.observacoes %}
+                                <p class="text-muted mt-2 mb-0" style="font-size:.75rem;line-height:1.4;">
+                                    {{ box.observacoes|u.truncate(80, '…') }}
+                                </p>
+                                {% endif %}
+                            </div>
+
+                            {# ── Internação ativa ── #}
+                            {% if box.internacao_id %}
+                            <div class="bx-internacao-strip">
+                                <i class="bi bi-heart-pulse-fill me-1"></i>
+                                <strong>{{ box.pet_nome }}</strong>
+                                <span class="text-muted ms-1" style="font-size:.72rem;">
+                                    desde {{ box.internacao_inicio|date('d/m H:i') }}
+                                    {% if box.alta_prevista %} · alta {{ box.alta_prevista|date('d/m') }}{% endif %}
+                                </span>
+                                <a href="{{ path('clinica_ficha_internacao', {id: box.internacao_id}) }}"
+                                   class="ms-2 float-end" title="Ver ficha">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </div>
+                            {% endif %}
+
+                            {# ── Card footer ── #}
+                            <div class="bx-card-footer">
+                                {# Status rápido — não disponível para boxes ocupados #}
+                                {% if box.status != 'ocupado' %}
+                                <div class="dropdown">
+                                    <button class="btn-bx-sm btn-bx-status dropdown-toggle"
+                                            data-bs-toggle="dropdown" title="Alterar status">
+                                        <i class="bi bi-arrow-left-right"></i> Status
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end"
+                                        style="font-size:.8rem; border-radius:var(--bx-radius); min-width:160px;">
+                                        {% for sk, sv in statusLabels %}
+                                            {% if sk != 'ocupado' and sk != box.status %}
+                                                <li>
+                                                    <button class="dropdown-item"
+                                                            onclick="alterarStatus({{ box.id }}, '{{ sk }}', '{{ sv }}')">
+                                                        {{ sv }}
+                                                    </button>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+
+                                <a href="{{ path('clinica_box_editar', {id: box.id}) }}" class="btn-bx-sm btn-bx-edit">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+
+                                {% if box.status != 'ocupado' %}
+                                <form method="POST" action="{{ path('clinica_box_excluir', {id: box.id}) }}"
+                                      onsubmit="return confirm('Excluir o box {{ box.numero }}?');" style="margin:0;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('del_box_' ~ box.id) }}">
+                                    <button type="submit" class="btn-bx-sm btn-bx-del">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+
+                        </div>{# /bx-card #}
+                                {% endif %}
+                    {% endfor %}
+                </div>{# /bx-grid #}
+            {% endfor %}
+
+        {% endif %}
+
+    </div>{# /bx-body #}
+</div>
+
+<script>
+// ── Filtro por status (contador) ─────────────────────────────────
+let filtroAtivo = null;
+
+function filtrarStatus(status) {
+    const cards = document.querySelectorAll('.bx-card');
+    const btnLimpar = document.getElementById('btnLimpar');
+
+    if (filtroAtivo === status) {
+        limparFiltro();
+        return;
+    }
+    filtroAtivo = status;
+
+    // Remove active dos contadores
+    document.querySelectorAll('.bx-counter-card').forEach(el => el.classList.remove('filter-active'));
+    document.getElementById('cnt-' + status)?.classList.add('filter-active');
+
+    let visiveis = 0;
+    cards.forEach(card => {
+        const visivel = card.dataset.status === status;
+        card.style.display = visivel ? '' : 'none';
+        if (visivel) visiveis++;
+    });
+
+    atualizarContagem(visiveis);
+    btnLimpar.style.display = '';
+    ocultarGruposVazios();
+}
+
+function limparFiltro() {
+    filtroAtivo = null;
+    document.querySelectorAll('.bx-card').forEach(c => c.style.display = '');
+    document.querySelectorAll('.bx-section-heading, .bx-grid').forEach(el => el.style.display = '');
+    document.querySelectorAll('.bx-counter-card').forEach(el => el.classList.remove('filter-active'));
+    document.getElementById('btnLimpar').style.display = 'none';
+    document.getElementById('bxSearch').value = '';
+    atualizarContagem(document.querySelectorAll('.bx-card').length);
+}
+
+// ── Busca por texto ───────────────────────────────────────────────
+function filtrarBusca(query) {
+    const q = query.toLowerCase().trim();
+    const cards = document.querySelectorAll('.bx-card');
+    let visiveis = 0;
+
+    cards.forEach(card => {
+        const texto = card.dataset.search || '';
+        const visivel = q === '' || texto.includes(q);
+        card.style.display = visivel ? '' : 'none';
+        if (visivel) visiveis++;
+    });
+
+    atualizarContagem(visiveis);
+    ocultarGruposVazios();
+}
+
+function ocultarGruposVazios() {
+    document.querySelectorAll('.bx-grid').forEach(grid => {
+        const temVisivel = [...grid.querySelectorAll('.bx-card')].some(c => c.style.display !== 'none');
+        const heading = grid.previousElementSibling;
+        grid.style.display = temVisivel ? '' : 'none';
+        if (heading && heading.classList.contains('bx-section-heading')) {
+            heading.style.display = temVisivel ? '' : 'none';
+        }
+    });
+}
+
+function atualizarContagem(n) {
+    document.getElementById('bxContagem').textContent = n + ' box' + (n !== 1 ? 'es' : '');
+}
+
+// ── Alterar status via AJAX ───────────────────────────────────────
+function alterarStatus(boxId, novoStatus, novoLabel) {
+    fetch(`{{ path('clinica_box_status', {id: '__ID__'}) }}`.replace('__ID__', boxId), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'status=' + encodeURIComponent(novoStatus),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            const card = document.getElementById('bxcard-' + boxId);
+            if (!card) return;
+
+            // Atualiza o atributo data-status
+            card.dataset.status = novoStatus;
+
+            // Atualiza a pill de status
+            const pill = card.querySelector('.bx-status-pill');
+            if (pill) {
+                pill.className = 'bx-status-pill pill-' + novoStatus;
+                pill.innerHTML = '<i class="bi bi-circle-fill" style="font-size:.4rem;"></i> ' + novoLabel;
+            }
+
+            // Atualiza a barra lateral colorida
+            const oldClass = [...card.classList].find(c => c.startsWith('bx-card[data-status'));
+            card.setAttribute('data-status', novoStatus);
+
+            // Recarrega a linha de contadores (reload simples)
+            setTimeout(() => location.reload(), 600);
+        } else {
+            alert(data.msg || 'Erro ao alterar status.');
+        }
+    })
+    .catch(() => alert('Erro de comunicação.'));
+}
+</script>
+{% endblock %}

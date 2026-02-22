@@ -167,7 +167,8 @@
                                id="inputTutor" 
                                class="form-control" 
                                placeholder="Digite o nome do cliente..."
-                               autocomplete="off">
+                               autocomplete="off"
+                               value="{{ vendaPreCarregada is not null ? vendaPreCarregada.cliente_nome : '' }}">
                         <div id="autocompleteTutor" class="autocomplete-suggestions" style="display: none;"></div>
                     </div>
                     <small class="text-muted">Opcional - deixe em branco para "Consumidor Final"</small>
@@ -176,8 +177,13 @@
                 <!-- Pet (opcional) -->
                 <div class="mb-3">
                     <label class="form-label fw-bold">Pet:</label>
-                    <select id="petSelect" class="form-select" disabled>
-                        <option value="">Selecione um cliente primeiro</option>
+                    <select id="petSelect" class="form-select" {% if vendaPreCarregada is null or vendaPreCarregada.pet_id is null %}disabled{% endif %}>
+                        {% if vendaPreCarregada is not null and vendaPreCarregada.pet_id is not null %}
+                            <option value="">Nenhum (venda avulsa)</option>
+                            <option value="{{ vendaPreCarregada.pet_id }}" selected>{{ vendaPreCarregada.pet_nome }}</option>
+                        {% else %}
+                            <option value="">Selecione um cliente primeiro</option>
+                        {% endif %}
                     </select>
                     <small class="text-muted">Opcional - selecione se a venda for para um pet</small>
                 </div>
@@ -325,6 +331,13 @@
 const produtos = {{ produtos|json_encode|raw }};
 const clientes = {{ clientes|json_encode|raw }};
 
+{# Dados da venda pré-carregada vinda da clínica (null se acesso normal) #}
+{% if vendaPreCarregada is not null %}
+const vendaPreCarregadaJS = {{ vendaPreCarregada|json_encode|raw }};
+{% else %}
+const vendaPreCarregadaJS = null;
+{% endif %}
+
 // Debug - você pode remover após confirmar que está funcionando
 console.log('=== DEBUG PDV ===');
 console.log('Total de produtos:', produtos.length);
@@ -341,6 +354,28 @@ let carrinhoItens = [];
 $(document).ready(function() {
     inicializarEventos();
     atualizarResumo();
+
+    // Pré-carrega itens da clínica no carrinho (se houver)
+    if (vendaPreCarregadaJS && vendaPreCarregadaJS.itens && vendaPreCarregadaJS.itens.length > 0) {
+        vendaPreCarregadaJS.itens.forEach(function(item) {
+            carrinhoItens.push({
+                id:        item.id,
+                nome:      item.nome,
+                valor:     parseFloat(item.valor_unitario),
+                quantidade: parseInt(item.quantidade, 10),
+                tipo:      item.tipo,
+                estoque:   null
+            });
+        });
+
+        // Preenche o estado do cliente/pet para o JS
+        clienteSelecionado = { id: null, nome: vendaPreCarregadaJS.cliente_nome };
+        petSelecionado     = vendaPreCarregadaJS.pet_id || null;
+
+        renderizarCarrinho();
+        atualizarResumo();
+        showToast('Venda #' + vendaPreCarregadaJS.venda_id + ' carregada da clínica!', 'success');
+    }
 });
 
 // ==================== FUNÇÕES DE TOAST ====================

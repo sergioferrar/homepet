@@ -1,0 +1,423 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ titulo }} — Clínica{% endblock %}
+
+{% block body %}
+<style>
+:root {
+    --bx-teal:       #4A6741;
+    --bx-teal-dark:  #3B5E37;
+    --bx-teal-light: #EBF2EA;
+    --bx-teal-mid:   #B8D4B4;
+    --bx-caramel:    #C97D3A;
+    --bx-bark:       #5C3D1E;
+    --bx-amber:      #F5C87A;
+    --bx-amber-pale: #FDF0D5;
+    --bx-slate:      #3d4f5c;
+    --bx-muted:      #7a8fa0;
+    --bx-border:     #dde8e7;
+    --bx-bg:         #f4f7f7;
+    --bx-surface:    #ffffff;
+    --bx-shadow-sm:  0 1px 4px rgba(42,103,98,.08);
+    --bx-shadow-md:  0 4px 16px rgba(42,103,98,.12);
+    --bx-radius:     12px;
+    --bx-radius-lg:  18px;
+}
+
+body { background: var(--bx-bg); }
+
+.bx-hero {
+    background: linear-gradient(135deg, var(--bx-bark) 0%, var(--bx-caramel) 100%);
+    padding: 1.5rem 2rem 3.5rem;
+    position: relative; overflow: hidden;
+}
+.bx-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+}
+.bx-hero-content { position: relative; z-index: 1; color: #fff; }
+.bx-hero-title   { font-size: 1.35rem; font-weight: 800; margin: 0 0 .2rem; display: flex; align-items: center; gap: .6rem; }
+.bx-hero-sub     { font-size: .82rem; opacity: .75; margin: 0; }
+
+.btn-voltar {
+    font-size: .78rem; padding: .3rem .8rem; border-radius: 8px;
+    color: rgba(255,255,255,.85) !important;
+    border: 1px solid rgba(255,255,255,.35) !important;
+    background: transparent !important;
+    transition: background .15s;
+}
+.btn-voltar:hover { background: rgba(255,255,255,.12) !important; }
+
+.bx-body { margin-top: -2.5rem; padding: 0 1.5rem 3rem; position: relative; z-index: 10; }
+
+/* ── Form card ───────────────────────────────────── */
+.bx-form-card {
+    background: var(--bx-surface); border: 1px solid var(--bx-border);
+    border-radius: var(--bx-radius-lg); box-shadow: var(--bx-shadow-md);
+    overflow: hidden; max-width: 860px; margin: 0 auto;
+}
+
+.bx-form-section {
+    padding: 1.35rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--bx-border);
+}
+.bx-form-section:last-of-type { border-bottom: none; }
+
+.bx-section-title {
+    font-size: .72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--bx-muted);
+    margin-bottom: 1rem;
+    display: flex; align-items: center; gap: .5rem;
+}
+.bx-section-title i { color: var(--bx-teal); }
+
+/* Fields */
+.bx-form-section .form-label {
+    font-size: .78rem; font-weight: 600; color: var(--bx-slate); margin-bottom: .35rem;
+}
+.bx-form-section .form-label.required::after { content: ' *'; color: #C0392B; }
+.bx-form-section .form-control,
+.bx-form-section .form-select {
+    border: 1.5px solid var(--bx-border); border-radius: var(--bx-radius);
+    font-size: .88rem; color: var(--bx-slate);
+    transition: border-color .18s, box-shadow .18s;
+}
+.bx-form-section .form-control:focus,
+.bx-form-section .form-select:focus {
+    border-color: var(--bx-teal);
+    box-shadow: 0 0 0 3px rgba(74,103,65,.12);
+    outline: none;
+}
+
+/* Toggle switches */
+.bx-toggle-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .65rem;
+}
+.bx-toggle {
+    display: flex; align-items: center; gap: .65rem;
+    background: #fafcfb; border: 1.5px solid var(--bx-border);
+    border-radius: var(--bx-radius); padding: .65rem .9rem;
+    cursor: pointer; transition: border-color .18s, background .18s;
+    user-select: none;
+}
+.bx-toggle:has(input:checked) {
+    background: var(--bx-teal-light); border-color: var(--bx-teal-mid);
+}
+.bx-toggle input[type="checkbox"] { display: none; }
+.bx-toggle-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: var(--bx-border); color: var(--bx-muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .95rem; flex-shrink: 0; transition: background .18s, color .18s;
+}
+.bx-toggle:has(input:checked) .bx-toggle-icon {
+    background: var(--bx-teal); color: #fff;
+}
+.bx-toggle-text { font-size: .8rem; font-weight: 600; color: var(--bx-slate); }
+.bx-toggle-sub  { font-size: .68rem; color: var(--bx-muted); line-height: 1.2; }
+
+/* Radio tipo/porte/estrutura */
+.bx-radio-grid {
+    display: flex; flex-wrap: wrap; gap: .5rem;
+}
+.bx-radio-option { display: none; }
+.bx-radio-label {
+    cursor: pointer; padding: .38rem .9rem;
+    border-radius: 100px; border: 1.5px solid var(--bx-border);
+    font-size: .8rem; font-weight: 600; color: var(--bx-muted);
+    transition: all .15s; user-select: none;
+}
+.bx-radio-option:checked + .bx-radio-label {
+    background: var(--bx-teal); color: #fff; border-color: transparent;
+}
+
+/* tipo específico colors */
+.bx-radio-option[value="emergencia"]:checked + .bx-radio-label  { background: #C0392B; }
+.bx-radio-option[value="isolamento"]:checked + .bx-radio-label  { background: #7B0D0D; }
+.bx-radio-option[value="cirurgia"]:checked + .bx-radio-label    { background: #3A7CA5; }
+.bx-radio-option[value="recuperacao"]:checked + .bx-radio-label { background: #2E7D32; }
+.bx-radio-option[value="observacao"]:checked + .bx-radio-label  { background: #D4A017; }
+
+/* footer */
+.bx-form-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--bx-border);
+    display: flex; justify-content: flex-end; gap: .75rem;
+    background: #f9fbfb;
+    border-radius: 0 0 var(--bx-radius-lg) var(--bx-radius-lg);
+}
+.btn-bx-save {
+    background: linear-gradient(135deg, var(--bx-bark) 0%, var(--bx-caramel) 100%);
+    color: #fff; border: none; border-radius: var(--bx-radius);
+    padding: .55rem 1.5rem; font-size: .9rem; font-weight: 600;
+    display: flex; align-items: center; gap: .4rem;
+    transition: transform .15s, box-shadow .15s;
+}
+.btn-bx-save:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(92,61,30,.3); color: #fff; }
+.btn-bx-cancel {
+    background: var(--bx-surface); color: var(--bx-muted);
+    border: 1.5px solid var(--bx-border); border-radius: var(--bx-radius);
+    padding: .55rem 1.2rem; font-size: .9rem; font-weight: 500;
+    transition: background .15s, color .15s;
+    text-decoration: none; display: flex; align-items: center;
+}
+.btn-bx-cancel:hover { background: var(--bx-bg); color: var(--bx-slate); }
+
+/* Preview badge */
+#boxPreviewBadge {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: var(--bx-teal-light); border: 1px solid var(--bx-teal-mid);
+    color: var(--bx-teal-dark); border-radius: var(--bx-radius);
+    padding: .4rem .9rem; font-size: .82rem; font-weight: 600;
+    transition: all .2s;
+}
+</style>
+
+<div style="background: var(--bx-bg); min-height: 100vh; padding-bottom: 3rem;">
+
+    <div class="bx-hero">
+        <div class="bx-hero-content d-flex align-items-start justify-content-between flex-wrap gap-2">
+            <div>
+                <p class="bx-hero-title"><i class="bi bi-grid-3x3-gap-fill"></i>{{ titulo }}</p>
+                <p class="bx-hero-sub">Configure as características clínicas e estruturais do box</p>
+            </div>
+            <a href="{{ path('clinica_box_index') }}" class="btn btn-outline-secondary btn-voltar">
+                <i class="bi bi-arrow-left me-1"></i>Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="bx-body">
+
+        {# Flash messages #}
+        {% for label, msgs in app.flashes %}
+            {% for msg in msgs %}
+                <div class="alert alert-{{ label }} alert-dismissible fade show mb-3" role="alert" style="max-width:860px;margin:0 auto .75rem;">
+                    {{ msg }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <form method="POST" id="formBox" novalidate>
+
+            <div class="bx-form-card">
+
+                {# ── 1. Identificação ── #}
+                <div class="bx-form-section">
+                    <p class="bx-section-title"><i class="bi bi-tag-fill"></i>Identificação</p>
+                    <div class="row g-3">
+
+                        <div class="col-md-3">
+                            <label for="numero" class="form-label required">Código do Box</label>
+                            <input type="text" id="numero" name="numero" class="form-control"
+                                   value="{{ box.numero ?? '' }}"
+                                   placeholder="Ex: INT-01, EMG-02"
+                                   maxlength="20" required
+                                   oninput="atualizarPreview()">
+                            <small class="text-muted" style="font-size:.7rem;">Use um código único e legível</small>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="localizacao" class="form-label">Localização</label>
+                            <input type="text" id="localizacao" name="localizacao" class="form-control"
+                                   value="{{ box.localizacao ?? '' }}"
+                                   placeholder="Ex: Ala B, Sala 3">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="status" class="form-label required">Status inicial</label>
+                            <select id="status" name="status" class="form-select" required>
+                                {% for sk, sv in statusLabels %}
+                                <option value="{{ sk }}" {{ (box.status ?? 'disponivel') == sk ? 'selected' : '' }}>
+                                    {{ sv }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div>
+                                <label class="form-label text-muted" style="font-size:.72rem;">Pré-visualização</label>
+                                <div id="boxPreviewBadge">
+                                    <i class="bi bi-grid-3x3-gap"></i>
+                                    <span id="previewNumero">{{ box.numero ?? 'Novo Box' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                {# ── 2. Finalidade ── #}
+                <div class="bx-form-section">
+                    <p class="bx-section-title"><i class="bi bi-clipboard2-pulse-fill"></i>Finalidade Clínica</p>
+                    <div class="mb-3">
+                        <label class="form-label required">Tipo de uso</label>
+                        <div class="bx-radio-grid">
+                            {% for tk, tv in tipoLabels %}
+                            <input type="radio" class="bx-radio-option" name="tipo" id="tipo-{{ tk }}"
+                                   value="{{ tk }}" required
+                                   {{ (box.tipo ?? '') == tk ? 'checked' : '' }}>
+                            <label class="bx-radio-label" for="tipo-{{ tk }}">{{ tv }}</label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                {# ── 3. Estrutura física ── #}
+                <div class="bx-form-section">
+                    <p class="bx-section-title"><i class="bi bi-bounding-box-circles"></i>Estrutura e Porte</p>
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label required">Tipo de estrutura</label>
+                            <div class="bx-radio-grid">
+                                {% for ek, ev in estruturaLabels %}
+                                <input type="radio" class="bx-radio-option" name="estrutura" id="est-{{ ek }}"
+                                       value="{{ ek }}"
+                                       {{ (box.estrutura ?? 'canil') == ek ? 'checked' : '' }}>
+                                <label class="bx-radio-label" for="est-{{ ek }}">{{ ev }}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label required">Porte atendido</label>
+                            <div class="bx-radio-grid">
+                                {% for pk, pv in porteLabels %}
+                                <input type="radio" class="bx-radio-option" name="porte" id="porte-{{ pk }}"
+                                       value="{{ pk }}"
+                                       {{ (box.porte ?? 'todos') == pk ? 'checked' : '' }}>
+                                <label class="bx-radio-label" for="porte-{{ pk }}">{{ pv }}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="peso_maximo_kg" class="form-label">Peso máximo (kg)</label>
+                            <input type="number" id="peso_maximo_kg" name="peso_maximo_kg"
+                                   class="form-control" step="0.5" min="0" max="200"
+                                   value="{{ box.peso_maximo_kg ?? '' }}"
+                                   placeholder="Sem limite">
+                            <small class="text-muted" style="font-size:.7rem;">Deixe vazio para sem limite</small>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="valor_diaria" class="form-label">Valor da diária (R$)</label>
+                            <input type="number" id="valor_diaria" name="valor_diaria"
+                                   class="form-control" step="0.01" min="0"
+                                   value="{{ box.valor_diaria ?? '' }}"
+                                   placeholder="0,00">
+                        </div>
+
+                    </div>
+                </div>
+
+                {# ── 4. Recursos clínicos ── #}
+                <div class="bx-form-section">
+                    <p class="bx-section-title"><i class="bi bi-heart-pulse-fill"></i>Recursos Clínicos Disponíveis</p>
+                    <div class="bx-toggle-grid">
+
+                        <label class="bx-toggle">
+                            <input type="checkbox" name="suporte_soro" value="1"
+                                   {{ (box.suporte_soro ?? false) ? 'checked' : '' }}>
+                            <div class="bx-toggle-icon"><i class="bi bi-droplet-half"></i></div>
+                            <div>
+                                <div class="bx-toggle-text">Suporte IV / Soro</div>
+                                <div class="bx-toggle-sub">Suporte para soro e medicação intravenosa</div>
+                            </div>
+                        </label>
+
+                        <label class="bx-toggle">
+                            <input type="checkbox" name="suporte_oxigenio" value="1"
+                                   {{ (box.suporte_oxigenio ?? false) ? 'checked' : '' }}>
+                            <div class="bx-toggle-icon"><i class="bi bi-wind"></i></div>
+                            <div>
+                                <div class="bx-toggle-text">Oxigenoterapia (O₂)</div>
+                                <div class="bx-toggle-sub">Saída de oxigênio para suporte respiratório</div>
+                            </div>
+                        </label>
+
+                        <label class="bx-toggle">
+                            <input type="checkbox" name="tem_aquecimento" value="1"
+                                   {{ (box.tem_aquecimento ?? false) ? 'checked' : '' }}>
+                            <div class="bx-toggle-icon"><i class="bi bi-thermometer-half"></i></div>
+                            <div>
+                                <div class="bx-toggle-text">Aquecimento</div>
+                                <div class="bx-toggle-sub">Manta ou resistência para filhotes e pós-cirúrgico</div>
+                            </div>
+                        </label>
+
+                        <label class="bx-toggle">
+                            <input type="checkbox" name="tem_camera" value="1"
+                                   {{ (box.tem_camera ?? false) ? 'checked' : '' }}>
+                            <div class="bx-toggle-icon"><i class="bi bi-camera-video-fill"></i></div>
+                            <div>
+                                <div class="bx-toggle-text">Câmera de Monit.</div>
+                                <div class="bx-toggle-sub">Monitoramento visual do animal</div>
+                            </div>
+                        </label>
+
+                    </div>
+                </div>
+
+                {# ── 5. Observações ── #}
+                <div class="bx-form-section">
+                    <p class="bx-section-title"><i class="bi bi-chat-left-text-fill"></i>Observações</p>
+                    <textarea name="observacoes" class="form-control" rows="3"
+                              placeholder="Informações adicionais sobre este box (limpeza especial, restrições, equipamentos externos etc.)">{{ box.observacoes ?? '' }}</textarea>
+                </div>
+
+                {# ── Footer ── #}
+                <div class="bx-form-footer">
+                    <a href="{{ path('clinica_box_index') }}" class="btn-bx-cancel">Cancelar</a>
+                    <button type="submit" class="btn-bx-save">
+                        <i class="bi bi-check2-circle"></i>
+                        {{ box ? 'Salvar alterações' : 'Criar Box' }}
+                    </button>
+                </div>
+
+            </div>{# /bx-form-card #}
+
+        </form>
+    </div>
+</div>
+
+<script>
+function atualizarPreview() {
+    const v = document.getElementById('numero').value.trim();
+    document.getElementById('previewNumero').textContent = v || 'Novo Box';
+}
+
+// Validação mínima antes de submit
+document.getElementById('formBox').addEventListener('submit', function(e) {
+    const numero  = document.getElementById('numero').value.trim();
+    const tipo    = document.querySelector('input[name="tipo"]:checked');
+    const estrutura = document.querySelector('input[name="estrutura"]:checked');
+    const porte   = document.querySelector('input[name="porte"]:checked');
+
+    if (!numero) {
+        e.preventDefault();
+        alert('Informe o código do box.');
+        document.getElementById('numero').focus();
+        return;
+    }
+    if (!tipo) {
+        e.preventDefault();
+        alert('Selecione o tipo de uso do box.');
+        return;
+    }
+    if (!estrutura) {
+        e.preventDefault();
+        alert('Selecione a estrutura do box.');
+        return;
+    }
+    if (!porte) {
+        e.preventDefault();
+        alert('Selecione o porte atendido.');
+        return;
+    }
+});
+</script>
+{% endblock %}

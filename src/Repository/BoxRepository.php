@@ -22,61 +22,221 @@ class BoxRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function findBoxDisponivel(): ?array
+    /**
+     * Lista todos os boxes de um estabelecimento com o pet atual (se ocupado).
+     */
+    public function findAllComOcupacao(int $baseId): array
     {
-        $sql = "SELECT b.id, b.numero, b.ocupado
-                FROM box b
-                WHERE b.ocupado = 0
-                ORDER BY b.numero ASC
-                LIMIT 1";
-        $result = $this->conn->fetchAssociative($sql);
-        return $result ?: null;
+        $db  = $_ENV['DBNAMETENANT'];
+        $sql = "
+            SELECT
+                b.id, b.numero, b.tipo, b.porte, b.estrutura, b.localizacao,
+                b.status, b.suporte_soro, b.suporte_oxigenio, b.tem_aquecimento,
+                b.tem_camera, b.peso_maximo_kg, b.valor_diaria, b.observacoes,
+                b.created_at,
+                -- internação ativa neste box
+                i.id              AS internacao_id,
+                i.data_inicio     AS internacao_inicio,
+                i.alta_prevista,
+                i.situacao,
+                i.risco,
+                p.nome            AS pet_nome,
+                p.raca            AS pet_raca,
+                c.nome            AS dono_nome,
+                c.telefone        AS dono_telefone
+            FROM {$db}.box b
+            LEFT JOIN {$db}.internacao i
+                ON  i.box      = b.numero
+                AND i.estabelecimento_id = :baseId
+                AND i.status   = 'ativa'
+            LEFT JOIN {$db}.pet p ON p.id = i.pet_id
+            LEFT JOIN {$db}.cliente c ON c.id = i.dono_id
+            WHERE b.estabelecimento_id = :baseId
+            ORDER BY b.tipo, b.numero ASC
+        ";
+
+        return $this->conn->fetchAllAssociative($sql, ['baseId' => $baseId]);
     }
 
-    public function findBoxesOcupados(): array
+    /**
+     * Boxes disponíveis para seleção no formulário de internação.
+     */
+    public function findDisponiveisParaSelect(int $baseId): array
     {
-        $sql = "SELECT b.id, b.numero, b.ocupado,
-                       h.id AS hospedagem_id, h.data_entrada, h.data_saida,
-                       p.id AS pet_id, p.nome AS pet_nome, p.especie,
-                       c.id AS cliente_id, c.nome AS cliente_nome, c.telefone
-                FROM box b
-                LEFT JOIN hospedagem_caes h ON h.box_id = b.id AND h.data_saida >= NOW()
-                LEFT JOIN pet p ON p.id = h.pet_id
-                LEFT JOIN cliente c ON c.id = h.cliente_id
-                WHERE b.ocupado = 1
-                ORDER BY b.numero ASC";
-        return $this->conn->fetchAllAssociative($sql);
+        $db  = $_ENV['DBNAMETENANT'];
+        $sql = "
+            SELECT b.id, b.numero, b.tipo, b.porte, b.estrutura, b.localizacao
+            FROM {$db}.box b
+            WHERE b.estabelecimento_id = :baseId
+              AND b.status = 'disponivel'
+            ORDER BY b.tipo, b.numero ASC
+        ";
+
+        return $this->conn->fetchAllAssociative($sql, ['baseId' => $baseId]);
     }
 
-    public function findByNumero(int $numero): ?array
+    /**
+     * Busca um box por ID, validando o estabelecimento.
+     */
+    public function findByIdAndBase(int $baseId, int $id): ?array
     {
-        $sql = "SELECT id, numero, ocupado FROM box WHERE numero = :numero LIMIT 1";
-        $result = $this->conn->fetchAssociative($sql, ['numero' => $numero]);
-        return $result ?: null;
-    }
-
-    public function countBoxes(): int
-    {
-        return (int) $this->conn->fetchOne("SELECT COUNT(id) FROM box");
-    }
-
-    public function findAllComStatus(): array
-    {
-        $sql = "SELECT b.id, b.numero, b.ocupado,
-                       p.nome AS pet_atual, c.nome AS cliente_atual
-                FROM box b
-                LEFT JOIN hospedagem_caes h ON h.box_id = b.id AND h.data_saida >= NOW()
-                LEFT JOIN pet p ON p.id = h.pet_id
-                LEFT JOIN cliente c ON c.id = h.cliente_id
-                ORDER BY b.numero ASC";
-        return $this->conn->fetchAllAssociative($sql);
-    }
-
-    public function atualizarOcupacao(int $boxId, bool $ocupado): void
-    {
-        $this->conn->executeQuery(
-            "UPDATE box SET ocupado = :ocupado WHERE id = :id",
-            ['ocupado' => (int) $ocupado, 'id' => $boxId]
+        $db  = $_ENV['DBNAMETENANT'];
+        $row = $this->conn->fetchAssociative(
+            "SELECT * FROM {$db}.box WHERE id = :id AND estabelecimento_id = :baseId",
+            ['id' => $id, 'baseId' => $baseId]
         );
+
+        return $row ?: null;
+    }
+
+    /**
+     * Insere um novo box e retorna o ID gerado.
+     */
+    public function inserir(int $baseId, Box $box): int
+    {
+        $db = $_ENV['DBNAMETENANT'];
+        $this->conn->executeQuery(
+            "INSERT INTO {$db}.box
+                (estabelecimento_id, numero, tipo, porte, estrutura, localizacao, status,
+                 suporte_soro, suporte_oxigenio, tem_aquecimento, tem_camera,
+                 peso_maximo_kg, valor_diaria, observacoes, created_at, updated_at)
+             VALUES
+                (:eid, :numero, :tipo, :porte, :estrutura, :localizacao, :status,
+                 :soro, :oxigenio, :aquecimento, :camera,
+                 :peso_max, :valor_diaria, :observacoes, NOW(), NOW())",
+            [
+                'eid'          => $baseId,
+                'numero'       => $box->getNumero(),
+                'tipo'         => $box->getTipo(),
+                'porte'        => $box->getPorte(),
+                'estrutura'    => $box->getEstrutura(),
+                'localizacao'  => $box->getLocalizacao(),
+                'status'       => $box->getStatus(),
+                'soro'         => (int) $box->isSuporteSoro(),
+                'oxigenio'     => (int) $box->isSuporteOxigenio(),
+                'aquecimento'  => (int) $box->isTemAquecimento(),
+                'camera'       => (int) $box->isTemCamera(),
+                'peso_max'     => $box->getPesoMaximoKg(),
+                'valor_diaria' => $box->getValorDiaria(),
+                'observacoes'  => $box->getObservacoes(),
+            ]
+        );
+
+        return (int) $this->conn->lastInsertId();
+    }
+
+    /**
+     * Atualiza os dados de um box.
+     */
+    public function atualizar(int $baseId, Box $box): void
+    {
+        $db = $_ENV['DBNAMETENANT'];
+        $this->conn->executeQuery(
+            "UPDATE {$db}.box SET
+                numero        = :numero,
+                tipo          = :tipo,
+                porte         = :porte,
+                estrutura     = :estrutura,
+                localizacao   = :localizacao,
+                status        = :status,
+                suporte_soro  = :soro,
+                suporte_oxigenio = :oxigenio,
+                tem_aquecimento  = :aquecimento,
+                tem_camera    = :camera,
+                peso_maximo_kg = :peso_max,
+                valor_diaria  = :valor_diaria,
+                observacoes   = :observacoes,
+                updated_at    = NOW()
+             WHERE id = :id AND estabelecimento_id = :eid",
+            [
+                'id'           => $box->getId(),
+                'eid'          => $baseId,
+                'numero'       => $box->getNumero(),
+                'tipo'         => $box->getTipo(),
+                'porte'        => $box->getPorte(),
+                'estrutura'    => $box->getEstrutura(),
+                'localizacao'  => $box->getLocalizacao(),
+                'status'       => $box->getStatus(),
+                'soro'         => (int) $box->isSuporteSoro(),
+                'oxigenio'     => (int) $box->isSuporteOxigenio(),
+                'aquecimento'  => (int) $box->isTemAquecimento(),
+                'camera'       => (int) $box->isTemCamera(),
+                'peso_max'     => $box->getPesoMaximoKg(),
+                'valor_diaria' => $box->getValorDiaria(),
+                'observacoes'  => $box->getObservacoes(),
+            ]
+        );
+    }
+
+    /**
+     * Marca o box como disponível (liberação automática ao dar alta).
+     */
+    public function liberar(int $baseId, string $numeroBox): void
+    {
+        $db = $_ENV['DBNAMETENANT'];
+        $this->conn->executeQuery(
+            "UPDATE {$db}.box SET status = 'disponivel', updated_at = NOW()
+             WHERE numero = :numero AND estabelecimento_id = :eid",
+            ['numero' => $numeroBox, 'eid' => $baseId]
+        );
+    }
+
+    /**
+     * Marca o box como ocupado ao iniciar uma internação.
+     */
+    public function ocupar(int $baseId, string $numeroBox): void
+    {
+        $db = $_ENV['DBNAMETENANT'];
+        $this->conn->executeQuery(
+            "UPDATE {$db}.box SET status = 'ocupado', updated_at = NOW()
+             WHERE numero = :numero AND estabelecimento_id = :eid",
+            ['numero' => $numeroBox, 'eid' => $baseId]
+        );
+    }
+
+    /**
+     * Altera o status manualmente (manutenção, higienização etc.)
+     */
+    public function atualizarStatus(int $baseId, int $id, string $status): void
+    {
+        $db = $_ENV['DBNAMETENANT'];
+        $this->conn->executeQuery(
+            "UPDATE {$db}.box SET status = :status, updated_at = NOW()
+             WHERE id = :id AND estabelecimento_id = :eid",
+            ['id' => $id, 'status' => $status, 'eid' => $baseId]
+        );
+    }
+
+    /**
+     * Exclui um box (somente se não houver internação ativa).
+     */
+    public function excluir(int $baseId, int $id): void
+    {
+        $db = $_ENV['DBNAMETENANT'];
+        $this->conn->executeQuery(
+            "DELETE FROM {$db}.box WHERE id = :id AND estabelecimento_id = :eid",
+            ['id' => $id, 'eid' => $baseId]
+        );
+    }
+
+    /**
+     * Retorna contadores por status para o dashboard.
+     */
+    public function contadoresPorStatus(int $baseId): array
+    {
+        $db  = $_ENV['DBNAMETENANT'];
+        $rows = $this->conn->fetchAllAssociative(
+            "SELECT status, COUNT(*) AS total
+             FROM {$db}.box
+             WHERE estabelecimento_id = :baseId
+             GROUP BY status",
+            ['baseId' => $baseId]
+        );
+
+        $result = ['disponivel' => 0, 'ocupado' => 0, 'manutencao' => 0, 'reservado' => 0, 'higienizacao' => 0];
+        foreach ($rows as $row) {
+            $result[$row['status']] = (int) $row['total'];
+        }
+        return $result;
     }
 }

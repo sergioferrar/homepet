@@ -1,48 +1,315 @@
 {% extends 'baseClinica.html.twig' %}
 
-{% block title %}Nova Internação{% endblock %}
+{% block title %}Nova Internação — {{ pet.nome }}{% endblock %}
 
 {% block body %}
-    <div class="container-fluid">
-        <div class="card shadow-sm w-100">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center mb-4">
-                <h4>Adicionar Internação</h4>
-                <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}" class="btn btn-light">
-                    <i class="fas fa-arrow-left me-2"></i>Voltar
-                </a>
-            </div>
-            <div class="card-body mb-4">
-                <h5 class="mb-2">
-                    {{ pet.nome }} ({{ pet.id }})
-                    <small class="text-muted fw-normal">{{ pet.raca }} - {{ pet.sexo }} - {{ pet.idade }} anos</small>
-                </h5>
-                <hr>
+<style>
+/* ═══════════════════════════════════════════════
+   NOVA INTERNAÇÃO — Design System (same as detalhes_pet)
+   Paleta: Teal clínico + Cinza sofisticado
+═══════════════════════════════════════════════ */
+:root {
+    --dp-teal:       #4A6741;
+    --dp-teal-dark:  #3B5E37;
+    --dp-teal-light: #EBF2EA;
+    --dp-teal-mid:   #B8D4B4;
+    --dp-slate:      #3d4f5c;
+    --dp-muted:      #7a8fa0;
+    --dp-border:     #dde8e7;
+    --dp-bg:         #f4f7f7;
+    --dp-surface:    #ffffff;
+    --dp-shadow-sm:  0 1px 4px rgba(42, 103, 98, 0.08);
+    --dp-shadow-md:  0 4px 16px rgba(42, 103, 98, 0.12);
+    --dp-radius:     12px;
+    --dp-radius-lg:  18px;
+}
 
-                <form action="{{ path('clinica_nova_internacao', {'petId': pet.id}) }}" method="post">
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-3">
-                            <label for="situacao" class="form-label text-danger">Situação*</label>
-                            <select id="situacao" name="situacao" class="form-select" required>
-                                <option value="">Selecione...</option>
-                                <option value="nao_urgente">Não urgente</option>
-                                <option value="pouco_urgente">Pouco urgente</option>
-                                <option value="urgente">Urgente</option>
-                                <option value="muito_urgente">Muito urgente</option>
-                                <option value="emergencia">Emergência</option>
-                            </select>
+body { background: var(--dp-bg); }
+
+/* ── Hero ────────────────────────────────────────── */
+.ni-hero {
+    background: linear-gradient(135deg, var(--dp-teal) 0%, var(--dp-teal-dark) 100%);
+    padding: 1.5rem 2rem 3.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.ni-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3Ccircle cx='0' cy='0' r='10'/%3E%3Ccircle cx='60' cy='60' r='10'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+}
+.ni-hero-content { position: relative; z-index: 1; color: #fff; }
+.ni-hero-title {
+    font-size: 1.35rem; font-weight: 800; margin: 0 0 .2rem;
+    display: flex; align-items: center; gap: .6rem;
+}
+.ni-hero-sub { font-size: .85rem; opacity: .75; margin: 0; }
+
+.btn-outline-secondary.voltar-dash {
+    font-size: .78rem; padding: .3rem .8rem; border-radius: 8px;
+    color: rgba(255,255,255,.85) !important;
+    border-color: rgba(255,255,255,.35) !important;
+    background: transparent !important;
+}
+.btn-outline-secondary.voltar-dash:hover {
+    background: rgba(255,255,255,.12) !important;
+}
+
+/* ── Pull-up card ────────────────────────────────── */
+.ni-body {
+    margin-top: -2.5rem; padding: 0 1.5rem 3rem;
+    position: relative; z-index: 10;
+}
+
+.ni-card {
+    background: var(--dp-surface);
+    border: 1px solid var(--dp-border);
+    border-radius: var(--dp-radius-lg);
+    box-shadow: var(--dp-shadow-md);
+    overflow: hidden;
+}
+
+/* ── Pet info strip ──────────────────────────────── */
+.ni-pet-strip {
+    display: flex; align-items: center; gap: .85rem;
+    padding: 1rem 1.5rem;
+    background: var(--dp-teal-light);
+    border-bottom: 1px solid var(--dp-teal-mid);
+}
+.ni-pet-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--dp-teal); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(42,103,98,.2);
+}
+.ni-pet-name { font-size: 1rem; font-weight: 700; color: var(--dp-slate); margin: 0; line-height: 1.2; }
+.ni-pet-meta { font-size: .78rem; color: var(--dp-muted); margin: 0; }
+
+/* ── Section heading ─────────────────────────────── */
+.ni-section-heading {
+    font-size: .72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--dp-muted);
+    padding: 1.25rem 1.5rem .6rem;
+    border-bottom: 1px solid var(--dp-border);
+    margin: 0;
+}
+
+/* ── Fields area ─────────────────────────────────── */
+.ni-fields { padding: 1.25rem 1.5rem; }
+
+.ni-fields .form-label {
+    font-size: .78rem; font-weight: 600; color: var(--dp-slate);
+    margin-bottom: .35rem;
+}
+.ni-fields .form-label.required::after {
+    content: ' *'; color: #c0392b;
+}
+.ni-fields .form-control,
+.ni-fields .form-select {
+    border: 1.5px solid var(--dp-border);
+    border-radius: var(--dp-radius);
+    font-size: .88rem;
+    color: var(--dp-slate);
+    transition: border-color .18s, box-shadow .18s;
+}
+.ni-fields .form-control:focus,
+.ni-fields .form-select:focus {
+    border-color: var(--dp-teal);
+    box-shadow: 0 0 0 3px rgba(74,103,65,.12);
+    outline: none;
+}
+.ni-fields textarea.form-control { resize: vertical; min-height: 100px; }
+
+/* ── Urgency badges ──────────────────────────────── */
+.urgency-group { display: flex; flex-wrap: wrap; gap: .5rem; }
+.urgency-option { display: none; }
+.urgency-label {
+    cursor: pointer; padding: .35rem .85rem;
+    border-radius: 100px; border: 1.5px solid var(--dp-border);
+    font-size: .78rem; font-weight: 600; color: var(--dp-muted);
+    transition: all .15s; user-select: none;
+}
+.urgency-option:checked + .urgency-label { color: #fff; border-color: transparent; }
+#urg-nao_urgente:checked + .urgency-label   { background: #4A6741; }
+#urg-pouco_urgente:checked + .urgency-label { background: #D4A017; }
+#urg-urgente:checked + .urgency-label       { background: #E67E22; }
+#urg-muito_urgente:checked + .urgency-label { background: #C0392B; }
+#urg-emergencia:checked + .urgency-label    { background: #7B0D0D; }
+
+/* ── Risk chips ──────────────────────────────────── */
+.risk-group { display: flex; gap: .5rem; }
+.risk-option { display: none; }
+.risk-label {
+    cursor: pointer; padding: .35rem 1rem;
+    border-radius: 100px; border: 1.5px solid var(--dp-border);
+    font-size: .78rem; font-weight: 600; color: var(--dp-muted);
+    transition: all .15s; user-select: none;
+}
+#risk-baixo:checked + .risk-label  { background: var(--dp-teal); color: #fff; border-color: transparent; }
+#risk-medio:checked + .risk-label  { background: #D4A017; color: #fff; border-color: transparent; }
+#risk-alto:checked + .risk-label   { background: #C0392B; color: #fff; border-color: transparent; }
+
+/* ── Tabs ────────────────────────────────────────── */
+.ni-nav-tabs {
+    display: flex; overflow-x: auto;
+    background: #f9fbfb; border-bottom: 1px solid var(--dp-border);
+    padding: 0 .5rem; scrollbar-width: none;
+    margin: 0;
+}
+.ni-nav-tabs::-webkit-scrollbar { display: none; }
+.ni-nav-tabs .nav-link {
+    border: none !important; border-radius: 0 !important;
+    padding: .9rem 1.1rem; font-size: .82rem; font-weight: 600;
+    color: var(--dp-muted) !important; white-space: nowrap;
+    border-bottom: 2.5px solid transparent !important;
+    background: transparent !important;
+    transition: color .18s;
+}
+.ni-nav-tabs .nav-link.active {
+    color: var(--dp-teal) !important;
+    border-bottom-color: var(--dp-teal) !important;
+}
+.ni-nav-tabs .nav-link i { margin-right: .35rem; }
+
+.ni-tab-content {
+    border: none !important;
+    padding: 1.5rem !important;
+    background: var(--dp-surface);
+}
+
+/* ── Tags input (alergias) ───────────────────────── */
+.tags-wrap {
+    border: 1.5px solid var(--dp-border); border-radius: var(--dp-radius);
+    padding: .45rem .65rem; display: flex; flex-wrap: wrap; gap: .35rem;
+    background: #fff; cursor: text;
+    transition: border-color .18s, box-shadow .18s;
+}
+.tags-wrap:focus-within {
+    border-color: var(--dp-teal);
+    box-shadow: 0 0 0 3px rgba(74,103,65,.12);
+}
+.tag-chip {
+    display: inline-flex; align-items: center; gap: .3rem;
+    background: var(--dp-teal-light); border: 1px solid var(--dp-teal-mid);
+    color: var(--dp-teal-dark); border-radius: 100px;
+    padding: .15rem .55rem; font-size: .75rem; font-weight: 600;
+}
+.tag-chip-remove {
+    background: none; border: none; cursor: pointer;
+    color: var(--dp-teal-dark); padding: 0; line-height: 1; font-size: .8rem;
+    opacity: .6; transition: opacity .15s;
+}
+.tag-chip-remove:hover { opacity: 1; }
+.tags-input {
+    border: none !important; outline: none !important;
+    font-size: .85rem; color: var(--dp-slate);
+    min-width: 120px; flex: 1; padding: .1rem .15rem;
+    box-shadow: none !important;
+}
+.tags-hidden { display: none; }
+
+/* ── Footer actions ──────────────────────────────── */
+.ni-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--dp-border);
+    display: flex; justify-content: flex-end; gap: .75rem;
+    background: #f9fbfb;
+    border-radius: 0 0 var(--dp-radius-lg) var(--dp-radius-lg);
+}
+.btn-ni-save {
+    background: linear-gradient(135deg, var(--dp-teal) 0%, var(--dp-teal-dark) 100%);
+    color: #fff; border: none; border-radius: var(--dp-radius);
+    padding: .55rem 1.5rem; font-size: .9rem; font-weight: 600;
+    transition: transform .15s, box-shadow .15s;
+    display: flex; align-items: center; gap: .4rem;
+}
+.btn-ni-save:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(74,103,65,.3); color: #fff; }
+.btn-ni-cancel {
+    background: var(--dp-surface); color: var(--dp-muted);
+    border: 1.5px solid var(--dp-border); border-radius: var(--dp-radius);
+    padding: .55rem 1.2rem; font-size: .9rem; font-weight: 500;
+    transition: background .15s, color .15s;
+}
+.btn-ni-cancel:hover { background: var(--dp-bg); color: var(--dp-slate); }
+</style>
+
+<div style="background: var(--dp-bg); min-height: 100vh; padding-bottom: 3rem;">
+
+    {# ── Hero ─────────────────────────────────────────────── #}
+    <div class="ni-hero">
+        <div class="ni-hero-content d-flex align-items-start justify-content-between flex-wrap gap-2">
+            <div>
+                <p class="ni-hero-title">
+                    <i class="bi bi-hospital"></i>
+                    Nova Internação
+                </p>
+                <p class="ni-hero-sub">Registre os dados clínicos e administrativos da internação</p>
+            </div>
+            <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}"
+               class="btn btn-outline-secondary voltar-dash">
+                <i class="bi bi-arrow-left me-1"></i>Voltar à Ficha
+            </a>
+        </div>
+    </div>
+
+    {# ── Pull-up card ─────────────────────────────────────── #}
+    <div class="ni-body">
+        <form action="{{ path('clinica_nova_internacao', {'petId': pet.id}) }}" method="post" id="formInternacao">
+
+            <div class="ni-card">
+
+                {# Pet strip #}
+                <div class="ni-pet-strip">
+                    <div class="ni-pet-avatar"><i class="bi bi-heart-pulse-fill"></i></div>
+                    <div>
+                        <p class="ni-pet-name">{{ pet.nome }} <span class="fw-normal text-muted small">(#{{ pet.id }})</span></p>
+                        <p class="ni-pet-meta">{{ pet.raca }} · {{ pet.sexo }} · {{ pet.idade }} anos</p>
+                    </div>
+                </div>
+
+                {# ── Triagem: situação + risco ── #}
+                <p class="ni-section-heading"><i class="bi bi-activity me-1"></i>Triagem Clínica</p>
+                <div class="ni-fields">
+                    <div class="row g-3">
+
+                        <div class="col-12">
+                            <label class="form-label required">Situação / Urgência</label>
+                            <div class="urgency-group">
+                                <input type="radio" class="urgency-option" name="situacao" id="urg-nao_urgente"     value="nao_urgente"    required>
+                                <label class="urgency-label" for="urg-nao_urgente">🟢 Não urgente</label>
+
+                                <input type="radio" class="urgency-option" name="situacao" id="urg-pouco_urgente"  value="pouco_urgente">
+                                <label class="urgency-label" for="urg-pouco_urgente">🟡 Pouco urgente</label>
+
+                                <input type="radio" class="urgency-option" name="situacao" id="urg-urgente"        value="urgente">
+                                <label class="urgency-label" for="urg-urgente">🟠 Urgente</label>
+
+                                <input type="radio" class="urgency-option" name="situacao" id="urg-muito_urgente"  value="muito_urgente">
+                                <label class="urgency-label" for="urg-muito_urgente">🔴 Muito urgente</label>
+
+                                <input type="radio" class="urgency-option" name="situacao" id="urg-emergencia"     value="emergencia">
+                                <label class="urgency-label" for="urg-emergencia">⚫ Emergência</label>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label for="risco" class="form-label text-danger">Risco*</label>
-                            <select id="risco" name="risco" class="form-select" required>
-                                <option value="">Selecione...</option>
-                                {# Adicione as opções de risco aqui #}
-                                <option value="baixo">Baixo</option>
-                                <option value="medio">Médio</option>
-                                <option value="alto">Alto</option>
-                            </select>
+
+                        <div class="col-md-4">
+                            <label class="form-label required">Risco</label>
+                            <div class="risk-group">
+                                <input type="radio" class="risk-option" name="risco" id="risk-baixo" value="baixo" required>
+                                <label class="risk-label" for="risk-baixo">Baixo</label>
+
+                                <input type="radio" class="risk-option" name="risco" id="risk-medio" value="medio">
+                                <label class="risk-label" for="risk-medio">Médio</label>
+
+                                <input type="radio" class="risk-option" name="risco" id="risk-alto" value="alto">
+                                <label class="risk-label" for="risk-alto">Alto</label>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label for="veterinario" class="form-label text-danger">Veterinário*</label>
+
+                        <div class="col-md-4">
+                            <label for="veterinario" class="form-label required">Veterinário responsável</label>
                             <select id="veterinario" name="veterinario_id" class="form-select" required>
                                 <option value="">Selecione...</option>
                                 {% for veterinario in veterinarios %}
@@ -50,80 +317,189 @@
                                 {% endfor %}
                             </select>
                         </div>
+
                         <div class="col-md-3">
-                            <label for="box" class="form-label">Box</label>
-                            <select id="box" name="box" class="form-select">
-                                <option value="">Sem box definido</option>
-                                {% for box in boxes %}
-                                    <option value="{{ box.nome }}">{{ box.nome }}</option>
-                                {% endfor %}
-                            </select>
+                            <label for="box" class="form-label">Box de Internação</label>
+                            {% if boxes is empty %}
+                                <div class="alert mb-0 py-2 px-3" style="font-size:.78rem;background:#fff3e0;border:1px solid #ffcc80;border-radius:var(--dp-radius);color:#e65100;">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Nenhum box disponível.
+                                    <a href="{{ path('clinica_box_novo') }}" target="_blank" style="color:#e65100;font-weight:600;">Criar agora</a>
+                                </div>
+                                <input type="hidden" name="box" value="">
+                            {% else %}
+                                <select id="box" name="box" class="form-select">
+                                    <option value="">— Sem box definido —</option>
+                                    {% for b in boxes %}
+                                        <option value="{{ b.numero }}"
+                                                data-tipo="{{ b.tipo }}"
+                                                data-porte="{{ b.porte }}"
+                                                data-local="{{ b.localizacao }}">
+                                            {{ b.numero }}
+                                            {% if b.tipo %}· {{ b.tipo|replace({'_':' '})|title }}{% endif %}
+                                            {% if b.localizacao %}({{ b.localizacao }}){% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <small id="boxInfo" class="text-muted mt-1 d-block" style="font-size:.7rem; min-height:1rem;"></small>
+                            {% endif %}
                         </div>
-                        <div class="col-md-3">
-                            <label for="alta_prevista" class="form-label">Alta Prevista</label>
+
+                        <div class="col-md-2">
+                            <label for="alta_prevista" class="form-label">Alta prevista</label>
                             <input type="date" id="alta_prevista" name="alta_prevista" class="form-control">
                         </div>
-                    </div>
 
-                    <ul class="nav nav-tabs" id="internacaoTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="info-medicas-tab" data-bs-toggle="tab"
-                                    data-bs-target="#info-medicas" type="button" role="tab" aria-controls="info-medicas"
-                                    aria-selected="true">
-                                <i class="bi bi-info-circle me-2"></i>Informações médicas
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="acessorios-tab" data-bs-toggle="tab"
-                                    data-bs-target="#acessorios" type="button" role="tab" aria-controls="acessorios"
-                                    aria-selected="false">
-                                <i class="fas fa-tools me-2"></i>Acessórios e Observações
-                            </button>
-                        </li>
-                    </ul>
-                    <div class="tab-content border border-top-0 p-3 mb-4" id="internacaoTabContent">
-                        <div class="tab-pane fade show active" id="info-medicas" role="tabpanel"
-                             aria-labelledby="info-medicas-tab">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="queixa" class="form-label text-danger">Queixa*</label>
-                                    <textarea id="queixa" name="queixa" class="form-control" rows="5"
-                                              required></textarea>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="diagnostico" class="form-label">Diagnóstico</label>
-                                    <textarea id="diagnostico" name="diagnostico" class="form-control"
-                                              rows="5"></textarea>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="prognostico" class="form-label">Prognóstico</label>
-                                    <textarea id="prognostico" name="prognostico" class="form-control"
-                                              rows="5"></textarea>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <label for="alergias_marcacoes" class="form-label">Alergias e marcações (Digite o texto
-                                    e pressione enter)</label>
-                                <input type="text" id="alergias_marcacoes" name="alergias_marcacoes"
-                                       class="form-control">
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="acessorios" role="tabpanel" aria-labelledby="acessorios-tab">
-                            {# Conteúdo para acessórios e observações #}
-                            <p class="text-muted">Adicione aqui informações sobre acessórios ou observações
-                                adicionais.</p>
-                            <textarea class="form-control" rows="5" name="observacoes_acessorios"></textarea>
-                        </div>
                     </div>
+                </div>
 
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-success me-2"><i class="fas fa-save me-2"></i>Salvar
+                {# ── Tabs de detalhes clínicos ── #}
+                <ul class="ni-nav-tabs nav" id="internacaoTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="info-medicas-tab"
+                                data-bs-toggle="tab" data-bs-target="#info-medicas"
+                                type="button" role="tab">
+                            <i class="bi bi-clipboard2-pulse"></i>Informações Médicas
                         </button>
-                        <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}"
-                           class="btn btn-secondary">Cancelar</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="acessorios-tab"
+                                data-bs-toggle="tab" data-bs-target="#acessorios"
+                                type="button" role="tab">
+                            <i class="bi bi-tools"></i>Acessórios e Observações
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="internacaoTabContent">
+
+                    {# Tab 1 — Info médicas #}
+                    <div class="tab-pane fade show active ni-tab-content" id="info-medicas" role="tabpanel">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="queixa" class="form-label required">Queixa principal</label>
+                                <textarea id="queixa" name="queixa" class="form-control" rows="5" required
+                                          placeholder="Descreva a queixa principal..."></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="diagnostico" class="form-label">Diagnóstico</label>
+                                <textarea id="diagnostico" name="diagnostico" class="form-control" rows="5"
+                                          placeholder="Diagnóstico inicial (se houver)..."></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="prognostico" class="form-label">Prognóstico</label>
+                                <textarea id="prognostico" name="prognostico" class="form-control" rows="5"
+                                          placeholder="Perspectiva clínica..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label">
+                                <i class="bi bi-exclamation-triangle me-1 text-warning"></i>
+                                Alergias e marcações
+                                <small class="text-muted fw-normal">(digite e pressione Enter)</small>
+                            </label>
+                            <div class="tags-wrap" id="tagsWrap">
+                                <input class="tags-input" id="tagsInput" type="text"
+                                       placeholder="Ex: Alergia à penicilina...">
+                            </div>
+                            <input type="hidden" name="alergias_marcacoes" id="tagsHidden" class="tags-hidden">
+                        </div>
                     </div>
-                </form>
-            </div>
-        </div>
-    </div>
+
+                    {# Tab 2 — Acessórios #}
+                    <div class="tab-pane fade ni-tab-content" id="acessorios" role="tabpanel">
+                        <label for="observacoes_acessorios" class="form-label">
+                            Acessórios e observações adicionais
+                        </label>
+                        <textarea class="form-control" id="observacoes_acessorios"
+                                  rows="6" name="observacoes_acessorios"
+                                  placeholder="Descreva acessórios (colar elizabetano, soro, etc.) ou observações relevantes..."></textarea>
+                    </div>
+
+                </div>{# /tab-content #}
+
+                {# ── Footer ── #}
+                <div class="ni-footer">
+                    <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}" class="btn-ni-cancel">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn-ni-save">
+                        <i class="bi bi-check2-circle"></i>Salvar Internação
+                    </button>
+                </div>
+
+            </div>{# /ni-card #}
+
+        </form>
+    </div>{# /ni-body #}
+
+</div>
+
+<script>
+// ── Box info helper ──────────────────────────────────────
+(function () {
+    const sel  = document.getElementById('box');
+    const info = document.getElementById('boxInfo');
+    if (!sel || !info) return;
+
+    const tipoLabels = {
+        internacao:'Internação', emergencia:'Emergência', observacao:'Observação',
+        isolamento:'Isolamento', cirurgia:'Pós-cirúrgico', recuperacao:'Recuperação'
+    };
+    const porteLabels = {
+        pequeno:'Pequeno', medio:'Médio', grande:'Grande', gigante:'Gigante', todos:'Todos os portes'
+    };
+
+    sel.addEventListener('change', function () {
+        const opt = sel.selectedOptions[0];
+        if (!opt || !opt.value) { info.textContent = ''; return; }
+        const tipo  = tipoLabels[opt.dataset.tipo] || opt.dataset.tipo || '';
+        const porte = porteLabels[opt.dataset.porte] || opt.dataset.porte || '';
+        const local = opt.dataset.local || '';
+        info.textContent = [tipo, porte, local].filter(Boolean).join(' · ');
+    });
+})();
+
+// ── Tags (alergias) ──────────────────────────────────────
+(function () {
+    const wrap   = document.getElementById('tagsWrap');
+    const input  = document.getElementById('tagsInput');
+    const hidden = document.getElementById('tagsHidden');
+    let tags = [];
+
+    function renderTags() {
+        wrap.querySelectorAll('.tag-chip').forEach(el => el.remove());
+        tags.forEach((tag, i) => {
+            const chip = document.createElement('span');
+            chip.className = 'tag-chip';
+            chip.innerHTML = `${tag}<button type="button" class="tag-chip-remove" data-i="${i}">×</button>`;
+            wrap.insertBefore(chip, input);
+        });
+        hidden.value = tags.join(',');
+    }
+
+    input.addEventListener('keydown', e => {
+        if ((e.key === 'Enter' || e.key === ',') && input.value.trim()) {
+            e.preventDefault();
+            tags.push(input.value.trim());
+            input.value = '';
+            renderTags();
+        }
+        if (e.key === 'Backspace' && !input.value && tags.length) {
+            tags.pop();
+            renderTags();
+        }
+    });
+
+    wrap.addEventListener('click', e => {
+        if (e.target.classList.contains('tag-chip-remove')) {
+            tags.splice(+e.target.dataset.i, 1);
+            renderTags();
+        }
+        input.focus();
+    });
+})();
+</script>
+
 {% endblock %}
