@@ -11,7 +11,10 @@ use App\Entity\Produto;
 use App\Entity\Servico;
 use App\Entity\Venda;
 use App\Entity\VendaItem;
+use App\Entity\Financeiro;
+use App\Entity\FinanceiroPendente;
 use App\Repository\ClienteRepository;
+use App\Repository\FinanceiroPendenteRepository;
 use App\Repository\VendaRepository;
 use App\Service\CaixaService;
 use App\Service\PdvService;
@@ -367,39 +370,91 @@ class PdvController extends DefaultController
      * 
      * @Route("/carrinho/finalizar/{id}", name="pdv_finalizar_carrinho", methods={"POST"})
      */
-    public function finalizarCarrinho(Request $request, int $id): JsonResponse
-    {
-        $this->switchDB();
+    public function finalizarCarrinho(
+        Request $request,
+        int $id,
+        VendaRepository $vendaRepo,
+        FinanceiroPendenteRepository $fpRepo
+    ): JsonResponse {
+        $this->switchDB(); // <- garante que estamos no banco do tenant
 
         try {
-            // Aceita tanto JSON (application/json) quanto form-data
+            // Aceita JSON ou form-data
             $contentType = $request->headers->get('Content-Type', '');
-            if (str_contains($contentType, 'application/json')) {
-                $dados = json_decode($request->getContent(), true) ?? [];
-            } else {
-                $dados = $request->request->all();
-            }
+            $dados = str_contains($contentType, 'application/json')
+                ? (json_decode($request->getContent(), true) ?? [])
+                : $request->request->all();
 
-            $dto = FinalizarCarrinhoDTO::fromArray($id, $dados);
+            $metodo   = $dados['metodo_pagamento'] ?? '';
+            $bandeira = $dados['bandeira_cartao']  ?? null;
+            $parcelas = !empty($dados['parcelas'])  ? (int)$dados['parcelas'] : null;
 
-            // Valida DTO
-            $errors = $dto->validate();
-            if (!empty($errors)) {
+            if (empty($metodo)) {
                 return new JsonResponse([
-                    'status' => 'error',
-                    'mensagem' => implode(' ', $errors)
+                    'status'   => 'error',
+                    'mensagem' => 'Método de pagamento não informado.',
                 ], 400);
             }
 
-            // Processa finalização via service
-            $resultado = $this->pdvService->finalizarCarrinho($dto);
+            $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
 
-            return new JsonResponse($resultado, $resultado['status'] === 'success' ? 200 : 400);
+            // Busca a venda via SQL nativo (banco do tenant correto)
+            $venda = $vendaRepo->findVendaCarrinho($estabelecimentoId, $id);
+
+            if (!$venda) {
+                return new JsonResponse([
+                    'status'   => 'error',
+                    'mensagem' => 'Venda não encontrada ou já finalizada.',
+                ], 404);
+            }
+
+            // Determina status final e registra no financeiro
+            if ($metodo === 'pendente') {
+                $statusFinal = 'Pendente';
+                $fpRepo->inserirPdv(
+                    $estabelecimentoId,
+                    $venda['cliente'] ?? 'Consumidor Final',
+                    (float)$venda['total'],
+                    $venda['pet_id'] ?? null
+                );
+            } else {
+                $statusFinal = 'Finalizado';
+                $vendaRepo->inserirFinanceiro(
+                    $estabelecimentoId,
+                    $metodo,
+                    (float)$venda['total'],
+                    $venda['cliente'] ?? 'Consumidor Final',
+                    $venda['pet_id'] ?? null,
+                    $id
+                );
+            }
+
+            // Atualiza a venda com SQL nativo — banco correto garantido
+            $ok = $vendaRepo->finalizarVenda(
+                $estabelecimentoId,
+                $id,
+                $metodo,
+                $statusFinal,
+                $bandeira,
+                $parcelas
+            );
+
+            if (!$ok) {
+                return new JsonResponse([
+                    'status'   => 'error',
+                    'mensagem' => 'Não foi possível atualizar a venda. Tente novamente.',
+                ], 500);
+            }
+
+            return new JsonResponse([
+                'status'   => 'success',
+                'mensagem' => 'Venda #' . $id . ' finalizada com sucesso!',
+            ]);
 
         } catch (\Exception $e) {
             return new JsonResponse([
-                'status' => 'error',
-                'mensagem' => 'Erro ao finalizar venda: ' . $e->getMessage()
+                'status'   => 'error',
+                'mensagem' => 'Erro ao finalizar venda: ' . $e->getMessage(),
             ], 500);
         }
     }

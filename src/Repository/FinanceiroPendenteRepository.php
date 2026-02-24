@@ -309,4 +309,26 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
 
 
+
+    /**
+     * Insere lançamento pendente originado de venda PDV.
+     */
+    public function inserirPdv(
+        int $estabelecimentoId,
+        string $nomeCliente,
+        float $total,
+        ?int $petId
+    ): void {
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiropendente
+                    (estabelecimento_id, descricao, valor, data, metodo_pagamento, origem, pet_id)
+                VALUES
+                    (:estab, :descricao, :valor, NOW(), 'pendente', 'PDV', :pet_id)";
+
+        $this->conn->executeStatement($sql, [
+            'estab'     => $estabelecimentoId,
+            'descricao' => "Venda PDV — {$nomeCliente}",
+            'valor'     => $total,
+            'pet_id'    => $petId,
+        ]);
+    }
 }

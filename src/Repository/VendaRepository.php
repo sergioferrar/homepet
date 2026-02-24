@@ -164,18 +164,42 @@ class VendaRepository extends ServiceEntityRepository
     /**
      * Finaliza venda do carrinho — update atômico com parâmetros opcionais
      */
+    /**
+     * Busca uma venda em status Carrinho para finalização.
+     * Retorna array com os dados ou null se não encontrada/já finalizada.
+     */
+    public function findVendaCarrinho(int $estabelecimentoId, int $vendaId): ?array
+    {
+        $sql = "SELECT v.id, v.cliente, v.total, v.pet_id, v.origem, v.observacao, v.status
+                FROM {$_ENV['DBNAMETENANT']}.venda v
+                WHERE v.id = :id
+                  AND v.estabelecimento_id = :estab
+                  AND v.status = 'Carrinho'
+                LIMIT 1";
+
+        $row = $this->conn->fetchAssociative($sql, [
+            'id'    => $vendaId,
+            'estab' => $estabelecimentoId,
+        ]);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Atualiza venda de Carrinho para o status final informado.
+     * Retorna true se exatamente 1 linha foi afetada.
+     */
     public function finalizarVenda(
         int $estabelecimentoId,
         int $vendaId,
         string $metodoPagamento,
+        string $statusFinal,
         ?string $bandeiraCartao = null,
         ?int $parcelas = null
     ): bool {
-        $status = ($metodoPagamento === 'pendente') ? 'Pendente' : 'Aberta';
-
         $set    = "status = :status, metodo_pagamento = :metodo, data = NOW()";
         $params = [
-            'status' => $status,
+            'status' => $statusFinal,
             'metodo' => $metodoPagamento,
             'id'     => $vendaId,
             'estab'  => $estabelecimentoId,
@@ -198,6 +222,33 @@ class VendaRepository extends ServiceEntityRepository
                   AND status = 'Carrinho'";
 
         return $this->conn->executeStatement($sql, $params) > 0;
+    }
+
+    /**
+     * Insere entrada no financeiro para venda PDV paga.
+     */
+    public function inserirFinanceiro(
+        int $estabelecimentoId,
+        string $metodo,
+        float $total,
+        string $nomeCliente,
+        ?int $petId,
+        int $vendaId
+    ): void {
+        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiro
+                    (estabelecimento_id, descricao, valor, data, metodo_pagamento,
+                     tipo, status, origem, pet_id)
+                VALUES
+                    (:estab, :descricao, :valor, NOW(), :metodo,
+                     'ENTRADA', 'Pago', 'PDV', :pet_id)";
+
+        $this->conn->executeStatement($sql, [
+            'estab'     => $estabelecimentoId,
+            'descricao' => "Venda PDV #{$vendaId} — {$nomeCliente}",
+            'valor'     => $total,
+            'metodo'    => $metodo,
+            'pet_id'    => $petId,
+        ]);
     }
 
     /**
