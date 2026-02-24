@@ -174,7 +174,7 @@ class VendaRepository extends ServiceEntityRepository
                 FROM {$_ENV['DBNAMETENANT']}.venda v
                 WHERE v.id = :id
                   AND v.estabelecimento_id = :estab
-                  AND v.status = 'Carrinho'
+                  AND v.status = 'Aberta'
                 LIMIT 1";
 
         $row = $this->conn->fetchAssociative($sql, [
@@ -219,7 +219,7 @@ class VendaRepository extends ServiceEntityRepository
                 SET {$set}
                 WHERE id = :id
                   AND estabelecimento_id = :estab
-                  AND status = 'Carrinho'";
+                  AND status = 'Aberta'";
 
         return $this->conn->executeStatement($sql, $params) > 0;
     }

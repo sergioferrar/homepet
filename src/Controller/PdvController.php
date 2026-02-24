@@ -418,7 +418,7 @@ class PdvController extends DefaultController
                     $venda['pet_id'] ?? null
                 );
             } else {
-                $statusFinal = 'Finalizado';
+                $statusFinal = 'Paga';
                 $vendaRepo->inserirFinanceiro(
                     $estabelecimentoId,
                     $metodo,
