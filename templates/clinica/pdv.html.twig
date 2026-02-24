@@ -306,10 +306,21 @@
                                   placeholder="Informações adicionais..."></textarea>
                     </div>
 
-                    <!-- Botão Finalizar -->
-                    <button id="btnSalvarVenda" class="btn btn-success w-100 btn-sm">
-                        <i class="bi bi-check-circle"></i> Salvar Venda
-                    </button>
+                    <!-- Botão Finalizar / Salvar -->
+                    {% if vendaPreCarregada is not null and vendaPreCarregada.venda_id is defined %}
+                        <div class="alert alert-info py-2 mb-2 text-center small">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Finalizando Venda <strong>#{{ vendaPreCarregada.venda_id }}</strong>
+                            — apenas o método de pagamento será atualizado.
+                        </div>
+                        <button id="btnSalvarVenda" class="btn btn-success w-100">
+                            <i class="bi bi-check-circle"></i> Finalizar Venda #{{ vendaPreCarregada.venda_id }}
+                        </button>
+                    {% else %}
+                        <button id="btnSalvarVenda" class="btn btn-success w-100 btn-sm">
+                            <i class="bi bi-check-circle"></i> Salvar Venda
+                        </button>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -375,8 +386,66 @@ $(document).ready(function() {
         renderizarCarrinho();
         atualizarResumo();
         showToast('Venda #' + vendaPreCarregadaJS.venda_id + ' carregada da clínica!', 'success');
+
+        // Preenche o campo visual do tutor
+        if (vendaPreCarregadaJS.cliente_nome) {
+            var inputTutor = document.getElementById('inputTutor');
+            if (inputTutor) inputTutor.value = vendaPreCarregadaJS.cliente_nome;
+        }
     }
 });
+
+/**
+ * Função exposta para o popup da clínica (detalhes_pet) injetar uma venda via postMessage/iframe.
+ * O pai chama: iframeWin.pdvReceberVendaClinica(dadosJSON)
+ */
+window.pdvReceberVendaClinica = function (dados) {
+    if (!dados || !dados.ok) return;
+
+    // Limpa carrinho atual
+    carrinhoItens = [];
+
+    // Popula itens
+    if (dados.itens && dados.itens.length > 0) {
+        dados.itens.forEach(function (item) {
+            carrinhoItens.push({
+                id:         item.id,
+                nome:       item.nome,
+                valor:      parseFloat(item.valor_unitario),
+                quantidade: parseInt(item.quantidade, 10),
+                tipo:       item.tipo,
+                estoque:    null
+            });
+        });
+    }
+
+    // Preenche cliente
+    if (dados.cliente_nome) {
+        clienteSelecionado = { id: null, nome: dados.cliente_nome };
+        var inputTutor = document.getElementById('inputTutor');
+        if (inputTutor) inputTutor.value = dados.cliente_nome;
+    }
+
+    // Preenche pet
+    if (dados.pet_id) {
+        petSelecionado = dados.pet_id;
+        var petSelect = document.getElementById('petSelect');
+        if (petSelect) {
+            petSelect.innerHTML = '<option value="' + dados.pet_id + '" selected>' + (dados.pet_nome || 'Pet') + '</option>';
+            petSelect.disabled = false;
+        }
+    }
+
+    // Preenche observação
+    if (dados.observacao) {
+        var obsField = document.getElementById('observacao') || document.querySelector('[name="observacao"]');
+        if (obsField) obsField.value = dados.observacao;
+    }
+
+    renderizarCarrinho();
+    atualizarResumo();
+    showToast('Venda #' + dados.venda_id + ' carregada da clínica!', 'success');
+};
 
 // ==================== FUNÇÕES DE TOAST ====================
 function showToast(mensagem, tipo = 'info') {
@@ -761,51 +830,90 @@ function inicializarEventos() {
 
 // ==================== SALVAR VENDA ====================
 async function salvarVenda() {
-    // Validações
-    if (carrinhoItens.length === 0) {
-        showToast('Adicione pelo menos um item à venda!', 'warning');
-        return;
-    }
-
-    const metodo = $('#metodo').val();
+    // ── Validações comuns ─────────────────────────────────────────────────────
+    const metodo  = $('#metodo').val();
     const subtotal = calcularSubtotal();
     const desconto = parseFloat($('#desconto').val()) || 0;
-    const total = Math.max(0, subtotal - desconto);
+    const total    = Math.max(0, subtotal - desconto);
 
-    if (total <= 0) {
-        showToast('O total da venda deve ser maior que zero!', 'warning');
-        return;
-    }
-
-    // Validar cartão
     if ((metodo === 'credito' || metodo === 'debito') && !$('#bandeiraCartao').val()) {
         showToast('Selecione a bandeira do cartão!', 'warning');
         return;
     }
 
-    // Preparar dados
-    const dados = {
-        itens: carrinhoItens.map(item => ({
-            id: item.id,
-            nome: item.nome,
-            quantidade: item.quantidade,
-            valor: item.valor,
-            tipo: item.tipo
-        })),
-        total: total,
-        metodo: metodo,
-        origem: 'PDV',
-        cliente_id: clienteSelecionado ? clienteSelecionado.id : null,
-        pet_id: petSelecionado,
-        bandeira: $('#bandeiraCartao').val() || null,
-        parcelas: parseInt($('#parcelas').val()) || null,
-        troco: metodo === 'dinheiro' ? (parseFloat($('#valorRecebido').val()) - total) : null,
-        observacao: $('#observacao').val().trim() || null
-    };
-
-    // Desabilitar botão
     const $btn = $('#btnSalvarVenda');
     $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Salvando...');
+
+    // ── Modo FINALIZAR: venda existente carregada da clínica/listar ───────────
+    // Quando vendaPreCarregadaJS tem venda_id, só atualiza status e pagamento.
+    // NÃO cria nova venda.
+    if (vendaPreCarregadaJS && vendaPreCarregadaJS.venda_id) {
+        const vendaId = vendaPreCarregadaJS.venda_id;
+        const urlFinalizar = '{{ path("pdv_finalizar_carrinho", {id: "__ID__"}) }}'.replace('__ID__', vendaId);
+
+        const payload = {
+            metodo_pagamento: metodo,
+            bandeira_cartao:  $('#bandeiraCartao').val() || null,
+            parcelas:         parseInt($('#parcelas').val()) || null
+        };
+
+        try {
+            const response = await $.ajax({
+                url: urlFinalizar,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload)
+            });
+
+            if (response.status === 'success') {
+                showToast('Venda #' + vendaId + ' finalizada com sucesso!', 'success');
+                setTimeout(() => {
+                    window.location.href = '{{ path("clinica_pdv_listar") }}';
+                }, 1500);
+            } else {
+                showToast(response.mensagem || 'Erro ao finalizar venda.', 'danger');
+                $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Finalizar Venda');
+            }
+        } catch (error) {
+            console.error('Erro ao finalizar:', error);
+            const msg = error.responseJSON?.mensagem || 'Erro ao comunicar com o servidor.';
+            showToast(msg, 'danger');
+            $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Finalizar Venda');
+        }
+        return; // Encerra aqui — não cai no fluxo de nova venda
+    }
+
+    // ── Modo NOVA VENDA: PDV normal ───────────────────────────────────────────
+    if (carrinhoItens.length === 0) {
+        showToast('Adicione pelo menos um item à venda!', 'warning');
+        $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Venda');
+        return;
+    }
+
+    if (total <= 0) {
+        showToast('O total da venda deve ser maior que zero!', 'warning');
+        $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Venda');
+        return;
+    }
+
+    const dados = {
+        itens: carrinhoItens.map(item => ({
+            id:         item.id,
+            nome:       item.nome,
+            quantidade: item.quantidade,
+            valor:      item.valor,
+            tipo:       item.tipo
+        })),
+        total:      total,
+        metodo:     metodo,
+        origem:     'PDV',
+        cliente_id: clienteSelecionado ? clienteSelecionado.id : null,
+        pet_id:     petSelecionado,
+        bandeira:   $('#bandeiraCartao').val() || null,
+        parcelas:   parseInt($('#parcelas').val()) || null,
+        troco:      metodo === 'dinheiro' ? (parseFloat($('#valorRecebido').val()) - total) : null,
+        observacao: $('#observacao').val().trim() || null
+    };
 
     try {
         const response = await $.ajax({
@@ -817,9 +925,7 @@ async function salvarVenda() {
 
         if (response.ok) {
             showToast('Venda registrada com sucesso!', 'success');
-            
-            // Limpar formulário
-            setTimeout(function() {
+            setTimeout(() => {
                 limparFormulario();
                 location.reload();
             }, 1500);

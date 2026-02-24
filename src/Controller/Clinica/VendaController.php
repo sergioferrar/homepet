@@ -89,12 +89,13 @@ class VendaController extends DefaultController
             $valorItem = ($valorUnitario * $quantidade) - $desconto;
 
             $item = new VendaItem();
-            $item->setVenda($venda);
+            $item->setVendaId($venda->getId());       // FK correta
             $item->setTipo('servico');
-            $item->setProduto($servicoId);
-            $item->setQuantidade($quantidade);
-            $item->setValorUnitario($valorUnitario);
-            $item->setSubtotal($valorItem);
+            $item->setProdutoId((int)$servicoId);     // ID numérico para rastreamento/estoque
+            $item->setProdutoNome($servico['nome'] ?? 'Serviço'); // snapshot do nome
+            $item->setQuantidade((int)$quantidade);
+            $item->setPrecoUnitario((float)$valorUnitario);
+            $item->setSubtotal((float)$valorItem);
 
             $em->persist($item);
 

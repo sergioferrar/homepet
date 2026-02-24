@@ -131,17 +131,22 @@ class PdvService
                 ];
             }
 
-            // Atualiza venda
-            $status = ($dto->metodoPagamento === 'pendente') ? 'Pendente' : 'Aberta';
-            $venda->setStatus($status);
+            // Atualiza dados de pagamento da venda
             $venda->setMetodoPagamento($dto->metodoPagamento);
             $venda->setBandeiraCartao($dto->bandeiraCartao);
             $venda->setParcelas($dto->parcelas);
             $venda->setData(new \DateTime());
 
-            // Registra financeiro pendente se necessário
             if ($dto->metodoPagamento === 'pendente') {
+                $venda->setStatus('Pendente');
                 $this->registrarFinanceiroPendente($venda);
+            } else {
+                $venda->setStatus('Finalizado');
+                // Registra entrada no financeiro para métodos pagos
+                $nomeCliente = $venda->getCliente() ?? 'Consumidor Final';
+                $itensCount  = $this->em->getRepository(\App\Entity\VendaItem::class)
+                    ->count(['vendaId' => $venda->getId()]);
+                $this->registrarFinanceiro($venda, $nomeCliente, $itensCount);
             }
 
             // Tenta emitir nota fiscal (se habilitado)
@@ -231,21 +236,32 @@ class PdvService
     }
 
     /**
-     * Adiciona itens à venda e retorna total calculado
+     * Adiciona itens à venda e retorna total calculado.
+     *
+     * Estrutura esperada de cada $item (vinda do frontend):
+     *   id         => 'prod_5' | 'serv_3'   (prefixo + ID numérico)
+     *   nome       => 'Nome do Produto'
+     *   quantidade => int
+     *   valor      => float (preço unitário)
+     *   tipo       => 'Produto' | 'Servico'
      */
     private function adicionarItensVenda(Venda $venda, array $itens): float
     {
         $totalCalculado = 0;
 
         foreach ($itens as $item) {
+            // Extrai o ID numérico real do produto/serviço removendo o prefixo
+            $produtoId = $this->extrairIdNumerico($item['id'] ?? '');
+
             $vendaItem = new VendaItem();
-            $vendaItem->setVenda($venda);
-            $vendaItem->setProduto($item['nome']);
-            $vendaItem->setQuantidade($item['quantidade']);
-            $vendaItem->setValorUnitario($item['valor']);
-            $vendaItem->setTipo($item['tipo']);
-            
-            $subtotal = $item['quantidade'] * $item['valor'];
+            $vendaItem->setVendaId($venda->getId());
+            $vendaItem->setProdutoId($produtoId ?: null);      // ID numérico para JOIN/estoque
+            $vendaItem->setProdutoNome($item['nome']);          // snapshot do nome
+            $vendaItem->setQuantidade((int)$item['quantidade']);
+            $vendaItem->setPrecoUnitario((float)$item['valor']);
+            $vendaItem->setTipo($item['tipo']);                 // normalizado para lowercase na entity
+
+            $subtotal = (float)$item['quantidade'] * (float)$item['valor'];
             $vendaItem->setSubtotal($subtotal);
             $totalCalculado += $subtotal;
 
@@ -253,6 +269,14 @@ class PdvService
         }
 
         return $totalCalculado;
+    }
+
+    /**
+     * Extrai ID numérico de strings como 'prod_5', 'serv_12' ou '5'.
+     */
+    private function extrairIdNumerico(string $id): int
+    {
+        return (int)preg_replace('/^[a-z]+_/', '', $id);
     }
 
     /**

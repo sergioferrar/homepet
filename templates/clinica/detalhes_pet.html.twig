@@ -668,6 +668,14 @@
                                                             data-bs-toggle="modal" data-bs-target="#modalEditarVenda">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
+                                                    {% if v.status in ['Carrinho', 'carrinho', 'Aberta'] %}
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-success btn-lancar-pdv"
+                                                            data-id="{{ v.id }}"
+                                                            title="Abrir esta venda no PDV para finalização">
+                                                        <i class="bi bi-cash-stack"></i>
+                                                    </button>
+                                                    {% endif %}
                                                     <form method="POST" action="{{ path('clinica_inativar_venda', { petId: pet.id, id: v.id }) }}">
                                                         <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-slash-circle"></i></button>
                                                     </form>
@@ -709,6 +717,34 @@
                             </div>
                         </div>
 
+
+                        {# MODAL PDV - Lançar Venda no Caixa #}
+                        <div class="modal fade" id="modalPdvVenda" tabindex="-1" aria-labelledby="modalPdvVendaLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-fullscreen-lg-down" style="max-width: 95vw; margin: 1rem auto;">
+                                <div class="modal-content" style="height: 92vh;">
+                                    <div class="modal-header py-2 bg-success text-white">
+                                        <h5 class="modal-title mb-0" id="modalPdvVendaLabel">
+                                            <i class="bi bi-cash-stack me-2"></i>
+                                            PDV — <span id="pdvModalVendaLabel">Carregar Venda</span>
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body p-0 position-relative">
+                                        <div id="pdvLoadingOverlay" class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center bg-white" style="z-index:10;">
+                                            <div class="text-center text-muted">
+                                                <div class="spinner-border text-success mb-3" role="status"></div>
+                                                <p class="mb-0">Carregando PDV...</p>
+                                            </div>
+                                        </div>
+                                        <iframe id="pdvIframe"
+                                                src="about:blank"
+                                                style="width:100%;height:100%;border:none;"
+                                                onload="pdvIframeOnLoad()">
+                                        </iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         {# ORÇAMENTOS #}
                         <div class="tab-pane fade" id="orcamentos" role="tabpanel" aria-labelledby="orcamentos-tab">
                             <p class="text-muted text-center mt-4">Nenhum orçamento registrado.</p>
@@ -1038,6 +1074,81 @@ $("#editar-id").val($(this).data("id")); $("#editar-descricao").val($(this).data
 $("#form-editar-venda").attr("action", "{{ path('clinica_editar_venda', {petId: pet.id, id: 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', $(this).data("id")));
 modalEditarVenda.show();
 });
+
+// ─── PDV POPUP — Lançar venda no caixa ───────────────────────────────────────
+var _pdvModal = null;
+var _pdvVendaCarregada = null;
+
+function pdvIframeOnLoad() {
+    var iframe = document.getElementById('pdvIframe');
+    if (!iframe || iframe.src === 'about:blank') return;
+
+    // Tenta injetar o payload assim que o iframe carregar
+    try {
+        var iframeWin = iframe.contentWindow;
+        // Espera o PDV estar pronto (evento customizado ou polling)
+        var tentativas = 0;
+        var intervalo = setInterval(function () {
+            tentativas++;
+            try {
+                if (iframeWin.pdvReceberVendaClinica) {
+                    clearInterval(intervalo);
+                    iframeWin.pdvReceberVendaClinica(_pdvVendaCarregada);
+                    document.getElementById('pdvLoadingOverlay').style.display = 'none';
+                }
+            } catch (e) { /* cross-origin ainda não pronto */ }
+            if (tentativas > 40) {
+                clearInterval(intervalo);
+                document.getElementById('pdvLoadingOverlay').style.display = 'none';
+            }
+        }, 250);
+    } catch (e) {
+        document.getElementById('pdvLoadingOverlay').style.display = 'none';
+    }
+}
+
+$(document).on("click", ".btn-lancar-pdv", function () {
+    var vendaId = $(this).data("id");
+    var pdvUrl  = "{{ path('clinica_pdv_index') }}";
+    var apiUrl  = "{{ path('pdv_dados_venda', {id: '__ID__'}) }}".replace('__ID__', vendaId);
+
+    _pdvVendaCarregada = null;
+    document.getElementById('pdvLoadingOverlay').style.display = 'flex';
+    document.getElementById('pdvIframe').src = 'about:blank';
+    $('#pdvModalVendaLabel').text('Venda #' + vendaId);
+
+    if (!_pdvModal) {
+        _pdvModal = new bootstrap.Modal(document.getElementById('modalPdvVenda'), {backdrop: 'static', keyboard: false});
+    }
+    _pdvModal.show();
+
+    // Busca os dados da venda
+    fetch(apiUrl)
+        .then(function (r) { return r.json(); })
+        .then(function (dados) {
+            if (!dados.ok) {
+                document.getElementById('pdvLoadingOverlay').innerHTML =
+                    '<div class="text-center text-danger"><i class="bi bi-exclamation-triangle fs-1"></i><p class="mt-2">' + (dados.msg || 'Erro ao carregar venda.') + '</p></div>';
+                return;
+            }
+            _pdvVendaCarregada = dados;
+            // Carrega o iframe com o PDV
+            document.getElementById('pdvIframe').src = pdvUrl;
+        })
+        .catch(function () {
+            document.getElementById('pdvLoadingOverlay').innerHTML =
+                '<div class="text-center text-danger"><i class="bi bi-wifi-off fs-1"></i><p class="mt-2">Erro de comunicação. Tente novamente.</p></div>';
+        });
+});
+
+// Limpa ao fechar o modal
+document.getElementById('modalPdvVenda').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('pdvIframe').src = 'about:blank';
+    _pdvVendaCarregada = null;
+    document.getElementById('pdvLoadingOverlay').style.display = 'flex';
+    document.getElementById('pdvLoadingOverlay').innerHTML = '<div class="text-center text-muted"><div class="spinner-border text-success mb-3" role="status"></div><p class="mb-0">Carregando PDV...</p></div>';
+});
+// ─────────────────────────────────────────────────────────────────────────────
 $(".btn-inativar-venda").on("click", function () {
 if (!confirm("Tem certeza que deseja inativar esta venda?")) return;
 fetch(`/clinica/pet/{{ pet.id }}/venda/${$(this).data("id")}/inativar`, {method: "POST"}).then(r => r.json()).then(d => { if (d.status === "success") { location.reload(); } else { alert(d.mensagem || "Erro ao inativar venda."); } }).catch(() => alert("Erro ao inativar venda."));

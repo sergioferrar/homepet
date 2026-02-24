@@ -18,52 +18,111 @@ class VendaItem
      */
     private $id;
 
-    /** @ORM\Column(type="integer", name="venda_id") */
+    /**
+     * ID da venda à qual este item pertence.
+     *
+     * @ORM\Column(type="integer", name="venda_id")
+     */
     private $vendaId;
 
-    /** @ORM\Column(type="string", length=255) */
-    private $produto;
+    /**
+     * ID numérico do produto ou serviço.
+     * Nulo para itens avulsos sem cadastro.
+     *
+     * @ORM\Column(type="integer", name="produto_id", nullable=true)
+     */
+    private $produtoId;
+
+    /**
+     * Snapshot do nome do produto/serviço no momento da venda.
+     * Preserva o histórico mesmo que o cadastro mude depois.
+     *
+     * @ORM\Column(type="string", length=255, name="produto")
+     */
+    private $produtoNome;
 
     /** @ORM\Column(type="integer") */
     private $quantidade;
 
-    /** @ORM\Column(type="decimal", precision=10, scale=2) */
-    private $valorUnitario;
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2, name="preco_unitario")
+     */
+    private $precoUnitario;
 
     /** @ORM\Column(type="decimal", precision=10, scale=2) */
     private $subtotal;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * 'produto' | 'servico'
+     *
+     * @ORM\Column(type="string", length=50)
      */
     private $tipo;
 
-    // --- Getters e Setters ---
+    // ── Getters & Setters ────────────────────────────────────────────────────
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getVendaId(): self
+    public function getVendaId(): ?int
     {
         return $this->vendaId;
     }
 
-    public function setVendaId($venda): self
+    public function setVendaId(int $vendaId): self
     {
-        $this->vendaId = $venda;
+        $this->vendaId = $vendaId;
         return $this;
     }
 
-    public function getProduto(): ?string
+    /**
+     * Atalho: aceita int (ID) ou objeto Venda.
+     */
+    public function setVenda($venda): self
     {
-        return $this->produto;
+        $this->vendaId = ($venda instanceof Venda) ? $venda->getId() : (int)$venda;
+        return $this;
     }
 
-    public function setProduto(string $produto): self
+    public function getProdutoId(): ?int
     {
-        $this->produto = $produto;
+        return $this->produtoId;
+    }
+
+    public function setProdutoId(?int $produtoId): self
+    {
+        $this->produtoId = $produtoId;
+        return $this;
+    }
+
+    /**
+     * Snapshot do nome — coluna `produto` no banco.
+     */
+    public function getProduto(): ?string
+    {
+        return $this->produtoNome;
+    }
+
+    /**
+     * @deprecated Use setProdutoNome() + setProdutoId() juntos.
+     *             Mantido por compatibilidade com código legado.
+     */
+    public function setProduto(string $nome): self
+    {
+        $this->produtoNome = $nome;
+        return $this;
+    }
+
+    public function getProdutoNome(): ?string
+    {
+        return $this->produtoNome;
+    }
+
+    public function setProdutoNome(string $nome): self
+    {
+        $this->produtoNome = $nome;
         return $this;
     }
 
@@ -78,18 +137,30 @@ class VendaItem
         return $this;
     }
 
-    public function getValorUnitario(): ?float
+    public function getValorUnitario(): float
     {
-        return (float)$this->valorUnitario;
+        return (float)$this->precoUnitario;
     }
 
+    /** @deprecated Use setPrecoUnitario(). Mantido para compatibilidade. */
     public function setValorUnitario(float $valor): self
     {
-        $this->valorUnitario = $valor;
+        $this->precoUnitario = $valor;
         return $this;
     }
 
-    public function getSubtotal(): ?float
+    public function getPrecoUnitario(): float
+    {
+        return (float)$this->precoUnitario;
+    }
+
+    public function setPrecoUnitario(float $valor): self
+    {
+        $this->precoUnitario = $valor;
+        return $this;
+    }
+
+    public function getSubtotal(): float
     {
         return (float)$this->subtotal;
     }
@@ -107,8 +178,7 @@ class VendaItem
 
     public function setTipo(string $tipo): self
     {
-        $this->tipo = $tipo;
-
+        $this->tipo = strtolower($tipo);
         return $this;
     }
 }

@@ -36,26 +36,38 @@ class EstoqueService
         $produtosValidados = [];
 
         foreach ($itens as $item) {
-            if ($item['tipo'] !== 'Produto') {
+            // Apenas produtos físicos consomem estoque — serviços são ignorados
+            if (strtolower($item['tipo']) !== 'produto') {
                 continue;
             }
 
-            $produtoId = $this->extrairProdutoId($item['id']);
-            
+            // Resolve ID: prioriza produto_id explícito, depois extrai do prefixo 'prod_X'
+            $produtoId = isset($item['produto_id']) && $item['produto_id']
+                ? (int)$item['produto_id']
+                : $this->extrairProdutoId($item['id'] ?? '');
+
+            // ID inválido (dados legados ou item avulso) — pula validação de estoque
+            // sem travar a venda. O item ainda é registrado, apenas sem baixa de estoque.
+            if (!$produtoId) {
+                continue;
+            }
+
             $produto = $this->em->getRepository(Produto::class)->findOneBy([
-                'id' => $produtoId,
-                'estabelecimentoId' => $estabelecimentoId
+                'id'                => $produtoId,
+                'estabelecimentoId' => $estabelecimentoId,
             ]);
 
+            // Produto não encontrado no cadastro — pula sem estourar a venda
             if (!$produto) {
-                throw new \RuntimeException("Produto '{$item['nome']}' não encontrado.");
+                continue;
             }
 
             $estoqueAtual = $produto->getEstoqueAtual() ?? 0;
-            
+
             if ($estoqueAtual < $item['quantidade']) {
                 throw new \RuntimeException(
-                    "Estoque insuficiente para '{$produto->getNome()}'. Disponível: {$estoqueAtual}"
+                    "Estoque insuficiente para '{$produto->getNome()}'. " .
+                    "Disponível: {$estoqueAtual} | Solicitado: {$item['quantidade']}"
                 );
             }
 
@@ -82,11 +94,14 @@ class EstoqueService
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
 
         foreach ($itens as $item) {
-            if ($item['tipo'] !== 'Produto') {
+            if (strtolower($item['tipo']) !== 'produto') {
                 continue;
             }
 
-            $produtoId = $this->extrairProdutoId($item['id']);
+            $produtoId = $this->extrairProdutoId($item['id'] ?? '');
+            if (!$produtoId) {
+                continue; // ID inválido — pula sem travar
+            }
 
             if (!isset($produtosValidados[$produtoId])) {
                 continue;

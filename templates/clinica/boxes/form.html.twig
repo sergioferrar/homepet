@@ -4,35 +4,39 @@
 {% block body %}
 <style>
 :root {
-    --bx-teal:       #4A6741;
-    --bx-teal-dark:  #3B5E37;
-    --bx-teal-light: #EBF2EA;
-    --bx-teal-mid:   #B8D4B4;
-    --bx-caramel:    #C97D3A;
-    --bx-bark:       #5C3D1E;
-    --bx-amber:      #F5C87A;
-    --bx-amber-pale: #FDF0D5;
+    --bx-teal:       #3d8b85;
+    --bx-teal-dark:  #2a6762;
+    --bx-teal-light: #eef6f5;
+    --bx-teal-mid:   #c5e5e3;
     --bx-slate:      #3d4f5c;
     --bx-muted:      #7a8fa0;
     --bx-border:     #dde8e7;
     --bx-bg:         #f4f7f7;
     --bx-surface:    #ffffff;
-    --bx-shadow-sm:  0 1px 4px rgba(42,103,98,.08);
-    --bx-shadow-md:  0 4px 16px rgba(42,103,98,.12);
+    --bx-caramel:    #C97D3A;
+    --bx-bark:       #5C3D1E;
+    --bx-amber:      #F5C87A;
+    --bx-amber-pale: #FDF0D5;
+    --bx-shadow-sm:  0 1px 4px rgba(42, 103, 98, 0.08);
+    --bx-shadow-md:  0 4px 16px rgba(42, 103, 98, 0.12);
     --bx-radius:     12px;
     --bx-radius-lg:  18px;
+    
 }
 
 body { background: var(--bx-bg); }
 
 .bx-hero {
-    background: linear-gradient(135deg, var(--bx-bark) 0%, var(--bx-caramel) 100%);
+    background: linear-gradient(135deg, var(--bx-teal) 0%, var(--bx-teal-dark) 100%);
     padding: 1.5rem 2rem 3.5rem;
-    position: relative; overflow: hidden;
+    position: relative;
+    overflow: hidden;
 }
 .bx-hero::before {
-    content: ''; position: absolute; inset: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3Ccircle cx='0' cy='0' r='10'/%3E%3Ccircle cx='60' cy='60' r='10'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     pointer-events: none;
 }
 .bx-hero-content { position: relative; z-index: 1; color: #fff; }

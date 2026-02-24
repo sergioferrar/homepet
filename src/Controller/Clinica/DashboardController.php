@@ -272,22 +272,33 @@ class DashboardController extends DefaultController
                 $vendaData = new \DateTime($venda['data']);
             }
 
-            $itens = $vendaItemRepo->findBy(['venda' => $vendaId]);
+            $itens = $vendaItemRepo->findBy(['vendaId' => $vendaId]);
 
             foreach ($itens as $item) {
-                // Se item é array, adaptar
-                if (is_array($item)) {
-                    $servicoId = $item['produto_id'];
-                    $quantidade = $item['quantidade'];
-                    $valorUnitario = $item['preco_unitario'];
-                    $descricao = $item['produto'] ?? 'Produto';
+                // Todos os itens agora são sempre objetos VendaItem
+                $produtoId     = $item->getProdutoId();
+                $quantidade    = $item->getQuantidade();
+                $valorUnitario = $item->getValorUnitario();
+                $snapshotNome = $item->getProduto(); // nome gravado no momento da venda
+
+                // Dados legados: campo produto continha o ID numérico em vez do nome.
+                // Detecta e busca o nome real no cadastro.
+                if ($snapshotNome !== null && is_numeric(trim($snapshotNome))) {
+                    $idBusca = $produtoId ?? (int)trim($snapshotNome);
+                    if ($item->getTipo() === 'produto') {
+                        $entidade = $em->getRepository(\App\Entity\Produto::class)->find($idBusca);
+                    } else {
+                        $entidade = $servicoRepo->find($idBusca);
+                    }
+                    $descricao = $entidade ? $entidade->getNome() : "Item #{$idBusca}";
+                } elseif ($produtoId && $item->getTipo() === 'servico') {
+                    // Sempre tenta enriquecer serviços com nome atualizado do cadastro
+                    $servico = $servicoRepo->find($produtoId);
+                    $descricao = ($servico && method_exists($servico, 'getNome'))
+                        ? $servico->getNome()
+                        : ($snapshotNome ?: 'Serviço');
                 } else {
-                    $servicoId = $item->getProduto();
-                    $quantidade = $item->getQuantidade();
-                    $valorUnitario = $item->getValorUnitario();
-                    
-                    $servico = $servicoRepo->find($servicoId);
-                    $descricao = is_object($servico) ? $servico->getDescricao() : 'Produto';
+                    $descricao = $snapshotNome ?: 'Item sem descrição';
                 }
 
                 $itensVenda[] = [

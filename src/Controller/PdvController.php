@@ -125,20 +125,20 @@ class PdvController extends DefaultController
         // 4. Monta payload de itens para a sessão
         $itensNormalizados = [];
         foreach ($itensEntities as $item) {
-            $tipo = strtolower($item->getTipo()); // 'produto' | 'servico'
+            $tipo      = $item->getTipo(); // já normalizado para lowercase
+            $produtoId = $this->resolverProdutoId($item); // trata legado com produtoId null
 
-            // Monta o id no mesmo formato que o PDV usa: "prod_X" ou "serv_X"
             $idFrontend = ($tipo === 'produto')
-                ? 'prod_' . $item->getProduto()
-                : 'serv_' . $item->getProduto();
+                ? 'prod_' . $produtoId
+                : 'serv_' . $produtoId;
 
             $itensNormalizados[] = [
-                'id'            => $idFrontend,
-                'nome'          => $item->getProduto(),     // campo produto guarda ID ou nome, ajuste se necessário
-                'tipo'          => ucfirst($tipo),          // "Produto" | "Servico"
-                'quantidade'    => $item->getQuantidade(),
-                'valor_unitario'=> $item->getValorUnitario(),
-                'subtotal'      => $item->getSubtotal(),
+                'id'             => $idFrontend,
+                'nome'           => $this->resolverNomeItem($em, $item),
+                'tipo'           => ucfirst($tipo),
+                'quantidade'     => $item->getQuantidade(),
+                'valor_unitario' => $item->getValorUnitario(),
+                'subtotal'       => $item->getSubtotal(),
             ];
         }
 
@@ -370,9 +370,17 @@ class PdvController extends DefaultController
     public function finalizarCarrinho(Request $request, int $id): JsonResponse
     {
         $this->switchDB();
-        
+
         try {
-            $dto = FinalizarCarrinhoDTO::fromArray($id, $request->request->all());
+            // Aceita tanto JSON (application/json) quanto form-data
+            $contentType = $request->headers->get('Content-Type', '');
+            if (str_contains($contentType, 'application/json')) {
+                $dados = json_decode($request->getContent(), true) ?? [];
+            } else {
+                $dados = $request->request->all();
+            }
+
+            $dto = FinalizarCarrinhoDTO::fromArray($id, $dados);
 
             // Valida DTO
             $errors = $dto->validate();
@@ -394,6 +402,71 @@ class PdvController extends DefaultController
                 'mensagem' => 'Erro ao finalizar venda: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+
+    /**
+     * Retorna os dados de uma venda em JSON para pré-carregar o PDV via popup (sem usar sessão).
+     *
+     * @Route("/dados-venda/{id}", name="pdv_dados_venda", methods={"GET"})
+     */
+    public function dadosVenda(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $this->switchDB();
+        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+
+        $venda = $em->getRepository(Venda::class)->findOneBy([
+            'id'                => $id,
+            'estabelecimentoId' => $estabelecimentoId,
+        ]);
+
+        if (!$venda) {
+            return new JsonResponse(['ok' => false, 'msg' => 'Venda não encontrada.'], 404);
+        }
+
+        $nomeCliente = $venda->getCliente() ?? 'Consumidor Final';
+        $petId       = $venda->getPetId();
+        $nomePet     = null;
+
+        if ($petId) {
+            $pet = $em->getRepository(Pet::class)->find($petId);
+            if ($pet) {
+                $nomePet = $pet->getNome();
+            }
+        }
+
+        $itensEntities     = $em->getRepository(VendaItem::class)->findBy(['vendaId' => $venda->getId()]);
+        $itensNormalizados = [];
+
+        foreach ($itensEntities as $item) {
+            $tipo      = $item->getTipo(); // já lowercase pela entity
+            $produtoId = $this->resolverProdutoId($item); // trata legado com produtoId null
+
+            $idFrontend = ($tipo === 'produto')
+                ? 'prod_' . $produtoId
+                : 'serv_' . $produtoId;
+
+            $itensNormalizados[] = [
+                'id'             => $idFrontend,
+                'nome'           => $this->resolverNomeItem($em, $item),
+                'tipo'           => ucfirst($tipo),
+                'quantidade'     => $item->getQuantidade(),
+                'valor_unitario' => $item->getValorUnitario(),
+                'subtotal'       => $item->getSubtotal(),
+            ];
+        }
+
+        return new JsonResponse([
+            'ok'           => true,
+            'venda_id'     => $venda->getId(),
+            'status'       => $venda->getStatus(),
+            'cliente_nome' => $nomeCliente,
+            'pet_id'       => $petId,
+            'pet_nome'     => $nomePet,
+            'itens'        => $itensNormalizados,
+            'total'        => $venda->getTotal(),
+            'observacao'   => $venda->getObservacao(),
+        ]);
     }
 
     /**
@@ -426,13 +499,13 @@ class PdvController extends DefaultController
                 $totalGasto += $venda->getTotal();
 
                 $itens = $em->getRepository(VendaItem::class)
-                    ->findBy(['venda' => $venda]);
+                    ->findBy(['vendaId' => $venda->getId()]);
 
                 $itensFormatados = array_map(fn($item) => [
-                    'produto' => $item->getProduto(),
-                    'quantidade' => $item->getQuantidade(),
+                    'produto'        => $item->getProdutoNome(),
+                    'quantidade'     => $item->getQuantidade(),
                     'valor_unitario' => number_format($item->getValorUnitario(), 2, ',', '.'),
-                    'subtotal' => number_format($item->getSubtotal(), 2, ',', '.'),
+                    'subtotal'       => number_format($item->getSubtotal(), 2, ',', '.'),
                 ], $itens);
 
                 $vendasFormatadas[] = [
@@ -511,6 +584,61 @@ class PdvController extends DefaultController
      * Helpers privados
      */
 
+    /**
+     * Resolve o nome de exibição de um VendaItem.
+     *
+     * Itens gravados antes da refatoração tinham o ID numérico no campo
+     * produtoNome (snapshot). Este método detecta esse caso e busca o nome
+     * real no cadastro de Produtos ou Serviços, com fallback graceful.
+     */
+    /**
+     * Resolve o ID numérico de um VendaItem garantindo que nunca seja null/zero.
+     *
+     * Itens legados podem ter produtoId=null e o ID numérico guardado
+     * no snapshot do nome (campo produto). Este método normaliza os dois casos.
+     */
+    private function resolverProdutoId(VendaItem $item): int
+    {
+        if ($item->getProdutoId()) {
+            return $item->getProdutoId();
+        }
+
+        // Fallback: snapshot numérico (dado legado)
+        $snapshot = $item->getProduto();
+        if ($snapshot !== null && is_numeric(trim($snapshot))) {
+            return (int)trim($snapshot);
+        }
+
+        // Sem ID válido — retorna 0 (tratado no EstoqueService)
+        return 0;
+    }
+
+    private function resolverNomeItem(EntityManagerInterface $em, VendaItem $item): string
+    {
+        $snapshot = $item->getProdutoNome();
+        $produtoId = $item->getProdutoId();
+
+        // Se o snapshot não é numérico, é um nome válido — retorna direto
+        if ($snapshot !== null && !is_numeric(trim($snapshot))) {
+            return $snapshot;
+        }
+
+        // Snapshot é numérico (dado legado) ou nulo — busca no cadastro pelo produtoId
+        $idBusca = $produtoId ?? (int)trim((string)$snapshot);
+
+        if (!$idBusca) {
+            return $snapshot ?? 'Item sem descrição';
+        }
+
+        if ($item->getTipo() === 'produto') {
+            $entidade = $em->getRepository(Produto::class)->find($idBusca);
+        } else {
+            $entidade = $em->getRepository(Servico::class)->find($idBusca);
+        }
+
+        return $entidade ? $entidade->getNome() : ($snapshot ?? "Item #{$idBusca}");
+    }
+
     private function normalizarItens(array $produtos, array $servicos): array
     {
         $itens = [];
@@ -544,13 +672,13 @@ class PdvController extends DefaultController
 
     private function buscarItensVenda(EntityManagerInterface $em, int $vendaId): array
     {
-        $itens = $em->getRepository(VendaItem::class)->findBy(['venda' => $vendaId]);
-        
+        $itens = $em->getRepository(VendaItem::class)->findBy(['vendaId' => $vendaId]);
+
         return array_map(fn($item) => [
-            'descricao' => $item->getProduto(),
-            'quantidade' => $item->getQuantidade(),
+            'descricao'      => $this->resolverNomeItem($em, $item),
+            'quantidade'     => $item->getQuantidade(),
             'valor_unitario' => $item->getValorUnitario(),
-            'subtotal' => $item->getSubtotal(),
+            'subtotal'       => $item->getSubtotal(),
         ], $itens);
     }
 }
