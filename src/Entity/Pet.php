@@ -39,7 +39,7 @@ class Pet
     /** @ORM\Column(type="text", nullable=true) */
     private $observacoes;
 
-    /** @ORM\Column(type="string", length=255, nullable=true) */
+    /** @ORM\Column(type="string", length=255, nullable=true, name="dono_id") */
     private $dono_id;
 
     /** @ORM\Column(type="string", length=255, nullable=true) */

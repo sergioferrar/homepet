@@ -33,7 +33,7 @@ class Financeiro
     private $data;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=true, name="pet_id")
      */
     private $petId;
 
