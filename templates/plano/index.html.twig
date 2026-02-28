@@ -1,56 +1,156 @@
 {% extends 'base.html.twig' %}
 
-{% block page_title %}Planos{% endblock %}
+{% block page_title %}Planos de Assinatura{% endblock %}
 
 {% block body %}
-    <div class="pagetitle">
-        <h1>Planos de assinatura <a href="{{ path('app_plano_create') }}"
-                                    class="btn btn-primary btn-sm mb-3 float-md-end"><i class="bi bi-plus"></i> Novo
-                Plano</a></h1>
-        <nav>
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
-                <li class="breadcrumb-item">Configurações</li>
-                <li class="breadcrumb-item active">Planos de assinatura</li>
-            </ol>
-        </nav>
-    </div>
-    <div class="container mt-5">
+<div class="pagetitle">
+    <h1>Planos de assinatura
+        <a href="{{ path('app_plano_create') }}" class="btn btn-primary btn-sm mb-3 float-md-end">
+            <i class="bi bi-plus-circle me-1"></i> Novo Plano
+        </a>
+    </h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+            <li class="breadcrumb-item">Configurações</li>
+            <li class="breadcrumb-item active">Planos de assinatura</li>
+        </ol>
+    </nav>
+</div>
 
-        <table class="table table-bordered datatable">
-            <thead>
-            <tr>
-                <th>Plano</th>
-                <th>Trial</th>
-                <th>Qtd Lojas</th>
-                <th>Status</th>
-                <th>Ações</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for row in planos %}
-                <tr>
-                    <td>{{ row.titulo }}</td>
-                    <td class="text-center">{{ row.trial|getTrial|raw }}</td>
-                    <td class="text-center"><span class="badge text-bg-secondary">{{ row.totalLojas }}</span></td>
-                    <td class="text-center">{{ row.status|getStatus|raw }}</td>
-                    <td class="text-center">
-                        <div class="dropdown">
-                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button"
-                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                Ação
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item"
-                                       href="{{ url('app_plano_editar',{'id':row.id}) }}">Editar</a></li>
-                                <li><a class="dropdown-item" href="#">Ver lojas</a></li>
-                                <li><a class="dropdown-item" href="#">Inativar</a></li>
-                            </ul>
+{# Flash messages #}
+{% for type, messages in app.flashes %}
+    {% for msg in messages %}
+        <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+<div class="row">
+    {% for item in planosData %}
+        {% set plano = item.entidade %}
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm {{ plano.status == 'Ativo' ? 'border-start border-primary border-3' : 'border-start border-secondary border-3' }}">
+                <div class="card-header d-flex justify-content-between align-items-center bg-transparent border-bottom-0 pt-3">
+                    <h5 class="card-title mb-0 fw-bold">{{ plano.titulo }}</h5>
+                    <span class="badge {{ plano.status == 'Ativo' ? 'bg-success' : 'bg-secondary' }}">
+                        {{ plano.status }}
+                    </span>
+                </div>
+
+                <div class="card-body pt-2">
+                    {# Valor #}
+                    <div class="mb-3">
+                        <span class="fs-3 fw-bold text-primary">{{ plano.valor|formataValorEmReal }}</span>
+                        <span class="text-muted small">/ mês</span>
+                    </div>
+
+                    {# Trial badge #}
+                    {% if plano.trial %}
+                        <div class="mb-2">
+                            <span class="badge bg-info text-dark"><i class="bi bi-clock me-1"></i>Possui período trial</span>
                         </div>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                    {% endif %}
+
+                    {# Módulos do plano #}
+                    <p class="text-muted small mb-1 fw-semibold">MÓDULOS INCLUÍDOS:</p>
+                    <div class="d-flex flex-wrap gap-1 mb-3">
+                        {% for modId, modTitulo in item.modulosArr %}
+                            {% set isAdicional = modId in [7, 8, 9, 10] %}
+                            <span class="badge {{ isAdicional ? 'bg-warning text-dark' : 'bg-light text-dark border' }}" style="font-size: .72rem;">
+                                <i class="bi {{ isAdicional ? 'bi-star-fill' : 'bi-check2' }} me-1"></i>{{ modTitulo }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted small">Nenhum módulo configurado</span>
+                        {% endfor %}
+                    </div>
+
+                    {# Qtd lojas #}
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-shop me-1"></i>
+                        <strong>{{ item.totalLojas }}</strong> estabelecimento(s) vinculado(s)
+                    </p>
+                </div>
+
+                <div class="card-footer bg-transparent border-0 d-flex gap-2 pb-3">
+                    <a href="{{ url('app_plano_editar', {'id': plano.id}) }}" class="btn btn-outline-primary btn-sm flex-grow-1">
+                        <i class="bi bi-pencil me-1"></i>Editar
+                    </a>
+
+                    {# Toggle Ativo/Inativo via AJAX #}
+                    <button
+                        class="btn btn-sm {{ plano.status == 'Ativo' ? 'btn-outline-warning' : 'btn-outline-success' }} btn-toggle-status"
+                        data-id="{{ plano.id }}"
+                        data-status="{{ plano.status }}"
+                        title="{{ plano.status == 'Ativo' ? 'Inativar' : 'Ativar' }}">
+                        <i class="bi {{ plano.status == 'Ativo' ? 'bi-pause-circle' : 'bi-play-circle' }}"></i>
+                    </button>
+
+                    {# Excluir apenas se não tiver lojas vinculadas #}
+                    {% if item.totalLojas == 0 %}
+                        <form method="post" action="{{ url('app_plano_excluir', {'id': plano.id}) }}"
+                              onsubmit="return confirm('Excluir o plano {{ plano.titulo|e('js') }}? Esta ação não pode ser desfeita.');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Excluir">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    {% else %}
+                        <button class="btn btn-outline-danger btn-sm" disabled title="Não é possível excluir: há lojas vinculadas">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info text-center" role="alert">
+                <i class="bi bi-info-circle me-2"></i>Nenhum plano cadastrado.
+                <a href="{{ path('app_plano_create') }}" class="alert-link">Criar primeiro plano</a>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{# Legenda de módulos #}
+<div class="card border-0 shadow-sm mt-2">
+    <div class="card-body py-2 px-3">
+        <small class="text-muted">
+            <span class="badge bg-light text-dark border me-1"><i class="bi bi-check2 me-1"></i>Padrão</span>
+            Incluído em todos os planos &nbsp;|&nbsp;
+            <span class="badge bg-warning text-dark me-1"><i class="bi bi-star-fill me-1"></i>Adicional</span>
+            Módulo fiscal / complementar cobrado à parte
+        </small>
     </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.querySelectorAll('.btn-toggle-status').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const id     = this.dataset.id;
+        const status = this.dataset.status;
+        const label  = status === 'Ativo' ? 'inativar' : 'ativar';
+
+        if (!confirm(`Deseja ${label} este plano?`)) return;
+
+        fetch(`/dashboard/plano/toggle/${id}`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message ?? 'Erro ao atualizar plano.');
+            }
+        })
+        .catch(() => alert('Erro de comunicação com o servidor.'));
+    });
+});
+</script>
 {% endblock %}

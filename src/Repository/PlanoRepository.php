@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Plano;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -17,112 +18,63 @@ use Doctrine\Persistence\ManagerRegistry;
 class PlanoRepository extends ServiceEntityRepository
 {
     private $conn;
+    private EntityManagerInterface $em;
 
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Plano::class);
         $this->conn = $this->getEntityManager()->getConnection();
+        $this->em   = $this->getEntityManager();
     }
 
-    public function listaPlanos()
+    /**
+     * Lista todos os planos com contagem de estabelecimentos.
+     * Usado no painel admin.
+     */
+    public function listaPlanos(): array
     {
-        $sql = "SELECT id, titulo, valor, status, trial, dataTrial, dataPlano,
-        (SELECT COUNT(*) FROM estabelecimento WHERE planoId = p.id) AS totalLojas
-            FROM planos AS p
-            #WHERE p.status = 'Ativo'";
-
-        $query = $this->conn->executeQuery($sql);
-
-        return $query->fetchAllAssociative();
+        return $this->em->createQuery(
+            'SELECT p FROM App\Entity\Plano p ORDER BY p.id DESC'
+        )->getResult();
     }
 
-    public function listaPlanosHome()
+    /**
+     * Lista planos ativos para exibição na landing page.
+     */
+    public function listaPlanosHome(): array
     {
-        $sql = "SELECT id, titulo, valor, status, trial, dataTrial, dataPlano, descricao
-            FROM planos AS p
-            WHERE p.status = 'Ativo'";
-
-        $query = $this->conn->executeQuery($sql);
-
-        return $query->fetchAllAssociative();
+        return $this->em->createQuery(
+            "SELECT p FROM App\Entity\Plano p WHERE p.status = 'Ativo' ORDER BY p.valor ASC"
+        )->getResult();
     }
 
-    public function verPlano($planoId)
+    /**
+     * Retorna um único plano pelo ID.
+     */
+    public function verPlano(int $planoId): ?Plano
     {
-        $sql = "SELECT id, titulo, valor, status, trial, dataTrial, dataPlano,descricao,
-        (SELECT COUNT(*) FROM estabelecimento WHERE planoId = p.id) AS totalLojas
-            FROM planos AS p
-            WHERE p.id = $planoId";
-
-        $query = $this->conn->executeQuery($sql);
-
-        return $query->fetchAssociative();
+        return $this->em->getRepository(Plano::class)->find($planoId);
     }
 
+    /**
+     * Persiste um novo plano.
+     */
     public function add(Plano $entity, bool $flush = false): void
     {
-        $this->getEntityManager()->persist($entity);
-
+        $this->em->persist($entity);
         if ($flush) {
-            $this->getEntityManager()->flush();
+            $this->em->flush();
         }
     }
 
-    public function update(Plano $entity, $planoId): void
-    {
-
-        $sql = "UPDATE planos SET titulo = '{$entity->getTitulo()}', descricao = '{$entity->getDescricao()}', 
-        valor = '{$entity->getValor()}', status = '{$entity->getStatus()}', 
-        trial = '{$entity->getTrial()}', dataPlano = '{$entity->getDataPlano()->format('Y-m-d H:i:s')}'
-            WHERE id = $planoId";
-
-        $this->conn->executeQuery($sql);
-    }
-
-
+    /**
+     * Remove um plano.
+     */
     public function remove(Plano $entity, bool $flush = false): void
     {
-        $this->getEntityManager()->remove($entity);
-
+        $this->em->remove($entity);
         if ($flush) {
-            $this->getEntityManager()->flush();
+            $this->em->flush();
         }
     }
-
-    public function createPlan($data){
-        $sql = "";
-    }
-
-    public function updatePlan($data){
-        $sql = "";
-    }
-
-    public function deletePlan($data){
-        $sql = "";
-    }
-
-//    /**
-//     * @return Planos[] Returns an array of Planos objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('p.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?Planos
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
 }

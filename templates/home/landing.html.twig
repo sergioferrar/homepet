@@ -304,49 +304,75 @@
         <!-- Section Title -->
         <div class="container section-title" data-aos="fade-up">
             <h2>Planos e preços</h2>
-            <p>Encontre um plano que atenda o seu estabelecimento de forma completa</p>
+            <p>Encontre o plano ideal para o seu estabelecimento. Todos os planos incluem os módulos essenciais para gerenciar seu petshop do dia a dia.</p>
         </div><!-- End Section Title -->
 
         <div class="container" data-aos="fade-up" data-aos-delay="100">
 
+            {# ── Cards de planos ─────────────────────────────────────── #}
             <div class="row g-4 justify-content-center">
+                {% for plano in planos %}
+                    {% set isPopular = plano.trial == 1 or plano.trial == '1' %}
+                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                        <div class="pricing-card {{ isPopular ? 'popular' : '' }}">
 
-                {% set popular = '' %}
-                {% set popularDiv = '' %}
-                {% set popularBotao = 'btn-primary' %}
-                {% for row in planos %}
-                    {% if row.trial == '1' %}
-                        {% set popularDiv = '<div class="popular-badge">Recomendado</div>' %}
-                        {% set popular = 'popular' %}
-                        {% set popularBotao = 'btn-light' %}
-                    {% endif %}
-                    <!-- Basic Plan -->
-                    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
-                        <div class="pricing-card {{ popular }}">
-                            {{ popularDiv|raw }}
-                            <h3>{{ row.titulo }}</h3>
+                            {% if isPopular %}
+                                <div class="popular-badge">⭐ Mais escolhido</div>
+                            {% endif %}
+
+                            <h3>{{ plano.titulo }}</h3>
+
                             <div class="price">
-                <span class="amount">
-                              {{ row.valor|formataValorEmReal }}</span>
+                                <span class="amount">{{ plano.valor|formataValorEmReal }}</span>
                                 <span class="period">/ mês</span>
                             </div>
 
+                            <h4>O que está incluído:</h4>
+                            {{ plano.descricao|listaPlano|raw }}
 
-                            <h4>O que vem no plano:</h4>
-                            {{ row.descricao|listaPlano|raw }}
-
-                            <a href="{{ url('landing_cadastro', {'planoId':row.id}) }}" class="btn {{ popularBotao }}">
-                                Adquirir plano
-                                <i class="bi bi-arrow-right"></i>
+                            <a href="{{ url('landing_cadastro', {'planoId': plano.id}) }}"
+                               class="btn {{ isPopular ? 'btn-light' : 'btn-primary' }} mt-3">
+                                Assinar plano
+                                <i class="bi bi-arrow-right ms-1"></i>
                             </a>
                         </div>
                     </div>
-                    {% set popularBotao = 'btn-primary' %}
-                    {% set popular = '' %}
-                    {% set popularDiv = '' %}
+                {% else %}
+                    <div class="col-12 text-center py-5">
+                        <p class="text-muted">Planos em breve disponíveis.</p>
+                    </div>
                 {% endfor %}
+            </div>
 
-
+            {# ── Nota sobre módulos adicionais ────────────────────────── #}
+            <div class="row mt-5" data-aos="fade-up" data-aos-delay="200">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h5 class="fw-bold mb-1">
+                                        <i class="bi bi-star-fill text-warning me-2"></i>
+                                        Módulos complementares disponíveis
+                                    </h5>
+                                    <p class="text-muted mb-0">
+                                        Potencialize seu petshop com módulos adicionais cobrados à parte:
+                                        <strong>Banho &amp; Tosa</strong>,
+                                        <strong>Hospedagem de Cães</strong>,
+                                        <strong>Clínica Veterinária</strong> e
+                                        <strong>PDV (Ponto de Venda)</strong> com emissão de notas fiscais.
+                                        Ideal para quem precisa de controle fiscal completo e integrado.
+                                    </p>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                    <a href="#contact" class="btn btn-outline-primary">
+                                        <i class="bi bi-chat-dots me-1"></i> Falar com consultor
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </div>

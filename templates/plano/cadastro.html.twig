@@ -1,139 +1,209 @@
 {% extends 'base.html.twig' %}
+
+{% block page_title %}Novo Plano{% endblock %}
+
 {% block body %}
-    <div class="pagetitle">
-        <h1>Novo plano</h1>
+<div class="pagetitle">
+    <h1>Novo plano</h1>
+    <a class="btn btn-outline-secondary btn-sm mb-3" href="{{ url('app_plano') }}">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+            <li class="breadcrumb-item">Configurações</li>
+            <li class="breadcrumb-item"><a href="{{ url('app_plano') }}">Planos</a></li>
+            <li class="breadcrumb-item active">Novo plano</li>
+        </ol>
+    </nav>
+</div>
 
-        <a class="btn btn-primary btm-sm mb-3" href="{{ url('app_plano') }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+<form method="post" action="{{ url('app_plano_create_new') }}">
+<section class="section">
+    <div class="row">
 
-        <nav>
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
-                <li class="breadcrumb-item">Configurações</li>
-                <li class="breadcrumb-item">Planos</li>
-                <li class="breadcrumb-item active">Novo plano</li>
-            </ol>
-        </nav>
-    </div>
-    <form method="post" action="{{ url('app_plano_create_new') }}">
-        <section class="section">
-            <div class="row justify-content-center">
-                <div class="col-md-8 col-sm-12">
+        {# ── Coluna esquerda: módulos ─────────────────────────────────── #}
+        <div class="col-lg-8 col-sm-12">
 
-                    <div class="card shadow-lg border-0">
-                        <div class="card-body">
-                            <h5 class="card-title text-uppercase">Módulos do plano</h5>
-                            <div class="row">
-                                <div class="col-md-12 mb-3">
-                                    <ul class="list-group">
-                                        {% for key,row in modulos %}
-                                            <li class="list-group-item">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="modulos[]"
-                                                           id="{{ key }}" value="{{ key }}">
-                                                    <label class="form-check-label" for="{{ key }}">
-                                                        {{ row }}
-                                                    </label>
-                                                </div>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                    <textarea class="form-control d-none{# tinymce-editor #}" rows="6" name="descricao"
-                                              id="descricao">
-									<ul class="list-group">
-										<li class="list-group-item">Agendamentos de Pets</li>
-										<li class="list-group-item">Cadastro de Clientes</li>
-										<li class="list-group-item">Cadastro de Pets</li>
-										<li class="list-group-item">Serviços do petShop</li>
-										<li class="list-group-item">Área de financeiro</li>
-										<li class="list-group-item"><span style="text-decoration: line-through;">Quadro de Banho e Tosa</span></li>
-										<li class="list-group-item"><span style="text-decoration: line-through;">Clinica Veterinária</span></li>
-										<li class="list-group-item"><span style="text-decoration: line-through;">Hospedagem de Cães</span></li>
-										<li class="list-group-item">Gestão de usuários</li>
-									</ul>
-									</textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            {# Módulos padrão (sempre inclusos) #}
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="bi bi-check2-all me-2"></i>Módulos padrão <small class="opacity-75 ms-1">— incluídos em todos os planos</small></h6>
                 </div>
-                <div class="col-md-4 col-sm-12">
-
-                    <div class="card shadow-lg border-0">
-                        <div class="card-body">
-                            <div class="mb-3 mt-3">
-                                <h5 class="card-title text-uppercase">Nome</h5>
-                                <input type="text" class="form-control" id="nome" name="nome" required>
-                            </div>
-                            <div class="mb-3">
-                                <h5 class="card-title text-uppercase">Valor do plano</h5>
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1">R$</span>
-                                    <input type="text" class="form-control" name="valor" id="valor" placeholder="99,00"
-                                           oninput="validateFloatInput(this)">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <h5 class="card-title text-uppercase border-botton">Status</h5>
-                                <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="status" id="status1" value="Ativo"
-                                           autocomplete="off" checked>
-                                    <label class="btn btn-outline-primary" for="status1">Ativo</label>
-                                    <input type="radio" class="btn-check" name="status" id="status2" value="Inativo"
-                                           autocomplete="off">
-                                    <label class="btn btn-outline-primary" for="status2">Inativo</label>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <h5 class="card-title text-uppercase">Trial</h5>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" name="trial" role="switch"
-                                           id="flexSwitchCheckDefault">
-                                    <label class="form-check-label" for="flexSwitchCheckDefault">Plano com periodo de
-                                        testes?</label>
-                                </div>
-                            </div>
-                            <div class="text-center">
-                                <button type="submit" class="btn btn-success w-50">Salvar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-12">
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for modulo in modulosPadrao %}
+                            <li class="list-group-item d-flex align-items-center gap-2">
+                                <span class="text-success"><i class="bi bi-check-circle-fill"></i></span>
+                                {{ modulo.titulo }}
+                                <span class="badge bg-light text-dark border ms-auto small">Padrão</span>
+                                {# Campo hidden garante que o padrão está no payload caso admin queira visualizar #}
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
-        </section>
-    </form>
+
+            {# Módulos adicionais (checkboxes) #}
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="bi bi-star me-2"></i>Módulos adicionais
+                        <small class="opacity-75 ms-1">— cobrados à parte (fiscal / PDV)</small>
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush" id="lista-adicionais">
+                        {% for modulo in modulosAdicionais %}
+                            <li class="list-group-item">
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input modulo-check"
+                                        type="checkbox"
+                                        name="modulos[]"
+                                        id="mod_{{ modulo.id }}"
+                                        value="{{ modulo.id }}">
+                                    <label class="form-check-label d-flex align-items-center gap-2" for="mod_{{ modulo.id }}">
+                                        <span class="text-warning"><i class="bi bi-star"></i></span>
+                                        {{ modulo.titulo }}
+                                        <span class="badge bg-warning text-dark border ms-auto small">Adicional</span>
+                                    </label>
+                                </div>
+                            </li>
+                        {% else %}
+                            <li class="list-group-item text-muted small">Nenhum módulo adicional disponível.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            {# Preview dos módulos selecionados #}
+            <div class="card shadow-sm border-0 mt-3" id="preview-card" style="display:none!important">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 text-muted"><i class="bi bi-eye me-1"></i>Preview: módulos que serão incluídos</h6>
+                </div>
+                <div class="card-body">
+                    <div id="preview-lista" class="d-flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+        </div>
+
+        {# ── Coluna direita: dados do plano ────────────────────────────── #}
+        <div class="col-lg-4 col-sm-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">Dados do plano</h6>
+                </div>
+                <div class="card-body">
+
+                    <div class="mb-3">
+                        <label for="nome" class="form-label fw-semibold">Nome do plano <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nome" name="nome"
+                               placeholder="Ex: Petshop Básico" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="valor" class="form-label fw-semibold">Valor mensal <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" class="form-control" name="valor" id="valor"
+                                   placeholder="0,00" oninput="validateFloatInput(this)" required>
+                        </div>
+                        <div class="form-text">Informe apenas o valor dos módulos padrão. Módulos adicionais são faturados à parte.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Status</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="status" id="status_ativo"
+                                   value="Ativo" autocomplete="off" checked>
+                            <label class="btn btn-outline-success" for="status_ativo">
+                                <i class="bi bi-check-circle me-1"></i>Ativo
+                            </label>
+                            <input type="radio" class="btn-check" name="status" id="status_inativo"
+                                   value="Inativo" autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="status_inativo">
+                                <i class="bi bi-pause-circle me-1"></i>Inativo
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Período de trial</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="trial"
+                                   role="switch" id="trial">
+                            <label class="form-check-label" for="trial">
+                                Marcar como plano recomendado / com período trial
+                            </label>
+                        </div>
+                        <div class="form-text">Planos marcados como trial aparecem em destaque na landing page.</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-floppy me-1"></i>Salvar plano
+                        </button>
+                        <a href="{{ url('app_plano') }}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+</form>
 {% endblock %}
+
 {% block javascripts %}
-    <script>
-        $(function () {
-            $('#cep').change(function () {
-                var cep = $(this).val().replace('-', '').replace('.', '');
-                if (cep.length === 8) {
-                    $.get("https://viacep.com.br/ws/" + cep + "/json", function (data) {
-                        if (!data.erro) {
-                            $('#bairro').val(data.bairro);
-                            $('#complemento').val(data.complemento);
-                            $('#cidade').val(data.localidade);
-                            $('#rua').val(data.logradouro);
-                        }
-                    }, 'json');
-                }
-            });
-        });
+<script>
+function validateFloatInput(input) {
+    input.value = input.value.replace(',', '.');
+    input.value = input.value.replace(/[^0-9.]/g, '');
+    const parts = input.value.split('.');
+    if (parts.length > 2) {
+        input.value = parts[0] + '.' + parts.slice(1).join('');
+    }
+}
+window.validateFloatInput = validateFloatInput;
 
-        document.addEventListener('DOMContentLoaded', function () {
-            function validateFloatInput(input) {
-                input.value = input.value.replace(',', '.');
-                input.value = input.value.replace(/[^0-9.]/g, '');
-                const parts = input.value.split('.');
-                if (parts.length > 2) {
-                    input.value = parts[0] + '.' + parts.slice(1).join('');
-                }
-            }
+// Preview de módulos selecionados
+const checks   = document.querySelectorAll('.modulo-check');
+const preview  = document.getElementById('preview-card');
+const lista    = document.getElementById('preview-lista');
 
-            // Torna a função global para o oninput enxergar
-            window.validateFloatInput = validateFloatInput;
-        });
-    </script>
+// Módulos padrão (fixos)
+const padrao = [
+    {% for m in modulosPadrao %}
+        { id: {{ m.id }}, titulo: '{{ m.titulo|e('js') }}', tipo: 'padrao' },
+    {% endfor %}
+];
+
+function atualizaPreview() {
+    lista.innerHTML = '';
+
+    // Fixos
+    padrao.forEach(m => {
+        const span = document.createElement('span');
+        span.className = 'badge bg-light text-dark border';
+        span.innerHTML = `<i class="bi bi-check2 me-1 text-success"></i>${m.titulo}`;
+        lista.appendChild(span);
+    });
+
+    // Adicionais selecionados
+    document.querySelectorAll('.modulo-check:checked').forEach(cb => {
+        const label = cb.nextElementSibling?.textContent?.trim() ?? cb.value;
+        const span  = document.createElement('span');
+        span.className = 'badge bg-warning text-dark';
+        span.innerHTML = `<i class="bi bi-star-fill me-1"></i>${label}`;
+        lista.appendChild(span);
+    });
+
+    preview.style.display = lista.children.length ? '' : 'none';
+}
+
+checks.forEach(cb => cb.addEventListener('change', atualizaPreview));
+atualizaPreview();
+</script>
 {% endblock %}

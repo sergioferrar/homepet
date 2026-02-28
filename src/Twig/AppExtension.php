@@ -168,32 +168,46 @@ class AppExtension extends AbstractExtension
     }
 
 
-    public function listaPlano($string)
+    /**
+     * Renderiza a lista de módulos de um plano para exibição na landing page.
+     *
+     * Suporta dois formatos de JSON armazenados no campo modulos/descricao:
+     *   - Formato novo: {"1":"Agendamentos de Pets","7":"Banho e Tosa",...}  (chave = id do módulo)
+     *   - Formato legado: ["agendamentosDePets","cadastroDeClientes",...]     (array indexado de chaves)
+     *
+     * Módulos adicionais (IDs 7-10) recebem badge especial.
+     */
+    public function listaPlano($string): string
     {
-        $linhas = json_decode($string, true);
-        $lista = '<ul class="features-list">
-        <li class="list-group-item">Agendamentos de Pets</li>
-        <li class="list-group-item">Cadastro de Clientes</li>
-        <li class="list-group-item">Cadastro de Pets</li>
-        <li class="list-group-item">Serviços do petShop</li>
-        <li class="list-group-item">Área de financeiro</li>
-        <li class="list-group-item">Quadro de Banho e Tosa</li>
-        <li class="list-group-item">Clinica Veterinária</li>
-        <li class="list-group-item">Hospedagem de Cães</li>
-        <li class="list-group-item">Gestão de usuários</li>
-        </ul>';
-        $html = '<ul class="features-list">';
-        $i = 0;
-        foreach($this->modulosSistema as $key => $value){
-            if(isset($linhas[$i])){
-                $linhaTracada = null;
-            } else {
-                $linhaTracada = ' style="text-decoration: line-through;"';
+        if (empty($string)) {
+            return '';
+        }
+
+        $decoded = json_decode($string, true);
+
+        // ── Formato novo: {"id": "titulo"} ──────────────────────────────
+        if (is_array($decoded) && !empty($decoded) && array_keys($decoded) !== range(0, count($decoded) - 1)) {
+            // chaves associativas = novo formato
+            $adicionaisIds = [7, 8, 9, 10];
+            $html = '<ul class="features-list">';
+            foreach ($decoded as $id => $titulo) {
+                $isAdicional = in_array((int)$id, $adicionaisIds, true);
+                $icon  = $isAdicional ? 'bi-star-fill text-warning' : 'bi-check-circle-fill text-success';
+                $badge = $isAdicional ? ' <span class="badge bg-warning text-dark ms-1" style="font-size:.65rem">Adicional</span>' : '';
+                $html .= '<li><i class="bi ' . $icon . ' me-1"></i>' . htmlspecialchars($titulo) . $badge . '</li>';
             }
+            $html .= '</ul>';
+            return $html;
+        }
 
-            $html .= '<li '.$linhaTracada.'><i class="bi bi-check-circle-fill"></i>'.$value.'</li>';            
-
-            $i++;
+        // ── Formato legado: array de chaves string ───────────────────────
+        $linhas = is_array($decoded) ? $decoded : [];
+        $html   = '<ul class="features-list">';
+        foreach ($this->modulosSistema as $key => $value) {
+            $incluso      = in_array($key, $linhas, true);
+            $linhaTracada = $incluso ? '' : ' style="text-decoration:line-through;opacity:.45;"';
+            $icon         = $incluso ? 'bi-check-circle-fill text-success' : 'bi-x-circle text-muted';
+            $html        .= '<li' . $linhaTracada . '><i class="bi ' . $icon . ' me-1"></i>' . htmlspecialchars($value) . '</li>';
         }
         $html .= '</ul>';
         return $html;
