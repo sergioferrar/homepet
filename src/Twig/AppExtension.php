@@ -37,11 +37,13 @@ class AppExtension extends AbstractExtension
         return [
             new TwigFilter('getEstate', [$this, 'getEstate']),
             new TwigFilter('base64_encode', 'base64_encode'),
+            new TwigFilter('json_decode', fn($v) => json_decode($v, true) ?? []),
             new TwigFilter('generateBreadCrumb', [$this, 'generateBreadCrumb']),
             new TwigFilter('formataTelefone', [$this, 'formataTelefone']),
             new TwigFilter('cnpjMask', [$this, 'cnpjMask']),
             new TwigFilter('mask9Digit', [$this, 'mask9Digit']),
             // new TwigFilter('nfTipoMask', [$this, 'nfTipoMask']),
+            new TwigFilter('formataValorEmRealLanding', [$this, 'formataValorEmRealLanding']),
             new TwigFilter('formataValorEmReal', [$this, 'formataValorEmReal']),
             new TwigFilter('formatDateTime', [$this, 'formatDateTime']),
             new TwigFilter('formatDate', [$this, 'formatDate']),
@@ -88,6 +90,10 @@ class AppExtension extends AbstractExtension
                 // code...
                 break;
         }
+    }
+    public function formataValorEmRealLanding($valor): string
+    {
+        return '<sup>R$</sup> ' . number_format($valor, 2, ',', '.');
     }
 
     public function mes_br($date): string
@@ -189,27 +195,29 @@ class AppExtension extends AbstractExtension
         if (is_array($decoded) && !empty($decoded) && array_keys($decoded) !== range(0, count($decoded) - 1)) {
             // chaves associativas = novo formato
             $adicionaisIds = [7, 8, 9, 10];
-            $html = '<ul class="features-list">';
+            $html = '';
+
             foreach ($decoded as $id => $titulo) {
                 $isAdicional = in_array((int)$id, $adicionaisIds, true);
                 $icon  = $isAdicional ? 'bi-star-fill text-warning' : 'bi-check-circle-fill text-success';
                 $badge = $isAdicional ? ' <span class="badge bg-warning text-dark ms-1" style="font-size:.65rem">Adicional</span>' : '';
-                $html .= '<li><i class="bi ' . $icon . ' me-1"></i>' . htmlspecialchars($titulo) . $badge . '</li>';
+                $html .= '<div class="plan-feature"><i class="bi bi-check-circle-fill"></i>' . htmlspecialchars($titulo) . $badge . '</div>';
             }
-            $html .= '</ul>';
+            $html .= '';
+            
             return $html;
         }
 
         // ── Formato legado: array de chaves string ───────────────────────
         $linhas = is_array($decoded) ? $decoded : [];
-        $html   = '<ul class="features-list">';
+        $html   = '';
         foreach ($this->modulosSistema as $key => $value) {
             $incluso      = in_array($key, $linhas, true);
             $linhaTracada = $incluso ? '' : ' style="text-decoration:line-through;opacity:.45;"';
             $icon         = $incluso ? 'bi-check-circle-fill text-success' : 'bi-x-circle text-muted';
-            $html        .= '<li' . $linhaTracada . '><i class="bi ' . $icon . ' me-1"></i>' . htmlspecialchars($value) . '</li>';
+            $html        .= '<div class="plan-feature" ' . $linhaTracada . '><i class="bi ' . $icon . ' me-1"></i>' . htmlspecialchars($value) . '</div>';
         }
-        $html .= '</ul>';
+        $html .= '';
         return $html;
     }
 

@@ -1,0 +1,368 @@
+{% extends 'base.html.twig' %}
+
+{% block page_title %}Meu Plano & Assinatura{% endblock %}
+
+{% block body %}
+<div class="pagetitle">
+    <h1>Meu Plano & Assinatura</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url('app_settings') }}">Configurações</a></li>
+            <li class="breadcrumb-item active">Meu Plano</li>
+        </ol>
+    </nav>
+</div>
+
+{# Flash messages #}
+{% for type, messages in app.flashes %}
+    {% for msg in messages %}
+        <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert">
+            {{ msg|raw }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+{# ═══════════════════════════════════════════════════════════════════ #}
+{# BLOCO 1 — Resumo do plano atual                                    #}
+{# ═══════════════════════════════════════════════════════════════════ #}
+<div class="row g-4 mb-4">
+
+    {# Card plano atual #}
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #0d6efd!important">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="text-muted small text-uppercase fw-semibold">Plano atual</span>
+                        <h4 class="fw-bold mb-0 mt-1">{{ planoAtual.titulo }}</h4>
+                    </div>
+                    <span class="badge bg-success fs-6">Ativo</span>
+                </div>
+
+                <div class="d-flex align-items-end gap-1 my-3">
+                    <span class="fs-2 fw-bold text-primary">{{ planoAtual.valor|formataValorEmReal }}</span>
+                    <span class="text-muted mb-1">/mês (plano base)</span>
+                </div>
+
+                {% if totalAdicionais > 0 %}
+                    <div class="alert alert-light border-0 p-2 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span class="small">Módulos adicionais:</span>
+                            <strong class="text-warning small">+ {{ totalAdicionais|number_format(2, ',', '.') }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between border-top mt-1 pt-1">
+                            <span class="small fw-semibold">Total mensal:</span>
+                            <strong class="text-success">R$ {{ totalMensal|number_format(2, ',', '.') }}</strong>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {# Vigência #}
+                {% if estabelecimento.dataPlanoFim %}
+                    {% set hoje = "now"|date("Y-m-d") %}
+                    {% set fim  = estabelecimento.dataPlanoFim|date("Y-m-d") %}
+                    {% set diasRestantes = ((estabelecimento.dataPlanoFim.timestamp - "now"|date("U")) / 86400)|round(0, 'ceil') %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="small text-muted">Vigência</span>
+                            <span class="small fw-semibold {{ diasRestantes <= 7 ? 'text-danger' : 'text-success' }}">
+                                {% if diasRestantes > 0 %}
+                                    {{ diasRestantes }} dia(s) restante(s)
+                                {% else %}
+                                    Vencido
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="progress" style="height:6px">
+                            {% set progressoCalc = 100 - ((diasRestantes / 30) * 100) %}
+                            {% set progresso = progressoCalc > 0 ? progressoCalc : 0 %}
+                            {% set progresso = progresso < 100 ? progresso : 100 %}
+                            <div class="progress-bar {{ diasRestantes <= 7 ? 'bg-danger' : 'bg-success' }}"
+                                 style="width: {{ progresso }}%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <span class="small text-muted">{{ estabelecimento.dataPlanoInicio|date("d/m/Y") }}</span>
+                            <span class="small text-muted">{{ estabelecimento.dataPlanoFim|date("d/m/Y") }}</span>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {# Ação cancelar plano #}
+                <button class="btn btn-outline-danger btn-sm w-100"
+                        data-bs-toggle="modal" data-bs-target="#modalCancelarPlano">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar assinatura
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# Card módulos incluídos no plano #}
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-light border-0">
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Módulos incluídos no seu plano</h6>
+            </div>
+            <div class="card-body">
+                {% set modulosPlano = planoAtual.modulos|json_decode %}
+                {% if modulosPlano %}
+                    <div class="row g-2">
+                        {% for modId, modTitulo in modulosPlano %}
+                            {% set isAdicional = modId in [7, 8, 9, 10] %}
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2 p-2 rounded border
+                                    {{ isAdicional ? 'border-warning bg-warning bg-opacity-10' : 'border-success bg-success bg-opacity-10' }}">
+                                    <i class="bi {{ isAdicional ? 'bi-star-fill text-warning' : 'bi-check-circle-fill text-success' }}"></i>
+                                    <span class="small">{{ modTitulo }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted small">Nenhum módulo configurado neste plano.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════════ #}
+{# BLOCO 2 — Módulos adicionais disponíveis                           #}
+{# ═══════════════════════════════════════════════════════════════════ #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header border-0" style="background: linear-gradient(135deg, #fff7e6, #fffdf5);">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-stars text-warning fs-5"></i>
+            <div>
+                <h6 class="mb-0 fw-bold">Módulos adicionais</h6>
+                <small class="text-muted">Expanda seu sistema com funcionalidades cobradas à parte</small>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+
+            {% for modulo in modulosAdicionaisDisp %}
+                {% set assinatura  = assinaturasIdx[modulo.id] ?? null %}
+                {% set isAtivo     = assinatura and assinatura.status == 'ativo' %}
+                {% set isPendente  = assinatura and assinatura.status == 'pendente' %}
+                {% set isCancelado = assinatura and assinatura.status == 'cancelado' %}
+                {% set valorModulo = precosAdicionais[modulo.id] ?? 49.90 %}
+
+                {# Ícone por módulo #}
+                {% set icone = 'bi-puzzle' %}
+                {% if modulo.id == 7 %}{% set icone = 'bi-scissors' %}
+                {% elseif modulo.id == 8 %}{% set icone = 'bi-house-heart' %}
+                {% elseif modulo.id == 9 %}{% set icone = 'bi-hospital' %}
+                {% elseif modulo.id == 10 %}{% set icone = 'bi-receipt' %}
+                {% endif %}
+
+                <div class="col-lg-6">
+                    <div class="card border h-100 {{ isAtivo ? 'border-success' : (isPendente ? 'border-warning' : 'border-light') }}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         style="width:42px;height:42px;background:{{ isAtivo ? '#d1e7dd' : '#fff3cd' }}">
+                                        <i class="bi {{ icone }} {{ isAtivo ? 'text-success' : 'text-warning' }} fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">{{ modulo.titulo }}</h6>
+                                        <span class="small text-muted">+ R$ {{ valorModulo|number_format(2, ',', '.') }}/mês</span>
+                                    </div>
+                                </div>
+                                {% if isAtivo %}
+                                    <span class="badge bg-success">Ativo</span>
+                                {% elseif isPendente %}
+                                    <span class="badge bg-warning text-dark">Aguardando pagamento</span>
+                                {% elseif isCancelado %}
+                                    <span class="badge bg-secondary">Cancelado</span>
+                                {% endif %}
+                            </div>
+
+                            {# Descrição por módulo #}
+                            <p class="small text-muted mb-3">
+                                {% if modulo.id == 7 %}
+                                    Gerencie quadros de banho, tosa, agenda de tosadores, controle de fichas e retornos.
+                                {% elseif modulo.id == 8 %}
+                                    Controle completo de estadias, boxs disponíveis, check-in/check-out e faturamento de diárias.
+                                {% elseif modulo.id == 9 %}
+                                    Prontuário digital, vacinas, consultas, prescrições, internação e retornos veterinários.
+                                {% elseif modulo.id == 10 %}
+                                    PDV integrado, emissão de NF-e/NFC-e, controle de caixa e relatórios fiscais.
+                                    <span class="badge bg-info text-dark">Inclui 1.000 NF/mês</span>
+                                {% else %}
+                                    {{ modulo.descricao }}
+                                {% endif %}
+                            </p>
+
+                            {# Datas quando ativo #}
+                            {% if isAtivo and assinatura %}
+                                <div class="d-flex gap-3 text-muted small mb-3">
+                                    <span><i class="bi bi-calendar-check me-1"></i>Desde {{ assinatura.contratadoEm|date("d/m/Y") }}</span>
+                                    {% if assinatura.proximaCobranca %}
+                                        <span><i class="bi bi-arrow-clockwise me-1"></i>Próx. cobrança {{ assinatura.proximaCobranca|date("d/m/Y") }}</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            {# Link de pagamento pendente #}
+                            {% if isPendente and assinatura.initPoint %}
+                                <a href="{{ assinatura.initPoint }}" class="btn btn-warning btn-sm w-100 mb-2" target="_blank">
+                                    <i class="bi bi-credit-card me-1"></i>Finalizar pagamento
+                                </a>
+                            {% endif %}
+
+                            {# Ações #}
+                            <div class="d-flex gap-2">
+                                {% if not isAtivo and not isPendente %}
+                                    <form method="post" action="{{ url('assinatura_contratar_modulo', {'moduloId': modulo.id}) }}"
+                                          class="flex-grow-1"
+                                          onsubmit="return confirm('Contratar o módulo {{ modulo.titulo|e('js') }} por R$ {{ valorModulo|number_format(2, ',', '.') }}/mês?');">
+                                        <button type="submit" class="btn btn-warning btn-sm w-100">
+                                            <i class="bi bi-plus-circle me-1"></i>Contratar módulo
+                                        </button>
+                                    </form>
+                                {% elseif isAtivo %}
+                                    <form method="post" action="{{ url('assinatura_cancelar_modulo', {'id': assinatura.id}) }}"
+                                          class="flex-grow-1"
+                                          onsubmit="return confirm('Cancelar o módulo {{ modulo.titulo|e('js') }}? O acesso permanece até o fim do período pago.');">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                            <i class="bi bi-x-circle me-1"></i>Cancelar módulo
+                                        </button>
+                                    </form>
+                                {% elseif isCancelado %}
+                                    <form method="post" action="{{ url('assinatura_contratar_modulo', {'moduloId': modulo.id}) }}"
+                                          class="flex-grow-1">
+                                        <button type="submit" class="btn btn-outline-success btn-sm w-100">
+                                            <i class="bi bi-arrow-clockwise me-1"></i>Reativar módulo
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+
+        </div>
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════════ #}
+{# BLOCO 3 — Upgrade de plano                                         #}
+{# ═══════════════════════════════════════════════════════════════════ #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header border-0 bg-light">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-arrow-up-circle text-primary fs-5"></i>
+            <div>
+                <h6 class="mb-0 fw-bold">Upgrade / mudança de plano</h6>
+                <small class="text-muted">Migre para outro plano a qualquer momento. O valor anterior é cancelado e o novo começa imediatamente.</small>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for plano in todosPlanos %}
+                {% set isAtualPlano = plano.id == planoAtual.id %}
+                {% set totalAdicionaisLocal = totalAdicionais %}
+                <div class="col-lg-4 col-md-6">
+                    <div class="card h-100 {{ isAtualPlano ? 'border-primary border-2' : 'border-light' }}">
+                        {% if isAtualPlano %}
+                            <div class="card-header bg-primary text-white py-1 text-center">
+                                <small class="fw-semibold">✓ Plano atual</small>
+                            </div>
+                        {% endif %}
+                        <div class="card-body text-center">
+                            <h6 class="fw-bold">{{ plano.titulo }}</h6>
+                            <div class="my-2">
+                                <span class="fs-4 fw-bold text-primary">{{ plano.valor|formataValorEmReal }}</span>
+                                <span class="text-muted small">/mês</span>
+                            </div>
+                            {% if totalAdicionaisLocal > 0 %}
+                                <div class="text-muted small mb-2">
+                                    + R$ {{ totalAdicionaisLocal|number_format(2,',','.') }} (adicionais)
+                                    = <strong>R$ {{ (plano.valor + totalAdicionaisLocal)|number_format(2,',','.') }}/mês</strong>
+                                </div>
+                            {% endif %}
+
+                            {# Diferença de valor #}
+                            {% if not isAtualPlano %}
+                                {% set diff = plano.valor - planoAtual.valor %}
+                                {% if diff > 0 %}
+                                    <span class="badge bg-warning text-dark mb-2">+ R$ {{ diff|number_format(2,',','.') }}/mês</span>
+                                {% elseif diff < 0 %}
+                                    <span class="badge bg-success mb-2">- R$ {{ (diff * -1)|number_format(2,',','.') }}/mês</span>
+                                {% endif %}
+                            {% endif %}
+
+                            {% if isAtualPlano %}
+                                <button class="btn btn-secondary btn-sm w-100" disabled>Plano atual</button>
+                            {% else %}
+                                <form method="post" action="{{ url('assinatura_upgrade', {'planoId': plano.id}) }}"
+                                      onsubmit="return confirm('Migrar para o plano {{ plano.titulo|e('js') }}? Sua assinatura atual será cancelada e reiniciada com o novo valor.');">
+                                    <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                                        {{ plano.valor > planoAtual.valor ? '⬆ Fazer upgrade' : '⬇ Fazer downgrade' }}
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════════ #}
+{# MODAL — Cancelar plano principal                                   #}
+{# ═══════════════════════════════════════════════════════════════════ #}
+<div class="modal fade" id="modalCancelarPlano" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Cancelar assinatura</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{{ url('assinatura_cancelar_plano') }}">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>Atenção!</strong> Ao cancelar:
+                        <ul class="mb-0 mt-1 small">
+                            <li>Sua assinatura no Mercado Pago será <strong>cancelada imediatamente</strong>.</li>
+                            <li>O acesso permanece ativo até <strong>{{ estabelecimento.dataPlanoFim ? estabelecimento.dataPlanoFim|date("d/m/Y") : 'o fim do período pago' }}</strong>.</li>
+                            <li>Módulos adicionais ativos também serão desativados ao vencer.</li>
+                        </ul>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Motivo do cancelamento (opcional)</label>
+                        <textarea class="form-control" name="motivo" rows="2"
+                                  placeholder="Nos ajude a melhorar..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle me-1"></i> Confirmar cancelamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// Ativa aba correta se vier com hash na URL
+document.addEventListener('DOMContentLoaded', () => {
+    const hash = window.location.hash;
+    if (hash) {
+        const tab = document.querySelector(`[data-bs-target="${hash}"]`);
+        if (tab) tab.click();
+    }
+});
+</script>
+{% endblock %}

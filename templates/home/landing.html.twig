@@ -1,805 +1,1357 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="pt-BR">
 <head>
-    <meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>Conheça nosso produto</title>
-    <meta name="description" content="">
-    <meta name="keywords" content="">
-
-    <!-- Favicons -->
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('images/logo.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}" crossorigin="use-credentials">
-
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com" rel="preconnect">
-    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-          rel="stylesheet">
-
-    <!-- Vendor CSS Files -->
-    <link href="{{ asset('landing/assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('landing/assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
-    <link href="{{ asset('landing/assets/vendor/aos/aos.css') }}" rel="stylesheet">
-    <link href="{{ asset('landing/assets/vendor/glightbox/css/glightbox.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('landing/assets/vendor/swiper/swiper-bundle.min.css') }}" rel="stylesheet">
-
-    <!-- Main CSS File -->
-    <link href="{{ asset('landing/assets/css/main.css') }}" rel="stylesheet">
-
-    <!-- =======================================================
-    * Template Name: Invent
-    * Template URL: https://bootstrapmade.com/invent-bootstrap-business-template/
-    * Updated: May 12 2025 with Bootstrap v5.3.6
-    * Author: BootstrapMade.com
-    * License: https://bootstrapmade.com/license/
-    ======================================================== -->
-</head>
-
-<body class="index-page">
-
-<header id="header" class="header d-flex align-items-center fixed-top">
-    <div class="container position-relative d-flex align-items-center justify-content-between">
-
-        <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
-            <!-- Uncomment the line below if you also wish to use an image logo -->
-            <!-- <img src="{{ asset('landing/assets/img/logo.webp') }}" alt=""> -->
-            <h1 class="sitename">System Home Pet</h1><span>.</span>
-        </a>
-
-        <nav id="navmenu" class="navmenu">
-            <ul>
-                <li><a href="#hero" class="active">Página inicial</a></li>
-                <li><a href="#about">Sobre nós</a></li>
-                {# <li><a href="#services">Services</a></li> #}
-                {# <li><a href="#portfolio">Portfolio</a></li> #}
-                <li><a href="#pricing">Preços</a></li>
-                {# <li><a href="#team">Team</a></li> #}
-
-                {# <li><a href="#contact">Contact</a></li> #}
-            </ul>
-            <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-        </nav>
-
-        <a class="btn-getstarted" href="#about">Vamos começar</a>
-
-    </div>
-</header>
-
-<main class="main">
-
-    <!-- Hero Section -->
-    <section id="hero" class="hero section">
-
-        <div class="container" data-aos="fade-up" data-aos-delay="100">
-
-            <div class="row align-items-center mb-5">
-                <div class="col-lg-6 mb-4 mb-lg-0">
-                    <div class="badge-wrapper mb-3">
-                        <div class="d-inline-flex align-items-center rounded-pill border border-accent-light">
-                            <div class="icon-circle me-2">
-                                <i class="bi bi-bell"></i>
-                            </div>
-                            <span class="badge-text me-3">System Home Pet</span>
-                        </div>
-                    </div>
-
-                    <h1 class="hero-title mb-4">Cuidando do seu Pet com Tecnologia e Amor</h1>
-
-                    <p class="hero-description mb-4">O System Home Pet é o sistema completo para clínicas veterinárias e
-                        pet shops. Organize atendimentos, controle produtos, cadastre pets e muito mais — tudo em um só
-                        lugar.</p>
-
-                    <div class="cta-wrapper">
-                        <a href="#how-we-work" class="btn btn-primary">Descubra mais</a>
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="hero-image">
-                        <img src="{{ asset('landing/assets/img/illustration/illustration-16.webp') }}" alt="Business Growth" class="img-fluid"
-                             loading="lazy">
-                    </div>
-                </div>
-            </div>
-
-
-        </div>
-
-    </section><!-- /Hero Section -->
-
-
-    <!-- Starter Section Section -->
-    <!-- About Section -->
-    <section id="about" class="about section">
-
-        <div class="container">
-
-            <div class="row gy-4">
-
-                <div class="col-lg-6 content" data-aos="fade-up" data-aos-delay="100">
-                    <p class="who-we-are">Sobre o System Home Pet</p>
-                    <h3>Sobre a nossa criação</h3>
-                    <p class="fst-italic">
-                        Desenvolvido especialmente para clínicas veterinárias e pet shops, o System Home Pet oferece uma
-                        plataforma moderna, intuitiva e eficiente para gerenciar todos os aspectos do seu negócio. Desde
-                        o cadastro de clientes e pets até o controle de estoque, agendamentos e histórico médico — você
-                        tem controle total na palma da mão.
-                    </p>
-                    <ul>
-                        <li><i class="bi bi-check-circle"></i> <span>Interface amigável e fácil de usar</span></li>
-                        <li><i class="bi bi-check-circle"></i> <span>Cadastro completo de pets, donos e consultas</span>
-                        </li>
-                        <li><i class="bi bi-check-circle"></i> <span>Ideal para pequenas e médias clínicas</span></li>
-                    </ul>
-                    <a href="#" class="read-more"><span>Vamos Começar</span><i class="bi bi-arrow-right"></i></a>
-                </div>
-
-                <div class="col-lg-6 about-images" data-aos="fade-up" data-aos-delay="200">
-                    <div class="row gy-4">
-                        <div class="col-lg-6">
-                            <img src="{{ asset('landing/assets/img/about/about-portrait-1.webp') }}" class="img-fluid" alt="">
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="row gy-4">
-                                <div class="col-lg-12">
-                                    <img src="{{ asset('landing/assets/img/about/about-8.webp') }}" class="img-fluid" alt="">
-                                </div>
-                                <div class="col-lg-12">
-                                    <img src="{{ asset('landing/assets/img/about/about-12.webp') }}" class="img-fluid" alt="">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-    </section><!-- /About Section -->
-
-    <!-- How We Work Section -->
-    <section id="how-we-work" class="how-we-work section">
-
-        <!-- Section Title -->
-        <div class="container section-title" data-aos="fade-up">
-            <h2>Funcionalidades do System Home Pet</h2>
-            <p>O seu nivel é além do que você possa imaginar</p>
-        </div><!-- End Section Title -->
-
-        <div class="container" data-aos="fade-up" data-aos-delay="100">
-
-            <div class="steps-5">
-                <div class="process-container">
-
-                    <div class="process-item" data-aos="fade-up" data-aos-delay="200">
-                        <div class="content">
-                            <span class="step-number">01</span>
-                            <div class="card-body">
-                                <div class="step-icon">
-                                    <i class="bi bi-pencil-square"></i>
-                                </div>
-                                <div class="step-content">
-                                    <h3>Agendamento de Consultas</h3>
-                                    <p>Marque, remaneje ou cancele atendimentos com poucos cliques. Notificações
-                                        automáticas para os tutores.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div><!-- End Process Item -->
-
-                    <div class="process-item" data-aos="fade-up" data-aos-delay="300">
-                        <div class="content">
-                            <span class="step-number">02</span>
-                            <div class="card-body">
-                                <div class="step-icon">
-                                    <i class="bi bi-gear"></i>
-                                </div>
-                                <div class="step-content">
-                                    <h3>Gestão de Estoque</h3>
-                                    <p>Controle produtos, rações, medicamentos e tenha alertas de baixo estoque.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div><!-- End Process Item -->
-
-                    <div class="process-item" data-aos="fade-up" data-aos-delay="400">
-                        <div class="content">
-                            <span class="step-number">03</span>
-                            <div class="card-body">
-                                <div class="step-icon">
-                                    <i class="bi bi-search"></i>
-                                </div>
-                                <div class="step-content">
-                                    <h3>Prontuário Digital</h3>
-                                    <p>Registre histórico médico completo de cada pet com anexo de exames, fotos e
-                                        laudos.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div><!-- End Process Item -->
-
-                    <div class="process-item" data-aos="fade-up" data-aos-delay="500">
-                        <div class="content">
-                            <span class="step-number">04</span>
-                            <div class="card-body">
-                                <div class="step-icon">
-                                    <i class="bi bi-rocket-takeoff"></i>
-                                </div>
-                                <div class="step-content">
-                                    <h3>Cadastro de Clientes e Pets</h3>
-                                    <p>Ficha completa com dados dos tutores e pets, incluindo vacinas, alergias e muito
-                                        mais.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div><!-- End Process Item -->
-
-
-                    <div class="process-item" data-aos="fade-up" data-aos-delay="600">
-                        <div class="content">
-                            <span class="step-number">05</span>
-                            <div class="card-body">
-                                <div class="step-icon">
-                                    <i class="bi bi-bar-chart-line"></i>
-                                </div>
-                                <div class="step-content">
-                                    <h3>Relatórios e Indicadores</h3>
-                                    <p>Tenha insights sobre atendimentos, faturamento, produtos mais vendidos e
-                                        desempenho da clínica.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div><!-- End Process Item -->
-
-                </div>
-            </div>
-
-        </div>
-
-    </section><!-- /How We Work Section -->
-
-
-    <!-- Call To Action 2 Section -->
-    <section id="call-to-action-2" class="call-to-action-2 section light-background">
-
-        <div class="container" data-aos="fade-up" data-aos-delay="100">
-
-            <div class="row g-5 align-items-center">
-                <div class="col-lg-6" data-aos="fade-right" data-aos-delay="200">
-                    <div class="cta-image-wrapper">
-                        <img src="{{ asset('landing/assets/img/cta/cta-4.webp') }}" alt="Call to Action" class="img-fluid rounded-4">
-                        <div class="cta-pattern"></div>
-                    </div>
-                </div>
-
-                <div class="col-lg-6" data-aos="fade-left" data-aos-delay="300">
-                    <div class="cta-content">
-                        <h2>Comece a usar o System Home Pet hoje mesmo!</h2>
-                        <p class="lead">Transforme a gestão da sua clínica veterinária com uma solução pensada para
-                            facilitar sua rotina. Simples, eficiente e adaptável ao seu negócio.</p>
-
-
-                        <div class="cta-action mt-5">
-                            <a href="#pricing" class="btn btn-primary btn-lg me-3">Vamos começar</a>
-                            <a href="#about" class="btn btn-outline-primary btn-lg">Saber mais</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-    </section><!-- /Call To Action 2 Section -->
-
-
-    <!-- Pricing Section -->
-    <section id="pricing" class="pricing section light-background">
-
-        <!-- Section Title -->
-        <div class="container section-title" data-aos="fade-up">
-            <h2>Planos e preços</h2>
-            <p>Encontre o plano ideal para o seu estabelecimento. Todos os planos incluem os módulos essenciais para gerenciar seu petshop do dia a dia.</p>
-        </div><!-- End Section Title -->
-
-        <div class="container" data-aos="fade-up" data-aos-delay="100">
-
-            {# ── Cards de planos ─────────────────────────────────────── #}
-            <div class="row g-4 justify-content-center">
-                {% for plano in planos %}
-                    {% set isPopular = plano.trial == 1 or plano.trial == '1' %}
-                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
-                        <div class="pricing-card {{ isPopular ? 'popular' : '' }}">
-
-                            {% if isPopular %}
-                                <div class="popular-badge">⭐ Mais escolhido</div>
-                            {% endif %}
-
-                            <h3>{{ plano.titulo }}</h3>
-
-                            <div class="price">
-                                <span class="amount">{{ plano.valor|formataValorEmReal }}</span>
-                                <span class="period">/ mês</span>
-                            </div>
-
-                            <h4>O que está incluído:</h4>
-                            {{ plano.descricao|listaPlano|raw }}
-
-                            <a href="{{ url('landing_cadastro', {'planoId': plano.id}) }}"
-                               class="btn {{ isPopular ? 'btn-light' : 'btn-primary' }} mt-3">
-                                Assinar plano
-                                <i class="bi bi-arrow-right ms-1"></i>
-                            </a>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="col-12 text-center py-5">
-                        <p class="text-muted">Planos em breve disponíveis.</p>
-                    </div>
-                {% endfor %}
-            </div>
-
-            {# ── Nota sobre módulos adicionais ────────────────────────── #}
-            <div class="row mt-5" data-aos="fade-up" data-aos-delay="200">
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body p-4">
-                            <div class="row align-items-center">
-                                <div class="col-md-8">
-                                    <h5 class="fw-bold mb-1">
-                                        <i class="bi bi-star-fill text-warning me-2"></i>
-                                        Módulos complementares disponíveis
-                                    </h5>
-                                    <p class="text-muted mb-0">
-                                        Potencialize seu petshop com módulos adicionais cobrados à parte:
-                                        <strong>Banho &amp; Tosa</strong>,
-                                        <strong>Hospedagem de Cães</strong>,
-                                        <strong>Clínica Veterinária</strong> e
-                                        <strong>PDV (Ponto de Venda)</strong> com emissão de notas fiscais.
-                                        Ideal para quem precisa de controle fiscal completo e integrado.
-                                    </p>
-                                </div>
-                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                                    <a href="#contact" class="btn btn-outline-primary">
-                                        <i class="bi bi-chat-dots me-1"></i> Falar com consultor
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-    </section><!-- /Pricing Section -->
-
-
-    {#   <!-- Testimonials Section -->
-    <section id="testimonials" class="testimonials section">
-
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>Testimonials</h2>
-        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
-      </div><!-- End Section Title -->
-
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
-
-        <div class="testimonials-slider swiper init-swiper">
-          <script type="application/json" class="swiper-config">
-            {
-              "loop": true,
-              "speed": 800,
-              "autoplay": {
-                "delay": 5000
-              },
-              "slidesPerView": 1,
-              "spaceBetween": 30,
-              "pagination": {
-                "el": ".swiper-pagination",
-                "type": "bullets",
-                "clickable": true
-              },
-              "breakpoints": {
-                "768": {
-                  "slidesPerView": 2
-                },
-                "1200": {
-                  "slidesPerView": 3
-                }
-              }
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>System Home Pet — Sistema de Gestão para Pet Shops e Clínicas Veterinárias</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,300;1,400&display=swap"
+          rel="stylesheet"/>
+    <style>
+        /* ============================================================
+        DESIGN TOKENS — LIGHT MODE (Cores alteradas para #5d57f4)
+        ============================================================ */
+        :root {
+            --teal: #5d57f4;
+            --teal-dark: #4a45c7;
+            --teal-light: #efeeff;
+            --teal-glow: rgba(93, 87, 244, 0.14);
+            --accent: #F59E0B;
+            --accent-light: #FEF3C7;
+            --bg-base: #F8FAFC;
+            --bg-alt: #FFFFFF;
+            --bg-subtle: #F1F5F9;
+            --surface-card: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #94A3B8;
+            --border: #E2E8F0;
+            --radius: 14px;
+            --font: 'Roboto', sans-serif;
+        }
+
+        /* ============================================================
+        BASE
+        ============================================================ */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-base);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font);
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* ============================================================
+        UTILITIES
+        ============================================================ */
+        .text-teal {
+            color: var(--teal) !important;
+        }
+
+        .text-accent {
+            color: var(--accent) !important;
+        }
+
+        .btn-primary-custom {
+            background: var(--teal);
+            color: #fff;
+            border: none;
+            padding: .7rem 1.7rem;
+            border-radius: 50px;
+            font-family: var(--font);
+            font-weight: 700;
+            font-size: .95rem;
+            letter-spacing: .01em;
+            transition: background .25s, transform .2s, box-shadow .25s;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+        }
+
+        .btn-primary-custom:hover {
+            background: var(--teal-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(93, 87, 244, 0.28);
+            color: #fff;
+        }
+
+        .btn-outline-custom {
+            background: transparent;
+            color: var(--teal);
+            border: 2px solid var(--teal);
+            padding: .65rem 1.65rem;
+            border-radius: 50px;
+            font-family: var(--font);
+            font-weight: 700;
+            font-size: .95rem;
+            transition: background .25s, color .25s, transform .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+        }
+
+        .btn-outline-custom:hover {
+            background: var(--teal);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .section-tag {
+            display: inline-block;
+            background: var(--teal-light);
+            color: var(--teal);
+            border: 1px solid rgba(93, 87, 244, 0.25);
+            font-family: var(--font);
+            font-weight: 700;
+            font-size: .75rem;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            padding: .3rem 1rem;
+            border-radius: 50px;
+            margin-bottom: 1.1rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.9rem, 4vw, 2.75rem);
+            font-weight: 900;
+            line-height: 1.18;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .divider-line {
+            width: 54px;
+            height: 4px;
+            background: var(--teal);
+            border-radius: 4px;
+            margin: 1.2rem 0 1.8rem;
+        }
+
+        /* ============================================================
+        NAVBAR
+        ============================================================ */
+        .navbar-custom {
+            background: rgba(255, 255, 255, .93);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border);
+            padding: .85rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: box-shadow .3s;
+        }
+
+        .navbar-custom.scrolled {
+            box-shadow: 0 4px 24px rgba(0, 0, 0, .07);
+        }
+
+        .navbar-brand-text {
+            font-family: var(--font);
+            font-weight: 900;
+            font-size: 1.35rem;
+            color: var(--text-primary) !important;
+            letter-spacing: -.02em;
+        }
+
+        .navbar-brand-text span {
+            color: var(--teal);
+        }
+
+        .nav-link-custom {
+            color: var(--text-secondary) !important;
+            font-family: var(--font);
+            font-weight: 500;
+            font-size: .93rem;
+            padding: .4rem .85rem !important;
+            border-radius: 8px;
+            transition: color .2s, background .2s;
+        }
+
+        .nav-link-custom:hover {
+            color: var(--text-primary) !important;
+            background: var(--bg-subtle);
+        }
+
+        .nav-link-custom.active-nav {
+            color: var(--teal) !important;
+        }
+
+        /* ============================================================
+        HERO
+        ============================================================ */
+        .hero-section {
+            position: relative;
+            padding: 100px 0 80px;
+            background: var(--bg-alt);
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(93, 87, 244, 0.09) 0%, transparent 68%);
+            border-radius: 50%;
+            top: -220px;
+            right: -180px;
+            pointer-events: none;
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.07) 0%, transparent 68%);
+            border-radius: 50%;
+            bottom: -100px;
+            left: -80px;
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            background: var(--accent-light);
+            border: 1px solid rgba(245, 158, 11, .35);
+            color: #92400E;
+            font-size: .82rem;
+            font-weight: 600;
+            padding: .35rem 1rem;
+            border-radius: 50px;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-headline {
+            font-size: clamp(2.2rem, 5.5vw, 3.7rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -.03em;
+            margin-bottom: 1.3rem;
+            color: var(--text-primary);
+        }
+
+        .hero-headline .line-teal {
+            color: var(--teal);
+        }
+
+        .hero-sub {
+            font-size: 1.08rem;
+            color: var(--text-secondary);
+            max-width: 520px;
+            margin-bottom: 2.2rem;
+            font-weight: 400;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2.5rem;
+            margin-top: 2.6rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-stat-num {
+            font-family: var(--font);
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--text-primary);
+        }
+
+        .hero-stat-label {
+            font-size: .8rem;
+            color: var(--text-muted);
+        }
+
+        /* Mockup */
+        @keyframes floatY {
+            0%, 100% {
+                transform: translateY(0);
             }
-          </script>
-          <div class="swiper-wrapper">
-            <div class="swiper-slide">
-              <div class="testimonial-card">
-                <div class="testimonial-content">
-                  <p>
-                    <i class="bi bi-quote quote-icon"></i>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                  </p>
-                </div>
-                <div class="testimonial-profile">
-                  <div class="rating">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </div>
-                  <div class="profile-info">
-                    <img src="{{ asset('landing/assets/img/person/person-m-8.webp') }}" alt="Profile Image">
-                    <div>
-                      <h3>Robert Johnson</h3>
-                      <h4>Marketing Director</h4>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div><!-- End testimonial item -->
+            50% {
+                transform: translateY(-12px);
+            }
+        }
 
-            <div class="swiper-slide">
-              <div class="testimonial-card">
-                <div class="testimonial-content">
-                  <p>
-                    <i class="bi bi-quote quote-icon"></i>
-                    Proin iaculis purus consequat sem cure digni ssim donec porttitora entum suscipit rhoncus. Accusantium quam, ultricies eget id, aliquam eget nibh et maecenas aliquam.
-                  </p>
-                </div>
-                <div class="testimonial-profile">
-                  <div class="rating">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </div>
-                  <div class="profile-info">
-                    <img src="{{ asset('landing/assets/img/person/person-f-3.webp') }}" alt="Profile Image">
-                    <div>
-                      <h3>Lisa Williams</h3>
-                      <h4>Product Manager</h4>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div><!-- End testimonial item -->
+        .hero-mockup-wrap {
+            z-index: 1;
+            animation: floatY 6s ease-in-out infinite;
+        }
 
-            <div class="swiper-slide">
-              <div class="testimonial-card">
-                <div class="testimonial-content">
-                  <p>
-                    <i class="bi bi-quote quote-icon"></i>
-                    Enim nisi quem export duis labore cillum quae magna enim sint quorum nulla quem veniam duis minim tempor labore quem eram duis noster aute amet eram.
-                  </p>
-                </div>
-                <div class="testimonial-profile">
-                  <div class="rating">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </div>
-                  <div class="profile-info">
-                    <img src="{{ asset('landing/assets/img/person/person-f-10.webp') }}" alt="Profile Image">
-                    <div>
-                      <h3>Emma Parker</h3>
-                      <h4>UX Designer</h4>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div><!-- End testimonial item -->
+        .hero-mockup {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 32px 80px rgba(15, 23, 42, .12);
+            overflow: hidden;
+        }
 
-            <div class="swiper-slide">
-              <div class="testimonial-card">
-                <div class="testimonial-content">
-                  <p>
-                    <i class="bi bi-quote quote-icon"></i>
-                    Fugiat enim eram quae cillum dolore dolor amet nulla culpa multos export minim fugiat minim velit minim dolor enim duis veniam ipsum anim magna sunt elit.
-                  </p>
-                </div>
-                <div class="testimonial-profile">
-                  <div class="rating">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </div>
-                  <div class="profile-info">
-                    <img src="{{ asset('landing/assets/img/person/person-m-5.webp') }}" alt="Profile Image">
-                    <div>
-                      <h3>David Miller</h3>
-                      <h4>Senior Developer</h4>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div><!-- End testimonial item -->
+        .mockup-bar {
+            background: var(--bg-subtle);
+            padding: .7rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            border-bottom: 1px solid var(--border);
+        }
 
-            <div class="swiper-slide">
-              <div class="testimonial-card">
-                <div class="testimonial-content">
-                  <p>
-                    <i class="bi bi-quote quote-icon"></i>
-                    Quis quorum aliqua sint quem legam fore sunt eram irure aliqua veniam tempor noster veniam enim culpa labore duis sunt culpa nulla illum cillum fugiat.
-                  </p>
-                </div>
-                <div class="testimonial-profile">
-                  <div class="rating">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </div>
-                  <div class="profile-info">
-                    <img src="{{ asset('landing/assets/img/person/person-m-2.webp') }}" alt="Profile Image">
-                    <div>
-                      <h3>Michael Davis</h3>
-                      <h4>CEO &amp; Founder</h4>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div><!-- End testimonial item -->
+        .mockup-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+        }
 
-            <div class="swiper-slide">
-              <div class="testimonial-card">
-                <div class="testimonial-content">
-                  <p>
-                    <i class="bi bi-quote quote-icon"></i>
-                    Eius ipsam praesentium dolor quaerat inventore rerum odio. Quos laudantium adipisci eius. Accusamus qui iste cupiditate sed temporibus est aspernatur.
-                  </p>
+        .mockup-dot-red {
+            background: #ff5f57;
+        }
+
+        .mockup-dot-yellow {
+            background: #ffbd2e;
+        }
+
+        .mockup-dot-green {
+            background: #28c840;
+        }
+
+        .mockup-body {
+            padding: 1.5rem;
+            min-height: 290px;
+        }
+
+        .dash-sidebar {
+            background: var(--teal-light);
+            border-radius: 10px;
+            padding: 1rem .8rem;
+            border: 1px solid rgba(93, 87, 244, 0.18);
+        }
+
+        .dash-nav-item {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            padding: .5rem .7rem;
+            border-radius: 8px;
+            font-size: .8rem;
+            color: var(--text-secondary);
+            margin-bottom: .3rem;
+        }
+
+        .dash-nav-item.active {
+            background: var(--teal);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .dash-metric-card {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: .9rem 1rem;
+            text-align: center;
+        }
+
+        .dash-metric-num {
+            font-family: var(--font);
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: var(--teal);
+        }
+
+        .dash-metric-label {
+            font-size: .72rem;
+            color: var(--text-muted);
+        }
+
+        .dash-bar {
+            height: 6px;
+            border-radius: 4px;
+            margin-top: .4rem;
+            background: var(--border);
+        }
+
+        .dash-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: var(--teal);
+        }
+
+        /* ============================================================
+        FEATURES
+        ============================================================ */
+        .features-section {
+            padding: 100px 0;
+            background: var(--bg-subtle);
+        }
+
+        .feature-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.8rem 1.5rem;
+            height: 100%;
+            transition: transform .25s, border-color .25s, box-shadow .25s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--teal);
+            box-shadow: 0 16px 48px rgba(93, 87, 244, 0.12);
+        }
+
+        .feature-icon-wrap {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            background: var(--teal-light);
+            border: 1px solid rgba(93, 87, 244, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: var(--teal);
+            margin-bottom: 1.1rem;
+        }
+
+        .feature-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: .4rem;
+        }
+
+        .feature-desc {
+            font-size: .88rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+        }
+
+        /* ============================================================
+        HOW IT WORKS
+        ============================================================ */
+        .how-section {
+            padding: 100px 0;
+            background: var(--bg-alt);
+        }
+
+        .timeline-wrap {
+            position: relative;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 36px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--teal), transparent);
+        }
+
+        @media (min-width: 768px) {
+            .timeline-line {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        .timeline-step {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2.6rem;
+            position: relative;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid var(--teal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font);
+            font-weight: 900;
+            font-size: 1.4rem;
+            color: var(--teal);
+            box-shadow: 0 0 0 6px var(--teal-light);
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-content {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.4rem 1.6rem;
+            flex: 1;
+        }
+
+        .step-content h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: .4rem;
+            color: var(--text-primary);
+        }
+
+        .step-content p {
+            font-size: .9rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* ============================================================
+        PLANS
+        ============================================================ */
+        .plans-section {
+            padding: 100px 0;
+            background: var(--bg-subtle);
+        }
+
+        .plan-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2.2rem 1.8rem;
+            height: 100%;
+            transition: transform .25s, box-shadow .25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.1);
+        }
+
+        .plan-card.featured {
+            border: 2px solid var(--teal);
+            box-shadow: 0 12px 40px rgba(93, 87, 244, 0.15);
+        }
+
+        .plan-badge {
+            position: absolute;
+            top: 1.2rem;
+            right: 1.2rem;
+            background: var(--teal);
+            color: #fff;
+            font-family: var(--font);
+            font-weight: 700;
+            font-size: .72rem;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            padding: .25rem .8rem;
+            border-radius: 50px;
+        }
+
+        .plan-name {
+            font-weight: 800;
+            font-size: .95rem;
+            text-transform: uppercase;
+            letter-spacing: .09em;
+            color: var(--teal);
+            margin-bottom: .6rem;
+        }
+
+        .plan-price {
+            font-family: var(--font);
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: .3rem;
+        }
+
+        .plan-price sup {
+            font-size: 1.2rem;
+            vertical-align: super;
+            margin-right: .1rem;
+        }
+
+        .plan-period {
+            font-size: .82rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 1.3rem 0;
+        }
+
+        .plan-feature {
+            display: flex;
+            align-items: flex-start;
+            gap: .6rem;
+            font-size: .88rem;
+            color: var(--text-secondary);
+            margin-bottom: .65rem;
+        }
+
+        .plan-feature .bi {
+            color: var(--teal);
+            font-size: 1rem;
+            flex-shrink: 0;
+            margin-top: .1rem;
+        }
+
+        .plan-feature.disabled {
+            color: var(--text-muted);
+        }
+
+        .plan-feature.disabled .bi {
+            color: var(--text-muted);
+        }
+
+        /* ============================================================
+        ABOUT
+        ============================================================ */
+        .about-section {
+            padding: 100px 0;
+            background: var(--bg-alt);
+        }
+
+        .about-card {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.6rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            height: 100%;
+            transition: box-shadow .2s;
+        }
+
+        .about-card:hover {
+            box-shadow: 0 8px 28px rgba(93, 87, 244, 0.1);
+        }
+
+        .about-icon {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            background: var(--teal-light);
+            border: 1px solid rgba(93, 87, 244, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: var(--teal);
+        }
+
+        .about-card h5 {
+            font-size: .98rem;
+            font-weight: 700;
+            margin-bottom: .3rem;
+            color: var(--text-primary);
+        }
+
+        .about-card p {
+            font-size: .86rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* ============================================================
+        CONTACT
+        ============================================================ */
+        .contact-section {
+            padding: 100px 0;
+            background: var(--bg-subtle);
+        }
+
+        .contact-form {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem 2.2rem;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06);
+        }
+
+        .form-control-custom {
+            background: var(--bg-subtle) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text-primary) !important;
+            border-radius: 10px !important;
+            padding: .75rem 1rem !important;
+            font-family: var(--font) !important;
+            font-size: .93rem !important;
+            transition: border-color .2s, box-shadow .2s !important;
+        }
+
+        .form-control-custom::placeholder {
+            color: var(--text-muted) !important;
+        }
+
+        .form-control-custom:focus {
+            border-color: var(--teal) !important;
+            box-shadow: 0 0 0 3px rgba(93, 87, 244, 0.12) !important;
+            outline: none !important;
+            background: #fff !important;
+        }
+
+        .form-label-custom {
+            font-family: var(--font);
+            font-weight: 600;
+            font-size: .84rem;
+            color: var(--text-secondary);
+            letter-spacing: .02em;
+            margin-bottom: .4rem;
+            display: block;
+        }
+
+        /* ============================================================
+        FOOTER
+        ============================================================ */
+        .footer {
+            background: var(--text-primary);
+            padding: 64px 0 28px;
+        }
+
+        .footer-brand {
+            font-family: var(--font);
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .footer-brand span {
+            color: var(--teal);
+        }
+
+        .footer-desc {
+            font-size: .88rem;
+            color: rgba(255, 255, 255, 0.5);
+            max-width: 260px;
+            line-height: 1.75;
+            margin-top: .8rem;
+        }
+
+        .footer-heading {
+            font-family: var(--font);
+            font-weight: 700;
+            font-size: .75rem;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 1.2rem;
+        }
+
+        .footer-link {
+            display: block;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: .88rem;
+            margin-bottom: .55rem;
+            transition: color .2s;
+        }
+
+        .footer-link:hover {
+            color: var(--teal);
+        }
+
+        .social-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+            transition: background .2s, color .2s;
+            margin-right: .5rem;
+        }
+
+        .social-icon:hover {
+            background: var(--teal);
+            color: #fff;
+            border-color: var(--teal);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            margin-top: 3rem;
+            padding-top: 1.4rem;
+            font-size: .82rem;
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        /* ============================================================
+        SCROLL REVEAL
+        ============================================================ */
+        [data-fade] {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity .65s ease, transform .65s ease;
+        }
+
+        [data-fade].visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* ============================================================
+        RESPONSIVE
+        ============================================================ */
+        @media (max-width: 767px) {
+            .hero-section {
+                padding: 70px 0 50px;
+            }
+
+            .hero-stats {
+                gap: 1.5rem;
+            }
+
+            .hero-mockup-wrap {
+                margin-top: 3rem;
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar-custom navbar navbar-expand-lg" id="navbar">
+    <div class="container">
+        <a class="navbar-brand navbar-brand-text" href="#">
+            <i class="bi bi-heart-pulse-fill text-teal me-1"></i>System Home <span>Pet</span>
+        </a>
+        <button class="navbar-toggler border-0" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navMain"
+                style="color:var(--text-secondary);">
+            <i class="bi bi-list fs-4"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav mx-auto gap-1">
+                <li class="nav-item"><a class="nav-link-custom nav-link" href="#inicio">Início</a></li>
+                <li class="nav-item"><a class="nav-link-custom nav-link" href="#recursos">Recursos</a></li>
+                <li class="nav-item"><a class="nav-link-custom nav-link" href="#planos">Planos</a></li>
+                <li class="nav-item"><a class="nav-link-custom nav-link" href="#quem-somos">Quem Somos</a></li>
+                <li class="nav-item"><a class="nav-link-custom nav-link" href="#contato">Contato</a></li>
+            </ul>
+            <a href="/cadastro-estabelecimento" class="btn btn-primary-custom ms-lg-3 mt-2 mt-lg-0">
+                Começar Agora <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<section class="hero-section" id="inicio">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="hero-badge">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                    Gestão completa em uma plataforma
                 </div>
-                <div class="testimonial-profile">
-                  <div class="rating">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </div>
-                  <div class="profile-info">
-                    <img src="{{ asset('landing/assets/img/person/person-f-7.webp') }}" alt="Profile Image">
+                <h1 class="hero-headline">
+                    O sistema completo para<br/>
+                    <span class="line-teal">Pet Shops</span> &amp;<br/>
+                    Clínicas Veterinárias
+                </h1>
+                <p class="hero-sub">
+                    Centralize agendamentos, prontuários, financeiro, estoque e muito mais.
+                    Uma solução moderna pensada para quem trabalha com o cuidado dos pets.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="/cadastro-estabelecimento" class="btn btn-primary-custom">
+                        Começar Agora <i class="bi bi-arrow-right"></i>
+                    </a>
+                    <a href="#planos" class="btn btn-outline-custom">Ver Planos</a>
+                </div>
+                <div class="hero-stats">
                     <div>
-                      <h3>Sarah Thompson</h3>
-                      <h4>Art Director</h4>
+                        <div class="hero-stat-num">+2.400</div>
+                        <div class="hero-stat-label">Estabelecimentos ativos</div>
                     </div>
-                  </div>
+                    <div>
+                        <div class="hero-stat-num">+18k</div>
+                        <div class="hero-stat-label">Pets cadastrados</div>
+                    </div>
+                    <div>
+                        <div class="hero-stat-num">99.9%</div>
+                        <div class="hero-stat-label">Uptime garantido</div>
+                    </div>
                 </div>
-              </div>
-            </div><!-- End testimonial item -->
-          </div>
-          <div class="swiper-pagination"></div>
+            </div>
+            <div class="col-lg-6 mt-5 mt-lg-0">
+                <div class="hero-mockup-wrap">
+                    <div class="hero-mockup">
+                        <div class="mockup-bar">
+                            <div class="mockup-dot mockup-dot-red"></div>
+                            <div class="mockup-dot mockup-dot-yellow"></div>
+                            <div class="mockup-dot mockup-dot-green"></div>
+                            <div class="flex-grow-1 mx-3"
+                                 style="background:var(--border);height:18px;border-radius:6px;"></div>
+                        </div>
+                        <div class="mockup-body">
+                            <div class="row g-3">
+                                <div class="col-3">
+                                    <div class="dash-sidebar h-100">
+                                        <div class="dash-nav-item active"><i class="bi bi-grid"></i> Painel</div>
+                                        <div class="dash-nav-item"><i class="bi bi-calendar3"></i> Agenda</div>
+                                        <div class="dash-nav-item"><i class="bi bi-people"></i> Clientes</div>
+                                        <div class="dash-nav-item"><i class="bi bi-heart"></i> Pets</div>
+                                        <div class="dash-nav-item"><i class="bi bi-box"></i> Estoque</div>
+                                        <div class="dash-nav-item"><i class="bi bi-graph-up"></i> Relatórios</div>
+                                    </div>
+                                </div>
+                                <div class="col-9">
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-4">
+                                            <div class="dash-metric-card">
+                                                <div class="dash-metric-num">87</div>
+                                                <div class="dash-metric-label">Consultas hoje</div>
+                                                <div class="dash-bar">
+                                                    <div class="dash-bar-fill" style="width:87%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="dash-metric-card">
+                                                <div class="dash-metric-num">R$4,2k</div>
+                                                <div class="dash-metric-label">Faturamento</div>
+                                                <div class="dash-bar">
+                                                    <div class="dash-bar-fill"
+                                                         style="width:62%;background:var(--accent)"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="dash-metric-card">
+                                                <div class="dash-metric-num">34</div>
+                                                <div class="dash-metric-label">Novos clientes</div>
+                                                <div class="dash-bar">
+                                                    <div class="dash-bar-fill"
+                                                         style="width:45%;background:#7c6fcd"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:10px;padding:1rem;">
+                                        <div style="font-size:.72rem;color:var(--text-muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.8rem;">
+                                            ATENDIMENTOS / SEMANA
+                                        </div>
+                                        <div style="display:flex;align-items:flex-end;gap:5px;height:60px;">
+                                            <div style="flex:1;background:var(--teal-light);border-radius:4px 4px 0 0;height:40%"></div>
+                                            <div style="flex:1;background:var(--teal-light);border-radius:4px 4px 0 0;height:65%"></div>
+                                            <div style="flex:1;background:var(--teal);border-radius:4px 4px 0 0;height:55%"></div>
+                                            <div style="flex:1;background:var(--teal-light);border-radius:4px 4px 0 0;height:80%"></div>
+                                            <div style="flex:1;background:var(--teal-light);border-radius:4px 4px 0 0;height:50%"></div>
+                                            <div style="flex:1;background:var(--teal);border-radius:4px 4px 0 0;height:90%"></div>
+                                            <div style="flex:1;background:var(--teal-light);border-radius:4px 4px 0 0;height:70%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="features-section" id="recursos">
+    <div class="container">
+        <div class="text-center mb-5" data-fade>
+            <span class="section-tag">Recursos</span>
+            <h2 class="section-title">Tudo que seu negócio precisa,<br/>em um só lugar</h2>
+            <p style="color:var(--text-secondary);max-width:560px;margin:0 auto;">
+                Do atendimento ao controle financeiro, o System HomePro cobre cada etapa da operação do seu
+                estabelecimento.
+            </p>
+        </div>
+        <div class="row g-4">
+            <div class="col-sm-6 col-lg-4" data-fade>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap"><i class="bi bi-people-fill"></i></div>
+                    <div class="feature-title">Gestão de Clientes e Pets</div>
+                    <div class="feature-desc">Cadastro completo de tutores e seus animais com histórico de atendimentos
+                        e informações detalhadas.
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-4" data-fade>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap"><i class="bi bi-clipboard2-pulse-fill"></i></div>
+                    <div class="feature-title">Prontuário Veterinário</div>
+                    <div class="feature-desc">Registros clínicos completos, anotações, diagnósticos e prescrições
+                        organizados por pet e data.
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-4" data-fade>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap"><i class="bi bi-shield-plus-fill"></i></div>
+                    <div class="feature-title">Controle de Vacinas</div>
+                    <div class="feature-desc">Calendário vacinal automatizado com lembretes para tutores e visão
+                        completa do histórico imunológico.
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-4" data-fade>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap"><i class="bi bi-currency-dollar"></i></div>
+                    <div class="feature-title">Controle Financeiro</div>
+                    <div class="feature-desc">Fluxo de caixa, contas a pagar/receber, DRE simplificado e conciliação
+                        financeira em tempo real.
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-4" data-fade>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap"><i class="bi bi-calendar3-week-fill"></i></div>
+                    <div class="feature-title">Agenda de Consultas</div>
+                    <div class="feature-desc">Agendamento online integrado, gestão de horários por veterinário e
+                        confirmação automática por e-mail.
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-4" data-fade>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap"><i class="bi bi-scissors"></i></div>
+                    <div class="feature-title">Banho &amp; Tosa</div>
+                    <div class="feature-desc">Controle completo de serviços de estética pet, fila de espera e
+                        acompanhamento em tempo real pelo tutor.
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-4" data-fade>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap"><i class="bi bi-box-seam-fill"></i></div>
+                    <div class="feature-title">Controle de Estoque</div>
+                    <div class="feature-desc">Entradas, saídas, alertas de estoque mínimo e relatório de giro de
+                        produtos com curva ABC.
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-4" data-fade>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap"><i class="bi bi-graph-up-arrow"></i></div>
+                    <div class="feature-title">Relatórios Gerenciais</div>
+                    <div class="feature-desc">Dashboards personalizáveis, exportação em PDF/Excel e insights para tomada
+                        de decisão estratégica.
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-4" data-fade>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap"><i class="bi bi-person-badge-fill"></i></div>
+                    <div class="feature-title">Usuários por Nível de Acesso</div>
+                    <div class="feature-desc">Admin, veterinário, atendente, caixa e outros perfis com permissões
+                        granulares para máxima segurança.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="how-section" id="como-funciona">
+    <div class="container">
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-6 text-center" data-fade>
+                <span class="section-tag">Como Funciona</span>
+                <h2 class="section-title">Pronto para usar em<br/>menos de 5 minutos</h2>
+                <p style="color:var(--text-secondary);">Nosso processo de onboarding foi projetado para ser simples,
+                    rápido e seguro.</p>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="timeline-wrap ps-2">
+                    <div class="timeline-line"></div>
+                    <div class="timeline-step" data-fade>
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Cadastro do Estabelecimento</h4>
+                            <p>O responsável acessa a página de cadastro e informa os dados do pet shop ou clínica. O
+                                processo leva menos de 2 minutos.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-step" data-fade>
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Confirmação por E-mail</h4>
+                            <p>Um e-mail automático é enviado ao endereço cadastrado com um link de ativação exclusivo e
+                                com validade de 24 horas.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-step" data-fade>
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Criação do Usuário Administrador</h4>
+                            <p>Ao clicar no link, o responsável cria o usuário ADMIN do estabelecimento — com acesso
+                                total ao sistema e configurações.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-step" data-fade>
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Cadastro da Equipe</h4>
+                            <p>O administrador cadastra todos os colaboradores: <strong>operador de caixa, banho &amp;
+                                    tosa, veterinários, atendentes</strong> e outros com permissões específicas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="plans-section" id="planos">
+    <div class="container">
+        <div class="text-center mb-5" data-fade>
+            <span class="section-tag">Planos</span>
+            <h2 class="section-title">Escolha o plano ideal<br/>para o seu negócio</h2>
+            <p style="color:var(--text-secondary);max-width:500px;margin:0 auto;">
+                Sem taxa de setup. Cancele quando quiser. Migre de plano a qualquer momento.
+            </p>
         </div>
 
-      </div>
+        <div class="row g-4">
+            {% for plano in planos %}
+                {% set isPopular = plano.trial == 1 or plano.trial == '1' %}
 
-    </section><!-- /Testimonials Section --> #}
-
-    {#     <!-- Contact Section -->
-    <section id="contact" class="contact section">
-
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>Contact</h2>
-        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
-      </div><!-- End Section Title -->
-
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
-
-        <div class="row gy-4 mb-5">
-          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
-            <div class="info-card">
-              <div class="icon-box">
-                <i class="bi bi-geo-alt"></i>
-              </div>
-              <h3>Our Address</h3>
-              <p>2847 Rainbow Road, Springfield, IL 62701, USA</p>
-            </div>
-          </div>
-
-          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
-            <div class="info-card">
-              <div class="icon-box">
-                <i class="bi bi-telephone"></i>
-              </div>
-              <h3>Contact Number</h3>
-              <p>Mobile: +1 (555) 123-4567<br>
-                Email: info@example.com</p>
-            </div>
-          </div>
-
-          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
-            <div class="info-card">
-              <div class="icon-box">
-                <i class="bi bi-clock"></i>
-              </div>
-              <h3>Opening Hour</h3>
-              <p>Monday - Saturday: 9:00 - 18:00<br>
-                Sunday: Closed</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-lg-12">
-            <div class="form-wrapper" data-aos="fade-up" data-aos-delay="400">
-              <form action="forms/contact.php" method="post" role="form" class="php-email-form">
-                <div class="row">
-                  <div class="col-md-6 form-group">
-                    <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-person"></i></span>
-                      <input type="text" name="name" class="form-control" placeholder="Your name*" required="">
+                <div class="col-lg-4 visible" data-fade="">
+                    <div class="plan-card {% if isPopular %}featured{% endif %}">
+                        {% if isPopular %}
+                            <div class="plan-badge">Mais Popular</div>
+                        {% endif %}
+                        <div class="plan-name">{{ plano.titulo }}</div>
+                        <div class="plan-price">{{ plano.valor|formataValorEmRealLanding|raw }}</div>
+                        <div class="plan-period">por mês</div>
+                        <div class="plan-divider"></div>
+                        {{ plano.descricao|listaPlano|raw }}
+                        <a href="{{ url('landing_cadastro', {'planoId': plano.id}) }}"
+                           class="btn btn-outline-custom w-100 mt-4">Selecionar Plano</a>
                     </div>
-                  </div>
-                  <div class="col-md-6 form-group">
-                    <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                      <input type="email" class="form-control" name="email" placeholder="Email address*" required="">
-                    </div>
-                  </div>
                 </div>
-                <div class="row mt-3">
-                  <div class="col-md-6 form-group">
-                    <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-phone"></i></span>
-                      <input type="text" class="form-control" name="phone" placeholder="Phone number*" required="">
-                    </div>
-                  </div>
-                  <div class="col-md-6 form-group">
-                    <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-list"></i></span>
-                      <select name="subject" class="form-control" required="">
-                        <option value="">Select service*</option>
-                        <option value="Service 1">Consulting</option>
-                        <option value="Service 2">Development</option>
-                        <option value="Service 3">Marketing</option>
-                        <option value="Service 4">Support</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="form-group mt-3">
-                    <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-chat-dots"></i></span>
-                      <textarea class="form-control" name="message" rows="6" placeholder="Write a message*" required=""></textarea>
-                    </div>
-                  </div>
-                  <div class="my-3">
-                    <div class="loading">Loading</div>
-                    <div class="error-message"></div>
-                    <div class="sent-message">Your message has been sent. Thank you!</div>
-                  </div>
-                  <div class="text-center">
-                    <button type="submit">Submit Message</button>
-                  </div>
-
+            {% else %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">Planos em breve disponíveis.</p>
                 </div>
-              </form>
-            </div>
-          </div>
-
+            {% endfor %}
         </div>
+</section>
+<section class="about-section" id="quem-somos">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6" data-fade>
+                <span class="section-tag">Quem Somos</span>
+                <h2 class="section-title">Paixão por tecnologia e cuidado animal</h2>
+                <p style="color:var(--text-secondary); margin-bottom: 2rem;">
+                    Nascemos com a missão de modernizar o mercado pet brasileiro, oferecendo ferramentas que eliminam a
+                    burocracia e permitem que você foque no que realmente importa: a saúde dos animais.
+                </p>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="about-card">
+                            <div class="about-icon"><i class="bi bi-shield-check"></i></div>
+                            <div>
+                                <h5>Segurança</h5>
+                                <p>Dados criptografados.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="about-card">
+                            <div class="about-icon"><i class="bi bi-rocket-takeoff"></i></div>
+                            <div>
+                                <h5>Inovação</h5>
+                                <p>Atualizações mensais.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6" data-fade>
+                <div style="background: var(--teal-light); border-radius: 24px; padding: 2rem; border: 1px solid var(--teal);">
+                    <h4 class="mb-3">Nossa Visão</h4>
+                    <p class="text-secondary">Ser o sistema de gestão pet líder na América Latina, conectando tutores,
+                        profissionais e estabelecimentos em um ecossistema digital inteligente e humano.</p>
+                    <div class="divider-line"></div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--teal); display: flex; align-items: center; justify-content: center; color: white;">
+                            <i class="bi bi-quote"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold">Equipe System Home Pet</div>
+                            <div class="small text-muted">Desde 2018</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="contact-section" id="contato">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="contact-form">
+                    <div class="row g-5">
+                        <div class="col-md-5">
+                            <h3 class="mb-4">Vamos conversar?</h3>
+                            <p class="text-secondary mb-5">Dúvidas sobre os planos ou precisa de uma demonstração
+                                personalizada? Nossa equipe está pronta para ajudar.</p>
 
-      </div>
-    </section><!-- /Contact Section --> #}
-
-</main>
-
-<footer id="footer" class="footer light-background">
-
-    <div class="container footer-top">
-        <div class="row gy-4">
-            <div class="col-lg-4 col-md-6 footer-about">
-                <a href="index.html" class="logo d-flex align-items-center d-none">
-                    <span class="sitename">System Home Pet</span>
+                            <div class="d-flex gap-3 mb-4">
+                                <div class="text-teal fs-4"><i class="bi bi-envelope-at"></i></div>
+                                <div>
+                                    <div class="fw-bold">E-mail</div>
+                                    <div class="text-secondary">contato@systemhomepet.com.br</div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-3 mb-4">
+                                <div class="text-teal fs-4"><i class="bi bi-whatsapp"></i></div>
+                                <div>
+                                    <div class="fw-bold">WhatsApp</div>
+                                    <div class="text-secondary">(11) 99999-9999</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <form>
+                                <div class="mb-3">
+                                    <label class="form-label-custom">Nome Completo</label>
+                                    <input type="text" class="form-control form-control-custom"
+                                           placeholder="Ex: João Silva">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label-custom">E-mail Corporativo</label>
+                                    <input type="email" class="form-control form-control-custom"
+                                           placeholder="joao@seuempresa.com">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label-custom">Mensagem</label>
+                                    <textarea class="form-control form-control-custom" rows="4"
+                                              placeholder="Como podemos ajudar?"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary-custom w-100 justify-content-center">Enviar
+                                    Mensagem
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ============================================================
+FOOTER
+============================================================ -->
+<footer class="footer">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-4">
+                <div class="footer-brand">
+                    <i class="bi bi-heart-pulse-fill text-teal me-1"></i>System Home<span>Pet</span>
+                </div>
+                <p class="footer-desc">O sistema completo de gestão para pet shops e clínicas veterinárias. Moderno,
+                    seguro e pensado para crescer com o seu negócio.</p>
+                <div class="mt-3">
+                    <a href="#" class="social-icon"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="social-icon"><i class="bi bi-linkedin"></i></a>
+                    <a href="#" class="social-icon"><i class="bi bi-youtube"></i></a>
+                </div>
+            </div>
+            <div class="col-6 col-lg-2">
+                <div class="footer-heading">Navegação</div>
+                <a href="#inicio" class="footer-link">Início</a>
+                <a href="#recursos" class="footer-link">Recursos</a>
+                <a href="#como-funciona" class="footer-link">Como Funciona</a>
+                <a href="#planos" class="footer-link">Planos</a>
+            </div>
+            <div class="col-6 col-lg-2">
+                <div class="footer-heading">Empresa</div>
+                <a href="/quem-somos" class="footer-link">Quem Somos</a>
+                <a href="/contato" class="footer-link">Contato</a>
+                <a href="/politicas-de-privacidade" class="footer-link">Políticas de Privacidade</a>
+            </div>
+            <div class="col-lg-4">
+                <div class="footer-heading">Pronto para começar?</div>
+                <p style="font-size:.88rem;color:rgba(255,255,255,.5);margin-bottom:1.2rem;">
+                    Cadastre seu estabelecimento hoje e comece a transformar sua gestão.
+                </p>
+                <a href="/cadastro-estabelecimento" class="btn btn-primary-custom">
+                    Cadastrar Estabelecimento <i class="bi bi-arrow-right"></i>
                 </a>
-                {# <div class="footer-contact pt-3">
-            <p>A108 Adam Street</p>
-            <p>New York, NY 535022</p>
-            <p class="mt-3"><strong>Phone:</strong> <span>+1 5589 55488 55</span></p>
-            <p><strong>Email:</strong> <span>info@example.com</span></p>
-          </div> #}
-                <div class="social-links d-flex mt-4 d-none">
-                    <a href=""><i class="bi bi-twitter-x"></i></a>
-                    <a href=""><i class="bi bi-facebook"></i></a>
-                    <a href=""><i class="bi bi-instagram"></i></a>
-                    <a href=""><i class="bi bi-linkedin"></i></a>
-                </div>
             </div>
-
-            <div class="col-lg-2 col-md-3 footer-links d-none">
-                <h4>Useful Links</h4>
-                <ul>
-                    <li><a href="#">Home</a></li>
-                    <li><a href="#">About us</a></li>
-                    <li><a href="#">Services</a></li>
-                    <li><a href="#">Terms of service</a></li>
-                    <li><a href="#">Privacy policy</a></li>
-                </ul>
-            </div>
-
-            <div class="col-lg-2 col-md-3 footer-links d-none">
-                <h4>Our Services</h4>
-                <ul>
-                    <li><a href="#">Web Design</a></li>
-                    <li><a href="#">Web Development</a></li>
-                    <li><a href="#">Product Management</a></li>
-                    <li><a href="#">Marketing</a></li>
-                    <li><a href="#">Graphic Design</a></li>
-                </ul>
-            </div>
-
-            <div class="col-lg-2 col-md-3 footer-links d-none">
-                <h4>Hic solutasetp</h4>
-                <ul>
-                    <li><a href="#">Molestiae accusamus iure</a></li>
-                    <li><a href="#">Excepturi dignissimos</a></li>
-                    <li><a href="#">Suscipit distinctio</a></li>
-                    <li><a href="#">Dilecta</a></li>
-                    <li><a href="#">Sit quas consectetur</a></li>
-                </ul>
-            </div>
-
-            <div class="col-lg-2 col-md-3 footer-links d-none">
-                <h4>Nobis illum</h4>
-                <ul>
-                    <li><a href="#">Ipsam</a></li>
-                    <li><a href="#">Laudantium dolorum</a></li>
-                    <li><a href="#">Dinera</a></li>
-                    <li><a href="#">Trodelas</a></li>
-                    <li><a href="#">Flexo</a></li>
-                </ul>
-            </div>
-
+        </div>
+        <div class="footer-bottom d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+            <span>© 2025 System Home Pet. Todos os direitos reservados.</span>
+            <span>
+                        <a href="/politicas-de-privacidade" style="color:inherit;">Privacidade</a>
+                        &nbsp;·&nbsp;
+                        <a href="/termos-de-uso" style="color:inherit;">Termos de Uso</a>
+                    </span>
         </div>
     </div>
-
-    <div class="container copyright text-center mt-4">
-        <p>© <span>Copyright</span> <strong class="px-1 sitename">System Home PET</strong> <span>Todos os direitos reservados</span>
-        </p>
-        <div class="credits">
-            <!-- All the links in the footer should remain intact. -->
-            <!-- You can delete the links only if you've purchased the pro version. -->
-            <!-- Licensing information: https://bootstrapmade.com/license/ -->
-            <!-- Purchase the pro version with working PHP/AJAX contact form: [buy-url] -->
-            Desenvolvido por <a
-                    href="https://api.whatsapp.com/send/?phone=5531995318362&text=Gostaria+de+mais+informações+sobre+o+sistema&type=phone_number&app_absent=0">Sérgio
-                Ferrari</a>
-
-        </div>
-    </div>
-
 </footer>
-
-<!-- Scroll Top -->
-<a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i
-            class="bi bi-arrow-up-short"></i></a>
-
-<!-- Preloader -->
-<div id="preloader"></div>
-
+<!-- Bootstrap JS -->
 <!-- Vendor JS Files -->
-<script src="{{ asset('landing/assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+{# <script src="{{ asset('landing/assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script> #}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ asset('landing/assets/vendor/php-email-form/validate.js') }}"></script>
 <script src="{{ asset('landing/assets/vendor/aos/aos.js') }}"></script>
 <script src="{{ asset('landing/assets/vendor/glightbox/js/glightbox.min.js') }}"></script>
 <script src="{{ asset('landing/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js') }}"></script>
 <script src="{{ asset('landing/assets/vendor/isotope-layout/isotope.pkgd.min.js') }}"></script>
 <script src="{{ asset('landing/assets/vendor/swiper/swiper-bundle.min.js') }}"></script>
-
 <!-- Main JS File -->
 <script src="{{ asset('landing/assets/js/main.js') }}"></script>
 
+<script>
+    // Scroll reveal
+    const fadeEls = document.querySelectorAll('[data-fade]');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {threshold: 0.1});
+    fadeEls.forEach(el => observer.observe(el));
+    // Navbar shadow + active link
+    const navbar = document.getElementById('navbar');
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-link-custom');
+    window.addEventListener('scroll', () => {
+        navbar.classList.toggle('scrolled', window.scrollY > 30);
+        let current = '';
+        sections.forEach(s => {
+            if (window.scrollY >= s.offsetTop - 130) current = s.getAttribute('id');
+        });
+        navLinks.forEach(link => {
+            link.classList.remove('active-nav');
+            if (link.getAttribute('href') === '#' + current) link.classList.add('active-nav');
+        });
+    });
+</script>
 </body>
-
 </html>

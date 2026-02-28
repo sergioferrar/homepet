@@ -139,6 +139,38 @@ class MercadoPagoService implements PaymentGatewayInterface
         }
     }
 
+    /**
+     * Atualiza o valor de uma assinatura recorrente existente.
+     * Útil para refletir a adição ou remoção de módulos adicionais.
+     */
+    public function updateSubscriptionAmount(string $subscriptionId, float $novoValor): array
+    {
+        try {
+            $response = $this->client->request('PUT', "https://api.mercadopago.com/preapproval/{$subscriptionId}", [
+                'headers' => $this->getHeaders(),
+                'json'    => [
+                    'auto_recurring' => [
+                        'transaction_amount' => $novoValor,
+                        'currency_id'        => 'BRL',
+                    ],
+                ],
+            ]);
+
+            $content = $response->toArray();
+
+            return [
+                'success'     => $response->getStatusCode() === 200,
+                'status'      => $content['status'] ?? null,
+                'raw_data'    => $content,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error'   => $e->getMessage(),
+            ];
+        }
+    }
+
     public function getPaymentStatus(string $paymentId): array
     {
         try {
