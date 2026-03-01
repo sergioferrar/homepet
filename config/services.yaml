@@ -77,3 +77,11 @@ services:
             - '@Symfony\Contracts\HttpClient\HttpClientInterface'
             - '%env(MERCADOPAGO_ACCESS_TOKEN)%'
     
+
+    # ==========================================
+    # NOTA FISCAL — Integração Asaas
+    # ==========================================
+    # Alias: toda classe que pede NotaFiscalServiceInterface
+    # receberá a implementação real do Asaas (PdvService, etc.)
+    App\Service\NotaFiscal\NotaFiscalServiceInterface:
+        alias: App\Service\NotaFiscal\AsaasNotaFiscalService

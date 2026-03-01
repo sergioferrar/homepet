@@ -18,7 +18,7 @@ use Psr\Log\LoggerInterface;
 class NotaFiscalService implements NotaFiscalServiceInterface
 {
     private LoggerInterface $logger;
-    private bool $habilitado = false;
+    private bool $habilitado = true;
 
     public function __construct(LoggerInterface $logger)
     {

@@ -1,0 +1,237 @@
+{% extends 'list/_list_base.html.twig' %}
+{% block title %}Configurar Asaas — Notas Fiscais{% endblock %}
+{% block list_title %}Configurações Asaas — NFS-e{% endblock %}
+{% block breadcrumbsGrupo %}Financeiro{% endblock %}
+{% block breadcrumbsAtivo %}Configurar Asaas{% endblock %}
+{% block page_title %}Configurações Asaas{% endblock %}
+{% block breadcrumbsAction %}
+    <a href="{{ url('nf_lista') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Voltar para notas
+    </a>
+{% endblock %}
+
+{% block list_content %}
+<div class="container-fluid py-3">
+    {% for type, messages in app.flashes %}
+        {% for msg in messages %}
+            <div class="alert alert-{{ type }} alert-dismissible fade show">
+                {{ msg|raw }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <form method="post" action="{{ url('nf_configurar_save') }}">
+        <div class="row g-4">
+
+            {# ── Coluna esquerda: credenciais ── #}
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header border-0 bg-light">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-key me-2 text-primary"></i>Credenciais Asaas</h6>
+                    </div>
+                    <div class="card-body pt-3">
+                        <div class="alert alert-info small">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Acesse <a href="https://www.asaas.com" target="_blank">asaas.com</a>, vá em
+                            <strong>Configurações → Integrações → Chaves de API</strong> e copie seu access token.
+                            Para testes, use o <a href="https://sandbox.asaas.com" target="_blank">Sandbox</a>.
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Ambiente</label>
+                            <select class="form-select" name="asaas_environment">
+                                <option value="sandbox" {{ cfg.environment == 'sandbox' ? 'selected' : '' }}>
+                                    🧪 Sandbox (testes)
+                                </option>
+                                <option value="production" {{ cfg.environment == 'production' ? 'selected' : '' }}>
+                                    🚀 Produção
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Chave de API (access_token)</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control font-monospace"
+                                       name="asaas_api_key" id="asaasApiKey"
+                                       value="{{ cfg.api_key }}"
+                                       placeholder="$aact_XXXXXXXX...">
+                                <button type="button" class="btn btn-outline-secondary" id="toggleKey">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                Chaves começam com <code>$aact_</code> (produção) ou <code>$aact_YWY2YWI</code> (sandbox).
+                            </div>
+                        </div>
+
+                        {% if cfg.api_key %}
+                            <div class="alert alert-success small">
+                                <i class="bi bi-check-circle me-1"></i>
+                                API Key configurada.
+                                <a href="{{ url('nf_servicos_municipais') }}" target="_blank" class="alert-link">
+                                    Testar conexão →
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# ── Coluna direita: serviço municipal ── #}
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header border-0 bg-light">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-building me-2 text-warning"></i>Serviço Municipal (NFS-e)</h6>
+                    </div>
+                    <div class="card-body pt-3">
+                        <div class="alert alert-warning small">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Consulte seu contador ou prefeitura para saber o código de serviço correto para seu petshop.
+                        </div>
+
+                        {% if servicos is not empty %}
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Buscar serviço municipal</label>
+                                <input type="text" class="form-control" id="buscaServico"
+                                       placeholder="Digite para filtrar...">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Selecionar serviço</label>
+                                <select class="form-select" id="selectServico" size="5">
+                                    {% for s in servicos %}
+                                        <option value="{{ s.id }}"
+                                                data-code="{{ s.code ?? '' }}"
+                                                data-name="{{ s.description ?? '' }}"
+                                                {{ cfg.municipal_service_id == s.id ? 'selected' : '' }}>
+                                            {{ s.description }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        {% else %}
+                            <p class="text-muted small">
+                                Serviços municipais não disponíveis via API para seu município.
+                                Informe o código manualmente.
+                            </p>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">ID do Serviço Municipal (Asaas)</label>
+                            <input type="text" class="form-control" name="asaas_municipal_service_id"
+                                   id="fieldServiceId" value="{{ cfg.municipal_service_id }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Código do Serviço Municipal <small class="text-muted">(fallback)</small></label>
+                            <input type="text" class="form-control" name="asaas_municipal_service_code"
+                                   id="fieldServiceCode" value="{{ cfg.municipal_service_code }}"
+                                   placeholder="ex: 1.01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nome do Serviço</label>
+                            <input type="text" class="form-control" name="asaas_municipal_service_name"
+                                   id="fieldServiceName" value="{{ cfg.municipal_service_name }}"
+                                   placeholder="ex: Serviços de cuidados com animais">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Alíquotas de impostos ── #}
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header border-0 bg-light">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-percent me-2 text-danger"></i>Alíquotas de Impostos</h6>
+                        <small class="text-muted">Consulte seu contador para os valores corretos. Deixe 0 para não incluir.</small>
+                    </div>
+                    <div class="card-body pt-3">
+                        <div class="row g-3">
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">ISS (%)</label>
+                                <input type="number" step="0.01" min="0" max="100"
+                                       class="form-control" name="asaas_iss" value="{{ cfg.iss }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">COFINS (%)</label>
+                                <input type="number" step="0.01" min="0" max="100"
+                                       class="form-control" name="asaas_cofins" value="{{ cfg.cofins }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">CSLL (%)</label>
+                                <input type="number" step="0.01" min="0" max="100"
+                                       class="form-control" name="asaas_csll" value="{{ cfg.csll }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">PIS (%)</label>
+                                <input type="number" step="0.01" min="0" max="100"
+                                       class="form-control" name="asaas_pis" value="{{ cfg.pis }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">IR (%)</label>
+                                <input type="number" step="0.01" min="0" max="100"
+                                       class="form-control" name="asaas_ir" value="{{ cfg.ir }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">INSS (%)</label>
+                                <input type="number" step="0.01" min="0" max="100"
+                                       class="form-control" name="asaas_inss" value="{{ cfg.inss }}">
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox"
+                                           name="asaas_retain_iss" value="1" id="retainIss"
+                                           {{ cfg.retain_iss == '1' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="retainIss">
+                                        Reter ISS na fonte
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>{# end row #}
+
+        <div class="mt-4 d-flex justify-content-end gap-2">
+            <a href="{{ url('nf_lista') }}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-save me-1"></i> Salvar configurações
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// Toggle chave API
+document.getElementById('toggleKey')?.addEventListener('click', function() {
+    const inp  = document.getElementById('asaasApiKey');
+    const icon = this.querySelector('i');
+    const show = inp.type === 'password';
+    inp.type   = show ? 'text' : 'password';
+    icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+});
+
+// Selecionar serviço municipal e preencher campos
+document.getElementById('selectServico')?.addEventListener('change', function() {
+    const opt = this.options[this.selectedIndex];
+    if (!opt) return;
+    document.getElementById('fieldServiceId').value   = opt.value;
+    document.getElementById('fieldServiceCode').value = opt.dataset.code;
+    document.getElementById('fieldServiceName').value = opt.dataset.name;
+});
+
+// Filtrar lista de serviços municipais
+document.getElementById('buscaServico')?.addEventListener('input', function() {
+    const q   = this.value.toLowerCase();
+    const sel = document.getElementById('selectServico');
+    Array.from(sel.options).forEach(opt => {
+        opt.hidden = !opt.text.toLowerCase().includes(q);
+    });
+});
+</script>
+{% endblock %}

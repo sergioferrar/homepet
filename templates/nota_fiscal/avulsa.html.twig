@@ -1,0 +1,169 @@
+{% extends 'list/_list_base.html.twig' %}
+{% block title %}Nova Nota Fiscal Avulsa{% endblock %}
+{% block list_title %}Emitir Nota Fiscal Avulsa{% endblock %}
+{% block breadcrumbsGrupo %}Financeiro{% endblock %}
+{% block breadcrumbsAtivo %}Nota Avulsa{% endblock %}
+{% block page_title %}Nova Nota Avulsa{% endblock %}
+{% block breadcrumbsAction %}
+    <a href="{{ url('nf_lista') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Voltar
+    </a>
+{% endblock %}
+
+{% block list_content %}
+<div class="container-fluid py-3">
+    {% for type, messages in app.flashes %}
+        {% for msg in messages %}
+            <div class="alert alert-{{ type }} alert-dismissible fade show">
+                {{ msg|raw }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <form method="post" action="{{ url('nf_avulsa_store') }}">
+        <div class="row g-4">
+
+            {# ── Dados do tomador ── #}
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header border-0 bg-light">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-person me-2 text-primary"></i>Tomador do Serviço</h6>
+                    </div>
+                    <div class="card-body">
+
+                        {# Busca rápida por cliente cadastrado #}
+                        <div class="mb-3">
+                            <label class="form-label">Cliente cadastrado <small class="text-muted">(opcional)</small></label>
+                            <select class="form-select" name="cliente_id" id="selectCliente">
+                                <option value="">— Informar manualmente —</option>
+                                {% for c in clientes %}
+                                    <option value="{{ c.id }}"
+                                            data-nome="{{ c.nome }}"
+                                            data-cpf="{{ c.cpf }}"
+                                            data-email="{{ c.email }}"
+                                            data-tel="{{ c.telefone }}"
+                                            data-cep="{{ c.cep }}"
+                                            data-numero="{{ c.numero }}">
+                                        {{ c.nome }}{% if c.cpf %} — {{ c.cpf }}{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nome / Razão Social <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="cliente_nome" id="clienteNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">CPF / CNPJ</label>
+                            <input type="text" class="form-control" name="cliente_cpf_cnpj" id="clienteCpf"
+                                   placeholder="000.000.000-00">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">E-mail</label>
+                            <input type="email" class="form-control" name="cliente_email" id="clienteEmail">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Telefone</label>
+                                <input type="text" class="form-control" name="cliente_telefone" id="clienteTel">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">CEP</label>
+                                <input type="text" class="form-control" name="cliente_cep" id="clienteCep">
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">Nº</label>
+                                <input type="text" class="form-control" name="cliente_numero" id="clienteNumero">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Dados da nota ── #}
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header border-0 bg-light">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-receipt me-2 text-success"></i>Dados da Nota Fiscal</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Descrição dos Serviços <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="descricao_servico" rows="4" required
+                                      placeholder="Descreva os serviços prestados..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Valor (R$) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" class="form-control" name="valor" required
+                                           placeholder="0,00" id="valorNota">
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Deduções (R$)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" class="form-control" name="deducoes" placeholder="0,00">
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Data de Emissão</label>
+                                <input type="date" class="form-control" name="data_emissao"
+                                       value="{{ "now"|date("Y-m-d") }}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Observações <small class="text-muted">(aparece na nota)</small></label>
+                            <textarea class="form-control" name="observacoes" rows="2"
+                                      placeholder="Informações adicionais..."></textarea>
+                        </div>
+
+                        <div class="alert alert-light border small">
+                            <i class="bi bi-info-circle me-1 text-info"></i>
+                            O código de serviço municipal e as alíquotas usados serão os configurados em
+                            <a href="{{ url('nf_configurar') }}" target="_blank">Configurações Asaas</a>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-end gap-2">
+            <a href="{{ url('nf_lista') }}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-send me-1"></i> Emitir Nota Fiscal
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// Preenche campos ao selecionar cliente cadastrado
+document.getElementById('selectCliente')?.addEventListener('change', function() {
+    const opt = this.options[this.selectedIndex];
+    if (!opt.value) return;
+    document.getElementById('clienteNome').value   = opt.dataset.nome  || '';
+    document.getElementById('clienteCpf').value    = opt.dataset.cpf   || '';
+    document.getElementById('clienteEmail').value  = opt.dataset.email || '';
+    document.getElementById('clienteTel').value    = opt.dataset.tel   || '';
+    document.getElementById('clienteCep').value    = opt.dataset.cep   || '';
+    document.getElementById('clienteNumero').value = opt.dataset.numero|| '';
+});
+
+// Formata valor monetário
+document.getElementById('valorNota')?.addEventListener('blur', function() {
+    let v = parseFloat(this.value.replace(',', '.'));
+    if (!isNaN(v)) this.value = v.toFixed(2).replace('.', ',');
+});
+</script>
+{% endblock %}

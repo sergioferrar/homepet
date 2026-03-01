@@ -548,7 +548,8 @@
                 'superadmin_estabelecimentos',
                 'superadmin_estabelecimento_detalhes',
                 'superadmin_invoices',
-                'superadmin_relatorios'
+                'superadmin_relatorios',
+                'nf_configurar'
             ] %}
             {% set superMenuAberto = route in superRoutes %}
 
@@ -594,6 +595,12 @@
                         <a href="{{ url('app_plano') }}"
                            class="{{ route == 'app_plano' ? 'active' : '' }}">
                             <i class="bi bi-tags"></i><span>Planos</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url('nf_configurar') }}"
+                           class="{{ route == 'nf_configurar' ? 'active' : '' }}">
+                            <i class="bi bi-layout-text-sidebar"></i><span>Notas Fiscais</span>
                         </a>
                     </li>
                     <li>

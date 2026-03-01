@@ -36,7 +36,7 @@ class Cliente
     /**
      * @ORM\Column(type="string", length=14, nullable=true)
      */
-    private $cpf;
+    private $cpf = null;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)

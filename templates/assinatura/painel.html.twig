@@ -140,7 +140,7 @@
             </div>
         </div>
     </div>
-    <div class="card-body">
+    <div class="card-body pt-3">
         <div class="row g-3">
 
             {% for modulo in modulosAdicionaisDisp %}
@@ -160,7 +160,7 @@
 
                 <div class="col-lg-6">
                     <div class="card border h-100 {{ isAtivo ? 'border-success' : (isPendente ? 'border-warning' : 'border-light') }}">
-                        <div class="card-body">
+                        <div class="card-body pt-3">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="rounded-circle d-flex align-items-center justify-content-center"
@@ -263,7 +263,7 @@
             </div>
         </div>
     </div>
-    <div class="card-body">
+    <div class="card-body pt-3">
         <div class="row g-3">
             {% for plano in todosPlanos %}
                 {% set isAtualPlano = plano.id == planoAtual.id %}
@@ -275,7 +275,7 @@
                                 <small class="fw-semibold">✓ Plano atual</small>
                             </div>
                         {% endif %}
-                        <div class="card-body text-center">
+                        <div class="card-body pt-3 text-center">
                             <h6 class="fw-bold">{{ plano.titulo }}</h6>
                             <div class="my-2">
                                 <span class="fs-4 fw-bold text-primary">{{ plano.valor|formataValorEmReal }}</span>

@@ -1,0 +1,250 @@
+{% extends 'list/_list_base.html.twig' %}
+{% block title %}Notas Fiscais{% endblock %}
+{% block list_title %}Notas Fiscais (NFS-e){% endblock %}
+{% block breadcrumbsGrupo %}Financeiro{% endblock %}
+{% block breadcrumbsAtivo %}Notas Fiscais{% endblock %}
+{% block page_title %}Notas Fiscais{% endblock %}
+{% block breadcrumbsAction %}
+    <a href="{{ url('nf_avulsa_form') }}" class="btn btn-sm btn-primary me-2">
+        <i class="bi bi-plus-circle me-1"></i> Nota Avulsa
+    </a>
+    <a href="{{ url('nf_configurar') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-gear me-1"></i> Configurar Asaas
+    </a>
+{% endblock %}
+
+{% block list_content %}
+<div class="container-fluid py-3">
+
+    {% for type, messages in app.flashes %}
+        {% for msg in messages %}
+            <div class="alert alert-{{ type }} alert-dismissible fade show">
+                {{ msg|raw }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {# Alerta se Asaas não configurado #}
+    {% if not asaas_configurado %}
+        <div class="alert alert-warning d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <div>
+                <strong>Asaas não configurado!</strong>
+                Configure sua chave de API para emitir notas fiscais.
+                <a href="{{ url('nf_configurar') }}" class="alert-link ms-2">Configurar agora →</a>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Cards de resumo #}
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold text-success">{{ total_mes }}</div>
+                    <div class="text-muted small">Autorizadas este mês</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    {% set pendentes = notas|filter(n => n.status == 'PENDING' or n.status == 'SCHEDULED')|length %}
+                    <div class="fs-2 fw-bold text-warning">{{ pendentes }}</div>
+                    <div class="text-muted small">Agendadas/Pendentes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    {% set comErro = notas|filter(n => n.status == 'ERROR')|length %}
+                    <div class="fs-2 fw-bold text-danger">{{ comErro }}</div>
+                    <div class="text-muted small">Com erro</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold text-primary">{{ notas|length }}</div>
+                    <div class="text-muted small">Total no período</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Tabela de notas #}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Cliente</th>
+                            <th>Valor</th>
+                            <th>Data emissão</th>
+                            <th>Nº Nota</th>
+                            <th>Status</th>
+                            <th>Origem</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for nota in notas %}
+                        <tr id="row-nota-{{ nota.id }}">
+                            <td class="text-muted small">{{ nota.id }}</td>
+                            <td>
+                                <div class="fw-semibold">{{ nota.clienteNome }}</div>
+                                {% if nota.clienteCpfCnpj %}
+                                    <small class="text-muted">{{ nota.clienteCpfCnpj }}</small>
+                                {% endif %}
+                            </td>
+                            <td>R$ {{ nota.valor|number_format(2, ',', '.') }}</td>
+                            <td>{{ nota.dataEmissao|date("d/m/Y") }}</td>
+                            <td>
+                                {% if nota.numeroNota %}
+                                    <span class="badge bg-light text-dark border">{{ nota.numeroNota }}</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ nota.statusBadgeClass }}" id="badge-{{ nota.id }}">
+                                    {{ nota.statusLabel }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ nota.origem }}</span>
+                                {% if nota.vendaId %}
+                                    <small class="text-muted ms-1">Venda #{{ nota.vendaId }}</small>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    {# Sincronizar status #}
+                                    <button class="btn btn-outline-secondary btn-sync-nf"
+                                            title="Sincronizar status"
+                                            data-id="{{ nota.id }}"
+                                            data-url="{{ url('nf_sync', {'id': nota.id}) }}">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+
+                                    {# Forçar emissão se agendada #}
+                                    {% if nota.status == 'SCHEDULED' %}
+                                        <form method="post" action="{{ url('nf_autorizar', {'id': nota.id}) }}" style="display:inline">
+                                            <button type="submit" class="btn btn-outline-success" title="Forçar emissão imediata">
+                                                <i class="bi bi-send"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+
+                                    {# PDF / XML se autorizada #}
+                                    {% if nota.pdfUrl %}
+                                        <a href="{{ nota.pdfUrl }}" target="_blank" class="btn btn-outline-danger" title="Download PDF">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if nota.xmlUrl %}
+                                        <a href="{{ nota.xmlUrl }}" target="_blank" class="btn btn-outline-info" title="Download XML">
+                                            <i class="bi bi-file-earmark-code"></i>
+                                        </a>
+                                    {% endif %}
+
+                                    {# Cancelar #}
+                                    {% if nota.status not in ['CANCELED', 'ERROR'] %}
+                                        <button class="btn btn-outline-danger"
+                                                title="Cancelar nota"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalCancelar"
+                                                data-id="{{ nota.id }}"
+                                                data-cliente="{{ nota.clienteNome }}"
+                                                data-url="{{ url('nf_cancelar', {'id': nota.id}) }}">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-5">
+                                <i class="bi bi-receipt fs-1 d-block mb-2 text-secondary"></i>
+                                Nenhuma nota fiscal emitida ainda.
+                                {% if asaas_configurado %}
+                                    <br><a href="{{ url('nf_avulsa_form') }}" class="btn btn-sm btn-primary mt-2">Emitir nota avulsa</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Modal cancelamento #}
+<div class="modal fade" id="modalCancelar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-x-circle me-2"></i>Cancelar Nota Fiscal</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="formCancelar">
+                <div class="modal-body">
+                    <p>Cancelar nota fiscal de <strong id="cancelarCliente"></strong>?</p>
+                    <p class="text-muted small">Esta ação é irreversível e será comunicada à prefeitura.</p>
+                    <div class="mb-3">
+                        <label class="form-label">Motivo do cancelamento</label>
+                        <textarea class="form-control" name="motivo" rows="2" required
+                                  placeholder="Informe o motivo..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button>
+                    <button type="submit" class="btn btn-danger">Cancelar nota</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// Modal cancelar
+document.getElementById('modalCancelar')?.addEventListener('show.bs.modal', function(e) {
+    const btn = e.relatedTarget;
+    document.getElementById('cancelarCliente').textContent = btn.dataset.cliente;
+    document.getElementById('formCancelar').action = btn.dataset.url;
+});
+
+// Sincronizar status via AJAX
+document.querySelectorAll('.btn-sync-nf').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const id  = this.dataset.id;
+        const url = this.dataset.url;
+        const icon = this.querySelector('i');
+        icon.classList.add('spin');
+
+        fetch(url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) {
+                    const badge = document.getElementById('badge-' + id);
+                    if (badge) badge.textContent = data.label;
+                }
+            })
+            .finally(() => icon.classList.remove('spin'));
+    });
+});
+</script>
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; display: inline-block; }
+</style>
+{% endblock %}
