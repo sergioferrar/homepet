@@ -102,7 +102,7 @@ class DefaultController extends AbstractController
         $tenantId = 'homepet_'.$this->session->get('estabelecimento_id')
                  ?? $this->session->get('estabelecimentoId')
                  ?? $_ENV['DBNAMETENANT'];
-                 dd($tenantId);
+                 
         (new DynamicConnectionManager($this->managerRegistry))
             ->switchDatabase((string) $tenantId, (string) $tenantId);
     }
