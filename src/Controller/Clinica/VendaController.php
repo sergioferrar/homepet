@@ -60,7 +60,7 @@ class VendaController extends DefaultController
         $venda->setParcelas($request->get('parcelas'));
         $venda->setOrigem($origem);
         $venda->setMetodoPagamento($metodoPagamento);
-        $venda->setStatus('Carrinho'); // Status inicial é sempre 'Carrinho'
+        $venda->setStatus('Aberta'); // Status inicial é sempre 'Carrinho'
         $venda->setData(new \DateTime());
         $venda->setObservacao($request->get('observacao')); // Salva observação se houver
 
