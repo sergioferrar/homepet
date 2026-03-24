@@ -8,6 +8,8 @@ use App\Entity\Cliente;
 use App\Entity\Financeiro;
 use App\Entity\FinanceiroPendente;
 use App\Entity\Servico;
+use App\Entity\Venda;
+use App\Entity\VendaItem;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -557,52 +559,90 @@ class AgendamentoController extends DefaultController
         $clientes = [];
         $totalGeral = 0;
 
+        // Agrega serviços por cliente guardando cada item individualmente
         foreach ($listaServicoPorAgendamento as $row) {
-            $clienteId = $row['cliente_nome'];
+            $clienteKey = $row['cliente_nome'];
 
-            if (!isset($clientes[$clienteId])) {
-                $clientes[$clienteId] = [
-                    'descricao' => [],
+            if (!isset($clientes[$clienteKey])) {
+                $clientes[$clienteKey] = [
                     'valor_total' => 0,
-                    'petIds' => [],
+                    'petIds'      => [],
+                    'servicos'    => [], // itens individuais que virarão venda_item
                 ];
             }
 
-            $clientes[$clienteId]['descricao'][] = "{$row['servico_nome']} para {$row['pet_nome']}";
-            $clientes[$clienteId]['valor_total'] += (float)$row['valor'];
-            $clientes[$clienteId]['petIds'][] = $row['petId'];
-
+            $clientes[$clienteKey]['servicos'][] = [
+                'servico_id'   => (int)$row['servicoId'],
+                'servico_nome' => $row['servico_nome'],
+                'pet_nome'     => $row['pet_nome'],
+                'valor'        => (float)$row['valor'],
+            ];
+            $clientes[$clienteKey]['valor_total'] += (float)$row['valor'];
+            $clientes[$clienteKey]['petIds'][]     = $row['petId'];
             $totalGeral += (float)$row['valor'];
         }
 
-        if ($dados['taxi_dog']) {
-            $totalGeral += (float)$dados['taxa_taxi_dog'];
+        // Táxi Dog: acrescenta ao total e registra como item avulso por cliente
+        if ($dados['taxi_dog'] && (float)$dados['taxa_taxi_dog'] > 0) {
+            $taxaTaxiDog = (float)$dados['taxa_taxi_dog'];
+            $totalGeral += $taxaTaxiDog;
             foreach ($clientes as &$cliente) {
-                $cliente['valor_total'] += (float)$dados['taxa_taxi_dog'];
-                $cliente['descricao'][] = "Táxi Dog";
+                $cliente['valor_total'] += $taxaTaxiDog;
+                $cliente['servicos'][] = [
+                    'servico_id'   => null,
+                    'servico_nome' => 'Táxi Dog',
+                    'pet_nome'     => '',
+                    'valor'        => $taxaTaxiDog,
+                ];
             }
+            unset($cliente);
         }
 
+        // Desconto distribuído igualmente entre os clientes do agendamento
         $totalGeral -= $desconto;
         $descontoPorCliente = count($clientes) > 0 ? $desconto / count($clientes) : 0;
         foreach ($clientes as &$cliente) {
             $cliente['valor_total'] -= $descontoPorCliente;
         }
+        unset($cliente);
 
-        // Removida criação no financeiro pendente aqui. Apenas registra venda real.
+        // Persiste Venda + VendaItem para cada cliente
+        $em = $this->getDoctrine()->getManager();
+
         foreach ($clientes as $clienteNome => $info) {
-            $venda = new \App\Entity\Venda();
+
+            // 1. Cabeçalho da Venda
+            $venda = new Venda();
             $venda->setEstabelecimentoId($this->getIdBase());
             $venda->setCliente($clienteNome);
             $venda->setTotal($info['valor_total']);
             $venda->setMetodoPagamento($metodoPagamento);
             $venda->setData(new \DateTime());
             $venda->setOrigem('banho_tosa');
-            $venda->setStatus('Carrinho'); // Alterado para Carrinho - finalizar no PDV
+            $venda->setStatus('Aberta');
             $venda->setPetId($info['petIds'][0]);
 
-            $em = $this->getDoctrine()->getManager();
             $em->persist($venda);
+            $em->flush(); // flush aqui para obter o ID da venda
+
+            // 2. Itens da Venda — um registro por serviço prestado
+            foreach ($info['servicos'] as $srv) {
+                $item = new VendaItem();
+                $item->setVendaId($venda->getId());
+                $item->setTipo('servico');
+                $item->setProdutoId($srv['servico_id']);
+                $item->setProdutoNome(
+                    $srv['pet_nome']
+                        ? "{$srv['servico_nome']} — {$srv['pet_nome']}"
+                        : $srv['servico_nome']
+                );
+                $item->setQuantidade(1);
+                $item->setPrecoUnitario($srv['valor']);
+                $item->setSubtotal($srv['valor']);
+
+                $em->persist($item);
+            }
+
             $em->flush();
         }
 

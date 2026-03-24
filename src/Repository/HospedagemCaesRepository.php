@@ -154,6 +154,30 @@ class HospedagemCaesRepository extends ServiceEntityRepository
 
 
 
+    /**
+     * Retorna o nome do pet pelo ID, usado ao montar o VendaItem de hospedagem.
+     */
+    public function getPetNome($baseId, int $petId): string
+    {
+        $sql = "SELECT nome FROM {$_ENV['DBNAMETENANT']}.pet
+                WHERE estabelecimento_id = :baseId AND id = :petId LIMIT 1";
+
+        $result = $this->conn->fetchOne($sql, ['baseId' => $baseId, 'petId' => $petId]);
+        return $result ?: 'Pet #' . $petId;
+    }
+
+    /**
+     * Retorna o nome do cliente pelo ID, usado ao montar o cabeçalho da Venda de hospedagem.
+     */
+    public function getClienteNome($baseId, int $clienteId): string
+    {
+        $sql = "SELECT nome FROM {$_ENV['DBNAMETENANT']}.cliente
+                WHERE estabelecimento_id = :baseId AND id = :clienteId LIMIT 1";
+
+        $result = $this->conn->fetchOne($sql, ['baseId' => $baseId, 'clienteId' => $clienteId]);
+        return $result ?: 'Cliente #' . $clienteId;
+    }
+
 //    /**
 //     * @return HospedagemCaes[] Returns an array of HospedagemCaes objects
 //     */
