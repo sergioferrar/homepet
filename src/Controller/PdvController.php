@@ -396,12 +396,16 @@ class PdvController extends DefaultController
                 ], 400);
             }
 
-            $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+            $estabelecimentoId = $this->getIdBase();
 
             // Busca a venda via SQL nativo (banco do tenant correto)
             $venda = $vendaRepo->findVendaCarrinho($estabelecimentoId, $id);
 
             if (!$venda) {
+                $this->logger->error('Venda não encontrada', [
+                    'venda_id' => $id,
+                    'estabelecimento_id' => $estabelecimentoId,
+                ]);
                 return new JsonResponse([
                     'status'   => 'error',
                     'mensagem' => 'Venda não encontrada ou já finalizada.',
@@ -468,7 +472,7 @@ class PdvController extends DefaultController
     public function dadosVenda(int $id, EntityManagerInterface $em): JsonResponse
     {
         $this->switchDB();
-        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+        $estabelecimentoId = $this->getIdBase();
 
         $venda = $em->getRepository(Venda::class)->findOneBy([
             'id'                => $id,

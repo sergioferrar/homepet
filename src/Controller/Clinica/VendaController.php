@@ -2,120 +2,170 @@
 
 namespace App\Controller\Clinica;
 
-use App\Entity\Cliente;
-use App\Entity\Consulta;
-use App\Entity\DocumentoModelo;
 use App\Entity\Financeiro;
 use App\Entity\FinanceiroPendente;
-use App\Entity\Internacao;
-use App\Entity\InternacaoExecucao;
-use App\Entity\InternacaoPrescricao;
-use App\Entity\Medicamento;
-use App\Entity\Pet;
 use App\Entity\Servico;
-use App\Entity\Vacina;
 use App\Entity\Venda;
 use App\Entity\VendaItem;
-use App\Entity\Veterinario;
-use App\Repository\ConsultaRepository;
-use App\Repository\DocumentoModeloRepository;
-use App\Repository\FinanceiroPendenteRepository;
 use App\Repository\FinanceiroRepository;
-use App\Repository\InternacaoRepository;
-use App\Repository\VeterinarioRepository;
+use App\Controller\DefaultController;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Service\GeradorpdfService;
-use App\Repository\PetRepository;
-use App\Controller\DefaultController;
-
 
 /**
  * @Route("dashboard/clinica")
  */
 class VendaController extends DefaultController
 {
-
     /**
      * @Route("/pet/{petId}/venda/concluir", name="clinica_concluir_venda", methods={"POST"})
      */
     public function concluirVenda(Request $request, int $petId, EntityManagerInterface $em): JsonResponse
     {
-        $this->switchDB();
-        $baseId = $this->getIdBase();
+        try {
+            $this->switchDB();
+            $baseId = $this->getIdBase();
 
-        $pet = $this->getRepositorio(\App\Entity\Pet::class)->find($request->get('pet_id'));
+            $petIdFromRequest = $request->get('pet_id');
+            if (!$petIdFromRequest) {
+                return $this->json(['status' => 'error', 'mensagem' => 'ID do pet não informado.'], 400);
+            }
 
-        $metodoPagamento = $request->get('metodo_pagamento');
-        $origem = $request->get('origem', 'clinica'); // Pega a origem da requisição
+            $pet = $this->getRepositorio(\App\Entity\Pet::class)->findPetById($baseId, $petIdFromRequest);
+            if (!$pet) {
+                return $this->json(['status' => 'error', 'mensagem' => 'Pet não encontrado.'], 404);
+            }
 
-        // 1️⃣ Cria a VENDA com status 'Carrinho' (será finalizada no PDV)
-        $venda = new Venda();
-        $venda->setEstabelecimentoId($baseId);
-        $venda->setCliente($pet->getDono_Id());
-        $venda->setPetId($request->get('pet_id'));
-        $venda->setParcelas($request->get('parcelas'));
-        $venda->setOrigem($origem);
-        $venda->setMetodoPagamento($metodoPagamento);
-        $venda->setStatus('Aberta'); // Status inicial é sempre 'Carrinho'
-        $venda->setData(new \DateTime());
-        $venda->setObservacao($request->get('observacao')); // Salva observação se houver
+            $metodoPagamento = $request->get('metodo_pagamento', 'pendente');
+            $origem = $request->get('origem', 'clinica');
 
-        $em->persist($venda);
+            // Define status baseado no método de pagamento
+            $status = ($metodoPagamento === 'pendente') ? 'Pendente' : 'Aberta';
 
-        // 2️⃣ Processa itens
-        $descricoes = (array)$request->get('descricao', []);
-        $descontos = (array)$request->get('desconto', []);
-        $valores = (array)$request->get('valor', []);
-        $quantidades = (array)$request->get('quantidade_diarias', []);
+            // 1️⃣ Cria a venda
+            $venda = new Venda();
+            $venda->setEstabelecimentoId($baseId);
+            $venda->setCliente($pet['dono_id']);
+            $venda->setPetId($petIdFromRequest);
+            $venda->setParcelas($request->get('parcelas', 1));
+            $venda->setOrigem($origem);
+            $venda->setMetodoPagamento($metodoPagamento);
+            $venda->setStatus($status);
+            $venda->setData(new \DateTime());
+            $venda->setObservacao($request->get('observacao'));
+            $venda->setTotal(0);
 
-        $valorTotal = 0;
-        $descontoTotal = 0;
+            $em->persist($venda);
+            $em->flush(); // flush para obter o ID
 
-        foreach ($descricoes as $i => $servicoId) {
+            // 2️⃣ Processa itens
+            $descricoes  = (array)$request->get('descricao', []);
+            $descontos   = (array)$request->get('desconto', []);
+            $quantidades = (array)$request->get('quantidade_diarias', []);
 
-            $servico = $this->getRepositorio(Servico::class)
-                ->listaServicoPorId($baseId, $servicoId);
+            $valorTotal = 0;
 
-            if (!$servico) continue;
+            foreach ($descricoes as $i => $itemId) {
+                $tipo = 'servico';
+                $realId = $itemId;
 
-            $quantidade = $quantidades[$i] ?? 1;
-            $valorUnitario = (float)$servico['valor'];
-            $desconto = (float)($descontos[$i] ?? 0);
+                // Detecta prefixo S- ou P-
+                if (str_starts_with($itemId, 'S-')) {
+                    $tipo = 'servico';
+                    $realId = substr($itemId, 2);
+                } elseif (str_starts_with($itemId, 'P-')) {
+                    $tipo = 'produto';
+                    $realId = substr($itemId, 2);
+                }
 
-            $valorItem = ($valorUnitario * $quantidade) - $desconto;
+                $nome = 'Item';
+                $valorUnitario = 0;
 
-            $item = new VendaItem();
-            $item->setVendaId($venda->getId());       // FK correta
-            $item->setTipo('servico');
-            $item->setProdutoId((int)$servicoId);     // ID numérico para rastreamento/estoque
-            $item->setProdutoNome($servico['nome'] ?? 'Serviço'); // snapshot do nome
-            $item->setQuantidade((int)$quantidade);
-            $item->setPrecoUnitario((float)$valorUnitario);
-            $item->setSubtotal((float)$valorItem);
+                if ($tipo === 'servico') {
+                    $servico = $this->getRepositorio(Servico::class)->listaServicoPorId($baseId, $realId);
+                    if (!$servico) continue;
+                    $nome = $servico['nome'] ?? 'Serviço';
+                    $valorUnitario = (float)$servico['valor'];
+                } else {
+                    $produto = $this->getRepositorio(\App\Entity\Produto::class)->find($realId);
+                    if (!$produto) continue;
+                    $nome = $produto->getNome();
+                    $valorUnitario = (float)$produto->getPrecoVenda();
+                }
 
-            $em->persist($item);
+                $quantidade = (int)($quantidades[$i] ?? 1);
+                $desconto   = (float)($descontos[$i] ?? 0);
+                $valorItem  = ($valorUnitario * $quantidade) - $desconto;
 
-            $valorTotal += $valorItem;
-            $descontoTotal += $desconto;
+                $item = new VendaItem();
+                $item->setVendaId($venda->getId());
+                $item->setTipo($tipo);
+                $item->setProdutoId((int)$realId);
+                $item->setProdutoNome($nome);
+                $item->setQuantidade($quantidade);
+                $item->setPrecoUnitario($valorUnitario);
+                $item->setSubtotal($valorItem);
+
+                $em->persist($item);
+                $valorTotal += $valorItem;
+            }
+
+            // 3️⃣ Atualiza total
+            $venda->setTotal($valorTotal);
+            $em->flush();
+
+            // 4️⃣ Registra no financeiro
+            $descricaoFinanceiro = sprintf(
+                'Venda Clínica - Pet: %s (#%d)',
+                $pet['nome'] ?? 'Pet',
+                $petIdFromRequest
+            );
+
+            if ($metodoPagamento === 'pendente') {
+                // Vai para financeiro pendente
+                $finPendente = new FinanceiroPendente();
+                $finPendente->setDescricao($descricaoFinanceiro);
+                $finPendente->setValor($valorTotal);
+                $finPendente->setData(new \DateTime());
+                $finPendente->setMetodoPagamento('pendente');
+                $finPendente->setOrigem('clinica');
+                $finPendente->setStatus('Pendente');
+                $finPendente->setTipo('ENTRADA');
+                $finPendente->setEstabelecimentoId($baseId);
+                $em->persist($finPendente);
+            } else {
+                // Vai para financeiro (pago)
+                $financeiro = new Financeiro();
+                $financeiro->setDescricao($descricaoFinanceiro);
+                $financeiro->setValor($valorTotal);
+                $financeiro->setData(new \DateTime());
+                $financeiro->setMetodoPagamento($metodoPagamento);
+                $financeiro->setOrigem('clinica');
+                $financeiro->setStatus('Pago');
+                $financeiro->setTipo('ENTRADA');
+                $financeiro->setEstabelecimentoId($baseId);
+                $em->persist($financeiro);
+            }
+
+            $em->flush();
+
+            $mensagem = ($metodoPagamento === 'pendente')
+                ? 'Venda registrada como pendente no financeiro!'
+                : 'Venda adicionada ao carrinho! Finalize no PDV.';
+
+            return $this->json([
+                'status'   => 'success',
+                'mensagem' => $mensagem,
+                'venda_id' => $venda->getId()
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Erro ao concluir venda', ['erro' => $e->getMessage()]);
+            return $this->json(['status' => 'error', 'mensagem' => 'Erro: ' . $e->getMessage()], 500);
         }
-
-        // 3️⃣ Finaliza venda
-        $venda->setTotal($valorTotal + $descontoTotal);
-
-        $em->flush();
-
-        // NÃO cria mais no financeiro_pendente aqui
-        // A venda fica em carrinho até ser finalizada no PDV
-
-        return $this->json([
-            'status' => 'success',
-            'mensagem' => 'Venda adicionada ao carrinho! Finalize no PDV.',
-            'venda_id' => $venda->getId()
-        ]);
     }
 
     /**
@@ -127,21 +177,15 @@ class VendaController extends DefaultController
         $baseId = $this->getIdBase();
 
         try {
-            // Busca a venda
             $vendaRepo = $this->getRepositorio(Venda::class);
-            $venda = $vendaRepo->findOneBy([
-                'id' => $id,
-                'estabelecimentoId' => $baseId
-            ]);
+            $venda = $vendaRepo->findOneBy(['id' => $id, 'estabelecimentoId' => $baseId]);
 
             if (!$venda) {
                 $this->addFlash('danger', 'Venda não encontrada.');
                 return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
             }
 
-            // Inativa a venda
             $vendaRepo->inativar($baseId, $id);
-
             $this->addFlash('success', 'Venda inativada com sucesso.');
             return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
 
@@ -151,14 +195,12 @@ class VendaController extends DefaultController
         }
     }
 
-
     /**
      * @Route("/clinica/pet/{petId}/venda/{id}/editar", name="clinica_editar_venda", methods={"POST"})
      */
     public function editarVenda(Request $request, int $petId, int $id, FinanceiroRepository $financeiroRepository): JsonResponse
     {
         try {
-            // 🔧 Troca o banco para o da clínica atual
             $this->switchDB();
             $baseId = $this->getIdBase();
 
@@ -175,18 +217,13 @@ class VendaController extends DefaultController
                 $financeiro->setData(new \DateTime($data));
             }
 
-            $metodo = $request->get('metodo_pagamento') ?: 'pendente';
-            $financeiro->setMetodoPagamento($metodo);
+            $financeiro->setMetodoPagamento($request->get('metodo_pagamento') ?: 'pendente');
             $financeiro->setObservacoes($request->get('observacao'));
-
             $financeiroRepository->update($baseId, $financeiro);
 
             return new JsonResponse(['status' => 'success', 'mensagem' => 'Venda atualizada com sucesso.']);
         } catch (\Throwable $e) {
-            return new JsonResponse([
-                'status' => 'error',
-                'mensagem' => 'Erro ao editar venda: ' . $e->getMessage(),
-            ], 500);
+            return new JsonResponse(['status' => 'error', 'mensagem' => 'Erro ao editar venda: ' . $e->getMessage()], 500);
         }
     }
 }

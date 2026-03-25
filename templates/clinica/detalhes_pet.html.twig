@@ -637,7 +637,7 @@
                                                         <span class="badge bg-info text-dark ms-2"><i class="bi bi-cart-check me-1"></i>Aguardando Finalização no PDV</span>
                                                     {% endif %}
                                                     <small class="ms-3 fw-normal">Pagamento via:
-                                                        {% if v.metodo_pagamento %}{{ v.metodo_pagamento|metodoPagamento|raw }}{% else %}<span class="badge bg-warning text-dark">Pendente</span>{% endif %}
+                                                        {% if v.metodoPagamento %}{{ v.metodoPagamento|metodoPagamento|raw }}{% else %}<span class="badge bg-warning text-dark">Pendente</span>{% endif %}
                                                     </small>
                                                 </p>
                                                 <p class="mt-2 mb-0"></p>
@@ -663,7 +663,7 @@
                                                 <div class="d-flex justify-content-end gap-1">
                                                     <button type="button" class="btn btn-sm btn-primary btn-editar-venda"
                                                             data-id="{{ v.id }}" data-valor="{{ v.total }}"
-                                                            data-metodo="{{ v.metodo_pagamento|default('') }}"
+                                                            data-metodo="{{ v.metodoPagamento|default('') }}"
                                                             data-status="{{ v.status }}"
                                                             data-bs-toggle="modal" data-bs-target="#modalEditarVenda">
                                                         <i class="fas fa-edit"></i>
@@ -822,12 +822,21 @@
     </div>
     <div class="modal-body">
         <div class="mb-3">
-            <label for="servico-descricao" class="form-label">Descrição do Serviço*</label>
+            <label for="servico-descricao" class="form-label">Serviço ou Produto*</label>
             <select class="form-select" id="servico-descricao-1" name="descricao[]" required>
-                <option value="">Selecione um serviço...</option>
-                {% for servico in servicos_clinica %}
-                    <option value="{{ servico.id }}" data-valor="{{ servico.valor }}">{{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}</option>
-                {% endfor %}
+                <option value="">Selecione um serviço ou produto...</option>
+                <optgroup label="🩺 Serviços">
+                    {% for servico in servicos_clinica %}
+                        <option value="S-{{ servico.id }}" data-valor="{{ servico.valor }}" data-tipo="servico">{{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% if produtos_estoque is defined and produtos_estoque|length > 0 %}
+                <optgroup label="📦 Produtos">
+                    {% for produto in produtos_estoque %}
+                        <option value="P-{{ produto.id }}" data-valor="{{ produto.preco_venda }}" data-tipo="produto">{{ produto.nome }} - R$ {{ produto.preco_venda|number_format(2, ',', '.') }} (Est: {{ produto.estoque_atual }})</option>
+                    {% endfor %}
+                </optgroup>
+                {% endif %}
             </select>
         </div>
         <div class="mb-3"><label for="servico-desconto" class="form-label">Desconto (R$)</label><input type="number" step="0.01" class="form-control" id="servico-desconto" name="desconto[]" value="0"></div>
@@ -1163,14 +1172,25 @@ let index = $(".servico-item").length + 1;
 let servicoHtml = `
 <div class="mb-3 servico-item border rounded-3 p-3 bg-light">
 <div class="mb-3">
-<label class="form-label">Descrição do Serviço*</label>
+<label class="form-label">Serviço ou Produto*</label>
 <select class="form-select select-servico" name="descricao[]" required id="servico-descricao-${index}">
-    <option value="">Selecione um serviço...</option>
+    <option value="">Selecione...</option>
+    <optgroup label="🩺 Serviços">
     {% for servico in servicos_clinica %}
-        <option value="{{ servico.id }}" data-valor="{{ servico.valor }}">
+        <option value="S-{{ servico.id }}" data-valor="{{ servico.valor }}" data-tipo="servico">
             {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
         </option>
     {% endfor %}
+    </optgroup>
+    {% if produtos_estoque is defined and produtos_estoque|length > 0 %}
+    <optgroup label="📦 Produtos">
+    {% for produto in produtos_estoque %}
+        <option value="P-{{ produto.id }}" data-valor="{{ produto.preco_venda }}" data-tipo="produto">
+            {{ produto.nome }} - R$ {{ produto.preco_venda|number_format(2, ',', '.') }} (Est: {{ produto.estoque_atual }})
+        </option>
+    {% endfor %}
+    </optgroup>
+    {% endif %}
 </select>
 </div>
 <div class="mb-3">
@@ -1178,7 +1198,7 @@ let servicoHtml = `
 <input type="number" step="0.01" class="form-control" name="desconto[]" value="0">
 </div>
 <button type="button" class="btn btn-danger remove-servico">
-<i class="bx bx-trash"></i> Remover Serviço
+<i class="bx bx-trash"></i> Remover
 </button>
 </div>
 `;
