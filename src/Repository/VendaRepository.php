@@ -151,7 +151,7 @@ class VendaRepository extends ServiceEntityRepository
      */
     public function inativar(int $estabelecimentoId, int $vendaId): bool
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.venda
+        $sql = "UPDATE venda
                 SET status = 'Cancelada'
                 WHERE id = :id AND estabelecimento_id = :estab";
 
@@ -171,7 +171,7 @@ class VendaRepository extends ServiceEntityRepository
     public function findVendaCarrinho(int $estabelecimentoId, int $vendaId): ?array
     {
         $sql = "SELECT v.id, v.cliente, v.total, v.pet_id, v.origem, v.observacao, v.status
-                FROM {$_ENV['DBNAMETENANT']}.venda v
+                FROM venda v
                 WHERE v.id = :id
                   AND v.estabelecimento_id = :estab
                   AND v.status = 'Aberta'
@@ -215,7 +215,7 @@ class VendaRepository extends ServiceEntityRepository
             $params['parcelas'] = $parcelas;
         }
 
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.venda
+        $sql = "UPDATE venda
                 SET {$set}
                 WHERE id = :id
                   AND estabelecimento_id = :estab
@@ -235,7 +235,7 @@ class VendaRepository extends ServiceEntityRepository
         ?int $petId,
         int $vendaId
     ): void {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiro
+        $sql = "INSERT INTO financeiro
                     (estabelecimento_id, descricao, valor, data, metodo_pagamento,
                      tipo, status, origem, pet_id)
                 VALUES

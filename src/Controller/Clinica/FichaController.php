@@ -82,7 +82,9 @@ class FichaController extends DefaultController
             throw $this->createNotFoundException('Pet não encontrado.');
         }
 
-        $cliente = $this->getRepositorio(Cliente::class)->find($pet['dono_id']);
+        $donoId = $pet['dono_id'] ?? null;
+        $cliente = $donoId ? $this->getRepositorio(Cliente::class)->find($donoId) : null;
+        $clienteNome = $cliente ? $cliente->getNome() : ($pet['dono_nome'] ?? 'Não informado');
 
         $this->restauraLoginDB();
         $clinica = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($baseId);
@@ -109,7 +111,7 @@ class FichaController extends DefaultController
             </div>
             <hr>
             <div style='font-size:12px;'>
-            <strong>Tutor:</strong> {$cliente->getNome()} <br>
+            <strong>Tutor:</strong> {$clienteNome} <br>
             <strong>Pet:</strong> {$pet['nome']} ({$pet['especie']} - {$pet['raca']}, {$pet['idade']} anos) <br>
             <strong>Sexo:</strong> {$pet['sexo']}
             </div>
