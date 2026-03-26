@@ -881,286 +881,571 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
 <script>
-$(document).ready(function () {
-// === PEGAR ELEMENTOS ===
-const $actionButtonsView = $('#action-buttons-view');
-const $atendimentoView = $('#atendimento-view');
-const $receitaView = $('#receita-view');
-const serviceDisplayContainer = $('#service-display-container');
-const serviceDetailsContent = document.getElementById('service-details-content');
-const $vacinaView = $('#vacina-view');
-const $btnNovaVacina = $('#btn-nova-vacina');
-const $btnFecharVacina = $('#btn-fechar-vacina');
-const $btnNovoAtendimento = $('#btn-novo-atendimento');
-const $btnNovaReceita = $('#btn-nova-receita');
-const $btnFecharAtendimento = $('#btn-fechar-atendimento');
-const $btnFecharReceita = $('#btn-fechar-receita');
-const $btnFecharServiceDisplay = $('#btn-fechar-service-display');
-const $btnAdicionarServico = $('#btn-adicionar-servico');
-const historicoTabElement = $('button[data-bs-target="#historico"]')[0];
-let historicoTab = historicoTabElement ? new bootstrap.Tab(historicoTabElement) : null;
-window.modalAdicionarServico = new bootstrap.Modal($('#modalAdicionarServico')[0], {backdrop: 'static', keyboard: false});
-window.modalEditarVenda = new bootstrap.Modal($('#modalEditarVenda')[0], {backdrop: 'static', keyboard: false});
-window.currentQuillDisplayEditors = [];
-const showView = (viewToShow) => {
-$actionButtonsView.hide();$atendimentoView.hide();$receitaView.hide();serviceDisplayContainer.hide();
-if (viewToShow) $(viewToShow).show();
-};
-const returnToActionGrid = (e) => {
-if (e) e.preventDefault();
-window.currentQuillDisplayEditors.forEach(editor => { if (editor.container && editor.container.parentNode) { editor.container.parentNode.removeChild(editor.container); } });
-window.currentQuillDisplayEditors = [];
-showView($actionButtonsView);
-};
-$('.voltar-dash').on('click', function () { window.close(); return false; });
-$btnNovoAtendimento.on('click', function (e) { e.preventDefault(); showView($atendimentoView); });
-$btnNovaReceita.on('click', function (e) { e.preventDefault(); showView($receitaView); });
-const notImplementedButtons = ['btn-novo-peso', 'btn-novo-exame', 'btn-novas-fotos'];
-notImplementedButtons.forEach(id => {
-$(`#${id}`).on('click', function (e) {
-e.preventDefault();
-var modal = Notify.modal(`A funcionalidade de "${$(this).text().trim()}" não está implementada ainda.`, 'md', 'mensagem do sistema')
-$(`#${modal.id}`).find('.modal-header').addClass('text-bg-warning')
-});
-});
-$btnFecharAtendimento.on('click', returnToActionGrid);
-$btnFecharReceita.on('click', returnToActionGrid);
-$btnFecharServiceDisplay.on('click', returnToActionGrid);
-const toolbarOptions = [[{'header': [1, 2, 3, false]}],['bold', 'italic', 'underline', 'strike'],[{'list': 'ordered'}, {'list': 'bullet'}],['link'],['clean']];
-const createQuillEditor = (selector, options = {}) => { const el = $(selector)[0]; return el ? new Quill(selector, {theme: 'snow', modules: {toolbar: toolbarOptions}, ...options}) : null; };
-const quillAtendimento = createQuillEditor('#atendimento-editor');
-const quillConteudo = createQuillEditor('#editor-conteudo');
-const timelineLinks = document.querySelectorAll('.timeline-link');
-timelineLinks.forEach(link => {
-link.addEventListener('click', function (e) {
-e.preventDefault();
-const tipo = this.dataset.tipo;
-const data = this.dataset.data;
-const resumo = this.dataset.resumo;
-const observacoes = this.dataset.observacoes;
-serviceDetailsContent.innerHTML = '';
-window.currentQuillDisplayEditors.forEach(editor => { if (editor.container && editor.container.parentNode) { editor.container.parentNode.removeChild(editor.container); } });
-window.currentQuillDisplayEditors = [];
-document.getElementById('service-display-title').textContent = `Detalhes do Registro: ${tipo}`;
-const appendServiceDetailCard = (cardTitle, contentData, typeClass, isHtml = false) => {
-const cardDiv = document.createElement('div'); cardDiv.className = ` ${typeClass}`;
-const cardHeader = document.createElement('h6'); cardHeader.className = 'mb-2'; cardHeader.textContent = cardTitle; cardDiv.appendChild(cardHeader);
-const cardDate = document.createElement('p'); cardDate.className = 'text-muted mb-3'; cardDate.innerHTML = ``; cardDiv.appendChild(cardDate);
-const contentDiv = document.createElement('div'); contentDiv.className = 'service-detail-content'; cardDiv.appendChild(contentDiv); serviceDetailsContent.appendChild(cardDiv);
-if (contentData) {
-if (isHtml) { contentDiv.innerHTML = contentData; } else {
-const quillDisplay = new Quill(contentDiv, {theme: 'bubble', readOnly: true, modules: {toolbar: false}});
-window.currentQuillDisplayEditors.push(quillDisplay);
-try { quillDisplay.setContents(contentData.ops[0].insert); $('.service-detail-content .ql-editor p').html(contentData.ops[0].insert) } catch { quillDisplay.setText('Conteúdo não disponível ou formato inválido.'); }
-}
-} else { contentDiv.innerHTML = '<p>Nenhum detalhe disponível.</p>'; }
-};
-if (tipo === 'Consulta' || tipo === 'Retorno') {
-const anamneseDeltaString = this.dataset.atendimentoDelta;
-const borderColorClass = (tipo === 'Consulta') ? 'border-primary' : 'border-success';
-const cardDiv = document.createElement('div'); cardDiv.className = `service-detail-card p-3 rounded ${borderColorClass} border-start border-4`;
-const cardHeader = document.createElement('h5'); cardHeader.className = 'mb-2 text-primary'; cardHeader.innerHTML = `<i class="fas fa-stethoscope me-2"></i>${tipo}`; cardDiv.appendChild(cardHeader);
-if (observacoes) { const obsDiv = document.createElement('div'); obsDiv.className = 'mb-3 p-2 bg-light rounded'; obsDiv.innerHTML = `<strong>Assunto:</strong> ${observacoes}`; cardDiv.appendChild(obsDiv); }
-const cardDate = document.createElement('p'); cardDate.className = 'text-muted mb-3'; cardDate.innerHTML = `<small><i class="fas fa-calendar me-1"></i>Registrado em: ${data}</small>`; cardDiv.appendChild(cardDate);
-const contentDiv = document.createElement('div'); contentDiv.className = 'service-detail-content'; cardDiv.appendChild(contentDiv); serviceDetailsContent.appendChild(cardDiv);
-if (anamneseDeltaString) {
-try { const anamneseData = JSON.parse(anamneseDeltaString); const quillDisplay = new Quill(contentDiv, {theme: 'bubble', readOnly: true, modules: {toolbar: false}}); window.currentQuillDisplayEditors.push(quillDisplay); quillDisplay.setContents(anamneseData); }
-catch (e) { contentDiv.innerHTML = '<p class="text-muted">Conteúdo não disponível ou formato inválido.</p>'; }
-} else { contentDiv.innerHTML = '<p class="text-muted">Nenhum detalhe de anamnese disponível.</p>'; }
-} else if (tipo === 'Receita') {
-const cabecalhoHtmlString = this.dataset.receitaCabecalhoHtml;
-let conteudoDeltaString = null;
-try { conteudoDeltaString = JSON.parse(this.dataset.receitaConteudoDelta); } catch(e) { console.log('Erro ao parsear conteúdo da receita:', e); }
-const rodapeHtmlString = this.dataset.receitaRodapeHtml;
-const receitaContainer = document.createElement('div'); receitaContainer.id = 'receita-para-impressao'; receitaContainer.className = 'receita-container p-4'; receitaContainer.style.cssText = 'border: 1px solid #ddd; border-radius: 12px; background: #fff;';
-if (cabecalhoHtmlString) { const cabecalhoDiv = document.createElement('div'); cabecalhoDiv.className = 'receita-cabecalho text-center mb-4 pb-3 border-bottom'; cabecalhoDiv.innerHTML = cabecalhoHtmlString; receitaContainer.appendChild(cabecalhoDiv); }
-const conteudoDiv = document.createElement('div'); conteudoDiv.className = 'receita-conteudo my-4'; conteudoDiv.style.minHeight = '200px'; receitaContainer.appendChild(conteudoDiv);
-if (conteudoDeltaString) {
-const quillDisplay = new Quill(conteudoDiv, {theme: 'bubble', readOnly: true, modules: {toolbar: false}}); window.currentQuillDisplayEditors.push(quillDisplay);
-try { quillDisplay.setContents(conteudoDeltaString); } catch(e) { conteudoDiv.innerHTML = '<p>Conteúdo não disponível.</p>'; }
-} else { conteudoDiv.innerHTML = '<p class="text-muted">Nenhum conteúdo na receita.</p>'; }
-if (rodapeHtmlString) { const rodapeDiv = document.createElement('div'); rodapeDiv.className = 'receita-rodape text-center mt-4 pt-3 border-top'; rodapeDiv.innerHTML = rodapeHtmlString; receitaContainer.appendChild(rodapeDiv); }
-serviceDetailsContent.appendChild(receitaContainer);
-if (!cabecalhoHtmlString && !conteudoDeltaString && !rodapeHtmlString) { receitaContainer.innerHTML = `<div class="text-center p-4"><h6 class="mb-2">Receita Médica</h6><p class="text-muted mb-3"><small>Emitida em: ${data}</small></p><p>Nenhum detalhe de receita disponível.</p></div>`; }
-} else {
-const borderColorClass = 'border-secondary';
-const cardDiv = document.createElement('div'); cardDiv.className = `service-detail-card ${borderColorClass}`;
-cardDiv.innerHTML = `<h6 class="mb-2">${tipo} - ${resumo}</h6><p class="text-muted mb-3"><small>Data: ${data}</small></p><p>Nenhum detalhe específico disponível para este tipo de registro no momento.</p>`;
-serviceDetailsContent.appendChild(cardDiv);
-}
-if (tipo === 'Receita') {
-Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html(), 'Imprimir Receita', 'Fechar', 'imprimir-receita');
-$(document).off('click', '.imprimir-receita').on('click', '.imprimir-receita', function () {
-var elementoParaImprimir = $(this).closest('.modal-content').find('#receita-para-impressao');
-if (!elementoParaImprimir.length) { elementoParaImprimir = $(this).closest('.modal-content').find('#service-details-content'); }
-if (!elementoParaImprimir.length) { alert('Não foi possível encontrar o conteúdo da receita.'); return; }
-$('#iframe-impressao-receita').remove();
-var iframe = document.createElement('iframe'); iframe.id = 'iframe-impressao-receita'; iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0'; document.body.appendChild(iframe);
-var doc = iframe.contentWindow.document;
-doc.open();
-doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receita Médica Veterinária</title><style>* {margin: 0;padding: 0;box-sizing: border-box;}body {font-family: 'Times New Roman', Times, serif;font-size: 14pt;line-height: 1.6;padding: 20mm;color: #000;}.receita-container {max-width: 100%;border: none !important;padding: 0 !important;}.receita-cabecalho {text-align: center;margin-bottom: 30px;padding-bottom: 15px;border-bottom: 2px solid #333;}.receita-cabecalho h1,.receita-cabecalho h2,.receita-cabecalho h3 {margin-bottom: 5px;}.receita-conteudo {min-height: 300px;margin: 30px 0;padding: 20px 0;}.receita-conteudo .ql-editor {padding: 0 !important;}.receita-conteudo p {margin-bottom: 10px;}.receita-rodape {text-align: center;margin-top: 50px;padding-top: 20px;border-top: 1px solid #333;}.border, .border-bottom, .border-top {border: none !important;}.p-4, .p-3, .my-4, .mb-4, .mt-4, .pb-3, .pt-3 {padding: 0 !important;margin: 0 !important;}@media print {body {-webkit-print-color-adjust: exact;print-color-adjust: exact;}@page {margin: 15mm;}}</style></head><body>${elementoParaImprimir.html()}</body></html>`);
-doc.close();
-const removerIframe = () => { if (iframe && iframe.parentNode) { document.body.removeChild(iframe); } };
-iframe.onload = function () { setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); iframe.contentWindow.onafterprint = removerIframe; setTimeout(removerIframe, 10000); }, 300); };
-});
-} else { Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html()); }
-});
-});
-$btnNovaVacina.on('click', function (e) { e.preventDefault(); showView($vacinaView); });
-$btnFecharVacina.on('click', returnToActionGrid);
-const formVac = document.querySelector('#formNovaVacina');
-if (formVac) {
-formVac.addEventListener('submit', async e => {
-e.preventDefault();
-try {
-const resp = await fetch(formVac.action, {method: 'POST', body: new FormData(formVac)});
-const data = await resp.json();
-if (data.ok) { if (window.Notify && Notify.toast) { Notify.toast(data.msg || "Vacina registrada!", "success"); } else { alert(data.msg || "Vacina registrada!"); } location.reload(); }
-else { alert(data.msg || "Erro ao registrar vacina."); }
-} catch (err) { alert('Erro ao registrar vacina.'); }
-});
-}
-const setupFormSubmission = (formId, editorsMap) => {
-$(`#${formId}`).on('submit', function () { $.each(editorsMap, (inputId, quillInstance) => { const $input = $(`#${inputId}`); if ($input.length && quillInstance) { $input.val(JSON.stringify(quillInstance.getContents())); } }); });
-};
-setupFormSubmission('form-atendimento', {'anamnese-input': quillAtendimento});
-setupFormSubmission('form-receita', {'conteudo-input': quillConteudo});
-const $formNovoServico = $('#form-novo-servico');
-const $selectServico = $('#servico-descricao-1');
-const $inputValor = $('#servico-valor');
-const servicosMap = {};
-{% for servico in servicos_clinica %}
-servicosMap["{{ servico.nome|e('js') }}"] = {{ servico.valor|number_format(2, '.', '') }};
-{% endfor %}
-$formNovoServico.on('submit', function (e) {
-e.preventDefault();
-fetch(this.action, {method: "POST", body: new FormData(this)})
-.then(r => r.json())
-.then(data => {
-if (data.status === 'success') {
-if (window.Notify && Notify.toast) { Notify.toast(data.mensagem, "success"); }
-$('#servico-descricao-1').val('').trigger('change'); $('#servicos-container').empty(); modalAdicionarServico.hide(); setTimeout(() => location.reload(), 800);
-} else { if (window.Notify && Notify.toast) { Notify.toast(data.mensagem || "Erro ao registrar serviço.", "danger"); } else { alert(data.mensagem || "Erro ao registrar serviço."); } }
-})
-.catch(err => { const errorMessage = (err.message.indexOf('<') === 0) ? "Erro no servidor (verifique logs do backend)." : err.message; if (window.Notify && Notify.toast) { Notify.toast(`Erro ao registrar serviço: ${errorMessage}`, "danger"); } else { alert(`Erro ao registrar serviço: ${errorMessage}`); } });
-});
-$btnAdicionarServico.on('click', function () {
-$('#servico-descricao-1').val('').trigger('change'); $('#servicos-container').empty(); $('#cartao-opcoes').addClass('d-none'); $('#total-servicos').text('0,00');
-if (!$('#modalAdicionarServico').hasClass('show')) { modalAdicionarServico.show(); }
-});
-$(document).on('change', '#servico-descricao', function () { const nomeServico = $(this).val(); $(document).next('input[name="valor[]"]').val($(this).find('option:selected').data('valor')); });
-$('#servico-descricao-1').select2({dropdownParent: $('#modalAdicionarServico .modal-content'), placeholder: "Selecione ou pesquise um serviço...", allowClear: true, width: '100%', language: {noResults: function () { return "Nenhum serviço encontrado"; }}});
-$(document).on('focus', '.servico-item select', function () { if (!$(this).data('select2')) { $(this).select2({placeholder: "Selecione ou pesquise um serviço...", allowClear: true, width: '100%', dropdownParent: $('#modalAdicionarServico')}); } });
-$(document).on('change', 'select[name="descricao[]"]', function () {
-const $select = $(this);
-const servicoSelecionado = $select.find('option:selected').text().toLowerCase();
-const valorBase = parseFloat($select.find('option:selected').data('valor')) || 0;
-$select.closest('.servico-item, .modal-body').find('.diarias-container').remove();
-$select.closest('.servico-item, .modal-body').find('.preview-total').remove();
-const index = $select.attr('id').replace(/\D/g, '') || '1';
-if (servicoSelecionado.includes('internação')) {
-const htmlDiarias = `<div class="diarias-container mb-3"><label for="quantidade-diarias-${index}" class="form-label">Quantidade de Diárias</label><input type="number" class="form-control quantidade-diarias" id="quantidade-diarias-${index}" name="quantidade_diarias[]" min="1" value="1" data-valor-base="${valorBase}"><small class="text-muted">O valor total será calculado automaticamente (valor × diárias).</small><input type="hidden" id="valor-total-${index}" name="valor_calculado[]" value="${valorBase.toFixed(2)}"><div id="preview-total-${index}" class="preview-total mt-2 fw-bold text-primary"></div></div>`;
-$select.closest('.mb-3').after(htmlDiarias);
-atualizarTotal($(`#quantidade-diarias-${index}`));
-}
-});
-function atualizarTotal($input) {
-const qtd = parseInt($input.val()) || 1; const valorBase = parseFloat($input.data('valor-base')) || 0; const total = valorBase * qtd; const id = $input.attr('id').replace('quantidade-diarias-', '');
-$(`#valor-total-${id}`).val(total.toFixed(2)); $(`#preview-total-${id}`).text(`💰 Total: R$ ${total.toFixed(2).replace('.', ',')}`);
-}
-$(document).on('input', '.quantidade-diarias', function () { atualizarTotal($(this)); });
-$(".btn-editar-venda").on("click", function () {
-$("#editar-id").val($(this).data("id")); $("#editar-descricao").val($(this).data("descricao")); $("#editar-valor").val($(this).data("valor")); $("#editar-metodo").val($(this).data("metodo")); $("#editar-data").val($(this).data("data")); $("#editar-observacao").val($(this).data("observacao"));
-$("#form-editar-venda").attr("action", "{{ path('clinica_editar_venda', {petId: pet.id, id: 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', $(this).data("id")));
-modalEditarVenda.show();
-});
-
-// ─── PDV POPUP — Lançar venda no caixa ───────────────────────────────────────
-var _pdvModal = null;
-var _pdvVendaCarregada = null;
-
-function pdvIframeOnLoad() {
-    var iframe = document.getElementById('pdvIframe');
-    if (!iframe || iframe.src === 'about:blank') return;
-
-    // Tenta injetar o payload assim que o iframe carregar
-    try {
-        var iframeWin = iframe.contentWindow;
-        // Espera o PDV estar pronto (evento customizado ou polling)
-        var tentativas = 0;
-        var intervalo = setInterval(function () {
-            tentativas++;
+$(document).ready(function() {
+    // === PEGAR ELEMENTOS ===
+    const $actionButtonsView = $('#action-buttons-view');
+    const $atendimentoView = $('#atendimento-view');
+    const $receitaView = $('#receita-view');
+    const serviceDisplayContainer = $('#service-display-container');
+    const serviceDetailsContent = document.getElementById('service-details-content');
+    const $vacinaView = $('#vacina-view');
+    const $btnNovaVacina = $('#btn-nova-vacina');
+    const $btnFecharVacina = $('#btn-fechar-vacina');
+    const $btnNovoAtendimento = $('#btn-novo-atendimento');
+    const $btnNovaReceita = $('#btn-nova-receita');
+    const $btnFecharAtendimento = $('#btn-fechar-atendimento');
+    const $btnFecharReceita = $('#btn-fechar-receita');
+    const $btnFecharServiceDisplay = $('#btn-fechar-service-display');
+    const $btnAdicionarServico = $('#btn-adicionar-servico');
+    const historicoTabElement = $('button[data-bs-target="#historico"]')[0];
+    let historicoTab = historicoTabElement ? new bootstrap.Tab(historicoTabElement) : null;
+    window.modalAdicionarServico = new bootstrap.Modal($('#modalAdicionarServico')[0], {
+        backdrop: 'static',
+        keyboard: false
+    });
+    window.modalEditarVenda = new bootstrap.Modal($('#modalEditarVenda')[0], {
+        backdrop: 'static',
+        keyboard: false
+    });
+    window.currentQuillDisplayEditors = [];
+    const showView = (viewToShow) => {
+        $actionButtonsView.hide();
+        $atendimentoView.hide();
+        $receitaView.hide();
+        serviceDisplayContainer.hide();
+        if (viewToShow) $(viewToShow).show();
+    };
+    const returnToActionGrid = (e) => {
+        if (e) e.preventDefault();
+        window.currentQuillDisplayEditors.forEach(editor => {
+            if (editor.container && editor.container.parentNode) {
+                editor.container.parentNode.removeChild(editor.container);
+            }
+        });
+        window.currentQuillDisplayEditors = [];
+        showView($actionButtonsView);
+    };
+    $('.voltar-dash').on('click', function() {
+        window.close();
+        return false;
+    });
+    $btnNovoAtendimento.on('click', function(e) {
+        e.preventDefault();
+        showView($atendimentoView);
+    });
+    $btnNovaReceita.on('click', function(e) {
+        e.preventDefault();
+        showView($receitaView);
+    });
+    const notImplementedButtons = ['btn-novo-peso', 'btn-novo-exame', 'btn-novas-fotos'];
+    notImplementedButtons.forEach(id => {
+        $(`#${id}`).on('click', function(e) {
+            e.preventDefault();
+            var modal = Notify.modal(`A funcionalidade de "${$(this).text().trim()}" não está implementada ainda.`, 'md', 'mensagem do sistema')
+            $(`#${modal.id}`).find('.modal-header').addClass('text-bg-warning')
+        });
+    });
+    $btnFecharAtendimento.on('click', returnToActionGrid);
+    $btnFecharReceita.on('click', returnToActionGrid);
+    $btnFecharServiceDisplay.on('click', returnToActionGrid);
+    const toolbarOptions = [
+        [{
+            'header': [1, 2, 3, false]
+        }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{
+            'list': 'ordered'
+        }, {
+            'list': 'bullet'
+        }],
+        ['link'],
+        ['clean']
+    ];
+    const createQuillEditor = (selector, options = {}) => {
+        const el = $(selector)[0];
+        return el ? new Quill(selector, {
+            theme: 'snow',
+            modules: {
+                toolbar: toolbarOptions
+            },
+            ...options
+        }) : null;
+    };
+    const quillAtendimento = createQuillEditor('#atendimento-editor');
+    const quillConteudo = createQuillEditor('#editor-conteudo');
+    const timelineLinks = document.querySelectorAll('.timeline-link');
+    timelineLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const tipo = this.dataset.tipo;
+            const data = this.dataset.data;
+            const resumo = this.dataset.resumo;
+            const observacoes = this.dataset.observacoes;
+            serviceDetailsContent.innerHTML = '';
+            window.currentQuillDisplayEditors.forEach(editor => {
+                if (editor.container && editor.container.parentNode) {
+                    editor.container.parentNode.removeChild(editor.container);
+                }
+            });
+            window.currentQuillDisplayEditors = [];
+            document.getElementById('service-display-title').textContent = `Detalhes do Registro: ${tipo}`;
+            const appendServiceDetailCard = (cardTitle, contentData, typeClass, isHtml = false) => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = ` ${typeClass}`;
+                const cardHeader = document.createElement('h6');
+                cardHeader.className = 'mb-2';
+                cardHeader.textContent = cardTitle;
+                cardDiv.appendChild(cardHeader);
+                const cardDate = document.createElement('p');
+                cardDate.className = 'text-muted mb-3';
+                cardDate.innerHTML = ``;
+                cardDiv.appendChild(cardDate);
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'service-detail-content';
+                cardDiv.appendChild(contentDiv);
+                serviceDetailsContent.appendChild(cardDiv);
+                if (contentData) {
+                    if (isHtml) {
+                        contentDiv.innerHTML = contentData;
+                    } else {
+                        const quillDisplay = new Quill(contentDiv, {
+                            theme: 'bubble',
+                            readOnly: true,
+                            modules: {
+                                toolbar: false
+                            }
+                        });
+                        window.currentQuillDisplayEditors.push(quillDisplay);
+                        try {
+                            quillDisplay.setContents(contentData.ops[0].insert);
+                            $('.service-detail-content .ql-editor p').html(contentData.ops[0].insert)
+                        } catch {
+                            quillDisplay.setText('Conteúdo não disponível ou formato inválido.');
+                        }
+                    }
+                } else {
+                    contentDiv.innerHTML = '<p>Nenhum detalhe disponível.</p>';
+                }
+            };
+            if (tipo === 'Consulta' || tipo === 'Retorno') {
+                const anamneseDeltaString = this.dataset.atendimentoDelta;
+                const borderColorClass = (tipo === 'Consulta') ? 'border-primary' : 'border-success';
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `service-detail-card p-3 rounded ${borderColorClass} border-start border-4`;
+                const cardHeader = document.createElement('h5');
+                cardHeader.className = 'mb-2 text-primary';
+                cardHeader.innerHTML = `<i class="fas fa-stethoscope me-2"></i>${tipo}`;
+                cardDiv.appendChild(cardHeader);
+                if (observacoes) {
+                    const obsDiv = document.createElement('div');
+                    obsDiv.className = 'mb-3 p-2 bg-light rounded';
+                    obsDiv.innerHTML = `<strong>Assunto:</strong> ${observacoes}`;
+                    cardDiv.appendChild(obsDiv);
+                }
+                const cardDate = document.createElement('p');
+                cardDate.className = 'text-muted mb-3';
+                cardDate.innerHTML = `<small><i class="fas fa-calendar me-1"></i>Registrado em: ${data}</small>`;
+                cardDiv.appendChild(cardDate);
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'service-detail-content';
+                cardDiv.appendChild(contentDiv);
+                serviceDetailsContent.appendChild(cardDiv);
+                if (anamneseDeltaString) {
+                    try {
+                        const anamneseData = JSON.parse(anamneseDeltaString);
+                        const quillDisplay = new Quill(contentDiv, {
+                            theme: 'bubble',
+                            readOnly: true,
+                            modules: {
+                                toolbar: false
+                            }
+                        });
+                        window.currentQuillDisplayEditors.push(quillDisplay);
+                        quillDisplay.setContents(anamneseData);
+                    } catch (e) {
+                        contentDiv.innerHTML = '<p class="text-muted">Conteúdo não disponível ou formato inválido.</p>';
+                    }
+                } else {
+                    contentDiv.innerHTML = '<p class="text-muted">Nenhum detalhe de anamnese disponível.</p>';
+                }
+            } else if (tipo === 'Receita') {
+                const cabecalhoHtmlString = this.dataset.receitaCabecalhoHtml;
+                let conteudoDeltaString = null;
+                try {
+                    conteudoDeltaString = JSON.parse(this.dataset.receitaConteudoDelta);
+                } catch (e) {
+                    console.log('Erro ao parsear conteúdo da receita:', e);
+                }
+                const rodapeHtmlString = this.dataset.receitaRodapeHtml;
+                const receitaContainer = document.createElement('div');
+                receitaContainer.id = 'receita-para-impressao';
+                receitaContainer.className = 'receita-container p-4';
+                receitaContainer.style.cssText = 'border: 1px solid #ddd; border-radius: 12px; background: #fff;';
+                if (cabecalhoHtmlString) {
+                    const cabecalhoDiv = document.createElement('div');
+                    cabecalhoDiv.className = 'receita-cabecalho text-center mb-4 pb-3 border-bottom';
+                    cabecalhoDiv.innerHTML = cabecalhoHtmlString;
+                    receitaContainer.appendChild(cabecalhoDiv);
+                }
+                const conteudoDiv = document.createElement('div');
+                conteudoDiv.className = 'receita-conteudo my-4';
+                conteudoDiv.style.minHeight = '200px';
+                receitaContainer.appendChild(conteudoDiv);
+                if (conteudoDeltaString) {
+                    const quillDisplay = new Quill(conteudoDiv, {
+                        theme: 'bubble',
+                        readOnly: true,
+                        modules: {
+                            toolbar: false
+                        }
+                    });
+                    window.currentQuillDisplayEditors.push(quillDisplay);
+                    try {
+                        quillDisplay.setContents(conteudoDeltaString);
+                    } catch (e) {
+                        conteudoDiv.innerHTML = '<p>Conteúdo não disponível.</p>';
+                    }
+                } else {
+                    conteudoDiv.innerHTML = '<p class="text-muted">Nenhum conteúdo na receita.</p>';
+                }
+                if (rodapeHtmlString) {
+                    const rodapeDiv = document.createElement('div');
+                    rodapeDiv.className = 'receita-rodape text-center mt-4 pt-3 border-top';
+                    rodapeDiv.innerHTML = rodapeHtmlString;
+                    receitaContainer.appendChild(rodapeDiv);
+                }
+                serviceDetailsContent.appendChild(receitaContainer);
+                if (!cabecalhoHtmlString && !conteudoDeltaString && !rodapeHtmlString) {
+                    receitaContainer.innerHTML = `<div class="text-center p-4"><h6 class="mb-2">Receita Médica</h6><p class="text-muted mb-3"><small>Emitida em: ${data}</small></p><p>Nenhum detalhe de receita disponível.</p></div>`;
+                }
+            } else {
+                const borderColorClass = 'border-secondary';
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `service-detail-card ${borderColorClass}`;
+                cardDiv.innerHTML = `<h6 class="mb-2">${tipo} - ${resumo}</h6><p class="text-muted mb-3"><small>Data: ${data}</small></p><p>Nenhum detalhe específico disponível para este tipo de registro no momento.</p>`;
+                serviceDetailsContent.appendChild(cardDiv);
+            }
+            if (tipo === 'Receita') {
+                Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html(), 'Imprimir Receita', 'Fechar', 'imprimir-receita');
+                $(document).off('click', '.imprimir-receita').on('click', '.imprimir-receita', function() {
+                    var elementoParaImprimir = $(this).closest('.modal-content').find('#receita-para-impressao');
+                    if (!elementoParaImprimir.length) {
+                        elementoParaImprimir = $(this).closest('.modal-content').find('#service-details-content');
+                    }
+                    if (!elementoParaImprimir.length) {
+                        alert('Não foi possível encontrar o conteúdo da receita.');
+                        return;
+                    }
+                    $('#iframe-impressao-receita').remove();
+                    var iframe = document.createElement('iframe');
+                    iframe.id = 'iframe-impressao-receita';
+                    iframe.style.position = 'fixed';
+                    iframe.style.right = '0';
+                    iframe.style.bottom = '0';
+                    iframe.style.width = '0';
+                    iframe.style.height = '0';
+                    iframe.style.border = '0';
+                    document.body.appendChild(iframe);
+                    var doc = iframe.contentWindow.document;
+                    doc.open();
+                    doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receita Médica Veterinária</title><style>* {margin: 0;padding: 0;box-sizing: border-box;}body {font-family: 'Times New Roman', Times, serif;font-size: 14pt;line-height: 1.6;padding: 20mm;color: #000;}.receita-container {max-width: 100%;border: none !important;padding: 0 !important;}.receita-cabecalho {text-align: center;margin-bottom: 30px;padding-bottom: 15px;border-bottom: 2px solid #333;}.receita-cabecalho h1,.receita-cabecalho h2,.receita-cabecalho h3 {margin-bottom: 5px;}.receita-conteudo {min-height: 300px;margin: 30px 0;padding: 20px 0;}.receita-conteudo .ql-editor {padding: 0 !important;}.receita-conteudo p {margin-bottom: 10px;}.receita-rodape {text-align: center;margin-top: 50px;padding-top: 20px;border-top: 1px solid #333;}.border, .border-bottom, .border-top {border: none !important;}.p-4, .p-3, .my-4, .mb-4, .mt-4, .pb-3, .pt-3 {padding: 0 !important;margin: 0 !important;}@media print {body {-webkit-print-color-adjust: exact;print-color-adjust: exact;}@page {margin: 15mm;}}</style></head><body>${elementoParaImprimir.html()}</body></html>`);
+                    doc.close();
+                    const removerIframe = () => {
+                        if (iframe && iframe.parentNode) {
+                            document.body.removeChild(iframe);
+                        }
+                    };
+                    iframe.onload = function() {
+                        setTimeout(() => {
+                            iframe.contentWindow.focus();
+                            iframe.contentWindow.print();
+                            iframe.contentWindow.onafterprint = removerIframe;
+                            setTimeout(removerIframe, 10000);
+                        }, 300);
+                    };
+                });
+            } else {
+                Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html());
+            }
+        });
+    });
+    $btnNovaVacina.on('click', function(e) {
+        e.preventDefault();
+        showView($vacinaView);
+    });
+    $btnFecharVacina.on('click', returnToActionGrid);
+    const formVac = document.querySelector('#formNovaVacina');
+    if (formVac) {
+        formVac.addEventListener('submit', async e => {
+            e.preventDefault();
             try {
-                if (iframeWin.pdvReceberVendaClinica) {
+                const resp = await fetch(formVac.action, {
+                    method: 'POST',
+                    body: new FormData(formVac)
+                });
+                const data = await resp.json();
+                if (data.ok) {
+                    if (window.Notify && Notify.toast) {
+                        Notify.toast(data.msg || "Vacina registrada!", "success");
+                    } else {
+                        alert(data.msg || "Vacina registrada!");
+                    }
+                    location.reload();
+                } else {
+                    alert(data.msg || "Erro ao registrar vacina.");
+                }
+            } catch (err) {
+                alert('Erro ao registrar vacina.');
+            }
+        });
+    }
+    const setupFormSubmission = (formId, editorsMap) => {
+        $(`#${formId}`).on('submit', function() {
+            $.each(editorsMap, (inputId, quillInstance) => {
+                const $input = $(`#${inputId}`);
+                if ($input.length && quillInstance) {
+                    $input.val(JSON.stringify(quillInstance.getContents()));
+                }
+            });
+        });
+    };
+    setupFormSubmission('form-atendimento', {
+        'anamnese-input': quillAtendimento
+    });
+    setupFormSubmission('form-receita', {
+        'conteudo-input': quillConteudo
+    });
+    const $formNovoServico = $('#form-novo-servico');
+    const $selectServico = $('#servico-descricao-1');
+    const $inputValor = $('#servico-valor');
+    const servicosMap = {}; {
+        %
+        for servico in servicos_clinica %
+    }
+    servicosMap["{{ servico.nome|e('js') }}"] = {
+        {
+            servico.valor | number_format(2, '.', '')
+        }
+    }; {
+        % endfor %
+    }
+    $formNovoServico.on('submit', function(e) {
+        e.preventDefault();
+        fetch(this.action, {
+                method: "POST",
+                body: new FormData(this)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (window.Notify && Notify.toast) {
+                        Notify.toast(data.mensagem, "success");
+                    }
+                    $('#servico-descricao-1').val('').trigger('change');
+                    $('#servicos-container').empty();
+                    modalAdicionarServico.hide();
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    if (window.Notify && Notify.toast) {
+                        Notify.toast(data.mensagem || "Erro ao registrar serviço.", "danger");
+                    } else {
+                        alert(data.mensagem || "Erro ao registrar serviço.");
+                    }
+                }
+            })
+            .catch(err => {
+                const errorMessage = (err.message.indexOf('<') === 0) ? "Erro no servidor (verifique logs do backend)." : err.message;
+                if (window.Notify && Notify.toast) {
+                    Notify.toast(`Erro ao registrar serviço: ${errorMessage}`, "danger");
+                } else {
+                    alert(`Erro ao registrar serviço: ${errorMessage}`);
+                }
+            });
+    });
+    $btnAdicionarServico.on('click', function() {
+        $('#servico-descricao-1').val('').trigger('change');
+        $('#servicos-container').empty();
+        $('#cartao-opcoes').addClass('d-none');
+        $('#total-servicos').text('0,00');
+        if (!$('#modalAdicionarServico').hasClass('show')) {
+            modalAdicionarServico.show();
+        }
+    });
+    $(document).on('change', '#servico-descricao', function() {
+        const nomeServico = $(this).val();
+        $(document).next('input[name="valor[]"]').val($(this).find('option:selected').data('valor'));
+    });
+    $('#servico-descricao-1').select2({
+        dropdownParent: $('#modalAdicionarServico .modal-content'),
+        placeholder: "Selecione ou pesquise um serviço...",
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return "Nenhum serviço encontrado";
+            }
+        }
+    });
+    $(document).on('focus', '.servico-item select', function() {
+        if (!$(this).data('select2')) {
+            $(this).select2({
+                placeholder: "Selecione ou pesquise um serviço...",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#modalAdicionarServico')
+            });
+        }
+    });
+    $(document).on('change', 'select[name="descricao[]"]', function() {
+        const $select = $(this);
+        const servicoSelecionado = $select.find('option:selected').text().toLowerCase();
+        const valorBase = parseFloat($select.find('option:selected').data('valor')) || 0;
+        $select.closest('.servico-item, .modal-body').find('.diarias-container').remove();
+        $select.closest('.servico-item, .modal-body').find('.preview-total').remove();
+        const index = $select.attr('id').replace(/\D/g, '') || '1';
+        if (servicoSelecionado.includes('internação')) {
+            const htmlDiarias = `<div class="diarias-container mb-3"><label for="quantidade-diarias-${index}" class="form-label">Quantidade de Diárias</label><input type="number" class="form-control quantidade-diarias" id="quantidade-diarias-${index}" name="quantidade_diarias[]" min="1" value="1" data-valor-base="${valorBase}"><small class="text-muted">O valor total será calculado automaticamente (valor × diárias).</small><input type="hidden" id="valor-total-${index}" name="valor_calculado[]" value="${valorBase.toFixed(2)}"><div id="preview-total-${index}" class="preview-total mt-2 fw-bold text-primary"></div></div>`;
+            $select.closest('.mb-3').after(htmlDiarias);
+            atualizarTotal($(`#quantidade-diarias-${index}`));
+        }
+    });
+
+    function atualizarTotal($input) {
+        const qtd = parseInt($input.val()) || 1;
+        const valorBase = parseFloat($input.data('valor-base')) || 0;
+        const total = valorBase * qtd;
+        const id = $input.attr('id').replace('quantidade-diarias-', '');
+        $(`#valor-total-${id}`).val(total.toFixed(2));
+        $(`#preview-total-${id}`).text(`💰 Total: R$ ${total.toFixed(2).replace('.', ',')}`);
+    }
+    $(document).on('input', '.quantidade-diarias', function() {
+        atualizarTotal($(this));
+    });
+    $(".btn-editar-venda").on("click", function() {
+        $("#editar-id").val($(this).data("id"));
+        $("#editar-descricao").val($(this).data("descricao"));
+        $("#editar-valor").val($(this).data("valor"));
+        $("#editar-metodo").val($(this).data("metodo"));
+        $("#editar-data").val($(this).data("data"));
+        $("#editar-observacao").val($(this).data("observacao"));
+        $("#form-editar-venda").attr("action", "{{ path('clinica_editar_venda', {petId: pet.id, id: 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', $(this).data("id")));
+        modalEditarVenda.show();
+    });
+
+    // ─── PDV POPUP — Lançar venda no caixa ───────────────────────────────────────
+    // NOTA: variáveis e função definidas em window para ficarem no escopo global,
+    // pois o atributo onload="pdvIframeOnLoad()" do iframe precisa de acesso global.
+    window._pdvModal = null;
+    window._pdvVendaCarregada = null;
+
+    window.pdvIframeOnLoad = function() {
+        var iframe = document.getElementById('pdvIframe');
+        if (!iframe || iframe.src === 'about:blank') return;
+
+        // Tenta injetar o payload assim que o iframe carregar
+        try {
+            var iframeWin = iframe.contentWindow;
+            // Espera o PDV estar pronto (evento customizado ou polling)
+            var tentativas = 0;
+            var intervalo = setInterval(function() {
+                tentativas++;
+                try {
+                    if (iframeWin.pdvReceberVendaClinica) {
+                        clearInterval(intervalo);
+                        iframeWin.pdvReceberVendaClinica(window._pdvVendaCarregada);
+                        document.getElementById('pdvLoadingOverlay').style.display = 'none';
+                    }
+                } catch (e) {
+                    /* cross-origin ainda não pronto */ }
+                if (tentativas > 40) {
                     clearInterval(intervalo);
-                    iframeWin.pdvReceberVendaClinica(_pdvVendaCarregada);
                     document.getElementById('pdvLoadingOverlay').style.display = 'none';
                 }
-            } catch (e) { /* cross-origin ainda não pronto */ }
-            if (tentativas > 40) {
-                clearInterval(intervalo);
-                document.getElementById('pdvLoadingOverlay').style.display = 'none';
-            }
-        }, 250);
-    } catch (e) {
-        document.getElementById('pdvLoadingOverlay').style.display = 'none';
-    }
-}
+            }, 250);
+        } catch (e) {
+            document.getElementById('pdvLoadingOverlay').style.display = 'none';
+        }
+    };
 
-$(document).on("click", ".btn-lancar-pdv", function () {
-    var vendaId = $(this).data("id");
-    var pdvUrl  = "{{ path('clinica_pdv_index') }}";
-    var apiUrl  = "{{ path('pdv_dados_venda', {id: '__ID__'}) }}".replace('__ID__', vendaId);
+    $(document).on("click", ".btn-lancar-pdv", function() {
+        var vendaId = $(this).data("id");
+        var pdvUrl = "{{ path('clinica_pdv_index') }}";
+        var apiUrl = "{{ path('pdv_dados_venda', {id: '__ID__'}) }}".replace('__ID__', vendaId);
 
-    _pdvVendaCarregada = null;
-    document.getElementById('pdvLoadingOverlay').style.display = 'flex';
-    document.getElementById('pdvIframe').src = 'about:blank';
-    $('#pdvModalVendaLabel').text('Venda #' + vendaId);
+        window._pdvVendaCarregada = null;
+        document.getElementById('pdvLoadingOverlay').style.display = 'flex';
+        document.getElementById('pdvIframe').src = 'about:blank';
+        $('#pdvModalVendaLabel').text('Venda #' + vendaId);
 
-    if (!_pdvModal) {
-        _pdvModal = new bootstrap.Modal(document.getElementById('modalPdvVenda'), {backdrop: 'static', keyboard: false});
-    }
-    _pdvModal.show();
+        if (!window._pdvModal) {
+            window._pdvModal = new bootstrap.Modal(document.getElementById('modalPdvVenda'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+        }
+        window._pdvModal.show();
 
-    // Busca os dados da venda
-    fetch(apiUrl)
-        .then(function (r) { return r.json(); })
-        .then(function (dados) {
-            if (!dados.ok) {
+        // Busca os dados da venda
+        fetch(apiUrl)
+            .then(function(r) {
+                return r.json();
+            })
+            .then(function(dados) {
+                if (!dados.ok) {
+                    document.getElementById('pdvLoadingOverlay').innerHTML =
+                        '<div class="text-center text-danger"><i class="bi bi-exclamation-triangle fs-1"></i><p class="mt-2">' + (dados.msg || 'Erro ao carregar venda.') + '</p></div>';
+                    return;
+                }
+                window._pdvVendaCarregada = dados;
+                // Carrega o iframe com o PDV
+                document.getElementById('pdvIframe').src = pdvUrl;
+            })
+            .catch(function() {
                 document.getElementById('pdvLoadingOverlay').innerHTML =
-                    '<div class="text-center text-danger"><i class="bi bi-exclamation-triangle fs-1"></i><p class="mt-2">' + (dados.msg || 'Erro ao carregar venda.') + '</p></div>';
-                return;
-            }
-            _pdvVendaCarregada = dados;
-            // Carrega o iframe com o PDV
-            document.getElementById('pdvIframe').src = pdvUrl;
-        })
-        .catch(function () {
-            document.getElementById('pdvLoadingOverlay').innerHTML =
-                '<div class="text-center text-danger"><i class="bi bi-wifi-off fs-1"></i><p class="mt-2">Erro de comunicação. Tente novamente.</p></div>';
-        });
-});
+                    '<div class="text-center text-danger"><i class="bi bi-wifi-off fs-1"></i><p class="mt-2">Erro de comunicação. Tente novamente.</p></div>';
+            });
+    });
 
-// Limpa ao fechar o modal
-document.getElementById('modalPdvVenda').addEventListener('hidden.bs.modal', function () {
-    document.getElementById('pdvIframe').src = 'about:blank';
-    _pdvVendaCarregada = null;
-    document.getElementById('pdvLoadingOverlay').style.display = 'flex';
-    document.getElementById('pdvLoadingOverlay').innerHTML = '<div class="text-center text-muted"><div class="spinner-border text-success mb-3" role="status"></div><p class="mb-0">Carregando PDV...</p></div>';
+    // Limpa ao fechar o modal
+    document.getElementById('modalPdvVenda').addEventListener('hidden.bs.modal', function() {
+        document.getElementById('pdvIframe').src = 'about:blank';
+        window._pdvVendaCarregada = null;
+        document.getElementById('pdvLoadingOverlay').style.display = 'flex';
+        document.getElementById('pdvLoadingOverlay').innerHTML = '<div class="text-center text-muted"><div class="spinner-border text-success mb-3" role="status"></div><p class="mb-0">Carregando PDV...</p></div>';
+    });
+    // ─────────────────────────────────────────────────────────────────────────────
+    $(".btn-inativar-venda").on("click", function() {
+        if (!confirm("Tem certeza que deseja inativar esta venda?")) return;
+        fetch(`/clinica/pet/{{ pet.id }}/venda/${$(this).data("id")}/inativar`, {
+            method: "POST"
+        }).then(r => r.json()).then(d => {
+            if (d.status === "success") {
+                location.reload();
+            } else {
+                alert(d.mensagem || "Erro ao inativar venda.");
+            }
+        }).catch(() => alert("Erro ao inativar venda."));
+    });
+    $("#form-editar-venda").on("submit", function(e) {
+        e.preventDefault();
+        fetch(this.action, {
+            method: "POST",
+            body: new FormData(this)
+        }).then(r => r.json()).then(d => {
+            if (d.status === "success") {
+                $('#editar-descricao').val('');
+                $('#editar-valor').val('');
+                modalEditarVenda.hide();
+                location.reload();
+            } else {
+                alert(d.mensagem);
+            }
+        }).catch(() => alert("Erro ao editar venda."));
+    });
 });
-// ─────────────────────────────────────────────────────────────────────────────
-$(".btn-inativar-venda").on("click", function () {
-if (!confirm("Tem certeza que deseja inativar esta venda?")) return;
-fetch(`/clinica/pet/{{ pet.id }}/venda/${$(this).data("id")}/inativar`, {method: "POST"}).then(r => r.json()).then(d => { if (d.status === "success") { location.reload(); } else { alert(d.mensagem || "Erro ao inativar venda."); } }).catch(() => alert("Erro ao inativar venda."));
-});
-$("#form-editar-venda").on("submit", function (e) {
-e.preventDefault();
-fetch(this.action, {method: "POST", body: new FormData(this)}).then(r => r.json()).then(d => { if (d.status === "success") { $('#editar-descricao').val(''); $('#editar-valor').val(''); modalEditarVenda.hide(); location.reload(); } else { alert(d.mensagem); } }).catch(() => alert("Erro ao editar venda."));
-});
-});
-$(document).on("click", ".add-servico", function () {
-let index = $(".servico-item").length + 1;
-let servicoHtml = `
+$(document).on("click", ".add-servico", function() {
+    let index = $(".servico-item").length + 1;
+    let servicoHtml = `
 <div class="mb-3 servico-item border rounded-3 p-3 bg-light">
 <div class="mb-3">
 <label class="form-label">Descrição do Serviço*</label>
@@ -1182,65 +1467,146 @@ let servicoHtml = `
 </button>
 </div>
 `;
-$('#servicos-container').append(servicoHtml);
-const $novoSelect = $(`#servico-descricao-${index}`);
-if ($novoSelect.data('select2')) { $novoSelect.select2('destroy'); }
-$novoSelect.select2({dropdownParent: $('#modalAdicionarServico .modal-content'), placeholder: "Selecione ou pesquise um serviço...", allowClear: true, width: '100%'});
+    $('#servicos-container').append(servicoHtml);
+    const $novoSelect = $(`#servico-descricao-${index}`);
+    if ($novoSelect.data('select2')) {
+        $novoSelect.select2('destroy');
+    }
+    $novoSelect.select2({
+        dropdownParent: $('#modalAdicionarServico .modal-content'),
+        placeholder: "Selecione ou pesquise um serviço...",
+        allowClear: true,
+        width: '100%'
+    });
 });
-$(document).on("click", ".remove-servico", function () { $(this).closest(".servico-item").remove(); calcularTotal(); });
+$(document).on("click", ".remove-servico", function() {
+    $(this).closest(".servico-item").remove();
+    calcularTotal();
+});
+
 function calcularTotal() {
-let total = 0;
-const servicoPrincipal = $('#servico-descricao-1');
-if (servicoPrincipal.length && servicoPrincipal.val()) {
-let valorPrincipal = parseFloat(servicoPrincipal.find('option:selected').data('valor')) || 0;
-const descontoPrincipal = parseFloat($('#servico-desconto').val()) || 0;
-const diarias1 = $('#quantidade-diarias-1');
-if (diarias1.length && diarias1.val()) { const qtdDiarias = parseInt(diarias1.val()) || 1; valorPrincipal = valorPrincipal * qtdDiarias; }
-total += (valorPrincipal - descontoPrincipal);
+    let total = 0;
+    const servicoPrincipal = $('#servico-descricao-1');
+    if (servicoPrincipal.length && servicoPrincipal.val()) {
+        let valorPrincipal = parseFloat(servicoPrincipal.find('option:selected').data('valor')) || 0;
+        const descontoPrincipal = parseFloat($('#servico-desconto').val()) || 0;
+        const diarias1 = $('#quantidade-diarias-1');
+        if (diarias1.length && diarias1.val()) {
+            const qtdDiarias = parseInt(diarias1.val()) || 1;
+            valorPrincipal = valorPrincipal * qtdDiarias;
+        }
+        total += (valorPrincipal - descontoPrincipal);
+    }
+    $('.servico-item').each(function() {
+        const select = $(this).find('.select-servico');
+        const desconto = parseFloat($(this).find('input[name="desconto[]"]').val()) || 0;
+        if (select.val()) {
+            let valor = parseFloat(select.find('option:selected').data('valor')) || 0;
+            const diariasInput = $(this).find('.quantidade-diarias');
+            if (diariasInput.length && diariasInput.val()) {
+                const qtdDiarias = parseInt(diariasInput.val()) || 1;
+                valor = valor * qtdDiarias;
+            }
+            total += (valor - desconto);
+        }
+    });
+    $('#total-servicos').text(total.toFixed(2).replace('.', ','));
 }
-$('.servico-item').each(function () {
-const select = $(this).find('.select-servico'); const desconto = parseFloat($(this).find('input[name="desconto[]"]').val()) || 0;
-if (select.val()) { let valor = parseFloat(select.find('option:selected').data('valor')) || 0; const diariasInput = $(this).find('.quantidade-diarias'); if (diariasInput.length && diariasInput.val()) { const qtdDiarias = parseInt(diariasInput.val()) || 1; valor = valor * qtdDiarias; } total += (valor - desconto); }
+$(document).on('change input', '#servico-descricao-1, #servico-desconto, .select-servico, input[name="desconto[]"], .quantidade-diarias', function() {
+    calcularTotal();
 });
-$('#total-servicos').text(total.toFixed(2).replace('.', ','));
-}
-$(document).on('change input', '#servico-descricao-1, #servico-desconto, .select-servico, input[name="desconto[]"], .quantidade-diarias', function () { calcularTotal(); });
-$('#modalAdicionarServico').on('shown.bs.modal', function () { calcularTotal(); });
-$('.modal').on('hidden.modal.bs', function () { $('.modal-backdrop').remove() })
-$(document).ready(function () {
-if ($.fn.DataTable && $('#tabelaVacinas').length) { $('#tabelaVacinas').DataTable({language: {url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json'}, order: [[2, 'desc']]}); }
+$('#modalAdicionarServico').on('shown.bs.modal', function() {
+    calcularTotal();
 });
-$(document).on('change', '#servico-metodo', function () {
-const metodo = $(this).val();
-if (metodo === 'credito' || metodo === 'debito') { $('#cartao-opcoes').removeClass('d-none'); } else { $('#cartao-opcoes').addClass('d-none'); }
+$('.modal').on('hidden.modal.bs', function() {
+    $('.modal-backdrop').remove()
+})
+$(document).ready(function() {
+    if ($.fn.DataTable && $('#tabelaVacinas').length) {
+        $('#tabelaVacinas').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json'
+            },
+            order: [
+                [2, 'desc']
+            ]
+        });
+    }
 });
-$(document).on('submit', 'form[action*="vacina"][action*="remover"]', async function (e) {
-e.preventDefault();
-if (!confirm("Deseja remover esta vacina?")) return;
-const form = this;
-try {
-const resp = await fetch(form.action, {method: "POST"}); const data = await resp.json();
-if (data.ok) { const row = form.closest("tr"); if (row) { $(row).fadeOut(300, () => $(row).remove()); } if (window.Notify && Notify.toast) { Notify.toast(data.msg || "Vacina removida com sucesso!", "success"); } else { alert(data.msg || "Vacina removida com sucesso!"); } }
-else { alert(data.msg || "Erro ao remover vacina."); }
-} catch (err) { alert("Erro ao remover vacina: " + err.message); }
+$(document).on('change', '#servico-metodo', function() {
+    const metodo = $(this).val();
+    if (metodo === 'credito' || metodo === 'debito') {
+        $('#cartao-opcoes').removeClass('d-none');
+    } else {
+        $('#cartao-opcoes').addClass('d-none');
+    }
+});
+$(document).on('submit', 'form[action*="vacina"][action*="remover"]', async function(e) {
+    e.preventDefault();
+    if (!confirm("Deseja remover esta vacina?")) return;
+    const form = this;
+    try {
+        const resp = await fetch(form.action, {
+            method: "POST"
+        });
+        const data = await resp.json();
+        if (data.ok) {
+            const row = form.closest("tr");
+            if (row) {
+                $(row).fadeOut(300, () => $(row).remove());
+            }
+            if (window.Notify && Notify.toast) {
+                Notify.toast(data.msg || "Vacina removida com sucesso!", "success");
+            } else {
+                alert(data.msg || "Vacina removida com sucesso!");
+            }
+        } else {
+            alert(data.msg || "Erro ao remover vacina.");
+        }
+    } catch (err) {
+        alert("Erro ao remover vacina: " + err.message);
+    }
 });
 $('#modalAdicionarServico .btn-close').remove();
 const modalConfirmacao = new bootstrap.Modal($('#modalConfirmacao')[0]);
 let acaoConfirmacao = null;
-$('#btn-cancelar-servico').on('click', function (e) {
-e.preventDefault();
-const temDados = $('#servico-descricao-1').val() || $('.servico-item').length > 0;
-if (temDados) { acaoConfirmacao = function () { window.modalAdicionarServico.hide(); }; $('#mensagem-confirmacao').text('Você tem dados não salvos. Deseja realmente cancelar e perder as informações?'); modalConfirmacao.show(); }
-else { window.modalAdicionarServico.hide(); }
+$('#btn-cancelar-servico').on('click', function(e) {
+    e.preventDefault();
+    const temDados = $('#servico-descricao-1').val() || $('.servico-item').length > 0;
+    if (temDados) {
+        acaoConfirmacao = function() {
+            window.modalAdicionarServico.hide();
+        };
+        $('#mensagem-confirmacao').text('Você tem dados não salvos. Deseja realmente cancelar e perder as informações?');
+        modalConfirmacao.show();
+    } else {
+        window.modalAdicionarServico.hide();
+    }
 });
-$('#btn-sim-confirmar').on('click', function () { modalConfirmacao.hide(); if (acaoConfirmacao) { acaoConfirmacao(); acaoConfirmacao = null; } });
-$('#btn-nao-confirmar').on('click', function () { modalConfirmacao.hide(); acaoConfirmacao = null; });
+$('#btn-sim-confirmar').on('click', function() {
+    modalConfirmacao.hide();
+    if (acaoConfirmacao) {
+        acaoConfirmacao();
+        acaoConfirmacao = null;
+    }
+});
+$('#btn-nao-confirmar').on('click', function() {
+    modalConfirmacao.hide();
+    acaoConfirmacao = null;
+});
 $('#modalEditarVenda .btn-close').remove();
-$('#btn-cancelar-editar').on('click', function (e) {
-e.preventDefault();
-const temDados = $('#editar-descricao').val() || $('#editar-valor').val();
-if (temDados) { acaoConfirmacao = function () { window.modalEditarVenda.hide(); }; $('#mensagem-confirmacao').text('Você tem alterações não salvas. Deseja realmente cancelar?'); modalConfirmacao.show(); }
-else { window.modalEditarVenda.hide(); }
+$('#btn-cancelar-editar').on('click', function(e) {
+    e.preventDefault();
+    const temDados = $('#editar-descricao').val() || $('#editar-valor').val();
+    if (temDados) {
+        acaoConfirmacao = function() {
+            window.modalEditarVenda.hide();
+        };
+        $('#mensagem-confirmacao').text('Você tem alterações não salvas. Deseja realmente cancelar?');
+        modalConfirmacao.show();
+    } else {
+        window.modalEditarVenda.hide();
+    }
 });
 </script>
 {% endblock %}
