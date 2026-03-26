@@ -882,6 +882,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
 <script>
 $(document).ready(function() {
+    var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+    dropdownElementList.map(function (dropdownToggleEl) {
+        return new bootstrap.Dropdown(dropdownToggleEl)
+    })
     // === PEGAR ELEMENTOS ===
     const $actionButtonsView = $('#action-buttons-view');
     const $atendimentoView = $('#atendimento-view');
