@@ -33,8 +33,14 @@ class ProdutoRepository extends ServiceEntityRepository
      */
     public function findByEstabelecimento(int $estabelecimentoId): array
     {
-        $sql = "SELECT p.id, p.nome, p.preco_venda, p.estoque_atual
-                FROM {$_ENV['DBNAMETENANT']}.produto p
+        $sql = "SELECT p.id, p.nome, p.descricao, p.preco_venda, p.codigo_barras,
+                       p.unidade_medida, p.categoria, p.status, p.estabelecimento_id,
+                       COALESCE(e.quantidade_atual, 0) AS estoque_atual,
+                       COALESCE(e.quantidade_disponivel, 0) AS estoque_disponivel,
+                       COALESCE(e.estoque_minimo, 0) AS estoque_minimo,
+                       e.status AS estoque_status
+                FROM produto p
+                LEFT JOIN estoque e ON e.produto_id = p.id AND e.estabelecimento_id = p.estabelecimento_id
                 WHERE p.estabelecimento_id = :id
                 ORDER BY p.nome ASC";
 

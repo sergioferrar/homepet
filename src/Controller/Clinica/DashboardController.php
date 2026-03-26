@@ -183,23 +183,17 @@ class DashboardController extends DefaultController
         // --- Serviços da clínica (já retorna array) ---
         $servicosClinica = $servicoRepo->findAllService($baseId, 'clinica');
 
-        // --- Produtos do estoque ---
-        $produtoRepo = $this->getRepositorio(\App\Entity\Produto::class);
-        $produtosEstoque = method_exists($produtoRepo, 'findByEstabelecimento')
-            ? $produtoRepo->findByEstabelecimento($baseId)
-            : [];
-
-        // --- VENDAS ---
+        // --- VENDAS (agora com método SQL otimizado) ---
         $vendasPagas     = $vendasRepo->findByPet($baseId, $pet['id']);
         $vendasPendentes = $vendasRepo->findBy([
             'estabelecimentoId' => $baseId,
             'petId'             => $pet['id'],
             'status'            => 'Pendente',
         ]);
-        $vendasAbertas = $vendasRepo->findBy([
+        $vendasCarrinho = $vendasRepo->findBy([
             'estabelecimentoId' => $baseId,
             'petId'             => $pet['id'],
-            'status'            => 'Aberta',
+            'status'            => 'Carrinho',
         ]);
 
         // --- TIMELINE ---
@@ -374,14 +368,13 @@ class DashboardController extends DefaultController
         $data['consultas']            = $consultas;
         $data['total_debitos']        = $totalDebitos;
         $data['servicos_clinica']     = $servicosClinica;
-        $data['produtos_estoque']     = $produtosEstoque;
         $data['internacao_ativa_id']  = $internacaoAtivaId;
         $data['ultima_internacao_id'] = $ultimaInternacaoId;
         $data['internacoes_pet']      = $internacoesPet;
         $data['vacinas']              = $vacinas;
         $data['vendas_pagas']         = $vendasPagas;
         $data['vendas_pendentes']     = $vendasPendentes;
-        $data['vendas_carrinho']      = $vendasAbertas;
+        $data['vendas_carrinho']      = $vendasCarrinho;
         $data['vendas_items']         = $resumoVentaItem;
         
         return $this->render('clinica/detalhes_pet.html.twig', $data);
