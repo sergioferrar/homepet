@@ -1,1 +1,52 @@
-{}
+{
+  "name": "System Home Pet",
+  "short_name": "vaf",
+  "theme_color": "#fff",
+  "background_color": "#fff",
+  "orientation": "landscape-primary",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "img/images/icons/icon-72x72.png",
+      "sizes": "72x37",
+      "type": "image/png"
+    },
+    {
+      "src": "img/images/icons/icon-96x96.png",
+      "sizes": "96x49",
+      "type": "image/png"
+    },
+    {
+      "src": "img/images/icons/icon-128x128.png",
+      "sizes": "128x65",
+      "type": "image/png"
+    },
+    {
+      "src": "img/images/icons/icon-144x144.png",
+      "sizes": "144x74",
+      "type": "image/png"
+    },
+    {
+      "src": "img/images/icons/icon-152x152.png",
+      "sizes": "152x78",
+      "type": "image/png"
+    },
+    {
+      "src": "img/images/icons/icon-192x192.png",
+      "sizes": "192x98",
+      "type": "image/png"
+    },
+    {
+      "src": "img/images/icons/icon-384x384.png",
+      "sizes": "384x196",
+      "type": "image/png"
+    },
+    {
+      "src": "img/images/icons/icon-512x512.png",
+      "sizes": "512x261",
+      "type": "image/png"
+    }
+  ]
+}
