@@ -99,7 +99,7 @@ class DefaultController extends AbstractController
         // Resolve o ID do tenant a partir da sessão.
         // No modo normal: ID do petshop do usuário logado.
         // No modo impersonation do Super Admin: ID do estabelecimento acessado.
-        $tenantId = 'homepet_'.$this->session->get('estabelecimento_id')
+        $tenantId = 'u199209817_26'.$this->session->get('estabelecimento_id')
                  ?? $this->session->get('estabelecimentoId')
                  ?? $_ENV['DBNAMETENANT'];
                  
