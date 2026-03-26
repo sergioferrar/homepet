@@ -119,19 +119,19 @@
 .dp-tabs-card {
     background: var(--dp-surface); border: 1px solid var(--dp-border);
     border-radius: var(--dp-radius-lg); box-shadow: var(--dp-shadow-sm);
-    /* Removido overflow: hidden para permitir que o dropdown saia do card se necessário */
+    position: relative; /* Adicionado para criar um novo contexto de empilhamento */
 }
 .dp-nav-tabs {
     display: flex; flex-wrap: nowrap;
     background: #f9fbfb; border-bottom: 1px solid var(--dp-border);
     padding: 0 0.5rem;
-    /* Removido overflow: auto para não cortar o dropdown */
+    position: relative; /* Garante que o z-index funcione corretamente */
+    z-index: 1; /* Garante que as abas fiquem acima do conteúdo */
 }
 @media (max-width: 991px) {
     .dp-nav-tabs { overflow-x: auto; scrollbar-width: none; }
     .dp-nav-tabs::-webkit-scrollbar { display: none; }
 }
-.dp-nav-tabs::-webkit-scrollbar { display: none; }
 .dp-nav-tabs .nav-item { flex-shrink: 0; }
 .dp-nav-tabs .nav-link {
     border: none !important; border-radius: 0 !important;
@@ -146,6 +146,40 @@
 }
 .dp-nav-tabs .nav-link i, .dp-nav-tabs .nav-link .bi { margin-right: 0.3rem; font-size: 0.85rem; }
 
+/* Estilos para o dropdown */
+.dp-nav-tabs .dropdown {
+    position: relative;
+}
+.dp-nav-tabs .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1060; /* Acima de modais e outros elementos */
+    background: var(--dp-surface);
+    border: 1px solid var(--dp-border);
+    border-radius: var(--dp-radius);
+    box-shadow: var(--dp-shadow-md);
+    min-width: 220px;
+    margin-top: 0.5rem;
+}
+.dp-nav-tabs .dropdown-menu .dropdown-item {
+    color: var(--dp-slate);
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+}
+.dp-nav-tabs .dropdown-menu .dropdown-item:hover {
+    background: var(--dp-teal-light);
+    color: var(--dp-teal-dark);
+}
+.dp-nav-tabs .dropdown-menu .dropdown-item-text {
+    color: var(--dp-muted);
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+}
+.dp-nav-tabs .dropdown-divider {
+    border-color: var(--dp-border);
+    margin: 0.5rem 0;
+}
 
 .dp-tab-body { padding: 1.5rem; }
 
@@ -370,7 +404,7 @@
                             <span class="badge bg-secondary ms-1">{{ internacoes_pet|length }}</span>
                         {% endif %}
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="dropdownInternacoes" style="z-index: 1060;">
+                    <ul class="dropdown-menu" aria-labelledby="dropdownInternacoes">
                         {% if internacoes_pet is defined and internacoes_pet|length %}
                             {% for i in internacoes_pet %}
                                 <li>
