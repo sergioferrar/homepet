@@ -130,6 +130,7 @@ class MenuService
         $modulo = [];
 
         if ($plano) {
+            // Prefere o campo `modulos`; cai na `descricao` por compatibilidade
             $rawJson = $plano->getModulos() ?: $plano->getDescricao();
 
             if ($rawJson) {
@@ -137,17 +138,30 @@ class MenuService
 
                 if (is_array($decoded) && !empty($decoded)) {
                     $keys = array_keys($decoded);
-                    $firstKey = $keys[0];
-                    $firstValue = $decoded[$firstKey];
 
-                    // Detecta formato: se a chave é numérica E o valor é uma string de título
-                    // então é formato novo {"1":"Agendamentos de Pets",...}
-                    if (is_numeric($firstKey) && is_string($firstValue)) {
-                        foreach ($keys as $id) {
-                            $modulo[] = (int) $id;
+                    // Formato novo: chaves associativas numéricas = IDs dos módulos
+                    if (!isset($keys[0]) || !is_int($keys[0])) {
+                        // array_keys retorna strings; verifica se são numéricas
+                        if (is_numeric($keys[0])) {
+                            // {"1":"Título",...} → IDs são as chaves
+                            foreach ($keys as $id) {
+                                $modulo[] = (int) $id;
+                            }
+                        } else {
+                            // Formato legado: ["agendamentosDePets",...]
+                            // valores são slugs → busca pelo campo `descricao` do Modulo
+                            foreach ($decoded as $slug) {
+                                $moduloEntity = $this->em
+                                    ->getRepository(\App\Entity\Modulo::class)
+                                    ->findOneBy(['descricao' => $slug]);
+
+                                if ($moduloEntity) {
+                                    $modulo[] = $moduloEntity->getId();
+                                }
+                            }
                         }
                     } else {
-                        // Formato legado: array indexado de slugs ["agendamentosDePets",...]
+                        // array_keys são inteiros = array indexado de slugs (legado)
                         foreach ($decoded as $slug) {
                             $moduloEntity = $this->em
                                 ->getRepository(\App\Entity\Modulo::class)
