@@ -1218,17 +1218,12 @@ $(document).ready(function() {
     const $formNovoServico = $('#form-novo-servico');
     const $selectServico = $('#servico-descricao-1');
     const $inputValor = $('#servico-valor');
-    const servicosMap = {}; {
-        %
-        for servico in servicos_clinica %
-    }
-    servicosMap["{{ servico.nome|e('js') }}"] = {
-        {
-            servico.valor | number_format(2, '.', '')
-        }
-    }; {
-        % endfor %
-    }
+    const servicosMap = {}; 
+    
+    {%for servico in servicos_clinica %}
+        servicosMap["{{ servico.nome|e('js') }}"] = {{ servico.valor | number_format(2, '.', '') }};
+    {% endfor %}
+    
     $formNovoServico.on('submit', function(e) {
         e.preventDefault();
         fetch(this.action, {
@@ -1333,12 +1328,10 @@ $(document).ready(function() {
     });
 
     // ─── PDV POPUP — Lançar venda no caixa ───────────────────────────────────────
-    // NOTA: variáveis e função definidas em window para ficarem no escopo global,
-    // pois o atributo onload="pdvIframeOnLoad()" do iframe precisa de acesso global.
-    window._pdvModal = null;
-    window._pdvVendaCarregada = null;
+    var _pdvModal = null;
+    var _pdvVendaCarregada = null;
 
-    window.pdvIframeOnLoad = function() {
+    function pdvIframeOnLoad() {
         var iframe = document.getElementById('pdvIframe');
         if (!iframe || iframe.src === 'about:blank') return;
 
@@ -1352,7 +1345,7 @@ $(document).ready(function() {
                 try {
                     if (iframeWin.pdvReceberVendaClinica) {
                         clearInterval(intervalo);
-                        iframeWin.pdvReceberVendaClinica(window._pdvVendaCarregada);
+                        iframeWin.pdvReceberVendaClinica(_pdvVendaCarregada);
                         document.getElementById('pdvLoadingOverlay').style.display = 'none';
                     }
                 } catch (e) {
@@ -1365,25 +1358,25 @@ $(document).ready(function() {
         } catch (e) {
             document.getElementById('pdvLoadingOverlay').style.display = 'none';
         }
-    };
+    }
 
     $(document).on("click", ".btn-lancar-pdv", function() {
         var vendaId = $(this).data("id");
         var pdvUrl = "{{ path('clinica_pdv_index') }}";
         var apiUrl = "{{ path('pdv_dados_venda', {id: '__ID__'}) }}".replace('__ID__', vendaId);
 
-        window._pdvVendaCarregada = null;
+        _pdvVendaCarregada = null;
         document.getElementById('pdvLoadingOverlay').style.display = 'flex';
         document.getElementById('pdvIframe').src = 'about:blank';
         $('#pdvModalVendaLabel').text('Venda #' + vendaId);
 
-        if (!window._pdvModal) {
-            window._pdvModal = new bootstrap.Modal(document.getElementById('modalPdvVenda'), {
+        if (!_pdvModal) {
+            _pdvModal = new bootstrap.Modal(document.getElementById('modalPdvVenda'), {
                 backdrop: 'static',
                 keyboard: false
             });
         }
-        window._pdvModal.show();
+        _pdvModal.show();
 
         // Busca os dados da venda
         fetch(apiUrl)
@@ -1396,7 +1389,7 @@ $(document).ready(function() {
                         '<div class="text-center text-danger"><i class="bi bi-exclamation-triangle fs-1"></i><p class="mt-2">' + (dados.msg || 'Erro ao carregar venda.') + '</p></div>';
                     return;
                 }
-                window._pdvVendaCarregada = dados;
+                _pdvVendaCarregada = dados;
                 // Carrega o iframe com o PDV
                 document.getElementById('pdvIframe').src = pdvUrl;
             })
@@ -1409,7 +1402,7 @@ $(document).ready(function() {
     // Limpa ao fechar o modal
     document.getElementById('modalPdvVenda').addEventListener('hidden.bs.modal', function() {
         document.getElementById('pdvIframe').src = 'about:blank';
-        window._pdvVendaCarregada = null;
+        _pdvVendaCarregada = null;
         document.getElementById('pdvLoadingOverlay').style.display = 'flex';
         document.getElementById('pdvLoadingOverlay').innerHTML = '<div class="text-center text-muted"><div class="spinner-border text-success mb-3" role="status"></div><p class="mb-0">Carregando PDV...</p></div>';
     });
