@@ -739,7 +739,7 @@
                                         <iframe id="pdvIframe"
                                                 src="about:blank"
                                                 style="width:100%;height:100%;border:none;"
-                                                onload="pdvIframeOnLoad()">
+                                                >
                                         </iframe>
                                     </div>
                                 </div>
@@ -1599,6 +1599,14 @@ $('#btn-cancelar-editar').on('click', function(e) {
         modalConfirmacao.show();
     } else {
         window.modalEditarVenda.hide();
+    }
+});
+document.getElementById('pdvIframe').addEventListener('load', function () {
+    console.log('PDV carregado');
+
+    const loading = document.getElementById('pdvLoadingOverlay');
+    if (loading) {
+        loading.style.display = 'none';
     }
 });
 </script>
