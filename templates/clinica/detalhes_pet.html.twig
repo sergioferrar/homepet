@@ -118,12 +118,18 @@
 
 .dp-tabs-card {
     background: var(--dp-surface); border: 1px solid var(--dp-border);
-    border-radius: var(--dp-radius-lg); box-shadow: var(--dp-shadow-sm); overflow: hidden;
+    border-radius: var(--dp-radius-lg); box-shadow: var(--dp-shadow-sm);
+    /* Removido overflow: hidden para permitir que o dropdown saia do card se necessário */
 }
 .dp-nav-tabs {
-    display: flex; flex-wrap: nowrap; overflow-x: auto;
+    display: flex; flex-wrap: nowrap;
     background: #f9fbfb; border-bottom: 1px solid var(--dp-border);
-    padding: 0 0.5rem; scrollbar-width: none;
+    padding: 0 0.5rem;
+    /* Removido overflow: auto para não cortar o dropdown */
+}
+@media (max-width: 991px) {
+    .dp-nav-tabs { overflow-x: auto; scrollbar-width: none; }
+    .dp-nav-tabs::-webkit-scrollbar { display: none; }
 }
 .dp-nav-tabs::-webkit-scrollbar { display: none; }
 .dp-nav-tabs .nav-item { flex-shrink: 0; }
@@ -355,6 +361,7 @@
                     <a class="nav-link dropdown-toggle"
                        id="dropdownInternacoes"
                        data-bs-toggle="dropdown"
+                       data-bs-display="static"
                        href="#"
                        role="button"
                        aria-expanded="false">
@@ -363,7 +370,7 @@
                             <span class="badge bg-secondary ms-1">{{ internacoes_pet|length }}</span>
                         {% endif %}
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="dropdownInternacoes">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="dropdownInternacoes" style="z-index: 1060;">
                         {% if internacoes_pet is defined and internacoes_pet|length %}
                             {% for i in internacoes_pet %}
                                 <li>
