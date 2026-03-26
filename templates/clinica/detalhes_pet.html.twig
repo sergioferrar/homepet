@@ -747,7 +747,7 @@
                                         <iframe id="pdvIframe"
                                                 src="about:blank"
                                                 style="width:100%;height:100%;border:none;"
-                                                onload="pdvIframeOnLoad()">
+                                                >
                                         </iframe>
                                     </div>
                                 </div>
@@ -886,10 +886,15 @@
 
 {% endblock %}
 {% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
 <script>
 $(document).ready(function() {
+    var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+    dropdownElementList.map(function (dropdownToggleEl) {
+        return new bootstrap.Dropdown(dropdownToggleEl)
+    })
     // === PEGAR ELEMENTOS ===
     const $actionButtonsView = $('#action-buttons-view');
     const $atendimentoView = $('#atendimento-view');
@@ -1226,17 +1231,12 @@ $(document).ready(function() {
     const $formNovoServico = $('#form-novo-servico');
     const $selectServico = $('#servico-descricao-1');
     const $inputValor = $('#servico-valor');
-    const servicosMap = {}; {
-        %
-        for servico in servicos_clinica %
-    }
-    servicosMap["{{ servico.nome|e('js') }}"] = {
-        {
-            servico.valor | number_format(2, '.', '')
-        }
-    }; {
-        % endfor %
-    }
+    const servicosMap = {}; 
+    
+    {%for servico in servicos_clinica %}
+        servicosMap["{{ servico.nome|e('js') }}"] = {{ servico.valor | number_format(2, '.', '') }};
+    {% endfor %}
+    
     $formNovoServico.on('submit', function(e) {
         e.preventDefault();
         fetch(this.action, {
@@ -1612,6 +1612,14 @@ $('#btn-cancelar-editar').on('click', function(e) {
         modalConfirmacao.show();
     } else {
         window.modalEditarVenda.hide();
+    }
+});
+document.getElementById('pdvIframe').addEventListener('load', function () {
+    console.log('PDV carregado');
+
+    const loading = document.getElementById('pdvLoadingOverlay');
+    if (loading) {
+        loading.style.display = 'none';
     }
 });
 </script>
