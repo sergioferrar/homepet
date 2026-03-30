@@ -139,16 +139,26 @@
             const filterSelect = document.getElementById('filter-type');
             const searchInput = document.getElementById('searchInput');
             const cardContainer = document.getElementById('cardContainer');
-            const allCards = Array.from(cardContainer.querySelectorAll('.card-item'));
 
-            // Função para aplicar filtros
+            // ✅ Corrigido: era '.card-item' (sem 's'), classe correta é '.card-items'
+            const allCards = Array.from(cardContainer.querySelectorAll('.card-items'));
+
+            // Inicializa a paginação ANTES de aplicar filtros
+            window.tabelaServicos = new TabelaDefault({
+                cardContainerId: 'cardContainer',
+                paginationId: 'pagination',
+                searchInputId: 'searchInput',
+                itemsPerPage: 5
+            });
+
             function applyFilters() {
-                const searchValue = searchInput.value.toLowerCase();
+                // ✅ Corrigido: searchInput pode ser null se o form for global (outro contexto)
+                const searchValue = searchInput ? searchInput.value.toLowerCase() : '';
                 const typeValue = filterSelect.value;
 
                 allCards.forEach(card => {
-                    const searchText = card.getAttribute('data-search');
-                    const cardType = card.getAttribute('data-type');
+                    const searchText = card.getAttribute('data-search') || '';
+                    const cardType = card.getAttribute('data-type') || '';
 
                     const matchesSearch = !searchValue || searchText.includes(searchValue);
                     const matchesType = !typeValue || cardType === typeValue;
@@ -162,7 +172,7 @@
                     }
                 });
 
-                // Reinicializa a paginação
+                // ✅ Corrigido: atualiza paginação com os cards visíveis
                 if (window.tabelaServicos) {
                     window.tabelaServicos.cards = allCards.filter(card => !card.classList.contains('d-none'));
                     window.tabelaServicos.filteredCards = window.tabelaServicos.cards.slice();
@@ -170,16 +180,11 @@
                 }
             }
 
-            // Inicializa a paginação
-            window.tabelaServicos = new TabelaDefault({
-                cardContainerId: 'cardContainer',
-                paginationId: 'pagination',
-                searchInputId: 'searchInput',
-                itemsPerPage: 5
-            });
+            // ✅ Corrigido: searchInput é global (fora desta página), garantir que existe
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFilters);
+            }
 
-            // Event listeners
-            searchInput.addEventListener('input', applyFilters);
             filterSelect.addEventListener('change', applyFilters);
         });
     </script>

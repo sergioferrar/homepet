@@ -24,6 +24,7 @@ class ServicoController extends DefaultController
     public function index(Request $request): Response
     {
         $this->switchDB();
+        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
         $userId = $this->session->get('userId');
         $repo = $this->getRepositorio(Servico::class);
 
@@ -31,9 +32,9 @@ class ServicoController extends DefaultController
         $tipoFiltro = $request->query->get('tipo');
         if ($tipoFiltro) {
             // Usa o método customizado do repositório com filtro de tipo
-            $servicos = $repo->findAllService($userId, $tipoFiltro);
+            $servicos = $repo->findAllService($estabelecimentoId, $tipoFiltro);
         } else {
-            $servicos = $repo->findAllService($userId);
+            $servicos = $repo->findAllService($estabelecimentoId);
         }
 
         return $this->render('servico/index.html.twig', [
