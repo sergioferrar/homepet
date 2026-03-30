@@ -308,7 +308,7 @@ class FinanceiroRepository extends ServiceEntityRepository
             LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
             WHERE f.estabelecimento_id = $baseId
               AND DATE(f.data) = DATE('{$data}')
-              AND f.status NOT IN ('Inativa', 'Pendente', 'Carrinho')
+              AND f.status NOT IN ('Inativa', 'Pendente', 'Aberta')
             GROUP BY c.id, DATE(f.data)
             ORDER BY data DESC";
 
@@ -325,7 +325,7 @@ class FinanceiroRepository extends ServiceEntityRepository
             WHERE f.estabelecimento_id = $baseId
               AND DATE(f.data) = DATE('{$data}')
               AND f.origem = :origem
-              AND f.status NOT IN ('Inativa', 'Pendente', 'Carrinho')
+              AND f.status NOT IN ('Inativa', 'Pendente', 'Aberta')
             GROUP BY c.id, DATE(f.data)
             ORDER BY data DESC";
 
@@ -378,7 +378,7 @@ public function inativar($baseId, int $id): void
                 FROM {$_ENV['DBNAMETENANT']}.venda 
                 WHERE estabelecimento_id = :baseId 
                   AND pet_id = :petId
-                  AND status NOT IN ('Inativa', 'Pendente', 'Carrinho')
+                  AND status NOT IN ('Inativa', 'Pendente', 'Aberta')
                 ORDER BY data DESC";
 
         return $this->conn->fetchAllAssociative($sql, [

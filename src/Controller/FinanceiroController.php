@@ -86,7 +86,7 @@ class FinanceiroController extends DefaultController
         $dataFluxo = $request->query->get('data_fluxo') ? new \DateTime($request->query->get('data_fluxo')) : new \DateTime();
         $fluxoCaixa = $this->getFluxoCaixa($baseId, $dataFluxo);
 
-        return $this->render('financeiro/index.html.twig', [
+        $data = [
             'financeiros'              => $financeirosDiarios,
             'financeiros_clinica'      => $financeirosClinica,
             'financeiros_banho_tosa'   => $financeirosBanhoTosa,
@@ -99,7 +99,10 @@ class FinanceiroController extends DefaultController
             'inativos'                 => $financeirosInativos,
             'fluxo_caixa'              => $fluxoCaixa,
             'data_fluxo'               => $dataFluxo,
-        ]);
+        ];
+        dd($data);
+
+        return $this->render('financeiro/index.html.twig', $data);
     }
 
     /**
@@ -302,7 +305,7 @@ class FinanceiroController extends DefaultController
             ->setParameter('estab', $baseId)
             ->setParameter('inicio', $inicioDia)
             ->setParameter('fim', $fimDia)
-            ->setParameter('statusExcluidos', ['Pendente', 'Inativa', 'Carrinho'])
+            ->setParameter('statusExcluidos', ['Pendente', 'Inativa', 'Aberta'])
             ->orderBy('v.data', 'ASC')
             ->getQuery()
             ->getResult();
