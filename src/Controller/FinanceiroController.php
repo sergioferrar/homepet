@@ -100,7 +100,6 @@ class FinanceiroController extends DefaultController
             'fluxo_caixa'              => $fluxoCaixa,
             'data_fluxo'               => $dataFluxo,
         ];
-        dd($data);
 
         return $this->render('financeiro/index.html.twig', $data);
     }
