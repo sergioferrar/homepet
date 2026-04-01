@@ -358,7 +358,7 @@ class DashboardController extends DefaultController
             $totalDebitos += is_object($venda) ? $venda->getTotal() : ($venda['total'] ?? 0);
         }
 
-        // --- DATA PARA VIEW ---
+         // --- DATA PARA VIEW ---
 
         $data                         = [];
         $data['pet']                  = $pet;
