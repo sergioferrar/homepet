@@ -376,7 +376,7 @@ class DashboardController extends DefaultController
         $data['vendas_pendentes']     = $vendasPendentes;
         $data['vendas_carrinho']      = $vendasCarrinho;
         $data['vendas_items']         = $resumoVentaItem;
-        dd($data);
+        
         return $this->render('clinica/detalhes_pet.html.twig', $data);
     }
 
