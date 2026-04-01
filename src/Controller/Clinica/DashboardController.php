@@ -185,16 +185,18 @@ class DashboardController extends DefaultController
 
         // --- VENDAS (agora com método SQL otimizado) ---
         $vendasPagas     = $vendasRepo->findByPet($baseId, $pet['id']);
-        $vendasPendentes = $vendasRepo->findBy([
-            'estabelecimentoId' => $baseId,
-            'petId'             => $pet['id'],
-            'status'            => 'Pendente',
-        ]);
-        $vendasCarrinho = $vendasRepo->findBy([
-            'estabelecimentoId' => $baseId,
-            'petId'             => $pet['id'],
-            'status'            => 'Aberta',
-        ]);
+        $vendasPendentes = $vendasRepo->vendaPorStatus($baseId, $pet['id'], 'Pendente');
+        $vendasCarrinho = $vendasRepo->vendaPorStatus($baseId, $pet['id'], 'Aberta');
+        // $vendasPendentes = $vendasRepo->findBy([
+        //     'estabelecimentoId' => $baseId,
+        //     'petId'             => $pet['id'],
+        //     'status'            => 'Pendente',
+        // ]);
+        // $vendasCarrinho = $vendasRepo->findBy([
+        //     'estabelecimentoId' => $baseId,
+        //     'petId'             => $pet['id'],
+        //     'status'            => 'Aberta',
+        // ]);
 
         // --- TIMELINE ---
         $timeline_items = [];

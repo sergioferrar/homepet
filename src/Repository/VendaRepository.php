@@ -265,7 +265,30 @@ class VendaRepository extends ServiceEntityRepository
                 LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id
                 WHERE v.estabelecimento_id = :estab
                   AND v.pet_id = :petId
-                  AND v.status NOT IN ('Carrinho', 'Cancelada')
+                  AND v.status NOT IN ('Aberta', 'Cancelada')
+                ORDER BY v.data DESC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'estab' => $estabelecimentoId,
+            'petId' => $petId,
+        ]);
+    }
+
+    /**
+     * Busca vendas de um pet com LEFT JOIN em pet e cliente
+     */
+    public function vendaPorStatus(int $estabelecimentoId, int $petId, $status): array
+    {
+        $sql = "SELECT v.id, v.pet_id, v.total, v.data, v.status,
+                       v.metodo_pagamento, v.origem, v.observacao,
+                       p.nome  AS pet_nome,
+                       c.nome  AS cliente_nome
+                FROM {$_ENV['DBNAMETENANT']}.venda v
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.pet    p ON p.id = v.pet_id
+                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id
+                WHERE v.estabelecimento_id = :estab
+                  AND v.pet_id = :petId
+                  AND v.status '$status'
                 ORDER BY v.data DESC";
 
         return $this->conn->fetchAllAssociative($sql, [
