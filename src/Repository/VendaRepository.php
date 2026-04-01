@@ -288,7 +288,7 @@ class VendaRepository extends ServiceEntityRepository
                 LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id
                 WHERE v.estabelecimento_id = :estab
                   AND v.pet_id = :petId
-                  AND v.status '$status'
+                  AND v.status = '$status'
                 ORDER BY v.data DESC";
 
         return $this->conn->fetchAllAssociative($sql, [
