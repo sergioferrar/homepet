@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha de Internação — {{ internacao.pet_nome }}</title>
+    <style>
+        /* ═══════════════════════════════════════════════
+           FICHA DE INTERNAÇÃO — CONTROLE COMPLETO
+           Layout para impressão A4 (210×297mm)
+        ═══════════════════════════════════════════════ */
+        @page {
+            size: A4 landscape;
+            margin: 10mm 12mm 10mm 12mm;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 9pt;
+            color: #111;
+            background: #fff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /*  Botão de impressão (só na tela)  */
+        .print-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 12px 16px;
+            background: #f0f4f0;
+            border-bottom: 1px solid #c8d8c6;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .btn-print {
+            background: #4A6741;
+            color: #fff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-close-print {
+            background: #6c757d;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        @media print {
+            .print-actions { display: none !important; }
+        }
+
+        /*  Wrapper principal  */
+        .ficha-wrapper {
+            padding: 4mm 2mm;
+            max-width: 270mm;
+            margin: 0 auto;
+        }
+
+        /*  Cabeçalho da clínica  */
+        .ficha-header-clinica {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid #333;
+            padding-bottom: 3mm;
+            margin-bottom: 3mm;
+        }
+
+        .clinica-nome {
+            font-size: 12pt;
+            font-weight: 900;
+            letter-spacing: .03em;
+            color: #1a1a1a;
+        }
+
+        .clinica-sub {
+            font-size: 7pt;
+            color: #555;
+            margin-top: 1px;
+        }
+
+        .ficha-titulo {
+            font-size: 11pt;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            border: 1.5px solid #333;
+            padding: 2mm 6mm;
+            background: #f5f5f5;
+        }
+
+        .data-emissao {
+            font-size: 7.5pt;
+            text-align: right;
+            color: #444;
+        }
+
+        /*  Dados do paciente  */
+        .dados-paciente {
+            border: 1.5px solid #333;
+            margin-bottom: 2mm;
+        }
+
+        .dados-paciente table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .dados-paciente td {
+            border: 1px solid #bbb;
+            padding: 1.5mm 2.5mm;
+            font-size: 8.5pt;
+            vertical-align: middle;
+        }
+
+        .dados-paciente .label {
+            font-weight: 700;
+            font-size: 7.5pt;
+            color: #333;
+            white-space: nowrap;
+            width: 1%;
+        }
+
+        .dados-paciente .value {
+            font-size: 9pt;
+            color: #111;
+            font-weight: 600;
+        }
+
+        /*  Seção DATA DO DIA  */
+        .secao-data-dia {
+            background: #e8e8e8;
+            border: 1.5px solid #333;
+            text-align: center;
+            font-weight: 900;
+            font-size: 9pt;
+            padding: 1.5mm;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-bottom: -1px;
+        }
+
+        /*  Tabela de Medicações  */
+        .tabela-medicacao {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1.5px solid #333;
+            margin-bottom: 3mm;
+        }
+
+        .tabela-medicacao th {
+            background: #d0d8d0;
+            font-size: 7.5pt;
+            font-weight: 700;
+            text-align: center;
+            padding: 1.5mm 1mm;
+            border: 1px solid #888;
+            white-space: nowrap;
+        }
+
+        .tabela-medicacao th.col-medicacao {
+            text-align: left;
+            padding-left: 2mm;
+            min-width: 90px;
+        }
+
+        .tabela-medicacao td {
+            border: 1px solid #aaa;
+            padding: 1.5mm 1mm;
+            font-size: 8pt;
+            text-align: center;
+            vertical-align: middle;
+            height: 8mm;
+        }
+
+        .tabela-medicacao td.col-medicacao {
+            text-align: left;
+            padding-left: 2mm;
+            font-weight: 600;
+            font-size: 8.5pt;
+        }
+
+        .tabela-medicacao td.col-freq {
+            font-size: 7.5pt;
+            font-weight: 700;
+        }
+
+        /* Checkboxes de horários */
+        .hora-check {
+            width: 5mm;
+            height: 5mm;
+            border: 1px solid #555;
+            display: inline-block;
+            background: #fff;
+            position: relative;
+        }
+
+        /* Linha marcada como executada */
+        .hora-check.executado::after {
+            content: '✓';
+            font-size: 8pt;
+            font-weight: 900;
+            color: #1a5f1a;
+            position: absolute;
+            top: -1px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Linhas extras em branco */
+        .linha-vazia td {
+            height: 7mm;
+        }
+
+        /*  Controle de Parâmetros  */
+        .secao-titulo-parametros {
+            font-weight: 900;
+            font-size: 8.5pt;
+            font-style: italic;
+            margin-bottom: 1mm;
+            color: #222;
+        }
+
+        .tabela-parametros {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1.5px solid #333;
+            margin-bottom: 3mm;
+        }
+
+        .tabela-parametros th {
+            background: #d0d8d0;
+            font-size: 7.5pt;
+            font-weight: 700;
+            text-align: center;
+            padding: 1.5mm 1mm;
+            border: 1px solid #888;
+        }
+
+        .tabela-parametros td {
+            border: 1px solid #aaa;
+            padding: 1.5mm 1mm;
+            font-size: 8pt;
+            text-align: center;
+            height: 8mm;
+            vertical-align: middle;
+        }
+
+        .tabela-parametros td.horario {
+            font-weight: 700;
+            background: #f0f0f0;
+            font-size: 8.5pt;
+        }
+
+        .tabela-parametros td.obs-wide {
+            text-align: left;
+        }
+
+        /*  Seção Observações  */
+        .secao-observacoes-label {
+            font-weight: 900;
+            font-size: 8.5pt;
+            font-style: italic;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+            margin-bottom: 1mm;
+            margin-top: 2mm;
+        }
+
+        .caixa-observacoes {
+            border: 1.5px solid #333;
+            min-height: 18mm;
+            padding: 2mm 3mm;
+            font-size: 8.5pt;
+            line-height: 1.6;
+        }
+
+        .caixa-observacoes .obs-linha {
+            border-bottom: 1px dashed #bbb;
+            min-height: 6mm;
+            padding: 1mm 0;
+        }
+
+        /*  Rodapé  */
+        .ficha-footer {
+            margin-top: 3mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-top: 1px solid #aaa;
+            padding-top: 2mm;
+            font-size: 7pt;
+            color: #666;
+        }
+
+        .assinatura-box {
+            text-align: center;
+            min-width: 60mm;
+            border-top: 1px solid #555;
+            padding-top: 1mm;
+            font-size: 7.5pt;
+        }
+
+        /*  Utilitários  */
+        .text-center { text-align: center; }
+        .fw-bold     { font-weight: 700; }
+    </style>
+</head>
+<body>
+
+{#  Botão impressão (somente tela)  #}
+<div class="print-actions">
+    <a href="{{ path('clinica_ficha_internacao', {id: internacao.id}) }}" class="btn-close-print">
+        ← Voltar à Ficha
+    </a>
+    <button class="btn-print" onclick="window.print()">
+        🖨 Imprimir Ficha
+    </button>
+</div>
+
+<div class="ficha-wrapper">
+
+    {#  Cabeçalho  #}
+    <div class="ficha-header-clinica">
+        <div>
+            <div class="clinica-nome">HomePet — Clínica Veterinária</div>
+            <div class="clinica-sub">Controle de Internação · Plantão</div>
+        </div>
+        <div class="ficha-titulo">FICHA DE INTERNAÇÃO — CONTROLE COMPLETO</div>
+        <div class="data-emissao">
+            Emitido em: {{ "now"|date("d/m/Y H:i") }}<br>
+            Veterinário: {{ internacao.veterinario_nome ?? '—' }}
+        </div>
+    </div>
+
+    {#  Dados do Paciente  #}
+    <div class="dados-paciente">
+        <table>
+            <tr>
+                <td class="label">Paciente:</td>
+                <td class="value" style="min-width:60mm">{{ internacao.pet_nome }}</td>
+                <td class="label">Espécie:</td>
+                <td class="value" style="min-width:35mm">{{ internacao.pet_especie ?? '—' }}</td>
+                <td class="label">Raça:</td>
+                <td class="value" style="min-width:35mm">{{ internacao.pet_raca ?? '—' }}</td>
+                <td class="label">Leito/Box:</td>
+                <td class="value" style="min-width:20mm">{{ internacao.box ?? '—' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Peso:</td>
+                <td class="value">{{ internacao.pet_peso is defined and internacao.pet_peso is not empty ? internacao.pet_peso ~ ' kg' : '_____ kg' }}</td>
+                <td class="label">Idade:</td>
+                <td class="value">{{ internacao.pet_idade ?? '—' }}</td>
+                <td class="label">Veterinário:</td>
+                <td class="value">{{ internacao.veterinario_nome ?? '—' }}</td>
+                <td class="label">Data:</td>
+                <td class="value">{{ "now"|date("d/m/Y") }}</td>
+            </tr>
+        </table>
+    </div>
+
+    {#  Tabela de Medicações  #}
+    <div class="secao-data-dia">DATA DO DIA: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+
+    {# Monta mapa de horários executados por prescrição #}
+    {% set horas_grade = ['07h','08h','10h','11h','13h','14h','15h','16h','17h','18h','19h','20h','22h','23h','02h'] %}
+
+    <table class="tabela-medicacao">
+        <thead>
+            <tr>
+                <th class="col-medicacao">Medicação</th>
+                <th style="min-width:18mm">Dose</th>
+                <th style="min-width:12mm">Via</th>
+                <th style="min-width:14mm">Freq.</th>
+                {% for h in horas_grade %}
+                    <th>{{ h }}</th>
+                {% endfor %}
+                <th style="min-width:14mm">Resp.</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in prescricoes %}
+                {# Calcula a frequência abreviada #}
+                {% set freq_horas = p.frequenciaHoras %}
+                {% if freq_horas == 24 %}
+                    {% set freq_label = 'SID' %}
+                {% elseif freq_horas == 12 %}
+                    {% set freq_label = 'BID' %}
+                {% elseif freq_horas == 8 %}
+                    {% set freq_label = 'TID' %}
+                {% elseif freq_horas == 6 %}
+                    {% set freq_label = 'QID' %}
+                {% else %}
+                    {% set freq_label = 'a/' ~ freq_horas ~ 'h' %}
+                {% endif %}
+
+                <tr>
+                    <td class="col-medicacao">
+                        {{ p.medicamento.nome }}
+                        <span style="font-size:7pt;color:#555;display:block;font-weight:400;">
+                            {{ p.medicamento.concentracao }}
+                        </span>
+                    </td>
+                    <td class="text-center">{{ p.dose }}</td>
+                    <td class="text-center" style="font-size:8pt;">{{ p.medicamento.via ?? '—' }}</td>
+                    <td class="text-center col-freq">{{ freq_label }}</td>
+                    {% for h in horas_grade %}
+                        <td class="text-center">
+                            {# Verifica se este horário foi executado #}
+                            {% set foi_executado = false %}
+                            {% for exec in execucoes_por_prescricao[p.id] ?? [] %}
+                                {% if exec.hora == h %}
+                                    {% set foi_executado = true %}
+                                {% endif %}
+                            {% endfor %}
+                            <span class="hora-check{{ foi_executado ? ' executado' : '' }}"></span>
+                        </td>
+                    {% endfor %}
+                    <td></td>
+                </tr>
+            {% endfor %}
+
+            {# Linhas extras em branco para anotações manuais #}
+            {% set linhas_extras = prescricoes|length < 6 ? 6 - prescricoes|length : 2 %}
+            {% for i in 1..linhas_extras %}
+                <tr class="linha-vazia">
+                    <td class="col-medicacao"></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    {% for h in horas_grade %}
+                        <td><span class="hora-check"></span></td>
+                    {% endfor %}
+                    <td></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {#  Controle de Parâmetros  #}
+    <div class="secao-titulo-parametros">Controle de Parâmetros</div>
+    <table class="tabela-parametros">
+        <thead>
+            <tr>
+                <th style="min-width:14mm">Horário</th>
+                <th style="min-width:18mm">Temp.</th>
+                <th style="min-width:14mm">PA</th>
+                <th style="min-width:20mm">Glicemia</th>
+                <th style="min-width:28mm">Alimentação</th>
+                <th style="min-width:22mm">Água</th>
+                <th style="min-width:22mm">Urina</th>
+                <th style="min-width:20mm">Fezes</th>
+                <th style="min-width:20mm">Limpeza</th>
+                <th>Obs</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for horario in ['07h', '13h', '19h', '23h'] %}
+                <tr>
+                    <td class="horario">{{ horario }}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="obs-wide"></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {#  Observações  #}
+    <div class="secao-observacoes-label">OBSERVAÇÕES</div>
+    <div class="caixa-observacoes">
+        {% if internacao.anotacoes is not empty %}
+            <div class="obs-linha">{{ internacao.anotacoes|striptags }}</div>
+        {% else %}
+            <div class="obs-linha"></div>
+        {% endif %}
+        <div class="obs-linha"></div>
+        <div class="obs-linha"></div>
+    </div>
+
+    {#  Rodapé  #}
+    <div class="ficha-footer">
+        <span>Internação #{{ internacao.id }} · Início: {{ internacao.data_inicio ? internacao.data_inicio|date('d/m/Y H:i') : '—' }}</span>
+        <div class="assinatura-box">
+            Assinatura do Responsável de Plantão
+        </div>
+        <span>HomePet © {{ "now"|date("Y") }}</span>
+    </div>
+
+</div><!-- /ficha-wrapper -->
+
+</body>
+</html>

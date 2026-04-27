@@ -122,7 +122,88 @@ class InternacaoController extends DefaultController
     }
 
 
-
+    /**
+     * Gera a tela de impressão da Ficha de Internação — Controle Completo de Plantão.
+     * Replica o layout do formulário físico usado pela equipe veterinária,
+     * com grade de horários de medicação (07h–02h), checkboxes de execução,
+     * controle de parâmetros e campo de observações.
+     *
+     * @Route("/internacao/{id}/imprimir-ficha", name="clinica_internacao_imprimir_ficha", methods={"GET"})
+     */
+    public function imprimirFicha(
+        int                    $id,
+        InternacaoRepository   $internacaoRepo,
+        EntityManagerInterface $em
+    ): Response {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+ 
+        // ── 1. Dados principais da internação ─────────────────────────────
+        $internacao = $internacaoRepo->findInternacaoCompleta($baseId, $id);
+        if (!$internacao) {
+            throw $this->createNotFoundException('Internação não encontrada.');
+        }
+ 
+        // ── 2. Busca prescrições ativas da internação ──────────────────────
+        $prescricoes = $em->getRepository(InternacaoPrescricao::class)
+            ->findBy(['internacaoId' => $id], ['id' => 'ASC']);
+ 
+        // ── 3. Horários-grade que aparecem na ficha física ─────────────────
+        //      Ajuste aqui caso queira adicionar/remover colunas de horário.
+        $horasGrade = ['07h','08h','10h','11h','13h','14h','15h','16h','17h','18h','19h','20h','22h','23h','02h'];
+ 
+        // ── 4. Mapeia execuções confirmadas por prescrição e hora ──────────
+        //      Estrutura: execucoesPorPrescricao[prescricaoId] = ['07h', '13h', ...]
+        $execucoesPorPrescricao = [];
+ 
+        if (!empty($prescricoes)) {
+            // Busca todos os eventos de prescrição desta internação
+            $todosEventos = $em->getRepository(\App\Entity\InternacaoEvento::class)
+                ->createQueryBuilder('e')
+                ->where('e.internacaoId = :internacaoId')
+                ->andWhere('e.tipo = :tipo')
+                ->setParameter('internacaoId', $id)
+                ->setParameter('tipo', 'prescricao')
+                ->getQuery()
+                ->getResult();
+ 
+            $eventoIds = array_map(fn($e) => $e->getId(), $todosEventos);
+ 
+            if (!empty($eventoIds)) {
+                // Busca execuções confirmadas
+                $execucoesResult = $em->getRepository(\App\Entity\InternacaoExecucao::class)
+                    ->createQueryBuilder('ex')
+                    ->where('ex.prescricaoId IN (:eventoIds)')
+                    ->andWhere('ex.status = :status')
+                    ->setParameter('eventoIds', $eventoIds)
+                    ->setParameter('status', 'confirmado')
+                    ->getQuery()
+                    ->getResult();
+ 
+                // Agrupa por prescricaoId -> lista de horas executadas
+                foreach ($execucoesResult as $exec) {
+                    $pid  = $exec->getPrescricaoId();
+                    $hora = $exec->getDataExecucao()
+                        ? $exec->getDataExecucao()->format('H') . 'h'
+                        : null;
+ 
+                    if ($hora) {
+                        // Normaliza para o formato da grade (ex: "07h" não "7h")
+                        $horaNorm = str_pad((int) $exec->getDataExecucao()->format('H'), 2, '0', STR_PAD_LEFT) . 'h';
+                        $execucoesPorPrescricao[$pid][] = ['hora' => $horaNorm];
+                    }
+                }
+            }
+        }
+ 
+        // ── 5. Renderiza o template de impressão (sem layout base) ─────────
+        return $this->render('clinica/ficha_impressao.html.twig', [
+            'internacao'              => $internacao,
+            'prescricoes'             => $prescricoes,
+            'horas_grade'             => $horasGrade,
+            'execucoes_por_prescricao'=> $execucoesPorPrescricao,
+        ]);
+    }
 
     /**
      * @Route("/internacao/{id}/ficha", name="clinica_ficha_internacao", methods={"GET"})
