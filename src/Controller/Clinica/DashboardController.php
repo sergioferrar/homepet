@@ -257,6 +257,69 @@ class DashboardController extends DefaultController
 
         // --- VENDAS PAGAS (COM ITENS) ---
         $resumoVentaItem = [];
+        foreach ($vendasCarrinho as $venda){
+            $itensVenda  = [];
+            $resumoItens = [];
+
+            // Se venda é objeto entity, adaptar
+            if (is_object($venda) && method_exists($venda, 'getId')) {
+                $vendaId = $venda->getId();
+                $vendaTotal = $venda->getTotal();
+                $vendaData = $venda->getData();
+            } else {
+                // Se é array do novo repository
+                $vendaId = $venda['id'];
+                $vendaTotal = $venda['total'];
+                $vendaData = new \DateTime($venda['data']);
+            }
+
+            $itens = $vendaItemRepo->findBy(['vendaId' => $vendaId]);
+
+            foreach ($itens as $item) {
+                // Todos os itens agora são sempre objetos VendaItem
+                $produtoId     = $item->getProdutoId();
+                $quantidade    = $item->getQuantidade();
+                $valorUnitario = $item->getValorUnitario();
+                $snapshotNome = $item->getProduto(); // nome gravado no momento da venda
+
+                // Dados legados: campo produto continha o ID numérico em vez do nome.
+                // Detecta e busca o nome real no cadastro.
+                if ($snapshotNome !== null && is_numeric(trim($snapshotNome))) {
+                    $idBusca = $produtoId ?? (int)trim($snapshotNome);
+                    if ($item->getTipo() === 'produto') {
+                        $entidade = $em->getRepository(\App\Entity\Produto::class)->find($idBusca);
+                    } else {
+                        $entidade = $servicoRepo->find($idBusca);
+                    }
+                    $descricao = $entidade ? $entidade->getNome() : "Item #{$idBusca}";
+                } elseif ($produtoId && $item->getTipo() === 'servico') {
+                    // Sempre tenta enriquecer serviços com nome atualizado do cadastro
+                    $servico = $servicoRepo->find($produtoId);
+                    $descricao = ($servico && method_exists($servico, 'getNome'))
+                        ? $servico->getNome()
+                        : ($snapshotNome ?: 'Serviço');
+                } else {
+                    $descricao = $snapshotNome ?: 'Item sem descrição';
+                }
+
+                $itensVenda[] = [
+                    'descricao'      => $descricao,
+                    'quantidade'     => $quantidade,
+                    'valor_unitario' => $valorUnitario,
+                    'subtotal'       => $quantidade * $valorUnitario,
+                ];
+
+                $resumoVentaItem[$vendaId][] = [
+                    'item'       => $descricao,
+                    'valor'      => $valorUnitario,
+                    'quantidade' => $quantidade,
+                    'subtotal'   => $quantidade * $valorUnitario,
+                ];
+
+                $resumoItens[] = $descricao;
+            }
+        }
+        
         foreach ($vendasPagas as $venda) {
 
             $itensVenda  = [];
