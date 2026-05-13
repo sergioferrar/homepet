@@ -1,0 +1,213 @@
+{% extends 'list/_list_base.html.twig' %}
+
+{% block title %}Veterinários{% endblock %}
+{% block page_title %}Veterinários{% endblock %}
+{% block list_title %}
+    Veterinários
+{% endblock %}
+
+{% block breadcrumbsAction %}
+    <a href="{{ path('veterinario_novo') }}" class="btn btn-primary float-end">
+        <i class="bx bx-plus-medical me-1"></i>Novo Veterinário
+    </a>
+{% endblock %}
+
+{% block breadcrumbsGrupo %}Clínica Veterinária{% endblock %}
+{% block breadcrumbsAtivo %}Veterinários{% endblock %}
+
+{% block list_stylesheets %}
+<style>
+    .badge-ativo   { background-color: #198754; }
+    .badge-inativo { background-color: #6c757d; }
+    .vet-card { transition: box-shadow .2s; }
+    .vet-card:hover { box-shadow: 0 0 0 3px rgba(0, 64, 128, .15); }
+    .vet-crmv { font-size: .78rem; letter-spacing: .04em; font-weight: 600; color: #0d47a1; }
+</style>
+{% endblock %}
+
+{% block list_content %}
+
+<div class="container-fluid px-2 mt-3">
+
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="row gy-3" id="cardContainerVeterinarios">
+        {% for vet in veterinarios %}
+            <div class="col-12 card-items"
+                 data-search="{{ vet.nome }} {{ vet.email }} {{ vet.crmv }} {{ vet.especialidade }}">
+                <div class="card shadow-sm border-0 rounded-3 vet-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+                            {# Dados principais #}
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <h5 class="card-title mb-0">{{ vet.nome }}</h5>
+                                    <span class="badge rounded-pill badge-{{ vet.status ?? 'ativo' }}">
+                                        {{ (vet.status ?? 'ativo') | capitalize }}
+                                    </span>
+                                </div>
+
+                                <div class="d-flex flex-wrap gap-3 text-muted small mt-1">
+                                    {% if vet.crmv %}
+                                        <span class="vet-crmv">
+                                            <i class="bx bx-id-card"></i> CRMV: {{ vet.crmv }}
+                                        </span>
+                                    {% endif %}
+                                    {% if vet.especialidade %}
+                                        <span><i class="bx bx-injection"></i> {{ vet.especialidade }}</span>
+                                    {% endif %}
+                                    {% if vet.email %}
+                                        <span><i class="bx bx-envelope"></i> {{ vet.email }}</span>
+                                    {% endif %}
+                                    {% if vet.telefone %}
+                                        <span><i class="bx bx-phone"></i> {{ vet.telefone }}</span>
+                                    {% endif %}
+                                    {% if vet.total_consultas is defined %}
+                                        <span class="text-secondary">
+                                            <i class="bx bx-notepad"></i> {{ vet.total_consultas }} consulta(s)
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {# Ações #}
+                            <div class="col-auto">
+                                <div class="dropdown dropstart">
+                                    <button class="btn btn-outline-secondary rounded-pill px-4"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bx bx-dots-vertical-rounded"></i> Ação
+                                    </button>
+                                    <ul class="dropdown-menu shadow">
+                                        <li>
+                                            <a href="{{ path('veterinario_editar', {'id': vet.id}) }}"
+                                               class="dropdown-item">
+                                                <i class="bx bx-edit me-1"></i> Editar
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <button type="button"
+                                                    class="dropdown-item {{ (vet.status ?? 'ativo') == 'ativo' ? 'text-danger' : 'text-success' }} btn-toggle-status"
+                                                    data-id="{{ vet.id }}"
+                                                    data-status="{{ vet.status ?? 'ativo' }}"
+                                                    data-nome="{{ vet.nome }}">
+                                                {% if (vet.status ?? 'ativo') == 'ativo' %}
+                                                    <i class="bx bx-block me-1"></i> Desabilitar
+                                                {% else %}
+                                                    <i class="bx bx-check-circle me-1"></i> Reativar
+                                                {% endif %}
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center mb-0">
+                    <i class="bx bx-info-circle me-1"></i>
+                    Nenhum veterinário cadastrado para este estabelecimento.
+                    <a href="{{ path('veterinario_novo') }}" class="alert-link ms-1">Cadastrar agora</a>.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{# Modal de confirmação de status #}
+<div class="modal fade" id="modalConfirmarStatus" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalStatusTitulo">Confirmar ação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalStatusMensagem"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmarStatus">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+$(function () {
+
+    // ── Busca inline ───────────────────────────────────────────
+    $(document).on('input', '.search-bar input, #searchInput', function () {
+        const q = $(this).val().toLowerCase();
+        $('#cardContainerVeterinarios .card-items').each(function () {
+            const txt = $(this).data('search') ? $(this).data('search').toLowerCase() : '';
+            $(this).toggle(txt.includes(q));
+        });
+    });
+
+    // ── Toggle de status (ativo ↔ inativo) ────────────────────
+    let pendingId   = null;
+    let pendingNome = null;
+    let pendingStatus = null;
+
+    $(document).on('click', '.btn-toggle-status', function () {
+        pendingId     = $(this).data('id');
+        pendingNome   = $(this).data('nome');
+        pendingStatus = $(this).data('status');
+
+        const acao = pendingStatus === 'ativo' ? 'desabilitar' : 'reativar';
+        $('#modalStatusTitulo').text('Confirmar ação');
+        $('#modalStatusMensagem').html(
+            `Tem certeza que deseja <strong>${acao}</strong> o veterinário <strong>${pendingNome}</strong>?<br>
+            <small class="text-muted">Os dados serão mantidos no banco para fins de auditoria e relatórios.</small>`
+        );
+        $('#modalConfirmarStatus').modal('show');
+    });
+
+    $('#btnConfirmarStatus').on('click', function () {
+        if (!pendingId) return;
+        const $btn = $(this).prop('disabled', true).text('Aguarde...');
+
+        $.ajax({
+            url    : `/dashboard/veterinarios/${pendingId}/status`,
+            method : 'POST',
+            data   : { _token: '' },
+            success: function (resp) {
+                if (resp.success) {
+                    $('#modalConfirmarStatus').modal('hide');
+                    // Exibe mensagem e recarrega a listagem
+                    const alertHtml = `<div class="alert alert-success alert-dismissible fade show" role="alert">
+                        ${resp.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>`;
+                    $('.container-fluid.px-2').prepend(alertHtml);
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    alert(resp.message || 'Erro ao alterar status.');
+                }
+            },
+            error: function () {
+                alert('Erro de comunicação com o servidor.');
+            },
+            complete: function () {
+                $btn.prop('disabled', false).text('Confirmar');
+            }
+        });
+    });
+
+});
+</script>
+{% endblock %}

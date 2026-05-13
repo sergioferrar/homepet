@@ -611,8 +611,11 @@ body { background: var(--dp-bg); }
         <div class="mb-3">
             <label class="form-label">Veterinário responsável</label>
             <select name="veterinario_id" class="form-select" required>
+                <option value="">— Selecione o veterinário —</option>
                 {% for vet in veterinarios %}
-                    <option value="{{ vet.id }}">{{ vet.nome }} ({{ vet.crmv }})</option>
+                    {% if (vet.status is not defined or vet.status == 'ativo') or (vet.getStatus is defined and vet.getStatus() == 'ativo') %}
+                        <option value="{{ vet.id }}">{{ vet.nome }}{% if vet.crmv %} (CRMV: {{ vet.crmv }}){% endif %}</option>
+                    {% endif %}
                 {% endfor %}
             </select>
         </div>

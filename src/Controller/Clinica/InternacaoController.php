@@ -55,7 +55,7 @@ class InternacaoController extends DefaultController
             throw $this->createNotFoundException('Pet não encontrado.');
         }
 
-        $veterinarios = $veterinarioRepo->findBy(['estabelecimentoId' => $baseId]);
+        $veterinarios = $veterinarioRepo->findBy(['estabelecimentoId' => $baseId, 'status' => 'ativo']);
 
         // ── REAL: busca boxes disponíveis do estabelecimento ──────────
         $boxes = $boxRepo->findDisponiveisParaSelect($baseId);
@@ -293,8 +293,8 @@ class InternacaoController extends DefaultController
             ];
         }
 
-        // --- VETERINÁRIOS ---
-        $veterinarios = $veterinarioRepo->findBy(['estabelecimentoId' => $baseId]);
+        // --- VETERINÁRIOS --- (apenas ativos para novos lançamentos; histórico preservado nas execuções)
+        $veterinarios = $veterinarioRepo->findBy(['estabelecimentoId' => $baseId, 'status' => 'ativo']);
 
         $data = [];
         $data['internacao'] = $internacao;

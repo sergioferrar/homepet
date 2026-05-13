@@ -51,6 +51,11 @@ class Veterinario
     private $crmv;
 
     /**
+     * @ORM\Column(type="string", length=20, options={"default": "ativo"})
+     */
+    private $status = 'ativo';
+
+    /**
      * @ORM\OneToMany(targetEntity=InternacaoExecucao::class, mappedBy="veterinario")
      */
     private $execucoes;
@@ -131,6 +136,22 @@ class Veterinario
     {
         $this->crmv = $crmv;
         return $this;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status ?? 'ativo';
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+        return $this;
+    }
+
+    public function isAtivo(): bool
+    {
+        return $this->status === 'ativo';
     }
 
     /**

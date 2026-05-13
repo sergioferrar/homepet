@@ -21,15 +21,16 @@ class VeterinarioRepository extends ServiceEntityRepository
     }
 
     /**
-     * Veterinários de um estabelecimento com agenda resumida
+     * Veterinários de um estabelecimento com total de procedimentos realizados.
+     * Usa internacao_execucao (relação real no sistema) em vez de consulta,
+     * pois a tabela consulta não possui a coluna veterinario_id.
      */
     public function findByEstabelecimento(int $estabelecimentoId): array
     {
         $sql = "SELECT v.id, v.nome, v.especialidade, v.crmv, v.telefone, v.email, v.status,
-                       COUNT(DISTINCT c.id) AS total_consultas
+                       COUNT(DISTINCT ie.id) AS total_consultas
                 FROM veterinario v
-                LEFT JOIN consulta c ON c.veterinario_id = v.id
-                           AND c.estabelecimento_id = v.estabelecimento_id
+                LEFT JOIN internacao_execucao ie ON ie.veterinario_id = v.id
                 WHERE v.estabelecimento_id = :estabelecimentoId
                 GROUP BY v.id, v.nome, v.especialidade, v.crmv, v.telefone, v.email, v.status
                 ORDER BY v.nome ASC";
@@ -102,15 +103,15 @@ class VeterinarioRepository extends ServiceEntityRepository
     }
 
     /**
-     * Busca um veterinário por ID com dados completos
+     * Busca um veterinário por ID com dados completos.
+     * total_procedimentos = execuções em internações; consulta não possui veterinario_id.
      */
     public function findByIdCompleto(int $vetId, int $estabelecimentoId): ?array
     {
         $sql = "SELECT v.id, v.nome, v.especialidade, v.crmv, v.telefone, v.email, v.status,
-                       COUNT(DISTINCT c.id) AS total_consultas,
+                       COUNT(DISTINCT i_exec.id) AS total_consultas,
                        COUNT(DISTINCT i_exec.id) AS total_procedimentos
                 FROM veterinario v
-                LEFT JOIN consulta c ON c.veterinario_id = v.id AND c.estabelecimento_id = v.estabelecimento_id
                 LEFT JOIN internacao_execucao i_exec ON i_exec.veterinario_id = v.id
                 WHERE v.id = :vetId AND v.estabelecimento_id = :estab
                 GROUP BY v.id, v.nome, v.especialidade, v.crmv, v.telefone, v.email, v.status

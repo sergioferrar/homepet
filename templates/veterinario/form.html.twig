@@ -1,0 +1,203 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ titulo }}{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .form-label.required::after {
+        content: " *";
+        color: #dc3545;
+        font-weight: 600;
+    }
+    .card-form {
+        border: none;
+        border-radius: .75rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    }
+    .section-title {
+        font-size: .72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #6c757d;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: .5rem;
+        margin-bottom: 1.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<div class="pagetitle">
+    <h1>{{ titulo }}
+        <a href="{{ path('veterinario_index') }}" class="btn btn-outline-secondary float-end">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+            <li class="breadcrumb-item">Clínica Veterinária</li>
+            <li class="breadcrumb-item"><a href="{{ path('veterinario_index') }}">Veterinários</a></li>
+            <li class="breadcrumb-item active">{{ titulo }}</li>
+        </ol>
+    </nav>
+</div>
+
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-12 col-lg-8">
+        <div class="card card-form">
+            <div class="card-body p-4">
+
+                <p class="section-title">
+                    <i class="bx bx-user-pin me-1"></i>Dados do Veterinário
+                </p>
+
+                <form method="post" action="{{ action }}" novalidate>
+
+                    {# Nome #}
+                    <div class="mb-3">
+                        <label for="nome" class="form-label required">Nome completo</label>
+                        <input type="text"
+                               id="nome"
+                               name="nome"
+                               class="form-control"
+                               value="{{ veterinario.nome ?? '' }}"
+                               placeholder="Ex.: Dr. Carlos Menezes"
+                               maxlength="255"
+                               required>
+                    </div>
+
+                    {# E-mail e Telefone — linha dupla em telas médias+ #}
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-7">
+                            <label for="email" class="form-label required">E-mail</label>
+                            <input type="email"
+                                   id="email"
+                                   name="email"
+                                   class="form-control"
+                                   value="{{ veterinario.email ?? '' }}"
+                                   placeholder="veterinario@email.com"
+                                   maxlength="255"
+                                   required>
+                        </div>
+                        <div class="col-12 col-md-5">
+                            <label for="telefone" class="form-label required">Telefone</label>
+                            <input type="text"
+                                   id="telefone"
+                                   name="telefone"
+                                   class="form-control"
+                                   value="{{ veterinario.telefone ?? '' }}"
+                                   placeholder="(31) 99999-9999"
+                                   maxlength="20"
+                                   required>
+                        </div>
+                    </div>
+
+                    {# Especialidade e CRMV — linha dupla #}
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-7">
+                            <label for="especialidade" class="form-label">Especialidade</label>
+                            <input type="text"
+                                   id="especialidade"
+                                   name="especialidade"
+                                   class="form-control"
+                                   value="{{ veterinario.especialidade ?? '' }}"
+                                   placeholder="Ex.: Clínica Geral, Ortopedia, Oncologia…"
+                                   maxlength="255">
+                        </div>
+                        <div class="col-12 col-md-5">
+                            <label for="crmv" class="form-label">CRMV</label>
+                            <input type="text"
+                                   id="crmv"
+                                   name="crmv"
+                                   class="form-control"
+                                   value="{{ veterinario.crmv ?? '' }}"
+                                   placeholder="Ex.: MG-12345"
+                                   maxlength="45">
+                        </div>
+                    </div>
+
+                    {# Estabelecimento — leitura apenas (preenchido pelo tenant) #}
+                    <div class="mb-4">
+                        <label class="form-label">Estabelecimento</label>
+                        <input type="text"
+                               class="form-control bg-light"
+                               value="{{ app.session.get('petshopNome') ?? app.session.get('estabelecimento_nome') ?? 'Estabelecimento atual' }}"
+                               readonly
+                               title="Preenchido automaticamente pelo estabelecimento logado">
+                        <div class="form-text text-muted">
+                            <i class="bx bx-info-circle me-1"></i>
+                            O estabelecimento é definido automaticamente pelo tenant logado e não pode ser alterado aqui.
+                        </div>
+                    </div>
+
+                    {# Ações #}
+                    <div class="d-flex gap-2 justify-content-end border-top pt-3 mt-2">
+                        <a href="{{ path('veterinario_index') }}" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-lg me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary px-5">
+                            <i class="bi bi-check-lg me-1"></i>
+                            {{ veterinario ? 'Salvar alterações' : 'Cadastrar' }}
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+$(function () {
+    // Máscara de telefone simples
+    $('#telefone').on('input', function () {
+        let v = $(this).val().replace(/\D/g, '');
+        if (v.length > 11) v = v.slice(0, 11);
+        if (v.length > 10) {
+            v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+        } else if (v.length > 6) {
+            v = v.replace(/^(\d{2})(\d{4})(\d*)$/, '($1) $2-$3');
+        } else if (v.length > 2) {
+            v = v.replace(/^(\d{2})(\d*)$/, '($1) $2');
+        }
+        $(this).val(v);
+    });
+
+    // Validação Bootstrap 5 nativa
+    (function () {
+        'use strict';
+        const forms = document.querySelectorAll('form[novalidate]');
+        Array.from(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+
+    // Esconde search-bar (não se aplica nesta tela)
+    $('.search-bar').hide();
+});
+</script>
+{% endblock %}
