@@ -269,4 +269,101 @@ class LandingpageController extends DefaultController
             return $this->redirectToRoute('landing_home');
         }
     }
+
+    /**
+     * Página pública — Política de Privacidade.
+     * Lê o conteúdo da tabela config (banco homepet_login, estab=0, tipo=lgpd).
+     *
+     * @Route("/politicas-de-privacidade", name="landing_politica_privacidade", methods={"GET"})
+     */
+    public function politicaPrivacidade(): Response
+    {
+        $config = $this->getRepositorio(\App\Entity\Config::class);
+
+        $politica = $config->findOneBy(['estabelecimento_id' => 0, 'tipo' => 'lgpd', 'chave' => 'politica_privacidade']);
+        $dpoNome  = $config->findOneBy(['estabelecimento_id' => 0, 'tipo' => 'lgpd', 'chave' => 'dpo_nome']);
+        $dpoEmail = $config->findOneBy(['estabelecimento_id' => 0, 'tipo' => 'lgpd', 'chave' => 'dpo_email']);
+        $banner   = $config->findOneBy(['estabelecimento_id' => 0, 'tipo' => 'lgpd', 'chave' => 'cookie_banner_ativo']);
+        $tracking = $this->carregarTracking($config);
+
+        return $this->render('home/politica_privacidade.html.twig', [
+            'conteudo'            => $politica?->getValor() ?? '',
+            'dpo_nome'            => $dpoNome?->getValor() ?? '',
+            'dpo_email'           => $dpoEmail?->getValor() ?? '',
+            'cookie_banner_ativo' => ($banner?->getValor() ?? '0') === '1',
+            'tracking'            => $tracking,
+        ]);
+    }
+
+    /**
+     * Página pública — Termos de Uso.
+     *
+     * @Route("/termos-de-uso", name="landing_termos_uso", methods={"GET"})
+     */
+    public function termosUso(): Response
+    {
+        $config = $this->getRepositorio(\App\Entity\Config::class);
+
+        $termos   = $config->findOneBy(['estabelecimento_id' => 0, 'tipo' => 'lgpd', 'chave' => 'termos_uso']);
+        $dpoNome  = $config->findOneBy(['estabelecimento_id' => 0, 'tipo' => 'lgpd', 'chave' => 'dpo_nome']);
+        $dpoEmail = $config->findOneBy(['estabelecimento_id' => 0, 'tipo' => 'lgpd', 'chave' => 'dpo_email']);
+        $banner   = $config->findOneBy(['estabelecimento_id' => 0, 'tipo' => 'lgpd', 'chave' => 'cookie_banner_ativo']);
+        $tracking = $this->carregarTracking($config);
+
+        return $this->render('home/termos_uso.html.twig', [
+            'conteudo'            => $termos?->getValor() ?? '',
+            'dpo_nome'            => $dpoNome?->getValor() ?? '',
+            'dpo_email'           => $dpoEmail?->getValor() ?? '',
+            'cookie_banner_ativo' => ($banner?->getValor() ?? '0') === '1',
+            'tracking'            => $tracking,
+        ]);
+    }
+
+    /**
+     * Endpoint AJAX — registra o consentimento de cookies do visitante.
+     * Recebe a escolha (aceitar/recusar) e retorna JSON.
+     *
+     * @Route("/lgpd/consentimento", name="landing_lgpd_consentimento", methods={"POST"})
+     */
+    public function registrarConsentimento(Request $request): \Symfony\Component\HttpFoundation\JsonResponse
+    {
+        $escolha = $request->get('escolha'); // 'aceito' ou 'recusado'
+        $allowed = ['aceito', 'recusado'];
+
+        if (!in_array($escolha, $allowed, true)) {
+            return $this->json(['success' => false, 'message' => 'Escolha inválida.'], 400);
+        }
+
+        // Grava cookie de consentimento por 365 dias (não precisa de banco para esta etapa)
+        $response = $this->json(['success' => true, 'consentimento' => $escolha]);
+        $response->headers->setCookie(
+            new \Symfony\Component\HttpFoundation\Cookie(
+                'hp_lgpd_consent',
+                $escolha,
+                new \DateTime('+365 days'),
+                '/',
+                null,
+                false,
+                false,
+                false,
+                'Lax'
+            )
+        );
+
+        return $response;
+    }
+
+    /**
+     * Carrega os IDs de tracking (GA4, GTM, Pixel, Ads) do banco login.
+     */
+    private function carregarTracking($configRepo): array
+    {
+        $chaves = ['google_analytics_id', 'google_tag_manager_id', 'facebook_pixel_id', 'google_ads_id'];
+        $tracking = [];
+        foreach ($chaves as $chave) {
+            $c = $configRepo->findOneBy(['estabelecimento_id' => 0, 'tipo' => 'tracking', 'chave' => $chave]);
+            $tracking[$chave] = $c?->getValor() ?? '';
+        }
+        return $tracking;
+    }
 }

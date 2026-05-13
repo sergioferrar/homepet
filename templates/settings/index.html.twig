@@ -61,6 +61,18 @@
                         Integrações
                         </button>
                     </li>
+                    <li class="nav-item">
+                        <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#lgpd">
+                            <i class="bi bi-shield-lock"></i>
+                            LGPD
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tracking">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            Tracking
+                        </button>
+                    </li>
                 </ul>
                 <!-- CONTENT -->
                 <div class="tab-content p-4">
@@ -288,14 +300,213 @@
                         </div>
                         <button class="btn btn-sm btn-success float-end">Saltar alterações</button>
                     </div> #}
+
+                    {# ══════════════════════════════════════════════════
+                       ABA: LGPD — Política de Privacidade e Termos de Uso
+                    ══════════════════════════════════════════════════ #}
+                    <div class="tab-pane fade" id="lgpd">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-shield-lock me-2 text-primary"></i>LGPD — Proteção de Dados</h5>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Lei 13.709/2018</span>
+                        </div>
+
+                        <div class="alert alert-info d-flex gap-2 align-items-start mb-4">
+                            <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
+                            <div>
+                                Os textos cadastrados aqui são exibidos nas páginas públicas
+                                <strong>/politicas-de-privacidade</strong> e <strong>/termos-de-uso</strong>.
+                                Mantenha-os atualizados conforme exigido pela LGPD.
+                                Em caso de dúvida, consulte seu DPO ou advogado especializado.
+                            </div>
+                        </div>
+
+                        {# DPO #}
+                        <div class="card border-0 bg-light rounded-3 mb-4 p-3">
+                            <h6 class="fw-semibold mb-3"><i class="bi bi-person-badge me-1"></i>Encarregado de Dados (DPO)</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nome do DPO</label>
+                                    <input type="text" class="form-control lgpd-field" id="dpo_nome"
+                                           name="dpo_nome" placeholder="Ex.: Maria Silva"
+                                           value="{{ lgpd.dpo_nome ?? '' }}">
+                                    <div class="form-text">Obrigatório pela LGPD — Art. 41.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">E-mail do DPO</label>
+                                    <input type="email" class="form-control lgpd-field" id="dpo_email"
+                                           name="dpo_email" placeholder="dpo@suaempresa.com.br"
+                                           value="{{ lgpd.dpo_email ?? '' }}">
+                                    <div class="form-text">Disponibilizado ao titular para exercício de direitos.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Cookie Banner #}
+                        <div class="card border-0 bg-light rounded-3 mb-4 p-3">
+                            <h6 class="fw-semibold mb-2"><i class="bi bi-cookie me-1"></i>Banner de Consentimento de Cookies</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input lgpd-field" type="checkbox" role="switch"
+                                       id="cookie_banner_ativo" name="cookie_banner_ativo" value="1"
+                                       {{ (lgpd.cookie_banner_ativo ?? '0') == '1' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="cookie_banner_ativo">
+                                    Exibir banner de consentimento nas páginas públicas
+                                </label>
+                            </div>
+                            <div class="form-text mt-1">
+                                Quando ativo, o visitante deve aceitar ou recusar cookies antes que os scripts de rastreamento
+                                (Google Analytics, Facebook Pixel, etc.) sejam carregados. Recomendado pela ANPD.
+                            </div>
+                        </div>
+
+                        {# Política de Privacidade #}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-file-earmark-lock2 me-1"></i>Política de Privacidade
+                                <span class="badge bg-danger ms-1">Obrigatório</span>
+                            </label>
+                            <div id="editor-politica" class="quill-editor-area" style="min-height:320px;">{{ lgpd.politica_privacidade ?? ''|raw }}</div>
+                            <textarea id="politica_privacidade" name="politica_privacidade" class="d-none lgpd-field">{{ lgpd.politica_privacidade ?? '' }}</textarea>
+                            <div class="form-text">
+                                Informe: quais dados são coletados, finalidade, base legal, tempo de retenção, direitos do titular e contato do DPO.
+                            </div>
+                        </div>
+
+                        {# Termos de Uso #}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-file-earmark-text me-1"></i>Termos de Uso
+                            </label>
+                            <div id="editor-termos" class="quill-editor-area" style="min-height:280px;">{{ lgpd.termos_uso ?? ''|raw }}</div>
+                            <textarea id="termos_uso" name="termos_uso" class="d-none lgpd-field">{{ lgpd.termos_uso ?? '' }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-primary px-5" id="btnSalvarLgpd">
+                                <i class="bi bi-floppy me-1"></i>Salvar configurações LGPD
+                            </button>
+                        </div>
+                    </div>
+
+                    {# ══════════════════════════════════════════════════
+                       ABA: TRACKING — Pixels e Tags
+                    ══════════════════════════════════════════════════ #}
+                    <div class="tab-pane fade" id="tracking">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-graph-up-arrow me-2 text-success"></i>Rastreamento & Analytics</h5>
+                        </div>
+
+                        <div class="alert alert-warning d-flex gap-2 align-items-start mb-4">
+                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
+                            <div>
+                                Scripts de rastreamento só são injetados nas páginas públicas quando o visitante
+                                <strong>aceita cookies</strong> (banner LGPD ativo) ou quando o banner está desabilitado.
+                                Respeite a escolha do usuário conforme exigência da LGPD e da ANPD.
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            {# Google Analytics 4 #}
+                            <div class="col-md-6">
+                                <div class="card border-0 bg-light rounded-3 h-100 p-3">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <img src="https://www.gstatic.com/analytics-suite/header/suite/v2/ic_analytics.svg"
+                                             width="28" alt="GA4" onerror="this.style.display='none'">
+                                        <h6 class="mb-0 fw-semibold">Google Analytics 4</h6>
+                                    </div>
+                                    <label class="form-label">ID de Medição <span class="text-muted fw-normal">(ex: G-XXXXXXXXXX)</span></label>
+                                    <input type="text" class="form-control tracking-field" name="google_analytics_id"
+                                           placeholder="G-XXXXXXXXXX"
+                                           value="{{ tracking.google_analytics_id ?? '' }}">
+                                    <div class="form-text mt-2">
+                                        <a href="https://analytics.google.com" target="_blank" class="text-decoration-none">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i>Obter ID no Google Analytics
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {# Google Tag Manager #}
+                            <div class="col-md-6">
+                                <div class="card border-0 bg-light rounded-3 h-100 p-3">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <i class="bi bi-tags-fill text-primary fs-5"></i>
+                                        <h6 class="mb-0 fw-semibold">Google Tag Manager</h6>
+                                    </div>
+                                    <label class="form-label">ID do Container <span class="text-muted fw-normal">(ex: GTM-XXXXXXX)</span></label>
+                                    <input type="text" class="form-control tracking-field" name="google_tag_manager_id"
+                                           placeholder="GTM-XXXXXXX"
+                                           value="{{ tracking.google_tag_manager_id ?? '' }}">
+                                    <div class="form-text mt-2">
+                                        <a href="https://tagmanager.google.com" target="_blank" class="text-decoration-none">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i>Acessar Google Tag Manager
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {# Facebook Pixel #}
+                            <div class="col-md-6">
+                                <div class="card border-0 bg-light rounded-3 h-100 p-3">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <i class="bi bi-meta text-primary fs-5"></i>
+                                        <h6 class="mb-0 fw-semibold">Meta (Facebook) Pixel</h6>
+                                    </div>
+                                    <label class="form-label">ID do Pixel <span class="text-muted fw-normal">(ex: 1234567890123)</span></label>
+                                    <input type="text" class="form-control tracking-field" name="facebook_pixel_id"
+                                           placeholder="1234567890123"
+                                           value="{{ tracking.facebook_pixel_id ?? '' }}">
+                                    <div class="form-text mt-2">
+                                        <a href="https://business.facebook.com/events_manager" target="_blank" class="text-decoration-none">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i>Gerenciar no Meta Business
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {# Google Ads #}
+                            <div class="col-md-6">
+                                <div class="card border-0 bg-light rounded-3 h-100 p-3">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <i class="bi bi-google text-danger fs-5"></i>
+                                        <h6 class="mb-0 fw-semibold">Google Ads</h6>
+                                    </div>
+                                    <label class="form-label">ID de Conversão <span class="text-muted fw-normal">(ex: AW-XXXXXXXXX)</span></label>
+                                    <input type="text" class="form-control tracking-field" name="google_ads_id"
+                                           placeholder="AW-XXXXXXXXX"
+                                           value="{{ tracking.google_ads_id ?? '' }}">
+                                    <div class="form-text mt-2">
+                                        <a href="https://ads.google.com" target="_blank" class="text-decoration-none">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i>Acessar Google Ads
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="button" class="btn btn-success px-5" id="btnSalvarTracking">
+                                <i class="bi bi-floppy me-1"></i>Salvar configurações de rastreamento
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
 {% endblock %}
 {% block javascripts %}
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+    <style>
+        .quill-editor-area { background: #fff; border: 1px solid #dee2e6; border-radius: .375rem; }
+        .ql-toolbar { border-radius: .375rem .375rem 0 0; border-color: #dee2e6 !important; }
+        .ql-container { border-radius: 0 0 .375rem .375rem; border-color: #dee2e6 !important; font-size: .95rem; }
+    </style>
     <script>
     $(function () {
+
+        // ── Show/hide password ────────────────────────────────────────
         $('.show-hide-paswd').on('click', function () {
             const $btn = $(this);
             const $icon = $btn.find('i');
@@ -304,6 +515,110 @@
             $input.attr('type', visivel ? 'text' : 'password');
             $icon.toggleClass('bi-eye', visivel).toggleClass('bi-eye-slash', !visivel);
         });
+
+        // ── Quill — Política de Privacidade ──────────────────────────
+        const quillPolitica = new Quill('#editor-politica', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ header: [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline'],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    ['link'],
+                    ['clean']
+                ]
+            }
+        });
+
+        // ── Quill — Termos de Uso ─────────────────────────────────────
+        const quillTermos = new Quill('#editor-termos', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ header: [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline'],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    ['link'],
+                    ['clean']
+                ]
+            }
+        });
+
+        // ── Sinc Quill → textarea hidden antes de salvar ─────────────
+        function sincQuill() {
+            $('#politica_privacidade').val(quillPolitica.root.innerHTML);
+            $('#termos_uso').val(quillTermos.root.innerHTML);
+        }
+
+        // ── Salvar LGPD via AJAX ──────────────────────────────────────
+        $('#btnSalvarLgpd').on('click', function () {
+            sincQuill();
+            const $btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Salvando...');
+            const dados = {};
+            $('.lgpd-field').each(function () {
+                const el = $(this);
+                if (el.attr('type') === 'checkbox') {
+                    dados[el.attr('name')] = el.is(':checked') ? '1' : '0';
+                } else {
+                    dados[el.attr('name')] = el.val();
+                }
+            });
+
+            $.ajax({
+                url   : '{{ path('settings_lgpd_salvar') }}',
+                method: 'POST',
+                data  : dados,
+                success: function (r) {
+                    toastSucesso(r.message ?? 'Configurações LGPD salvas!');
+                },
+                error: function () {
+                    toastErro('Erro ao salvar configurações LGPD.');
+                },
+                complete: function () {
+                    $btn.prop('disabled', false).html('<i class="bi bi-floppy me-1"></i>Salvar configurações LGPD');
+                }
+            });
+        });
+
+        // ── Salvar Tracking via AJAX ──────────────────────────────────
+        $('#btnSalvarTracking').on('click', function () {
+            const $btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Salvando...');
+            const dados = {};
+            $('.tracking-field').each(function () {
+                dados[$(this).attr('name')] = $(this).val();
+            });
+
+            $.ajax({
+                url   : '{{ path('settings_tracking_salvar') }}',
+                method: 'POST',
+                data  : dados,
+                success: function (r) {
+                    toastSucesso(r.message ?? 'Configurações de rastreamento salvas!');
+                },
+                error: function () {
+                    toastErro('Erro ao salvar rastreamento.');
+                },
+                complete: function () {
+                    $btn.prop('disabled', false).html('<i class="bi bi-floppy me-1"></i>Salvar configurações de rastreamento');
+                }
+            });
+        });
+
+        // ── Toast helpers ─────────────────────────────────────────────
+        function toastSucesso(msg) { mostrarToast(msg, 'success'); }
+        function toastErro(msg)    { mostrarToast(msg, 'danger'); }
+        function mostrarToast(msg, tipo) {
+            const id = 'toast_' + Date.now();
+            const html = `<div id="${id}" class="toast align-items-center text-bg-${tipo} border-0 show position-fixed bottom-0 end-0 m-3" style="z-index:9999" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body fw-semibold">${msg}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>`;
+            $('body').append(html);
+            setTimeout(() => { $(`#${id}`).remove(); }, 4000);
+        }
+
     });
     </script>
 {% endblock %}

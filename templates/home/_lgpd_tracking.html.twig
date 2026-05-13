@@ -1,0 +1,106 @@
+{# templates/home/_lgpd_tracking.html.twig
+   Macro reutilizável: banner de consentimento LGPD + injeção condicional de scripts de rastreamento.
+   Incluído nas páginas públicas: landing, politica_privacidade, termos_uso. #}
+
+{# ══════════════════════════════════════════════════════════
+   SCRIPTS DE RASTREAMENTO (injetados somente após consentimento)
+   Condição: cookie hp_lgpd_consent=aceito  OU  banner desabilitado
+══════════════════════════════════════════════════════════ #}
+{% if not cookie_banner_ativo or app.request.cookies.get('hp_lgpd_consent') == 'aceito' %}
+
+    {# Google Tag Manager — deve vir primeiro quando configurado #}
+    {% if tracking.google_tag_manager_id is defined and tracking.google_tag_manager_id %}
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','{{ tracking.google_tag_manager_id }}');</script>
+    {% endif %}
+
+    {# Google Analytics 4 — só quando GTM não estiver gerenciando #}
+    {% if tracking.google_analytics_id is defined and tracking.google_analytics_id and not tracking.google_tag_manager_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ tracking.google_analytics_id }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ tracking.google_analytics_id }}');
+    </script>
+    {% endif %}
+
+    {# Google Ads #}
+    {% if tracking.google_ads_id is defined and tracking.google_ads_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ tracking.google_ads_id }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ tracking.google_ads_id }}');
+    </script>
+    {% endif %}
+
+    {# Meta (Facebook) Pixel #}
+    {% if tracking.facebook_pixel_id is defined and tracking.facebook_pixel_id %}
+    <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '{{ tracking.facebook_pixel_id }}');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id={{ tracking.facebook_pixel_id }}&ev=PageView&noscript=1"/></noscript>
+    {% endif %}
+
+{% endif %}
+
+{# ══════════════════════════════════════════════════════════
+   BANNER DE CONSENTIMENTO DE COOKIES (LGPD)
+   Exibido somente quando: banner_ativo=true E cookie não definido
+══════════════════════════════════════════════════════════ #}
+{% if cookie_banner_ativo and app.request.cookies.get('hp_lgpd_consent') is null %}
+<div id="hp-cookie-banner"
+     style="position:fixed;bottom:0;left:0;right:0;z-index:9999;
+            background:rgba(15,23,42,.97);color:#f8fafc;
+            padding:1.25rem 1.5rem;
+            box-shadow:0 -4px 24px rgba(0,0,0,.3);
+            display:flex;flex-wrap:wrap;gap:1rem;align-items:center;
+            font-family:'Roboto',sans-serif;font-size:.9rem;line-height:1.5;">
+    <div style="flex:1;min-width:260px;">
+        <strong style="font-size:1rem;">🍪 Usamos cookies</strong><br>
+        Utilizamos cookies e tecnologias similares para melhorar sua experiência, personalizar conteúdo e analisar o tráfego.
+        Ao clicar em <strong>"Aceitar"</strong>, você concorda com nossa
+        <a href="{{ path('landing_politica_privacidade') }}" style="color:#93c5fd;text-decoration:underline;">Política de Privacidade</a>
+        e <a href="{{ path('landing_termos_uso') }}" style="color:#93c5fd;text-decoration:underline;">Termos de Uso</a>.
+    </div>
+    <div style="display:flex;gap:.75rem;flex-shrink:0;">
+        <button onclick="hpLgpdConsentir('recusado')"
+                style="padding:.5rem 1.25rem;border:1px solid #64748b;background:transparent;color:#cbd5e1;
+                       border-radius:.5rem;cursor:pointer;font-size:.85rem;white-space:nowrap;">
+            Somente essenciais
+        </button>
+        <button onclick="hpLgpdConsentir('aceito')"
+                style="padding:.5rem 1.5rem;border:none;background:#5d57f4;color:#fff;
+                       border-radius:.5rem;cursor:pointer;font-size:.9rem;font-weight:600;white-space:nowrap;">
+            Aceitar todos
+        </button>
+    </div>
+</div>
+<script>
+function hpLgpdConsentir(escolha) {
+    fetch('{{ path('landing_lgpd_consentimento') }}', {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body   : 'escolha=' + escolha
+    }).then(function () {
+        document.getElementById('hp-cookie-banner').style.display = 'none';
+        if (escolha === 'aceito') {
+            // Recarrega para injetar os scripts de tracking agora permitidos
+            location.reload();
+        }
+    });
+}
+</script>
+{% endif %}

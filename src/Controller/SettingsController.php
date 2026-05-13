@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\Config;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -11,6 +13,12 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class SettingsController extends DefaultController
 {
+    /**
+     * ID de estabelecimento reservado para configurações globais do sistema
+     * (políticas, termos, tracking). Gravadas no banco homepet_login.
+     */
+    private const GLOBAL_ESTAB_ID = 0;
+
     /**
      * @Route("settings", name="app_settings")
      */
@@ -26,11 +34,124 @@ class SettingsController extends DefaultController
         $data['estabelecimento'] = $dadosEstabelecimentoLogado;
         $data['planoLogado'] = $dadosEstabelecimentoLogado;
         $data['planos'] = $dadosPlanos;
-        $data['gateway'] = $this->getRepositorio(\App\Entity\Config::class)->findBy(['estabelecimento_id' => $dadosUsuarioLogado->getPetshopId(), 'tipo' => 'gateway_payment']);
-        $data['mailer'] = $this->getRepositorio(\App\Entity\Config::class)->findBy(['estabelecimento_id' => $dadosUsuarioLogado->getPetshopId(), 'tipo' => 'mailer']);
-        // dd($data);
+        $data['gateway'] = $this->getRepositorio(Config::class)->findBy(['estabelecimento_id' => $dadosUsuarioLogado->getPetshopId(), 'tipo' => 'gateway_payment']);
+        $data['mailer']  = $this->getRepositorio(Config::class)->findBy(['estabelecimento_id' => $dadosUsuarioLogado->getPetshopId(), 'tipo' => 'mailer']);
 
+        // ── Configurações LGPD e Tracking (banco login, estab=0) ─────────────
+        $configRepo = $this->getRepositorio(Config::class);
+        $data['lgpd']    = $this->indexarConfig($configRepo->findBy(['estabelecimento_id' => $this->session->get('userId'), 'tipo' => 'lgpd']));
+        $data['tracking'] = $this->indexarConfig($configRepo->findBy(['estabelecimento_id' => $this->session->get('userId'), 'tipo' => 'tracking']));
+        
         return $this->render('settings/index.html.twig', $data);
+    }
+
+    /**
+     * Salva as páginas de LGPD (Política de Privacidade e Termos de Uso)
+     * no banco homepet_login com estabelecimento_id = 0 (global do sistema).
+     *
+     * @Route("settings/lgpd", name="settings_lgpd_salvar", methods={"POST"})
+     */
+    public function salvarLgpd(Request $request): JsonResponse
+    {
+        $configRepo = $this->getRepositorio(Config::class);
+
+        $campos = [
+            'politica_privacidade' => 'Texto da Política de Privacidade — LGPD',
+            'termos_uso'           => 'Texto dos Termos de Uso',
+            'dpo_nome'             => 'Nome do Encarregado de Dados (DPO)',
+            'dpo_email'            => 'E-mail do DPO para solicitações de titulares',
+            'cookie_banner_ativo'  => 'Exibe banner de consentimento de cookies nas páginas públicas',
+        ];
+
+        foreach ($campos as $chave => $observacao) {
+            $valor = $request->get($chave);
+            if ($valor === null) {
+                continue;
+            }
+
+            $config = $configRepo->findOneBy([
+                'estabelecimento_id' => $this->session->get('userId'),
+                'tipo'               => 'lgpd',
+                'chave'              => $chave,
+            ]);
+
+            if (!$config) {
+                $config = new Config();
+                $config->setEstabelecimentoId($this->session->get('userId'));
+                $config->setTipo('lgpd');
+                $config->setChave($chave);
+                $config->setObservacao($observacao);
+                $this->em->persist($config);
+            }
+
+            $config->setValor($valor);
+        }
+
+        $this->em->flush();
+
+        return new JsonResponse(['success' => true, 'message' => 'Configurações LGPD salvas com sucesso.']);
+    }
+
+    /**
+     * Salva os pixels e tags de rastreamento (Google Analytics, Facebook Pixel,
+     * Google Tag Manager) no banco homepet_login com estabelecimento_id = 0.
+     *
+     * @Route("settings/tracking", name="settings_tracking_salvar", methods={"POST"})
+     */
+    public function salvarTracking(Request $request): JsonResponse
+    {
+        $configRepo = $this->getRepositorio(Config::class);
+
+        $campos = [
+            'google_analytics_id'  => 'ID de medição do Google Analytics 4 (ex: G-XXXXXXXXXX)',
+            'google_tag_manager_id'=> 'ID do Google Tag Manager (ex: GTM-XXXXXXX)',
+            'facebook_pixel_id'    => 'ID do Pixel do Facebook/Meta (ex: 1234567890)',
+            'google_ads_id'        => 'ID de conversão do Google Ads (ex: AW-XXXXXXXXX)',
+        ];
+
+        foreach ($campos as $chave => $observacao) {
+            $valor = $request->get($chave);
+            if ($valor === null) {
+                continue;
+            }
+
+            $config = $configRepo->findOneBy([
+                'estabelecimento_id' => $this->session->get('userId'),
+                'tipo'               => 'tracking',
+                'chave'              => $chave,
+            ]);
+
+            if (!$config) {
+                $config = new Config();
+                $config->setEstabelecimentoId($this->session->get('userId'));
+                $config->setTipo('tracking');
+                $config->setChave($chave);
+                $config->setObservacao($observacao);
+                $this->em->persist($config);
+            }
+
+            $config->setValor($valor);
+        }
+
+        $this->em->flush();
+
+        return new JsonResponse(['success' => true, 'message' => 'Configurações de rastreamento salvas com sucesso.']);
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+
+    /**
+     * Converte array de Config[] em mapa chave => valor para uso no template.
+     *
+     * @param Config[] $configs
+     */
+    private function indexarConfig(array $configs): array
+    {
+        $mapa = [];
+        foreach ($configs as $c) {
+            $mapa[$c->getChave()] = $c->getValor();
+        }
+        return $mapa;
     }
 
     /**
