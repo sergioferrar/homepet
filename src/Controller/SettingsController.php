@@ -37,11 +37,12 @@ class SettingsController extends DefaultController
         $data['gateway'] = $this->getRepositorio(Config::class)->findBy(['estabelecimento_id' => $dadosUsuarioLogado->getPetshopId(), 'tipo' => 'gateway_payment']);
         $data['mailer']  = $this->getRepositorio(Config::class)->findBy(['estabelecimento_id' => $dadosUsuarioLogado->getPetshopId(), 'tipo' => 'mailer']);
 
-        // ── Configurações LGPD e Tracking (banco login, estab=0) ─────────────
-        $configRepo = $this->getRepositorio(Config::class);
-        $data['lgpd']    = $this->indexarConfig($configRepo->findBy(['estabelecimento_id' => $this->session->get('userId'), 'tipo' => 'lgpd']));
-        $data['tracking'] = $this->indexarConfig($configRepo->findBy(['estabelecimento_id' => $this->session->get('userId'), 'tipo' => 'tracking']));
-        
+        // ── Configurações LGPD e Tracking — lidas direto via DBAL do banco login ──
+        // getRepositorio() pode estar apontando para o tenant após switchDB em outra parte
+        // da requisição, por isso usamos o DBAL direto aqui para garantir o banco correto.
+        $data['lgpd']     = $this->lerConfigsDbal('lgpd');
+        $data['tracking'] = $this->lerConfigsDbal('tracking');
+
         return $this->render('settings/index.html.twig', $data);
     }
 
@@ -49,11 +50,16 @@ class SettingsController extends DefaultController
      * Salva as páginas de LGPD (Política de Privacidade e Termos de Uso)
      * no banco homepet_login com estabelecimento_id = 0 (global do sistema).
      *
+     * Usa DBAL direto (INSERT … ON DUPLICATE KEY UPDATE) para garantir que
+     * a gravação ocorra sempre no banco homepet_login, independente de o
+     * tenant ter sido trocado antes nesta requisição.
+     *
      * @Route("settings/lgpd", name="settings_lgpd_salvar", methods={"POST"})
      */
     public function salvarLgpd(Request $request): JsonResponse
     {
-        $configRepo = $this->getRepositorio(Config::class);
+        // Garante conexão com o banco homepet_login antes de qualquer leitura/escrita
+        $this->restauraLoginDB();
 
         $campos = [
             'politica_privacidade' => 'Texto da Política de Privacidade — LGPD',
@@ -63,33 +69,12 @@ class SettingsController extends DefaultController
             'cookie_banner_ativo'  => 'Exibe banner de consentimento de cookies nas páginas públicas',
         ];
 
-        foreach ($campos as $chave => $observacao) {
-            $valor = $request->get($chave);
-            if ($valor === null) {
-                continue;
-            }
-
-            $config = $configRepo->findOneBy([
-                'estabelecimento_id' => $this->session->get('userId'),
-                'tipo'               => 'lgpd',
-                'chave'              => $chave,
-            ]);
-
-            if (!$config) {
-                $config = new Config();
-                $config->setEstabelecimentoId($this->session->get('userId'));
-                $config->setTipo('lgpd');
-                $config->setChave($chave);
-                $config->setObservacao($observacao);
-                $this->em->persist($config);
-            }
-
-            $config->setValor($valor);
+        try {
+            $this->upsertConfigs('lgpd', $campos, $request);
+            return new JsonResponse(['success' => true, 'message' => 'Configurações LGPD salvas com sucesso.']);
+        } catch (\Throwable $e) {
+            return new JsonResponse(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()], 500);
         }
-
-        $this->em->flush();
-
-        return new JsonResponse(['success' => true, 'message' => 'Configurações LGPD salvas com sucesso.']);
     }
 
     /**
@@ -100,14 +85,34 @@ class SettingsController extends DefaultController
      */
     public function salvarTracking(Request $request): JsonResponse
     {
-        $configRepo = $this->getRepositorio(Config::class);
+        $this->restauraLoginDB();
 
         $campos = [
-            'google_analytics_id'  => 'ID de medição do Google Analytics 4 (ex: G-XXXXXXXXXX)',
-            'google_tag_manager_id'=> 'ID do Google Tag Manager (ex: GTM-XXXXXXX)',
-            'facebook_pixel_id'    => 'ID do Pixel do Facebook/Meta (ex: 1234567890)',
-            'google_ads_id'        => 'ID de conversão do Google Ads (ex: AW-XXXXXXXXX)',
+            'google_analytics_id'   => 'ID de medição do Google Analytics 4 (ex: G-XXXXXXXXXX)',
+            'google_tag_manager_id' => 'ID do Google Tag Manager (ex: GTM-XXXXXXX)',
+            'facebook_pixel_id'     => 'ID do Pixel do Facebook/Meta (ex: 1234567890)',
+            'google_ads_id'         => 'ID de conversão do Google Ads (ex: AW-XXXXXXXXX)',
         ];
+
+        try {
+            $this->upsertConfigs('tracking', $campos, $request);
+            return new JsonResponse(['success' => true, 'message' => 'Configurações de rastreamento salvas com sucesso.']);
+        } catch (\Throwable $e) {
+            return new JsonResponse(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+
+    /**
+     * Upsert genérico via DBAL — INSERT … ON DUPLICATE KEY UPDATE.
+     * Garante atomicidade e funciona corretamente com o banco homepet_login.
+     *
+     * @param array<string,string> $campos  chave => observação
+     */
+    private function upsertConfigs(string $tipo, array $campos, Request $request): void
+    {
+        $conn = $this->managerRegistry->getConnection();
 
         foreach ($campos as $chave => $observacao) {
             $valor = $request->get($chave);
@@ -115,43 +120,55 @@ class SettingsController extends DefaultController
                 continue;
             }
 
-            $config = $configRepo->findOneBy([
-                'estabelecimento_id' => $this->session->get('userId'),
-                'tipo'               => 'tracking',
-                'chave'              => $chave,
+            // Cria a tabela config caso não exista (idempotente — seguro rodar sempre)
+            $conn->executeStatement("
+                CREATE TABLE IF NOT EXISTS `config` (
+                    `id`                INT          NOT NULL AUTO_INCREMENT,
+                    `estabelecimento_id` INT         NOT NULL DEFAULT 0,
+                    `chave`             VARCHAR(255) NOT NULL,
+                    `valor`             LONGTEXT         NULL,
+                    `tipo`              VARCHAR(255) NOT NULL,
+                    `observacao`        TEXT             NULL,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `uq_config_estab_tipo_chave` (`estabelecimento_id`, `tipo`(100), `chave`(100))
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+
+            $conn->executeStatement("
+                INSERT INTO `config` (`estabelecimento_id`, `tipo`, `chave`, `valor`, `observacao`)
+                VALUES (:estab, :tipo, :chave, :valor, :obs)
+                ON DUPLICATE KEY UPDATE `valor` = VALUES(`valor`)
+            ", [
+                'estab' => self::GLOBAL_ESTAB_ID,
+                'tipo'  => $tipo,
+                'chave' => $chave,
+                'valor' => $valor,
+                'obs'   => $observacao,
             ]);
-
-            if (!$config) {
-                $config = new Config();
-                $config->setEstabelecimentoId($this->session->get('userId'));
-                $config->setTipo('tracking');
-                $config->setChave($chave);
-                $config->setObservacao($observacao);
-                $this->em->persist($config);
-            }
-
-            $config->setValor($valor);
         }
-
-        $this->em->flush();
-
-        return new JsonResponse(['success' => true, 'message' => 'Configurações de rastreamento salvas com sucesso.']);
     }
 
-    // ── Helpers ─────────────────────────────────────────────────────────────
-
     /**
-     * Converte array de Config[] em mapa chave => valor para uso no template.
-     *
-     * @param Config[] $configs
+     * Lê configs de um tipo via DBAL direto, retornando mapa chave => valor.
+     * Usa a conexão padrão (homepet_login) independente de switchDB anterior.
      */
-    private function indexarConfig(array $configs): array
+    private function lerConfigsDbal(string $tipo): array
     {
-        $mapa = [];
-        foreach ($configs as $c) {
-            $mapa[$c->getChave()] = $c->getValor();
+        try {
+            $conn = $this->managerRegistry->getConnection();
+            $rows = $conn->fetchAllAssociative(
+                "SELECT chave, valor FROM config WHERE estabelecimento_id = :estab AND tipo = :tipo",
+                ['estab' => self::GLOBAL_ESTAB_ID, 'tipo' => $tipo]
+            );
+            $mapa = [];
+            foreach ($rows as $row) {
+                $mapa[$row['chave']] = $row['valor'];
+            }
+            return $mapa;
+        } catch (\Throwable) {
+            // Tabela ainda não existe — retorna mapa vazio (primeira vez)
+            return [];
         }
-        return $mapa;
     }
 
     /**

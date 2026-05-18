@@ -24,6 +24,8 @@ class LandingpageController extends DefaultController
 
         $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome();
         $data['planos'] = $planos;
+        $data['cookie_banner_ativo'] = '0';
+        $data['tracking'] = '';
         $data['modulos'] = $this->modulosSistema;
 
         return $this->render('home/landing.html.twig', $data);
@@ -323,7 +325,7 @@ class LandingpageController extends DefaultController
      * Endpoint AJAX — registra o consentimento de cookies do visitante.
      * Recebe a escolha (aceitar/recusar) e retorna JSON.
      *
-     * @Route("/lgpd/consentimento", name="landing_lgpd_consentimento", methods={"POST"})
+     * @Route("/lgpd/consentimento", name="landing_lgpd_consentimento")
      */
     public function registrarConsentimento(Request $request): \Symfony\Component\HttpFoundation\JsonResponse
     {
