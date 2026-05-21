@@ -1,21 +1,20 @@
-{# templates/pet/pet_form.html.twig #}
+{# templates/pet/novo.html.twig #}
 {% extends 'forms/_form_base.html.twig' %}
 
 {# Título principal da página #}
 {% block form_page_title %}
-    {% if pet is defined %}Editar Pet{% else %}Novo Pet{% endif %}
+    Novo Pet
 {% endblock %}
 
 {# Itens do breadcrumb #}
 {% block breadcrumb_items %}
     <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-primary">Pets</a></li>
-    <li class="breadcrumb-item active">{% if pet is defined %}Editar{% else %}Novo{% endif %}</li>
+    <li class="breadcrumb-item active">Novo</li>
 {% endblock %}
 
 {# Conteúdo do formulário #}
 {% block form_content %}
-    <form method="post"
-          action="{% if pet is defined %}{{ path('pet_editar', {'id': pet.id}) }}{% else %}{{ path('pet_novo') }}{% endif %}">
+    <form method="post" action="{{ path('pet_novo') }}">
         <div class="mb-3">
             <label for="nome" class="form-label">Nome</label>
             <input type="text" class="form-control" id="nome" name="nome" value="{{ pet.nome|default('') }}" required>
@@ -28,37 +27,35 @@
             </div>
             <div class="col-md-6 mb-3">
                 <label for="sexo" class="form-label">Sexo</label>
-                <select class="form-control" id="sexo" name="sexo">
+                <select class="form-select select2" id="sexo" name="sexo">
                     <option value="">Selecionar</option>
                     <option value="M" {% if pet.sexo is defined and pet.sexo == 'M' %}selected{% endif %}>Macho</option>
                     <option value="F" {% if pet.sexo is defined and pet.sexo == 'F' %}selected{% endif %}>Fêmea</option>
                 </select>
             </div>
         </div>
-        <div class="mb-3 autocomplete">
+        <div class="mb-3">
             <label for="raca" class="form-label">Raça</label>
-            <input type="text" class="form-control" id="raca" name="raca" value="{{ pet.raca|default('') }}">
-            <div id="autocomplete-list" class="autocomplete-items"></div>
+            <select class="form-select select2-raca" id="raca" name="raca">
+                <option value="">Selecionar ou digitar raça...</option>
+                {% for raca in racas %}
+                    <option value="{{ raca }}" {% if pet.raca is defined and pet.raca == raca %}selected{% endif %}>{{ raca }}</option>
+                {% endfor %}
+            </select>
         </div>
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="porte" class="form-label">Porte</label>
-                <select class="form-control" id="porte" name="porte">
+                <select class="form-select select2" id="porte" name="porte">
                     <option value="">Selecionar</option>
-                    <option value="Pequeno" {% if pet.porte is defined and pet.porte == 'Pequeno' %}selected{% endif %}>
-                        Pequeno
-                    </option>
-                    <option value="Médio" {% if pet.porte is defined and pet.porte == 'Médio' %}selected{% endif %}>
-                        Médio
-                    </option>
-                    <option value="Grande" {% if pet.porte is defined and pet.porte == 'Grande' %}selected{% endif %}>
-                        Grande
-                    </option>
+                    <option value="Pequeno" {% if pet.porte is defined and pet.porte == 'Pequeno' %}selected{% endif %}>Pequeno</option>
+                    <option value="Médio" {% if pet.porte is defined and pet.porte == 'Médio' %}selected{% endif %}>Médio</option>
+                    <option value="Grande" {% if pet.porte is defined and pet.porte == 'Grande' %}selected{% endif %}>Grande</option>
                 </select>
             </div>
             <div class="col-md-6 mb-3">
                 <label for="data_nascimento" class="form-label">Data de Nascimento</label>
-                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" 
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento"
                        value="{{ pet.dataNascimento is defined and pet.dataNascimento ? pet.dataNascimento|date('Y-m-d') : '' }}">
                 <small class="text-muted" id="idade_calculada"></small>
             </div>
@@ -76,17 +73,15 @@
             </div>
             <div class="col-md-6 mb-3">
                 <label for="castrado" class="form-label">Castrado</label>
-                <select class="form-control" id="castrado" name="castrado">
-                    <option value="0" {% if pet.castrado is defined and pet.castrado == 0 %}selected{% endif %}>Não
-                    </option>
-                    <option value="1" {% if pet.castrado is defined and pet.castrado == 1 %}selected{% endif %}>Sim
-                    </option>
+                <select class="form-select select2" id="castrado" name="castrado">
+                    <option value="0" {% if pet.castrado is defined and pet.castrado == 0 %}selected{% endif %}>Não</option>
+                    <option value="1" {% if pet.castrado is defined and pet.castrado == 1 %}selected{% endif %}>Sim</option>
                 </select>
             </div>
         </div>
         <div class="mb-3">
             <label for="dono_id" class="form-label">Dono</label>
-            <select class="form-control" id="dono_id" name="dono_id">
+            <select class="form-select select2" id="dono_id" name="dono_id">
                 <option value="">Selecionar cliente</option>
                 {% for cliente in clientes %}
                     <option value="{{ cliente.id }}"
@@ -102,34 +97,64 @@
 
 {# JavaScript específico para este formulário #}
 {% block form_javascripts %}
+    {# Select2 CSS #}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+    {# Select2 JS #}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Cálculo automático da idade
+
+            // ── Select2 padrão (sem tags) ──────────────────────────────────
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                language: 'pt-BR',
+                placeholder: function () {
+                    return $(this).data('placeholder') || 'Selecionar';
+                },
+                allowClear: true
+            });
+
+            // ── Select2 para Raça (com tags – permite digitar valor livre) ─
+            $('.select2-raca').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                language: 'pt-BR',
+                placeholder: 'Selecionar ou digitar raça...',
+                allowClear: true,
+                tags: true,
+                createTag: function (params) {
+                    var term = $.trim(params.term);
+                    if (term === '') return null;
+                    return { id: term, text: term, newTag: true };
+                }
+            });
+
+            // ── Cálculo automático da idade ────────────────────────────────
             var dataNascimentoInput = document.getElementById("data_nascimento");
             var idadeCalculada = document.getElementById("idade_calculada");
-            
+
             function calcularIdade() {
                 var dataNascimento = dataNascimentoInput.value;
-                if (!dataNascimento) {
-                    idadeCalculada.textContent = "";
-                    return;
-                }
-                
+                if (!dataNascimento) { idadeCalculada.textContent = ""; return; }
+
                 var nascimento = new Date(dataNascimento);
                 var hoje = new Date();
-                
+
                 var anos = hoje.getFullYear() - nascimento.getFullYear();
                 var meses = hoje.getMonth() - nascimento.getMonth();
-                
+
                 if (meses < 0 || (meses === 0 && hoje.getDate() < nascimento.getDate())) {
-                    anos--;
-                    meses += 12;
+                    anos--; meses += 12;
                 }
                 if (hoje.getDate() < nascimento.getDate()) {
                     meses--;
                     if (meses < 0) meses += 12;
                 }
-                
+
                 var texto = "";
                 if (anos === 0 && meses === 0) {
                     var dias = Math.floor((hoje - nascimento) / (1000 * 60 * 60 * 24));
@@ -141,53 +166,12 @@
                 } else {
                     texto = anos + " ano(s) e " + meses + " mês(es)";
                 }
-                
+
                 idadeCalculada.textContent = "Idade: " + texto;
             }
-            
+
             dataNascimentoInput.addEventListener("change", calcularIdade);
-            calcularIdade(); // Calcular ao carregar se já tiver valor
-
-            var racas = {{ racas|json_encode()|raw }};
-            var input = document.getElementById("raca");
-
-            input.addEventListener("input", function () {
-                var val = this.value;
-                closeAllLists();
-                if (!val) return false;
-
-                var divList = document.createElement("div");
-                divList.setAttribute("id", "autocomplete-list");
-                divList.setAttribute("class", "autocomplete-items");
-                this.parentNode.appendChild(divList);
-
-                racas.forEach(function (raca) {
-                    if (raca.toLowerCase().includes(val.toLowerCase())) {
-                        var item = document.createElement("div");
-                        item.setAttribute("class", "lista");
-                        item.innerHTML = "<strong>" + raca.substr(0, val.length) + "</strong>" + raca.substr(val.length);
-                        item.innerHTML += "<input type='hidden' value='" + raca + "'>";
-                        item.addEventListener("click", function () {
-                            input.value = this.getElementsByTagName("input")[0].value;
-                            closeAllLists();
-                        });
-                        divList.appendChild(item);
-                    }
-                });
-            });
-
-            function closeAllLists(elmnt) {
-                var items = document.getElementsByClassName("autocomplete-items");
-                for (var i = 0; i < items.length; i++) {
-                    if (elmnt != items[i] && elmnt != input) {
-                        items[i].parentNode.removeChild(items[i]);
-                    }
-                }
-            }
-
-            document.addEventListener("click", function (e) {
-                closeAllLists(e.target);
-            });
+            calcularIdade();
         });
     </script>
 {% endblock %}
