@@ -393,6 +393,54 @@ class SuperAdminController extends DefaultController
     }
 
     /**
+     * @Route("/estabelecimento/{id}/alterar-status", name="superadmin_estabelecimento_alterar_status", methods={"POST"})
+     */
+    public function alterarStatus(Request $request, int $id): Response
+    {
+        if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
+            throw $this->createAccessDeniedException('Acesso negado');
+        }
+
+        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($id);
+
+        if (!$estabelecimento) {
+            $this->addFlash('danger', 'Estabelecimento não encontrado.');
+            return $this->redirectToRoute('superadmin_estabelecimentos');
+        }
+
+        $novoStatus = $request->request->get('status');
+        $statusPermitidos = ['Ativo', 'Inativo', 'Suspenso'];
+
+        if (!in_array($novoStatus, $statusPermitidos)) {
+            $this->addFlash('danger', 'Status inválido.');
+            return $this->redirectToRoute('superadmin_estabelecimento_detalhes', ['id' => $id]);
+        }
+
+        $estabelecimento->setStatus($novoStatus);
+
+        // Se estiver ativando e o plano estiver expirado, estende por 30 dias a partir de hoje
+        if ($novoStatus === 'Ativo') {
+            $hoje = new \DateTime();
+            if (!$estabelecimento->getDataPlanoFim() || $estabelecimento->getDataPlanoFim() < $hoje) {
+                $novaExpiracao = (new \DateTime())->modify('+30 days');
+                $estabelecimento->setDataPlanoFim($novaExpiracao);
+            }
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($estabelecimento);
+        $em->flush();
+
+        $this->addFlash('success', sprintf(
+            'Status do estabelecimento "%s" alterado para "%s" com sucesso.',
+            $estabelecimento->getRazaoSocial(),
+            $novoStatus
+        ));
+
+        return $this->redirectToRoute('superadmin_estabelecimento_detalhes', ['id' => $id]);
+    }
+
+    /**
      * @Route("/estabelecimento/{id}/enviar-notificacao", name="superadmin_enviar_notificacao", methods={"POST"})
      *
      * Envia e-mail de renovação de assinatura para o usuário Admin do estabelecimento.

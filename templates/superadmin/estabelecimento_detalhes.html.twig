@@ -284,6 +284,76 @@
                 </div>
             </div>
 
+            <!-- Gestão de Status -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header py-3
+                    {% if estabelecimento.status == 'Ativo' %}bg-success bg-opacity-10 border-success border-opacity-25
+                    {% elseif estabelecimento.status == 'Suspenso' %}bg-danger bg-opacity-10 border-danger border-opacity-25
+                    {% else %}bg-secondary bg-opacity-10{% endif %}">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-toggle-on me-2
+                            {% if estabelecimento.status == 'Ativo' %}text-success
+                            {% elseif estabelecimento.status == 'Suspenso' %}text-danger
+                            {% else %}text-secondary{% endif %}"></i>
+                        Gestão de Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {# Flash messages #}
+                    {% for msg in app.flashes('success') %}
+                        <div class="alert alert-success alert-dismissible fade show py-2 mb-3" role="alert">
+                            <i class="bi bi-check-circle me-2"></i>{{ msg }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                    {% for msg in app.flashes('danger') %}
+                        <div class="alert alert-danger alert-dismissible fade show py-2 mb-3" role="alert">
+                            <i class="bi bi-x-circle me-2"></i>{{ msg }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+
+                    <p class="text-muted small mb-3">
+                        Status atual:
+                        {% if estabelecimento.status == 'Ativo' %}
+                            <span class="badge bg-success ms-1"><i class="bi bi-check-circle me-1"></i>Ativo</span>
+                        {% elseif estabelecimento.status == 'Suspenso' %}
+                            <span class="badge bg-danger ms-1"><i class="bi bi-slash-circle me-1"></i>Suspenso</span>
+                        {% else %}
+                            <span class="badge bg-secondary ms-1"><i class="bi bi-dash-circle me-1"></i>{{ estabelecimento.status }}</span>
+                        {% endif %}
+                    </p>
+
+                    <form method="post"
+                          action="{{ path('superadmin_estabelecimento_alterar_status', {id: estabelecimento.id}) }}"
+                          onsubmit="return confirmarAlteracaoStatus(this)">
+                        <div class="mb-3">
+                            <label for="select_status" class="form-label fw-semibold small text-uppercase text-muted">
+                                Alterar para
+                            </label>
+                            <select id="select_status" name="status" class="form-select" required>
+                                <option value="" disabled selected>Selecionar novo status...</option>
+                                {% if estabelecimento.status != 'Ativo' %}
+                                    <option value="Ativo">✅ Ativo</option>
+                                {% endif %}
+                                {% if estabelecimento.status != 'Suspenso' %}
+                                    <option value="Suspenso">🚫 Suspenso</option>
+                                {% endif %}
+                                {% if estabelecimento.status != 'Inativo' %}
+                                    <option value="Inativo">⏸ Inativo</option>
+                                {% endif %}
+                            </select>
+                            <div class="form-text" id="status_hint"></div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="btn_alterar_status">
+                                <i class="bi bi-arrow-repeat me-2"></i>Alterar Status
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             {# Modal de confirmação antes de enviar o e-mail #}
             <div class="modal fade" id="modalConfirmaNotificacao" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
@@ -393,6 +463,42 @@
 </div>
 
 <script>
+function confirmarAlteracaoStatus(form) {
+    const select = form.querySelector('#select_status');
+    const novoStatus = select.options[select.selectedIndex].text.replace(/[✅🚫⏸]\s*/u, '').trim();
+    const atual = '{{ estabelecimento.status }}';
+
+    let extra = '';
+    if (select.value === 'Ativo' && '{{ expirado }}' === '1') {
+        extra = '\n\n⚠️ O plano está expirado — a data de vencimento será extendida por 30 dias automaticamente.';
+    }
+
+    return confirm(
+        `Deseja alterar o status de "${atual}" para "${novoStatus}"?${extra}`
+    );
+}
+
+// Hint dinâmico ao mudar o select
+document.addEventListener('DOMContentLoaded', function () {
+    const sel  = document.getElementById('select_status');
+    const hint = document.getElementById('status_hint');
+    const btn  = document.getElementById('btn_alterar_status');
+
+    if (!sel) return;
+
+    const hints = {
+        'Ativo'    : '✅ O estabelecimento voltará a ter acesso total ao sistema.',
+        'Suspenso' : '🚫 O acesso será bloqueado imediatamente.',
+        'Inativo'  : '⏸ O estabelecimento ficará desabilitado sem perda de dados.',
+    };
+
+    sel.addEventListener('change', function () {
+        hint.textContent = hints[this.value] || '';
+        const colors = { Ativo: 'success', Suspenso: 'danger', Inativo: 'secondary' };
+        btn.className = `btn btn-${colors[this.value] || 'primary'}`;
+    });
+});
+
 function marcarComoPago(invoiceId) {
     if (!confirm('Deseja marcar este invoice como pago manualmente?')) return;
 

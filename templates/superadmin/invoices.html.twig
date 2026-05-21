@@ -231,7 +231,7 @@ function marcarComoPago(invoiceId) {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
-    fetch(`/superadmin/invoice/${invoiceId}/marcar-pago`, {
+    fetch(`${$('meta[name="base"]').attr('content')}superadmin/invoice/${invoiceId}/marcar-pago`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
     })

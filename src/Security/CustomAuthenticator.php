@@ -87,6 +87,8 @@ class CustomAuthenticator extends AbstractAuthenticator
             $request->getSession()->set('estabelecimento_id', null);
         }
         $request->getSession()->set('login', true);
+        $request->getSession()->set('userId', $user->getId());
+        $request->getSession()->set('isSuperAdmin', in_array('ROLE_SUPER_ADMIN', $user->getRoles()));
 
         $response = new JsonResponse($data);
         $response->headers->setCookie(
