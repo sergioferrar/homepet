@@ -393,54 +393,6 @@ class SuperAdminController extends DefaultController
     }
 
     /**
-     * @Route("/estabelecimento/{id}/alterar-status", name="superadmin_estabelecimento_alterar_status", methods={"POST"})
-     */
-    public function alterarStatus(Request $request, int $id): Response
-    {
-        if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
-            throw $this->createAccessDeniedException('Acesso negado');
-        }
-
-        $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($id);
-
-        if (!$estabelecimento) {
-            $this->addFlash('danger', 'Estabelecimento não encontrado.');
-            return $this->redirectToRoute('superadmin_estabelecimentos');
-        }
-
-        $novoStatus = $request->request->get('status');
-        $statusPermitidos = ['Ativo', 'Inativo', 'Suspenso'];
-
-        if (!in_array($novoStatus, $statusPermitidos)) {
-            $this->addFlash('danger', 'Status inválido.');
-            return $this->redirectToRoute('superadmin_estabelecimento_detalhes', ['id' => $id]);
-        }
-
-        $estabelecimento->setStatus($novoStatus);
-
-        // Se estiver ativando e o plano estiver expirado, estende por 30 dias a partir de hoje
-        if ($novoStatus === 'Ativo') {
-            $hoje = new \DateTime();
-            if (!$estabelecimento->getDataPlanoFim() || $estabelecimento->getDataPlanoFim() < $hoje) {
-                $novaExpiracao = (new \DateTime())->modify('+30 days');
-                $estabelecimento->setDataPlanoFim($novaExpiracao);
-            }
-        }
-
-        $em = $this->getDoctrine()->getManager();
-        $em->persist($estabelecimento);
-        $em->flush();
-
-        $this->addFlash('success', sprintf(
-            'Status do estabelecimento "%s" alterado para "%s" com sucesso.',
-            $estabelecimento->getRazaoSocial(),
-            $novoStatus
-        ));
-
-        return $this->redirectToRoute('superadmin_estabelecimento_detalhes', ['id' => $id]);
-    }
-
-    /**
      * @Route("/estabelecimento/{id}/enviar-notificacao", name="superadmin_enviar_notificacao", methods={"POST"})
      *
      * Envia e-mail de renovação de assinatura para o usuário Admin do estabelecimento.
@@ -553,5 +505,137 @@ class SuperAdminController extends DefaultController
         $this->addFlash('success', 'Você voltou para a visualização de Super Admin.');
 
         return $this->redirectToRoute('superadmin_dashboard');
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Configurações Globais — LGPD e Tracking (exclusivas do Super Admin)
+    // ════════════════════════════════════════════════════════════════════════
+
+    /** ID reservado para configs globais do sistema no banco homepet_login. */
+    private const GLOBAL_ESTAB_ID = 0;
+
+    /**
+     * @Route("/configuracoes-globais", name="superadmin_configuracoes_globais")
+     */
+    public function configuracoesGlobais(): Response
+    {
+        if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
+            throw $this->createAccessDeniedException();
+        }
+
+        return $this->render('superadmin/configuracoes_globais.html.twig', [
+            'lgpd'     => $this->lerConfigsDbal('lgpd'),
+            'tracking' => $this->lerConfigsDbal('tracking'),
+        ]);
+    }
+
+    /**
+     * @Route("/configuracoes-globais/lgpd", name="superadmin_lgpd_salvar", methods={"POST"})
+     */
+    public function salvarLgpd(Request $request): JsonResponse
+    {
+        if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
+            return new JsonResponse(['success' => false, 'message' => 'Acesso negado.'], 403);
+        }
+
+        $this->restauraLoginDB();
+
+        $campos = [
+            'politica_privacidade' => 'Texto da Política de Privacidade — LGPD',
+            'termos_uso'           => 'Texto dos Termos de Uso',
+            'dpo_nome'             => 'Nome do Encarregado de Dados (DPO)',
+            'dpo_email'            => 'E-mail do DPO para solicitações de titulares',
+            'cookie_banner_ativo'  => 'Exibe banner de consentimento de cookies nas páginas públicas',
+        ];
+
+        try {
+            $this->upsertConfigs('lgpd', $campos, $request);
+            return new JsonResponse(['success' => true, 'message' => 'Configurações LGPD salvas com sucesso.']);
+        } catch (\Throwable $e) {
+            return new JsonResponse(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * @Route("/configuracoes-globais/tracking", name="superadmin_tracking_salvar", methods={"POST"})
+     */
+    public function salvarTracking(Request $request): JsonResponse
+    {
+        if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
+            return new JsonResponse(['success' => false, 'message' => 'Acesso negado.'], 403);
+        }
+
+        $this->restauraLoginDB();
+
+        $campos = [
+            'google_analytics_id'   => 'ID de medição do Google Analytics 4 (ex: G-XXXXXXXXXX)',
+            'google_tag_manager_id' => 'ID do Google Tag Manager (ex: GTM-XXXXXXX)',
+            'facebook_pixel_id'     => 'ID do Pixel do Facebook/Meta (ex: 1234567890)',
+            'google_ads_id'         => 'ID de conversão do Google Ads (ex: AW-XXXXXXXXX)',
+        ];
+
+        try {
+            $this->upsertConfigs('tracking', $campos, $request);
+            return new JsonResponse(['success' => true, 'message' => 'Configurações de rastreamento salvas com sucesso.']);
+        } catch (\Throwable $e) {
+            return new JsonResponse(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // ── Helpers privados ─────────────────────────────────────────────────────
+
+    private function upsertConfigs(string $tipo, array $campos, Request $request): void
+    {
+        $conn = $this->managerRegistry->getConnection();
+
+        foreach ($campos as $chave => $observacao) {
+            $valor = $request->get($chave);
+            if ($valor === null) {
+                continue;
+            }
+
+            $conn->executeStatement("
+                CREATE TABLE IF NOT EXISTS `config` (
+                    `id`                INT          NOT NULL AUTO_INCREMENT,
+                    `estabelecimento_id` INT         NOT NULL DEFAULT 0,
+                    `chave`             VARCHAR(255) NOT NULL,
+                    `valor`             LONGTEXT         NULL,
+                    `tipo`              VARCHAR(255) NOT NULL,
+                    `observacao`        TEXT             NULL,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `uq_config_estab_tipo_chave` (`estabelecimento_id`, `tipo`(100), `chave`(100))
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+
+            $conn->executeStatement("
+                INSERT INTO `config` (`estabelecimento_id`, `tipo`, `chave`, `valor`, `observacao`)
+                VALUES (:estab, :tipo, :chave, :valor, :obs)
+                ON DUPLICATE KEY UPDATE `valor` = VALUES(`valor`)
+            ", [
+                'estab' => self::GLOBAL_ESTAB_ID,
+                'tipo'  => $tipo,
+                'chave' => $chave,
+                'valor' => $valor,
+                'obs'   => $observacao,
+            ]);
+        }
+    }
+
+    private function lerConfigsDbal(string $tipo): array
+    {
+        try {
+            $conn = $this->managerRegistry->getConnection();
+            $rows = $conn->fetchAllAssociative(
+                "SELECT chave, valor FROM config WHERE estabelecimento_id = :estab AND tipo = :tipo",
+                ['estab' => self::GLOBAL_ESTAB_ID, 'tipo' => $tipo]
+            );
+            $mapa = [];
+            foreach ($rows as $row) {
+                $mapa[$row['chave']] = $row['valor'];
+            }
+            return $mapa;
+        } catch (\Throwable) {
+            return [];
+        }
     }
 }
