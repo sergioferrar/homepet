@@ -112,7 +112,7 @@ class PdvController extends DefaultController
         }
 
         // 2. Valida status — só carrega vendas abertas / em carrinho
-        $statusPermitidos = ['Aberta', 'Carrinho', 'carrinho'];
+        $statusPermitidos = ['Aberta', 'Carrinho', 'carrinho', 'Pendente'];
         if (!in_array($venda->getStatus(), $statusPermitidos, true)) {
             $this->addFlash('warning', sprintf(
                 'A venda #%d não pode ser lançada no caixa (status: %s).',
