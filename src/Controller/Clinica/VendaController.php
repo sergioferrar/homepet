@@ -108,7 +108,7 @@ class VendaController extends DefaultController
 
                 $conn->executeStatement(
                     "INSERT INTO venda_item
-                        (venda_id, tipo, produto_id, produto_nome, quantidade, preco_unitario, subtotal)
+                        (venda_id, tipo, produto_id, produto, quantidade, preco_unitario, subtotal)
                      VALUES
                         (:venda, :tipo, :pid, :pnome, :qtd, :unit, :sub)",
                     [
