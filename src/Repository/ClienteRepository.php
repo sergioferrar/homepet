@@ -25,6 +25,11 @@ class ClienteRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
+    public function getConn(): \Doctrine\DBAL\Connection
+    {
+        return $this->conn;
+    }
+
     public function setBaseId($baseId = 'u199209817_login')
     {
         $this->baseId = $baseId;

@@ -1265,8 +1265,13 @@ $(document).ready(function() {
         servicosMap["{{ servico.nome|e('js') }}"] = {{ servico.valor | number_format(2, '.', '') }};
     {% endfor %}
     
+    let _vendaEmAndamento = false; // guarda contra duplo submit
     $formNovoServico.on('submit', function(e) {
         e.preventDefault();
+        if (_vendaEmAndamento) return; // ignora segundo clique
+        _vendaEmAndamento = true;
+        const $btnSubmit = $(this).find('button[type="submit"]');
+        $btnSubmit.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Salvando...');
         fetch(this.action, {
                 method: "POST",
                 body: new FormData(this)
@@ -1287,6 +1292,8 @@ $(document).ready(function() {
                     } else {
                         alert(data.mensagem || "Erro ao registrar serviço.");
                     }
+                    _vendaEmAndamento = false;
+                    $btnSubmit.prop('disabled', false).html('<i class="bi bi-check-lg"></i> Concluir / Salvar');
                 }
             })
             .catch(err => {
@@ -1296,6 +1303,8 @@ $(document).ready(function() {
                 } else {
                     alert(`Erro ao registrar serviço: ${errorMessage}`);
                 }
+                _vendaEmAndamento = false;
+                $btnSubmit.prop('disabled', false).html('<i class="bi bi-check-lg"></i> Concluir / Salvar');
             });
     });
     $btnAdicionarServico.on('click', function() {

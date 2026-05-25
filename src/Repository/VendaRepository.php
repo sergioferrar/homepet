@@ -174,7 +174,7 @@ class VendaRepository extends ServiceEntityRepository
                 FROM venda v
                 WHERE v.id = :id
                   AND v.estabelecimento_id = :estab
-                  AND v.status = 'Aberta'
+                  AND v.status IN ('Aberta', 'Pendente')
                 LIMIT 1";
 
         $row = $this->conn->fetchAssociative($sql, [
