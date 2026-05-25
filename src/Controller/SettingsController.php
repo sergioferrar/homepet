@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\Config;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -14,161 +13,35 @@ use Symfony\Component\Routing\Annotation\Route;
 class SettingsController extends DefaultController
 {
     /**
-     * ID de estabelecimento reservado para configurações globais do sistema
-     * (políticas, termos, tracking). Gravadas no banco homepet_login.
-     */
-    private const GLOBAL_ESTAB_ID = 0;
-
-    /**
      * @Route("settings", name="app_settings")
      */
     public function index(): Response
     {
-        $data = [];
+        // Usa o usuário autenticado pelo Symfony — não depende de userId na sessão.
+        $usuarioLogado = $this->security->getUser();
 
-        $dadosUsuarioLogado = $this->getRepositorio(\App\Entity\Usuario::class)->findOneBy(['id' => $this->session->get('userId')]);
-        $dadosEstabelecimentoLogado = $this->getRepositorio(\App\Entity\Estabelecimento::class)->findOneBy(['id' => $dadosUsuarioLogado->getPetshopId()]);
-        
-        $dadosPlanoLogado = $this->getRepositorio(\App\Entity\Plano::class)->findOneBy(['id' => $dadosEstabelecimentoLogado->getPlanoId()]);
-        $dadosPlanos = $this->getRepositorio(\App\Entity\Plano::class)->findAll();
-        $data['estabelecimento'] = $dadosEstabelecimentoLogado;
-        $data['planoLogado'] = $dadosEstabelecimentoLogado;
-        $data['planos'] = $dadosPlanos;
-        $data['gateway'] = $this->getRepositorio(Config::class)->findBy(['estabelecimento_id' => $dadosUsuarioLogado->getPetshopId(), 'tipo' => 'gateway_payment']);
-        $data['mailer']  = $this->getRepositorio(Config::class)->findBy(['estabelecimento_id' => $dadosUsuarioLogado->getPetshopId(), 'tipo' => 'mailer']);
-
-        // ── Configurações LGPD e Tracking — lidas direto via DBAL do banco login ──
-        // getRepositorio() pode estar apontando para o tenant após switchDB em outra parte
-        // da requisição, por isso usamos o DBAL direto aqui para garantir o banco correto.
-        $data['lgpd']     = $this->lerConfigsDbal('lgpd');
-        $data['tracking'] = $this->lerConfigsDbal('tracking');
-
-        return $this->render('settings/index.html.twig', $data);
-    }
-
-    /**
-     * Salva as páginas de LGPD (Política de Privacidade e Termos de Uso)
-     * no banco homepet_login com estabelecimento_id = 0 (global do sistema).
-     *
-     * Usa DBAL direto (INSERT … ON DUPLICATE KEY UPDATE) para garantir que
-     * a gravação ocorra sempre no banco homepet_login, independente de o
-     * tenant ter sido trocado antes nesta requisição.
-     *
-     * @Route("settings/lgpd", name="settings_lgpd_salvar", methods={"POST"})
-     */
-    public function salvarLgpd(Request $request): JsonResponse
-    {
-        // Garante conexão com o banco homepet_login antes de qualquer leitura/escrita
-        $this->restauraLoginDB();
-
-        $campos = [
-            'politica_privacidade' => 'Texto da Política de Privacidade — LGPD',
-            'termos_uso'           => 'Texto dos Termos de Uso',
-            'dpo_nome'             => 'Nome do Encarregado de Dados (DPO)',
-            'dpo_email'            => 'E-mail do DPO para solicitações de titulares',
-            'cookie_banner_ativo'  => 'Exibe banner de consentimento de cookies nas páginas públicas',
-        ];
-
-        try {
-            $this->upsertConfigs('lgpd', $campos, $request);
-            return new JsonResponse(['success' => true, 'message' => 'Configurações LGPD salvas com sucesso.']);
-        } catch (\Throwable $e) {
-            return new JsonResponse(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Salva os pixels e tags de rastreamento (Google Analytics, Facebook Pixel,
-     * Google Tag Manager) no banco homepet_login com estabelecimento_id = 0.
-     *
-     * @Route("settings/tracking", name="settings_tracking_salvar", methods={"POST"})
-     */
-    public function salvarTracking(Request $request): JsonResponse
-    {
-        $this->restauraLoginDB();
-
-        $campos = [
-            'google_analytics_id'   => 'ID de medição do Google Analytics 4 (ex: G-XXXXXXXXXX)',
-            'google_tag_manager_id' => 'ID do Google Tag Manager (ex: GTM-XXXXXXX)',
-            'facebook_pixel_id'     => 'ID do Pixel do Facebook/Meta (ex: 1234567890)',
-            'google_ads_id'         => 'ID de conversão do Google Ads (ex: AW-XXXXXXXXX)',
-        ];
-
-        try {
-            $this->upsertConfigs('tracking', $campos, $request);
-            return new JsonResponse(['success' => true, 'message' => 'Configurações de rastreamento salvas com sucesso.']);
-        } catch (\Throwable $e) {
-            return new JsonResponse(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()], 500);
-        }
-    }
-
-    // ── Helpers ─────────────────────────────────────────────────────────────
-
-    /**
-     * Upsert genérico via DBAL — INSERT … ON DUPLICATE KEY UPDATE.
-     * Garante atomicidade e funciona corretamente com o banco homepet_login.
-     *
-     * @param array<string,string> $campos  chave => observação
-     */
-    private function upsertConfigs(string $tipo, array $campos, Request $request): void
-    {
-        $conn = $this->managerRegistry->getConnection();
-
-        foreach ($campos as $chave => $observacao) {
-            $valor = $request->get($chave);
-            if ($valor === null) {
-                continue;
-            }
-
-            // Cria a tabela config caso não exista (idempotente — seguro rodar sempre)
-            $conn->executeStatement("
-                CREATE TABLE IF NOT EXISTS `config` (
-                    `id`                INT          NOT NULL AUTO_INCREMENT,
-                    `estabelecimento_id` INT         NOT NULL DEFAULT 0,
-                    `chave`             VARCHAR(255) NOT NULL,
-                    `valor`             LONGTEXT         NULL,
-                    `tipo`              VARCHAR(255) NOT NULL,
-                    `observacao`        TEXT             NULL,
-                    PRIMARY KEY (`id`),
-                    UNIQUE KEY `uq_config_estab_tipo_chave` (`estabelecimento_id`, `tipo`(100), `chave`(100))
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-            ");
-
-            $conn->executeStatement("
-                INSERT INTO `config` (`estabelecimento_id`, `tipo`, `chave`, `valor`, `observacao`)
-                VALUES (:estab, :tipo, :chave, :valor, :obs)
-                ON DUPLICATE KEY UPDATE `valor` = VALUES(`valor`)
-            ", [
-                'estab' => self::GLOBAL_ESTAB_ID,
-                'tipo'  => $tipo,
-                'chave' => $chave,
-                'valor' => $valor,
-                'obs'   => $observacao,
-            ]);
-        }
-    }
-
-    /**
-     * Lê configs de um tipo via DBAL direto, retornando mapa chave => valor.
-     * Usa a conexão padrão (homepet_login) independente de switchDB anterior.
-     */
-    private function lerConfigsDbal(string $tipo): array
-    {
-        try {
-            $conn = $this->managerRegistry->getConnection();
-            $rows = $conn->fetchAllAssociative(
-                "SELECT chave, valor FROM config WHERE estabelecimento_id = :estab AND tipo = :tipo",
-                ['estab' => self::GLOBAL_ESTAB_ID, 'tipo' => $tipo]
+        if (!$usuarioLogado || !$usuarioLogado->getPetshopId()) {
+            // Superadmin sem estabelecimento impersonado não tem acesso a esta tela.
+            $this->addFlash('warning',
+                'As configurações de estabelecimento não estão disponíveis no painel Super Admin. '
+                . 'Acesse um estabelecimento primeiro ou use Configurações Globais.'
             );
-            $mapa = [];
-            foreach ($rows as $row) {
-                $mapa[$row['chave']] = $row['valor'];
-            }
-            return $mapa;
-        } catch (\Throwable) {
-            // Tabela ainda não existe — retorna mapa vazio (primeira vez)
-            return [];
+            return $this->redirectToRoute('superadmin_dashboard');
         }
+
+        $petshopId = $usuarioLogado->getPetshopId();
+
+        $dadosEstabelecimentoLogado = $this->getRepositorio(\App\Entity\Estabelecimento::class)
+            ->findOneBy(['id' => $petshopId]);
+        $dadosPlanos = $this->getRepositorio(\App\Entity\Plano::class)->findAll();
+
+        return $this->render('settings/index.html.twig', [
+            'estabelecimento' => $dadosEstabelecimentoLogado,
+            'planoLogado'     => $dadosEstabelecimentoLogado,
+            'planos'          => $dadosPlanos,
+            'gateway'         => $this->getRepositorio(Config::class)->findBy(['estabelecimento_id' => $petshopId, 'tipo' => 'gateway_payment']),
+            'mailer'          => $this->getRepositorio(Config::class)->findBy(['estabelecimento_id' => $petshopId, 'tipo' => 'mailer']),
+        ]);
     }
 
     /**

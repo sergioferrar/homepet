@@ -8,7 +8,7 @@
     <title>{% block title %}{% endblock %} - Home Pet Shop System</title>
     <meta content="" name="description">
     <meta content="" name="keywords">
-    <meta name="base" content="{{ url('home') }}"/>
+    <meta name="base" content="{{ url('landing_home') }}"/>
 
     <!-- Favicons -->
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('images/logo.png') }}">
@@ -620,7 +620,7 @@
         {% set isSuperAdminPuro = is_granted('ROLE_SUPER_ADMIN')
             and not app.session.get('impersonating_establishment') %}
 
-        {% set configRoutes = ['app_plano', 'app_estabelecimento', 'menu_index', 'app_settings'] %}
+        {% set configRoutes = ['app_plano', 'app_estabelecimento', 'menu_index', 'superadmin_configuracoes_globais'] %}
         {% set configAberto = route in configRoutes %}
 
         <li class="nav-item">
@@ -634,8 +634,8 @@
                 class="nav-content collapse {{ configAberto ? 'show' : '' }}"
                 data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="{{ url('app_settings') }}"
-                       class="{{ route == 'app_settings' ? 'active' : '' }}">
+                    <a href="{{ url('superadmin_configuracoes_globais') }}"
+                       class="{{ route == 'superadmin_configuracoes_globais' ? 'active' : '' }}">
                         <i class="bi bi-gear"></i><span>Configurações do sistema</span>
                     </a>
                 </li>

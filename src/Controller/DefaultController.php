@@ -99,9 +99,24 @@ class DefaultController extends AbstractController
         // Resolve o ID do tenant a partir da sessão.
         // No modo normal: ID do petshop do usuário logado.
         // No modo impersonation do Super Admin: ID do estabelecimento acessado.
-        $tenantId = 'u199209817_'.$this->session->get('estabelecimento_id')
-                 ?? $this->session->get('estabelecimentoId')
-                 ?? $_ENV['DBNAMETENANT'];
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+
+        $isLocalhost = in_array($ip, [
+            '127.0.0.1',
+            '::1',
+            'localhost'
+        ]) || str_starts_with($ip, '192.168.');
+
+        $prefix = $isLocalhost
+            ? 'homepet_'
+            : 'u199209817_';
+
+        $tenantId = $prefix . (
+            $this->session->get('estabelecimento_id')
+            ?? $this->session->get('estabelecimentoId')
+            ?? $_ENV['DBNAMETENANT']
+        );
                  
         (new DynamicConnectionManager($this->managerRegistry))
             ->switchDatabase((string) $tenantId, (string) $tenantId);
