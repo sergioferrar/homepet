@@ -51,14 +51,14 @@ class VendaController extends DefaultController
             //    (flush intermediário dentro de transação causa autocommit implícito no MySQL)
             $conn->executeStatement(
                 "INSERT INTO venda
-                    (estabelecimento_id, cliente_id, pet_id, parcelas, origem,
+                    (estabelecimento_id, cliente, pet_id, parcelas, origem,
                      metodo_pagamento, status, data, observacao, total)
                  VALUES
                     (:estab, :cliente, :pet, :parcelas, :origem,
                      :metodo, :status, NOW(), :obs, 0)",
                 [
                     'estab'    => $baseId,
-                    'cliente'  => $pet['dono_id'],
+                    'cliente'  => $pet['dono_nome'] ?? 'Consumidor Final',
                     'pet'      => $petIdFromRequest,
                     'parcelas' => $request->get('parcelas', 1),
                     'origem'   => $origem,
