@@ -219,7 +219,7 @@ class VendaRepository extends ServiceEntityRepository
                 SET {$set}
                 WHERE id = :id
                   AND estabelecimento_id = :estab
-                  AND status = 'Aberta'";
+                  AND status = 'Aberta' OR status = 'Pendente'";
 
         return $this->conn->executeStatement($sql, $params) > 0;
     }
