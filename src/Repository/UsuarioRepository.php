@@ -40,7 +40,7 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
 
     public function listaTodos(){
         $sql = "SELECT u.*, e.*, u.id AS userId, e.id AS shopId
-            FROM usuario u
+            FROM homepet_login.usuario u
             LEFT JOIN estabelecimento e ON (e.id = u.petshop_id) 
             ";
         $query = $this->conn->query($sql);
@@ -48,10 +48,9 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
     }
 
     public function listaTodosPrivado($petshop_id){
-        $sql = "SELECT u.*
-            FROM usuario u
-            WHERE u.petshop_id = $petshop_id
-            ";
+        $sql = "SELECT id, nome_usuario, senha, email, roles, access_level, petshop_id, data_trial
+            FROM homepet_login.usuario
+            WHERE petshop_id = $petshop_id";
         $query = $this->conn->query($sql);
         return $query->fetchAll();
     }
@@ -79,7 +78,7 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
     public function localizaUsuario(string $usernameOrEmail)
     {
         $sql = "SELECT id, nome_usuario, email, senha, access_level, petshop_id
-            FROM usuario
+            FROM homepet_login.usuario
             WHERE email = '{$usernameOrEmail}'";
         $query = $this->conn->query($sql);
         return $query->fetch();
