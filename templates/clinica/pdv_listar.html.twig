@@ -78,7 +78,7 @@
                     </td>
                     <td class="text-center">
                         {# ✅ Botão "Lançar no Caixa" — apenas para vendas abertas/carrinho #}
-                        {% if v.status in ['Aberta', 'Carrinho', 'carrinho'] %}
+                        {% if v.status in ['Aberta', 'Carrinho', 'carrinho', 'Pendente'] %}
                             <a href="{{ path('pdv_carregar', {id: v.id}) }}"
                                class="btn btn-success btn-sm"
                                title="Lançar esta venda no PDV para finalização">

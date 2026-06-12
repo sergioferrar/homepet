@@ -24,7 +24,7 @@ class LandingpageController extends DefaultController
 
         $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome();
         $data['planos'] = $planos;
-        $data['cookie_banner_ativo'] = '0';
+        $data['cookie_banner_ativo'] = true;
         $data['tracking'] = '';
         $data['modulos'] = $this->modulosSistema;
 

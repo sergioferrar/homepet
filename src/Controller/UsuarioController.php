@@ -20,16 +20,17 @@ class UsuarioController extends DefaultController
     public function index(Request $request): Response
     {
         $data = [];
+        // dd($this->tenantContext);
         $repositorio = $this->getRepositorio(Usuario::class);
         switch ($this->security->getUser()->getAccessLevel()) {
             case 'Super Admin':
                 $usuarios = $repositorio->listaTodos();
-                $pethop = $this->getRepositorio(Estabelecimento::class)->find($this->estabelecimentoId);
+                $pethop = $this->getRepositorio(Estabelecimento::class)->find($this->tenantContext->getEstabelecimentoId());
 
                 $data['estabelecimento'] = $pethop;
                 break;
             case 'Admin':
-                $usuarios = $repositorio->listaTodosPrivado($this->estabelecimentoId);
+                $usuarios = $repositorio->listaTodosPrivado($this->tenantContext->getEstabelecimentoId());
                 break;
         }
 
