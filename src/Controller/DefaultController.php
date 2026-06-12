@@ -1,25 +1,20 @@
 <?php
-
 namespace App\Controller;
 
-use App\Entity\Usuario;
-use App\Service\DatabaseBkp;
-use App\Service\TempDirManager;
 use App\Service\CaixaService;
+use App\Service\DatabaseBkp;
+use App\Service\DynamicConnectionManager;
 use App\Service\PdvService;
+use App\Service\TempDirManager;
 use App\Service\TenantContext;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-use Doctrine\ORM\EntityManagerInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Security;
-use Doctrine\Persistence\ManagerRegistry;
-use App\Service\DynamicConnectionManager;
 
 class DefaultController extends AbstractController
 {
@@ -30,7 +25,7 @@ class DefaultController extends AbstractController
     protected $security;
     protected $rule = 'IS_AUTHENTICATED';
     protected $cnpj = '##.###.###/####-##';
-    protected $cpf = '###.###.###-##';
+    protected $cpf  = '###.###.###-##';
     protected $requestStack;
     protected $request;
     protected $session;
@@ -40,12 +35,12 @@ class DefaultController extends AbstractController
     protected $modulosSistema = [
         'agendamentosDePets' => 'Agendamentos de Pets',
         'cadastroDeClientes' => 'Cadastro de Clientes',
-        'cadastroDePets' => 'Cadastro de Pets',
-        'serviçosDoPetshop' => 'Serviços do Petshop',
-        'áreaDeFinanceiro' => 'Área de Financeiro',
-        'gestãoDeUsuários' => 'Gestão de Usuários',
-        'banhoETosa' => 'Banho e Tosa',
-        'hospedagemDeCães' => 'Hospedagem de Cães',
+        'cadastroDePets'     => 'Cadastro de Pets',
+        'serviçosDoPetshop'  => 'Serviços do Petshop',
+        'áreaDeFinanceiro'   => 'Área de Financeiro',
+        'gestãoDeUsuários'   => 'Gestão de Usuários',
+        'banhoETosa'         => 'Banho e Tosa',
+        'hospedagemDeCães'   => 'Hospedagem de Cães',
         'clínicaVeterinária' => 'Clínica Veterinária',
     ];
 
@@ -62,10 +57,10 @@ class DefaultController extends AbstractController
      * @param Security $security
      */
     public function __construct(
-        ?Security $security, 
-        ManagerRegistry $managerRegistry, 
-        RequestStack $request, 
-        TempDirManager $tempDirManager, 
+        ?Security $security,
+        ManagerRegistry $managerRegistry,
+        RequestStack $request,
+        TempDirManager $tempDirManager,
         DatabaseBkp $databaseBkp,
         EntityManagerInterface $entityManager,
         LoggerInterface $logger,
@@ -73,25 +68,24 @@ class DefaultController extends AbstractController
         CaixaService $caixaService,
         EntityManagerInterface $em,
         TenantContext $tenantContext
-    )
-    {
-        date_default_timezone_set('America/Sao_Paulo');  
-        $this->security = $security;
+    ) {
+        date_default_timezone_set('America/Sao_Paulo');
+        $this->security        = $security;
         $this->managerRegistry = $managerRegistry;
-        $this->requestStack = $request;
-        $this->request = $request->getCurrentRequest();
-        $this->session = $this->request->getSession();
-        $this->tempDirManager = $tempDirManager;
-        $this->databaseBkp = $databaseBkp;
+        $this->requestStack    = $request;
+        $this->request         = $request->getCurrentRequest();
+        $this->session         = $this->request->getSession();
+        $this->tempDirManager  = $tempDirManager;
+        $this->databaseBkp     = $databaseBkp;
         // CORRIGIDO: Lazy loading - só carrega quando necessário, evita problemas na autenticação
         $this->estabelecimentoId = null;
-        $this->entityManager = $entityManager;
-        $this->logger = $logger;
+        $this->entityManager     = $entityManager;
+        $this->logger            = $logger;
 
-        $this->pdvService = $pdvService;
-        $this->caixaService = $caixaService;
+        $this->pdvService    = $pdvService;
+        $this->caixaService  = $caixaService;
         $this->tenantContext = $tenantContext;
-        $this->em = $em;
+        $this->em            = $em;
     }
 
     public function switchDB(): void
@@ -105,19 +99,15 @@ class DefaultController extends AbstractController
         $isLocalhost = in_array($ip, [
             '127.0.0.1',
             '::1',
-            'localhost'
+            'localhost',
         ]) || str_starts_with($ip, '192.168.');
 
-        $prefix = $isLocalhost
-            ? 'homepet_'
-            : 'u199209817_';
+        $prefix = 'u199209817_';
 
         $tenantId = $prefix . (
-            $this->session->get('estabelecimento_id')
-            ?? $this->session->get('estabelecimentoId')
-            ?? $_ENV['DBNAMETENANT']
+            $this->session->get('estabelecimento_id') ?? $this->session->get('estabelecimentoId') ?? $_ENV['DBNAMETENANT']
         );
-                 
+
         (new DynamicConnectionManager($this->managerRegistry))
             ->switchDatabase((string) $tenantId, (string) $tenantId);
     }
@@ -178,9 +168,9 @@ class DefaultController extends AbstractController
 
     protected function filterSecurity($numbers, $aumentaConta = 1)
     {
-        $nNumber = '';
+        $nNumber    = '';
         $totalChars = strlen($numbers);
-        $conta = intval(ceil(($totalChars / 2) / 2));
+        $conta      = intval(ceil(($totalChars / 2) / 2));
 
         for ($i = 0; $i <= $totalChars - 1; $i++) {
             if ($i >= $conta && $i <= ($totalChars - ($conta + $aumentaConta))) {
@@ -258,7 +248,7 @@ class DefaultController extends AbstractController
             $id = $this->session->get('estabelecimento_id');
 
             // Fallback camelCase (usado pelo LoginController)
-            if (!$id) {
+            if (! $id) {
                 $id = $this->session->get('estabelecimentoId');
             }
 
@@ -267,22 +257,21 @@ class DefaultController extends AbstractController
 
         return $this->estabelecimentoId;
     }
-    
 
     protected function quillDeltaToHtml(?string $deltaJson): string
     {
-        if (!$deltaJson) {
+        if (! $deltaJson) {
             return '';
         }
 
         $delta = json_decode($deltaJson, true);
-        if (!$delta || !isset($delta['ops'])) {
+        if (! $delta || ! isset($delta['ops'])) {
             return '';
         }
 
         $html = '';
         foreach ($delta['ops'] as $op) {
-            $insert = $op['insert'] ?? '';
+            $insert     = $op['insert'] ?? '';
             $attributes = $op['attributes'] ?? [];
 
             if (isset($attributes['bold'])) {
@@ -295,13 +284,13 @@ class DefaultController extends AbstractController
                 $insert = "<u>{$insert}</u>";
             }
             if (isset($attributes['header'])) {
-                $level = $attributes['header'];
+                $level  = $attributes['header'];
                 $insert = "<h{$level}>{$insert}</h{$level}>";
             }
             if (isset($attributes['list'])) {
                 $listType = $attributes['list'] === 'ordered' ? 'ol' : 'ul';
-                $insert = "<li>{$insert}</li>";
-                $html .= "<{$listType}>{$insert}</{$listType}>";
+                $insert   = "<li>{$insert}</li>";
+                $html     .= "<{$listType}>{$insert}</{$listType}>";
                 continue;
             }
             $html .= nl2br($insert);
@@ -318,29 +307,29 @@ class DefaultController extends AbstractController
     protected function infor($message)
     {
         $this->message = $message;
-        $this->status = 'info';
-        $this->error = false;
+        $this->status  = 'info';
+        $this->error   = false;
     }
 
     protected function alert($message)
     {
         $this->message = $message;
-        $this->status = 'warning';
-        $this->error = false;
+        $this->status  = 'warning';
+        $this->error   = false;
     }
 
     protected function sucesso($message)
     {
         $this->message = $message;
-        $this->status = 'success';
-        $this->error = false;
+        $this->status  = 'success';
+        $this->error   = false;
     }
 
     protected function erro($message)
     {
         $this->message = $message;
-        $this->status = 'danger';
-        $this->error = true;
+        $this->status  = 'danger';
+        $this->error   = true;
     }
 
     protected function message(string $dialog, $status)
@@ -349,8 +338,8 @@ class DefaultController extends AbstractController
 
         return [
             'message' => $this->message,
-            'status' => $this->status,
-            'error' => $this->error,
+            'status'  => $this->status,
+            'error'   => $this->error,
         ];
     }
 
