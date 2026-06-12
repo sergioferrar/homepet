@@ -1,12 +1,10 @@
 <?php
-
 namespace App\Controller;
 
 use App\Entity\Estabelecimento;
 use App\Entity\Usuario;
 use App\Service\DatabaseBkp;
 use App\Service\EmailService;
-use App\Service\Payment\MercadoPagoService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -22,11 +20,11 @@ class LandingpageController extends DefaultController
     {
         $data = [];
 
-        $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome();
-        $data['planos'] = $planos;
+        $planos                      = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome();
+        $data['planos']              = $planos;
         $data['cookie_banner_ativo'] = true;
-        $data['tracking'] = '';
-        $data['modulos'] = $this->modulosSistema;
+        $data['tracking']            = '';
+        $data['modulos']             = $this->modulosSistema;
 
         return $this->render('home/landing.html.twig', $data);
     }
@@ -38,13 +36,11 @@ class LandingpageController extends DefaultController
     {
         $data = [];
 
-        $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome($this->session->get('userId'));
+        $planos          = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome($this->session->get('userId'));
         $data['planoId'] = $request->get('planoId');
 
         return $this->render('home/cadastro-estabelecimento.html.twig', $data);
     }
-
-
 
     /**
      * @Route("/landing/cadastrar", name="estabelecimento_cadastrar", methods="POST")
@@ -74,18 +70,25 @@ class LandingpageController extends DefaultController
 
         // Criar database apartir do estabelecimento criado usando DatabaseBkp
         try {
+
             $backupFile = dirname(__DIR__, 2) . '/instalation.sql';
-            
+            $command    = "mysqldump -u homepet_user -pSj071214@ -h 88.223.87.237 homepet_0000 > {$backupFile}";
+            exec($command);
+            $this->databaseBkp->setDbName("homepet_{$estabelecimento->getId()}")->createDatabase();
+
+            $command = "mysql -u homepet_user -p -h 88.223.87.237 homepet_{$estabelecimento->getId()} < {$backupFile}";
+            exec($command);
+
             // Verifica se o arquivo de instalação existe
-            if (!file_exists($backupFile)) {
+            if (! file_exists($backupFile)) {
                 throw new \Exception("Arquivo de instalação não encontrado: {$backupFile}");
             }
-            
+
             // Cria o banco de dados e importa a estrutura
             $this->databaseBkp->setDbName("homepet_{$estabelecimento->getId()}")
                 ->createDatabase()
                 ->importDatabase($backupFile);
-                
+
         } catch (\Exception $e) {
             // Log do erro mas não bloqueia o cadastro
             error_log("Erro ao criar banco de dados para estabelecimento {$estabelecimento->getId()}: " . $e->getMessage());
@@ -100,7 +103,7 @@ class LandingpageController extends DefaultController
      */
     public function cadastrarUsuario(EmailService $emailService, Request $request): Response
     {
-        if (!$request->isMethod('POST')) {
+        if (! $request->isMethod('POST')) {
             return $this->render('usuario/cadastrar.html.twig', [
                 'estabelecimento' => $request->get('estabelecimento'),
             ]);
@@ -109,7 +112,7 @@ class LandingpageController extends DefaultController
         /**
          * 1. Validação básica
          */
-        $senha = $request->get('senha');
+        $senha       = $request->get('senha');
         $confirmacao = $request->get('senha_confirmacao');
 
         if ($senha !== $confirmacao) {
@@ -133,19 +136,19 @@ class LandingpageController extends DefaultController
         /**
          * 3. Definição de roles
          */
-        switch ($request->get('access_level')) { 
-            case 'Super Admin': 
-            case 'Admin': 
-                $roles = ['ROLE_ADMIN']; 
-            break; 
-            case 'Atendente': 
-            case 'Tosador': 
-            case 'Balconista': 
-                $roles = ['ROLE_ADMIN_USER']; 
-            break; 
-            default: 
-                $roles = ['ROLE_USER']; 
-            break;
+        switch ($request->get('access_level')) {
+            case 'Super Admin':
+            case 'Admin':
+                $roles = ['ROLE_ADMIN'];
+                break;
+            case 'Atendente':
+            case 'Tosador':
+            case 'Balconista':
+                $roles = ['ROLE_ADMIN_USER'];
+                break;
+            default:
+                $roles = ['ROLE_USER'];
+                break;
         }
 
         $usuario->setRoles($roles);
@@ -181,7 +184,7 @@ class LandingpageController extends DefaultController
          * 7. Redirecionamento com feedback
          */
         $mensagem = base64_encode(
-            "Foi enviado um e-mail para <b>{$request->get('email')}</b>. 
+            "Foi enviado um e-mail para <b>{$request->get('email')}</b>.
              Verifique sua caixa de entrada ou SPAM e clique no link para concluir seu cadastro!"
         );
 
@@ -209,9 +212,9 @@ class LandingpageController extends DefaultController
 
             // Criar invoice para esta assinatura
             $invoice = $invoiceService->createInvoice($estabelecimento, [
-                'tipo' => 'assinatura',
-                'valor_total' => $plano->getValor(),
-                'plano_id' => $plano->getId(),
+                'tipo'            => 'assinatura',
+                'valor_total'     => $plano->getValor(),
+                'plano_id'        => $plano->getId(),
                 'data_vencimento' => $estabelecimento->getDataPlanoFim(),
             ]);
 
@@ -223,31 +226,31 @@ class LandingpageController extends DefaultController
             $endereco = json_decode(file_get_contents($endpoint), true);
 
             $comprador = [
-                'name' => $usario->getNomeUsuario(),
-                'email' => $usario->getEmail(),
-                'rua' => $endereco['logradouro'] ?? '',
-                'numero' => $estabelecimento->getNumero(),
-                'bairro' => $endereco['bairro'] ?? '',
-                'cidade' => $endereco['localidade'] ?? '',
-                'estado' => $endereco['uf'] ?? '',
+                'name'      => $usario->getNomeUsuario(),
+                'email'     => $usario->getEmail(),
+                'rua'       => $endereco['logradouro'] ?? '',
+                'numero'    => $estabelecimento->getNumero(),
+                'bairro'    => $endereco['bairro'] ?? '',
+                'cidade'    => $endereco['localidade'] ?? '',
+                'estado'    => $endereco['uf'] ?? '',
                 'idUsuario' => $usario->getId(),
-                'cnpj' => $estabelecimento->getCNPJ(),
-                'cep' => $endereco['cep'] ?? '',
+                'cnpj'      => $estabelecimento->getCNPJ(),
+                'cep'       => $endereco['cep'] ?? '',
             ];
 
             $dataPagamento = [
-                'comprador' => $comprador,
-                'planoId' => $plano->getId(),
-                'title' => $plano->getTitulo(),
-                'price' => (float)$plano->getValor(),
-                'email' => $usario->getEmail(),
+                'comprador'          => $comprador,
+                'planoId'            => $plano->getId(),
+                'title'              => $plano->getTitulo(),
+                'price'              => (float) $plano->getValor(),
+                'email'              => $usario->getEmail(),
                 'external_reference' => $invoice->getId(),
             ];
 
             // Salva na sessão para usar após pagamento
             $request->getSession()->set('finaliza', [
-                'uid' => $usario->getId(),
-                'eid' => $eid,
+                'uid'        => $usario->getId(),
+                'eid'        => $eid,
                 'invoice_id' => $invoice->getId(),
             ]);
 
@@ -332,7 +335,7 @@ class LandingpageController extends DefaultController
         $escolha = $request->get('escolha'); // 'aceito' ou 'recusado'
         $allowed = ['aceito', 'recusado'];
 
-        if (!in_array($escolha, $allowed, true)) {
+        if (! in_array($escolha, $allowed, true)) {
             return $this->json(['success' => false, 'message' => 'Escolha inválida.'], 400);
         }
 
@@ -360,10 +363,10 @@ class LandingpageController extends DefaultController
      */
     private function carregarTracking($configRepo): array
     {
-        $chaves = ['google_analytics_id', 'google_tag_manager_id', 'facebook_pixel_id', 'google_ads_id'];
+        $chaves   = ['google_analytics_id', 'google_tag_manager_id', 'facebook_pixel_id', 'google_ads_id'];
         $tracking = [];
         foreach ($chaves as $chave) {
-            $c = $configRepo->findOneBy(['estabelecimento_id' => 0, 'tipo' => 'tracking', 'chave' => $chave]);
+            $c                = $configRepo->findOneBy(['estabelecimento_id' => 0, 'tipo' => 'tracking', 'chave' => $chave]);
             $tracking[$chave] = $c?->getValor() ?? '';
         }
         return $tracking;

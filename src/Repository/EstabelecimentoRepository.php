@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Repository;
 
 use App\Entity\Estabelecimento;
@@ -52,7 +51,7 @@ class EstabelecimentoRepository extends ServiceEntityRepository
 
     public function listaEstabelecimentosGestao()
     {
-        $sql = "SELECT 
+        $sql = "SELECT
                 e.id, e.razaoSocial, e.cnpj, e.status, e.dataCadastro, e.dataPlanoInicio, e.dataPlanoFim, p.titulo AS plano_nome, e.cidade,
                 p.valor AS plano_valor, COUNT(u.id) AS total_usuarios
             FROM estabelecimento e
@@ -86,9 +85,9 @@ class EstabelecimentoRepository extends ServiceEntityRepository
 
     public function buscarPorId($id): ?array
     {
-        $sql = "SELECT e.id, e.razaoSocial, e.cnpj, e.rua, e.numero, e.complemento, 
-                       e.bairro, e.cidade, e.pais, e.cep, e.status, 
-                       e.dataCadastro, e.dataAtualizacao, e.planoId, 
+        $sql = "SELECT e.id, e.razaoSocial, e.cnpj, e.rua, e.numero, e.complemento,
+                       e.bairro, e.cidade, e.pais, e.cep, e.status,
+                       e.dataCadastro, e.dataAtualizacao, e.planoId,
                        e.dataPlanoInicio, e.dataPlanoFim
                 FROM u199209817_login.estabelecimento e
                 LEFT JOIN u199209817_login.planos p ON p.id = e.planoId
@@ -98,11 +97,9 @@ class EstabelecimentoRepository extends ServiceEntityRepository
         return $stmt->fetchAssociative() ?: null;
     }
 
-
-
     public function renovacao($baseId, $eid, $dataInicio, $dataFim)
     {
-        $sql = "UPDATE estabelecimento 
+        $sql = "UPDATE estabelecimento
             SET dataPlanoInicio = '{$dataInicio}', dataPlanoFim = '{$dataFim}'
             WHERE id='$eid'";
 
@@ -112,8 +109,8 @@ class EstabelecimentoRepository extends ServiceEntityRepository
     public function aprovacao($baseId, $eid)
     {
         $dataPlanoInicio = date('Y-m-d H:i:s');
-        $dataPlanoFim = date('Y-m-d H:i:s', strtotime('+1month'));
-        $sql = "UPDATE estabelecimento 
+        $dataPlanoFim    = date('Y-m-d H:i:s', strtotime('+1month'));
+        $sql             = "UPDATE estabelecimento
             SET status = 'Ativo', dataPlanoInicio = '$dataPlanoInicio', dataPlanoFim = '$dataPlanoFim'
             WHERE id='$eid'";
 
