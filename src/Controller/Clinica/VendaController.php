@@ -1,14 +1,11 @@
 <?php
-
 namespace App\Controller\Clinica;
 
+use App\Controller\DefaultController;
 use App\Entity\Financeiro;
-use App\Entity\FinanceiroPendente;
 use App\Entity\Servico;
 use App\Entity\Venda;
-use App\Entity\VendaItem;
 use App\Repository\FinanceiroRepository;
-use App\Controller\DefaultController;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,7 +24,7 @@ class VendaController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
-        $conn   = $this->entityManager->getConnection();
+        $conn = $this->entityManager->getConnection();
 
         try {
             $petIdFromRequest = $request->get('pet_id');
@@ -41,8 +38,8 @@ class VendaController extends DefaultController
             }
 
             $metodoPagamento = $request->get('metodo_pagamento', 'pendente');
-            $origem          = $request->get('origem', 'clinica');
-            $status          = ($metodoPagamento === 'pendente') ? 'Pendente' : 'Aberta';
+            $origem = $request->get('origem', 'clinica');
+            $status = ($metodoPagamento === 'pendente') ? 'Pendente' : 'Aberta';
 
             // ── Transação atômica — abre ANTES de qualquer escrita ────────────
             $conn->beginTransaction();
@@ -57,68 +54,74 @@ class VendaController extends DefaultController
                     (:estab, :cliente, :pet, :parcelas, :origem,
                      :metodo, :status, NOW(), :obs, 0)",
                 [
-                    'estab'    => $baseId,
-                    'cliente'  => $pet['dono_nome'] ?? 'Consumidor Final',
-                    'pet'      => $petIdFromRequest,
+                    'estab' => $baseId,
+                    'cliente' => $pet['dono_nome'] ?? 'Consumidor Final',
+                    'pet' => $petIdFromRequest,
                     'parcelas' => $request->get('parcelas', 1),
-                    'origem'   => $origem,
-                    'metodo'   => $metodoPagamento,
-                    'status'   => $status,
-                    'obs'      => $request->get('observacao'),
+                    'origem' => $origem,
+                    'metodo' => $metodoPagamento,
+                    'status' => $status,
+                    'obs' => $request->get('observacao'),
                 ]
             );
-            $vendaId = (int)$conn->lastInsertId();
+            $vendaId = (int) $conn->lastInsertId();
 
             // 2️⃣ Processa itens via DBAL
-            $descricoes  = (array)$request->get('descricao', []);
-            $descontos   = (array)$request->get('desconto', []);
-            $quantidades = (array)$request->get('quantidade_diarias', []);
-            $valorTotal  = 0.0;
+            $descricoes = (array) $request->get('descricao', []);
+            $descontos = (array) $request->get('desconto', []);
+            $quantidades = (array) $request->get('quantidade_diarias', []);
+            $valorTotal = 0.0;
 
             foreach ($descricoes as $i => $itemId) {
-                $tipo   = 'servico';
+                $tipo = 'servico';
                 $realId = $itemId;
 
-                if (str_starts_with((string)$itemId, 'S-')) {
-                    $tipo   = 'servico';
+                if (str_starts_with((string) $itemId, 'S-')) {
+                    $tipo = 'servico';
                     $realId = substr($itemId, 2);
-                } elseif (str_starts_with((string)$itemId, 'P-')) {
-                    $tipo   = 'produto';
+                } elseif (str_starts_with((string) $itemId, 'P-')) {
+                    $tipo = 'produto';
                     $realId = substr($itemId, 2);
                 }
 
-                $nome          = 'Item';
+                $nome = 'Item';
                 $valorUnitario = 0.0;
 
                 if ($tipo === 'servico') {
                     $servico = $this->getRepositorio(Servico::class)->listaServicoPorId($baseId, $realId);
-                    if (!$servico) continue;
-                    $nome          = $servico['nome'] ?? 'Serviço';
-                    $valorUnitario = (float)$servico['valor'];
+                    if (!$servico) {
+                        continue;
+                    }
+
+                    $nome = $servico['nome'] ?? 'Serviço';
+                    $valorUnitario = (float) $servico['valor'];
                 } else {
                     $produto = $this->getRepositorio(\App\Entity\Produto::class)->find($realId);
-                    if (!$produto) continue;
-                    $nome          = $produto->getNome();
-                    $valorUnitario = (float)$produto->getPrecoVenda();
+                    if (!$produto) {
+                        continue;
+                    }
+
+                    $nome = $produto->getNome();
+                    $valorUnitario = (float) $produto->getPrecoVenda();
                 }
 
-                $quantidade = (int)($quantidades[$i] ?? 1);
-                $desconto   = (float)($descontos[$i] ?? 0);
-                $valorItem  = ($valorUnitario * $quantidade) - $desconto;
+                $quantidade = (int) ($quantidades[$i] ?? 1);
+                $desconto = (float) ($descontos[$i] ?? 0);
+                $valorItem = ($valorUnitario * $quantidade) - $desconto;
 
                 $conn->executeStatement(
                     "INSERT INTO venda_item
-                        (venda_id, tipo, produto_id, produto, quantidade, preco_unitario, subtotal)
+                        (venda_id, tipo, produto_id, produto, quantidade, valor_unitario, subtotal)
                      VALUES
                         (:venda, :tipo, :pid, :pnome, :qtd, :unit, :sub)",
                     [
                         'venda' => $vendaId,
-                        'tipo'  => $tipo,
-                        'pid'   => (int)$realId,
+                        'tipo' => $tipo,
+                        'pid' => (int) $realId,
                         'pnome' => $nome,
-                        'qtd'   => $quantidade,
-                        'unit'  => $valorUnitario,
-                        'sub'   => $valorItem,
+                        'qtd' => $quantidade,
+                        'unit' => $valorUnitario,
+                        'sub' => $valorItem,
                     ]
                 );
 
@@ -148,7 +151,7 @@ class VendaController extends DefaultController
                         (:desc, :valor, NOW(), 'pendente', 'clinica', 'Pendente',
                          :estab, 0)",
                     [
-                        'desc'  => $descricaoFinanceiro,
+                        'desc' => $descricaoFinanceiro,
                         'valor' => $valorTotal,
                         'estab' => $baseId,
                     ]
@@ -178,25 +181,27 @@ class VendaController extends DefaultController
             }
 
             $mensagem = ($metodoPagamento === 'pendente')
-                ? 'Venda registrada como pendente no financeiro!'
-                : 'Venda adicionada ao carrinho! Finalize no PDV.';
+            ? 'Venda registrada como pendente no financeiro!'
+            : 'Venda adicionada ao carrinho! Finalize no PDV.';
 
             return $this->json([
-                'status'   => 'success',
+                'status' => 'success',
                 'mensagem' => $mensagem,
                 'venda_id' => $vendaId,
             ]);
 
         } catch (\Throwable $e) {
+
+            dd($e);
             if ($conn->isTransactionActive()) {
                 $conn->rollBack();
             }
             $this->logger->error('Erro ao concluir venda', [
-                'erro'  => $e->getMessage(),
+                'erro' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
             return $this->json([
-                'status'   => 'error',
+                'status' => 'error',
                 'mensagem' => 'Erro ao registrar venda: ' . $e->getMessage(),
             ], 500);
         }
@@ -244,7 +249,7 @@ class VendaController extends DefaultController
             }
 
             $financeiro->setDescricao($request->get('descricao'));
-            $financeiro->setValor((float)$request->get('valor'));
+            $financeiro->setValor((float) $request->get('valor'));
 
             $data = $request->get('data');
             if ($data) {

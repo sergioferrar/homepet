@@ -45,7 +45,7 @@ class VendaItem
     private $quantidade;
 
     /**
-     * @ORM\Column(type="decimal", precision=10, scale=2, name="preco_unitario")
+     * @ORM\Column(type="decimal", precision=10, scale=2, name="valor_unitario")
      */
     private $precoUnitario;
 
