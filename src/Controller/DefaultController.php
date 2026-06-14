@@ -102,7 +102,7 @@ class DefaultController extends AbstractController
             'localhost',
         ]) || str_starts_with($ip, '192.168.');
 
-        $prefix = 'homepet_';
+        $prefix = '';
 
         $tenantId = $prefix . (
             $this->session->get('estabelecimento_id') ?? $this->session->get('estabelecimentoId') ?? $_ENV['DBNAMETENANT']
