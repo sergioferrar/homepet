@@ -112,9 +112,23 @@ class DefaultController extends AbstractController
             ->switchDatabase((string) $tenantId, (string) $tenantId);
     }
 
+    public function prepareTenantidConnection($tenantid)
+    {
+        $prefix = 'homepet_';
+
+        $conn = (new DynamicConnectionManager($this->managerRegistry));
+            $conn->switchDatabase((string) $prefix . $tenantid, (string) $prefix . $tenantid);
+        return $conn;
+    }
+
     public function restauraLoginDB(): void
     {
         (new DynamicConnectionManager($this->managerRegistry))->restoreOriginal();
+    }
+
+    public function pegarConexaoAtiva()
+    {
+        return $this->managerRegistry->getConnection();
     }
 
     /**

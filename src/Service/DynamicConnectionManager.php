@@ -11,7 +11,7 @@ class DynamicConnectionManager
 
     public function __construct(ManagerRegistry $registry)
     {
-        $this->connection     = $registry->getConnection();
+        $this->connection = $registry->getConnection();
         $this->originalParams = $this->connection->getParams();
     }
 
@@ -25,15 +25,15 @@ class DynamicConnectionManager
         // dd($params, $newUsername,get_current_user());
 
         $params['dbname'] = $newDbName ?? $_ENV['DBNAMETENANT']; //'u199209817_26';
-                                                                 // if(get_current_user() == 'u199209817'){
-                                                                 //     $params['user'] = $newUsername;
-                                                                 // }
-                                                                 //if($params['host'] !== '127.0.0.1'){
-                                                                 //}
-                                                                 // senha, host e driver permanecem os mesmos
+        // if(get_current_user() == 'u199209817'){
+        //     $params['user'] = $newUsername;
+        // }
+        //if($params['host'] !== '127.0.0.1'){
+        //}
+        // senha, host e driver permanecem os mesmos
 
         $reflection = new \ReflectionClass($this->connection);
-        $property   = $reflection->getProperty('params');
+        $property = $reflection->getProperty('params');
         $property->setAccessible(true);
         $property->setValue($this->connection, $params);
 
@@ -44,7 +44,7 @@ class DynamicConnectionManager
     {
         // dd($this->originalParams);
         $databaseVariables = explode('/', $_ENV['DATABASE_URL']);
-        $databaseUser      = explode(':', $databaseVariables[2]);
+        $databaseUser = explode(':', $databaseVariables[2]);
         // dd(explode('/', $_ENV['DATABASE_URL']),$databaseUser[0]);
         $this->switchDatabase(explode('?', $databaseVariables[3])[0], $databaseUser[0]);
         // dump($this->connection);
