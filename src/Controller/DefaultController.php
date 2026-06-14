@@ -103,10 +103,13 @@ class DefaultController extends AbstractController
         ]) || str_starts_with($ip, '192.168.');
 
         $prefix = 'homepet_';
-        
+        //dd($this->session->all(), $this->security->getUser());
+
+        $tenantId = $prefix.$this->security->getUser()->getPetshopId();
+/*
         $tenantId = $prefix . (
             $this->session->get('estabelecimento_id') ?? $this->session->get('estabelecimentoId') ?? $_ENV['DBNAMETENANT']
-        );
+        );*/
 
         (new DynamicConnectionManager($this->managerRegistry))
             ->switchDatabase((string) $tenantId, (string) $tenantId);
