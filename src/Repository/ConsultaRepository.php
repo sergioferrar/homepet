@@ -19,7 +19,7 @@ class ConsultaRepository extends ServiceEntityRepository
     public function salvarConsulta(Consulta $consulta): void // Removido $baseId, pois já está no objeto
     {
        
-        $sql = "INSERT INTO homepe_{$baseId}.consulta 
+        $sql = "INSERT INTO homepet_{$baseId}.consulta 
                 (estabelecimento_id, cliente_id, pet_id, data, hora, observacoes, criado_em, status, anamnese)
                 VALUES (:estabelecimento_id, :cliente_id, :pet_id, :data, :hora, :observacoes, :criado_em, :status, :anamnese)";
 
@@ -42,9 +42,9 @@ class ConsultaRepository extends ServiceEntityRepository
     public function listarConsultasPorCliente($baseId, int $clienteId): array
     {
         $sql = "SELECT c.id, c.data, c.hora, p.nome as pet_nome, cl.nome as cliente_nome, c.observacoes
-                FROM homepe_{$baseId}.consulta c
-                JOIN homepe_{$baseId}.pet p ON c.pet_id = p.id
-                JOIN homepe_{$baseId}.cliente cl ON c.cliente_id = cl.id
+                FROM homepet_{$baseId}.consulta c
+                JOIN homepet_{$baseId}.pet p ON c.pet_id = p.id
+                JOIN homepet_{$baseId}.cliente cl ON c.cliente_id = cl.id
                 WHERE c.estabelecimento_id = :baseId AND c.cliente_id = :clienteId
                 ORDER BY c.data DESC, c.hora DESC";
 
@@ -59,9 +59,9 @@ class ConsultaRepository extends ServiceEntityRepository
     {
         $sql = "SELECT c.id, c.data, c.hora, c.observacoes, c.status,
                        p.nome as pet_nome, cl.nome as cliente_nome
-                FROM homepe_{$baseId}.consulta c
-                JOIN homepe_{$baseId}.pet p ON c.pet_id = p.id
-                JOIN homepe_{$baseId}.cliente cl ON c.cliente_id = cl.id
+                FROM homepet_{$baseId}.consulta c
+                JOIN homepet_{$baseId}.pet p ON c.pet_id = p.id
+                JOIN homepet_{$baseId}.cliente cl ON c.cliente_id = cl.id
                 WHERE c.estabelecimento_id = :baseId AND c.data = :data
                 ORDER BY c.hora";
 
@@ -77,7 +77,7 @@ class ConsultaRepository extends ServiceEntityRepository
     public function contarConsultasPorMes($baseId): array
     {
         $sql = "SELECT MONTH(data) as mes, COUNT(*) as total
-                FROM homepe_{$baseId}.consulta
+                FROM homepet_{$baseId}.consulta
                 WHERE YEAR(data) = YEAR(NOW()) AND estabelecimento_id = :baseId
                 GROUP BY MONTH(data)
                 ORDER BY mes";
@@ -105,7 +105,7 @@ class ConsultaRepository extends ServiceEntityRepository
 
     public function atualizarStatusConsulta($baseId, int $consultaId, string $novoStatus): bool
     {
-        $sql = "UPDATE homepe_{$baseId}.consulta
+        $sql = "UPDATE homepet_{$baseId}.consulta
                 SET status = :status
                 WHERE id = :id AND estabelecimento_id = :baseId";
 
@@ -123,9 +123,9 @@ class ConsultaRepository extends ServiceEntityRepository
         $sql = "SELECT c.id, c.data, c.hora, c.observacoes, c.status,
                        p.nome as pet_nome, cl.nome as cliente_nome,
                        'Consulta' AS tipo
-                FROM homepe_{$baseId}.consulta c
-                JOIN homepe_{$baseId}.pet p ON c.pet_id = p.id
-                JOIN homepe_{$baseId}.cliente cl ON c.cliente_id = cl.id
+                FROM homepet_{$baseId}.consulta c
+                JOIN homepet_{$baseId}.pet p ON c.pet_id = p.id
+                JOIN homepet_{$baseId}.cliente cl ON c.cliente_id = cl.id
                 WHERE c.estabelecimento_id = :baseId
                   AND c.data >= :hoje
                 ORDER BY c.data ASC, c.hora ASC
@@ -142,9 +142,9 @@ class ConsultaRepository extends ServiceEntityRepository
     {
         $sql = "SELECT c.id, c.data, c.hora, c.status,
                        cl.nome AS cliente, p.nome AS pet, p.id AS pet_id
-                FROM homepe_{$baseId}.consulta c
-                JOIN homepe_{$baseId}.cliente cl ON cl.id = c.cliente_id
-                JOIN homepe_{$baseId}.pet p ON p.id = c.pet_id
+                FROM homepet_{$baseId}.consulta c
+                JOIN homepet_{$baseId}.cliente cl ON cl.id = c.cliente_id
+                JOIN homepet_{$baseId}.pet p ON p.id = c.pet_id
                 WHERE c.estabelecimento_id = :baseId
                 ORDER BY c.data DESC, c.hora DESC
                 LIMIT :limite";
@@ -158,7 +158,7 @@ class ConsultaRepository extends ServiceEntityRepository
     public function contarConsultasPorStatus($baseId): array
     {
         $sql = "SELECT status, COUNT(*) as total
-                FROM homepe_{$baseId}.consulta
+                FROM homepet_{$baseId}.consulta
                 WHERE estabelecimento_id = :baseId
                 GROUP BY status";
 
@@ -183,7 +183,7 @@ class ConsultaRepository extends ServiceEntityRepository
     public function calcularMediaConsultas($baseId): float
     {
         $sql = "SELECT COUNT(*) as total, COUNT(DISTINCT DATE(data)) as dias
-                FROM homepe_{$baseId}.consulta
+                FROM homepet_{$baseId}.consulta
                 WHERE estabelecimento_id = :baseId";
 
         $stmt = $this->conn->prepare($sql);
@@ -201,9 +201,9 @@ class ConsultaRepository extends ServiceEntityRepository
         
             $sql = "SELECT c.id, c.data, c.hora, c.observacoes, c.status, c.anamnese, c.tipo,
                            cl.nome AS cliente, p.nome AS pet, p.id AS pet_id
-                    FROM homepe_{$baseId}.consulta c
-                    JOIN homepe_{$baseId}.cliente cl ON cl.id = c.cliente_id
-                    JOIN homepe_{$baseId}.pet p ON p.id = c.pet_id
+                    FROM homepet_{$baseId}.consulta c
+                    JOIN homepet_{$baseId}.cliente cl ON cl.id = c.cliente_id
+                    JOIN homepet_{$baseId}.pet p ON p.id = c.pet_id
                     WHERE c.estabelecimento_id = :baseId AND c.pet_id = :petId
                     ORDER BY c.data DESC, c.hora DESC";
 

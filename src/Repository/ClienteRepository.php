@@ -48,10 +48,10 @@ class ClienteRepository extends ServiceEntityRepository
                 a.concluido,
                 p.nome AS pet_nome,
                 s.nome AS servico_nome
-            FROM homepe_{$baseId}.agendamento a
-            INNER JOIN homepe_{$baseId}.agendamento_pet_servico aps ON aps.agendamentoId = a.id
-            INNER JOIN homepe_{$baseId}.pet p ON p.id = aps.petId
-            INNER JOIN homepe_{$baseId}.servico s ON s.id = aps.servicoId
+            FROM homepet_{$baseId}.agendamento a
+            INNER JOIN homepet_{$baseId}.agendamento_pet_servico aps ON aps.agendamentoId = a.id
+            INNER JOIN homepet_{$baseId}.pet p ON p.id = aps.petId
+            INNER JOIN homepet_{$baseId}.servico s ON s.id = aps.servicoId
             WHERE a.estabelecimento_id = '{$baseId}' AND p.dono_id = :clienteId
             ORDER BY a.data DESC, a.horaChegada DESC";
 
@@ -61,7 +61,7 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function localizaTodosClientePorID($baseId, $clienteId){
         $sql = "SELECT * 
-            FROM homepe_{$baseId}.cliente 
+            FROM homepet_{$baseId}.cliente 
             WHERE estabelecimento_id = '{$baseId}' AND id='{$clienteId}'";
 
         $query = $this->conn->query($sql);
@@ -75,7 +75,7 @@ class ClienteRepository extends ServiceEntityRepository
                     COALESCE(nome, 'Sem nome') as nome,
                     COALESCE(email, '-') as email,
                     COALESCE(telefone, '-') as telefone
-                FROM homepe_{$baseId}.cliente 
+                FROM homepet_{$baseId}.cliente 
                 WHERE estabelecimento_id = '{$baseId}'";
 
         $query = $this->conn->query($sql);
@@ -85,7 +85,7 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function save($baseId, array $clientData): void
     {
-        $sql = "INSERT INTO homepe_{$baseId}.cliente
+        $sql = "INSERT INTO homepet_{$baseId}.cliente
         (estabelecimento_id, nome, cpf, email, telefone, rua, numero, complemento, bairro, cidade, whatsapp)
         VALUES  (:estabelecimento_id, :nome, :cpf, :email, :telefone, :rua, :numero, :complemento, :bairro, :cidade, :whatsapp)";
 
@@ -106,7 +106,7 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function update($baseId, array $clienteData): void
     {
-        $sql = "UPDATE homepe_{$baseId}.cliente 
+        $sql = "UPDATE homepet_{$baseId}.cliente 
                 SET nome = :nome, cpf = :cpf, email = :email, telefone = :telefone, 
                     rua = :rua, numero = :numero, complemento = :complemento, 
                     bairro = :bairro, cidade = :cidade, whatsapp = :whatsapp
@@ -130,7 +130,7 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function delete($baseId, int $id): void
     {
-        $sql = "DELETE FROM homepe_{$baseId}.cliente WHERE estabelecimento_id = '{$baseId}' AND  id = :id";
+        $sql = "DELETE FROM homepet_{$baseId}.cliente WHERE estabelecimento_id = '{$baseId}' AND  id = :id";
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
@@ -144,7 +144,7 @@ class ClienteRepository extends ServiceEntityRepository
             $params['term'] = "%$term%";
         }
 
-        $sql = "SELECT * FROM homepe_{$baseId}.cliente $where";
+        $sql = "SELECT * FROM homepet_{$baseId}.cliente $where";
         // die($sql);
         $stmt = $this->conn->executeQuery($sql, $params);
         return $stmt->fetchAllAssociative();
@@ -159,8 +159,8 @@ class ClienteRepository extends ServiceEntityRepository
     {
         $sql = "SELECT c.id, c.nome, c.email, c.telefone, c.whatsapp, c.rua,
                     c.numero, c.complemento, c.bairro, c.cidade, c.cep
-                FROM homepe_{$baseId}.cliente c
-                INNER JOIN homepe_{$baseId}.pet p ON p.dono_id = c.id
+                FROM homepet_{$baseId}.cliente c
+                INNER JOIN homepet_{$baseId}.pet p ON p.dono_id = c.id
                 WHERE c.estabelecimento_id = '{$baseId}' AND  p.id = :petId";
 
         $stmt = $this->conn->executeQuery($sql, ['petId' => $petId]);
@@ -178,7 +178,7 @@ class ClienteRepository extends ServiceEntityRepository
                         porte,
                         idade,
                         observacoes
-                    FROM homepe_{$baseId}.pet 
+                    FROM homepet_{$baseId}.pet 
                     WHERE dono_id = :id AND estabelecimento_id = '{$baseId}'";
             return $this->conn->fetchAllAssociative($sql, ['id' => $clienteId]);
         }
@@ -190,10 +190,10 @@ class ClienteRepository extends ServiceEntityRepository
                     s.nome as servico_nome, 
                     s.valor as servico_valor, 
                     p.nome as pet
-                FROM homepe_{$baseId}.agendamento a
-                INNER JOIN homepe_{$baseId}.agendamento_pet_servico aps ON aps.agendamentoId = a.id
-                INNER JOIN homepe_{$baseId}.pet p ON aps.petId = p.id
-                INNER JOIN homepe_{$baseId}.servico s ON aps.servicoId = s.id
+                FROM homepet_{$baseId}.agendamento a
+                INNER JOIN homepet_{$baseId}.agendamento_pet_servico aps ON aps.agendamentoId = a.id
+                INNER JOIN homepet_{$baseId}.pet p ON aps.petId = p.id
+                INNER JOIN homepet_{$baseId}.servico s ON aps.servicoId = s.id
                 WHERE p.dono_id = :id AND a.estabelecimento_id = '{$baseId}'
                 ORDER BY a.data DESC, a.horaChegada DESC
                 LIMIT 5";
@@ -205,8 +205,8 @@ class ClienteRepository extends ServiceEntityRepository
     public function hasFinanceiroPendente($baseId, int $clienteId): bool
     {
         $sql = "SELECT COUNT(*) as total
-                FROM homepe_{$baseId}.financeiropendente f
-                JOIN homepe_{$baseId}.pet p ON f.pet_id = p.id
+                FROM homepet_{$baseId}.financeiropendente f
+                JOIN homepet_{$baseId}.pet p ON f.pet_id = p.id
                 WHERE f.estabelecimento_id = :baseId AND p.dono_id = :id";
 
         $total = $this->conn->fetchOne($sql, [
@@ -220,10 +220,10 @@ class ClienteRepository extends ServiceEntityRepository
     public function findClientesComPet($baseId): array
     {
         $sql = "SELECT c.id, c.nome, c.telefone
-                FROM homepe_{$baseId}.cliente c
+                FROM homepet_{$baseId}.cliente c
                 WHERE c.estabelecimento_id = :baseId
                 AND EXISTS (
-                    SELECT 1 FROM homepe_{$baseId}.pet p
+                    SELECT 1 FROM homepet_{$baseId}.pet p
                     WHERE p.dono_id = c.id
                 )";
 
@@ -242,7 +242,7 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function listarPetsDoCliente($baseId, $clienteId): array
     {
-        $sql = "SELECT id, nome, raca FROM homepe_{$baseId}.pet
+        $sql = "SELECT id, nome, raca FROM homepet_{$baseId}.pet
                 WHERE dono_id = :clienteId AND estabelecimento_id = :baseId";
 
         $stmt = $this->conn->prepare($sql);
@@ -254,14 +254,14 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function countTotalDono($baseId): int
     {
-        $sql = "SELECT COUNT(*) FROM homepe_{$baseId}.cliente WHERE estabelecimento_id = :baseId";
+        $sql = "SELECT COUNT(*) FROM homepet_{$baseId}.cliente WHERE estabelecimento_id = :baseId";
         return (int) $this->conn->fetchOne($sql, ['baseId' => $baseId]);
     }
 
     public function findByNomeLike($baseId, string $query): array
     {
         $sql = "SELECT * 
-            FROM homepe_{$baseId}.cliente 
+            FROM homepet_{$baseId}.cliente 
             WHERE nome like :query AND estabelecimento_id = :baseId";
         
         $stmt = $this->conn->prepare($sql);

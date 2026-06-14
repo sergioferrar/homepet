@@ -30,7 +30,7 @@ class VacinaRepository extends ServiceEntityRepository
                     v.fabricante,
                     v.observacoes,
                     v.veterinario_id
-                FROM homepe_{$baseId}.vacina v
+                FROM homepet_{$baseId}.vacina v
                 WHERE v.estabelecimento_id = :baseId
                   AND v.pet_id = :petId
                 ORDER BY v.data_aplicacao DESC, v.id DESC";
@@ -46,7 +46,7 @@ class VacinaRepository extends ServiceEntityRepository
      */
     public function save(int $baseId, Vacina $vacina): void
     {
-        $sql = "INSERT INTO homepe_{$baseId}.vacina 
+        $sql = "INSERT INTO homepet_{$baseId}.vacina 
                     (estabelecimento_id, pet_id, tipo, data_aplicacao, data_validade, 
                      lote, fabricante, observacoes, veterinario_id)
                 VALUES 
@@ -75,7 +75,7 @@ class VacinaRepository extends ServiceEntityRepository
      */
     public function update(int $baseId, Vacina $vacina): void
     {
-        $sql = "UPDATE homepe_{$baseId}.vacina 
+        $sql = "UPDATE homepet_{$baseId}.vacina 
                 SET tipo = :tipo,
                     data_aplicacao = :data_aplicacao,
                     data_validade = :data_validade,
@@ -107,7 +107,7 @@ class VacinaRepository extends ServiceEntityRepository
      */
     public function delete(int $baseId, int $id): void
     {
-        $sql = "DELETE FROM homepe_{$baseId}.vacina 
+        $sql = "DELETE FROM homepet_{$baseId}.vacina 
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
         $stmt = $this->conn->prepare($sql);
@@ -121,7 +121,7 @@ class VacinaRepository extends ServiceEntityRepository
      */
     public function buscarPorId(int $baseId, int $id): ?array
     {
-        $sql = "SELECT * FROM homepe_{$baseId}.vacina 
+        $sql = "SELECT * FROM homepet_{$baseId}.vacina 
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
         $stmt = $this->conn->prepare($sql);

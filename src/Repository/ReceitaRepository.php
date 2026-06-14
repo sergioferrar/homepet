@@ -19,7 +19,7 @@ class ReceitaRepository extends ServiceEntityRepository
     public function listarPorPet($baseId, int $petId): array
     {
         $sql = "SELECT id, data, resumo, cabecalho, conteudo, rodape
-                FROM homepe_{$baseId}.receita
+                FROM homepet_{$baseId}.receita
                 WHERE estabelecimento_id = :baseId AND pet_id = :petId
                 ORDER BY data DESC";
 

@@ -27,7 +27,7 @@ class ServicoRepository extends ServiceEntityRepository
     public function listaServicoPorId($baseId, $idServico)
     {
         $sql = "SELECT id, nome, descricao, valor 
-            FROM homepe_{$baseId}.servico
+            FROM homepet_{$baseId}.servico
             WHERE estabelecimento_id = '{$baseId}' AND id = {$idServico}";
 
         $query = $this->conn->query($sql);
@@ -37,7 +37,7 @@ class ServicoRepository extends ServiceEntityRepository
     public function findAllService($baseId, $tipo = null): array
     {
         $sql = "SELECT * 
-            FROM homepe_{$baseId}.servico 
+            FROM homepet_{$baseId}.servico 
             WHERE estabelecimento_id = '{$baseId}'";
         
         if ($tipo !== null) {
@@ -51,7 +51,7 @@ class ServicoRepository extends ServiceEntityRepository
     public function findService($baseId, int $id): ?Servico
     {
         $sql = "SELECT * 
-            FROM homepe_{$baseId}.servico 
+            FROM homepet_{$baseId}.servico 
             WHERE estabelecimento_id = '{$baseId}' AND id = :id"; // Tabela com 's' minúsculo
 
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
@@ -73,7 +73,7 @@ class ServicoRepository extends ServiceEntityRepository
     public function save($baseId, Servico $servico): void
     {
         // Tabela com 's' minúsculo
-        $sql = "INSERT INTO homepe_{$baseId}.servico (estabelecimento_id, nome, descricao, valor) VALUES 
+        $sql = "INSERT INTO homepet_{$baseId}.servico (estabelecimento_id, nome, descricao, valor) VALUES 
         (:estabelecimento_id, :nome, :descricao, :valor)";
 
         $stmt = $this->conn->prepare($sql);
@@ -87,7 +87,7 @@ class ServicoRepository extends ServiceEntityRepository
     public function update($baseId, Servico $servico): void
     {
         // Tabela com 's' minúsculo
-        $sql = "UPDATE homepe_{$baseId}.servico SET nome = :nome, descricao = :descricao, valor = :valor 
+        $sql = "UPDATE homepet_{$baseId}.servico SET nome = :nome, descricao = :descricao, valor = :valor 
             WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $stmt = $this->conn->prepare($sql);
@@ -101,7 +101,7 @@ class ServicoRepository extends ServiceEntityRepository
     public function delete($baseId, int $id): void
     {
         // Tabela com 's' minúsculo
-        $sql = "DELETE FROM homepe_{$baseId}.servico 
+        $sql = "DELETE FROM homepet_{$baseId}.servico 
             WHERE estabelecimento_id = '{$baseId}' AND id = :id"; 
         $this->conn->executeQuery($sql, ['id' => $id]);
     }

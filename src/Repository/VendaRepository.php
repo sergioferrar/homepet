@@ -37,9 +37,9 @@ class VendaRepository extends ServiceEntityRepository
                        c.id    AS cliente_id,
                        c.nome  AS cliente_nome,
                        c.telefone AS cliente_telefone
-                FROM homepe_{$baseId}.venda v
-                LEFT JOIN homepe_{$baseId}.pet    p ON p.id = v.pet_id
-                LEFT JOIN homepe_{$baseId}.cliente c ON c.id = p.dono_id
+                FROM homepet_{$baseId}.venda v
+                LEFT JOIN homepet_{$baseId}.pet    p ON p.id = v.pet_id
+                LEFT JOIN homepet_{$baseId}.cliente c ON c.id = p.dono_id
                 WHERE v.estabelecimento_id = :estab
                   AND DATE(v.data) = :data
                 ORDER BY v.id DESC";
@@ -57,7 +57,7 @@ class VendaRepository extends ServiceEntityRepository
     {
         $sql = "SELECT metodo_pagamento AS metodo,
                        COALESCE(SUM(total), 0) AS total
-                FROM homepe_{$baseId}.venda
+                FROM homepet_{$baseId}.venda
                 WHERE estabelecimento_id = :baseId
                   AND DATE(data) = :data
                   AND status NOT IN ('Carrinho', 'Cancelada')
@@ -76,7 +76,7 @@ class VendaRepository extends ServiceEntityRepository
     public function totalGeralDoDia(int $estabelecimentoId, \DateTime $data): float
     {
         $sql = "SELECT COALESCE(SUM(total), 0) AS total
-                FROM homepe_{$baseId}.venda
+                FROM homepet_{$baseId}.venda
                 WHERE estabelecimento_id = :estab
                   AND DATE(data) = :data
                   AND status NOT IN ('Carrinho', 'Cancelada')";
@@ -96,9 +96,9 @@ class VendaRepository extends ServiceEntityRepository
                        v.metodo_pagamento, v.origem, v.observacao,
                        p.nome  AS pet_nome,
                        c.nome  AS cliente_nome
-                FROM homepe_{$baseId}.venda v
-                LEFT JOIN homepe_{$baseId}.pet    p ON p.id = v.pet_id
-                LEFT JOIN homepe_{$baseId}.cliente c ON c.id = p.dono_id
+                FROM homepet_{$baseId}.venda v
+                LEFT JOIN homepet_{$baseId}.pet    p ON p.id = v.pet_id
+                LEFT JOIN homepet_{$baseId}.cliente c ON c.id = p.dono_id
                 WHERE v.estabelecimento_id = :estab
                   AND DATE(v.data) BETWEEN :inicio AND :fim
                 ORDER BY v.data DESC";
@@ -116,7 +116,7 @@ class VendaRepository extends ServiceEntityRepository
     public function totalPorPeriodo(int $estabelecimentoId, \DateTime $inicio, \DateTime $fim): float
     {
         $sql = "SELECT COALESCE(SUM(total), 0) AS total
-                FROM homepe_{$baseId}.venda
+                FROM homepet_{$baseId}.venda
                 WHERE estabelecimento_id = :estab
                   AND DATE(data) BETWEEN :inicio AND :fim
                   AND status NOT IN ('Carrinho', 'Cancelada')";
@@ -136,9 +136,9 @@ class VendaRepository extends ServiceEntityRepository
         $sql = "SELECT v.id, v.pet_id, v.total, v.data, v.origem, v.observacao,
                        p.nome AS pet_nome,
                        c.nome AS cliente_nome
-                FROM homepe_{$baseId}.venda v
-                LEFT JOIN homepe_{$baseId}.pet    p ON p.id = v.pet_id
-                LEFT JOIN homepe_{$baseId}.cliente c ON c.id = p.dono_id
+                FROM homepet_{$baseId}.venda v
+                LEFT JOIN homepet_{$baseId}.pet    p ON p.id = v.pet_id
+                LEFT JOIN homepet_{$baseId}.cliente c ON c.id = p.dono_id
                 WHERE v.estabelecimento_id = :baseId
                   AND v.status = 'Carrinho'
                 ORDER BY v.data DESC";
@@ -260,9 +260,9 @@ class VendaRepository extends ServiceEntityRepository
                        v.metodo_pagamento, v.origem, v.observacao,
                        p.nome  AS pet_nome,
                        c.nome  AS cliente_nome
-                FROM homepe_{$baseId}.venda v
-                LEFT JOIN homepe_{$baseId}.pet    p ON p.id = v.pet_id
-                LEFT JOIN homepe_{$baseId}.cliente c ON c.id = p.dono_id
+                FROM homepet_{$baseId}.venda v
+                LEFT JOIN homepet_{$baseId}.pet    p ON p.id = v.pet_id
+                LEFT JOIN homepet_{$baseId}.cliente c ON c.id = p.dono_id
                 WHERE v.estabelecimento_id = :estab
                   AND v.pet_id = :petId
                   AND v.status NOT IN ('Aberta', 'Cancelada')
@@ -283,9 +283,9 @@ class VendaRepository extends ServiceEntityRepository
                        v.metodo_pagamento, v.origem, v.observacao,
                        p.nome  AS pet_nome,
                        c.nome  AS cliente_nome
-                FROM homepe_{$baseId}.venda v
-                LEFT JOIN homepe_{$baseId}.pet    p ON p.id = v.pet_id
-                LEFT JOIN homepe_{$baseId}.cliente c ON c.id = p.dono_id
+                FROM homepet_{$baseId}.venda v
+                LEFT JOIN homepet_{$baseId}.pet    p ON p.id = v.pet_id
+                LEFT JOIN homepet_{$baseId}.cliente c ON c.id = p.dono_id
                 WHERE v.estabelecimento_id = :estab
                   AND v.pet_id = :petId
                   AND v.status = '$status'
@@ -304,7 +304,7 @@ class VendaRepository extends ServiceEntityRepository
     {
         $sql = "SELECT COUNT(*) AS quantidade,
                        COALESCE(SUM(total), 0) AS total
-                FROM homepe_{$baseId}.venda
+                FROM homepet_{$baseId}.venda
                 WHERE estabelecimento_id = :baseId
                   AND DATE(data) = :data
                   AND status NOT IN ('Carrinho', 'Cancelada')";
