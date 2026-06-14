@@ -73,6 +73,7 @@ security:
         - { path: ^/usuario/cadastrar, roles: PUBLIC_ACCESS }
         - { path: ^/assinatura/*, roles: PUBLIC_ACCESS }
         - { path: ^/pagamento/*, roles: PUBLIC_ACCESS }
+        - { path: ^/dashboard/nota-fiscal/*, roles: PUBLIC_ACCESS }
         #Roles
         - { path: ^/*, roles: [IS_AUTHENTICATED] }
 
