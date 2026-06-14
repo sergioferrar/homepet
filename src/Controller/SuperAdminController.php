@@ -3,11 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Estabelecimento;
-use App\Entity\Fatura;
-use App\Repository\InvoiceRepository;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -31,7 +29,7 @@ class SuperAdminController extends DefaultController
 
         // Buscar todos estabelecimentos usando método otimizado do repository
         $estabelecimentoRepo = $this->getRepositorio(Estabelecimento::class);
-        
+
         // Usa método customizado se existir, senão usa QueryBuilder
         if (method_exists($estabelecimentoRepo, 'listaEstabelecimentosGestao')) {
             $estabelecimentos = $estabelecimentoRepo->listaEstabelecimentosGestao();
@@ -52,10 +50,9 @@ class SuperAdminController extends DefaultController
         foreach ($estabelecimentos as $est) {
             // Agora $est é um array, não objeto
             $diasCadastro = $hoje->diff(new \DateTime($est['dataCadastro']))->days;
-            
+
             $dataPlanoFim = new \DateTime($est['dataPlanoFim']);
             $diasExpiracao = $hoje->diff($dataPlanoFim)->days;
-            
 
             // Novos (menos de 30 dias)
             if ($diasCadastro <= 30) {
@@ -78,18 +75,18 @@ class SuperAdminController extends DefaultController
 
         // Estatísticas de invoices (SIMPLIFICADO - sem InvoiceService)
         $invoiceRepository = $this->getRepositorio(\App\Entity\Fatura::class);
-        
+
         try {
             // Buscar estatísticas direto do repository
             $invoicesPorStatus = $invoiceRepository->getInvoicesPorStatus();
-            
+
             $invoiceStats = [
                 'total_pendente' => 0,
                 'total_pago' => 0,
                 'valor_pendente' => 0,
                 'valor_recebido' => 0,
             ];
-            
+
             foreach ($invoicesPorStatus as $stat) {
                 if ($stat['status'] === 'pendente') {
                     $invoiceStats['total_pendente'] = $stat['quantidade'];
@@ -164,22 +161,22 @@ class SuperAdminController extends DefaultController
         switch ($filtro) {
             case 'novos':
                 $qb->where('e.dataCadastro >= :data')
-                   ->setParameter('data', (new \DateTime('-30 days')));
+                    ->setParameter('data', (new \DateTime('-30 days')));
                 break;
             case 'ativos':
                 $qb->where('e.dataPlanoFim > :hoje')
-                   ->andWhere('e.status = :status')
-                   ->setParameter('hoje', $hoje)
-                   ->setParameter('status', 'Ativo');
+                    ->andWhere('e.status = :status')
+                    ->setParameter('hoje', $hoje)
+                    ->setParameter('status', 'Ativo');
                 break;
             case 'expirados':
                 $qb->where('e.dataPlanoFim < :hoje')
-                   ->setParameter('hoje', $hoje);
+                    ->setParameter('hoje', $hoje);
                 break;
             case 'proximos_vencer':
                 $qb->where('e.dataPlanoFim BETWEEN :hoje AND :limite')
-                   ->setParameter('hoje', $hoje)
-                   ->setParameter('limite', (new \DateTime('+15 days')));
+                    ->setParameter('hoje', $hoje)
+                    ->setParameter('limite', (new \DateTime('+15 days')));
                 break;
         }
 
@@ -202,7 +199,7 @@ class SuperAdminController extends DefaultController
         }
 
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($id);
-        
+
         if (!$estabelecimento) {
             throw $this->createNotFoundException('Estabelecimento não encontrado');
         }
@@ -226,10 +223,10 @@ class SuperAdminController extends DefaultController
 
         return $this->render('superadmin/estabelecimento_detalhes.html.twig', [
             'estabelecimento' => $estabelecimento,
-            'invoices'        => $invoices,
-            'dias_expiracao'  => $diasExpiracao,
-            'expirado'        => $expirado,
-            'usuario_email'   => $usuarioAdmin ? $usuarioAdmin->getEmail() : null,
+            'invoices' => $invoices,
+            'dias_expiracao' => $diasExpiracao,
+            'expirado' => $expirado,
+            'usuario_email' => $usuarioAdmin ? $usuarioAdmin->getEmail() : null,
         ]);
     }
 
@@ -248,7 +245,7 @@ class SuperAdminController extends DefaultController
 
         if ($status !== 'todos') {
             $qb->where('i.status = :status')
-               ->setParameter('status', $status);
+                ->setParameter('status', $status);
         }
 
         $qb->orderBy('i.dataEmissao', 'DESC');
@@ -270,7 +267,7 @@ class SuperAdminController extends DefaultController
         }
 
         $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($id);
-        
+
         if (!$invoice) {
             return new JsonResponse(['success' => false, 'error' => 'Invoice não encontrado'], 404);
         }
@@ -279,7 +276,7 @@ class SuperAdminController extends DefaultController
             // Marcar como pago manualmente (SEM InvoiceService)
             $invoice->setStatus('pago');
             $invoice->setDataPagamento(new \DateTime());
-            
+
             $em = $this->getDoctrine()->getManager();
             $em->persist($invoice);
             $em->flush();
@@ -300,21 +297,21 @@ class SuperAdminController extends DefaultController
         }
 
         $ano = $request->query->get('ano', date('Y'));
-        
+
         $invoiceRepository = $this->getRepositorio(\App\Entity\Fatura::class);
-        
+
         // Receita por mês do ano
         $receitaPorMes = [];
         for ($mes = 1; $mes <= 12; $mes++) {
             $inicio = new \DateTime("{$ano}-{$mes}-01");
             $fim = new \DateTime($inicio->format('Y-m-t'));
-            
+
             try {
                 $receita = $invoiceRepository->getTotalReceitaMes($inicio, $fim);
             } catch (\Exception $e) {
                 $receita = 0;
             }
-            
+
             $receitaPorMes[] = [
                 'mes' => $mes,
                 'nome_mes' => $inicio->format('M'),
@@ -338,7 +335,7 @@ class SuperAdminController extends DefaultController
         }
 
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($id);
-        
+
         if (!$estabelecimento) {
             $this->addFlash('error', 'Estabelecimento não encontrado.');
             return $this->redirectToRoute('superadmin_dashboard');
@@ -348,12 +345,12 @@ class SuperAdminController extends DefaultController
         // para restauração fiel ao sair do modo impersonation
         $request->getSession()->set('superadmin_original_context', [
             // chave camelCase usada pelo LoginController
-            'estabelecimentoId'   => $request->getSession()->get('estabelecimentoId'),
+            'estabelecimentoId' => $request->getSession()->get('estabelecimentoId'),
             // chave snake_case usada por DefaultController::getIdBase() e TenantContext
-            'estabelecimento_id'  => $request->getSession()->get('estabelecimento_id'),
-            'isSuperAdmin'        => true,
-            'accessLevel'         => $request->getSession()->get('accessLevel'),
-            'user_status'         => $request->getSession()->get('user_status'),
+            'estabelecimento_id' => $request->getSession()->get('estabelecimento_id'),
+            'isSuperAdmin' => true,
+            'accessLevel' => $request->getSession()->get('accessLevel'),
+            'user_status' => $request->getSession()->get('user_status'),
         ]);
 
         // Carregar configurações do estabelecimento impersonado (mailer, gateway, etc.)
@@ -367,7 +364,7 @@ class SuperAdminController extends DefaultController
                 }
                 // Configurações de gateway de pagamento
                 if ($config->getTipo() === 'gateway_payment') {
-                    $_ENV[strtoupper($config->getChave())]    = $config->getValor();
+                    $_ENV[strtoupper($config->getChave())] = $config->getValor();
                     $_SERVER[strtoupper($config->getChave())] = $config->getValor();
                 }
             }
@@ -377,15 +374,15 @@ class SuperAdminController extends DefaultController
         //   - estabelecimentoId  (camelCase) → lida pelo LoginController e template Twig
         //   - estabelecimento_id (snake_case) → lida por DefaultController::getIdBase()
         //                                       e TenantContext::loadFromSession()
-        $request->getSession()->set('estabelecimentoId',  $id);
+        $request->getSession()->set('estabelecimentoId', $id);
         $request->getSession()->set('estabelecimento_id', $id);
 
         // Demais flags de contexto
-        $request->getSession()->set('isSuperAdmin',              false);
-        $request->getSession()->set('accessLevel',               'Admin');
-        $request->getSession()->set('user_status',               'Admin');
+        $request->getSession()->set('isSuperAdmin', false);
+        $request->getSession()->set('accessLevel', 'Admin');
+        $request->getSession()->set('user_status', 'Admin');
         $request->getSession()->set('impersonating_establishment', true);
-        $request->getSession()->set('impersonating_name',        $estabelecimento->getRazaoSocial());
+        $request->getSession()->set('impersonating_name', $estabelecimento->getRazaoSocial());
 
         $this->addFlash('info', "Você está acessando o estabelecimento: {$estabelecimento->getRazaoSocial()}");
 
@@ -442,27 +439,27 @@ class SuperAdminController extends DefaultController
         );
 
         // ── 4. Calcula dias restantes para personalizar o tom do e-mail ────
-        $hoje         = new \DateTime();
-        $dataFim      = $estabelecimento->getDataPlanoFim();
-        $diff         = $hoje->diff($dataFim);
+        $hoje = new \DateTime();
+        $dataFim = $estabelecimento->getDataPlanoFim();
+        $diff = $hoje->diff($dataFim);
         $diasRestantes = (int) $diff->days;
-        $expirado      = $dataFim < $hoje;
+        $expirado = $dataFim < $hoje;
 
         // ── 5. Renderiza o template de e-mail ─────────────────────────────
         $html = $this->renderView('emails/renovacao_assinatura.html.twig', [
-            'estabelecimento'  => $estabelecimento,
-            'usuario'          => $usuario,
-            'payment_link'     => $paymentLink,
-            'dias_restantes'   => $diasRestantes,
-            'expirado'         => $expirado,
-            'data_expiracao'   => $dataFim,
+            'estabelecimento' => $estabelecimento,
+            'usuario' => $usuario,
+            'payment_link' => $paymentLink,
+            'dias_restantes' => $diasRestantes,
+            'expirado' => $expirado,
+            'data_expiracao' => $dataFim,
         ]);
 
         // ── 6. Envia o e-mail ──────────────────────────────────────────────
         try {
             $assunto = $expirado
-                ? 'Sua assinatura expirou — Renove agora | System Home Pet'
-                : "Sua assinatura vence em {$diasRestantes} dia(s) — System Home Pet";
+            ? 'Sua assinatura expirou — Renove agora | System Home Pet'
+            : "Sua assinatura vence em {$diasRestantes} dia(s) — System Home Pet";
 
             $emailService->sendEmail($usuario->getEmail(), $assunto, $html);
 
@@ -491,12 +488,12 @@ class SuperAdminController extends DefaultController
         $originalContext = $request->getSession()->get('superadmin_original_context');
 
         // Restaura as duas variantes de chave usadas pelo sistema
-        $request->getSession()->set('estabelecimentoId',  $originalContext['estabelecimentoId']  ?? null);
+        $request->getSession()->set('estabelecimentoId', $originalContext['estabelecimentoId'] ?? null);
         $request->getSession()->set('estabelecimento_id', $originalContext['estabelecimento_id'] ?? null);
 
-        $request->getSession()->set('isSuperAdmin',  $originalContext['isSuperAdmin']  ?? true);
-        $request->getSession()->set('accessLevel',   $originalContext['accessLevel']   ?? 'Super Admin');
-        $request->getSession()->set('user_status',   $originalContext['user_status']   ?? 'Super Admin');
+        $request->getSession()->set('isSuperAdmin', $originalContext['isSuperAdmin'] ?? true);
+        $request->getSession()->set('accessLevel', $originalContext['accessLevel'] ?? 'Super Admin');
+        $request->getSession()->set('user_status', $originalContext['user_status'] ?? 'Super Admin');
 
         $request->getSession()->remove('impersonating_establishment');
         $request->getSession()->remove('impersonating_name');
@@ -524,7 +521,7 @@ class SuperAdminController extends DefaultController
         }
 
         return $this->render('superadmin/configuracoes_globais.html.twig', [
-            'lgpd'     => $this->lerConfigsDbal('lgpd'),
+            'lgpd' => $this->lerConfigsDbal('lgpd'),
             'tracking' => $this->lerConfigsDbal('tracking'),
         ]);
     }
@@ -542,10 +539,10 @@ class SuperAdminController extends DefaultController
 
         $campos = [
             'politica_privacidade' => 'Texto da Política de Privacidade — LGPD',
-            'termos_uso'           => 'Texto dos Termos de Uso',
-            'dpo_nome'             => 'Nome do Encarregado de Dados (DPO)',
-            'dpo_email'            => 'E-mail do DPO para solicitações de titulares',
-            'cookie_banner_ativo'  => 'Exibe banner de consentimento de cookies nas páginas públicas',
+            'termos_uso' => 'Texto dos Termos de Uso',
+            'dpo_nome' => 'Nome do Encarregado de Dados (DPO)',
+            'dpo_email' => 'E-mail do DPO para solicitações de titulares',
+            'cookie_banner_ativo' => 'Exibe banner de consentimento de cookies nas páginas públicas',
         ];
 
         try {
@@ -568,10 +565,10 @@ class SuperAdminController extends DefaultController
         $this->restauraLoginDB();
 
         $campos = [
-            'google_analytics_id'   => 'ID de medição do Google Analytics 4 (ex: G-XXXXXXXXXX)',
+            'google_analytics_id' => 'ID de medição do Google Analytics 4 (ex: G-XXXXXXXXXX)',
             'google_tag_manager_id' => 'ID do Google Tag Manager (ex: GTM-XXXXXXX)',
-            'facebook_pixel_id'     => 'ID do Pixel do Facebook/Meta (ex: 1234567890)',
-            'google_ads_id'         => 'ID de conversão do Google Ads (ex: AW-XXXXXXXXX)',
+            'facebook_pixel_id' => 'ID do Pixel do Facebook/Meta (ex: 1234567890)',
+            'google_ads_id' => 'ID de conversão do Google Ads (ex: AW-XXXXXXXXX)',
         ];
 
         try {
@@ -582,6 +579,41 @@ class SuperAdminController extends DefaultController
         }
     }
 
+    /**
+     * @Route("/superadmin/estabelecimento/{id}/alterar-status", name="superadmin_estabelecimento_alterar_status")
+     */
+    public function alterarStatusEstabelecimento(
+        int $id,
+        Request $request,
+        EstabelecimentoRepository $estabelecimentoRepository,
+        EntityManagerInterface $em
+    ): Response {
+        $estabelecimento = $estabelecimentoRepository->find($id);
+
+        if (!$estabelecimento) {
+            throw $this->createNotFoundException('Estabelecimento não encontrado.');
+        }
+
+        $novoStatus = $request->request->get('status');
+        $statusValidos = ['Ativo', 'Suspenso', 'Inativo'];
+
+        if (!in_array($novoStatus, $statusValidos, true)) {
+            $this->addFlash('danger', 'Status inválido.');
+            return $this->redirectToRoute('superadmin_estabelecimento_detalhes', ['id' => $id]);
+        }
+
+        // Se reativando um plano expirado, estende 30 dias
+        if ($novoStatus === 'Ativo' && $estabelecimento->getDataPlanoFim() < new \DateTime()) {
+            $estabelecimento->setDataPlanoFim(new \DateTime('+30 days'));
+        }
+
+        $estabelecimento->setStatus($novoStatus);
+        $em->flush();
+
+        $this->addFlash('success', "Status alterado para \"{$novoStatus}\" com sucesso.");
+
+        return $this->redirectToRoute('superadmin_estabelecimento_detalhes', ['id' => $id]);
+    }
     // ── Helpers privados ─────────────────────────────────────────────────────
 
     private function upsertConfigs(string $tipo, array $campos, Request $request): void
@@ -613,10 +645,10 @@ class SuperAdminController extends DefaultController
                 ON DUPLICATE KEY UPDATE `valor` = VALUES(`valor`)
             ", [
                 'estab' => self::GLOBAL_ESTAB_ID,
-                'tipo'  => $tipo,
+                'tipo' => $tipo,
                 'chave' => $chave,
                 'valor' => $valor,
-                'obs'   => $observacao,
+                'obs' => $observacao,
             ]);
         }
     }
@@ -634,7 +666,7 @@ class SuperAdminController extends DefaultController
                 $mapa[$row['chave']] = $row['valor'];
             }
             return $mapa;
-        } catch (\Throwable) {
+        } catch (\Throwable ) {
             return [];
         }
     }
