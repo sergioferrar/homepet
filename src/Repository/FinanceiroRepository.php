@@ -27,7 +27,7 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function findFinanceiro($baseId, int $financeiroId): ?Financeiro
     {
         $sql = "SELECT * 
-            FROM {$_ENV['DBNAMETENANT']}.venda 
+            FROM homepe_{$baseId}.venda 
             WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $stmt = $this->conn->executeQuery($sql, ['id' => $financeiroId]);
@@ -54,7 +54,7 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function findAllFinanceiro($baseId, $financeiroId): array
     {
         $sql = "SELECT id, descricao, toal, data, pet_id, pet_nome
-                FROM {$_ENV['DBNAMETENANT']}.venda
+                FROM homepe_{$baseId}.venda
                 LEFT JOIN pet ON (pet.id = venda.pet_id)
                 WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
@@ -70,9 +70,9 @@ class FinanceiroRepository extends ServiceEntityRepository
                     GROUP_CONCAT(DISTINCT p.nome SEPARATOR ', ') AS pets,
                     SUM(f.total) AS total_valor,
                     DATE(f.data) AS data
-                FROM {$_ENV['DBNAMETENANT']}.venda f
-                LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
-                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                FROM homepe_{$baseId}.venda f
+                LEFT JOIN homepe_{$baseId}.pet p ON f.pet_id = p.id
+                LEFT JOIN homepe_{$baseId}.cliente c ON p.dono_id = c.id
                 WHERE f.estabelecimento_id = :baseId 
                   AND DATE(f.data) = :data
                   AND f.status NOT IN ('Inativa', 'Pendente', 'Carrinho')
@@ -90,7 +90,7 @@ class FinanceiroRepository extends ServiceEntityRepository
    public function getRelatorioPorPeriodo($baseId, \DateTime $dataInicio, \DateTime $dataFim): array
     {
         $sql = "SELECT DATE(f.data) as data, SUM(f.total) as total
-                FROM {$_ENV['DBNAMETENANT']}.venda f
+                FROM homepe_{$baseId}.venda f
                 WHERE f.estabelecimento_id = :baseId 
                   AND f.data BETWEEN :dataInicio AND :dataFim
                   AND f.status NOT IN ('Inativa', 'Pendente', 'Carrinho')
@@ -120,7 +120,7 @@ class FinanceiroRepository extends ServiceEntityRepository
             : (int) ($_POST['quantidade_diarias'] ?? 1);
 
         // SQL base - insere na tabela venda
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.venda 
+        $sql = "INSERT INTO homepe_{$baseId}.venda 
                 (estabelecimento_id, pet_id, total, data, status, inativar, origem) 
                 VALUES (:estabelecimento_id, :pet_id, :total, :data, :status, :inativar, :origem)";
 
@@ -156,7 +156,7 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function update($baseId, Financeiro $financeiro): void
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.financeiro 
+        $sql = "UPDATE homepe_{$baseId}.financeiro 
                 SET descricao = :descricao, valor = :valor, data = :data, pet_id = :pet_id 
                 WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
@@ -176,14 +176,14 @@ class FinanceiroRepository extends ServiceEntityRepository
      */
     public function delete($baseId, int $id): void
     {
-        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}.financeiro WHERE estabelecimento_id = '{$baseId}' AND id = :id";
+        $sql = "DELETE FROM homepe_{$baseId}.financeiro WHERE estabelecimento_id = '{$baseId}' AND id = :id";
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
     public function totalAgendamento($baseId)
     {
         $sql = "SELECT COUNT(*) AS totalAgendamento
-        FROM {$_ENV['DBNAMETENANT']}.agendamento
+        FROM homepe_{$baseId}.agendamento
         WHERE estabelecimento_id = '{$baseId}' AND concluido = 1";
 
         $query = $this->conn->executeQuery($sql);
@@ -193,7 +193,7 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function totalAgendamentoDia($baseId)
     {
         $sql = "SELECT COUNT(*) AS totalAgendamento
-        FROM {$_ENV['DBNAMETENANT']}.agendamento
+        FROM homepe_{$baseId}.agendamento
         WHERE estabelecimento_id = '{$baseId}' AND concluido = 1 AND DATE(data) = DATE(NOW())";
 
         $query = $this->conn->executeQuery($sql);
@@ -203,7 +203,7 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function totalAnimais($baseId)
     {
         $sql = "SELECT COUNT(*) AS totalAnimal
-        FROM {$_ENV['DBNAMETENANT']}.pet
+        FROM homepe_{$baseId}.pet
         WHERE estabelecimento_id = '{$baseId}'";
 
         $query = $this->conn->query($sql);
@@ -213,7 +213,7 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function totalLucro($baseId)
     {
         $sql = "SELECT sum(valor) AS lucroTotal
-        FROM {$_ENV['DBNAMETENANT']}.financeiro
+        FROM homepe_{$baseId}.financeiro
         WHERE estabelecimento_id = '{$baseId}'";
 
         $query = $this->conn->query($sql);
@@ -226,7 +226,7 @@ class FinanceiroRepository extends ServiceEntityRepository
         $ano = $ano ?? date('Y');
 
         $sql = "SELECT SUM(total) AS lucroTotal
-                FROM {$_ENV['DBNAMETENANT']}.venda
+                FROM homepe_{$baseId}.venda
                 WHERE estabelecimento_id = :baseId
                   AND MONTH(data) = :mes
                   AND YEAR(data) = :ano
@@ -246,7 +246,7 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function lucroDiario($baseId)
     {
         $sql = "SELECT SUM(total) as valor, data
-        FROM {$_ENV['DBNAMETENANT']}.venda
+        FROM homepe_{$baseId}.venda
         WHERE estabelecimento_id = '{$baseId}'
         GROUP BY data";
 
@@ -256,7 +256,7 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function verificaPagamentoExistente($baseId, $petId, $valor, $dataReferencia): bool
     {
-        $sql = "SELECT COUNT(*) FROM {$_ENV['DBNAMETENANT']}.financeiro
+        $sql = "SELECT COUNT(*) FROM homepe_{$baseId}.financeiro
                 WHERE estabelecimento_id = '{$baseId}' 
                     AND pet_id = :pet_id
                     AND valor = :valor
@@ -272,7 +272,7 @@ class FinanceiroRepository extends ServiceEntityRepository
 
     public function somarPorDescricao($baseId, $descricaoParcial, \DateTime $inicio, \DateTime $fim): float
     {
-        $sql = "SELECT SUM(valor) FROM {$_ENV['DBNAMETENANT']}.financeiro
+        $sql = "SELECT SUM(valor) FROM homepe_{$baseId}.financeiro
                 WHERE estabelecimento_id = :base_id
                   AND descricao LIKE :descricao
                   AND data BETWEEN :inicio AND :fim
@@ -289,7 +289,7 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function buscarPorPet(int $baseId, int $petId): array
     {
         $sql = "SELECT * 
-                FROM {$_ENV['DBNAMETENANT']}.financeiro 
+                FROM homepe_{$baseId}.financeiro 
                 WHERE estabelecimento_id = :baseId AND pet_id = :petId
                 ORDER BY data DESC";
 
@@ -303,9 +303,9 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function findTotalByDate(int $baseId, $data): array
     {
         $sql = "SELECT f.id, DATE(f.data) AS data, SUM(f.total) AS total_valor, c.nome AS dono_nome, GROUP_CONCAT(DISTINCT p.nome SEPARATOR ', ') AS pets
-            FROM {$_ENV['DBNAMETENANT']}.venda f
-            LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
-            LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+            FROM homepe_{$baseId}.venda f
+            LEFT JOIN homepe_{$baseId}.pet p ON f.pet_id = p.id
+            LEFT JOIN homepe_{$baseId}.cliente c ON p.dono_id = c.id
             WHERE f.estabelecimento_id = $baseId
               AND DATE(f.data) = DATE('{$data}')
               AND f.status NOT IN ('Inativa', 'Pendente', 'Aberta')
@@ -319,9 +319,9 @@ class FinanceiroRepository extends ServiceEntityRepository
     public function findTotalByDateAndOrigem(int $baseId, $data, string $origem): array
     {
         $sql = "SELECT f.id, DATE(f.data) AS data, SUM(f.total) AS total_valor, c.nome AS dono_nome, GROUP_CONCAT(DISTINCT p.nome SEPARATOR ', ') AS pets, f.origem
-            FROM {$_ENV['DBNAMETENANT']}.venda f
-            LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
-            LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+            FROM homepe_{$baseId}.venda f
+            LEFT JOIN homepe_{$baseId}.pet p ON f.pet_id = p.id
+            LEFT JOIN homepe_{$baseId}.cliente c ON p.dono_id = c.id
             WHERE f.estabelecimento_id = $baseId
               AND DATE(f.data) = DATE('{$data}')
               AND f.origem = :origem
@@ -337,7 +337,7 @@ class FinanceiroRepository extends ServiceEntityRepository
 
 public function inativar($baseId, int $id): void
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.venda 
+        $sql = "UPDATE homepe_{$baseId}.venda 
                 SET status = 'Pendente', inativar = 1
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
@@ -353,9 +353,9 @@ public function inativar($baseId, int $id): void
         $sql = "SELECT f.id, f.observacao AS descricao, f.total, f.data, f.pet_id, 
                        p.nome AS pet_nome, c.nome AS dono_nome, COALESCE(f.metodo_pagamento, 'Dinheiro') AS metodo_pagamento,
                        'venda' AS tipo
-                  FROM {$_ENV['DBNAMETENANT']}.venda f
-             LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
-             LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                  FROM homepe_{$baseId}.venda f
+             LEFT JOIN homepe_{$baseId}.pet p ON f.pet_id = p.id
+             LEFT JOIN homepe_{$baseId}.cliente c ON p.dono_id = c.id
                  WHERE f.estabelecimento_id = :baseId
                    AND f.status = 'Inativa'";
 
@@ -375,7 +375,7 @@ public function inativar($baseId, int $id): void
     public function buscarAtivosPorPet(int $baseId, int $petId): array
     {
         $sql = "SELECT * 
-                FROM {$_ENV['DBNAMETENANT']}.venda 
+                FROM homepe_{$baseId}.venda 
                 WHERE estabelecimento_id = :baseId 
                   AND pet_id = :petId
                   AND status NOT IN ('Inativa', 'Pendente', 'Aberta')

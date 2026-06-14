@@ -40,8 +40,8 @@ class PetRepository extends ServiceEntityRepository
                         COALESCE(c.bairro, ''), ' - ',
                         COALESCE(c.cidade, '')
                     ) AS dono_endereco
-                FROM {$_ENV['DBNAMETENANT']}.pet p
-                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                FROM homepe_{$baseId}.pet p
+                LEFT JOIN homepe_{$baseId}.cliente c ON p.dono_id = c.id
                 WHERE p.estabelecimento_id = :baseId 
                   AND p.id = :petId";
 
@@ -59,8 +59,8 @@ class PetRepository extends ServiceEntityRepository
     public function findAllPets($baseId): array
     {
         $sql = "SELECT p.id, CONCAT(p.nome, ' - ', c.nome) AS nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.data_nascimento, p.observacoes, c.nome as dono_nome
-                FROM {$_ENV['DBNAMETENANT']}.pet p
-                JOIN {$_ENV['DBNAMETENANT']}.cliente c ON (p.dono_id = c.id)
+                FROM homepe_{$baseId}.pet p
+                JOIN homepe_{$baseId}.cliente c ON (p.dono_id = c.id)
                 WHERE p.estabelecimento_id = '{$baseId}'";
 
         $stmt = $this->conn->executeQuery($sql);
@@ -70,8 +70,8 @@ class PetRepository extends ServiceEntityRepository
     public function pesquisarPetsOuTutor($baseId, string $termo): array
     {
         $sql = "SELECT p.id, p.nome, p.especie, p.raca, c.nome AS dono_nome
-                FROM {$_ENV['DBNAMETENANT']}.pet p
-                JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                FROM homepe_{$baseId}.pet p
+                JOIN homepe_{$baseId}.cliente c ON p.dono_id = c.id
                 WHERE p.estabelecimento_id = :baseId
                   AND (p.nome LIKE :termo OR c.nome LIKE :termo)
                 ORDER BY p.nome ASC";
@@ -86,7 +86,7 @@ class PetRepository extends ServiceEntityRepository
 
     public function save($baseId, Pet $pet): void
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.pet 
+        $sql = "INSERT INTO homepe_{$baseId}.pet 
                 (estabelecimento_id, nome, especie, sexo, raca, porte, idade, observacoes, dono_id, peso, castrado, data_nascimento) 
                 VALUES (:estabelecimento_id, :nome, :especie, :sexo, :raca, :porte, :idade, :observacoes, :dono_id, :peso, :castrado, :data_nascimento)";
         
@@ -109,7 +109,7 @@ class PetRepository extends ServiceEntityRepository
 
     public function update($baseId, Pet $pet): void
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.pet 
+        $sql = "UPDATE homepe_{$baseId}.pet 
                 SET nome = :nome, especie = :especie, sexo = :sexo, raca = :raca, porte = :porte, 
                     idade = :idade, observacoes = :observacoes, dono_id = :dono_id, 
                     peso = :peso, castrado = :castrado, data_nascimento = :data_nascimento
@@ -137,7 +137,7 @@ class PetRepository extends ServiceEntityRepository
 
     public function delete($baseId, int $id): void
     {
-        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}.pet WHERE estabelecimento_id = '{$baseId}' AND id = :id";
+        $sql = "DELETE FROM homepe_{$baseId}.pet WHERE estabelecimento_id = '{$baseId}' AND id = :id";
         
         
         $stmt = $this->conn->prepare($sql);
@@ -147,7 +147,7 @@ class PetRepository extends ServiceEntityRepository
     }
     public function countTotalPets($baseId): int
     {
-        $sql = "SELECT COUNT(*) FROM {$_ENV['DBNAMETENANT']}.pet WHERE estabelecimento_id = :baseId";
+        $sql = "SELECT COUNT(*) FROM homepe_{$baseId}.pet WHERE estabelecimento_id = :baseId";
         return (int) $this->conn->fetchOne($sql, ['baseId' => $baseId]);
     }
 
@@ -159,8 +159,8 @@ class PetRepository extends ServiceEntityRepository
                 p.id, p.nome, p.especie, p.raca,
                 c.nome AS tutor,
                 DATE_FORMAT(p.data_cadastro, '%d/%m') AS data
-            FROM {$_ENV['DBNAMETENANT']}.pet p
-            LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id
+            FROM homepe_{$baseId}.pet p
+            LEFT JOIN homepe_{$baseId}.cliente c ON c.id = p.dono_id
             WHERE p.estabelecimento_id = :idBase
             ORDER BY p.data_cadastro DESC
             LIMIT 5
@@ -175,7 +175,7 @@ class PetRepository extends ServiceEntityRepository
     public function contarPetsPorEspecie($baseId): array
     {
         $sql = "SELECT especie, COUNT(*) as total
-                FROM {$_ENV['DBNAMETENANT']}.pet
+                FROM homepe_{$baseId}.pet
                 WHERE estabelecimento_id = :baseId
                 GROUP BY especie";
 
@@ -194,7 +194,7 @@ class PetRepository extends ServiceEntityRepository
     public function buscarPetsPorCliente($baseId, $clienteId): array
     {
         $sql = "SELECT id, nome 
-                FROM {$_ENV['DBNAMETENANT']}.pet
+                FROM homepe_{$baseId}.pet
                 WHERE estabelecimento_id = :baseId AND dono_id = :clienteId
                 ORDER BY nome";
 
@@ -209,9 +209,9 @@ class PetRepository extends ServiceEntityRepository
     {
         $sql = "SELECT v.id, v.pet_id, v.tipo, v.data_aplicacao, v.data_validade,
                        p.nome as pet_nome, c.nome as tutor
-                FROM {$_ENV['DBNAMETENANT']}.vacina v
-                JOIN {$_ENV['DBNAMETENANT']}.pet p ON v.pet_id = p.id
-                JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                FROM homepe_{$baseId}.vacina v
+                JOIN homepe_{$baseId}.pet p ON v.pet_id = p.id
+                JOIN homepe_{$baseId}.cliente c ON p.dono_id = c.id
                 WHERE v.data_validade < CURDATE()
                   AND p.estabelecimento_id = :baseId
                 ORDER BY v.data_validade ASC";
@@ -226,8 +226,8 @@ class PetRepository extends ServiceEntityRepository
     public function listarPetsInternados($baseId): array
     {
         $sql = "SELECT p.id, p.nome, p.raca, p.especie, c.nome as tutor
-                FROM {$_ENV['DBNAMETENANT']}.pet p
-                JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.cliente_id = c.id
+                FROM homepe_{$baseId}.pet p
+                JOIN homepe_{$baseId}.cliente c ON p.cliente_id = c.id
                 WHERE p.internado = 1
                   AND p.estabelecimento_id = :baseId
                 ORDER BY p.nome";

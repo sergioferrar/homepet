@@ -20,9 +20,9 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         $sql = "SELECT f.id, 
                        CONCAT('Serviço para ', p.nome, ' - Dono: ', c.nome) AS descricao, 
                        f.valor, f.data, f.pet_id, p.nome as pet_nome, c.nome as dono_nome, f.metodo_pagamento
-                FROM {$_ENV['DBNAMETENANT']}.financeiropendente f
-                LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
-                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+                FROM homepe_{$baseId}.financeiropendente f
+                LEFT JOIN homepe_{$baseId}.pet p ON f.pet_id = p.id
+                LEFT JOIN homepe_{$baseId}.cliente c ON p.dono_id = c.id
                 WHERE f.estabelecimento_id = '{$baseId}' AND  DATE(f.data) = :data";
 
         $stmt = $this->conn->executeQuery($sql, ['data' => $data->format('Y-m-d')]);
@@ -33,7 +33,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     {
         // Buscar o registro pendente
         $sql = "SELECT * 
-            FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+            FROM homepe_{$baseId}.financeiropendente 
             WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $registroPendente = $this->conn->executeQuery($sql, ['id' => $id])->fetchAssociative();
@@ -43,7 +43,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         }
 
         // Verificar se existe uma venda pendente correspondente
-        $sqlVendaPendente = "SELECT id FROM {$_ENV['DBNAMETENANT']}.venda 
+        $sqlVendaPendente = "SELECT id FROM homepe_{$baseId}.venda 
                             WHERE estabelecimento_id = :baseId 
                               AND pet_id = :pet_id 
                               AND status = 'Pendente'
@@ -61,7 +61,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
         if ($vendaExistente) {
             // Atualiza a venda existente para 'Paga'
-            $sqlUpdate = "UPDATE {$_ENV['DBNAMETENANT']}.venda 
+            $sqlUpdate = "UPDATE homepe_{$baseId}.venda 
                          SET status = 'Paga', 
                              metodo_pagamento = :metodo_pagamento,
                              data = NOW()
@@ -74,13 +74,13 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
             ]);
         } else {
             // Se não existe venda pendente, cria uma nova venda com status 'Paga'
-            $sqlInsert = "INSERT INTO {$_ENV['DBNAMETENANT']}.venda 
+            $sqlInsert = "INSERT INTO homepe_{$baseId}.venda 
                           (estabelecimento_id, cliente, total, data, pet_id, metodo_pagamento, origem, status) 
                           VALUES (:estabelecimento_id, :cliente, :total, :data, :pet_id, :metodo_pagamento, :origem, :status)";
             
             // Buscar nome do cliente através do pet
-            $sqlCliente = "SELECT c.nome FROM {$_ENV['DBNAMETENANT']}.pet p 
-                           LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id 
+            $sqlCliente = "SELECT c.nome FROM homepe_{$baseId}.pet p 
+                           LEFT JOIN homepe_{$baseId}.cliente c ON p.dono_id = c.id 
                            WHERE p.id = :pet_id";
             $clienteNome = $this->conn->executeQuery($sqlCliente, ['pet_id' => $registroPendente['pet_id']])->fetchOne();
             
@@ -97,7 +97,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         }
 
         // Remover do financeiropendente
-        $sqlDelete = "DELETE FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+        $sqlDelete = "DELETE FROM homepe_{$baseId}.financeiropendente 
             WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $this->conn->executeQuery($sqlDelete, ['id' => $id]);
@@ -106,7 +106,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function findPendenteById($baseId, int $id)
     {
         $sql = "SELECT * 
-            FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+            FROM homepe_{$baseId}.financeiropendente 
             WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);
@@ -115,7 +115,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
     public function deletePendente($baseId, int $id): void
     {
-        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+        $sql = "DELETE FROM homepe_{$baseId}.financeiropendente 
             WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         $this->conn->executeQuery($sql, ['id' => $id]);
@@ -124,7 +124,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
     public function verificaServicoExistente($baseId, $agendamentoId){
         $sql = "SELECT id 
-            FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+            FROM homepe_{$baseId}.financeiropendente 
             WHERE estabelecimento_id = '{$baseId}' AND agendamento_id = $agendamentoId";
 
         $query = $this->conn->query($sql);
@@ -146,7 +146,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
             ? (int) $financeiro->getQuantidadeDiarias()
             : (int) ($_POST['quantidade_diarias'] ?? 1);
 
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiropendente 
+        $sql = "INSERT INTO homepe_{$baseId}.financeiropendente 
                 (estabelecimento_id, descricao, valor, data, pet_id, metodo_pagamento, agendamento_id, origem) 
                 VALUES (:estabelecimento_id, :descricao, :valor, :data, :pet_id, :metodo_pagamento, :agendamento_id, :origem)";
 
@@ -186,7 +186,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function findByBaseId($baseId, array $criteria): array
     {
         $sql = "SELECT id, descricao, valor, data, pet_id, metodo_pagamento, agendamento_id 
-                FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+                FROM homepe_{$baseId}.financeiropendente 
                 WHERE estabelecimento_id = '{$baseId}' AND agendamento_id = :agendamentoId";
         
         $stmt = $this->conn->executeQuery($sql, [
@@ -198,7 +198,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
     public function removeByBaseId($baseId, $agendamentoId): void
     {
-        $sql = "DELETE FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+        $sql = "DELETE FROM homepe_{$baseId}.financeiropendente 
                 WHERE estabelecimento_id = '{$baseId}' AND agendamento_id = :agendamentoId";
         
         $this->conn->executeQuery($sql, [
@@ -209,8 +209,8 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function findByClienteId(int $baseId, int $clienteId): array
     {
         $sql = "SELECT f.descricao, f.valor, f.data
-                FROM {$_ENV['DBNAMETENANT']}.financeiropendente f
-                JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
+                FROM homepe_{$baseId}.financeiropendente f
+                JOIN homepe_{$baseId}.pet p ON f.pet_id = p.id
                 WHERE f.estabelecimento_id = :baseId AND p.dono_id = :clienteId
                 ORDER BY f.data DESC";
 
@@ -223,9 +223,9 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function findAllClinica(int $baseId): array
     {
         $sql = "SELECT f.id, f.descricao, f.valor, f.valor AS total, f.data, p.nome AS pet_nome, c.nome AS dono_nome 
-            FROM {$_ENV['DBNAMETENANT']}.financeiropendente f
-            LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON f.pet_id = p.id
-            LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
+            FROM homepe_{$baseId}.financeiropendente f
+            LEFT JOIN homepe_{$baseId}.pet p ON f.pet_id = p.id
+            LEFT JOIN homepe_{$baseId}.cliente c ON p.dono_id = c.id
             WHERE f.estabelecimento_id = :baseId
               AND (f.status IS NULL OR f.status != 'inativo')
             ORDER BY f.data DESC";
@@ -239,7 +239,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function somarDebitosPendentes($baseId): float
     {
         $sql = "SELECT SUM(valor) as total
-                FROM {$_ENV['DBNAMETENANT']}.financeiropendente
+                FROM homepe_{$baseId}.financeiropendente
                 WHERE estabelecimento_id = :baseId";
 
         $stmt = $this->conn->prepare($sql);
@@ -251,7 +251,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
     public function inativar($baseId, int $id): void
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.financeiropendente 
+        $sql = "UPDATE homepe_{$baseId}.financeiropendente 
                 SET status = 'inativo'
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
@@ -265,7 +265,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function findInativos(int $baseId, int $petId): array
     {
         $sql = "SELECT * 
-                FROM {$_ENV['DBNAMETENANT']}.financeiropendente
+                FROM homepe_{$baseId}.financeiropendente
                 WHERE estabelecimento_id = :baseId
                   AND pet_id = :petId
                   AND status = 'inativo'
@@ -280,7 +280,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function findAtivosPorPet(int $baseId, int $petId): array
     {
         $sql = "SELECT * 
-                FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+                FROM homepe_{$baseId}.financeiropendente 
                 WHERE estabelecimento_id = :baseId 
                   AND pet_id = :petId
                   AND (status IS NULL OR status != 'inativo')
@@ -295,7 +295,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     public function findInativosPorPet(int $baseId, int $petId): array
     {
         $sql = "SELECT * 
-                FROM {$_ENV['DBNAMETENANT']}.financeiropendente 
+                FROM homepe_{$baseId}.financeiropendente 
                 WHERE estabelecimento_id = :baseId 
                   AND pet_id = :petId
                   AND status = 'inativo'
@@ -319,7 +319,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         float $total,
         ?int $petId
     ): void {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiropendente
+        $sql = "INSERT INTO homepe_{$baseId}.financeiropendente
                     (estabelecimento_id, descricao, valor, data, metodo_pagamento, origem, pet_id)
                 VALUES
                     (:estab, :descricao, :valor, NOW(), 'pendente', 'PDV', :pet_id)";

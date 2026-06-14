@@ -44,13 +44,13 @@ class BoxRepository extends ServiceEntityRepository
                 p.raca            AS pet_raca,
                 c.nome            AS dono_nome,
                 c.telefone        AS dono_telefone
-            FROM {$db}.box b
-            LEFT JOIN {$db}.internacao i
+            FROM homepe_{$baseId}.box b
+            LEFT JOIN homepe_{$baseId}.internacao i
                 ON  i.box      = b.numero
                 AND i.estabelecimento_id = :baseId
                 AND i.status   = 'ativa'
-            LEFT JOIN {$db}.pet p ON p.id = i.pet_id
-            LEFT JOIN {$db}.cliente c ON c.id = i.dono_id
+            LEFT JOIN homepe_{$baseId}.pet p ON p.id = i.pet_id
+            LEFT JOIN homepe_{$baseId}.cliente c ON c.id = i.dono_id
             WHERE b.estabelecimento_id = :baseId
             ORDER BY b.tipo, b.numero ASC
         ";
@@ -66,7 +66,7 @@ class BoxRepository extends ServiceEntityRepository
         $db  = $_ENV['DBNAMETENANT'];
         $sql = "
             SELECT b.id, b.numero, b.tipo, b.porte, b.estrutura, b.localizacao
-            FROM {$db}.box b
+            FROM homepe_{$baseId}.box b
             WHERE b.estabelecimento_id = :baseId
               AND b.status = 'disponivel'
             ORDER BY b.tipo, b.numero ASC
@@ -82,7 +82,7 @@ class BoxRepository extends ServiceEntityRepository
     {
         $db  = $_ENV['DBNAMETENANT'];
         $row = $this->conn->fetchAssociative(
-            "SELECT * FROM {$db}.box WHERE id = :id AND estabelecimento_id = :baseId",
+            "SELECT * FROM homepe_{$baseId}.box WHERE id = :id AND estabelecimento_id = :baseId",
             ['id' => $id, 'baseId' => $baseId]
         );
 
@@ -96,7 +96,7 @@ class BoxRepository extends ServiceEntityRepository
     {
         $db = $_ENV['DBNAMETENANT'];
         $this->conn->executeQuery(
-            "INSERT INTO {$db}.box
+            "INSERT INTO homepe_{$baseId}.box
                 (estabelecimento_id, numero, tipo, porte, estrutura, localizacao, status,
                  suporte_soro, suporte_oxigenio, tem_aquecimento, tem_camera,
                  peso_maximo_kg, valor_diaria, observacoes, created_at, updated_at)
@@ -132,7 +132,7 @@ class BoxRepository extends ServiceEntityRepository
     {
         $db = $_ENV['DBNAMETENANT'];
         $this->conn->executeQuery(
-            "UPDATE {$db}.box SET
+            "UPDATE homepe_{$baseId}.box SET
                 numero        = :numero,
                 tipo          = :tipo,
                 porte         = :porte,
@@ -175,7 +175,7 @@ class BoxRepository extends ServiceEntityRepository
     {
         $db = $_ENV['DBNAMETENANT'];
         $this->conn->executeQuery(
-            "UPDATE {$db}.box SET status = 'disponivel', updated_at = NOW()
+            "UPDATE homepe_{$baseId}.box SET status = 'disponivel', updated_at = NOW()
              WHERE numero = :numero AND estabelecimento_id = :eid",
             ['numero' => $numeroBox, 'eid' => $baseId]
         );
@@ -188,7 +188,7 @@ class BoxRepository extends ServiceEntityRepository
     {
         $db = $_ENV['DBNAMETENANT'];
         $this->conn->executeQuery(
-            "UPDATE {$db}.box SET status = 'ocupado', updated_at = NOW()
+            "UPDATE homepe_{$baseId}.box SET status = 'ocupado', updated_at = NOW()
              WHERE numero = :numero AND estabelecimento_id = :eid",
             ['numero' => $numeroBox, 'eid' => $baseId]
         );
@@ -201,7 +201,7 @@ class BoxRepository extends ServiceEntityRepository
     {
         $db = $_ENV['DBNAMETENANT'];
         $this->conn->executeQuery(
-            "UPDATE {$db}.box SET status = :status, updated_at = NOW()
+            "UPDATE homepe_{$baseId}.box SET status = :status, updated_at = NOW()
              WHERE id = :id AND estabelecimento_id = :eid",
             ['id' => $id, 'status' => $status, 'eid' => $baseId]
         );
@@ -214,7 +214,7 @@ class BoxRepository extends ServiceEntityRepository
     {
         $db = $_ENV['DBNAMETENANT'];
         $this->conn->executeQuery(
-            "DELETE FROM {$db}.box WHERE id = :id AND estabelecimento_id = :eid",
+            "DELETE FROM homepe_{$baseId}.box WHERE id = :id AND estabelecimento_id = :eid",
             ['id' => $id, 'eid' => $baseId]
         );
     }
@@ -227,7 +227,7 @@ class BoxRepository extends ServiceEntityRepository
         $db  = $_ENV['DBNAMETENANT'];
         $rows = $this->conn->fetchAllAssociative(
             "SELECT status, COUNT(*) AS total
-             FROM {$db}.box
+             FROM homepe_{$baseId}.box
              WHERE estabelecimento_id = :baseId
              GROUP BY status",
             ['baseId' => $baseId]

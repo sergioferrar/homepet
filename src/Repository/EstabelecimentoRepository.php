@@ -77,7 +77,7 @@ class EstabelecimentoRepository extends ServiceEntityRepository
     {
         $sql = "SELECT SCHEMA_NAME
             FROM INFORMATION_SCHEMA.SCHEMATA
-            WHERE SCHEMA_NAME ='{$_ENV['DBNAMETENANT']}'";
+            WHERE SCHEMA_NAME ='homepe_{$baseId}'";
 
         $query = $this->conn->query($sql);
         return $query->fetch();
@@ -89,8 +89,8 @@ class EstabelecimentoRepository extends ServiceEntityRepository
                        e.bairro, e.cidade, e.pais, e.cep, e.status,
                        e.dataCadastro, e.dataAtualizacao, e.planoId,
                        e.dataPlanoInicio, e.dataPlanoFim
-                FROM u199209817_login.estabelecimento e
-                LEFT JOIN u199209817_login.planos p ON p.id = e.planoId
+                FROM homepet_login.estabelecimento e
+                LEFT JOIN homepet_login.planos p ON p.id = e.planoId
                 WHERE e.id = :id";
 
         $stmt = $this->conn->executeQuery($sql, ['id' => $id]);

@@ -226,7 +226,7 @@ class InternacaoRepository extends ServiceEntityRepository
                 CONVERT(COALESCE(c.tipo, 'Consulta') USING utf8mb4)            AS tipo,
                 CONVERT(CONCAT('Atendimento - ', COALESCE(c.tipo,'Consulta')) USING utf8mb4) AS titulo,
                 CONVERT(NULLIF(c.observacoes, '') USING utf8mb4)               AS descricao
-            FROM {$db}.consulta c
+            FROM homepe_{$baseId}.consulta c
             WHERE c.estabelecimento_id = :baseId
               AND c.pet_id = :petId
 
@@ -237,7 +237,7 @@ class InternacaoRepository extends ServiceEntityRepository
                 CONVERT('Receita' USING utf8mb4)                 AS tipo,
                 CONVERT(COALESCE(r.resumo, 'Receita emitida') USING utf8mb4)   AS titulo,
                 CAST(NULL AS CHAR)                                AS descricao
-            FROM {$db}.receita r
+            FROM homepe_{$baseId}.receita r
             WHERE r.estabelecimento_id = :baseId
               AND r.pet_id = :petId
 
@@ -248,7 +248,7 @@ class InternacaoRepository extends ServiceEntityRepository
                 CONVERT(ie.tipo USING utf8mb4)                   AS tipo,
                 CONVERT(ie.titulo USING utf8mb4)                 AS titulo,
                 CONVERT(ie.descricao USING utf8mb4)              AS descricao
-            FROM {$db}.internacao_evento ie
+            FROM homepe_{$baseId}.internacao_evento ie
             WHERE ie.estabelecimento_id = :baseId
               AND ie.pet_id = :petId
 
@@ -279,7 +279,7 @@ class InternacaoRepository extends ServiceEntityRepository
                 ie.descricao,
                 ie.data_hora,
                 ie.criado_em
-            FROM {$db}.internacao_evento ie
+            FROM homepe_{$baseId}.internacao_evento ie
             WHERE ie.estabelecimento_id = :baseId
               AND ie.internacao_id = :internacaoId
             ORDER BY ie.data_hora DESC, ie.id DESC
