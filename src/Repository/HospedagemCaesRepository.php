@@ -29,7 +29,7 @@ class HospedagemCaesRepository extends ServiceEntityRepository
     public function insert($baseId, HospedagemCaes $h): void
 
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.hospedagem_caes (estabelecimento_id, cliente_id, pet_id, data_entrada, data_saida, valor, observacoes)
+        $sql = "INSERT INTO homepet_{$baseId}.hospedagem_caes (estabelecimento_id, cliente_id, pet_id, data_entrada, data_saida, valor, observacoes)
                 VALUES (:estabelecimento_id, :cliente_id, :pet_id, :data_entrada, :data_saida, :valor, :observacoes)";
         $this->conn->executeQuery($sql, [
             'estabelecimento_id' => $baseId,
@@ -45,8 +45,8 @@ class HospedagemCaesRepository extends ServiceEntityRepository
     public function registrarFinanceiro($baseId, HospedagemCaes $h): void
 
     {
-        $sql = "INSERT INTO {$_ENV['DBNAMETENANT']}.financeiro (estabelecimento_id, descricao, valor, data, pet_id, pet_nome)
-                VALUES (:estabelecimento_id, :descricao, :valor, NOW(), :pet_id, (SELECT nome FROM {$_ENV['DBNAMETENANT']}.pet WHERE estabelecimento_id = '{$baseId}' AND id = :pet_id LIMIT 1))";
+        $sql = "INSERT INTO homepet_{$baseId}.financeiro (estabelecimento_id, descricao, valor, data, pet_id, pet_nome)
+                VALUES (:estabelecimento_id, :descricao, :valor, NOW(), :pet_id, (SELECT nome FROM homepet_{$baseId}.pet WHERE estabelecimento_id = '{$baseId}' AND id = :pet_id LIMIT 1))";
         $this->conn->executeQuery($sql, [
             'estabelecimento_id' => $baseId,
             'descricao' => 'Hospedagem do Pet',
@@ -58,11 +58,11 @@ class HospedagemCaesRepository extends ServiceEntityRepository
     public function getClientes($baseId)
     {
         $sql = "SELECT * 
-        FROM {$_ENV['DBNAMETENANT']}.cliente
+        FROM homepet_{$baseId}.cliente
         WHERE estabelecimento_id = '{$baseId}'
         ";
 
-        return $this->conn->fetchAllAssociative("SELECT * FROM {$_ENV['DBNAMETENANT']}.cliente");
+        return $this->conn->fetchAllAssociative("SELECT * FROM homepet_{$baseId}.cliente");
     }
 
     public function getPets($baseId): array
@@ -72,8 +72,8 @@ class HospedagemCaesRepository extends ServiceEntityRepository
                     p.nome, 
                     c.id AS dono_id, 
                     c.nome AS dono_nome
-                FROM {$_ENV['DBNAMETENANT']}.pet p
-                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = p.dono_id
+                FROM homepet_{$baseId}.pet p
+                LEFT JOIN homepet_{$baseId}.cliente c ON c.id = p.dono_id
                 WHERE p.estabelecimento_id = '{$baseId}'";
 
         return $this->conn->fetchAllAssociative($sql);
@@ -87,9 +87,9 @@ class HospedagemCaesRepository extends ServiceEntityRepository
         $sql = "SELECT h.id, h.cliente_id, c.nome AS cliente_nome,
                        h.pet_id, p.nome AS pet_nome,
                        h.data_entrada, h.data_saida, h.valor, h.observacoes
-                FROM {$_ENV['DBNAMETENANT']}.hospedagem_caes h
-                LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = h.cliente_id
-                LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.id = h.pet_id
+                FROM homepet_{$baseId}.hospedagem_caes h
+                LEFT JOIN homepet_{$baseId}.cliente c ON c.id = h.cliente_id
+                LEFT JOIN homepet_{$baseId}.pet p ON p.id = h.pet_id
                 WHERE h.estabelecimento_id = '{$baseId}'
                 ORDER BY h.data_entrada DESC";
 
@@ -100,7 +100,7 @@ class HospedagemCaesRepository extends ServiceEntityRepository
     public function localizaPorId($baseId, int $id): ?array
     {
         $sql = "SELECT * 
-            FROM {$_ENV['DBNAMETENANT']}.hospedagem_caes 
+            FROM homepet_{$baseId}.hospedagem_caes 
             WHERE estabelecimento_id = '{$baseId}' AND id = :id";
 
         return $this->conn->fetchAssociative($sql, ['id' => $id]) ?: null;
@@ -108,13 +108,13 @@ class HospedagemCaesRepository extends ServiceEntityRepository
 
     public function delete($baseId, int $id): void
     {
-        $this->conn->executeQuery("DELETE FROM {$_ENV['DBNAMETENANT']}.hospedagem_caes WHERE estabelecimento_id = '{$baseId}' AND id = :id", ['id' => $id]);
+        $this->conn->executeQuery("DELETE FROM homepet_{$baseId}.hospedagem_caes WHERE estabelecimento_id = '{$baseId}' AND id = :id", ['id' => $id]);
     }
 
 
     public function updateHospedagem($baseId, int $id, HospedagemCaes $h): void
     {
-        $sql = "UPDATE {$_ENV['DBNAMETENANT']}.hospedagem_caes
+        $sql = "UPDATE homepet_{$baseId}.hospedagem_caes
                 SET cliente_id = :cliente_id,
                     pet_id = :pet_id,
                     data_entrada = :data_entrada,
@@ -138,9 +138,9 @@ class HospedagemCaesRepository extends ServiceEntityRepository
     {
         $query = "
             SELECT h.*, c.nome as cliente_nome, p.nome as pet_nome
-            FROM {$_ENV['DBNAMETENANT']}.hospedagem_caes h
-            INNER JOIN {$_ENV['DBNAMETENANT']}.cliente c ON c.id = h.cliente_id
-            INNER JOIN {$_ENV['DBNAMETENANT']}.pet p ON p.id = h.pet_id
+            FROM homepet_{$baseId}.hospedagem_caes h
+            INNER JOIN homepet_{$baseId}.cliente c ON c.id = h.cliente_id
+            INNER JOIN homepet_{$baseId}.pet p ON p.id = h.pet_id
             WHERE h.estabelecimento_id = '{$baseId}' AND h.estabelecimento_id = '{$baseId}' AND h.data_entrada <= :data AND h.data_saida >= :data
             ORDER BY h.data_entrada ASC
         ";
@@ -159,7 +159,7 @@ class HospedagemCaesRepository extends ServiceEntityRepository
      */
     public function getPetNome($baseId, int $petId): string
     {
-        $sql = "SELECT nome FROM {$_ENV['DBNAMETENANT']}.pet
+        $sql = "SELECT nome FROM homepet_{$baseId}.pet
                 WHERE estabelecimento_id = :baseId AND id = :petId LIMIT 1";
 
         $result = $this->conn->fetchOne($sql, ['baseId' => $baseId, 'petId' => $petId]);
@@ -171,7 +171,7 @@ class HospedagemCaesRepository extends ServiceEntityRepository
      */
     public function getClienteNome($baseId, int $clienteId): string
     {
-        $sql = "SELECT nome FROM {$_ENV['DBNAMETENANT']}.cliente
+        $sql = "SELECT nome FROM homepet_{$baseId}.cliente
                 WHERE estabelecimento_id = :baseId AND id = :clienteId LIMIT 1";
 
         $result = $this->conn->fetchOne($sql, ['baseId' => $baseId, 'clienteId' => $clienteId]);

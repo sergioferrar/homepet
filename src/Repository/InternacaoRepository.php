@@ -31,10 +31,10 @@ class InternacaoRepository extends ServiceEntityRepository
                 p.id   AS pet_id, p.nome AS pet_nome, p.raca AS pet_raca, p.sexo AS pet_sexo, p.idade AS pet_idade,
                 c.id   AS dono_id, c.nome AS dono_nome, c.telefone AS dono_telefone,
                 v.id   AS veterinario_id, v.nome AS veterinario_nome, v.especialidade AS veterinario_especialidade
-            FROM " . $_ENV['DBNAMETENANT'] . ".internacao i
-            LEFT JOIN " . $_ENV['DBNAMETENANT'] . ".pet p ON p.id = i.pet_id
-            LEFT JOIN " . $_ENV['DBNAMETENANT'] . ".cliente c ON c.id = p.dono_id
-            LEFT JOIN " . $_ENV['DBNAMETENANT'] . ".veterinario v ON v.id = i.veterinario_id
+            FROM homepet_" . $baseId . ".internacao i
+            LEFT JOIN homepet_" . $baseId . ".pet p ON p.id = i.pet_id
+            LEFT JOIN homepet_" . $baseId . ".cliente c ON c.id = p.dono_id
+            LEFT JOIN homepet_" . $baseId . ".veterinario v ON v.id = i.veterinario_id
             WHERE i.estabelecimento_id = :baseId AND i.id = :internacaoId
         ";
 
@@ -61,7 +61,7 @@ class InternacaoRepository extends ServiceEntityRepository
     {
         $sql = "
             SELECT id, estabelecimento_id, internacao_id, pet_id, tipo, titulo, descricao, data_hora, criado_em, status
-            FROM " . $_ENV['DBNAMETENANT'] . ".internacao_evento
+            FROM homepet_" . $baseId . ".internacao_evento
             WHERE estabelecimento_id = :baseId AND internacao_id = :internacaoId
             ORDER BY data_hora DESC, id DESC
         ";
@@ -83,7 +83,7 @@ class InternacaoRepository extends ServiceEntityRepository
         ?\DateTimeInterface $dataHora = null,
         string $status = 'pendente'
     ): int {
-        $sql = "INSERT INTO " . $_ENV['DBNAMETENANT'] . ".internacao_evento
+        $sql = "INSERT INTO homepet_" . $baseId . ".internacao_evento
                 (estabelecimento_id, internacao_id, pet_id, tipo, titulo, descricao, data_hora, criado_em, status)
                 VALUES (:baseId, :internacaoId, :petId, :tipo, :titulo, :descricao, :data_hora, :criado_em, :status)";
 
@@ -113,9 +113,9 @@ class InternacaoRepository extends ServiceEntityRepository
                 i.status,
                 p.nome AS pet_nome,
                 c.nome AS dono_nome
-            FROM " . $_ENV['DBNAMETENANT'] . ".internacao i
-            LEFT JOIN " . $_ENV['DBNAMETENANT'] . ".pet p ON p.id = i.pet_id
-            LEFT JOIN " . $_ENV['DBNAMETENANT'] . ".cliente c ON c.id = i.dono_id
+            FROM homepet_" . $baseId . ".internacao i
+            LEFT JOIN homepet_" . $baseId . ".pet p ON p.id = i.pet_id
+            LEFT JOIN homepet_" . $baseId . ".cliente c ON c.id = i.dono_id
             WHERE i.estabelecimento_id = :baseId
               AND i.status = 'ativa'
               AND i.pet_id IS NOT NULL
@@ -137,7 +137,7 @@ class InternacaoRepository extends ServiceEntityRepository
         $motivo = mb_substr(trim($motivo), 0, 255);
 
         $this->conn->executeQuery(
-            "INSERT INTO " . $_ENV['DBNAMETENANT'] . ".internacao 
+            "INSERT INTO homepet_" . $baseId . ".internacao 
              (data_inicio, motivo, status, pet_id, dono_id, estabelecimento_id, situacao, risco, veterinario_id, box, alta_prevista, diagnostico, prognostico, anotacoes)
              VALUES (:data_inicio, :motivo, :status, :pet_id, :dono_id, :estabelecimento_id, :situacao, :risco, :veterinario_id, :box, :alta_prevista, :diagnostico, :prognostico, :anotacoes)",
             [
@@ -164,7 +164,7 @@ class InternacaoRepository extends ServiceEntityRepository
 
     public function finalizarInternacao(int $baseId, int $id): void
     {
-        $sql = "UPDATE " . $_ENV['DBNAMETENANT'] . ".internacao 
+        $sql = "UPDATE homepet_" . $baseId . ".internacao 
                 SET status = 'finalizada' 
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
@@ -176,7 +176,7 @@ class InternacaoRepository extends ServiceEntityRepository
 
     public function deletar(int $baseId, int $id): void
     {
-        $this->conn->executeQuery("DELETE FROM " . $_ENV['DBNAMETENANT'] . ".internacao 
+        $this->conn->executeQuery("DELETE FROM homepet_" . $baseId . ".internacao 
             WHERE estabelecimento_id = :baseId AND id = :id", [
             'baseId' => $baseId,
             'id' => $id,
@@ -185,7 +185,7 @@ class InternacaoRepository extends ServiceEntityRepository
 
     public function buscarPorId(int $baseId, int $id): ?array
     {
-        $sql = "SELECT * FROM " . $_ENV['DBNAMETENANT'] . ".internacao 
+        $sql = "SELECT * FROM homepet_" . $baseId . ".internacao 
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
         $dados = $this->conn->fetchAssociative($sql, [
@@ -199,7 +199,7 @@ class InternacaoRepository extends ServiceEntityRepository
     public function findAtivaIdByPet(int $baseId, int $petId): ?int
     {
         $sql = "SELECT id
-                FROM " . $_ENV['DBNAMETENANT'] . ".internacao
+                FROM homepet_" . $baseId . ".internacao
                 WHERE estabelecimento_id = :baseId
                   AND pet_id = :petId
                   AND status = 'ativa'
@@ -216,7 +216,7 @@ class InternacaoRepository extends ServiceEntityRepository
 
  public function listarTimelinePet(int $baseId, int $petId, int $limit = 200): array
     {
-        $db = $_ENV['DBNAMETENANT'];
+        $db = "homepet_{$baseId}";
         // Ajuste aqui se preferir outra collation:
         $collation = 'utf8mb4_unicode_ci';
 
@@ -266,7 +266,7 @@ class InternacaoRepository extends ServiceEntityRepository
 
     public function listarTimelineInternacao(int $baseId, int $internacaoId, int $limit = 200): array
     {
-        $db = $_ENV['DBNAMETENANT'];
+        $db = "homepet_{$baseId}";
 
         $sql = "
             SELECT 
@@ -299,7 +299,7 @@ class InternacaoRepository extends ServiceEntityRepository
     public function findUltimaIdByPet(int $baseId, int $petId): ?int
     {
         $sql = "SELECT id
-                FROM " . $_ENV['DBNAMETENANT'] . ".internacao
+                FROM homepet_" . $baseId . ".internacao
                 WHERE estabelecimento_id = :baseId
                   AND pet_id = :petId
                 ORDER BY data_inicio DESC
@@ -317,7 +317,7 @@ class InternacaoRepository extends ServiceEntityRepository
     {
         $sql = "
             SELECT id, data_inicio, status, motivo, situacao, risco, box
-            FROM " . $_ENV['DBNAMETENANT'] . ".internacao
+            FROM homepet_" . $baseId . ".internacao
             WHERE estabelecimento_id = :baseId
               AND pet_id = :petId
             ORDER BY data_inicio DESC, id DESC
@@ -331,7 +331,7 @@ class InternacaoRepository extends ServiceEntityRepository
 
     public function marcarMedicacaoComoExecutada(int $baseId, int $eventoId): void
     {
-        $sql = "UPDATE " . $_ENV['DBNAMETENANT'] . ".internacao_evento
+        $sql = "UPDATE homepet_" . $baseId . ".internacao_evento
                 SET tipo = 'medicacao_exec', status = 'executado'
                 WHERE estabelecimento_id = :baseId AND id = :eventoId";
 
@@ -343,7 +343,7 @@ class InternacaoRepository extends ServiceEntityRepository
 
     public function atualizarStatus(int $baseId, int $id, string $status): void
     {
-        $sql = "UPDATE " . $_ENV['DBNAMETENANT'] . ".internacao 
+        $sql = "UPDATE homepet_" . $baseId . ".internacao 
                 SET status = :status 
                 WHERE estabelecimento_id = :baseId AND id = :id";
         $this->conn->executeQuery($sql, [
