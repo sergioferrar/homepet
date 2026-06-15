@@ -85,7 +85,7 @@ class MercadoPagoService implements PaymentGatewayInterface
                 'currency_id' => 'BRL',
             ],
             'payer_email' => $data['email'] ?? 'test@test.com',
-            'back_url' => ($_ENV['PAGAMENTO_URL'] ?? '') . 'pagamento/sucesso',
+            'back_url' => ($_ENV['PAGAMENTO_URL'] ?? '') . 'pagamento/retorno',
             'status' => 'pending',
             'external_reference' => $data['external_reference'] ?? null,
         ];

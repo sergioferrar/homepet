@@ -66,13 +66,9 @@ class LandingpageController extends DefaultController
     {
 
         try {
-
-
-
-            $estabelecimento = new Estabelecimento();
-
             $plano = $request->get('planoId');
 
+            $estabelecimento = new Estabelecimento();
             $estabelecimento->setRazaoSocial($request->get('razaoSocial'));
             $estabelecimento->setCnpj(preg_replace('/\D/', '', $request->get('cnpj')));
             $estabelecimento->setRua($request->get('rua'));
@@ -129,7 +125,7 @@ class LandingpageController extends DefaultController
             ]);
 
             // 5. Flash message de sucesso (opcional)
-            $this->addFlash('success', "Banco de dados do estabelecimento criado com sucesso ({$dbName}).");
+            // $this->addFlash('success', "Banco de dados do estabelecimento criado com sucesso ({$dbName}).");
 
         } catch (\RuntimeException $e) {
             // Erro controlado do instalador — tabela específica falhou
@@ -138,7 +134,7 @@ class LandingpageController extends DefaultController
                 'message' => $e->getMessage(),
                 'file' => $e->getFile() . ':' . $e->getLine(),
             ]);
-            $this->addFlash('warning', 'O banco foi criado, mas houve falha ao instalar as tabelas. Contate o suporte.');
+            // $this->addFlash('warning', 'O banco foi criado, mas houve falha ao instalar as tabelas. Contate o suporte.');
 
         } catch (\Exception $e) {
             // Erro inesperado (conexão, permissão, etc.)
@@ -147,7 +143,7 @@ class LandingpageController extends DefaultController
                 'message' => $e->getMessage(),
                 'file' => $e->getFile() . ':' . $e->getLine(),
             ]);
-            $this->addFlash('danger', 'Não foi possível criar o banco de dados. Contate o suporte.');
+            // $this->addFlash('danger', 'Não foi possível criar o banco de dados. Contate o suporte.');
         }
 
         return $this->redirectToRoute('petshop_usuario_cadastrar', ['estabelecimento' => $estabelecimento->getId(), 'planoId' => $plano]);
