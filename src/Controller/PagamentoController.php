@@ -85,6 +85,7 @@ class PagamentoController extends DefaultController
                 ]);
             }
         } catch (\Exception $e) {
+            dd($e);
             return $this->render('pagamento/falha.html.twig', [
                 'erro' => 'Erro ao processar pagamento: ' . $e->getMessage(),
             ]);
@@ -159,7 +160,6 @@ class PagamentoController extends DefaultController
      */
     public function success(Request $request): Response
     {
-        return $this->redirectToRoute('pagamento_retorno');
         return $this->render('pagamento/sucesso.html.twig', []);
     }
 
