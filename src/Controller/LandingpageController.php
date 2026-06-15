@@ -307,7 +307,7 @@ class LandingpageController extends DefaultController
 
             // Criar assinatura recorrente
             $result = $gateway->createSubscription($dataPagamento);
-
+dd($result);
             if ($result['success']) {
                 // Atualizar invoice com subscription_id
                 $invoice->setSubscriptionId($result['subscription_id']);
