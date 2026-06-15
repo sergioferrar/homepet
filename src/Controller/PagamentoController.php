@@ -159,6 +159,7 @@ class PagamentoController extends DefaultController
      */
     public function success(Request $request): Response
     {
+        return $this->redirectToRoute('pagamento_retorno');
         return $this->render('pagamento/sucesso.html.twig', []);
     }
 
