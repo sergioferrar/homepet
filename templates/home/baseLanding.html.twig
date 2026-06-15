@@ -853,7 +853,7 @@
             <ul class="navbar-nav mx-auto gap-1">
                 <li class="nav-item"><a class="nav-link-custom nav-link" href="{{url('landing_home')}}">Início</a></li>
                 <li class="nav-item"><a class="nav-link-custom nav-link" href="#recursos">Recursos</a></li>
-                <li class="nav-item"><a class="nav-link-custom nav-link" href="#planos">Planos</a></li>
+                <li class="nav-item"><a class="nav-link-custom nav-link" href="{{ url('landing_planos') }}">Planos</a></li>
                 <li class="nav-item"><a class="nav-link-custom nav-link" href="#quem-somos">Quem Somos</a></li>
                 <li class="nav-item"><a class="nav-link-custom nav-link" href="#contato">Contato</a></li>
             </ul>
@@ -890,7 +890,7 @@ FOOTER
                 <a href="#inicio" class="footer-link">Início</a>
                 <a href="#recursos" class="footer-link">Recursos</a>
                 <a href="#como-funciona" class="footer-link">Como Funciona</a>
-                <a href="#planos" class="footer-link">Planos</a>
+                <a href="{{ url('landing_planos') }}" class="footer-link">Planos</a>
             </div>
             <div class="col-6 col-lg-2">
                 <div class="footer-heading">Empresa</div>
@@ -904,7 +904,7 @@ FOOTER
                 <p style="font-size:.88rem;color:rgba(255,255,255,.5);margin-bottom:1.2rem;">
                     Cadastre seu estabelecimento hoje e comece a transformar sua gestão.
                 </p>
-                <a href="/cadastro-estabelecimento" class="btn btn-primary-custom">
+                <a href="{{ url('landing_planos') }}" class="btn btn-primary-custom">
                     Cadastrar Estabelecimento <i class="bi bi-arrow-right"></i>
                 </a>
             </div>

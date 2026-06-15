@@ -32,6 +32,21 @@ class LandingpageController extends DefaultController
     }
 
     /**
+     * @Route("/planos", name="landing_planos")
+     */
+    public function planos(Request $request): Response
+    {
+        $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome();
+
+        return $this->render('home/planos.html.twig', [
+            'planos'              => $planos,
+            'cookie_banner_ativo' => true,
+            'tracking'            => '',
+            'modulos'             => $this->modulosSistema,
+        ]);
+    }
+
+    /**
      * @Route("/landing/cadastro", name="landing_cadastro")
      */
     public function cadastro(Request $request): Response

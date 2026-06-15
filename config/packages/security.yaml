@@ -65,6 +65,7 @@ security:
         - { path: ^/politicas-de-privacidade, roles: PUBLIC_ACCESS }
         - { path: ^/termos-de-uso, roles: PUBLIC_ACCESS }
         - { path: ^/lgpd/consentimento, roles: PUBLIC_ACCESS }
+        - { path: ^/planos/*, roles: PUBLIC_ACCESS }
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/logout, roles: PUBLIC_ACCESS }

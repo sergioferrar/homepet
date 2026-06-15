@@ -1,0 +1,103 @@
+{% extends 'home/baseLanding.html.twig' %}
+
+{% block body %}
+{# ── Cabeçalho da página ─────────────────────────────────────────── #}
+<section class="page-hero-section">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-7" data-fade>
+                <span class="section-tag">Planos</span>
+                <h1 class="hero-headline" style="font-size:clamp(2rem,5vw,3rem);">
+                    Escolha o plano ideal<br/>
+                    <span class="line-teal">para o seu negócio</span>
+                </h1>
+                <p class="hero-sub" style="max-width:520px;margin:0 auto 2rem;">
+                    Sem taxa de setup. Cancele quando quiser. Migre de plano a qualquer momento.
+                </p>
+                <div class="d-flex flex-wrap gap-3 justify-content-center mb-2">
+                    <a href="{{ url('landing_home') }}" class="btn btn-outline-custom">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar ao início
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── Grid de planos ──────────────────────────────────────────────── #}
+<section class="plans-section" id="planos" style="padding-top:60px;">
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            {% for plano in planos %}
+                {% set isPopular = plano.trial == 1 or plano.trial == '1' %}
+                <div class="col-lg-4 col-md-6 visible" data-fade="">
+                    <div class="plan-card {% if isPopular %}featured{% endif %}">
+                        {% if isPopular %}
+                            <div class="plan-badge">Mais Popular</div>
+                        {% endif %}
+                        <div class="plan-name">{{ plano.titulo }}</div>
+                        <div class="plan-price">{{ plano.valor|formataValorEmRealLanding|raw }}</div>
+                        <div class="plan-period">por mês</div>
+                        <div class="plan-divider"></div>
+                        {{ plano.descricao|listaPlano|raw }}
+                        <a href="{{ url('landing_cadastro', {'planoId': plano.id}) }}"
+                           class="btn btn-outline-custom w-100 mt-4">
+                            Selecionar este plano <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">Nenhum plano disponível no momento. Entre em contato.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        {# ── Bloco de garantias / benefícios ──────────────────────────── #}
+        <div class="row g-4 mt-5 pt-3" style="border-top:1px solid var(--border);">
+            <div class="col-md-4 text-center" data-fade>
+                <div class="feature-icon-wrap mx-auto mb-3" style="width:52px;height:52px;border-radius:14px;background:var(--teal-light);display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-shield-check" style="color:var(--teal);font-size:1.4rem;"></i>
+                </div>
+                <h6 class="fw-700">Sem fidelidade</h6>
+                <p style="color:var(--text-secondary);font-size:.88rem;">Cancele quando quiser, sem multa.</p>
+            </div>
+            <div class="col-md-4 text-center" data-fade>
+                <div class="feature-icon-wrap mx-auto mb-3" style="width:52px;height:52px;border-radius:14px;background:var(--teal-light);display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-arrow-left-right" style="color:var(--teal);font-size:1.4rem;"></i>
+                </div>
+                <h6 class="fw-700">Migre de plano</h6>
+                <p style="color:var(--text-secondary);font-size:.88rem;">Faça upgrade ou downgrade a qualquer momento.</p>
+            </div>
+            <div class="col-md-4 text-center" data-fade>
+                <div class="feature-icon-wrap mx-auto mb-3" style="width:52px;height:52px;border-radius:14px;background:var(--teal-light);display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-headset" style="color:var(--teal);font-size:1.4rem;"></i>
+                </div>
+                <h6 class="fw-700">Suporte incluso</h6>
+                <p style="color:var(--text-secondary);font-size:.88rem;">Atendimento humano em todos os planos.</p>
+            </div>
+        </div>
+
+        {# ── CTA dúvidas ──────────────────────────────────────────────── #}
+        <div class="row justify-content-center mt-5 mb-4">
+            <div class="col-lg-7 text-center" data-fade>
+                <p style="color:var(--text-secondary);">
+                    Dúvidas sobre qual plano escolher?
+                    <a href="{{ url('landing_home') }}#contato" style="color:var(--teal);font-weight:600;">
+                        Fale com a gente
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+.page-hero-section {
+    padding: 120px 0 60px;
+    background: linear-gradient(135deg, var(--bg-base) 60%, var(--bg-subtle) 100%);
+}
+</style>
+{% endblock %}
