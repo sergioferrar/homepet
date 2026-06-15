@@ -321,6 +321,7 @@ class LandingpageController extends DefaultController
             }
 
         } catch (\Exception $e) {
+            dd($e);
             $this->addFlash('error', 'Erro ao processar pagamento: ' . $e->getMessage());
             return $this->redirectToRoute('landing_home');
         }
