@@ -151,7 +151,7 @@ class PetRepository extends ServiceEntityRepository
         return (int) $this->conn->fetchOne($sql, ['baseId' => $baseId]);
     }
 
-    public function listarPetsRecentes(int $idBase): array
+    public function listarPetsRecentes(int $baseId): array
     {
         $conn = $this->getEntityManager()->getConnection();
         $sql = "
@@ -167,7 +167,7 @@ class PetRepository extends ServiceEntityRepository
         ";
 
         $stmt = $this->conn->prepare($sql);
-        $resultSet = $stmt->executeQuery(['idBase' => $idBase]);
+        $resultSet = $stmt->executeQuery(['idBase' => $baseId]);
 
         return $resultSet->fetchAllAssociative();
     }
