@@ -111,6 +111,7 @@ class InvoiceController extends DefaultController
                 return $this->redirectToRoute('invoice_detalhes', ['id' => $id]);
             }
         } catch (\Exception $e) {
+            dd($e);
             $this->addFlash('error', 'Erro ao processar pagamento: ' . $e->getMessage());
             return $this->redirectToRoute('invoice_detalhes', ['id' => $id]);
         }
