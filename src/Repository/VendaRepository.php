@@ -28,7 +28,7 @@ class VendaRepository extends ServiceEntityRepository
     /**
      * Busca vendas por data com LEFT JOIN em pet e cliente — evita N+1 queries.
      */
-    public function findByData(int $estabelecimentoId, \DateTime $data): array
+    public function findByData(int $baseId, \DateTime $data): array
     {
         $sql = "SELECT v.id, v.estabelecimento_id, v.pet_id, v.total, v.data,
                        v.status, v.metodo_pagamento, v.bandeira_cartao, v.parcelas,
@@ -45,7 +45,7 @@ class VendaRepository extends ServiceEntityRepository
                 ORDER BY v.id DESC";
 
         return $this->conn->fetchAllAssociative($sql, [
-            'estab' => $estabelecimentoId,
+            'estab' => $baseId,
             'data'  => $data->format('Y-m-d'),
         ]);
     }
@@ -53,7 +53,7 @@ class VendaRepository extends ServiceEntityRepository
     /**
      * Retorna total por forma de pagamento no dia
      */
-    public function totalPorFormaPagamento(int $estabelecimentoId, \DateTime $data): array
+    public function totalPorFormaPagamento(int $baseId, \DateTime $data): array
     {
         $sql = "SELECT metodo_pagamento AS metodo,
                        COALESCE(SUM(total), 0) AS total
@@ -65,7 +65,7 @@ class VendaRepository extends ServiceEntityRepository
                 ORDER BY metodo_pagamento ASC";
 
         return $this->conn->fetchAllAssociative($sql, [
-            'baseId' => $estabelecimentoId,
+            'baseId' => $baseId,
             'data'   => $data->format('Y-m-d'),
         ]);
     }
@@ -73,7 +73,7 @@ class VendaRepository extends ServiceEntityRepository
     /**
      * Total geral do dia (escalar — não hidrata entidades)
      */
-    public function totalGeralDoDia(int $estabelecimentoId, \DateTime $data): float
+    public function totalGeralDoDia(int $baseId, \DateTime $data): float
     {
         $sql = "SELECT COALESCE(SUM(total), 0) AS total
                 FROM homepet_{$baseId}.venda
@@ -82,7 +82,7 @@ class VendaRepository extends ServiceEntityRepository
                   AND status NOT IN ('Carrinho', 'Cancelada')";
 
         return (float) $this->conn->fetchOne($sql, [
-            'estab' => $estabelecimentoId,
+            'estab' => $baseId,
             'data'  => $data->format('Y-m-d'),
         ]);
     }
@@ -90,7 +90,7 @@ class VendaRepository extends ServiceEntityRepository
     /**
      * Vendas por período com LEFT JOIN em pet e cliente
      */
-    public function findByPeriodo(int $estabelecimentoId, \DateTime $inicio, \DateTime $fim): array
+    public function findByPeriodo(int $baseId, \DateTime $inicio, \DateTime $fim): array
     {
         $sql = "SELECT v.id, v.pet_id, v.total, v.data, v.status,
                        v.metodo_pagamento, v.origem, v.observacao,
@@ -104,7 +104,7 @@ class VendaRepository extends ServiceEntityRepository
                 ORDER BY v.data DESC";
 
         return $this->conn->fetchAllAssociative($sql, [
-            'estab'  => $estabelecimentoId,
+            'estab'  => $baseId,
             'inicio' => $inicio->format('Y-m-d'),
             'fim'    => $fim->format('Y-m-d'),
         ]);
@@ -113,7 +113,7 @@ class VendaRepository extends ServiceEntityRepository
     /**
      * Total por período (escalar)
      */
-    public function totalPorPeriodo(int $estabelecimentoId, \DateTime $inicio, \DateTime $fim): float
+    public function totalPorPeriodo(int $baseId, \DateTime $inicio, \DateTime $fim): float
     {
         $sql = "SELECT COALESCE(SUM(total), 0) AS total
                 FROM homepet_{$baseId}.venda
@@ -122,7 +122,7 @@ class VendaRepository extends ServiceEntityRepository
                   AND status NOT IN ('Carrinho', 'Cancelada')";
 
         return (float) $this->conn->fetchOne($sql, [
-            'estab'  => $estabelecimentoId,
+            'estab'  => $baseId,
             'inicio' => $inicio->format('Y-m-d'),
             'fim'    => $fim->format('Y-m-d'),
         ]);
@@ -131,7 +131,7 @@ class VendaRepository extends ServiceEntityRepository
     /**
      * Vendas em carrinho com dados de pet e cliente via LEFT JOIN
      */
-    public function findCarrinho(int $estabelecimentoId): array
+    public function findCarrinho(int $baseId): array
     {
         $sql = "SELECT v.id, v.pet_id, v.total, v.data, v.origem, v.observacao,
                        p.nome AS pet_nome,
@@ -143,13 +143,13 @@ class VendaRepository extends ServiceEntityRepository
                   AND v.status = 'Carrinho'
                 ORDER BY v.data DESC";
 
-        return $this->conn->fetchAllAssociative($sql, ['baseId' => $estabelecimentoId]);
+        return $this->conn->fetchAllAssociative($sql, ['baseId' => $baseId]);
     }
 
     /**
      * Inativa (cancela) uma venda
      */
-    public function inativar(int $estabelecimentoId, int $vendaId): bool
+    public function inativar(int $baseId, int $vendaId): bool
     {
         $sql = "UPDATE venda
                 SET status = 'Cancelada'
@@ -157,7 +157,7 @@ class VendaRepository extends ServiceEntityRepository
 
         return $this->conn->executeStatement($sql, [
             'id'    => $vendaId,
-            'estab' => $estabelecimentoId,
+            'estab' => $baseId,
         ]) > 0;
     }
 
@@ -168,7 +168,7 @@ class VendaRepository extends ServiceEntityRepository
      * Busca uma venda em status Carrinho para finalização.
      * Retorna array com os dados ou null se não encontrada/já finalizada.
      */
-    public function findVendaCarrinho(int $estabelecimentoId, int $vendaId): ?array
+    public function findVendaCarrinho(int $baseId, int $vendaId): ?array
     {
         $sql = "SELECT v.id, v.cliente, v.total, v.pet_id, v.origem, v.observacao, v.status
                 FROM venda v
@@ -179,7 +179,7 @@ class VendaRepository extends ServiceEntityRepository
 
         $row = $this->conn->fetchAssociative($sql, [
             'id'    => $vendaId,
-            'estab' => $estabelecimentoId,
+            'estab' => $baseId,
         ]);
 
         return $row ?: null;
@@ -190,7 +190,7 @@ class VendaRepository extends ServiceEntityRepository
      * Retorna true se exatamente 1 linha foi afetada.
      */
     public function finalizarVenda(
-        int $estabelecimentoId,
+        int $baseId,
         int $vendaId,
         string $metodoPagamento,
         string $statusFinal,
@@ -202,7 +202,7 @@ class VendaRepository extends ServiceEntityRepository
             'status' => $statusFinal,
             'metodo' => $metodoPagamento,
             'id'     => $vendaId,
-            'estab'  => $estabelecimentoId,
+            'estab'  => $baseId,
         ];
 
         if ($bandeiraCartao !== null) {
@@ -228,7 +228,7 @@ class VendaRepository extends ServiceEntityRepository
      * Insere entrada no financeiro para venda PDV paga.
      */
     public function inserirFinanceiro(
-        int $estabelecimentoId,
+        int $baseId,
         string $metodo,
         float $total,
         string $nomeCliente,
@@ -243,7 +243,7 @@ class VendaRepository extends ServiceEntityRepository
                      'ENTRADA', 'Pago', 'PDV', :pet_id)";
 
         $this->conn->executeStatement($sql, [
-            'estab'     => $estabelecimentoId,
+            'estab'     => $baseId,
             'descricao' => "Venda PDV #{$vendaId} — {$nomeCliente}",
             'valor'     => $total,
             'metodo'    => $metodo,
@@ -254,7 +254,7 @@ class VendaRepository extends ServiceEntityRepository
     /**
      * Busca vendas de um pet com LEFT JOIN em pet e cliente
      */
-    public function findByPet(int $estabelecimentoId, int $petId): array
+    public function findByPet(int $baseId, int $petId): array
     {
         $sql = "SELECT v.id, v.pet_id, v.total, v.data, v.status,
                        v.metodo_pagamento, v.origem, v.observacao,
@@ -269,7 +269,7 @@ class VendaRepository extends ServiceEntityRepository
                 ORDER BY v.data DESC";
 
         return $this->conn->fetchAllAssociative($sql, [
-            'estab' => $estabelecimentoId,
+            'estab' => $baseId,
             'petId' => $petId,
         ]);
     }
@@ -277,7 +277,7 @@ class VendaRepository extends ServiceEntityRepository
     /**
      * Busca vendas de um pet com LEFT JOIN em pet e cliente
      */
-    public function vendaPorStatus(int $estabelecimentoId, int $petId, $status): array
+    public function vendaPorStatus(int $baseId, int $petId, $status): array
     {
         $sql = "SELECT v.id, v.pet_id, v.total, v.data, v.status,
                        v.metodo_pagamento, v.origem, v.observacao,
@@ -292,7 +292,7 @@ class VendaRepository extends ServiceEntityRepository
                 ORDER BY v.data DESC";
 
         return $this->conn->fetchAllAssociative($sql, [
-            'estab' => $estabelecimentoId,
+            'estab' => $baseId,
             'petId' => $petId,
         ]);
     }
@@ -300,7 +300,7 @@ class VendaRepository extends ServiceEntityRepository
     /**
      * Resumo de vendas do dia — COUNT e SUM em query única
      */
-    public function getResumoDoDia(int $estabelecimentoId, \DateTime $data): array
+    public function getResumoDoDia(int $baseId, \DateTime $data): array
     {
         $sql = "SELECT COUNT(*) AS quantidade,
                        COALESCE(SUM(total), 0) AS total
@@ -310,7 +310,7 @@ class VendaRepository extends ServiceEntityRepository
                   AND status NOT IN ('Carrinho', 'Cancelada')";
 
         $result    = $this->conn->fetchAssociative($sql, [
-            'baseId' => $estabelecimentoId,
+            'baseId' => $baseId,
             'data'   => $data->format('Y-m-d'),
         ]);
 
