@@ -252,64 +252,101 @@ class LandingpageController extends DefaultController
     ): Response {
         try {
             $eid = $request->get('estabelecimento');
-            $uid = $this->session->get('userId');
 
-            // Pegar dados do estabelecimiento
+            // Pegar dados do estabelecimento
             $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($eid);
-            // Buscar usuario com o estabelecimento acessado
+
+            if (!$estabelecimento) {
+                $this->addFlash('error', 'Estabelecimento não encontrado.');
+                return $this->redirectToRoute('landing_home');
+            }
+
+            // Se o estabelecimento já está ativo, redireciona para login
+            if ($estabelecimento->getStatus() === 'Ativo') {
+                $this->addFlash('success', 'Sua conta já está ativa! Faça login para continuar.');
+                return $this->redirectToRoute('app_login');
+            }
+
+            // Buscar usuário vinculado ao estabelecimento
             $usario = $this->getRepositorio(\App\Entity\Usuario::class)->findOneBy(['petshop_id' => $eid]);
             // Buscar o plano que o estabelecimento está assinando
             $plano = $this->getRepositorio(\App\Entity\Plano::class)->find($estabelecimento->getPlanoId());
 
-            // Criar invoice para esta assinatura
-            $invoice = $invoiceService->createInvoice($estabelecimento, [
-                'tipo' => 'assinatura',
-                'valor_total' => $plano->getValor(),
-                'plano_id' => $plano->getId(),
+            // ── CORREÇÃO: verifica se já existe invoice pendente para não gerar duplicatas ──
+            $invoicePendente = $this->getRepositorio(\App\Entity\Fatura::class)->findOneBy(
+                ['estabelecimentoId' => $eid, 'status' => 'pendente'],
+                ['id' => 'DESC']
+            );
+
+            if ($invoicePendente && $invoicePendente->getSubscriptionId()) {
+                // Já há assinatura criada no gateway — consulta o init_point
+                $gateway = $paymentGatewayFactory->getDefaultGateway();
+                try {
+                    $subStatus = $gateway->getSubscriptionStatus($invoicePendente->getSubscriptionId());
+                    $initPoint = $subStatus['init_point'] ?? null;
+                } catch (\Exception $e) {
+                    $initPoint = null;
+                }
+                if ($initPoint) {
+                    // Mantém sessão atualizada
+                    $request->getSession()->set('finaliza', [
+                        'uid'        => $usario->getId(),
+                        'eid'        => $eid,
+                        'invoice_id' => $invoicePendente->getId(),
+                    ]);
+                    return $this->redirect($initPoint);
+                }
+            }
+
+            // Cria nova invoice apenas se não houver pendente
+            $invoice = $invoicePendente ?? $invoiceService->createInvoice($estabelecimento, [
+                'tipo'            => 'assinatura',
+                'valor_total'     => $plano->getValor(),
+                'plano_id'        => $plano->getId(),
                 'data_vencimento' => $estabelecimento->getDataPlanoFim(),
             ]);
 
             // Obter gateway de pagamento
             $gateway = $paymentGatewayFactory->getDefaultGateway();
 
-            // pra salvar o cadastro original
+            // Buscar endereço via ViaCEP
             $endpoint = "https://viacep.com.br/ws/{$estabelecimento->getCep()}/json";
-            $endereco = json_decode(file_get_contents($endpoint), true);
+            $endereco = @json_decode(@file_get_contents($endpoint), true) ?? [];
 
             $comprador = [
-                'name' => $usario->getNomeUsuario(),
-                'email' => $usario->getEmail(),
-                'rua' => $endereco['logradouro'] ?? '',
-                'numero' => $estabelecimento->getNumero(),
-                'bairro' => $endereco['bairro'] ?? '',
-                'cidade' => $endereco['localidade'] ?? '',
-                'estado' => $endereco['uf'] ?? '',
+                'name'      => $usario->getNomeUsuario(),
+                'email'     => $usario->getEmail(),
+                'rua'       => $endereco['logradouro'] ?? '',
+                'numero'    => $estabelecimento->getNumero(),
+                'bairro'    => $endereco['bairro'] ?? '',
+                'cidade'    => $endereco['localidade'] ?? '',
+                'estado'    => $endereco['uf'] ?? '',
                 'idUsuario' => $usario->getId(),
-                'cnpj' => $estabelecimento->getCNPJ(),
-                'cep' => $endereco['cep'] ?? '',
+                'cnpj'      => $estabelecimento->getCNPJ(),
+                'cep'       => $endereco['cep'] ?? '',
             ];
 
             $dataPagamento = [
-                'comprador' => $comprador,
-                'planoId' => $plano->getId(),
-                'title' => $plano->getTitulo(),
-                'price' => (float) $plano->getValor(),
-                'email' => $usario->getEmail(),
-                'external_reference' => $invoice->getId(),
+                'comprador'          => $comprador,
+                'planoId'            => $plano->getId(),
+                'title'              => $plano->getTitulo(),
+                'price'              => (float) $plano->getValor(),
+                'email'              => $usario->getEmail(),
+                'external_reference' => $invoice->getId(),   // usado pelo webhook para ativar o estabelecimento
             ];
 
-            // Salva na sessão para usar após pagamento
+            // Salva na sessão (útil para fluxos de retorno síncrono)
             $request->getSession()->set('finaliza', [
-                'uid' => $usario->getId(),
-                'eid' => $eid,
+                'uid'        => $usario->getId(),
+                'eid'        => $eid,
                 'invoice_id' => $invoice->getId(),
             ]);
 
-            // Criar assinatura recorrente
+            // Criar assinatura recorrente no gateway
             $result = $gateway->createSubscription($dataPagamento);
-dd($result);
+
             if ($result['success']) {
-                // Atualizar invoice com subscription_id
+                // Atualizar invoice com dados da assinatura criada
                 $invoice->setSubscriptionId($result['subscription_id']);
                 $invoice->setPaymentGateway($gateway->getGatewayName());
                 $this->getRepositorio(\App\Entity\Fatura::class)->add($invoice, true);
@@ -321,7 +358,11 @@ dd($result);
             }
 
         } catch (\Exception $e) {
-            dd($e);
+            $this->logger->error('Erro ao processar pagamento inicial.', [
+                'eid'     => $eid ?? null,
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile() . ':' . $e->getLine(),
+            ]);
             $this->addFlash('error', 'Erro ao processar pagamento: ' . $e->getMessage());
             return $this->redirectToRoute('landing_home');
         }

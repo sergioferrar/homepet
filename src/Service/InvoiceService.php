@@ -54,7 +54,7 @@ class InvoiceService
     /**
      * Marca um invoice como pago
      */
-    public function markAsPaid(Invoice $invoice, array $paymentData = []): void
+    public function markAsPaid(Fatura $invoice, array $paymentData = []): void
     {
         $invoice->setStatus('pago');
         $invoice->setDataPagamento(new \DateTime());
@@ -68,26 +68,29 @@ class InvoiceService
             $invoice->setPaymentData(json_encode($paymentData));
         }
 
+        $this->em->persist($invoice);
         $this->em->flush();
     }
 
     /**
      * Marca um invoice como vencido
      */
-    public function markAsExpired(Invoice $invoice): void
+    public function markAsExpired(Fatura $invoice): void
     {
         $invoice->setStatus('vencido');
         $invoice->setUpdatedAt(new \DateTime());
+        $this->em->persist($invoice);
         $this->em->flush();
     }
 
     /**
      * Cancela um invoice
      */
-    public function cancelInvoice(Invoice $invoice): void
+    public function cancelInvoice(Fatura $invoice): void
     {
         $invoice->setStatus('cancelado');
         $invoice->setUpdatedAt(new \DateTime());
+        $this->em->persist($invoice);
         $this->em->flush();
     }
 
