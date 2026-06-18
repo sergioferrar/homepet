@@ -369,6 +369,62 @@ class LandingpageController extends DefaultController
     }
 
     /**
+     * Recebe o formulário de contato da landing page e envia e-mail para contato@systemhomepet.com
+     *
+     * @Route("/landing/contato", name="landing_contato", methods={"POST"})
+     */
+    public function contato(Request $request, EmailService $emailService): Response
+    {
+        // Valida CSRF
+        if (!$this->isCsrfTokenValid('contato', $request->get('_token'))) {
+            $this->addFlash('contato_erro', 'Requisição inválida. Por favor, recarregue a página e tente novamente.');
+            return $this->redirectToRoute('landing_home', ['#' => 'contato']);
+        }
+
+        $nome     = trim($request->get('nome', ''));
+        $email    = trim($request->get('email', ''));
+        $mensagem = trim($request->get('mensagem', ''));
+
+        // Validação básica
+        if ($nome === '' || $email === '' || $mensagem === '') {
+            $this->addFlash('contato_erro', 'Por favor, preencha todos os campos antes de enviar.');
+            return $this->redirectToRoute('landing_home', ['#' => 'contato']);
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->addFlash('contato_erro', 'O e-mail informado não é válido.');
+            return $this->redirectToRoute('landing_home', ['#' => 'contato']);
+        }
+
+        try {
+            $html = $this->renderView('emails/contato_landing.html.twig', [
+                'nome'     => htmlspecialchars($nome, ENT_QUOTES, 'UTF-8'),
+                'email'    => htmlspecialchars($email, ENT_QUOTES, 'UTF-8'),
+                'mensagem' => htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8'),
+                'data'     => (new \DateTime())->format('d/m/Y \à\s H:i'),
+            ]);
+
+            $emailService->sendEmail(
+                'contato@systemhomepet.com',
+                "📬 Contato do site — {$nome}",
+                $html
+            );
+
+            $this->addFlash('contato_sucesso', 'Mensagem enviada com sucesso! Em breve nossa equipe entrará em contato.');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Erro ao enviar e-mail de contato.', [
+                'nome'    => $nome,
+                'email'   => $email,
+                'message' => $e->getMessage(),
+            ]);
+            $this->addFlash('contato_erro', 'Não foi possível enviar a mensagem no momento. Tente novamente ou fale conosco pelo WhatsApp.');
+        }
+
+        return $this->redirectToRoute('landing_home', ['_fragment' => 'contato']);
+    }
+
+    /**
      * Página pública — Política de Privacidade.
      * Lê o conteúdo da tabela config (banco homepet_login, estab=0, tipo=lgpd).
      *

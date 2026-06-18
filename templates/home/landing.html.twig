@@ -377,24 +377,61 @@
                                 </div>
                             </div>
                             <div class="col-12 col-md-7">
-                                <form>
+
+                                {% for label, messages in app.flashes %}
+                                    {% for message in messages %}
+                                        {% if label == 'contato_sucesso' %}
+                                        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                                            <i class="bi bi-check-circle-fill me-2"></i>{{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        </div>
+                                        {% elseif label == 'contato_erro' %}
+                                        <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                                            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+
+                                <form action="{{ path('landing_contato') }}" method="POST" id="formContato">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('contato') }}">
                                     <div class="mb-3">
-                                        <label class="form-label-custom">Nome Completo</label>
-                                        <input type="text" class="form-control form-control-custom"
-                                        placeholder="Ex: João Silva">
+                                        <label class="form-label-custom" for="contato_nome">Nome Completo</label>
+                                        <input type="text" id="contato_nome" name="nome"
+                                               class="form-control form-control-custom"
+                                               placeholder="Ex: João Silva"
+                                               required maxlength="150">
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label-custom">E-mail Corporativo</label>
-                                        <input type="email" class="form-control form-control-custom"
-                                        placeholder="joao@seuempresa.com">
+                                        <label class="form-label-custom" for="contato_email">E-mail</label>
+                                        <input type="email" id="contato_email" name="email"
+                                               class="form-control form-control-custom"
+                                               placeholder="joao@seuempresa.com"
+                                               required maxlength="200">
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label-custom">Mensagem</label>
-                                        <textarea class="form-control form-control-custom" rows="4"
-                                        placeholder="Como podemos ajudar?"></textarea>
+                                        <label class="form-label-custom" for="contato_mensagem">Mensagem</label>
+                                        <textarea id="contato_mensagem" name="mensagem"
+                                                  class="form-control form-control-custom" rows="4"
+                                                  placeholder="Como podemos ajudar?"
+                                                  required maxlength="2000"></textarea>
                                     </div>
-                                    <button type="submit" class="btn btn-primary-custom w-100 justify-content-center">Enviar Mensagem</button>
+                                    <button type="submit" id="btnEnviarContato"
+                                            class="btn btn-primary-custom w-100 justify-content-center">
+                                        <span id="btnTexto"><i class="bi bi-send me-2"></i>Enviar Mensagem</span>
+                                        <span id="btnLoading" class="d-none">
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>Enviando...
+                                        </span>
+                                    </button>
                                 </form>
+                                <script>
+                                document.getElementById('formContato').addEventListener('submit', function() {
+                                    document.getElementById('btnTexto').classList.add('d-none');
+                                    document.getElementById('btnLoading').classList.remove('d-none');
+                                    document.getElementById('btnEnviarContato').disabled = true;
+                                });
+                                </script>
                             </div>
                         </div>
                     </div>
