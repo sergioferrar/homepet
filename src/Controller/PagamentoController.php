@@ -23,7 +23,7 @@ class PagamentoController extends DefaultController
      */
     public function notificacao(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
-        $paymentId = $request->get('payment_id');
+        $paymentId = $request->get('payment_id') ?? $request->get('preapproval_id');
         $status    = $request->get('status');
 
         if (!$paymentId) {
