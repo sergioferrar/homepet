@@ -75,50 +75,72 @@ class MercadoPagoService implements PaymentGatewayInterface
 
     public function createSubscription(array $data): array
     {
-        // Mercado Pago usa o conceito de "preapproval" para assinaturas
+        $backUrl  = rtrim($_ENV['PAGAMENTO_URL'] ?? '', '/') . '/pagamento/retorno';
+        $notifUrl = rtrim($_ENV['PAGAMENTO_URL'] ?? '', '/') . '/pagamento/webhook/mercadopago';
+
+        // Data de início: imediatamente (formato ISO 8601 com timezone)
+        $startDate = isset($data['start_date'])
+            ? $data['start_date']
+            : (new \DateTime('now', new \DateTimeZone('America/Sao_Paulo')))->format(\DateTime::ATOM);
+
         $body = [
-            'reason' => $data['title'] ?? 'Assinatura Sistema',
+            'reason'   => $data['title'] ?? 'Assinatura Sistema',
+            'payer_email' => $data['email'] ?? '',
+            'back_url'    => $backUrl,
+            'notification_url' => $notifUrl,
+            'status'          => 'pending',
+            'external_reference' => (string) ($data['external_reference'] ?? ''),
             'auto_recurring' => [
-                'frequency' => 1,
-                'frequency_type' => 'months',
-                'transaction_amount' => (float) ($data['price'] ?? 0),
-                'currency_id' => 'BRL',
+                'frequency'          => 1,
+                'frequency_type'     => 'months',
+                'transaction_amount' => round((float) ($data['price'] ?? 0), 2),
+                'currency_id'        => 'BRL',
+                'start_date'         => $startDate,
             ],
-            'payer_email' => $data['email'] ?? 'test@test.com',
-            'back_url' => ($_ENV['PAGAMENTO_URL'] ?? '') . 'pagamento/sucesso',
-            'status' => 'pending',
-            'external_reference' => $data['external_reference'] ?? null,
         ];
 
-        // Data de início (hoje)
-        if (isset($data['start_date'])) {
-            $body['auto_recurring']['start_date'] = $data['start_date'];
-        }
-
-        // Data de fim (opcional)
-        if (isset($data['end_date'])) {
+        // Data de fim opcional
+        if (!empty($data['end_date'])) {
             $body['auto_recurring']['end_date'] = $data['end_date'];
         }
 
         try {
             $response = $this->client->request('POST', 'https://api.mercadopago.com/preapproval', [
-                'headers' => $this->getHeaders(),
-                'json' => $body
+                'headers' => array_merge($this->getHeaders(), [
+                    'X-Idempotency-Key' => \Ramsey\Uuid\Uuid::uuid4()->toString(),
+                ]),
+                'json' => $body,
             ]);
 
-            $content = $response->toArray();
+            // Captura o corpo mesmo em caso de erro HTTP para logar detalhes reais
+            $content = $response->toArray(false); // false = não lança exceção no 4xx/5xx
+
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode === 200 || $statusCode === 201) {
+                return [
+                    'success'        => true,
+                    'subscription_id' => $content['id'] ?? null,
+                    'init_point'      => $content['init_point'] ?? null,
+                    'sandbox_init_point' => $content['sandbox_init_point'] ?? null,
+                    'status'          => $content['status'] ?? null,
+                ];
+            }
+
+            // 400/422 — MP retornou detalhes do erro
+            $mpMessage = $content['message'] ?? ($content['error'] ?? 'Erro desconhecido');
+            $mpCause   = isset($content['cause']) ? json_encode($content['cause']) : '';
 
             return [
-                'success' => true,
-                'subscription_id' => $content['id'] ?? null,
-                'init_point' => $content['init_point'] ?? null,
-                'sandbox_init_point' => $content['sandbox_init_point'] ?? null,
-                'status' => $content['status'] ?? null,
+                'success' => false,
+                'error'   => "[MP {$statusCode}] {$mpMessage}" . ($mpCause ? " | Cause: {$mpCause}" : ''),
+                'raw'     => $content,
             ];
+
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
             ];
         }
     }
