@@ -358,6 +358,7 @@ class LandingpageController extends DefaultController
             }
 
         } catch (\Exception $e) {
+            dd($e);
             $this->logger->error('Erro ao processar pagamento inicial.', [
                 'eid'     => $eid ?? null,
                 'message' => $e->getMessage(),
