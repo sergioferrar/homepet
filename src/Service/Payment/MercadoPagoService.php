@@ -81,7 +81,7 @@ class MercadoPagoService implements PaymentGatewayInterface
         // Data de início: imediatamente (formato ISO 8601 com timezone)
         $startDate = isset($data['start_date'])
             ? $data['start_date']
-            : (new \DateTime('now', new \DateTimeZone('America/Sao_Paulo')))->format(\DateTime::ATOM);
+            : (new \DateTime('now', new \DateTimeZone('America/Sao_Paulo')))->format('Y-m-d\TH:i:s.000P');
 
         $body = [
             'reason'   => $data['title'] ?? 'Assinatura Sistema',
