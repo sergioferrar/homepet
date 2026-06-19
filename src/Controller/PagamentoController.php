@@ -2,15 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\Estabelecimento;
+use App\Service\Payment\MercadoPagoService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Entity\Estabelecimento;
-use MercadoPago\Client\Payment\PaymentClient;
-use MercadoPago\Client\Common\RequestOptions;
-use MercadoPago\MercadoPagoConfig;
-use App\Service\Payment\MercadoPagoService;
-
 
 class PagamentoController extends DefaultController
 {
@@ -23,89 +19,114 @@ class PagamentoController extends DefaultController
      */
     public function notificacao(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
-        $paymentId = $request->get('payment_id') ?? $request->get('preapproval_id');
-        $status    = $request->get('status');
+        // O fluxo de cadastro usa assinatura recorrente (preapproval), portanto o MP
+        // retorna preapproval_id. Pagamentos avulsos retornam payment_id.
+        $paymentId = $request->get('payment_id') ?: $request->get('collection_id');
+        $preapprovalId = $request->get('preapproval_id');
+        $status = $request->get('status') ?? $request->get('collection_status');
 
-        if (!$paymentId) {
+        if (!$paymentId && !$preapprovalId) {
             return new Response('ID de pagamento ausente', 400);
         }
 
         $emEstabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class);
-        $emUsuario         = $this->getRepositorio(\App\Entity\Usuario::class);
-        $emFatura          = $this->getRepositorio(\App\Entity\Fatura::class);
+        $emUsuario = $this->getRepositorio(\App\Entity\Usuario::class);
+        $emFatura = $this->getRepositorio(\App\Entity\Fatura::class);
 
         try {
-            $autentication = $mercadoPagoService->oauthMP();
-            $payment       = $mercadoPagoService->consultarPagamento($paymentId, $autentication['access_token']);
+            $aprovado = false;
+            $externalReference = null;
+            $paymentMethod = null;
+            $statusConsultado = $status;
 
-            if ($payment['status'] === 'approved' || $status === 'approved') {
+            if ($preapprovalId) {
+                // ── Assinatura recorrente: consulta o status da preapproval ──
+                // Uma assinatura autorizada com sucesso tem status "authorized".
+                $subscription = $mercadoPagoService->getSubscriptionStatus($preapprovalId);
+                $statusConsultado = $subscription['status'] ?? $status;
+                $aprovado = in_array($statusConsultado, ['authorized', 'approved'], true);
+                $externalReference = $subscription['raw_data']['external_reference'] ?? null;
+            } elseif ($paymentId) {
+                // ── Pagamento avulso: consulta o status do pagamento ──
+                $payment = $mercadoPagoService->getPaymentStatus($paymentId);
+                $statusConsultado = $payment['status'] ?? $status;
+                $aprovado = $statusConsultado === 'approved';
+                $externalReference = $payment['external_reference'] ?? null;
+                $paymentMethod = $payment['payment_method_id'] ?? null;
+            }
 
-                // ── Tenta encontrar a invoice pelo external_reference do pagamento ──
-                $invoiceId   = $payment['external_reference'] ?? null;
-                $invoice     = $invoiceId ? $emFatura->find($invoiceId) : null;
+            // Reforço: alguns retornos trazem o status aprovado já na query string.
+            if (!$aprovado && in_array($status, ['approved', 'authorized'], true)) {
+                $aprovado = true;
+            }
 
-                // Fallback: usa sessão se disponível (compatibilidade)
-                if (!$invoice) {
-                    $sessionData = $request->getSession()->get('finaliza');
-                    if (!empty($sessionData['invoice_id'])) {
-                        $invoice = $emFatura->find($sessionData['invoice_id']);
-                    }
-                }
-
-                $eid     = null;
-                $usuario = null;
-
-                if ($invoice) {
-                    $eid     = $invoice->getEstabelecimentoId();
-                    $usuario = $emUsuario->findOneBy(['petshop_id' => $eid]);
-
-                    // Marca a invoice como paga
-                    $invoiceService = $this->container->get(\App\Service\InvoiceService::class);
-                    $invoiceService->markAsPaid($invoice, [
-                        'payment_id'     => $paymentId,
-                        'payment_status' => $payment['status'],
-                        'payment_method' => $payment['payment_method_id'] ?? null,
-                    ]);
-                }
-
-                // Ativa o estabelecimento
-                if ($eid) {
-                    $uid = $usuario ? $usuario->getId() : 0;
-                    $emEstabelecimento->aprovacao($uid, $eid);
-                } else {
-                    // Fallback via sessão antiga
-                    $sessionData = $request->getSession()->get('finaliza');
-                    if (!empty($sessionData['eid'])) {
-                        $emEstabelecimento->aprovacao($sessionData['uid'] ?? 0, $sessionData['eid']);
-                        $eid = $sessionData['eid'];
-                    }
-                }
-
-                // Envia e-mail de confirmação
-                if ($usuario && $invoice) {
-                    $emailService = $this->container->get(\App\Service\EmailService::class);
-                    $emailService->sendEmail(
-                        $usuario->getEmail(),
-                        'Assinatura Confirmada - Sistema HomePet',
-                        $this->renderView('emails/assinatura_confirmada.html.twig', [
-                            'invoice' => $invoice,
-                            'usuario' => $usuario,
-                        ])
-                    );
-                }
-
-                return $this->render('pagamento/confirmacao.html.twig', [
-                    'estabelecimento' => $eid,
-                    'status'          => 'aprovado',
-                ]);
-
-            } else {
-                // Pagamento pendente ou recusado
+            if (!$aprovado) {
+                // Pagamento pendente ou recusado — webhook confirmará depois.
                 return $this->render('pagamento/pendente.html.twig', [
-                    'status'   => $payment['status'] ?? $status,
+                    'status' => $statusConsultado,
                     'mensagem' => 'Seu pagamento está sendo processado. Você receberá um e-mail quando for confirmado.',
                 ]);
             }
+
+            // ── Localiza a invoice pelo external_reference (invoice_id) ──
+            $invoice = $externalReference ? $emFatura->find($externalReference) : null;
+
+            // Fallback: usa sessão se disponível (compatibilidade)
+            if (!$invoice) {
+                $sessionData = $request->getSession()->get('finaliza');
+                if (!empty($sessionData['invoice_id'])) {
+                    $invoice = $emFatura->find($sessionData['invoice_id']);
+                }
+            }
+
+            $eid = null;
+            $usuario = null;
+
+            if ($invoice) {
+                $eid = $invoice->getEstabelecimentoId();
+                $usuario = $emUsuario->findOneBy(['petshop_id' => $eid]);
+
+                // Marca a invoice como paga
+                $invoiceService = $this->container->get(\App\Service\InvoiceService::class);
+                $invoiceService->markAsPaid($invoice, [
+                    'payment_id' => $paymentId ?: $preapprovalId,
+                    'payment_status' => 'approved',
+                    'payment_method' => $paymentMethod,
+                ]);
+            }
+
+            // Fallback do estabelecimento via sessão antiga
+            if (!$eid) {
+                $sessionData = $request->getSession()->get('finaliza');
+                if (!empty($sessionData['eid'])) {
+                    $eid = $sessionData['eid'];
+                    $usuario = $usuario ?: $emUsuario->findOneBy(['petshop_id' => $eid]);
+                }
+            }
+
+            // ── Ativa o estabelecimento ──
+            if ($eid) {
+                $uid = $usuario ? $usuario->getId() : 0;
+                $emEstabelecimento->aprovacao($uid, $eid);
+            }
+
+            // Envia e-mail de confirmação
+            if ($usuario && $invoice) {
+                $emailService = $this->container->get(\App\Service\EmailService::class);
+                $emailService->sendEmail(
+                    $usuario->getEmail(),
+                    'Assinatura Confirmada - Sistema HomePet',
+                    $this->renderView('emails/assinatura_confirmada.html.twig', [
+                        'invoice' => $invoice,
+                        'usuario' => $usuario,
+                    ])
+                );
+            }
+
+            return $this->render('pagamento/confirmacao.html.twig', [
+                'estabelecimento' => $eid,
+                'status' => 'aprovado',
+            ]);
 
         } catch (\Exception $e) {
             $this->logger->error('Erro no retorno de pagamento.', ['message' => $e->getMessage()]);
@@ -136,7 +157,7 @@ class PagamentoController extends DefaultController
                 // Se for pagamento de invoice (external_reference = invoice_id)
                 if (isset($result['external_reference'])) {
                     $invoiceId = $result['external_reference'];
-                    $invoice   = $this->getRepositorio(\App\Entity\Fatura::class)->find($invoiceId);
+                    $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($invoiceId);
 
                     if ($invoice && $result['status'] === 'approved') {
                         $invoiceService = $this->container->get(\App\Service\InvoiceService::class);
@@ -159,17 +180,17 @@ class PagamentoController extends DefaultController
                         if ($usuario && $estabelecimento) {
                             $emailService = $this->container->get(\App\Service\EmailService::class);
                             $template = ($invoice->getTipo() === 'assinatura')
-                                ? 'emails/assinatura_confirmada.html.twig'
-                                : 'emails/assinatura_renovada.html.twig';
+                            ? 'emails/assinatura_confirmada.html.twig'
+                            : 'emails/assinatura_renovada.html.twig';
 
                             $emailService->sendEmail(
                                 $usuario->getEmail(),
                                 $invoice->getTipo() === 'assinatura'
-                                    ? 'Assinatura Confirmada - Sistema HomePet'
-                                    : 'Assinatura Renovada - Sistema HomePet',
+                                ? 'Assinatura Confirmada - Sistema HomePet'
+                                : 'Assinatura Renovada - Sistema HomePet',
                                 $this->renderView($template, [
-                                    'invoice'          => $invoice,
-                                    'estabelecimento'  => $estabelecimento,
+                                    'invoice' => $invoice,
+                                    'estabelecimento' => $estabelecimento,
                                 ])
                             );
                         }
@@ -219,20 +240,20 @@ class PagamentoController extends DefaultController
 
         // $payment = $mercadoPagoService->criarPagamento($payload, $autentication['access_token']);
         $payment = $mercadoPagoService->criarPagamento([
-            "transaction_amount" => (float)$request->get('transactionAmount'),
+            "transaction_amount" => (float) $request->get('transactionAmount'),
             "payment_method_id" => 'pix',
             "payer" => [
                 "email" => $request->get('email'),
-            ]
+            ],
         ], $autentication['access_token']);
         // dd($payment);
-        
+
         // Salva o payment_id na sessão para verificação posterior
         $request->getSession()->set('payment_id', $payment['id']);
-        
+
         $data = [];
         $data['pix_entities'] = $payment['point_of_interaction'];
-        $data['valor'] = (float)$request->get('transactionAmount');
+        $data['valor'] = (float) $request->get('transactionAmount');
         $data['payment_id'] = $payment['id'];
         // dd($data);
         return $this->render('pagamento/pix.html.twig', $data);
@@ -244,7 +265,7 @@ class PagamentoController extends DefaultController
     public function verificarStatus(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
         $paymentId = $request->query->get('payment_id');
-        
+
         if (!$paymentId) {
             return $this->json(['status' => 'error', 'message' => 'Payment ID não fornecido']);
         }
@@ -252,14 +273,14 @@ class PagamentoController extends DefaultController
         try {
             $autentication = $mercadoPagoService->oauthMP();
             $payment = $mercadoPagoService->consultarPagamento($paymentId, $autentication['access_token']);
-            
+
             // Se aprovado, ativa o estabelecimento
             if ($payment['status'] === 'approved' && $request->getSession()->has('finaliza')) {
                 $finaliza = $request->getSession()->get('finaliza');
                 $this->getRepositorio(\App\Entity\Estabelecimento::class)
                     ->aprovacao($finaliza['uid'], $finaliza['eid']);
             }
-            
+
             return $this->json([
                 'status' => $payment['status'],
                 'status_detail' => $payment['status_detail'] ?? null,
@@ -275,30 +296,30 @@ class PagamentoController extends DefaultController
     public function pagarCartao(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
         $data = json_decode($request->getContent(), true);
-        
+
         try {
             $autentication = $mercadoPagoService->oauthMP();
-            
+
             // Prepara os dados do pagamento
             $paymentData = [
-                'transaction_amount' => (float)$data['amount'],
+                'transaction_amount' => (float) $data['amount'],
                 'token' => $data['token'],
                 'description' => $data['description'],
-                'installments' => (int)$data['installments'],
+                'installments' => (int) $data['installments'],
                 'payment_method_id' => $data['payment_method_id'],
                 'issuer_id' => $data['issuer_id'],
                 'payer' => [
                     'email' => $data['email'],
                     'identification' => [
                         'type' => $data['payer']['identification']['type'],
-                        'number' => $data['payer']['identification']['number']
-                    ]
-                ]
+                        'number' => $data['payer']['identification']['number'],
+                    ],
+                ],
             ];
-            
+
             // Cria o pagamento
             $payment = $mercadoPagoService->criarPagamento($paymentData, $autentication['access_token']);
-            
+
             // Se aprovado, ativa o estabelecimento
             if ($payment['status'] === 'approved') {
                 $this->getRepositorio(\App\Entity\Estabelecimento::class)
@@ -307,17 +328,17 @@ class PagamentoController extends DefaultController
                         $request->getSession()->get('finaliza')['eid']
                     );
             }
-            
+
             return $this->json([
                 'status' => $payment['status'],
                 'status_detail' => $payment['status_detail'] ?? null,
-                'payment_id' => $payment['id']
+                'payment_id' => $payment['id'],
             ]);
-            
+
         } catch (\Exception $e) {
             return $this->json([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

@@ -63,7 +63,7 @@ class FichaController extends DefaultController
         $consulta->setStatus('atendido');
         $consulta->setCriadoEm(new \DateTime());
 
-        $this->getRepositorio(Consulta::class)->salvarConsulta($consulta);
+        $this->getRepositorio(Consulta::class)->salvarConsulta($baseId, $consulta);
 
         $this->addFlash('success', 'Atendimento salvo com sucesso!');
         return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);

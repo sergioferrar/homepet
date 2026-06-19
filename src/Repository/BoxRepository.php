@@ -27,7 +27,6 @@ class BoxRepository extends ServiceEntityRepository
      */
     public function findAllComOcupacao(int $baseId): array
     {
-        $db  = $_ENV['DBNAMETENANT'];
         $sql = "
             SELECT
                 b.id, b.numero, b.tipo, b.porte, b.estrutura, b.localizacao,
@@ -63,7 +62,6 @@ class BoxRepository extends ServiceEntityRepository
      */
     public function findDisponiveisParaSelect(int $baseId): array
     {
-        $db  = $_ENV['DBNAMETENANT'];
         $sql = "
             SELECT b.id, b.numero, b.tipo, b.porte, b.estrutura, b.localizacao
             FROM homepet_{$baseId}.box b
@@ -80,7 +78,6 @@ class BoxRepository extends ServiceEntityRepository
      */
     public function findByIdAndBase(int $baseId, int $id): ?array
     {
-        $db  = $_ENV['DBNAMETENANT'];
         $row = $this->conn->fetchAssociative(
             "SELECT * FROM homepet_{$baseId}.box WHERE id = :id AND estabelecimento_id = :baseId",
             ['id' => $id, 'baseId' => $baseId]
@@ -94,7 +91,6 @@ class BoxRepository extends ServiceEntityRepository
      */
     public function inserir(int $baseId, Box $box): int
     {
-        $db = $_ENV['DBNAMETENANT'];
         $this->conn->executeQuery(
             "INSERT INTO homepet_{$baseId}.box
                 (estabelecimento_id, numero, tipo, porte, estrutura, localizacao, status,
@@ -130,7 +126,6 @@ class BoxRepository extends ServiceEntityRepository
      */
     public function atualizar(int $baseId, Box $box): void
     {
-        $db = $_ENV['DBNAMETENANT'];
         $this->conn->executeQuery(
             "UPDATE homepet_{$baseId}.box SET
                 numero        = :numero,
@@ -173,7 +168,6 @@ class BoxRepository extends ServiceEntityRepository
      */
     public function liberar(int $baseId, string $numeroBox): void
     {
-        $db = $_ENV['DBNAMETENANT'];
         $this->conn->executeQuery(
             "UPDATE homepet_{$baseId}.box SET status = 'disponivel', updated_at = NOW()
              WHERE numero = :numero AND estabelecimento_id = :eid",
@@ -186,7 +180,6 @@ class BoxRepository extends ServiceEntityRepository
      */
     public function ocupar(int $baseId, string $numeroBox): void
     {
-        $db = $_ENV['DBNAMETENANT'];
         $this->conn->executeQuery(
             "UPDATE homepet_{$baseId}.box SET status = 'ocupado', updated_at = NOW()
              WHERE numero = :numero AND estabelecimento_id = :eid",
@@ -199,7 +192,6 @@ class BoxRepository extends ServiceEntityRepository
      */
     public function atualizarStatus(int $baseId, int $id, string $status): void
     {
-        $db = $_ENV['DBNAMETENANT'];
         $this->conn->executeQuery(
             "UPDATE homepet_{$baseId}.box SET status = :status, updated_at = NOW()
              WHERE id = :id AND estabelecimento_id = :eid",
@@ -212,7 +204,6 @@ class BoxRepository extends ServiceEntityRepository
      */
     public function excluir(int $baseId, int $id): void
     {
-        $db = $_ENV['DBNAMETENANT'];
         $this->conn->executeQuery(
             "DELETE FROM homepet_{$baseId}.box WHERE id = :id AND estabelecimento_id = :eid",
             ['id' => $id, 'eid' => $baseId]
@@ -224,7 +215,6 @@ class BoxRepository extends ServiceEntityRepository
      */
     public function contadoresPorStatus(int $baseId): array
     {
-        $db  = $_ENV['DBNAMETENANT'];
         $rows = $this->conn->fetchAllAssociative(
             "SELECT status, COUNT(*) AS total
              FROM homepet_{$baseId}.box

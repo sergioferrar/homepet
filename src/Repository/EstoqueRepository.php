@@ -76,7 +76,7 @@ class EstoqueRepository extends ServiceEntityRepository
                        e.controla_validade, e.local_estoque_id, e.status,
                        p.nome AS produto_nome, p.descricao AS produto_descricao,
                        p.preco_venda, p.codigo_barras, p.categoria
-                FROM estoque e
+                FROM homepet_{$estabelecimentoId}.estoque e
                 LEFT JOIN produto p ON p.id = e.produto_id
                 WHERE e.estabelecimento_id = :estabelecimentoId
                   AND e.status = 'ativo'

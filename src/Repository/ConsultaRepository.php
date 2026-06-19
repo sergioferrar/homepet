@@ -16,7 +16,7 @@ class ConsultaRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function salvarConsulta(Consulta $consulta): void // Removido $baseId, pois já está no objeto
+    public function salvarConsulta($baseId, Consulta $consulta): void // Removido $baseId, pois já está no objeto
     {
        
         $sql = "INSERT INTO homepet_{$baseId}.consulta 
