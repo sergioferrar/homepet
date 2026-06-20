@@ -3,10 +3,13 @@ namespace App\Controller\Clinica;
 
 use App\Controller\DefaultController;
 use App\Entity\Financeiro;
+use App\Entity\FinanceiroPendente;
+use App\Entity\Pet;
+use App\Entity\Produto;
 use App\Entity\Servico;
 use App\Entity\Venda;
+use App\Entity\VendaItem;
 use App\Repository\FinanceiroRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,7 +27,17 @@ class VendaController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+
+        // Conexão compartilhada (mesmo objeto usado pelos repositories após switchDB)
+        // — usada apenas para o controle transacional; toda escrita roda nos repositories.
         $conn = $this->entityManager->getConnection();
+
+        $vendaRepo              = $this->getRepositorio(Venda::class);
+        $vendaItemRepo          = $this->getRepositorio(VendaItem::class);
+        $produtoRepo            = $this->getRepositorio(Produto::class);
+        $servicoRepo            = $this->getRepositorio(Servico::class);
+        $financeiroRepo         = $this->getRepositorio(Financeiro::class);
+        $financeiroPendenteRepo = $this->getRepositorio(FinanceiroPendente::class);
 
         try {
             $petIdFromRequest = $request->get('pet_id');
@@ -32,7 +45,7 @@ class VendaController extends DefaultController
                 return $this->json(['status' => 'error', 'mensagem' => 'ID do pet não informado.'], 400);
             }
 
-            $pet = $this->getRepositorio(\App\Entity\Pet::class)->findPetById($baseId, $petIdFromRequest);
+            $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petIdFromRequest);
             if (!$pet) {
                 return $this->json(['status' => 'error', 'mensagem' => 'Pet não encontrado.'], 404);
             }
@@ -44,27 +57,17 @@ class VendaController extends DefaultController
             // ── Transação atômica — abre ANTES de qualquer escrita ────────────
             $conn->beginTransaction();
 
-            // 1️⃣ Insere a venda via DBAL para obter o ID sem flush intermediário
-            //    (flush intermediário dentro de transação causa autocommit implícito no MySQL)
-            $conn->executeStatement(
-                "INSERT INTO venda
-                    (estabelecimento_id, cliente, pet_id, parcelas, origem,
-                     metodo_pagamento, status, data, observacao, total)
-                 VALUES
-                    (:estab, :cliente, :pet, :parcelas, :origem,
-                     :metodo, :status, NOW(), :obs, 0)",
-                [
-                    'estab' => $baseId,
-                    'cliente' => $pet['dono_nome'] ?? 'Consumidor Final',
-                    'pet' => $petIdFromRequest,
-                    'parcelas' => $request->get('parcelas', 1),
-                    'origem' => $origem,
-                    'metodo' => $metodoPagamento,
-                    'status' => $status,
-                    'obs' => $request->get('observacao'),
-                ]
-            );
-            $vendaId = (int) $conn->lastInsertId();
+            // 1️⃣ Insere a venda via repository (SQL nativo) para obter o ID
+            $vendaId = $vendaRepo->inserirVenda($baseId, [
+                'estabelecimento_id' => $baseId,
+                'cliente'            => $pet['dono_nome'] ?? 'Consumidor Final',
+                'pet_id'             => $petIdFromRequest,
+                'parcelas'           => $request->get('parcelas', 1),
+                'origem'             => $origem,
+                'metodo_pagamento'   => $metodoPagamento,
+                'status'             => $status,
+                'observacao'         => $request->get('observacao'),
+            ]);
 
             // 2️⃣ Processa itens via DBAL
             $descricoes = (array) $request->get('descricao', []);
@@ -88,7 +91,7 @@ class VendaController extends DefaultController
                 $valorUnitario = 0.0;
 
                 if ($tipo === 'servico') {
-                    $servico = $this->getRepositorio(Servico::class)->listaServicoPorId($baseId, $realId);
+                    $servico = $servicoRepo->listaServicoPorId($baseId, $realId);
                     if (!$servico) {
                         continue;
                     }
@@ -96,43 +99,34 @@ class VendaController extends DefaultController
                     $nome = $servico['nome'] ?? 'Serviço';
                     $valorUnitario = (float) $servico['valor'];
                 } else {
-                    $produto = $this->getRepositorio(\App\Entity\Produto::class)->find($realId);
+                    $produto = $produtoRepo->findByIdComEstoque((int) $realId, $baseId);
                     if (!$produto) {
                         continue;
                     }
 
-                    $nome = $produto->getNome();
-                    $valorUnitario = (float) $produto->getPrecoVenda();
+                    $nome = $produto['nome'];
+                    $valorUnitario = (float) $produto['preco_venda'];
                 }
 
                 $quantidade = (int) ($quantidades[$i] ?? 1);
                 $desconto = (float) ($descontos[$i] ?? 0);
                 $valorItem = ($valorUnitario * $quantidade) - $desconto;
 
-                $conn->executeStatement(
-                    "INSERT INTO venda_item
-                        (venda_id, tipo, produto_id, produto, quantidade, valor_unitario, subtotal)
-                     VALUES
-                        (:venda, :tipo, :pid, :pnome, :qtd, :unit, :sub)",
-                    [
-                        'venda' => $vendaId,
-                        'tipo' => $tipo,
-                        'pid' => (int) $realId,
-                        'pnome' => $nome,
-                        'qtd' => $quantidade,
-                        'unit' => $valorUnitario,
-                        'sub' => $valorItem,
-                    ]
-                );
+                $vendaItemRepo->inserirItem($baseId, [
+                    'venda_id'       => $vendaId,
+                    'tipo'           => $tipo,
+                    'produto_id'     => (int) $realId,
+                    'produto'        => $nome,
+                    'quantidade'     => $quantidade,
+                    'valor_unitario' => $valorUnitario,
+                    'subtotal'       => $valorItem,
+                ]);
 
                 $valorTotal += $valorItem;
             }
 
             // 3️⃣ Atualiza total da venda
-            $conn->executeStatement(
-                "UPDATE venda SET total = :total WHERE id = :id",
-                ['total' => $valorTotal, 'id' => $vendaId]
-            );
+            $vendaRepo->atualizarTotal($baseId, $vendaId, $valorTotal);
 
             // 4️⃣ Registra no financeiro — dentro da mesma transação DBAL
             $descricaoFinanceiro = sprintf(
@@ -142,43 +136,22 @@ class VendaController extends DefaultController
             );
 
             if ($metodoPagamento === 'pendente') {
-                // FinanceiroPendente via DBAL (entidade não possui campo "tipo")
-                $conn->executeStatement(
-                    "INSERT INTO financeiropendente
-                        (descricao, valor, data, metodo_pagamento, origem, status,
-                         estabelecimento_id, inativar)
-                     VALUES
-                        (:desc, :valor, NOW(), 'pendente', 'clinica', 'Pendente',
-                         :estab, 0)",
-                    [
-                        'desc' => $descricaoFinanceiro,
-                        'valor' => $valorTotal,
-                        'estab' => $baseId,
-                    ]
-                );
-
-                // ── Commit ANTES do ORM para evitar transação aninhada ────────
-                $conn->commit();
+                // FinanceiroPendente via repository (SQL nativo)
+                $financeiroPendenteRepo->inserirVendaClinica($baseId, $descricaoFinanceiro, $valorTotal);
             } else {
-                // ── Commit da transação DBAL ANTES do flush do ORM ────────────
-                // O flush() do Doctrine abre sua própria transação; chamar dentro
-                // de uma transação DBAL aberta causa autocommit implícito no MySQL
-                // e pode gerar erro de transação aninhada.
-                $conn->commit();
-
-                // Financeiro (pago) via ORM — fora da transação DBAL
-                $financeiro = new Financeiro();
-                $financeiro->setDescricao($descricaoFinanceiro);
-                $financeiro->setValor($valorTotal);
-                $financeiro->setData(new \DateTime());
-                $financeiro->setMetodoPagamento($metodoPagamento);
-                $financeiro->setOrigem('clinica');
-                $financeiro->setStatus('Pago');
-                $financeiro->setTipo('ENTRADA');
-                $financeiro->setEstabelecimentoId($baseId);
-                $this->entityManager->persist($financeiro);
-                $this->entityManager->flush();
+                // Financeiro (pago) via repository (SQL nativo) — substitui persist()/flush()
+                $financeiroRepo->inserirEntrada($baseId, [
+                    'descricao'        => $descricaoFinanceiro,
+                    'valor'            => $valorTotal,
+                    'metodo_pagamento' => $metodoPagamento,
+                    'origem'           => 'clinica',
+                    'status'           => 'Pago',
+                    'tipo'             => 'ENTRADA',
+                ]);
             }
+
+            // ── Commit único da transação (todas as escritas usam a mesma conexão)
+            $conn->commit();
 
             $mensagem = ($metodoPagamento === 'pendente')
             ? 'Venda registrada como pendente no financeiro!'
@@ -191,8 +164,6 @@ class VendaController extends DefaultController
             ]);
 
         } catch (\Throwable $e) {
-
-            dd($e);
             if ($conn->isTransactionActive()) {
                 $conn->rollBack();
             }
@@ -210,14 +181,14 @@ class VendaController extends DefaultController
     /**
      * @Route("/pet/{petId}/venda/{id}/inativar", name="clinica_inativar_venda", methods={"POST"})
      */
-    public function inativarVenda(Request $request, int $petId, int $id, EntityManagerInterface $em): Response
+    public function inativarVenda(Request $request, int $petId, int $id): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
         try {
             $vendaRepo = $this->getRepositorio(Venda::class);
-            $venda = $vendaRepo->findOneBy(['id' => $id, 'estabelecimentoId' => $baseId]);
+            $venda = $vendaRepo->buscarPorId($baseId, $id);
 
             if (!$venda) {
                 $this->addFlash('danger', 'Venda não encontrada.');

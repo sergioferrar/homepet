@@ -2,34 +2,15 @@
 
 namespace App\Controller\Clinica;
 
+use App\Controller\DefaultController;
 use App\Entity\Cliente;
 use App\Entity\Consulta;
-use App\Entity\DocumentoModelo;
-use App\Entity\Financeiro;
-use App\Entity\FinanceiroPendente;
-use App\Entity\Internacao;
-use App\Entity\InternacaoExecucao;
-use App\Entity\InternacaoPrescricao;
-use App\Entity\Medicamento;
 use App\Entity\Pet;
-use App\Entity\Servico;
-use App\Entity\Vacina;
 use App\Entity\Veterinario;
 use App\Repository\ConsultaRepository;
-use App\Repository\DocumentoModeloRepository;
-use App\Repository\FinanceiroPendenteRepository;
-use App\Repository\FinanceiroRepository;
-use App\Repository\InternacaoRepository;
-use App\Repository\VeterinarioRepository;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Service\GeradorpdfService;
-use App\Repository\PetRepository;
-use App\Controller\DefaultController;
-
 
 /**
  * @Route("dashboard/clinica")
@@ -51,7 +32,7 @@ class FichaController extends DefaultController
 
         $consulta = new Consulta();
         $consulta->setEstabelecimentoId($baseId);
-        $consulta->setClienteId((int)$request->get('cliente_id'));
+        $consulta->setClienteId((int) $request->get('cliente_id'));
         $consulta->setPetId($petId);
         $consulta->setData(new \DateTime($request->get('data')));
         $consulta->setHora(new \DateTime($request->get('hora')));
@@ -104,34 +85,79 @@ class FichaController extends DefaultController
             $conteudoHtml = $this->quillDeltaToHtml($conteudoDelta);
 
             $cabecalhoHtml = "
-            <div style='text-align:center; font-size:14px; font-weight:bold;'>
-            " . ($clinica->getRazaoSocial() ?? 'Clínica Veterinária') . " <br>
-            CNPJ: " . ($clinica->getCnpj() ?? '') . " <br>
-            {$clinica->getRua()}, {$clinica->getNumero()} - {$clinica->getBairro()}, {$clinica->getCidade()} - CEP: {$clinica->getCep()}
-            </div>
-            <hr>
-            <div style='font-size:12px;'>
-            <strong>Tutor:</strong> {$clienteNome} <br>
-            <strong>Pet:</strong> {$pet['nome']} ({$pet['especie']} - {$pet['raca']}, {$pet['idade']} anos) <br>
-            <strong>Sexo:</strong> {$pet['sexo']}
-            </div>
-            <hr>
-            ";
+<table width='100%' style='border-collapse:collapse;'>
+  <tr>
+    <td style='padding:0 0 10px 0; border-bottom:2.5px solid #5d57f4;'>
+      <table width='100%' style='border-collapse:collapse;'>
+        <tr>
+          <td style='width:55px; vertical-align:middle; padding-right:10px;'>
+            <table style='border-collapse:collapse;'>
+              <tr>
+                <td style='width:44px; height:44px; border:2px solid #5d57f4; border-radius:50%; text-align:center; vertical-align:middle; font-size:18px; font-weight:bold; color:#5d57f4;'>+</td>
+              </tr>
+            </table>
+          </td>
+          <td style='vertical-align:middle; text-align:left;'>
+            <span style='font-size:16px; font-weight:bold; color:#0F172A;'>" . ($clinica->getRazaoSocial() ?? 'Clínica Veterinária') . "</span><br>
+            <span style='font-size:10px; color:#475569;'>CNPJ: " . ($clinica->getCnpj() ?? '') . "</span>
+          </td>
+          <td style='vertical-align:middle; text-align:right; font-size:10px; color:#475569; line-height:1.6;'>
+            {$clinica->getRua()}, {$clinica->getNumero()} - {$clinica->getBairro()}<br>
+            {$clinica->getCidade()} - CEP: {$clinica->getCep()}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
 
-            // --- NOVO: Cria o rodapé HTML fixo diretamente no PHP ---
+<table width='100%' style='border-collapse:collapse; margin-top:14px;'>
+  <tr>
+    <td style='text-align:center; padding-bottom:10px;'>
+      <span style='font-size:11px; font-weight:bold; letter-spacing:2.5px; color:#5d57f4;'>RECEITUÁRIO VETERINÁRIO</span>
+    </td>
+  </tr>
+</table>
+
+<table width='100%' style='border-collapse:collapse; background-color:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px;'>
+  <tr>
+    <td style='padding:10px 14px; font-size:11px; color:#0F172A; line-height:1.8;'>
+      <strong style='color:#475569;'>TUTOR:</strong> {$clienteNome} &nbsp;&nbsp;|&nbsp;&nbsp;
+      <strong style='color:#475569;'>PET:</strong> {$pet['nome']} ({$pet['especie']} - {$pet['raca']}, {$pet['idade']} anos) &nbsp;&nbsp;|&nbsp;&nbsp;
+      <strong style='color:#475569;'>SEXO:</strong> {$pet['sexo']}
+    </td>
+  </tr>
+</table>
+";
+
+// --- Rodapé HTML fixo (assinatura do veterinário + emissão) ---
             $rodapeHtml = "
-            <div style='text-align:center; font-size:12px; margin-top: 20px;'>
-            <hr style='border: 1px dashed black; width: 50%; margin: 10px auto;'>
-            <p>Assinatura do Veterinário</p>
-            <p>
-            <strong>{$vet->getNome()}</strong> <br>
-            <strong>CRMV:</strong> {$vet->getCrmv()}
-            </p>
-            </div>
-            <div style='text-align:center; font-size:10px; margin-top: 10px;'>
-            <span>Documento emitido em: " . date('d/m/Y H:i:s') . "</span>
-            </div>
-            ";
+<table width='100%' style='border-collapse:collapse; margin-top:6px;'>
+  <tr>
+    <td style='border-top:1px solid #E2E8F0; padding-top:18px; text-align:center;'>
+      <table style='margin:0 auto; border-collapse:collapse;'>
+        <tr>
+          <td style='border-top:1px solid #0F172A; padding-top:6px; text-align:center; min-width:240px;'>
+            <span style='font-size:9px; text-transform:uppercase; letter-spacing:1px; color:#94A3B8;'>Assinatura do Veterinário</span><br>
+            <span style='font-size:12px; font-weight:bold; color:#0F172A;'>{$vet->getNome()}</span><br>
+            <span style='font-size:10.5px; color:#475569;'>CRMV: {$vet->getCrmv()}</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style='text-align:center; padding-top:14px;'>
+      <span style='font-size:8.5px; color:#94A3B8;'>Documento emitido em: " . date('d/m/Y H:i:s') . "</span>
+    </td>
+  </tr>
+  <tr>
+    <td style='text-align:center; padding-top:4px;'>
+      <span style='font-size:8px; color:#cbd5e1;'>System Home Pet — Seu CRM para clínicas e pet shops</span>
+    </td>
+  </tr>
+</table>
+";
 
             $receita = new \App\Entity\Receita();
             $receita->setEstabelecimentoId($baseId);
@@ -220,8 +246,8 @@ class FichaController extends DefaultController
         if ($request->isMethod('POST')) {
             $consulta = new Consulta();
             $consulta->setEstabelecimentoId($baseId);
-            $consulta->setClienteId((int)$request->get('cliente_id'));
-            $consulta->setPetId((int)$request->get('pet_id'));
+            $consulta->setClienteId((int) $request->get('cliente_id'));
+            $consulta->setPetId((int) $request->get('pet_id'));
             $consulta->setData(new \DateTime($request->get('data')));
             $consulta->setHora(new \DateTime($request->get('hora')));
             $consulta->setObservacoes($request->get('observacoes'));
@@ -254,7 +280,7 @@ class FichaController extends DefaultController
         $this->getRepositorio(Consulta::class)->atualizarStatusConsulta($baseId, $id, $status);
         return $this->json(['success' => true]);
     }
-    
+
     /**
      * @Route("/consulta/{id}", name="clinica_ver_consulta", methods={"GET"})
      */

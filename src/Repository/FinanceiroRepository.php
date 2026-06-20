@@ -154,6 +154,30 @@ class FinanceiroRepository extends ServiceEntityRepository
 
 
 
+    /**
+     * Insere uma entrada paga no financeiro (ex.: venda concluída na clínica).
+     * Substitui o antigo persist()/flush() do ORM no controller.
+     */
+    public function inserirEntrada(int $baseId, array $dados): void
+    {
+        $sql = "INSERT INTO homepet_{$baseId}.financeiro
+                    (estabelecimento_id, descricao, valor, data, metodo_pagamento,
+                     origem, status, tipo)
+                VALUES
+                    (:estabelecimento_id, :descricao, :valor, NOW(), :metodo_pagamento,
+                     :origem, :status, :tipo)";
+
+        $this->conn->executeStatement($sql, [
+            'estabelecimento_id' => $baseId,
+            'descricao'          => $dados['descricao'],
+            'valor'              => $dados['valor'],
+            'metodo_pagamento'   => $dados['metodo_pagamento'],
+            'origem'             => $dados['origem'] ?? 'clinica',
+            'status'             => $dados['status'] ?? 'Pago',
+            'tipo'               => $dados['tipo'] ?? 'ENTRADA',
+        ]);
+    }
+
     public function update($baseId, Financeiro $financeiro): void
     {
         $sql = "UPDATE homepet_{$baseId}.financeiro 

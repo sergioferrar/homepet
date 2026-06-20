@@ -151,7 +151,7 @@ class VendaRepository extends ServiceEntityRepository
      */
     public function inativar(int $baseId, int $vendaId): bool
     {
-        $sql = "UPDATE venda
+        $sql = "UPDATE homepet_{$baseId}.venda
                 SET status = 'Cancelada'
                 WHERE id = :id AND estabelecimento_id = :estab";
 
@@ -159,6 +159,66 @@ class VendaRepository extends ServiceEntityRepository
             'id'    => $vendaId,
             'estab' => $baseId,
         ]) > 0;
+    }
+
+    /**
+     * Insere uma nova venda (origem clínica/PDV) e retorna o ID gerado.
+     */
+    public function inserirVenda(int $baseId, array $dados): int
+    {
+        $sql = "INSERT INTO homepet_{$baseId}.venda
+                    (estabelecimento_id, cliente, pet_id, parcelas, origem,
+                     metodo_pagamento, status, data, observacao, total)
+                VALUES
+                    (:estabelecimento_id, :cliente, :pet_id, :parcelas, :origem,
+                     :metodo_pagamento, :status, NOW(), :observacao, 0)";
+
+        $this->conn->executeStatement($sql, [
+            'estabelecimento_id' => $dados['estabelecimento_id'],
+            'cliente'            => $dados['cliente'],
+            'pet_id'             => $dados['pet_id'],
+            'parcelas'           => $dados['parcelas'],
+            'origem'             => $dados['origem'],
+            'metodo_pagamento'   => $dados['metodo_pagamento'],
+            'status'             => $dados['status'],
+            'observacao'         => $dados['observacao'],
+        ]);
+
+        return (int) $this->conn->lastInsertId();
+    }
+
+    /**
+     * Atualiza o total de uma venda.
+     */
+    public function atualizarTotal(int $baseId, int $vendaId, float $total): void
+    {
+        $sql = "UPDATE homepet_{$baseId}.venda
+                SET total = :total
+                WHERE id = :id AND estabelecimento_id = :estab";
+
+        $this->conn->executeStatement($sql, [
+            'total' => $total,
+            'id'    => $vendaId,
+            'estab' => $baseId,
+        ]);
+    }
+
+    /**
+     * Busca uma venda pelo ID dentro do estabelecimento.
+     */
+    public function buscarPorId(int $baseId, int $vendaId): ?array
+    {
+        $sql = "SELECT *
+                FROM homepet_{$baseId}.venda
+                WHERE id = :id AND estabelecimento_id = :estab
+                LIMIT 1";
+
+        $row = $this->conn->fetchAssociative($sql, [
+            'id'    => $vendaId,
+            'estab' => $baseId,
+        ]);
+
+        return $row ?: null;
     }
 
     /**

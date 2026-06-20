@@ -311,6 +311,26 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
 
     /**
+     * Insere lançamento pendente originado de venda da clínica.
+     * Substitui o INSERT inline que existia no VendaController::concluirVenda.
+     */
+    public function inserirVendaClinica(int $baseId, string $descricao, float $valor): void
+    {
+        $sql = "INSERT INTO homepet_{$baseId}.financeiropendente
+                    (descricao, valor, data, metodo_pagamento, origem, status,
+                     estabelecimento_id, inativar)
+                VALUES
+                    (:descricao, :valor, NOW(), 'pendente', 'clinica', 'Pendente',
+                     :estabelecimento_id, 0)";
+
+        $this->conn->executeStatement($sql, [
+            'descricao'          => $descricao,
+            'valor'              => $valor,
+            'estabelecimento_id' => $baseId,
+        ]);
+    }
+
+    /**
      * Insere lançamento pendente originado de venda PDV.
      */
     public function inserirPdv(
