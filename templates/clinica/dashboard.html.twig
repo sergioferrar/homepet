@@ -328,7 +328,7 @@
                     <div class="p-4 text-white position-relative" 
                          style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                         <div class="row align-items-center">
-                            <div class="col-md-8">
+                            <div class="col-md-6">
                                 <div class="d-flex align-items-center gap-3 mb-2">
                                     <i class="bi bi-heart-pulse-fill fs-1"></i>
                                     <div>
@@ -339,13 +339,13 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <div class="col-md-6 text-md-end mt-3 mt-md-0">
                                 <div class="bg-white bg-opacity-10 rounded-3 p-3 d-inline-block">
                                     <div class="d-flex align-items-center gap-2">
-                                        <i class="bi bi-calendar3 fs-5"></i>
+                                        <i class="bi bi-calendar3 fs-5 me-2"></i>
                                         <div class="text-start">
                                             <div class="fw-bold fs-5">{{ "now"|date("d/m/Y") }}</div>
-                                            <small class="opacity-75">{{ "now"|date("H:i") }}</small>
+                                            <small class="opacity-75 text-end">{{ "now"|date("H:i") }}</small>
                                         </div>
                                     </div>
                                 </div>
@@ -370,7 +370,7 @@
                         <div class="bg-primary bg-opacity-10 rounded-circle p-3">
                             <i class="bi bi-heart-pulse text-primary fs-2"></i>
                         </div>
-                        <span class="badge bg-primary bg-opacity-10 text-primary">Total</span>
+                        <span class="badge bg-primary bg-opacity-10 text-white">Total</span>
                     </div>
                     <h2 class="mb-1 fw-bold text-primary">{{ total_pets }}</h2>
                     <p class="mb-0 text-muted small">Animais Registrados</p>
