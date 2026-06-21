@@ -15,19 +15,12 @@ use App\Entity\Pet;
 use App\Entity\Servico;
 use App\Entity\Vacina;
 use App\Entity\Veterinario;
-use App\Repository\ConsultaRepository;
-use App\Repository\DocumentoModeloRepository;
-use App\Repository\FinanceiroPendenteRepository;
-use App\Repository\FinanceiroRepository;
-use App\Repository\InternacaoRepository;
-use App\Repository\VeterinarioRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Service\GeradorpdfService;
-use App\Repository\PetRepository;
 use App\Controller\DefaultController;
 
 
@@ -113,13 +106,13 @@ class HistoricoController extends DefaultController
      */
     public function excluirDocumento(
         int                       $petId,
-        int                       $id,
-        DocumentoModeloRepository $repoDoc,
-        PetRepository             $petRepo
+        int                       $id
     ): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $repoDoc = $this->getRepositorio(DocumentoModelo::class);
+        $petRepo = $this->getRepositorio(Pet::class);
 
         $pet = $petRepo->find($petId);
         if (!$pet) {
@@ -138,12 +131,12 @@ class HistoricoController extends DefaultController
     public function gerarDocumentoPdf(
         int               $petId,
         Request           $request,
-        PetRepository     $petRepo,
         GeradorpdfService $pdf
     ): Response
     {
         // 🔹 Seleciona o banco de dados do tenant atual
         $this->switchDB();
+        $petRepo = $this->getRepositorio(Pet::class);
 
         // 🔹 Busca o pet
         $pet = $petRepo->find($petId);

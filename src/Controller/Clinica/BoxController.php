@@ -58,10 +58,12 @@ class BoxController extends DefaultController
     /**
      * @Route("", name="index", methods={"GET"})
      */
-    public function index(BoxRepository $boxRepo): Response
+    public function index(Request $request): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+
+        $boxRepo = $this->getRepositorio(\App\Entity\Box::class);
 
         $boxes      = $boxRepo->findAllComOcupacao($baseId);
         $contadores = $boxRepo->contadoresPorStatus($baseId);
@@ -81,10 +83,12 @@ class BoxController extends DefaultController
     /**
      * @Route("/novo", name="novo", methods={"GET","POST"})
      */
-    public function novo(Request $request, BoxRepository $boxRepo): Response
+    public function novo(Request $request): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+
+        $boxRepo = $this->getRepositorio(\App\Entity\Box::class);
 
         if ($request->isMethod('POST')) {
             $box = $this->hydrateFromRequest($request, new Box());
@@ -115,10 +119,12 @@ class BoxController extends DefaultController
     /**
      * @Route("/{id}/editar", name="editar", methods={"GET","POST"})
      */
-    public function editar(int $id, Request $request, BoxRepository $boxRepo): Response
+    public function editar(int $id, Request $request): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+
+        $boxRepo = $this->getRepositorio(\App\Entity\Box::class);
 
         $row = $boxRepo->findByIdAndBase($baseId, $id);
         if (!$row) {
@@ -158,10 +164,12 @@ class BoxController extends DefaultController
      *
      * @Route("/{id}/status", name="status", methods={"POST"})
      */
-    public function alterarStatus(int $id, Request $request, BoxRepository $boxRepo): JsonResponse
+    public function alterarStatus(int $id, Request $request): JsonResponse
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+
+        $boxRepo = $this->getRepositorio(\App\Entity\Box::class);
 
         $novoStatus = $request->get('status');
         $statusValidos = array_keys(self::STATUS_LABELS);
@@ -202,10 +210,12 @@ class BoxController extends DefaultController
     /**
      * @Route("/{id}/excluir", name="excluir", methods={"POST"})
      */
-    public function excluir(int $id, Request $request, BoxRepository $boxRepo): Response
+    public function excluir(int $id, Request $request): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+
+        $boxRepo = $this->getRepositorio(\App\Entity\Box::class);
 
         $row = $boxRepo->findByIdAndBase($baseId, $id);
         if (!$row) {

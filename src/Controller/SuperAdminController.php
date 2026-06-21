@@ -585,9 +585,9 @@ class SuperAdminController extends DefaultController
     public function alterarStatusEstabelecimento(
         int $id,
         Request $request,
-        EstabelecimentoRepository $estabelecimentoRepository,
         EntityManagerInterface $em
     ): Response {
+        $estabelecimentoRepository = $this->getRepositorio(\App\Entity\Estabelecimento::class);
         $estabelecimento = $estabelecimentoRepository->find($id);
 
         if (!$estabelecimento) {

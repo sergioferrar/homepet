@@ -18,9 +18,9 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class NotaFiscalController extends DefaultController
 {
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
     // LISTAGEM
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
 
     /**
      * @Route("", name="nf_lista")
@@ -40,9 +40,9 @@ class NotaFiscalController extends DefaultController
         ]);
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
     // EMITIR A PARTIR DE UMA VENDA
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
 
     /**
      * @Route("/emitir-venda/{vendaId}", name="nf_emitir_venda",
@@ -68,16 +68,16 @@ class NotaFiscalController extends DefaultController
         return $this->redirectToRoute('nf_lista');
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
     // EMITIR NOTA AVULSA
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
 
     /**
      * @Route("/avulsa", name="nf_avulsa_form", methods={"GET"})
      */
     public function avulsaForm(AsaasNotaFiscalService $asaas): Response
     {
-        $eid     = $this->getIdBase();
+        $eid = $this->getIdBase();
         $clientes = $this->em->getRepository(Cliente::class)->findBy(['estabelecimentoId' => $eid], ['nome' => 'ASC']);
         $servicos = $asaas->listarServicosMunicipais($eid);
 
@@ -139,9 +139,9 @@ class NotaFiscalController extends DefaultController
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
     // AUTORIZAR (forçar emissão imediata)
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
 
     /**
      * @Route("/autorizar/{id}", name="nf_autorizar",
@@ -167,9 +167,9 @@ class NotaFiscalController extends DefaultController
         return $this->redirectToRoute('nf_lista');
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
     // CANCELAR
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
 
     /**
      * @Route("/cancelar/{id}", name="nf_cancelar",
@@ -196,9 +196,9 @@ class NotaFiscalController extends DefaultController
         return $this->redirectToRoute('nf_lista');
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
     // SINCRONIZAR STATUS
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
 
     /**
      * @Route("/sync/{id}", name="nf_sync",
@@ -221,9 +221,9 @@ class NotaFiscalController extends DefaultController
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
     // WEBHOOK (Asaas → HomePet)
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
 
     /**
      * Endpoint público — sem autenticação de sessão, usa token de segurança.
@@ -251,9 +251,9 @@ class NotaFiscalController extends DefaultController
         return new JsonResponse(['ok' => true]);
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
     // CONFIGURAÇÃO ASAAS (aba dentro de Settings)
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
 
     /**
      * @Route("/configurar", name="nf_configurar", methods={"GET"})
@@ -318,9 +318,9 @@ class NotaFiscalController extends DefaultController
         return $this->redirectToRoute('nf_configurar');
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
     // AJAX: busca serviços municipais em tempo real
-    // ─────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------
 
     /**
      * @Route("/servicos-municipais", name="nf_servicos_municipais", methods={"GET"})

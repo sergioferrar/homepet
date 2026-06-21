@@ -9,7 +9,6 @@ use App\Entity\Produto;
 use App\Entity\Servico;
 use App\Entity\Venda;
 use App\Entity\VendaItem;
-use App\Repository\FinanceiroRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -208,11 +207,12 @@ class VendaController extends DefaultController
     /**
      * @Route("/clinica/pet/{petId}/venda/{id}/editar", name="clinica_editar_venda", methods={"POST"})
      */
-    public function editarVenda(Request $request, int $petId, int $id, FinanceiroRepository $financeiroRepository): JsonResponse
+    public function editarVenda(Request $request, int $petId, int $id): JsonResponse
     {
         try {
             $this->switchDB();
             $baseId = $this->getIdBase();
+            $financeiroRepository = $this->getRepositorio(Financeiro::class);
 
             $financeiro = $financeiroRepository->findFinanceiro($baseId, $id);
             if (!$financeiro) {

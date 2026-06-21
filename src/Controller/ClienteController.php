@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\Cliente;
-use App\Repository\ClienteRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -68,12 +67,12 @@ class ClienteController extends DefaultController
      */
     public function editar(
         Request           $request,
-        int               $id,
-        ClienteRepository $clienteRepository
+        int               $id
     ): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $clienteRepository = $this->getRepositorio(Cliente::class);
 
         // Busca cliente pelo ID
         $cliente = $clienteRepository->localizaTodosClientePorID($baseId, $id);

@@ -4,8 +4,6 @@ namespace App\Controller;
 
 use App\Entity\Fatura;
 use App\Entity\Estabelecimento;
-use App\Repository\InvoiceRepository;
-use App\Repository\EstabelecimentoRepository;
 use App\Service\InvoiceService;
 use App\Service\Payment\PaymentGatewayFactory;
 use Symfony\Component\HttpFoundation\Request;
@@ -65,7 +63,7 @@ class InvoiceController extends DefaultController
     /**
      * @Route("/pagar/{id}", name="invoice_pagar")
      */
-    public function pagar(Request $request, int $id, EstabelecimentoRepository $estabelecimentoRepository,PaymentGatewayFactory $paymentGatewayFactory): Response
+    public function pagar(Request $request, int $id, PaymentGatewayFactory $paymentGatewayFactory): Response
     {
         $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($id);
         
@@ -79,6 +77,7 @@ class InvoiceController extends DefaultController
         }
 
         // Buscar estabelecimento
+        $estabelecimentoRepository = $this->getRepositorio(Estabelecimento::class);
         $estabelecimento = $estabelecimentoRepository->find($invoice->getEstabelecimentoId());
         $plano = $this->getRepositorio(\App\Entity\Plano::class)->find($invoice->getPlanoId());
 
@@ -120,13 +119,14 @@ class InvoiceController extends DefaultController
     /**
      * @Route("/renovar-assinatura", name="invoice_renovar_assinatura")
      */
-    public function renovarAssinatura(Request $request, EstabelecimentoRepository $estabelecimentoRepository, InvoiceService $invoiceService): Response
+    public function renovarAssinatura(Request $request, InvoiceService $invoiceService): Response
     {
         $user = $this->getUser();
         if (!$user) {
             return $this->redirectToRoute('app_login');
         }
 
+        $estabelecimentoRepository = $this->getRepositorio(Estabelecimento::class);
         $estabelecimento = $estabelecimentoRepository->find($user->getPetshopId());
         
         if (!$estabelecimento) {
@@ -151,7 +151,7 @@ class InvoiceController extends DefaultController
     /**
      * @Route("/criar", name="invoice_criar", methods={"POST"})
      */
-    public function criar(Request $request, EstabelecimentoRepository $estabelecimentoRepository, InvoiceService $invoiceService): JsonResponse
+    public function criar(Request $request, InvoiceService $invoiceService): JsonResponse
     {
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
             return new JsonResponse(['success' => false, 'error' => 'Acesso negado'], 403);
@@ -162,6 +162,7 @@ class InvoiceController extends DefaultController
         $valorTotal = $request->request->get('valor_total');
         $tipo = $request->request->get('tipo', 'assinatura');
 
+        $estabelecimentoRepository = $this->getRepositorio(Estabelecimento::class);
         $estabelecimento = $estabelecimentoRepository->find($estabelecimentoId);
         
         if (!$estabelecimento) {

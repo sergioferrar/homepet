@@ -7,7 +7,6 @@ use App\Entity\Cliente;
 use App\Entity\Consulta;
 use App\Entity\Pet;
 use App\Entity\Veterinario;
-use App\Repository\ConsultaRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -284,10 +283,11 @@ class FichaController extends DefaultController
     /**
      * @Route("/consulta/{id}", name="clinica_ver_consulta", methods={"GET"})
      */
-    public function verConsulta(int $id, ConsultaRepository $consultaRepo): Response
+    public function verConsulta(int $id): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $consultaRepo = $this->getRepositorio(Consulta::class);
 
         // Você precisará de um método no seu repositório para buscar uma única consulta com todos os detalhes
         $consulta = $consultaRepo->findConsultaCompletaById($baseId, $id);

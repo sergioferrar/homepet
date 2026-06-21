@@ -13,9 +13,6 @@ use App\Entity\Venda;
 use App\Entity\VendaItem;
 use App\Entity\Financeiro;
 use App\Entity\FinanceiroPendente;
-use App\Repository\ClienteRepository;
-use App\Repository\FinanceiroPendenteRepository;
-use App\Repository\VendaRepository;
 use App\Service\CaixaService;
 use App\Service\PdvService;
 use App\Service\TenantContext;
@@ -253,11 +250,12 @@ class PdvController extends DefaultController
      * 
      * @Route("/caixa", name="clinica_pdv_caixa", methods={"GET"})
      */
-    public function caixa(VendaRepository $vendaRepo): Response
+    public function caixa(): Response
     {
         $this->switchDB();
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
         $hoje = new \DateTime();
+        $vendaRepo = $this->getRepositorio(Venda::class);
 
         // Busca resumo do caixa
         $resumoCaixa = $this->caixaService->getResumoDoDia();
@@ -303,10 +301,11 @@ class PdvController extends DefaultController
      * 
      * @Route("/clientes/listar", name="clinica_pdv_clientes_listar", methods={"GET"})
      */
-    public function listarClientes(ClienteRepository $clienteRepo): JsonResponse
+    public function listarClientes(): JsonResponse
     {
         $this->switchDB();
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+        $clienteRepo = $this->getRepositorio(Cliente::class);
 
         $clientes = $clienteRepo->findBy(['estabelecimentoId' => $estabelecimentoId]);
 
@@ -325,11 +324,12 @@ class PdvController extends DefaultController
      * 
      * @Route("/autocomplete/tutor", name="clinica_autocomplete_tutor", methods={"GET"})
      */
-    public function autocompleteTutor(Request $request, ClienteRepository $clienteRepo): JsonResponse
+    public function autocompleteTutor(Request $request): JsonResponse
     {
         $this->switchDB();
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
         $query = $request->query->get('query');
+        $clienteRepo = $this->getRepositorio(Cliente::class);
 
         if (empty($query) || strlen($query) < 3) {
             return new JsonResponse([]);
@@ -350,10 +350,11 @@ class PdvController extends DefaultController
      * 
      * @Route("/pets-by-tutor/{id}", name="clinica_pets_by_tutor", methods={"GET"})
      */
-    public function getPetsByTutor(int $id, ClienteRepository $clienteRepo): JsonResponse
+    public function getPetsByTutor(int $id): JsonResponse
     {
         $this->switchDB();
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+        $clienteRepo = $this->getRepositorio(Cliente::class);
 
         $pets = $clienteRepo->listarPetsDoCliente($estabelecimentoId, $id);
 
@@ -372,11 +373,11 @@ class PdvController extends DefaultController
      */
     public function finalizarCarrinho(
         Request $request,
-        int $id,
-        VendaRepository $vendaRepo,
-        FinanceiroPendenteRepository $fpRepo
+        int $id
     ): JsonResponse {
         $this->switchDB(); // <- garante que estamos no banco do tenant
+        $vendaRepo = $this->getRepositorio(Venda::class);
+        $fpRepo = $this->getRepositorio(FinanceiroPendente::class);
 
         try {
             // Aceita JSON ou form-data
@@ -604,10 +605,11 @@ class PdvController extends DefaultController
      * 
      * @Route("/resumo-dia", name="clinica_pdv_resumo_dia", methods={"GET"})
      */
-    public function resumoDia(Request $request, VendaRepository $vendaRepo): JsonResponse
+    public function resumoDia(Request $request): JsonResponse
     {
         $this->switchDB();
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+        $vendaRepo = $this->getRepositorio(Venda::class);
 
         try {
             $dataParam = $request->query->get('data');

@@ -2,7 +2,6 @@
 
 namespace App\Controller\Clinica;
 
-use App\Repository\BoxRepository;
 use App\Entity\Cliente;
 use App\Entity\Consulta;
 use App\Entity\DocumentoModelo;
@@ -16,19 +15,12 @@ use App\Entity\Pet;
 use App\Entity\Servico;
 use App\Entity\Vacina;
 use App\Entity\Veterinario;
-use App\Repository\ConsultaRepository;
-use App\Repository\DocumentoModeloRepository;
-use App\Repository\FinanceiroPendenteRepository;
-use App\Repository\FinanceiroRepository;
-use App\Repository\InternacaoRepository;
-use App\Repository\VeterinarioRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Service\GeradorpdfService;
-use App\Repository\PetRepository;
 use App\Controller\DefaultController;
 
 
@@ -42,13 +34,14 @@ class InternacaoController extends DefaultController
     /**
      * @Route("/pet/{petId}/internacao/nova", name="clinica_nova_internacao", methods={"GET", "POST"})
      */
-    public function novaInternacao(Request $request, int $petId, BoxRepository $boxRepo): Response
+    public function novaInternacao(Request $request, int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
 
         $internacaoRepo  = $this->getRepositorio(Internacao::class);
         $veterinarioRepo = $this->getRepositorio(Veterinario::class);
+        $boxRepo         = $this->getRepositorio(\App\Entity\Box::class);
 
         $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
         if (!$pet) {
@@ -132,11 +125,11 @@ class InternacaoController extends DefaultController
      */
     public function imprimirFicha(
         int                    $id,
-        InternacaoRepository   $internacaoRepo,
         EntityManagerInterface $em
     ): Response {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $internacaoRepo = $this->getRepositorio(Internacao::class);
  
         // ── 1. Dados principais da internação ─────────────────────────────
         $internacao = $internacaoRepo->findInternacaoCompleta($baseId, $id);
@@ -210,13 +203,13 @@ class InternacaoController extends DefaultController
      */
     public function fichaInternacao(
         int                    $id,
-        InternacaoRepository   $internacaoRepo,
-        VeterinarioRepository  $veterinarioRepo,
         EntityManagerInterface $em
     ): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $internacaoRepo = $this->getRepositorio(Internacao::class);
+        $veterinarioRepo = $this->getRepositorio(Veterinario::class);
 
         $internacao = $internacaoRepo->findInternacaoCompleta($baseId, $id);
         if (!$internacao) {
@@ -313,12 +306,12 @@ class InternacaoController extends DefaultController
     public function acaoInternacao(
         int $id,
         string $acao,
-        Request $request,
-        InternacaoRepository $internacaoRepo,
-        BoxRepository $boxRepo
+        Request $request
     ): JsonResponse {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $internacaoRepo = $this->getRepositorio(Internacao::class);
+        $boxRepo = $this->getRepositorio(\App\Entity\Box::class);
 
         if (!$this->isCsrfTokenValid('internacao_acao_' . $id, $request->get('_token'))) {
             return $this->json(['ok' => false, 'msg' => 'Token inválido.'], 400);
@@ -477,8 +470,7 @@ class InternacaoController extends DefaultController
         int                    $id,
         int                    $eventoId,
         Request                $request,
-        EntityManagerInterface $em,
-        InternacaoRepository   $internacaoRepo
+        EntityManagerInterface $em
     ): JsonResponse
     {
         $this->switchDB();
@@ -526,8 +518,7 @@ class InternacaoController extends DefaultController
         int                    $id,
         int                    $eventoId,
         Request                $request,
-        EntityManagerInterface $em,
-        InternacaoRepository   $internacaoRepo
+        EntityManagerInterface $em
     ): JsonResponse
     {
         $this->switchDB();

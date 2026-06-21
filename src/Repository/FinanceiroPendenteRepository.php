@@ -351,4 +351,23 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
             'pet_id'    => $petId,
         ]);
     }
+
+    public function buscaInativosPendentes($baseId)
+    {
+        $sql = "SELECT fp.id, fp.descricao, fp.valor AS total, fp.data, fp.pet_id,
+                p.nome AS pet_nome, c.nome AS dono_nome, 
+                COALESCE(fp.metodo_pagamento, 'pendente') AS metodo_pagamento,
+                'financeiro_pendente' AS tipo
+            FROM homepet_{$baseId}.financeiropendente fp
+            LEFT JOIN homepet_{$baseId}.pet p ON fp.pet_id = p.id
+            LEFT JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
+                WHERE fp.estabelecimento_id = :baseId
+            AND fp.status = 'inativo'
+            ORDER BY fp.data DESC";
+
+        $query = $this->conn->executeStatement($sqlPendentesInativos, ['baseId' => $baseId]);
+
+        return $query->fetchAllAssociative();
+
+    }
 }

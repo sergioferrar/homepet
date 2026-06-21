@@ -5,9 +5,6 @@ namespace App\Controller;
 use App\Entity\Financeiro;
 use App\Entity\Pet;
 use App\Entity\FinanceiroPendente;
-use App\Repository\FinanceiroRepository;
-use App\Repository\FinanceiroPendenteRepository;
-use App\Repository\PetRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,10 +22,12 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/", name="financeiro_index")
      */
-    public function index(Request $request, FinanceiroRepository $financeiroRepo, FinanceiroPendenteRepository $financeiroPendenteRepo): Response
+    public function index(Request $request): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $financeiroRepo = $this->getRepositorio(Financeiro::class);
+        $financeiroPendenteRepo = $this->getRepositorio(FinanceiroPendente::class);
 
         // --- Aba Diário ---
         $dataDiario = $request->query->get('data') ? date('Y-m-d', strtotime($request->query->get('data'))) : date('Y-m-d');
@@ -60,20 +59,8 @@ class FinanceiroController extends DefaultController
         $vendasInativas = $financeiroRepo->findInativos($baseId);
 
         // Busca registros inativos do financeiro_pendente
-        $conn = $this->getDoctrine()->getConnection();
-        $sqlPendentesInativos = "SELECT fp.id, fp.descricao, fp.valor AS total, fp.data, fp.pet_id,
-                                        p.nome AS pet_nome, c.nome AS dono_nome, 
-                                        COALESCE(fp.metodo_pagamento, 'pendente') AS metodo_pagamento,
-                                        'financeiro_pendente' AS tipo
-                                 FROM {$_ENV['DBNAMETENANT']}.financeiropendente fp
-                                 LEFT JOIN {$_ENV['DBNAMETENANT']}.pet p ON fp.pet_id = p.id
-                                 LEFT JOIN {$_ENV['DBNAMETENANT']}.cliente c ON p.dono_id = c.id
-                                 WHERE fp.estabelecimento_id = :baseId
-                                   AND fp.status = 'inativo'
-                                 ORDER BY fp.data DESC";
-
-        $pendentesInativos = $conn->fetchAllAssociative($sqlPendentesInativos, ['baseId' => $baseId]);
-
+        $pendentesInativos = $financeiroPendenteRepo->buscaInativosPendentes($baseId);
+        
         // Mescla vendas inativas e pendentes inativos
         $financeirosInativos = array_merge($vendasInativas, $pendentesInativos);
 
@@ -107,10 +94,12 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/novo", name="financeiro_novo")
      */
-    public function novo(Request $request, FinanceiroRepository $financeiroRepo, PetRepository $petRepo): Response
+    public function novo(Request $request): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $financeiroRepo = $this->getRepositorio(Financeiro::class);
+        $petRepo = $this->getRepositorio(Pet::class);
 
         if ($request->isMethod('POST')) {
             $financeiro = new Financeiro();
@@ -134,10 +123,12 @@ class FinanceiroController extends DefaultController
      * 
      * CORRIGIDO: findFinanceiro agora retorna array, não objeto
      */
-    public function editar(Request $request, int $id, FinanceiroRepository $financeiroRepo, PetRepository $petRepo): Response
+    public function editar(Request $request, int $id): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $financeiroRepo = $this->getRepositorio(Financeiro::class);
+        $petRepo = $this->getRepositorio(Pet::class);
         
         // findFinanceiro agora retorna array (não objeto)
         $financeiroData = $financeiroRepo->findFinanceiro($baseId, $id);
@@ -168,10 +159,11 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/deletar/{id}", name="financeiro_deletar")
      */
-    public function deletar(int $id, FinanceiroRepository $financeiroRepo): Response
+    public function deletar(int $id): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $financeiroRepo = $this->getRepositorio(Financeiro::class);
 
         $financeiro = $financeiroRepo->findFinanceiro($baseId, $id);
 
@@ -186,10 +178,11 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/pendente/confirmar/{id}", name="financeiro_confirmar_pagamento", methods={"POST"})
      */
-    public function confirmarPagamento(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
+    public function confirmarPagamento(int $id): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $financeiroPendenteRepository = $this->getRepositorio(FinanceiroPendente::class);
 
         $financeiroPendente = $financeiroPendenteRepository->findPendenteById($baseId, $id);
 
@@ -208,10 +201,11 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/pendente/deletar/{id}", name="financeiro_deletar_pendente", methods={"POST"})
      */
-    public function deletarPendente(int $id, FinanceiroPendenteRepository $financeiroPendenteRepository): Response
+    public function deletarPendente(int $id): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $financeiroPendenteRepository = $this->getRepositorio(FinanceiroPendente::class);
 
         $financeiroPendente = $financeiroPendenteRepository->findPendenteById($baseId, $id);
 
@@ -229,10 +223,11 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/relatorio/export", name="financeiro_relatorio_export")
      */
-    public function exportRelatorioExcel(Request $request, FinanceiroRepository $financeiroRepo): Response
+    public function exportRelatorioExcel(Request $request): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $financeiroRepo = $this->getRepositorio(Financeiro::class);
 
         $mesInicio = $request->query->get('mes_inicio');
         $mesFim = $request->query->get('mes_fim');
@@ -292,7 +287,7 @@ class FinanceiroController extends DefaultController
     {
         $inicioDia = (clone $data)->setTime(0, 0, 0);
         $fimDia = (clone $data)->setTime(23, 59, 59);
-
+        $this->switchDB();
         $em = $this->getDoctrine()->getManager();
 
         // 🔹 1. Busca ENTRADAS da tabela venda (todas as vendas pagas - exclui Pendente, Inativa e Carrinho)

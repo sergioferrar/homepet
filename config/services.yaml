@@ -72,10 +72,13 @@ services:
             #       - '@App\Service\Payment\PagSeguroService'
     
     # MercadoPago Service (Nova implementação com interface)
+    # MERCADO_PAGO_ENV = 'sandbox' → usa ambiente de testes do Mercado Pago
+    # MERCADO_PAGO_ENV = 'production' → usa ambiente de produção
     App\Service\Payment\MercadoPagoService:
         arguments:
             - '@Symfony\Contracts\HttpClient\HttpClientInterface'
             - '%env(MERCADOPAGO_ACCESS_TOKEN)%'
+            - '%env(MERCADO_PAGO_ENV)%'
     
 
     # ==========================================

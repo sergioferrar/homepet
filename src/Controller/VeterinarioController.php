@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\Veterinario;
-use App\Repository\VeterinarioRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,10 +18,11 @@ class VeterinarioController extends DefaultController
      *
      * @Route("", name="veterinario_index", methods={"GET"})
      */
-    public function index(VeterinarioRepository $repo): Response
+    public function index(): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $repo = $this->getRepositorio(Veterinario::class);
 
         $veterinarios = $repo->findByEstabelecimento($baseId);
 
@@ -36,10 +36,11 @@ class VeterinarioController extends DefaultController
      *
      * @Route("/novo", name="veterinario_novo", methods={"GET", "POST"})
      */
-    public function novo(Request $request, VeterinarioRepository $repo): Response
+    public function novo(Request $request): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $repo = $this->getRepositorio(Veterinario::class);
 
         if ($request->isMethod('POST')) {
             $veterinario = new Veterinario();
@@ -73,10 +74,11 @@ class VeterinarioController extends DefaultController
      *
      * @Route("/{id}/editar", name="veterinario_editar", methods={"GET", "POST"}, requirements={"id"="\d+"})
      */
-    public function editar(int $id, Request $request, VeterinarioRepository $repo): Response
+    public function editar(int $id, Request $request): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $repo = $this->getRepositorio(Veterinario::class);
 
         // Busca o veterinário garantindo que pertence ao estabelecimento do tenant
         $dados = $repo->findByIdCompleto($id, $baseId);
@@ -123,10 +125,11 @@ class VeterinarioController extends DefaultController
      *
      * @Route("/{id}/status", name="veterinario_status", methods={"POST"}, requirements={"id"="\d+"})
      */
-    public function alterarStatus(int $id, Request $request, VeterinarioRepository $repo): JsonResponse
+    public function alterarStatus(int $id, Request $request): JsonResponse
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $repo = $this->getRepositorio(Veterinario::class);
 
         $dados = $repo->findByIdCompleto($id, $baseId);
         if (!$dados) {

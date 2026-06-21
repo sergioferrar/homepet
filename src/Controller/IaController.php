@@ -2,30 +2,55 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Repository\PetRepository;
-use App\Repository\AgendamentoRepository;
+use Symfony\Component\Security\Core\Security;
+use App\Entity\Pet;
+use App\Entity\Agendamento;
+use App\Service\CaixaService;
+use App\Service\DatabaseBkp;
 use App\Service\IaGeminiService;
+use App\Service\PdvService;
+use App\Service\TempDirManager;
+use App\Service\TenantContext;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
+use Psr\Log\LoggerInterface;
 
-// <- AQUI muda
-
-class IaController extends AbstractController
+class IaController extends DefaultController
 {
-    private $petRepository;
-    private $agendamentoRepository;
     private $iaGeminiService;
 
     public function __construct(
-        PetRepository         $petRepository,
-        AgendamentoRepository $agendamentoRepository,
-        IaGeminiService       $iaGeminiService // <- AQUI muda
+        ?Security $security,
+        ManagerRegistry $managerRegistry,
+        RequestStack $request,
+        TempDirManager $tempDirManager,
+        DatabaseBkp $databaseBkp,
+        EntityManagerInterface $entityManager,
+        LoggerInterface $logger,
+        PdvService $pdvService,
+        CaixaService $caixaService,
+        EntityManagerInterface $em,
+        TenantContext $tenantContext,
+        IaGeminiService $iaGeminiService
     )
     {
-        $this->petRepository = $petRepository;
-        $this->agendamentoRepository = $agendamentoRepository;
+        parent::__construct(
+            $security,
+            $managerRegistry,
+            $request,
+            $tempDirManager,
+            $databaseBkp,
+            $entityManager,
+            $logger,
+            $pdvService,
+            $caixaService,
+            $em,
+            $tenantContext
+        );
         $this->iaGeminiService = $iaGeminiService;
     }
 
@@ -34,6 +59,9 @@ class IaController extends AbstractController
      */
     public function perguntar(Request $request)
     {
+        $petRepository = $this->getRepositorio(Pet::class);
+        $agendamentoRepository = $this->getRepositorio(Agendamento::class);
+
         $data = json_decode($request->getContent(), true);
         $pergunta = $data['pergunta'] ?? '';
 
@@ -41,8 +69,8 @@ class IaController extends AbstractController
         $baseId = $this->getIdBase();
         $usuario = $session->get('user');
 
-        $pet = $this->petRepository->buscarUltimoPorUsuario($baseId, $usuario);
-        $agendamento = $this->agendamentoRepository->buscarUltimoPorPet($baseId, $pet['id'] ?? 0);
+        $pet = $petRepository->buscarUltimoPorUsuario($baseId, $usuario);
+        $agendamento = $agendamentoRepository->buscarUltimoPorPet($baseId, $pet['id'] ?? 0);
 
         $contexto = "Você é uma IA veterinária de apoio clínico. Pet: {$pet['nome']} ({$pet['especie']}), {$pet['idade']} anos, raça {$pet['raca']}. Histórico: {$pet['observacoes']}. Último serviço: " . ($agendamento['servico'] ?? 'N/A');
 

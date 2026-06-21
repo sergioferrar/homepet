@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\Vacina;
 use App\Entity\Pet;
-use App\Repository\VacinaRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,10 +20,11 @@ class VacinaController extends DefaultController
      *
      * @Route("/pet/{petId}/vacinas", name="clinica_vacinas", methods={"GET"})
      */
-    public function listar(int $petId, VacinaRepository $repo): Response
+    public function listar(int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $repo = $this->getRepositorio(Vacina::class);
 
         // Usa o método SQL puro do novo repository
         $vacinas = $repo->listarPorPet($baseId, $petId);
@@ -43,10 +43,11 @@ class VacinaController extends DefaultController
      *
      * @Route("/pet/{petId}/vacina/nova", name="clinica_vacina_nova", methods={"POST"})
      */
-    public function novaVacina(int $petId, Request $request, VacinaRepository $repo): JsonResponse
+    public function novaVacina(int $petId, Request $request): JsonResponse
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $repo = $this->getRepositorio(Vacina::class);
 
         $vacina = new Vacina();
         $vacina->setEstabelecimentoId($baseId);
@@ -73,10 +74,11 @@ class VacinaController extends DefaultController
      *
      * @Route("/pet/{petId}/vacina/{id}/remover", name="clinica_vacina_remover", methods={"POST"})
      */
-    public function remover(int $petId, int $id, VacinaRepository $repo, Request $request): JsonResponse
+    public function remover(int $petId, int $id, Request $request): JsonResponse
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $repo = $this->getRepositorio(Vacina::class);
 
         $vacina = $repo->buscarPorId($baseId, $id);
         if (!$vacina) {
