@@ -95,7 +95,8 @@ class PetController extends DefaultController
 
         return $this->render('pet/novo.html.twig', [
             'clientes' => $clientes,
-            'racas' => $racas
+            'racas' => $racas,
+            'cliente_id' => $request->get('cliente_id') ?? false
         ]);
     }
 

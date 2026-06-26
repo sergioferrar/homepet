@@ -36,7 +36,7 @@
         </div>
         <div class="mb-3">
             <label for="raca" class="form-label">Raça</label>
-            <select class="form-select select2-raca" id="raca" name="raca">
+            <select class="form-select select2" id="raca" name="raca">
                 <option value="">Selecionar ou digitar raça...</option>
                 {% for raca in racas %}
                     <option value="{{ raca }}" {% if pet.raca is defined and pet.raca == raca %}selected{% endif %}>{{ raca }}</option>
@@ -79,16 +79,20 @@
                 </select>
             </div>
         </div>
-        <div class="mb-3">
-            <label for="dono_id" class="form-label">Dono</label>
-            <select class="form-select select2" id="dono_id" name="dono_id">
-                <option value="">Selecionar cliente</option>
-                {% for cliente in clientes %}
-                    <option value="{{ cliente.id }}"
-                            {% if pet.dono_id is defined and cliente.id == pet.dono_id %}selected{% endif %}>{{ cliente.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
+            {% if cliente_id != false %}
+                <input type="hidden" name="dono_id" value="{{ cliente_id }}">
+            {% else %}
+                <div class="mb-3">
+                    <label for="dono_id" class="form-label">Dono</label>
+                    <select class="form-select select2" id="dono_id" name="dono_id">
+                        <option value="">Selecionar cliente</option>
+                        {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}"
+                                    {% if pet.dono_id is defined and cliente.id == pet.dono_id %}selected{% endif %}>{{ cliente.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
         <div class="text-center">
             <button type="submit" class="btn btn-success w-50">Salvar</button>
         </div>
