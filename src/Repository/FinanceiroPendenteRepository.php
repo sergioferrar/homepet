@@ -361,11 +361,11 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
             FROM homepet_{$baseId}.financeiropendente fp
             LEFT JOIN homepet_{$baseId}.pet p ON fp.pet_id = p.id
             LEFT JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
-                WHERE fp.estabelecimento_id = :baseId
+                WHERE fp.estabelecimento_id = {$baseId}
             AND fp.status = 'inativo'
             ORDER BY fp.data DESC";
 
-        $query = $this->conn->executeStatement($sqlPendentesInativos, ['baseId' => $baseId]);
+        $query = $this->conn->executeQuery($sql);
 
         return $query->fetchAllAssociative();
 
