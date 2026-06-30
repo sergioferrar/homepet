@@ -8,9 +8,7 @@ use App\Entity\DocumentoModelo;
 use App\Entity\Financeiro;
 use App\Entity\FinanceiroPendente;
 use App\Entity\Internacao;
-use App\Entity\InternacaoExecucao;
 use App\Entity\Pet;
-use App\Entity\Servico;
 use App\Entity\Vacina;
 use App\Repository\FinanceiroRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -32,39 +30,39 @@ class DashboardController extends DefaultController
         $this->switchDB();
         $baseId = $this->getIdBase();
 
-        $repoPet        = $this->getRepositorio(Pet::class);
-        $repoCliente    = $this->getRepositorio(Cliente::class);
+        $repoPet = $this->getRepositorio(Pet::class);
+        $repoCliente = $this->getRepositorio(Cliente::class);
         $repoFinanceiro = $this->getRepositorio(FinanceiroPendente::class);
-        $repoConsulta   = $this->getRepositorio(Consulta::class);
+        $repoConsulta = $this->getRepositorio(Consulta::class);
         $repoInternacao = $this->getRepositorio(Internacao::class);
 
-        $internacoes    = $repoInternacao->listarInternacoesAtivas($baseId);
-        $totalPets      = $repoPet->countTotalPets($baseId);
-        $totalDono      = $repoCliente->countTotalDono($baseId);
+        $internacoes = $repoInternacao->listarInternacoesAtivas($baseId);
+        $totalPets = $repoPet->countTotalPets($baseId);
+        $totalDono = $repoCliente->countTotalDono($baseId);
         $debitosCliente = $repoFinanceiro->somarDebitosPendentes($baseId);
-        $media          = $repoConsulta->calcularMediaConsultas($baseId);
-        $atendimentos   = $repoConsulta->listarUltimosAtendimentos($baseId);
+        $media = $repoConsulta->calcularMediaConsultas($baseId);
+        $atendimentos = $repoConsulta->listarUltimosAtendimentos($baseId);
 
         $animaisCadastrados = method_exists($repoPet, 'listarPetsRecentes') ? $repoPet->listarPetsRecentes($baseId, 5) : [];
-        $vacinasVencidas    = method_exists($repoPet, 'listarVacinasPendentes') ? $repoPet->listarVacinasPendentes($baseId) : [];
+        $vacinasVencidas = method_exists($repoPet, 'listarVacinasPendentes') ? $repoPet->listarVacinasPendentes($baseId) : [];
         $vacinasProgramadas = method_exists($repoPet, 'listarVacinasProgramadas') ? $repoPet->listarVacinasProgramadas($baseId) : [];
 
         // 🔍 pesquisa
         $termo = $request->query->get('q');
-        $pets  = [];
+        $pets = [];
 
         if ($termo) {
             $pets = $repoPet->pesquisarPetsOuTutor($baseId, $termo);
         }
 
         // 🔹 BUSCA TODAS AS PRESCRIÇÕES DE TODAS AS INTERNAÇÕES ATIVAS (OTIMIZADO)
-        $prescricoesGerais          = [];
+        $prescricoesGerais = [];
         $calendarioPrescricoesGeral = [];
 
         // Coleta todos os IDs de internações ativas
         $internacaoIds = array_filter(array_column($internacoes, 'id'));
 
-        if (! empty($internacaoIds)) {
+        if (!empty($internacaoIds)) {
             // Busca TODOS os eventos de prescrição de uma vez
             $eventos = $em->getRepository(\App\Entity\InternacaoEvento::class)
                 ->createQueryBuilder('e')
@@ -78,7 +76,7 @@ class DashboardController extends DefaultController
             // Busca TODAS as execuções de uma vez
             $eventoIds = array_map(fn($e) => $e->getId(), $eventos);
             $execucoes = [];
-            if (! empty($eventoIds)) {
+            if (!empty($eventoIds)) {
                 $execucoesResult = $em->getRepository(\App\Entity\InternacaoExecucao::class)
                     ->createQueryBuilder('ex')
                     ->where('ex.prescricaoId IN (:eventoIds)')
@@ -101,48 +99,48 @@ class DashboardController extends DefaultController
             // Processa eventos
             foreach ($eventos as $evento) {
                 $internacaoId = $evento->getInternacaoId();
-                $internacao   = $internacoesMap[$internacaoId] ?? null;
+                $internacao = $internacoesMap[$internacaoId] ?? null;
 
-                if (! $internacao) {
+                if (!$internacao) {
                     continue;
                 }
 
                 $execucao = $execucoes[$evento->getId()] ?? null;
 
-                $cor    = '#667eea'; // roxo
+                $cor = '#667eea'; // roxo
                 $status = 'pendente';
                 if ($execucao && $execucao->getStatus() == 'confirmado') {
-                    $cor    = '#10b981'; // verde
+                    $cor = '#10b981'; // verde
                     $status = 'confirmado';
                 }
 
                 $calendarioPrescricoesGeral[] = [
-                    'title'         => ($internacao['pet_nome'] ?? 'Pet') . ' - ' . $evento->getTitulo(),
-                    'start'         => $evento->getDataHora()->format(\DateTime::ATOM),
-                    'end'           => (clone $evento->getDataHora())->modify('+30 minutes')->format(\DateTime::ATOM),
-                    'color'         => $cor,
-                    'evento_id'     => $evento->getId(),
+                    'title' => ($internacao['pet_nome'] ?? 'Pet') . ' - ' . $evento->getTitulo(),
+                    'start' => $evento->getDataHora()->format(\DateTime::ATOM),
+                    'end' => (clone $evento->getDataHora())->modify('+30 minutes')->format(\DateTime::ATOM),
+                    'color' => $cor,
+                    'evento_id' => $evento->getId(),
                     'internacao_id' => $internacaoId,
-                    'pet_nome'      => $internacao['pet_nome'] ?? 'Pet',
-                    'dono_nome'     => $internacao['dono_nome'] ?? '',
-                    'status'        => $status,
-                    'descricao'     => $evento->getDescricao(),
+                    'pet_nome' => $internacao['pet_nome'] ?? 'Pet',
+                    'dono_nome' => $internacao['dono_nome'] ?? '',
+                    'status' => $status,
+                    'descricao' => $evento->getDescricao(),
                 ];
             }
         }
 
         return $this->render('clinica/dashboard.html.twig', [
-            'total_pets'                   => $totalPets,
-            'debitos_cliente'              => $debitosCliente,
-            'media_atendimento'            => $media,
-            'atendimentos'                 => $atendimentos,
-            'internados'                   => $internacoes,
-            'vacinas_programadas'          => $vacinasProgramadas,
-            'vacinas_vencidas'             => $vacinasVencidas,
-            'totaldono'                    => $totalDono,
-            'animais_cadastrados'          => $animaisCadastrados,
-            'pets'                         => $pets,
-            'termo'                        => $termo,
+            'total_pets' => $totalPets,
+            'debitos_cliente' => $debitosCliente,
+            'media_atendimento' => $media,
+            'atendimentos' => $atendimentos,
+            'internados' => $internacoes,
+            'vacinas_programadas' => $vacinasProgramadas,
+            'vacinas_vencidas' => $vacinasVencidas,
+            'totaldono' => $totalDono,
+            'animais_cadastrados' => $animaisCadastrados,
+            'pets' => $pets,
+            'termo' => $termo,
             'calendario_prescricoes_geral' => $calendarioPrescricoesGeral,
         ]);
     }
@@ -156,35 +154,35 @@ class DashboardController extends DefaultController
         $baseId = $this->getIdBase();
 
         // --- Repositórios ---
-        $consultaRepo   = $this->getRepositorio(Consulta::class);
-        $documentoRepo  = $this->getRepositorio(DocumentoModelo::class);
+        $consultaRepo = $this->getRepositorio(Consulta::class);
+        $documentoRepo = $this->getRepositorio(DocumentoModelo::class);
         $internacaoRepo = $this->getRepositorio(Internacao::class);
-        $vacinaRepo     = $this->getRepositorio(Vacina::class);
-        $vendasRepo     = $this->getRepositorio(\App\Entity\Venda::class);
-        $vendaItemRepo  = $this->getRepositorio(\App\Entity\VendaItem::class);
-        $servicoRepo    = $this->getRepositorio(\App\Entity\Servico::class);
+        $vacinaRepo = $this->getRepositorio(Vacina::class);
+        $vendasRepo = $this->getRepositorio(\App\Entity\Venda::class);
+        $vendaItemRepo = $this->getRepositorio(\App\Entity\VendaItem::class);
+        $servicoRepo = $this->getRepositorio(\App\Entity\Servico::class);
 
         // --- Pet (agora retorna array) ---
         $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $id);
-        if (! $pet) {
+        if (!$pet) {
             throw $this->createNotFoundException('O pet não foi encontrado.');
         }
 
         // --- Dados básicos ---
-        $consultas  = $consultaRepo->findAllByPetId($baseId, $pet['id']);
+        $consultas = $consultaRepo->findAllByPetId($baseId, $pet['id']);
         $documentos = $documentoRepo->listarDocumentos($baseId);
-        $receitas   = $this->getRepositorio(\App\Entity\Receita::class)->listarPorPet($baseId, $pet['id']);
-        $vacinas    = $vacinaRepo->listarPorPet($baseId, $pet['id']);
+        $receitas = $this->getRepositorio(\App\Entity\Receita::class)->listarPorPet($baseId, $pet['id']);
+        $vacinas = $vacinaRepo->listarPorPet($baseId, $pet['id']);
 
-        $internacaoAtivaId  = $internacaoRepo->findAtivaIdByPet($baseId, $pet['id']);
+        $internacaoAtivaId = $internacaoRepo->findAtivaIdByPet($baseId, $pet['id']);
         $ultimaInternacaoId = $internacaoRepo->findUltimaIdByPet($baseId, $pet['id']);
-        $internacoesPet     = $internacaoRepo->listarInternacoesPorPet($baseId, $pet['id']);
+        $internacoesPet = $internacaoRepo->listarInternacoesPorPet($baseId, $pet['id']);
 
         // --- Serviços da clínica (já retorna array) ---
         $servicosClinica = $servicoRepo->findAllService($baseId, 'clinica');
 
         // --- VENDAS (agora com método SQL otimizado) ---
-        $vendasPagas     = $vendasRepo->findByPet($baseId, $pet['id']);
+        $vendasPagas = $vendasRepo->findByPet($baseId, $pet['id'], 'Paga');
         $vendasPendentes = $vendasRepo->vendaPorStatus($baseId, $pet['id'], 'Pendente');
         $vendasCarrinho = $vendasRepo->vendaPorStatus($baseId, $pet['id'], 'Aberta');
         // $vendasPendentes = $vendasRepo->findBy([
@@ -204,12 +202,12 @@ class DashboardController extends DefaultController
         // Consultas
         foreach ($consultas as $item) {
             $anamnese = json_decode($item['anamnese'], true)['ops'] ?? [];
-            $resumo   = '';
+            $resumo = '';
 
             foreach ($anamnese as $row) {
-                if (! empty($row['insert'])) {
+                if (!empty($row['insert'])) {
                     $texto = $row['insert'];
-                    if (! empty($row['attributes']['bold'])) {
+                    if (!empty($row['attributes']['bold'])) {
                         $texto = "<b>{$texto}</b>";
                     }
                     $resumo .= "{$texto} ";
@@ -217,196 +215,71 @@ class DashboardController extends DefaultController
             }
 
             $timeline_items[] = [
-                'data'        => new \DateTime($item['data'] . ' ' . $item['hora']),
-                'tipo'        => $item['tipo'] ?? 'Consulta',
+                'data' => new \DateTime($item['data'] . ' ' . $item['hora']),
+                'tipo' => $item['tipo'] ?? 'Consulta',
                 'observacoes' => $item['observacoes'],
-                'resumo'      => trim($resumo),
-                'anamnese'    => $item['anamnese'] ?? null,
+                'resumo' => trim($resumo),
+                'anamnese' => $item['anamnese'] ?? null,
             ];
         }
 
         // Receitas
         foreach ($receitas as $r) {
             $timeline_items[] = [
-                'data'              => new \DateTime($r['data']),
-                'tipo'              => 'Receita',
-                'resumo'            => $r['resumo'] ?? '',
-                'observacoes'       => $r['resumo'] ?? '',
+                'data' => new \DateTime($r['data']),
+                'tipo' => 'Receita',
+                'resumo' => $r['resumo'] ?? '',
+                'observacoes' => $r['resumo'] ?? '',
                 'receita_cabecalho' => $r['cabecalho'],
-                'receita_conteudo'  => $r['conteudo'],
-                'receita_rodape'    => $r['rodape'],
+                'receita_conteudo' => $r['conteudo'],
+                'receita_rodape' => $r['rodape'],
             ];
         }
 
         // Vacinas
         foreach ($vacinas as $v) {
             $timeline_items[] = [
-                'data'   => isset($v['data_aplicacao']) ? new \DateTime($v['data_aplicacao']) : new \DateTime(),
-                'tipo'   => 'Vacina',
+                'data' => isset($v['data_aplicacao']) ? new \DateTime($v['data_aplicacao']) : new \DateTime(),
+                'tipo' => 'Vacina',
                 'resumo' => sprintf(
                     '%s — Lote: %s | Validade: %s',
                     strtoupper($v['tipo'] ?? 'VACINA'),
                     $v['lote'] ?? '—',
                     isset($v['data_validade'])
-                        ? (new \DateTime($v['data_validade']))->format('d/m/Y')
-                        : '—'
+                    ? (new \DateTime($v['data_validade']))->format('d/m/Y')
+                    : '—'
                 ),
-                'cor'    => '#FFD700',
+                'cor' => '#FFD700',
             ];
         }
 
         // --- VENDAS PAGAS (COM ITENS) ---
-        $resumoVentaItem = [];
-        foreach ($vendasCarrinho as $venda){
-            $itensVenda  = [];
-            $resumoItens = [];
+        $resumoVendaItem = [];
 
-            // Se venda é objeto entity, adaptar
-            if (is_object($venda) && method_exists($venda, 'getId')) {
-                $vendaId = $venda->getId();
-                $vendaTotal = $venda->getTotal();
-                $vendaData = $venda->getData();
-            } else {
-                // Se é array do novo repository
-                $vendaId = $venda['id'];
-                $vendaTotal = $venda['total'];
-                $vendaData = new \DateTime($venda['data']);
-            }
+        // $itensVenda
+        $listaVendasCarrinho = $this->listaItemsVenda($vendasCarrinho);
+        $listaVendasPagas = $this->listaItemsVenda($vendasPagas, true);
+        $listaVendasPendentes = $this->listaItemsVenda($vendasPendentes, true);
 
-            $itens = $vendaItemRepo->findBy(['vendaId' => $vendaId]);
+        $timeline_items =  array_merge($timeline_items, $listaVendasCarrinho['timeline_items'], $listaVendasPagas['timeline_items'], $listaVendasPendentes['timeline_items']);
+        // $resumoVendaItem = array_merge($listaVendasCarrinho['resumoVendaItem'], $listaVendasPagas['resumoVendaItem'], $listaVendasPendentes['resumoVendaItem']);
+        // dd($resumoVendaItem, $timeline_items);
+        $resumoVendaItem = $listaVendasCarrinho['resumoVendaItem']+$listaVendasPagas['resumoVendaItem']+$listaVendasPendentes['resumoVendaItem'];
 
-            foreach ($itens as $item) {
-                // Todos os itens agora são sempre objetos VendaItem
-                $produtoId     = $item->getProdutoId();
-                $quantidade    = $item->getQuantidade();
-                $valorUnitario = $item->getValorUnitario();
-                $snapshotNome = $item->getProduto(); // nome gravado no momento da venda
-
-                // Dados legados: campo produto continha o ID numérico em vez do nome.
-                // Detecta e busca o nome real no cadastro.
-                if ($snapshotNome !== null && is_numeric(trim($snapshotNome))) {
-                    $idBusca = $produtoId ?? (int)trim($snapshotNome);
-                    if ($item->getTipo() === 'produto') {
-                        $entidade = $em->getRepository(\App\Entity\Produto::class)->find($idBusca);
-                    } else {
-                        $entidade = $servicoRepo->find($idBusca);
-                    }
-                    $descricao = $entidade ? $entidade->getNome() : "Item #{$idBusca}";
-                } elseif ($produtoId && $item->getTipo() === 'servico') {
-                    // Sempre tenta enriquecer serviços com nome atualizado do cadastro
-                    $servico = $servicoRepo->find($produtoId);
-                    $descricao = ($servico && method_exists($servico, 'getNome'))
-                        ? $servico->getNome()
-                        : ($snapshotNome ?: 'Serviço');
-                } else {
-                    $descricao = $snapshotNome ?: 'Item sem descrição';
-                }
-
-                $itensVenda[] = [
-                    'descricao'      => $descricao,
-                    'quantidade'     => $quantidade,
-                    'valor_unitario' => $valorUnitario,
-                    'subtotal'       => $quantidade * $valorUnitario,
-                ];
-
-                $resumoVentaItem[$vendaId][] = [
-                    'item'       => $descricao,
-                    'valor'      => $valorUnitario,
-                    'quantidade' => $quantidade,
-                    'subtotal'   => $quantidade * $valorUnitario,
-                ];
-
-                $resumoItens[] = $descricao;
-            }
-        }
-        
-        foreach ($vendasPagas as $venda) {
-
-            $itensVenda  = [];
-            $resumoItens = [];
-
-            // Se venda é objeto entity, adaptar
-            if (is_object($venda) && method_exists($venda, 'getId')) {
-                $vendaId = $venda->getId();
-                $vendaTotal = $venda->getTotal();
-                $vendaData = $venda->getData();
-            } else {
-                // Se é array do novo repository
-                $vendaId = $venda['id'];
-                $vendaTotal = $venda['total'];
-                $vendaData = new \DateTime($venda['data']);
-            }
-
-            $itens = $vendaItemRepo->findBy(['vendaId' => $vendaId]);
-
-            foreach ($itens as $item) {
-                // Todos os itens agora são sempre objetos VendaItem
-                $produtoId     = $item->getProdutoId();
-                $quantidade    = $item->getQuantidade();
-                $valorUnitario = $item->getValorUnitario();
-                $snapshotNome = $item->getProduto(); // nome gravado no momento da venda
-
-                // Dados legados: campo produto continha o ID numérico em vez do nome.
-                // Detecta e busca o nome real no cadastro.
-                if ($snapshotNome !== null && is_numeric(trim($snapshotNome))) {
-                    $idBusca = $produtoId ?? (int)trim($snapshotNome);
-                    if ($item->getTipo() === 'produto') {
-                        $entidade = $em->getRepository(\App\Entity\Produto::class)->find($idBusca);
-                    } else {
-                        $entidade = $servicoRepo->find($idBusca);
-                    }
-                    $descricao = $entidade ? $entidade->getNome() : "Item #{$idBusca}";
-                } elseif ($produtoId && $item->getTipo() === 'servico') {
-                    // Sempre tenta enriquecer serviços com nome atualizado do cadastro
-                    $servico = $servicoRepo->find($produtoId);
-                    $descricao = ($servico && method_exists($servico, 'getNome'))
-                        ? $servico->getNome()
-                        : ($snapshotNome ?: 'Serviço');
-                } else {
-                    $descricao = $snapshotNome ?: 'Item sem descrição';
-                }
-
-                $itensVenda[] = [
-                    'descricao'      => $descricao,
-                    'quantidade'     => $quantidade,
-                    'valor_unitario' => $valorUnitario,
-                    'subtotal'       => $quantidade * $valorUnitario,
-                ];
-
-                $resumoVentaItem[$vendaId][] = [
-                    'item'       => $descricao,
-                    'valor'      => $valorUnitario,
-                    'quantidade' => $quantidade,
-                    'subtotal'   => $quantidade * $valorUnitario,
-                ];
-
-                $resumoItens[] = $descricao;
-            }
-
-            $timeline_items[] = [
-                'data'        => $vendaData,
-                'tipo'        => 'Venda',
-                'resumo'      => implode(' + ', $resumoItens),
-                'observacoes' => 'Venda concluída',
-                'valor'       => $vendaTotal,
-                'status'      => 'paga',
-                'venda_itens' => $itensVenda,
-                'venda_id'    => $vendaId,
-            ];
-        }
+        // $resumoVendaItem    = $listaVendasPagas['resumoVendaItem'];
 
         // --- VENDAS PENDENTES ---
         foreach ($vendasPendentes as $venda) {
             // Adaptar para objetos entity
             if (is_object($venda)) {
                 $timeline_items[] = [
-                    'data'        => $venda->getData(),
-                    'tipo'        => 'Débito',
-                    'resumo'      => 'Venda pendente',
+                    'data' => $venda->getData(),
+                    'tipo' => 'Débito',
+                    'resumo' => 'Venda pendente',
                     'observacoes' => 'Pagamento pendente',
-                    'valor'       => $venda->getTotal(),
-                    'status'      => 'pendente',
-                    'cor'         => '#dc3545',
+                    'valor' => $venda->getTotal(),
+                    'status' => 'pendente',
+                    'cor' => '#dc3545',
                 ];
             }
         }
@@ -423,25 +296,33 @@ class DashboardController extends DefaultController
             $totalDebitos += is_object($venda) ? $venda->getTotal() : ($venda['total'] ?? 0);
         }
 
-         // --- DATA PARA VIEW ---
+        // --- DATA PARA VIEW ---
 
-        $data                         = [];
-        $data['pet']                  = $pet;
-        $data['timeline_items']       = $timeline_items;
-        $data['timeline_agrupado']    = $timelineAgrupado;
-        $data['documentos']           = $documentos;
-        $data['consultas']            = $consultas;
-        $data['total_debitos']        = $totalDebitos;
-        $data['servicos_clinica']     = $servicosClinica;
-        $data['internacao_ativa_id']  = $internacaoAtivaId;
+        $data = [];
+        $data['pet'] = $pet;
+        $data['timeline_items'] = $timeline_items;
+        $data['timeline_agrupado'] = $timelineAgrupado;
+        $data['documentos'] = $documentos;
+        $data['consultas'] = $consultas;
+        $data['total_debitos'] = $totalDebitos;
+        $data['servicos_clinica'] = $servicosClinica;
+        $data['internacao_ativa_id'] = $internacaoAtivaId;
         $data['ultima_internacao_id'] = $ultimaInternacaoId;
-        $data['internacoes_pet']      = $internacoesPet;
-        $data['vacinas']              = $vacinas;
-        $data['vendas_pagas']         = $vendasPagas;
-        $data['vendas_pendentes']     = $vendasPendentes;
-        $data['vendas_carrinho']      = $vendasCarrinho;
-        $data['vendas_items']         = $resumoVentaItem;
-        
+        $data['internacoes_pet'] = $internacoesPet;
+        $data['vacinas'] = $vacinas;
+        $data['vendas_pagas'] = $vendasPagas;
+        $data['vendas_pendentes'] = $vendasPendentes;
+        $data['vendas_carrinho'] = $vendasCarrinho;
+        $data['vendas_items'] = $resumoVendaItem;
+
+//         dd(
+// $data['timeline_items'],
+// $data['vendas_pagas'],
+// $data['vendas_pendentes'],
+// $data['vendas_carrinho'],
+// $data['vendas_items']
+//         );
+
         return $this->render('clinica/detalhes_pet.html.twig', $data);
     }
 
@@ -455,32 +336,32 @@ class DashboardController extends DefaultController
 
         $repoFinanceiro = new FinanceiroRepository($this->managerRegistry);
 
-        $hoje          = new \DateTime();
-        $inicioMes     = (clone $hoje)->modify('first day of this month')->setTime(0, 0);
+        $hoje = new \DateTime();
+        $inicioMes = (clone $hoje)->modify('first day of this month')->setTime(0, 0);
         $semanaPassada = (clone $hoje)->modify('-7 days');
 
         // Métodos retornam arrays agora
-        $financeiroHoje   = $repoFinanceiro->findByDate($baseId, $hoje);
+        $financeiroHoje = $repoFinanceiro->findByDate($baseId, $hoje);
         $financeiroSemana = $repoFinanceiro->getRelatorioPorPeriodo($baseId, $semanaPassada, $hoje);
-        $financeiroMes    = $repoFinanceiro->getRelatorioPorPeriodo($baseId, $inicioMes, $hoje);
+        $financeiroMes = $repoFinanceiro->getRelatorioPorPeriodo($baseId, $inicioMes, $hoje);
 
-        $inicioMes    = (clone $hoje)->modify('first day of this month');
+        $inicioMes = (clone $hoje)->modify('first day of this month');
         $totalReceita = $repoFinanceiro->somarPorDescricao($baseId, 'Receita', $inicioMes, $hoje);
         $totalDespesa = $repoFinanceiro->somarPorDescricao($baseId, 'Pagamento', $inicioMes, $hoje);
 
         $totalGeral = $totalReceita - $totalDespesa;
-        $dataAtual  = $request->query->get('data')
-            ? new \DateTime($request->query->get('data'))
-            : new \DateTime();
+        $dataAtual = $request->query->get('data')
+        ? new \DateTime($request->query->get('data'))
+        : new \DateTime();
 
         return $this->render('clinica/financeirodash.html.twig', [
-            'financeiro_hoje'   => $financeiroHoje,
+            'financeiro_hoje' => $financeiroHoje,
             'financeiro_semana' => $financeiroSemana,
-            'financeiro_mes'    => $financeiroMes,
-            'total_receita'     => $totalReceita,
-            'total_despesa'     => $totalDespesa,
-            'saldo_geral'       => $totalGeral,
-            'dataAtual'         => $dataAtual,
+            'financeiro_mes' => $financeiroMes,
+            'total_receita' => $totalReceita,
+            'total_despesa' => $totalDespesa,
+            'saldo_geral' => $totalGeral,
+            'dataAtual' => $dataAtual,
         ]);
     }
 
@@ -491,9 +372,9 @@ class DashboardController extends DefaultController
     {
         $this->switchDB();
 
-        $baseId     = $this->getIdBase();
+        $baseId = $this->getIdBase();
         $resultados = [];
-        $query      = $request->query->get('q', '');
+        $query = $request->query->get('q', '');
 
         if (strlen($query) < 2) {
             return new JsonResponse(['resultados' => []]);
@@ -516,7 +397,7 @@ class DashboardController extends DefaultController
                 $resultados[] = [
                     'nome' => $pet->getNome(),
                     'tipo' => 'Pet' . ($pet->getEspecie() ? ' - ' . $pet->getEspecie() : ''),
-                    'url'  => $this->generateUrl('clinica_detalhes_pet', ['id' => $pet->getId()]),
+                    'url' => $this->generateUrl('clinica_detalhes_pet', ['id' => $pet->getId()]),
                     'icon' => 'bi-heart-fill',
                 ];
             }
@@ -536,7 +417,7 @@ class DashboardController extends DefaultController
                 $resultados[] = [
                     'nome' => $cliente->getNome(),
                     'tipo' => 'Cliente' . ($cliente->getTelefone() ? ' - ' . $cliente->getTelefone() : ''),
-                    'url'  => '/homepet/public/clinica/cliente/' . $cliente->getId(),
+                    'url' => '/homepet/public/clinica/cliente/' . $cliente->getId(),
                     'icon' => 'bi-person-fill',
                 ];
             }
@@ -546,5 +427,80 @@ class DashboardController extends DefaultController
         } catch (\Exception $e) {
             return new JsonResponse(['resultados' => [], 'error' => $e->getMessage()]);
         }
+    }
+
+    private function listaItemsVenda($vendas, $timeline = false)
+    {
+        
+        $vendaItemRepo = $this->getRepositorio(\App\Entity\VendaItem::class);
+        $produtoRepo = $this->getRepositorio(\App\Entity\Produto::class);
+        $servicoRepo = $this->getRepositorio(\App\Entity\Servico::class);
+
+        $itensVenda = [];
+        $resumoItens = [];
+        $resumoVendaItem = [];
+        $timeline_items = [];
+
+        foreach ($vendas as $venda) {
+            // Localizar items pela vendaId
+            $vendaId = $venda['id'];
+            // dd($venda);
+            $vendaTotal = $venda['total'];
+            $vendaData = $venda['data'];
+
+            $itens = $vendaItemRepo->findBy(['vendaId' => $vendaId]);
+
+            foreach ($itens as $item) {
+                $produtoId = $item->getProdutoId();
+                $quantidade = $item->getQuantidade();
+                $valorUnitario = $item->getValorUnitario();
+                $snapshotNome = $item->getProduto(); // nome gravado no momento da venda
+
+                if ($item->getTipo() === 'servico') {
+                    $servico = $servicoRepo->find($produtoId);
+                    $descricao = $servico->getDescricao() ?: 'Item sem descrição';
+                }
+
+                if ($item->getTipo() === 'produto') {
+                    $idBusca = $produtoId ?? (int) trim($snapshotNome);
+                    $servico = $servicoRepo->find($produtoId);
+                    $descricao = $servico->getNome() ?: "Item #{$idBusca}";
+                }
+
+                // if($item->getTipo() === 'medicamento'){}
+                $itensVenda[] = [
+                    'descricao' => $descricao,
+                    'quantidade' => $quantidade,
+                    'valor_unitario' => $valorUnitario,
+                    'subtotal' => $quantidade * $valorUnitario,
+                ];
+
+                $resumoVendaItem[$vendaId][] = [
+                    'item' => $descricao,
+                    'valor' => $valorUnitario,
+                    'quantidade' => $quantidade,
+                    'subtotal' => $quantidade * $valorUnitario,
+                ];
+            }
+
+            if ($timeline == true) {
+                $timeline_items[] = [
+                    'data' => $vendaData,
+                    'tipo' => 'Venda',
+                    'resumo' => implode(' + ', $resumoItens),
+                    'observacoes' => 'Venda concluída',
+                    'valor' => $vendaTotal,
+                    'status' => 'paga',
+                    'venda_itens' => $itensVenda,
+                    'venda_id' => $vendaId,
+                ];
+            }
+        }
+
+        return [
+            'itensVenda' => $itensVenda,
+            'resumoVendaItem' => $resumoVendaItem,
+            'timeline_items' => $timeline_items,
+        ];
     }
 }

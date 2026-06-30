@@ -314,8 +314,14 @@ class VendaRepository extends ServiceEntityRepository
     /**
      * Busca vendas de um pet com LEFT JOIN em pet e cliente
      */
-    public function findByPet(int $baseId, int $petId): array
+    public function findByPet(int $baseId, int $petId, $status = null): array
     {
+        $sqlPart = "v.status NOT IN ('Aberta', 'Cancelada')";
+        
+        if($status != null){
+            $sqlPart = "v.status = '{$status}'";
+        }
+
         $sql = "SELECT v.id, v.pet_id, v.total, v.data, v.status,
                        v.metodo_pagamento, v.origem, v.observacao,
                        p.nome  AS pet_nome,
@@ -325,7 +331,7 @@ class VendaRepository extends ServiceEntityRepository
                 LEFT JOIN homepet_{$baseId}.cliente c ON c.id = p.dono_id
                 WHERE v.estabelecimento_id = :estab
                   AND v.pet_id = :petId
-                  AND v.status NOT IN ('Aberta', 'Cancelada')
+                  AND {$sqlPart}
                 ORDER BY v.data DESC";
 
         return $this->conn->fetchAllAssociative($sql, [
@@ -346,15 +352,14 @@ class VendaRepository extends ServiceEntityRepository
                 FROM homepet_{$baseId}.venda v
                 LEFT JOIN homepet_{$baseId}.pet    p ON p.id = v.pet_id
                 LEFT JOIN homepet_{$baseId}.cliente c ON c.id = p.dono_id
-                WHERE v.estabelecimento_id = :estab
-                  AND v.pet_id = :petId
+                WHERE v.estabelecimento_id = {$baseId}
+                  AND v.pet_id = {$petId}
                   AND v.status = '$status'
                 ORDER BY v.data DESC";
 
-        return $this->conn->fetchAllAssociative($sql, [
-            'estab' => $baseId,
-            'petId' => $petId,
-        ]);
+        $query = $this->conn->executeQuery($sql);
+
+        return $query->fetchAllAssociative($sql);
     }
 
     /**
