@@ -35,7 +35,8 @@ class FichaController extends DefaultController
         $consulta->setPetId($petId);
         $consulta->setData(new \DateTime($request->get('data')));
         $consulta->setHora(new \DateTime($request->get('hora')));
-        $consulta->setVeterinarioId($request->get('veterinario'));
+        $veterinarioId = $request->get('veterinario');
+        $consulta->setVeterinarioId($veterinarioId !== null && $veterinarioId !== '' ? (int) $veterinarioId : null);
         $consulta->setObservacoes($request->get('observacoes'));
 
         $consulta->setAnamnese($request->get('anamnese_delta'));
@@ -71,8 +72,30 @@ class FichaController extends DefaultController
         $clinica = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($baseId);
 
         $this->switchDB();
-        // Busca o veterinário
-        $vet = $this->getRepositorio(Veterinario::class)->findOneBy(['estabelecimentoId' => $baseId]);
+
+        // Veterinário responsável pela receita:
+        // 1) se o usuário escolher explicitamente no formulário (permite trocar o responsável);
+        // 2) senão, usa o veterinário do último atendimento (consulta ativa) do pet;
+        // 3) fallback: primeiro veterinário do estabelecimento.
+        $vetRepo = $this->getRepositorio(Veterinario::class);
+        $vetIdSelecionado = $request->get('veterinario_id');
+
+        $vet = null;
+        if ($vetIdSelecionado) {
+            $vet = $vetRepo->find((int) $vetIdSelecionado);
+        }
+
+        if (!$vet) {
+            $vetIdConsulta = $this->getRepositorio(Consulta::class)->findVetIdUltimaConsulta($baseId, $petId);
+            if ($vetIdConsulta) {
+                $vet = $vetRepo->find($vetIdConsulta);
+            }
+        }
+
+        if (!$vet) {
+            $vet = $vetRepo->findOneBy(['estabelecimentoId' => $baseId]);
+        }
+
         if (!$vet) {
             // Tratar caso em que o veterinário não é encontrado
             throw $this->createNotFoundException('Veterinário não encontrado.');
@@ -81,6 +104,7 @@ class FichaController extends DefaultController
         if ($request->isMethod('POST')) {
             $conteudoDelta = $request->get('conteudo');
             $resumo = $request->get('resumo');
+            $rodapeCustom = trim((string) $request->get('rodape_custom'));
 
             $conteudoHtml = $this->quillDeltaToHtml($conteudoDelta);
 
@@ -131,6 +155,10 @@ class FichaController extends DefaultController
 ";
 
 // --- Rodapé HTML fixo (assinatura do veterinário + emissão) ---
+            $rodapeCustomHtml = $rodapeCustom !== ''
+                ? "<tr><td style='text-align:center; padding-top:12px; font-size:10px; color:#475569; line-height:1.6;'>" . nl2br(htmlspecialchars($rodapeCustom, ENT_QUOTES)) . "</td></tr>"
+                : "";
+
             $rodapeHtml = "
 <table width='100%' style='border-collapse:collapse; margin-top:6px;'>
   <tr>
@@ -146,6 +174,7 @@ class FichaController extends DefaultController
       </table>
     </td>
   </tr>
+  {$rodapeCustomHtml}
   <tr>
     <td style='text-align:center; padding-top:14px;'>
       <span style='font-size:8.5px; color:#94A3B8;'>Documento emitido em: " . date('d/m/Y H:i:s') . "</span>

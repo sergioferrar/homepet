@@ -221,6 +221,8 @@ class DashboardController extends DefaultController
                 'observacoes' => $item['observacoes'],
                 'resumo' => trim($resumo),
                 'anamnese' => $item['anamnese'] ?? null,
+                'veterinario' => $item['veterinario_nome'] ?? null,
+                'veterinario_crmv' => $item['veterinario_crmv'] ?? null,
             ];
         }
 
@@ -324,6 +326,8 @@ class DashboardController extends DefaultController
         $data['vendas_carrinho'] = $vendasCarrinho;
         $data['vendas_items'] = $resumoVendaItem;
         $data['veterinario'] = $vet;
+        // Veterinário do último atendimento (consulta ativa) — pré-seleciona na receita
+        $data['receita_vet_id'] = $consultaRepo->findVetIdUltimaConsulta($baseId, $pet['id']);
 
 //         dd(
 // $data['timeline_items'],

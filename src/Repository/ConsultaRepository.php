@@ -19,9 +19,9 @@ class ConsultaRepository extends ServiceEntityRepository
     public function salvarConsulta($baseId, Consulta $consulta): void // Removido $baseId, pois já está no objeto
     {
        
-        $sql = "INSERT INTO homepet_{$baseId}.consulta 
-                (estabelecimento_id, cliente_id, pet_id, data, hora, observacoes, criado_em, status, anamnese)
-                VALUES (:estabelecimento_id, :cliente_id, :pet_id, :data, :hora, :observacoes, :criado_em, :status, :anamnese)";
+        $sql = "INSERT INTO homepet_{$baseId}.consulta
+                (estabelecimento_id, cliente_id, pet_id, data, hora, observacoes, criado_em, status, anamnese, tipo, veterinario_id)
+                VALUES (:estabelecimento_id, :cliente_id, :pet_id, :data, :hora, :observacoes, :criado_em, :status, :anamnese, :tipo, :veterinario_id)";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('estabelecimento_id', $consulta->getEstabelecimentoId());
@@ -34,8 +34,10 @@ class ConsultaRepository extends ServiceEntityRepository
         $stmt->bindValue('status', $consulta->getStatus() ?? 'atendido');
 
         $stmt->bindValue('anamnese', $consulta->getAnamnese());
-        
-        $stmt->executeStatement(); 
+        $stmt->bindValue('tipo', $consulta->getTipo());
+        $stmt->bindValue('veterinario_id', $consulta->getVeterinarioId());
+
+        $stmt->executeStatement();
     }
 
 
@@ -200,10 +202,13 @@ class ConsultaRepository extends ServiceEntityRepository
         {
         
             $sql = "SELECT c.id, c.data, c.hora, c.observacoes, c.status, c.anamnese, c.tipo,
+                           c.veterinario_id,
+                           v.nome AS veterinario_nome, v.crmv AS veterinario_crmv,
                            cl.nome AS cliente, p.nome AS pet, p.id AS pet_id
                     FROM homepet_{$baseId}.consulta c
                     JOIN homepet_{$baseId}.cliente cl ON cl.id = c.cliente_id
                     JOIN homepet_{$baseId}.pet p ON p.id = c.pet_id
+                    LEFT JOIN homepet_{$baseId}.veterinario v ON v.id = c.veterinario_id
                     WHERE c.estabelecimento_id = :baseId AND c.pet_id = :petId
                     ORDER BY c.data DESC, c.hora DESC";
 
@@ -212,6 +217,28 @@ class ConsultaRepository extends ServiceEntityRepository
             $stmt->bindValue('petId', $petId);
             return $stmt->executeQuery()->fetchAllAssociative();
         }
+
+    /**
+     * Retorna o veterinário do atendimento mais recente do pet (consulta ativa/último atendimento).
+     * Usado para pré-preencher a receita com o profissional que fez o atendimento.
+     */
+    public function findVetIdUltimaConsulta($baseId, int $petId): ?int
+    {
+        $sql = "SELECT c.veterinario_id
+                FROM homepet_{$baseId}.consulta c
+                WHERE c.estabelecimento_id = :baseId
+                  AND c.pet_id = :petId
+                  AND c.veterinario_id IS NOT NULL
+                ORDER BY c.data DESC, c.hora DESC, c.id DESC
+                LIMIT 1";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('petId', $petId);
+        $vetId = $stmt->executeQuery()->fetchOne();
+
+        return $vetId !== false && $vetId !== null ? (int) $vetId : null;
+    }
 
 
 }

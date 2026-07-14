@@ -401,7 +401,23 @@
                                         <h5 class="form-view-header">Emitir Receita</h5>
                                         <button type="button" class="btn-close" id="btn-fechar-receita" aria-label="Fechar"></button>
                                     </div>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label">Veterinário responsável</label>
+                                            <select class="form-select" name="veterinario_id">
+                                                <option value="">Selecione o veterinário</option>
+                                                {% for row in veterinario %}
+                                                <option value="{{ row.id }}" {% if receita_vet_id is defined and receita_vet_id == row.id %}selected{% endif %}>{{ row.nome }}{% if row.crmv %} — CRMV: {{ row.crmv }}{% endif %}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <small class="text-muted">Pré-selecionado com o profissional do último atendimento. Altere se necessário.</small>
+                                        </div>
+                                    </div>
                                     <div class="mb-3"><label class="form-label">Conteúdo da Receita</label><div id="editor-conteudo"></div><input type="hidden" name="conteudo" id="conteudo-input"></div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Rodapé personalizado <span class="text-muted">(opcional)</span></label>
+                                        <textarea class="form-control" name="rodape_custom" rows="2" placeholder="Texto adicional exibido no rodapé da receita (ex.: orientações, contato, observações)."></textarea>
+                                    </div>
                                     <div class="d-flex justify-content-end"><button type="submit" class="btn btn-primary"><i class="fas fa-print me-1"></i>Gerar PDF e Salvar</button></div>
                                 </div>
                             </form>
@@ -466,6 +482,7 @@
                                                    data-observacoes="{{ item.observacoes|default('') }}"
                                                    data-data="{{ dataFormatada }}"
                                                    data-resumo="{{ item.resumo|raw }}"
+                                                   {% if item.veterinario is defined and item.veterinario %}data-veterinario="{{ item.veterinario|e('html_attr') }}{% if item.veterinario_crmv is defined and item.veterinario_crmv %} — CRMV: {{ item.veterinario_crmv }}{% endif %}"{% endif %}
                                                    {% if item.anamnese is defined %}data-atendimento-delta="{{ item.anamnese|e('html_attr') }}"{% endif %}
                                                    {% if item.receita_cabecalho is defined %}data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}"{% endif %}
                                                    {% if item.receita_conteudo is defined %}data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}"{% endif %}
@@ -473,7 +490,10 @@
                                                     <span>{{ item.tipo }}</span>
                                                 </a>
                                             </h4>
-                                            <p><small class="text-muted">{{ dataFormatada }}</small></p>
+                                            <p class="mb-1"><small class="text-muted">{{ dataFormatada }}</small></p>
+                                            {% if item.veterinario is defined and item.veterinario %}
+                                                <p class="mb-0"><small class="text-muted"><i class="fas fa-user-md me-1"></i>{{ item.veterinario }}{% if item.veterinario_crmv is defined and item.veterinario_crmv %} — CRMV: {{ item.veterinario_crmv }}{% endif %}</small></p>
+                                            {% endif %}
                                         </div>
                                         <div class="timeline-body">
                                             <a href="#" class="timeline-link timeline-text btn btn-sm btn-primary"
@@ -481,6 +501,7 @@
                                                data-observacoes="{{ item.observacoes|default('') }}"
                                                data-data="{{ dataFormatada }}"
                                                data-resumo="{{ item.resumo|raw }}"
+                                               {% if item.veterinario is defined and item.veterinario %}data-veterinario="{{ item.veterinario|e('html_attr') }}{% if item.veterinario_crmv is defined and item.veterinario_crmv %} — CRMV: {{ item.veterinario_crmv }}{% endif %}"{% endif %}
                                                {% if item.anamnese is defined %}data-atendimento-delta="{{ item.anamnese|e('html_attr') }}"{% endif %}
                                                {% if item.receita_cabecalho is defined %}data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}"{% endif %}
                                                {% if item.receita_conteudo is defined %}data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}"{% endif %}
@@ -923,6 +944,13 @@ $(document).ready(function() {
                 cardHeader.className = 'mb-2 text-primary';
                 cardHeader.innerHTML = `<i class="fas fa-stethoscope me-2"></i>${tipo}`;
                 cardDiv.appendChild(cardHeader);
+                const veterinario = this.dataset.veterinario;
+                if (veterinario) {
+                    const vetDiv = document.createElement('div');
+                    vetDiv.className = 'mb-3 p-2 bg-light rounded';
+                    vetDiv.innerHTML = `<i class="fas fa-user-md me-1"></i><strong>Veterinário responsável:</strong> ${veterinario}`;
+                    cardDiv.appendChild(vetDiv);
+                }
                 if (observacoes) {
                     const obsDiv = document.createElement('div');
                     obsDiv.className = 'mb-3 p-2 bg-light rounded';

@@ -49,7 +49,7 @@ class Consulta
     private $observacoes;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", nullable=true)
      */
     private $veterinarioId;
 
@@ -160,14 +160,14 @@ class Consulta
         return $this;
     }
 
-    public function getVeterinarioId(): ?string
+    public function getVeterinarioId(): ?int
     {
-        return $this->veterinarioI;
+        return $this->veterinarioId;
     }
 
-    public function setVeterinarioId(?string $veterinarioId): self
+    public function setVeterinarioId(?int $veterinarioId): self
     {
-        $this->veterinarioI = $veterinarioId;
+        $this->veterinarioId = $veterinarioId;
         return $this;
     }
 }
