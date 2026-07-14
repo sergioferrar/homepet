@@ -13,7 +13,7 @@
         DESIGN TOKENS — LIGHT MODE (Cores alteradas para #5d57f4)
         ============================================================ */
         :root {
-            --teal: #5d57f4;
+            --teal: #14B8A6;
             --teal-dark: #4a45c7;
             --teal-light: #efeeff;
             --teal-glow: rgba(93, 87, 244, 0.14);
@@ -842,7 +842,31 @@
 <nav class="navbar-custom navbar navbar-expand-lg" id="navbar">
     <div class="container">
         <a class="navbar-brand navbar-brand-text" href="#">
-            <i class="bi bi-heart-pulse-fill text-teal me-1"></i>System Home <span>Pet</span>
+            <svg width="400" height="60" viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                        <linearGradient id="markGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#14B8A6"/>
+                            <stop offset="100%" stop-color="#14B8A6"/>
+                        </linearGradient>
+                        </defs>
+                        <g transform="translate(20,0)">
+                            <rect x="0" y="0" width="220" height="220" rx="52" fill="url(#markGrad)"/>
+                            <g fill="#FFFFFF">
+                                <ellipse cx="110" cy="150" rx="52" ry="42"/>
+                                <ellipse cx="55" cy="98" rx="21" ry="26" transform="rotate(-18 55 98)"/>
+                                <ellipse cx="95" cy="66" rx="22" ry="28" transform="rotate(-6 95 66)"/>
+                                <ellipse cx="140" cy="64" rx="22" ry="28" transform="rotate(6 140 64)"/>
+                                <ellipse cx="178" cy="94" rx="21" ry="26" transform="rotate(18 178 94)"/>
+                            </g>
+                            <g fill="url(#markGrad)">
+                                <rect x="97" y="126" width="26" height="52" rx="6"/>
+                                <rect x="84" y="139" width="52" height="26" rx="6"/>
+                            </g>
+                        </g>
+                        <text x="272" y="95" font-family="Poppins, sans-serif" font-size="100" font-weight="500" letter-spacing="3" fill="#5B6472">System</text>
+                        <text x="272" y="165" font-family="Poppins, sans-serif" font-size="90" font-weight="700" fill="#14B8A6">Home<tspan fill="#FDBA74">PET</tspan></text>
+                        {# <text x="272" y="205" font-family="Poppins, sans-serif" font-size="22" font-weight="400" fill="#5B6472">Gestão para Pet shop e clínicas veterinárias</text> #}
+                    </svg>
         </a>
         <button class="navbar-toggler border-0" type="button"
                 data-bs-toggle="collapse" data-bs-target="#navMain"
@@ -874,7 +898,28 @@ FOOTER
         <div class="row g-5">
             <div class="col-lg-4">
                 <div class="footer-brand">
-                    <i class="bi bi-heart-pulse-fill text-teal me-1"></i>System Home<span>Pet</span>
+                        <svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg" style="height: 60px; width: auto;">
+        <!-- Ícone da Patinha -->
+        <g transform="translate(0,0 )">
+            <rect x="0" y="0" width="220" height="220" rx="62" fill="white" fill-opacity="0.2"></rect>
+            <g fill="white">
+                <ellipse cx="110" cy="150" rx="52" ry="42"></ellipse>
+                <ellipse cx="55" cy="98" rx="21" ry="26" transform="rotate(-18 55 98)"></ellipse>
+                <ellipse cx="95" cy="66" rx="22" ry="28" transform="rotate(-6 95 66)"></ellipse>
+                <ellipse cx="140" cy="64" rx="22" ry="28" transform="rotate(6 140 64)"></ellipse>
+                <ellipse cx="178" cy="94" rx="21" ry="26" transform="rotate(18 178 94)"></ellipse>
+            </g>
+            <!-- Cruz Veterinária -->
+            <g fill="#13A8A1"> <!-- Usei o azul claro aqui para destaque -->
+                <rect x="97" y="126" width="26" height="52" rx="6"></rect>
+                <rect x="84" y="139" width="52" height="26" rx="6"></rect>
+            </g>
+        </g>
+        
+        <!-- Texto HomePET (Ajustado para o Header) -->
+        <text x="240" y="100" font-family="Poppins, sans-serif" font-size="90" font-weight="700" fill="#FFFFFF">System</text>
+        <text x="240" y="195" font-family="Poppins, sans-serif" font-size="90" font-weight="700" fill="#FFFFFF">Home<tspan fill="#FDBA74">PET</tspan></text>
+    </svg>
                 </div>
                 <p class="footer-desc">O sistema completo de gestão para pet shops e clínicas veterinárias. Moderno,
                     seguro e pensado para crescer com o seu negócio.</p>
