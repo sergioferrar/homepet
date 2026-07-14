@@ -359,6 +359,9 @@
         .search-bar {
             position: relative;
         }
+        .navbar-custom img {
+            width: 150px !important;
+        }
     </style>
 
 </head>
@@ -372,13 +375,34 @@
 <!-- ======= Header ======= -->
 <header id="header" class="header fixed-top d-flex align-items-center">
 
-    <div class="d-flex align-items-center justify-content-between">
-        <a href="{{ path('home') }}" class="logo d-flex align-items-center">
+    <div class="d-flex align-items-center justify-content-between" style="width: 280px; padding: 0 10px;">
+<a href="{{ path('home') }}" class="logo d-flex align-items-center">
+    <svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg" style="height: 40px; width: auto;">
+        <!-- Ícone da Patinha -->
+        <g transform="translate(0,0 )">
+            <rect x="0" y="0" width="220" height="220" rx="52" fill="white" fill-opacity="0.2"></rect>
+            <g fill="white">
+                <ellipse cx="110" cy="150" rx="52" ry="42"></ellipse>
+                <ellipse cx="55" cy="98" rx="21" ry="26" transform="rotate(-18 55 98)"></ellipse>
+                <ellipse cx="95" cy="66" rx="22" ry="28" transform="rotate(-6 95 66)"></ellipse>
+                <ellipse cx="140" cy="64" rx="22" ry="28" transform="rotate(6 140 64)"></ellipse>
+                <ellipse cx="178" cy="94" rx="21" ry="26" transform="rotate(18 178 94)"></ellipse>
+            </g>
+            <!-- Cruz Veterinária -->
+            <g fill="#13A8A1"> <!-- Usei o azul claro aqui para destaque -->
+                <rect x="97" y="126" width="26" height="52" rx="6"></rect>
+                <rect x="84" y="139" width="52" height="26" rx="6"></rect>
+            </g>
+        </g>
+        
+        <!-- Texto HomePET (Ajustado para o Header) -->
+        <text x="240" y="165" font-family="Poppins, sans-serif" font-size="90" font-weight="700" fill="#FFFFFF">Home<tspan fill="#FDBA74">PET</tspan></text>
+    </svg>
+</a>
 
-            <span class="d-none d-lg-block fs-6">System Home Pet</span>
-        </a>
-        <i class="bi bi-list toggle-sidebar-btn"></i>
-    </div><!-- End Logo -->
+        <!-- Ícone do Menu com cor branca -->
+        <i class="bi bi-list toggle-sidebar-btn text-white" style="font-size: 26px; cursor: pointer;"></i>
+    </div>
 
     <div class="d-flex align-items-center justify-content-between ms-4">
         <a href="javascript:void(0);" class="d-flex align-items-center text-white">

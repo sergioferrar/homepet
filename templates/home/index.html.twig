@@ -3,15 +3,34 @@
 {% block body %}
     <div class="row justify-content-center mb-4">
         <div class="col-md-10 col-lg-8">
-            <div class="card shadow-lg welcome-box text-center px-4 py-3 border-0">
-                <div class="mb-2 d-flex justify-content-center gap-2">
-                    <i class="fa-solid fa-dog fa-lg text-primary"></i>
-                    <i class="fa-solid fa-dog fa-lg text-warning"></i>
-                    <i class="fa-solid fa-dog fa-lg text-info"></i>
-                </div>
-                <h2 class="mb-2 fw-semibold fs-4">Bem-vindo ao <span class="text-primary">System Pet</span></h2>
-                <p class="text-muted mb-0 mt-3 small">Sistema de gerenciamento de agendamentos, clientes, pets e
-                    serviços.</p>
+            <div class="bg-transparent text-center px-4 py-3 border-0 text-center">
+                <center>
+                    <svg width="400" height="100" viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                        <linearGradient id="markGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#14B8A6"/>
+                            <stop offset="100%" stop-color="#14B8A6"/>
+                        </linearGradient>
+                        </defs>
+                        <g transform="translate(20,0)">
+                            <rect x="0" y="0" width="220" height="220" rx="52" fill="url(#markGrad)"/>
+                            <g fill="#FFFFFF">
+                                <ellipse cx="110" cy="150" rx="52" ry="42"/>
+                                <ellipse cx="55" cy="98" rx="21" ry="26" transform="rotate(-18 55 98)"/>
+                                <ellipse cx="95" cy="66" rx="22" ry="28" transform="rotate(-6 95 66)"/>
+                                <ellipse cx="140" cy="64" rx="22" ry="28" transform="rotate(6 140 64)"/>
+                                <ellipse cx="178" cy="94" rx="21" ry="26" transform="rotate(18 178 94)"/>
+                            </g>
+                            <g fill="url(#markGrad)">
+                                <rect x="97" y="126" width="26" height="52" rx="6"/>
+                                <rect x="84" y="139" width="52" height="26" rx="6"/>
+                            </g>
+                        </g>
+                        <text x="272" y="95" font-family="Poppins, sans-serif" font-size="100" font-weight="500" letter-spacing="3" fill="#5B6472">System</text>
+                        <text x="272" y="165" font-family="Poppins, sans-serif" font-size="90" font-weight="700" fill="#14B8A6">Home<tspan fill="#FDBA74">PET</tspan></text>
+                        <text x="272" y="205" font-family="Poppins, sans-serif" font-size="22" font-weight="400" fill="#5B6472">Gestão para Pet shop e clínicas veterinárias</text>
+                    </svg>
+                </center>
             </div>
         </div>
     </div>

@@ -1,0 +1,22 @@
+<svg width="800" height="280" viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(20,30)">
+    <rect x="0" y="0" width="220" height="220" rx="52" fill="#FFFFFF" fill-opacity="0.14"/>
+    <g fill="#FFFFFF">
+      <ellipse cx="110" cy="150" rx="52" ry="42"/>
+      <ellipse cx="55" cy="98" rx="21" ry="26" transform="rotate(-18 55 98)"/>
+      <ellipse cx="95" cy="66" rx="22" ry="28" transform="rotate(-6 95 66)"/>
+      <ellipse cx="140" cy="64" rx="22" ry="28" transform="rotate(6 140 64)"/>
+      <ellipse cx="178" cy="94" rx="21" ry="26" transform="rotate(18 178 94)"/>
+    </g>
+    <g fill="#0E7490">
+      <rect x="97" y="126" width="26" height="52" rx="6"/>
+      <rect x="84" y="139" width="52" height="26" rx="6"/>
+    </g>
+  </g>
+
+  <text x="272" y="95" font-family="Poppins, sans-serif" font-size="28" font-weight="500" letter-spacing="3" fill="#E2E8F0">System</text>
+
+  <text x="272" y="165" font-family="Poppins, sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">Home<tspan fill="#FDBA74">PET</tspan></text>
+
+  <text x="272" y="205" font-family="Poppins, sans-serif" font-size="22" font-weight="400" fill="#E2E8F0">Gestão para Pet shop e clínicas veterinárias</text>
+</svg>

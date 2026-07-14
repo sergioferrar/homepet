@@ -32,24 +32,29 @@
     * License: https://bootstrapmade.com/license/
     ======================================================== -->
 </head>
-<body style="background:url('{{ asset('images/background.webp') }}'); background-size: cover;">
+<body style="background-size: cover;">
 <main class="vh-100 d-flex align-items-stretch">
 
     <div class="container-fluid p-0">
         <div class="row g-0 h-100">
 
             <!-- Lado esquerdo - branding -->
-            <div class="col-lg-7 d-none d-lg-flex align-items-center justify-content-center text-white"
-                 style="background: url('{{ asset('images/background.webp') }}') center/cover no-repeat;">
+<div class="col-lg-7 d-none d-lg-flex align-items-center justify-content-center text-white"
+     style="background-image: url('{{ asset('images/dog_cat_together.png') }}'); 
+            background-color: #13A8A1; 
+            background-repeat: no-repeat; 
+            background-position: center; 
+            background-size: contain; 
+            background-origin: content-box; 
+            padding: 20px 40px;"> <!-- Ajuste estes valores para o espaçamento desejado -->
 
-                <div class="bg-dark bg-opacity-50 p-5 rounded-4 text-center shadow-lg">
-                    <img src="{{ asset('images/logo.png') }}" width="160" class="mb-4" alt="System Home Pet">
+    <div class="bg-dark bg-opacity-50 p-5 rounded-4 text-center shadow-lg" style="backdrop-filter: blur(5px);">
+        <img src="{{ asset('images/logo-homepet-branca.svg') }}" class="mb-4" alt="System Home Pet">
+        <!-- Você pode adicionar um título ou frase aqui se desejar -->
+    </div>
 
-                    <h1 class="fw-bold mb-3">System Home Pet</h1>
-                    <p class="lead mb-0">Gestão inteligente para o seu petshop 🐶🐱</p>
-                </div>
+</div>
 
-            </div>
 
             <!-- Lado direito - login -->
             <div class="col-lg-5 d-flex align-items-center justify-content-center bg-light">
