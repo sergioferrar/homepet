@@ -35,6 +35,7 @@ class FichaController extends DefaultController
         $consulta->setPetId($petId);
         $consulta->setData(new \DateTime($request->get('data')));
         $consulta->setHora(new \DateTime($request->get('hora')));
+        $consulta->setVeterinarioId($request->get('veterinario'));
         $consulta->setObservacoes($request->get('observacoes'));
 
         $consulta->setAnamnese($request->get('anamnese_delta'));

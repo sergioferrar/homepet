@@ -9,7 +9,7 @@
        DETALHES PET — Design System
        Paleta: Teal clínico + Cinza sofisticado
     ═══════════════════════════════════════════════ */
-    :root { --dp-teal: #3d8b85; --dp-teal-dark: #2a6762; --dp-teal-light: #eef6f5; --dp-teal-mid: #c5e5e3; --dp-slate: #3d4f5c; --dp-muted: #7a8fa0; --dp-border: #dde8e7; --dp-bg: #f4f7f7; --dp-surface: #ffffff; --dp-shadow-sm: 0 1px 4px rgba(42, 103, 98, 0.08); --dp-shadow-md: 0 4px 16px rgba(42, 103, 98, 0.12); --dp-radius: 12px; --dp-radius-lg: 18px; }
+    :root { --dp-teal: #14B8A6; --dp-teal-dark: #2a6762; --dp-teal-light: #eef6f5; --dp-teal-mid: #c5e5e3; --dp-slate: #3d4f5c; --dp-muted: #7a8fa0; --dp-border: #dde8e7; --dp-bg: #f4f7f7; --dp-surface: #ffffff; --dp-shadow-sm: 0 1px 4px rgba(42, 103, 98, 0.08); --dp-shadow-md: 0 4px 16px rgba(42, 103, 98, 0.12); --dp-radius: 12px; --dp-radius-lg: 18px; }
     .dp-page { background: var(--dp-bg); min-height: 100vh; padding: 0 0 3rem; }
     .dp-hero { background: linear-gradient(135deg, var(--dp-teal) 0%, var(--dp-teal-dark) 100%); padding: 1.5rem 2rem 3.5rem; position: relative; overflow: hidden; }
     .dp-hero::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width=!string!height=!string!viewBox=!string!xmlns=!string!%3E%3Cg fill=!string!fill-rule=!string!%3E%3Cg fill=!string!fill-opacity=!string!%3E%3Ccircle cx=!string!cy=!string!r=!string!/%3E%3Ccircle cx=!string!cy=!string!r=!string!/%3E%3Ccircle cx=!string!cy=!string!r=!string!/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); pointer-events: none; }
@@ -367,8 +367,21 @@
                                         <button type="button" class="btn-close" id="btn-fechar-atendimento" aria-label="Fechar"></button>
                                     </div>
                                     <div class="row">
-                                        <div class="col-md-6 mb-3"><label class="form-label">Tipo*</label><select class="form-select" name="tipo"><option value="Consulta" selected>Consulta</option><option value="Retorno">Retorno</option></select></div>
-                                        <div class="col-md-6 mb-3"><label class="form-label">Resumo (Observações)</label><input type="text" class="form-control" name="observacoes"></div>
+                                        <div class="col-md-6 mb-3"><label class="form-label">Tipo*</label>
+                                            <select class="form-select" name="tipo">
+                                                <option value="Consulta" selected>Consulta</option>
+                                                <option value="Retorno">Retorno</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Veterinário</label>
+                                            <select class="form-select" name="veterinario">
+                                                <option value="">Selecione o veterinário</option>
+                                                {% for row in veterinario %}
+                                                <option value="{{ row.id }}">{{ row.nome }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="mb-3"><label class="form-label">Anamnese / Exame Clínico</label><div id="atendimento-editor"></div><input type="hidden" name="anamnese_delta" id="anamnese-input"></div>
                                     <input type="hidden" name="pet_id" value="{{ pet.id }}">

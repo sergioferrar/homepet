@@ -10,6 +10,7 @@ use App\Entity\FinanceiroPendente;
 use App\Entity\Internacao;
 use App\Entity\Pet;
 use App\Entity\Vacina;
+use App\Entity\Veterinario;
 use App\Repository\FinanceiroRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -296,6 +297,14 @@ class DashboardController extends DefaultController
             $totalDebitos += is_object($venda) ? $venda->getTotal() : ($venda['total'] ?? 0);
         }
 
+        // $this->switchDB();
+        // Busca o veterinário
+        $vet = $this->getRepositorio(Veterinario::class)->findAll();
+        if (!$vet) {
+            // Tratar caso em que o veterinário não é encontrado
+            throw $this->createNotFoundException('Veterinário não encontrado.');
+        }
+
         // --- DATA PARA VIEW ---
 
         $data = [];
@@ -314,6 +323,7 @@ class DashboardController extends DefaultController
         $data['vendas_pendentes'] = $vendasPendentes;
         $data['vendas_carrinho'] = $vendasCarrinho;
         $data['vendas_items'] = $resumoVendaItem;
+        $data['veterinario'] = $vet;
 
 //         dd(
 // $data['timeline_items'],
@@ -458,7 +468,12 @@ class DashboardController extends DefaultController
 
                 if ($item->getTipo() === 'servico') {
                     $servico = $servicoRepo->find($produtoId);
-                    $descricao = $servico->getDescricao() ?: 'Item sem descrição';
+                    if($servico){
+                        $descricao = 'Item sem descrição';
+                        if($servico->getDescricao() != ''){
+                            $descricao = $servico->getDescricao();
+                        }
+                    }
                 }
 
                 if ($item->getTipo() === 'produto') {

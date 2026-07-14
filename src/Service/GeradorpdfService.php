@@ -10,7 +10,6 @@ namespace App\Service;
 
 use App\Service\TempDirManager;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Mpdf\Mpdf;
 
 class GeradorpdfService
 {
@@ -59,7 +58,7 @@ class GeradorpdfService
         //$this->pdf->allow_charset_conversion = true;
         //$this->pdf->charset_in = 'UTF-8';
         $this->pdf->list_indent_first_level = 1;
-        $this->css = '';//file_get_contents($folderPath . 'assets/css/style.css'); ## caminho para o css
+        $this->css = ''; //file_get_contents($folderPath . 'assets/css/style.css'); ## caminho para o css
         $this->nomeArquivo = date('d/m/Y') . 'pdf';
     }
 
@@ -73,7 +72,7 @@ class GeradorpdfService
         return $this->config;
     }
 
- public function configuracaoPagina($orientacao, $margEsquerda, $margDireita, $margTop, $margBottom, $margCabecalho, $margRodape)
+    public function configuracaoPagina($orientacao, $margEsquerda, $margDireita, $margTop, $margBottom, $margCabecalho, $margRodape)
     {
         // Use a propriedade tMargin e bMargin para definir a margem do conteúdo
         $this->pdf->tMargin = $margTop;
@@ -135,7 +134,7 @@ class GeradorpdfService
             $this->config['tempDir'] = $this->tempDirManager->diretorioBase();
 
             $caminho = $this->tempDirManager->diretorioBase();
-            
+
             $this->pdf->Output($caminho . '/' . $this->nomeArquivo, 'F');
             unset($this->pdf);
             $this->pdf = new \Mpdf\Mpdf($this->config);

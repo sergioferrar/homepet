@@ -49,6 +49,11 @@ class Consulta
     private $observacoes;
 
     /**
+     * @ORM\Column(type="integer")
+     */
+    private $veterinarioId;
+
+    /**
      * @ORM\Column(type="string", length=20, options={"default": "aguardando"})
      */
     private $status = 'aguardando';
@@ -152,6 +157,17 @@ class Consulta
     public function setTipo(?string $tipo): self
     {
         $this->tipo = $tipo;
+        return $this;
+    }
+
+    public function getVeterinarioId(): ?string
+    {
+        return $this->veterinarioI;
+    }
+
+    public function setVeterinarioId(?string $veterinarioId): self
+    {
+        $this->veterinarioI = $veterinarioId;
         return $this;
     }
 }

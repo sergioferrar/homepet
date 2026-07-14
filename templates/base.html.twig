@@ -37,12 +37,30 @@
 
     <!-- Custom Theme Colors -->
     <style>
-        /* 🎨 TEMA ROXO - Cores principais */
+        /* 🎨 TEMA HOME PET - Cores principais (alinhadas à logo) */
         :root {
-            --purple-primary: #667eea;
-            --purple-dark: #764ba2;
-            --purple-light: #f6f5ff;
-            --purple-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --purple-primary: #14B8A6;
+            --purple-dark: #0E7490;
+            --purple-light: #EAFBF8;
+            --purple-gradient: linear-gradient(135deg, #14B8A6 0%, #0E7490 100%);
+            --pet-accent: #F97316;
+            --pet-accent-light: #FFF1E6;
+        }
+
+        /* 🔤 Tipografia - segue a fonte usada na logo (Poppins para títulos/marca, Nunito para leitura) */
+        body {
+            font-family: 'Nunito', 'Open Sans', sans-serif;
+        }
+
+        h1, h2, h3, h4, h5, h6,
+        .btn,
+        .card-header,
+        .header .logo span,
+        .sidebar-nav .nav-link,
+        .nav-tabs .nav-link,
+        .page-title,
+        #page-title {
+            font-family: 'Poppins', sans-serif;
         }
 
         /* Cor de fundo do sistema */
@@ -55,19 +73,35 @@
             transition: margin-left 0.3s ease;
         }
 
-        /* 🎨 Botões primários roxos */
+        /* 🎨 Botões primários (teal da logo) */
         .btn-primary {
             background: var(--purple-gradient) !important;
             border: none !important;
+            font-weight: 600 !important;
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%) !important;
+            background: linear-gradient(135deg, #0d9488 0%, #0b5563 100%) !important;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.4) !important;
         }
 
-        /* 🎨 Links e elementos ativos roxos */
+        /* 🎨 Botão de destaque secundário (laranja da logo, para CTAs pontuais) */
+        .btn-accent {
+            background: var(--pet-accent) !important;
+            border: none !important;
+            color: #fff !important;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600 !important;
+        }
+
+        .btn-accent:hover {
+            background: #ea580c !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4) !important;
+        }
+
+        /* 🎨 Links e elementos ativos (teal) */
         .sidebar-nav .nav-link:hover,
         .sidebar-nav .nav-link.active {
             color: var(--purple-primary) !important;
@@ -78,7 +112,7 @@
             color: var(--purple-primary) !important;
         }
 
-        /* 🎨 Badges e alertas roxos */
+        /* 🎨 Badges e alertas (teal) */
         .badge.bg-primary {
             background: var(--purple-gradient) !important;
         }
@@ -89,31 +123,31 @@
             color: var(--purple-dark) !important;
         }
 
-        /* 🎨 Cards com destaque roxo */
+        /* 🎨 Cards com destaque (teal) */
         .card-header.bg-primary {
             background: var(--purple-gradient) !important;
             color: white !important;
         }
 
-        /* 🎨 Tabs roxas */
+        /* 🎨 Tabs (teal) */
         .nav-tabs .nav-link.active {
             color: var(--purple-primary) !important;
             border-bottom: 2px solid var(--purple-primary) !important;
         }
 
-        /* 🎨 Progress bars roxas */
+        /* 🎨 Progress bars (teal) */
         .progress-bar {
             background: var(--purple-gradient) !important;
         }
 
-        /* 🎨 Formulários com foco roxo */
+        /* 🎨 Formulários com foco (teal) */
         .form-control:focus,
         .form-select:focus {
             border-color: var(--purple-primary) !important;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+            box-shadow: 0 0 0 0.2rem rgba(20, 184, 166, 0.25) !important;
         }
 
-        /* 🎨 Checkboxes e radios roxos */
+        /* 🎨 Checkboxes e radios (teal) */
         .form-check-input:checked {
             background-color: var(--purple-primary) !important;
             border-color: var(--purple-primary) !important;
@@ -186,11 +220,11 @@
             padding: 0 !important;
         }
 
-        /* Header roxo com gradiente */
+        /* Header com gradiente teal (identidade Home Pet) */
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            background: linear-gradient(135deg, #14B8A6 0%, #0E7490 100%) !important;
             border-bottom: none !important;
-            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3) !important;
+            box-shadow: 0 2px 10px rgba(20, 184, 166, 0.3) !important;
             transition: left 0.3s ease;
         }
 
@@ -318,7 +352,7 @@
         }
 
         .back-to-top:hover {
-            background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%) !important;
+            background: linear-gradient(135deg, #0d9488 0%, #0b5563 100%) !important;
         }
 
 
@@ -359,9 +393,6 @@
         .search-bar {
             position: relative;
         }
-        .navbar-custom img {
-            width: 150px !important;
-        }
     </style>
 
 </head>
@@ -380,7 +411,7 @@
     <svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg" style="height: 40px; width: auto;">
         <!-- Ícone da Patinha -->
         <g transform="translate(0,0 )">
-            <rect x="0" y="0" width="220" height="220" rx="52" fill="white" fill-opacity="0.2"></rect>
+            <rect x="0" y="0" width="220" height="220" rx="52" fill="white" fill-opacity="0.3"></rect>
             <g fill="white">
                 <ellipse cx="110" cy="150" rx="52" ry="42"></ellipse>
                 <ellipse cx="55" cy="98" rx="21" ry="26" transform="rotate(-18 55 98)"></ellipse>
@@ -471,7 +502,7 @@
                     <li class="dropdown-header">
                         <h6>{{ app.session.get('user') }}</h6>
                         {% if is_granted('ROLE_SUPER_ADMIN') %}
-                            <span class="badge" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                            <span class="badge" style="background: linear-gradient(135deg, #14B8A6, #0E7490);">
                                 <i class="bi bi-shield-lock me-1"></i>Super Admin
                             </span>
                         {% else %}
@@ -714,7 +745,7 @@
 <!-- Botão flutuante para IA — oculto para Super Admin (não tem contexto de estabelecimento) -->
 {% if not is_granted('ROLE_SUPER_ADMIN') %}
 <button id="btnChatIA" class="btn rounded-circle"
-        style="position: fixed; bottom: 80px; right: 20px; z-index: 1050; width: 60px; height: 60px; font-size: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+        style="position: fixed; bottom: 80px; right: 20px; z-index: 1050; width: 60px; height: 60px; font-size: 24px; background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); border: none; color: white; box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);">
     <i class="bi bi-robot"></i>
 </button>
 {% endif %}
@@ -724,7 +755,7 @@
 <div class="modal fade" id="chatIaModal" tabindex="-1" aria-labelledby="chatIaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
-            <div class="modal-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #F97316 0%, #ea580c 100%);">
                 <h5 class="modal-title">Dra. HomePet - Assistente IA</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
