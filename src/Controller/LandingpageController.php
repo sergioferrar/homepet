@@ -4,7 +4,6 @@ namespace App\Controller;
 use App\Entity\Estabelecimento;
 use App\Entity\Usuario;
 use App\Installer\TenantDatabaseInstaller;
-use Doctrine\DBAL\DriverManager;
 use App\Service\DatabaseBkp;
 use App\Service\EmailService;
 use Symfony\Component\HttpFoundation\Request;
@@ -39,10 +38,10 @@ class LandingpageController extends DefaultController
         $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome();
 
         return $this->render('home/planos.html.twig', [
-            'planos'              => $planos,
+            'planos' => $planos,
             'cookie_banner_ativo' => true,
-            'tracking'            => '',
-            'modulos'             => $this->modulosSistema,
+            'tracking' => '',
+            'modulos' => $this->modulosSistema,
         ]);
     }
 
@@ -78,7 +77,7 @@ class LandingpageController extends DefaultController
             $estabelecimento->setCidade($request->get('cidade'));
             $estabelecimento->setPais($request->get('pais'));
             $estabelecimento->setCep($request->get('cep'));
-            $estabelecimento->setStatus('Inativo');// Deixar Ativo por enquanto
+            $estabelecimento->setStatus('Inativo'); // Deixar Ativo por enquanto
             $estabelecimento->setDataCadastro((new \DateTime('now')));
             $estabelecimento->setDataPlanoInicio((new \DateTime('now')));
             $estabelecimento->setDataPlanoFim((new \DateTime(date('Y-m-d H:i:s', strtotime('+1 month')))));
@@ -100,7 +99,7 @@ class LandingpageController extends DefaultController
             $tenantConnectiold = $this->pegarConexaoAtiva();
             $this->prepareTenantidConnection($estabelecimento->getId());
 
-            $tenantConnection = $this->entityManager->getConnection();;
+            $tenantConnection = $this->entityManager->getConnection();
             // dd($tenantConnectiold, $tenantConnection->execute("SHOW databases")->fetchAssociative());
 
             // 3. Executa o instalador (cria todas as 33 tabelas em ordem)
@@ -290,8 +289,8 @@ class LandingpageController extends DefaultController
                 if ($initPoint) {
                     // Mantém sessão atualizada
                     $request->getSession()->set('finaliza', [
-                        'uid'        => $usario->getId(),
-                        'eid'        => $eid,
+                        'uid' => $usario->getId(),
+                        'eid' => $eid,
                         'invoice_id' => $invoicePendente->getId(),
                     ]);
                     return $this->redirect($initPoint);
@@ -300,9 +299,9 @@ class LandingpageController extends DefaultController
 
             // Cria nova invoice apenas se não houver pendente
             $invoice = $invoicePendente ?? $invoiceService->createInvoice($estabelecimento, [
-                'tipo'            => 'assinatura',
-                'valor_total'     => $plano->getValor(),
-                'plano_id'        => $plano->getId(),
+                'tipo' => 'assinatura',
+                'valor_total' => $plano->getValor(),
+                'plano_id' => $plano->getId(),
                 'data_vencimento' => $estabelecimento->getDataPlanoFim(),
             ]);
 
@@ -314,31 +313,31 @@ class LandingpageController extends DefaultController
             $endereco = @json_decode(@file_get_contents($endpoint), true) ?? [];
 
             $comprador = [
-                'name'      => $usario->getNomeUsuario(),
-                'email'     => $usario->getEmail(),
-                'rua'       => $endereco['logradouro'] ?? '',
-                'numero'    => $estabelecimento->getNumero(),
-                'bairro'    => $endereco['bairro'] ?? '',
-                'cidade'    => $endereco['localidade'] ?? '',
-                'estado'    => $endereco['uf'] ?? '',
+                'name' => $usario->getNomeUsuario(),
+                'email' => $usario->getEmail(),
+                'rua' => $endereco['logradouro'] ?? '',
+                'numero' => $estabelecimento->getNumero(),
+                'bairro' => $endereco['bairro'] ?? '',
+                'cidade' => $endereco['localidade'] ?? '',
+                'estado' => $endereco['uf'] ?? '',
                 'idUsuario' => $usario->getId(),
-                'cnpj'      => $estabelecimento->getCNPJ(),
-                'cep'       => $endereco['cep'] ?? '',
+                'cnpj' => $estabelecimento->getCNPJ(),
+                'cep' => $endereco['cep'] ?? '',
             ];
 
             $dataPagamento = [
-                'comprador'          => $comprador,
-                'planoId'            => $plano->getId(),
-                'title'              => $plano->getTitulo(),
-                'price'              => (float) $plano->getValor(),
-                'email'              => $usario->getEmail(),
-                'external_reference' => $invoice->getId(),   // usado pelo webhook para ativar o estabelecimento
+                'comprador' => $comprador,
+                'planoId' => $plano->getId(),
+                'title' => $plano->getTitulo(),
+                'price' => (float) $plano->getValor(),
+                'email' => $usario->getEmail(),
+                'external_reference' => $invoice->getId(), // usado pelo webhook para ativar o estabelecimento
             ];
 
             // Salva na sessão (útil para fluxos de retorno síncrono)
             $request->getSession()->set('finaliza', [
-                'uid'        => $usario->getId(),
-                'eid'        => $eid,
+                'uid' => $usario->getId(),
+                'eid' => $eid,
                 'invoice_id' => $invoice->getId(),
             ]);
 
@@ -360,9 +359,9 @@ class LandingpageController extends DefaultController
         } catch (\Exception $e) {
             dd($e);
             $this->logger->error('Erro ao processar pagamento inicial.', [
-                'eid'     => $eid ?? null,
+                'eid' => $eid ?? null,
                 'message' => $e->getMessage(),
-                'file'    => $e->getFile() . ':' . $e->getLine(),
+                'file' => $e->getFile() . ':' . $e->getLine(),
             ]);
             $this->addFlash('error', 'Erro ao processar pagamento: ' . $e->getMessage());
             return $this->redirectToRoute('landing_home');
@@ -382,8 +381,8 @@ class LandingpageController extends DefaultController
             return $this->redirectToRoute('landing_home', ['#' => 'contato']);
         }
 
-        $nome     = trim($request->get('nome', ''));
-        $email    = trim($request->get('email', ''));
+        $nome = trim($request->get('nome', ''));
+        $email = trim($request->get('email', ''));
         $mensagem = trim($request->get('mensagem', ''));
 
         // Validação básica
@@ -399,10 +398,10 @@ class LandingpageController extends DefaultController
 
         try {
             $html = $this->renderView('emails/contato_landing.html.twig', [
-                'nome'     => htmlspecialchars($nome, ENT_QUOTES, 'UTF-8'),
-                'email'    => htmlspecialchars($email, ENT_QUOTES, 'UTF-8'),
+                'nome' => htmlspecialchars($nome, ENT_QUOTES, 'UTF-8'),
+                'email' => htmlspecialchars($email, ENT_QUOTES, 'UTF-8'),
                 'mensagem' => htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8'),
-                'data'     => (new \DateTime())->format('d/m/Y \à\s H:i'),
+                'data' => (new \DateTime())->format('d/m/Y \à\s H:i'),
             ]);
 
             $emailService->sendEmail(
@@ -415,8 +414,8 @@ class LandingpageController extends DefaultController
 
         } catch (\Exception $e) {
             $this->logger->error('Erro ao enviar e-mail de contato.', [
-                'nome'    => $nome,
-                'email'   => $email,
+                'nome' => $nome,
+                'email' => $email,
                 'message' => $e->getMessage(),
             ]);
             $this->addFlash('contato_erro', 'Não foi possível enviar a mensagem no momento. Tente novamente ou fale conosco pelo WhatsApp.');
