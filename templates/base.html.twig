@@ -692,7 +692,7 @@
             <ul id="administracao"
                 class="nav-content collapse {{ configAberto ? 'show' : '' }}"
                 data-bs-parent="#sidebar-nav">
-                {% if isSuperAdminPuro %}
+                {% if is_granted('ROLE_SUPER_ADMIN') %}
                 <li>
                     <a href="{{ url('superadmin_configuracoes_globais') }}"
                        class="{{ route == 'superadmin_configuracoes_globais' ? 'active' : '' }}">
