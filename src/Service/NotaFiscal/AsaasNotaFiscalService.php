@@ -537,9 +537,16 @@ class AsaasNotaFiscalService implements NotaFiscalServiceInterface
             $map[$c->getChave()] = $c->getValor();
         }
 
-        // Fallback .env
-        $apiKey = $map['asaas_api_key'] ?? ($_ENV['ASAAS_API_KEY'] ?? null);
-        $env    = $map['asaas_environment'] ?? ($_ENV['ASAAS_ENVIRONMENT'] ?? 'sandbox');
+        // Fallback .env (aceita tanto ASAAS_API_KEY quanto ASSAS_TOKEN_API).
+        $apiKey = $map['asaas_api_key']
+            ?? ($_ENV['ASAAS_API_KEY'] ?? ($_ENV['ASSAS_TOKEN_API'] ?? null));
+
+        // Ambiente: usa o configurado; se ausente, infere pelo prefixo do token
+        // do Asaas ($aact_prod_... = produção; $aact_... de teste = sandbox).
+        $env = $map['asaas_environment'] ?? ($_ENV['ASAAS_ENVIRONMENT'] ?? null);
+        if (!$env) {
+            $env = ($apiKey && str_contains($apiKey, '_prod_')) ? 'production' : 'sandbox';
+        }
 
         return [
             'api_key'              => $apiKey,

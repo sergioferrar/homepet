@@ -14,6 +14,8 @@ use App\Entity\VendaItem;
 use App\Entity\Financeiro;
 use App\Entity\FinanceiroPendente;
 use App\Service\CaixaService;
+use App\Service\NotaFiscal\AsaasNotaFiscalService;
+use App\Service\NotaFiscal\NotaFiscalException;
 use App\Service\PdvService;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
@@ -373,7 +375,8 @@ class PdvController extends DefaultController
      */
     public function finalizarCarrinho(
         Request $request,
-        int $id
+        int $id,
+        AsaasNotaFiscalService $asaas
     ): JsonResponse {
         $this->switchDB(); // <- garante que estamos no banco do tenant
         $vendaRepo = $this->getRepositorio(Venda::class);
@@ -447,9 +450,43 @@ class PdvController extends DefaultController
                 ], 500);
             }
 
+            // ── Emissão automática de NFS-e (Asaas) ──
+            // Só emite para vendas pagas (não pendentes) e quando o Asaas está
+            // configurado para o estabelecimento. NUNCA pode derrubar a venda:
+            // qualquer falha aqui é registrada em log e sinalizada na resposta.
+            $notaFiscal = null;
+
+            if ($metodo !== 'pendente') {
+                // A venda vive no banco do tenant (switchDB acima); carrega a entidade
+                // enquanto ainda estamos nesse contexto.
+                $vendaEntity = $this->getRepositorio(Venda::class)->find($id);
+
+                // O serviço do Asaas lê a config (chave de API) no banco principal,
+                // então voltamos para ele antes de emitir — mesmo contexto da emissão manual.
+                $this->restauraLoginDB();
+
+                if ($vendaEntity && !empty($asaas->getConfig($estabelecimentoId)['api_key'])) {
+                    try {
+                        $resultadoNf = $asaas->emitir($vendaEntity);
+                        $notaFiscal = [
+                            'emitida'          => true,
+                            'asaas_invoice_id' => $resultadoNf['asaas_invoice_id'] ?? null,
+                            'status'           => $resultadoNf['status'] ?? null,
+                        ];
+                    } catch (NotaFiscalException | \Exception $e) {
+                        $this->logger->error('Falha ao emitir NFS-e no fechamento do PDV.', [
+                            'venda_id' => $id,
+                            'erro'     => $e->getMessage(),
+                        ]);
+                        $notaFiscal = ['emitida' => false, 'erro' => $e->getMessage()];
+                    }
+                }
+            }
+
             return new JsonResponse([
-                'status'   => 'success',
-                'mensagem' => 'Venda #' . $id . ' finalizada com sucesso!',
+                'status'      => 'success',
+                'mensagem'    => 'Venda #' . $id . ' finalizada com sucesso!',
+                'nota_fiscal' => $notaFiscal,
             ]);
 
         } catch (\Exception $e) {
