@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Assinatura Confirmada</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f6f6f6; padding: 20px; margin: 0;">
+<table align="center" cellpadding="0" cellspacing="0" width="600"
+       style="background-color: #ffffff; border-radius: 8px; padding: 40px;">
+    <tr>
+        <td align="center" style="padding-bottom: 30px;">
+            <h2 style="color: #333;">Assinatura confirmada! 🎉</h2>
+        </td>
+    </tr>
+    <tr>
+        <td style="color: #555; font-size: 16px; line-height: 1.6;">
+            <p>Olá{% if usuario %}, {{ usuario.nomeUsuario }}{% endif %},</p>
+            <p>Seu pagamento foi aprovado e seu estabelecimento já está <strong>ativo</strong> na plataforma System Home Pet.</p>
+            <p>Você já pode acessar sua conta e começar a usar o sistema clicando no botão abaixo:</p>
+            <p style="text-align: center; margin: 30px 0;">
+                <a href="{{ login_url }}"
+                   style="background-color: #4CAF50; color: white; text-decoration: none; padding: 12px 24px; border-radius: 5px; display: inline-block;">Acessar a plataforma</a>
+            </p>
+            <p>Se o botão não funcionar, copie e cole o endereço abaixo no seu navegador:</p>
+            <p style="word-break: break-all; color: #4CAF50;">{{ login_url }}</p>
+            <p>Atenciosamente,<br>Equipe System Home Pet</p>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

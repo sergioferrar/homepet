@@ -7,6 +7,7 @@ use App\Service\Payment\MercadoPagoService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class PagamentoController extends DefaultController
 {
@@ -110,23 +111,30 @@ class PagamentoController extends DefaultController
                 $emEstabelecimento->aprovacao($uid, $eid);
             }
 
-            // Envia e-mail de confirmação
-            if ($usuario && $invoice) {
-                $emailService = $this->container->get(\App\Service\EmailService::class);
-                $emailService->sendEmail(
-                    $usuario->getEmail(),
-                    'Assinatura Confirmada - Sistema HomePet',
-                    $this->renderView('emails/assinatura_confirmada.html.twig', [
-                        'invoice' => $invoice,
-                        'usuario' => $usuario,
-                    ])
-                );
+            // Envia e-mail de confirmação com o link de acesso.
+            // Não deve bloquear o fluxo: se falhar, apenas registra o erro.
+            if ($usuario) {
+                try {
+                    $loginUrl = $this->generateUrl('app_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
+                    $emailService = $this->container->get(\App\Service\EmailService::class);
+                    $emailService->sendEmail(
+                        $usuario->getEmail(),
+                        'Assinatura Confirmada - Sistema HomePet',
+                        $this->renderView('emails/assinatura_confirmada.html.twig', [
+                            'invoice'   => $invoice,
+                            'usuario'   => $usuario,
+                            'login_url' => $loginUrl,
+                        ])
+                    );
+                } catch (\Exception $e) {
+                    $this->logger->error('Falha ao enviar e-mail de confirmação de assinatura.', ['message' => $e->getMessage()]);
+                }
             }
 
-            return $this->render('pagamento/confirmacao.html.twig', [
-                'estabelecimento' => $eid,
-                'status' => 'aprovado',
-            ]);
+            // Pagamento aprovado e estabelecimento ativado — envia o usuário para a
+            // tela de login com a mensagem de estabelecimento ativado.
+            $mensagem = base64_encode('Estabelecimento ativado com sucesso! Faça login para acessar a plataforma.');
+            return $this->redirectToRoute('app_login', ['confirmation' => $mensagem]);
 
         } catch (\Exception $e) {
             $this->logger->error('Erro no retorno de pagamento.', ['message' => $e->getMessage()]);
