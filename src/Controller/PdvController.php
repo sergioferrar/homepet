@@ -448,12 +448,13 @@ class PdvController extends DefaultController
             }
 
             // ── Emissão automática de NFS-e (Asaas) ──
-            // Só emite para vendas pagas (não pendentes) e quando o Asaas está
-            // configurado para o estabelecimento. NUNCA pode derrubar a venda:
-            // qualquer falha aqui é registrada em log e sinalizada na resposta.
+            // Só emite quando a funcionalidade está LIGADA (env ASSAS_INIT=on),
+            // para vendas pagas (não pendentes) e com o Asaas configurado para o
+            // estabelecimento. NUNCA pode derrubar a venda: qualquer falha aqui
+            // é registrada em log e sinalizada na resposta.
             $notaFiscal = null;
 
-            if ($metodo !== 'pendente') {
+            if ($metodo !== 'pendente' && $this->emissaoAutomaticaAtiva()) {
                 // A venda vive no banco do tenant (switchDB acima); carrega a entidade
                 // enquanto ainda estamos nesse contexto.
                 $vendaEntity = $this->getRepositorio(Venda::class)->find($id);
@@ -681,6 +682,21 @@ class PdvController extends DefaultController
      * produtoNome (snapshot). Este método detecta esse caso e busca o nome
      * real no cadastro de Produtos ou Serviços, com fallback graceful.
      */
+    /**
+     * Liga/desliga a emissão automática de NFS-e no fechamento do PDV.
+     *
+     * Controlada pela variável de ambiente ASSAS_INIT:
+     *   ASSAS_INIT=on   → emite automaticamente
+     *   ASSAS_INIT=off  (ou ausente) → não emite
+     * Aceita também 'true'/'1'/'enabled' como ligado.
+     */
+    private function emissaoAutomaticaAtiva(): bool
+    {
+        $flag = $_ENV['ASSAS_INIT'] ?? $_SERVER['ASSAS_INIT'] ?? 'off';
+
+        return in_array(strtolower(trim((string) $flag)), ['on', 'true', '1', 'enabled'], true);
+    }
+
     /**
      * Resolve o ID numérico de um VendaItem garantindo que nunca seja null/zero.
      *
