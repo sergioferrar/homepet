@@ -51,6 +51,13 @@ class PagamentoController extends DefaultController
                         $statusConsultado  = $subscription['status'] ?? $status;
                         $aprovado          = $aprovado || in_array($statusConsultado, ['authorized', 'approved'], true);
                         $externalReference = $externalReference ?: ($subscription['raw_data']['external_reference'] ?? null);
+                    } else {
+                        // Ex.: 401 (token de teste consultando assinatura de produção) ou 404 (id inválido).
+                        $this->logger->error('Não foi possível validar a assinatura no Mercado Pago.', [
+                            'preapproval_id' => $preapprovalId,
+                            'http_code'      => $subscription['http_code'] ?? null,
+                            'error'          => $subscription['error'] ?? null,
+                        ]);
                     }
                 } elseif ($paymentId) {
                     $payment = $mercadoPagoService->getPaymentStatus($paymentId);
@@ -59,6 +66,12 @@ class PagamentoController extends DefaultController
                         $aprovado          = $aprovado || $statusConsultado === 'approved';
                         $externalReference = $externalReference ?: ($payment['external_reference'] ?? null);
                         $paymentMethod     = $payment['payment_method_id'] ?? null;
+                    } else {
+                        $this->logger->error('Não foi possível validar o pagamento no Mercado Pago.', [
+                            'payment_id' => $paymentId,
+                            'http_code'  => $payment['http_code'] ?? null,
+                            'error'      => $payment['error'] ?? null,
+                        ]);
                     }
                 }
             } catch (\Exception $e) {

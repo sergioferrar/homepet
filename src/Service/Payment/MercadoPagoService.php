@@ -225,7 +225,18 @@ class MercadoPagoService implements PaymentGatewayInterface
                 'headers' => $this->getHeaders(),
             ]);
 
-            $data = $response->toArray(false);
+            $statusCode = $response->getStatusCode();
+            $data       = $response->toArray(false);
+
+            // Erros HTTP (401/404/…) NÃO devem ser tratados como um status de pagamento.
+            if ($statusCode < 200 || $statusCode >= 300) {
+                return [
+                    'success'   => false,
+                    'http_code' => $statusCode,
+                    'error'     => $data['message'] ?? 'Falha ao consultar pagamento no Mercado Pago',
+                    'raw_data'  => $data,
+                ];
+            }
 
             return [
                 'success'            => true,
@@ -249,7 +260,18 @@ class MercadoPagoService implements PaymentGatewayInterface
                 'headers' => $this->getHeaders(),
             ]);
 
-            $data = $response->toArray(false);
+            $statusCode = $response->getStatusCode();
+            $data       = $response->toArray(false);
+
+            // Erros HTTP (401/404/…) NÃO devem ser tratados como status da assinatura.
+            if ($statusCode < 200 || $statusCode >= 300) {
+                return [
+                    'success'   => false,
+                    'http_code' => $statusCode,
+                    'error'     => $data['message'] ?? 'Falha ao consultar assinatura no Mercado Pago',
+                    'raw_data'  => $data,
+                ];
+            }
 
             return [
                 'success'           => true,
