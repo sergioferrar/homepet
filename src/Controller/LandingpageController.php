@@ -78,7 +78,7 @@ class LandingpageController extends DefaultController
             $estabelecimento->setCidade($request->get('cidade'));
             $estabelecimento->setPais($request->get('pais'));
             $estabelecimento->setCep($request->get('cep'));
-            $estabelecimento->setStatus('Ativo');// Deixar Ativo por enquanto
+            $estabelecimento->setStatus('Inativo');// Deixar Ativo por enquanto
             $estabelecimento->setDataCadastro((new \DateTime('now')));
             $estabelecimento->setDataPlanoInicio((new \DateTime('now')));
             $estabelecimento->setDataPlanoFim((new \DateTime(date('Y-m-d H:i:s', strtotime('+1 month')))));
