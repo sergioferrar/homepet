@@ -515,7 +515,11 @@ class SuperAdminController extends DefaultController
      * @Route("/configuracoes-globais", name="superadmin_configuracoes_globais")
      */
     public function configuracoesGlobais(): Response
-    {
+    {   
+        if($this->isGranted('ROLE_ADMIN')){
+            return $this->redirectToRoute('app_settings');
+        }
+        
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
             throw $this->createAccessDeniedException();
         }
