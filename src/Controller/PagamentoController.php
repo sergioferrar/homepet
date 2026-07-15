@@ -21,10 +21,12 @@ class PagamentoController extends DefaultController
     public function notificacao(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
         // O fluxo de cadastro usa assinatura recorrente (preapproval), portanto o MP
-        // retorna preapproval_id. Pagamentos avulsos retornam payment_id.
-        $paymentId = $request->get('payment_id') ?: $request->get('collection_id');
+        // retorna preapproval_id. Pagamentos avulsos retornam payment_id/collection_id.
+        $paymentId     = $request->get('payment_id') ?: $request->get('collection_id');
         $preapprovalId = $request->get('preapproval_id');
-        $status = $request->get('status') ?? $request->get('collection_status');
+        $status        = $request->get('status') ?? $request->get('collection_status');
+        // O MP já envia o external_reference na própria URL de retorno; usamos como base.
+        $externalReference = $request->get('external_reference');
 
         if (!$paymentId && !$preapprovalId) {
             return new Response('ID de pagamento ausente', 400);
@@ -35,50 +37,47 @@ class PagamentoController extends DefaultController
         $emFatura = $this->getRepositorio(\App\Entity\Fatura::class);
 
         try {
-            $aprovado = false;
-            $externalReference = null;
+            // ── 1) Decide a aprovação ──
+            // Confia no status que o MP envia no redirect e apenas *reforça* com a
+            // consulta à API. A consulta nunca pode derrubar o fluxo nem reverter um
+            // pagamento já aprovado; se ela falhar, mantemos a decisão do redirect.
+            $aprovado      = in_array($status, ['approved', 'authorized'], true);
             $paymentMethod = null;
-            $statusConsultado = $status;
 
-            if ($preapprovalId) {
-                // ── Assinatura recorrente: consulta o status da preapproval ──
-                // Uma assinatura autorizada com sucesso tem status "authorized".
-                $subscription = $mercadoPagoService->getSubscriptionStatus($preapprovalId);
-                $statusConsultado = $subscription['status'] ?? $status;
-                $aprovado = in_array($statusConsultado, ['authorized', 'approved'], true);
-                $externalReference = $subscription['raw_data']['external_reference'] ?? null;
-            } elseif ($paymentId) {
-                // ── Pagamento avulso: consulta o status do pagamento ──
-                $payment = $mercadoPagoService->getPaymentStatus($paymentId);
-                $statusConsultado = $payment['status'] ?? $status;
-                $aprovado = $statusConsultado === 'approved';
-                $externalReference = $payment['external_reference'] ?? null;
-                $paymentMethod = $payment['payment_method_id'] ?? null;
-            }
-
-            // Reforço: alguns retornos trazem o status aprovado já na query string.
-            if (!$aprovado && in_array($status, ['approved', 'authorized'], true)) {
-                $aprovado = true;
+            try {
+                if ($preapprovalId) {
+                    $subscription = $mercadoPagoService->getSubscriptionStatus($preapprovalId);
+                    if (!empty($subscription['success'])) {
+                        $statusConsultado  = $subscription['status'] ?? $status;
+                        $aprovado          = $aprovado || in_array($statusConsultado, ['authorized', 'approved'], true);
+                        $externalReference = $externalReference ?: ($subscription['raw_data']['external_reference'] ?? null);
+                    }
+                } elseif ($paymentId) {
+                    $payment = $mercadoPagoService->getPaymentStatus($paymentId);
+                    if (!empty($payment['success'])) {
+                        $statusConsultado  = $payment['status'] ?? $status;
+                        $aprovado          = $aprovado || $statusConsultado === 'approved';
+                        $externalReference = $externalReference ?: ($payment['external_reference'] ?? null);
+                        $paymentMethod     = $payment['payment_method_id'] ?? null;
+                    }
+                }
+            } catch (\Exception $e) {
+                // A consulta falhou — segue com o status recebido no redirect.
+                $this->logger->error('Falha ao consultar status no Mercado Pago.', ['message' => $e->getMessage()]);
             }
 
             if (!$aprovado) {
                 // Pagamento pendente ou recusado — webhook confirmará depois.
                 return $this->render('pagamento/pendente.html.twig', [
-                    'status' => $statusConsultado,
+                    'status' => $status,
                     'mensagem' => 'Seu pagamento está sendo processado. Você receberá um e-mail quando for confirmado.',
                 ]);
             }
 
-            // ── Localiza a invoice pelo external_reference (invoice_id) ──
-            $invoice = $externalReference ? $emFatura->find($externalReference) : null;
-
-            // Fallback: usa sessão se disponível (compatibilidade)
-            if (!$invoice) {
-                $sessionData = $request->getSession()->get('finaliza');
-                if (!empty($sessionData['invoice_id'])) {
-                    $invoice = $emFatura->find($sessionData['invoice_id']);
-                }
-            }
+            // ── 2) Localiza a invoice de forma segura ──
+            // O external_reference pode vir como id (inteiro), número da invoice ou um
+            // hash gerado pelo próprio MP; por isso NUNCA passamos direto para find().
+            $invoice = $this->localizarInvoice($emFatura, $externalReference, $request);
 
             $eid = null;
             $usuario = null;
@@ -87,16 +86,20 @@ class PagamentoController extends DefaultController
                 $eid = $invoice->getEstabelecimentoId();
                 $usuario = $emUsuario->findOneBy(['petshop_id' => $eid]);
 
-                // Marca a invoice como paga
-                $invoiceService = $this->container->get(\App\Service\InvoiceService::class);
-                $invoiceService->markAsPaid($invoice, [
-                    'payment_id' => $paymentId ?: $preapprovalId,
-                    'payment_status' => 'approved',
-                    'payment_method' => $paymentMethod,
-                ]);
+                // Marca a invoice como paga (não pode derrubar a ativação)
+                try {
+                    $invoiceService = $this->container->get(\App\Service\InvoiceService::class);
+                    $invoiceService->markAsPaid($invoice, [
+                        'payment_id' => $paymentId ?: $preapprovalId,
+                        'payment_status' => 'approved',
+                        'payment_method' => $paymentMethod,
+                    ]);
+                } catch (\Exception $e) {
+                    $this->logger->error('Falha ao marcar invoice como paga.', ['message' => $e->getMessage()]);
+                }
             }
 
-            // Fallback do estabelecimento via sessão antiga
+            // Fallback do estabelecimento via sessão
             if (!$eid) {
                 $sessionData = $request->getSession()->get('finaliza');
                 if (!empty($sessionData['eid'])) {
@@ -105,13 +108,25 @@ class PagamentoController extends DefaultController
                 }
             }
 
-            // ── Ativa o estabelecimento ──
+            // ── 3) Ativa o estabelecimento ──
             if ($eid) {
-                $uid = $usuario ? $usuario->getId() : 0;
-                $emEstabelecimento->aprovacao($uid, $eid);
+                try {
+                    $uid = $usuario ? $usuario->getId() : 0;
+                    $emEstabelecimento->aprovacao($uid, $eid);
+                } catch (\Exception $e) {
+                    $this->logger->error('Falha ao ativar estabelecimento.', ['eid' => $eid, 'message' => $e->getMessage()]);
+                }
+            } else {
+                // Pagamento aprovado mas não conseguimos identificar o estabelecimento.
+                // O webhook (assíncrono) ainda poderá ativá-lo; registramos para diagnóstico.
+                $this->logger->error('Pagamento aprovado, mas estabelecimento não identificado no retorno.', [
+                    'external_reference' => $externalReference,
+                    'payment_id'         => $paymentId,
+                    'preapproval_id'     => $preapprovalId,
+                ]);
             }
 
-            // Envia e-mail de confirmação com o link de acesso.
+            // ── 4) E-mail de confirmação com o link de acesso ──
             // Não deve bloquear o fluxo: se falhar, apenas registra o erro.
             if ($usuario) {
                 try {
@@ -142,6 +157,37 @@ class PagamentoController extends DefaultController
                 'erro' => 'Erro ao processar pagamento: ' . $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Localiza a Fatura a partir do external_reference (ou da sessão) sem lançar exceção.
+     *
+     * O id da Fatura é inteiro, mas o external_reference devolvido pelo MP pode ser um
+     * hash — por isso só chamamos find() quando o valor é numérico, caindo para o número
+     * da invoice e, por fim, para o invoice_id guardado na sessão.
+     */
+    private function localizarInvoice($emFatura, ?string $externalReference, Request $request): ?\App\Entity\Fatura
+    {
+        $invoice = null;
+
+        if ($externalReference !== null && $externalReference !== '') {
+            if (ctype_digit((string) $externalReference)) {
+                $invoice = $emFatura->find((int) $externalReference);
+            }
+            if (!$invoice) {
+                $invoice = $emFatura->findOneBy(['numeroInvoice' => $externalReference]);
+            }
+        }
+
+        // Fallback: invoice_id salvo na sessão durante o checkout.
+        if (!$invoice) {
+            $sessionData = $request->getSession()->get('finaliza');
+            if (!empty($sessionData['invoice_id']) && ctype_digit((string) $sessionData['invoice_id'])) {
+                $invoice = $emFatura->find((int) $sessionData['invoice_id']);
+            }
+        }
+
+        return $invoice;
     }
 
     /**
