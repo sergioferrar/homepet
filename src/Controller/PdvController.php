@@ -2,17 +2,15 @@
 
 namespace App\Controller;
 
-use App\DTO\FinalizarCarrinhoDTO;
 use App\DTO\RegistrarSaidaDTO;
 use App\DTO\RegistrarVendaDTO;
 use App\Entity\Cliente;
+use App\Entity\FinanceiroPendente;
 use App\Entity\Pet;
 use App\Entity\Produto;
 use App\Entity\Servico;
 use App\Entity\Venda;
 use App\Entity\VendaItem;
-use App\Entity\Financeiro;
-use App\Entity\FinanceiroPendente;
 use App\Service\CaixaService;
 use App\Service\NotaFiscal\AsaasNotaFiscalService;
 use App\Service\NotaFiscal\NotaFiscalException;
@@ -26,7 +24,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 /**
  * Controller do PDV - Apenas coordena requests, toda lógica está nos Services
- * 
+ *
  * @Route("dashboard/clinica/pdv")
  */
 class PdvController extends DefaultController
@@ -34,7 +32,7 @@ class PdvController extends DefaultController
 
     /**
      * Tela principal do PDV
-     * 
+     *
      * @Route("", name="clinica_pdv_index", methods={"GET"})
      */
     public function index(EntityManagerInterface $em, Request $request): Response
@@ -45,7 +43,7 @@ class PdvController extends DefaultController
         // Busca produtos e serviços
         $produtos = $em->getRepository(Produto::class)
             ->findBy(['estabelecimentoId' => $estabelecimentoId]);
-        
+
         $servicos = $em->getRepository(Servico::class)
             ->findBy(['estabelecimentoId' => $estabelecimentoId]);
 
@@ -55,13 +53,13 @@ class PdvController extends DefaultController
         // Busca e normaliza clientes
         $clientesEntities = $em->getRepository(Cliente::class)
             ->findBy(['estabelecimentoId' => $estabelecimentoId]);
-        
-        $clientesNormalizados = array_map(function($cliente) {
+
+        $clientesNormalizados = array_map(function ($cliente) {
             return [
                 'id' => $cliente->getId(),
                 'nome' => $cliente->getNome(),
                 'email' => $cliente->getEmail(),
-                'telefone' => $cliente->getTelefone()
+                'telefone' => $cliente->getTelefone(),
             ];
         }, $clientesEntities);
 
@@ -77,10 +75,10 @@ class PdvController extends DefaultController
         }
 
         return $this->render("clinica/pdv.html.twig", [
-            'produtos'            => $itensNormalizados,
-            'clientes'            => $clientesNormalizados,
-            'vendas_carrinho'     => $vendasCarrinho ?? [],
-            'vendaPreCarregada'   => $vendaPreCarregada,   // null quando não há pré-carregamento
+            'produtos' => $itensNormalizados,
+            'clientes' => $clientesNormalizados,
+            'vendas_carrinho' => $vendasCarrinho ?? [],
+            'vendaPreCarregada' => $vendaPreCarregada, // null quando não há pré-carregamento
         ]);
     }
 
@@ -101,7 +99,7 @@ class PdvController extends DefaultController
 
         // 1. Busca a venda garantindo que pertence ao estabelecimento
         $venda = $em->getRepository(Venda::class)->findOneBy([
-            'id'                => $id,
+            'id' => $id,
             'estabelecimentoId' => $estabelecimentoId,
         ]);
 
@@ -127,27 +125,27 @@ class PdvController extends DefaultController
         // 4. Monta payload de itens para a sessão
         $itensNormalizados = [];
         foreach ($itensEntities as $item) {
-            $tipo      = $item->getTipo(); // já normalizado para lowercase
+            $tipo = $item->getTipo(); // já normalizado para lowercase
             $produtoId = $this->resolverProdutoId($item); // trata legado com produtoId null
 
             $idFrontend = ($tipo === 'produto')
-                ? 'prod_' . $produtoId
-                : 'serv_' . $produtoId;
+            ? 'prod_' . $produtoId
+            : 'serv_' . $produtoId;
 
             $itensNormalizados[] = [
-                'id'             => $idFrontend,
-                'nome'           => $this->resolverNomeItem($em, $item),
-                'tipo'           => ucfirst($tipo),
-                'quantidade'     => $item->getQuantidade(),
+                'id' => $idFrontend,
+                'nome' => $this->resolverNomeItem($em, $item),
+                'tipo' => ucfirst($tipo),
+                'quantidade' => $item->getQuantidade(),
                 'valor_unitario' => $item->getValorUnitario(),
-                'subtotal'       => $item->getSubtotal(),
+                'subtotal' => $item->getSubtotal(),
             ];
         }
 
         // 5. Resolve nome do cliente e pet
         $nomeCliente = $venda->getCliente() ?? 'Consumidor Final';
-        $petId       = $venda->getPetId();
-        $nomePet     = null;
+        $petId = $venda->getPetId();
+        $nomePet = null;
 
         if ($petId) {
             $pet = $em->getRepository(Pet::class)->find($petId);
@@ -158,13 +156,13 @@ class PdvController extends DefaultController
 
         // 6. Grava tudo na sessão — o PDV lê via Twig/JS
         $session->set('pdv_venda_pre_carregada', [
-            'venda_id'     => $venda->getId(),
+            'venda_id' => $venda->getId(),
             'cliente_nome' => $nomeCliente,
-            'pet_id'       => $petId,
-            'pet_nome'     => $nomePet,
-            'itens'        => $itensNormalizados,
-            'total'        => $venda->getTotal(),
-            'observacao'   => $venda->getObservacao(),
+            'pet_id' => $petId,
+            'pet_nome' => $nomePet,
+            'itens' => $itensNormalizados,
+            'total' => $venda->getTotal(),
+            'observacao' => $venda->getObservacao(),
         ]);
 
         $this->addFlash('success', sprintf(
@@ -173,19 +171,18 @@ class PdvController extends DefaultController
         ));
 
         // 7. Redireciona para a tela principal do PDV
-        return $this->redirectToRoute('clinica_pdv_index',[ 'vendaId' => $venda->getId() ]);
+        return $this->redirectToRoute('clinica_pdv_index', ['vendaId' => $venda->getId()]);
     }
-
 
     /**
      * Registra nova venda
-     * 
+     *
      * @Route("/registrar", name="clinica_pdv_registrar", methods={"POST"})
      */
     public function registrar(Request $request): JsonResponse
     {
         $this->switchDB();
-        
+
         try {
             $dados = json_decode($request->getContent(), true);
             $dto = RegistrarVendaDTO::fromArray($dados);
@@ -195,7 +192,7 @@ class PdvController extends DefaultController
             if (!empty($errors)) {
                 return new JsonResponse([
                     'ok' => false,
-                    'msg' => implode(' ', $errors)
+                    'msg' => implode(' ', $errors),
                 ], 400);
             }
 
@@ -207,20 +204,20 @@ class PdvController extends DefaultController
         } catch (\Exception $e) {
             return new JsonResponse([
                 'ok' => false,
-                'msg' => $e->getMessage()
+                'msg' => $e->getMessage(),
             ], 500);
         }
     }
 
     /**
      * Registra saída de caixa
-     * 
+     *
      * @Route("/saida", name="clinica_pdv_saida", methods={"POST"})
      */
     public function registrarSaida(Request $request): JsonResponse
     {
         $this->switchDB();
-        
+
         try {
             $dados = json_decode($request->getContent(), true);
             $dto = RegistrarSaidaDTO::fromArray($dados);
@@ -230,7 +227,7 @@ class PdvController extends DefaultController
             if (!empty($errors)) {
                 return new JsonResponse([
                     'ok' => false,
-                    'msg' => implode(' ', $errors)
+                    'msg' => implode(' ', $errors),
                 ], 400);
             }
 
@@ -242,14 +239,14 @@ class PdvController extends DefaultController
         } catch (\Exception $e) {
             return new JsonResponse([
                 'ok' => false,
-                'msg' => 'Erro ao registrar saída: ' . $e->getMessage()
+                'msg' => 'Erro ao registrar saída: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
      * Tela de controle de caixa
-     * 
+     *
      * @Route("/caixa", name="clinica_pdv_caixa", methods={"GET"})
      */
     public function caixa(): Response
@@ -279,7 +276,7 @@ class PdvController extends DefaultController
 
     /**
      * Listagem de vendas
-     * 
+     *
      * @Route("/listar", name="clinica_pdv_listar", methods={"GET"})
      */
     public function listar(EntityManagerInterface $em): Response
@@ -300,7 +297,7 @@ class PdvController extends DefaultController
 
     /**
      * Lista clientes para Select2
-     * 
+     *
      * @Route("/clientes/listar", name="clinica_pdv_clientes_listar", methods={"GET"})
      */
     public function listarClientes(): JsonResponse
@@ -315,7 +312,7 @@ class PdvController extends DefaultController
             'id' => $c->getId(),
             'nome' => $c->getNome(),
             'email' => $c->getEmail(),
-            'telefone' => $c->getTelefone()
+            'telefone' => $c->getTelefone(),
         ], $clientes);
 
         return new JsonResponse($resultado);
@@ -323,7 +320,7 @@ class PdvController extends DefaultController
 
     /**
      * Autocomplete de tutores
-     * 
+     *
      * @Route("/autocomplete/tutor", name="clinica_autocomplete_tutor", methods={"GET"})
      */
     public function autocompleteTutor(Request $request): JsonResponse
@@ -341,7 +338,7 @@ class PdvController extends DefaultController
 
         $resultado = array_map(fn($c) => [
             'id' => $c['id'],
-            'nome' => $c['nome']
+            'nome' => $c['nome'],
         ], $clientes);
 
         return new JsonResponse($resultado);
@@ -349,7 +346,7 @@ class PdvController extends DefaultController
 
     /**
      * Busca pets de um tutor
-     * 
+     *
      * @Route("/pets-by-tutor/{id}", name="clinica_pets_by_tutor", methods={"GET"})
      */
     public function getPetsByTutor(int $id): JsonResponse
@@ -362,7 +359,7 @@ class PdvController extends DefaultController
 
         $resultado = array_map(fn($p) => [
             'id' => $p['id'],
-            'nome' => $p['nome']
+            'nome' => $p['nome'],
         ], $pets);
 
         return new JsonResponse($resultado);
@@ -370,7 +367,7 @@ class PdvController extends DefaultController
 
     /**
      * Finaliza venda em carrinho
-     * 
+     *
      * @Route("/carrinho/finalizar/{id}", name="pdv_finalizar_carrinho", methods={"POST"})
      */
     public function finalizarCarrinho(
@@ -386,16 +383,16 @@ class PdvController extends DefaultController
             // Aceita JSON ou form-data
             $contentType = $request->headers->get('Content-Type', '');
             $dados = str_contains($contentType, 'application/json')
-                ? (json_decode($request->getContent(), true) ?? [])
-                : $request->request->all();
+            ? (json_decode($request->getContent(), true) ?? [])
+            : $request->request->all();
 
-            $metodo   = $dados['metodo_pagamento'] ?? '';
-            $bandeira = $dados['bandeira_cartao']  ?? null;
-            $parcelas = !empty($dados['parcelas'])  ? (int)$dados['parcelas'] : null;
+            $metodo = $dados['metodo_pagamento'] ?? '';
+            $bandeira = $dados['bandeira_cartao'] ?? null;
+            $parcelas = !empty($dados['parcelas']) ? (int) $dados['parcelas'] : null;
 
             if (empty($metodo)) {
                 return new JsonResponse([
-                    'status'   => 'error',
+                    'status' => 'error',
                     'mensagem' => 'Método de pagamento não informado.',
                 ], 400);
             }
@@ -407,7 +404,7 @@ class PdvController extends DefaultController
 
             if (!$venda) {
                 return new JsonResponse([
-                    'status'   => 'error',
+                    'status' => 'error',
                     'mensagem' => 'Venda não encontrada ou já finalizada.',
                 ], 404);
             }
@@ -418,7 +415,7 @@ class PdvController extends DefaultController
                 $fpRepo->inserirPdv(
                     $estabelecimentoId,
                     $venda['cliente'] ?? 'Consumidor Final',
-                    (float)$venda['total'],
+                    (float) $venda['total'],
                     $venda['pet_id'] ?? null
                 );
             } else {
@@ -426,7 +423,7 @@ class PdvController extends DefaultController
                 $vendaRepo->inserirFinanceiro(
                     $estabelecimentoId,
                     $metodo,
-                    (float)$venda['total'],
+                    (float) $venda['total'],
                     $venda['cliente'] ?? 'Consumidor Final',
                     $venda['pet_id'] ?? null,
                     $id
@@ -445,7 +442,7 @@ class PdvController extends DefaultController
 
             if (!$ok) {
                 return new JsonResponse([
-                    'status'   => 'error',
+                    'status' => 'error',
                     'mensagem' => 'Não foi possível atualizar a venda. Tente novamente.',
                 ], 500);
             }
@@ -469,14 +466,14 @@ class PdvController extends DefaultController
                     try {
                         $resultadoNf = $asaas->emitir($vendaEntity);
                         $notaFiscal = [
-                            'emitida'          => true,
+                            'emitida' => true,
                             'asaas_invoice_id' => $resultadoNf['asaas_invoice_id'] ?? null,
-                            'status'           => $resultadoNf['status'] ?? null,
+                            'status' => $resultadoNf['status'] ?? null,
                         ];
                     } catch (NotaFiscalException | \Exception $e) {
                         $this->logger->error('Falha ao emitir NFS-e no fechamento do PDV.', [
                             'venda_id' => $id,
-                            'erro'     => $e->getMessage(),
+                            'erro' => $e->getMessage(),
                         ]);
                         $notaFiscal = ['emitida' => false, 'erro' => $e->getMessage()];
                     }
@@ -484,19 +481,18 @@ class PdvController extends DefaultController
             }
 
             return new JsonResponse([
-                'status'      => 'success',
-                'mensagem'    => 'Venda #' . $id . ' finalizada com sucesso!',
+                'status' => 'success',
+                'mensagem' => 'Venda #' . $id . ' finalizada com sucesso!',
                 'nota_fiscal' => $notaFiscal,
             ]);
 
         } catch (\Exception $e) {
             return new JsonResponse([
-                'status'   => 'error',
+                'status' => 'error',
                 'mensagem' => 'Erro ao finalizar venda: ' . $e->getMessage(),
             ], 500);
         }
     }
-
 
     /**
      * Retorna os dados de uma venda em JSON para pré-carregar o PDV via popup (sem usar sessão).
@@ -509,7 +505,7 @@ class PdvController extends DefaultController
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
 
         $venda = $em->getRepository(Venda::class)->findOneBy([
-            'id'                => $id,
+            'id' => $id,
             'estabelecimentoId' => $estabelecimentoId,
         ]);
 
@@ -518,8 +514,8 @@ class PdvController extends DefaultController
         }
 
         $nomeCliente = $venda->getCliente() ?? 'Consumidor Final';
-        $petId       = $venda->getPetId();
-        $nomePet     = null;
+        $petId = $venda->getPetId();
+        $nomePet = null;
 
         if ($petId) {
             $pet = $em->getRepository(Pet::class)->find($petId);
@@ -528,43 +524,43 @@ class PdvController extends DefaultController
             }
         }
 
-        $itensEntities     = $em->getRepository(VendaItem::class)->findBy(['vendaId' => $venda->getId()]);
+        $itensEntities = $em->getRepository(VendaItem::class)->findBy(['vendaId' => $venda->getId()]);
         $itensNormalizados = [];
 
         foreach ($itensEntities as $item) {
-            $tipo      = $item->getTipo(); // já lowercase pela entity
+            $tipo = $item->getTipo(); // já lowercase pela entity
             $produtoId = $this->resolverProdutoId($item); // trata legado com produtoId null
 
             $idFrontend = ($tipo === 'produto')
-                ? 'prod_' . $produtoId
-                : 'serv_' . $produtoId;
+            ? 'prod_' . $produtoId
+            : 'serv_' . $produtoId;
 
             $itensNormalizados[] = [
-                'id'             => $idFrontend,
-                'nome'           => $this->resolverNomeItem($em, $item),
-                'tipo'           => ucfirst($tipo),
-                'quantidade'     => $item->getQuantidade(),
+                'id' => $idFrontend,
+                'nome' => $this->resolverNomeItem($em, $item),
+                'tipo' => ucfirst($tipo),
+                'quantidade' => $item->getQuantidade(),
                 'valor_unitario' => $item->getValorUnitario(),
-                'subtotal'       => $item->getSubtotal(),
+                'subtotal' => $item->getSubtotal(),
             ];
         }
 
         return new JsonResponse([
-            'ok'           => true,
-            'venda_id'     => $venda->getId(),
-            'status'       => $venda->getStatus(),
+            'ok' => true,
+            'venda_id' => $venda->getId(),
+            'status' => $venda->getStatus(),
             'cliente_nome' => $nomeCliente,
-            'pet_id'       => $petId,
-            'pet_nome'     => $nomePet,
-            'itens'        => $itensNormalizados,
-            'total'        => $venda->getTotal(),
-            'observacao'   => $venda->getObservacao(),
+            'pet_id' => $petId,
+            'pet_nome' => $nomePet,
+            'itens' => $itensNormalizados,
+            'total' => $venda->getTotal(),
+            'observacao' => $venda->getObservacao(),
         ]);
     }
 
     /**
      * Busca vendas de um pet
-     * 
+     *
      * @Route("/pet/{petId}/vendas", name="clinica_pdv_pet_vendas", methods={"GET"})
      */
     public function vendasPorPet(int $petId, EntityManagerInterface $em): JsonResponse
@@ -595,10 +591,10 @@ class PdvController extends DefaultController
                     ->findBy(['vendaId' => $venda->getId()]);
 
                 $itensFormatados = array_map(fn($item) => [
-                    'produto'        => $item->getProdutoNome(),
-                    'quantidade'     => $item->getQuantidade(),
+                    'produto' => $item->getProdutoNome(),
+                    'quantidade' => $item->getQuantidade(),
                     'valor_unitario' => number_format($item->getValorUnitario(), 2, ',', '.'),
-                    'subtotal'       => number_format($item->getSubtotal(), 2, ',', '.'),
+                    'subtotal' => number_format($item->getSubtotal(), 2, ',', '.'),
                 ], $itens);
 
                 $vendasFormatadas[] = [
@@ -623,23 +619,23 @@ class PdvController extends DefaultController
                 'resumo' => [
                     'total_vendas' => count($vendas),
                     'total_gasto' => number_format($totalGasto, 2, ',', '.'),
-                    'ticket_medio' => count($vendas) > 0 
-                        ? number_format($totalGasto / count($vendas), 2, ',', '.') 
-                        : '0,00',
+                    'ticket_medio' => count($vendas) > 0
+                    ? number_format($totalGasto / count($vendas), 2, ',', '.')
+                    : '0,00',
                 ],
             ]);
 
         } catch (\Exception $e) {
             return new JsonResponse([
                 'ok' => false,
-                'msg' => 'Erro: ' . $e->getMessage()
+                'msg' => 'Erro: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
      * Resumo de vendas do dia
-     * 
+     *
      * @Route("/resumo-dia", name="clinica_pdv_resumo_dia", methods={"GET"})
      */
     public function resumoDia(Request $request): JsonResponse
@@ -669,7 +665,7 @@ class PdvController extends DefaultController
         } catch (\Exception $e) {
             return new JsonResponse([
                 'ok' => false,
-                'msg' => 'Erro: ' . $e->getMessage()
+                'msg' => 'Erro: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -700,7 +696,7 @@ class PdvController extends DefaultController
         // Fallback: snapshot numérico (dado legado)
         $snapshot = $item->getProduto();
         if ($snapshot !== null && is_numeric(trim($snapshot))) {
-            return (int)trim($snapshot);
+            return (int) trim($snapshot);
         }
 
         // Sem ID válido — retorna 0 (tratado no EstoqueService)
@@ -718,7 +714,7 @@ class PdvController extends DefaultController
         }
 
         // Snapshot é numérico (dado legado) ou nulo — busca no cadastro pelo produtoId
-        $idBusca = $produtoId ?? (int)trim((string)$snapshot);
+        $idBusca = $produtoId ?? (int) trim((string) $snapshot);
 
         if (!$idBusca) {
             return $snapshot ?? 'Item sem descrição';
@@ -769,10 +765,10 @@ class PdvController extends DefaultController
         $itens = $em->getRepository(VendaItem::class)->findBy(['vendaId' => $vendaId]);
 
         return array_map(fn($item) => [
-            'descricao'      => $this->resolverNomeItem($em, $item),
-            'quantidade'     => $item->getQuantidade(),
+            'descricao' => $this->resolverNomeItem($em, $item),
+            'quantidade' => $item->getQuantidade(),
             'valor_unitario' => $item->getValorUnitario(),
-            'subtotal'       => $item->getSubtotal(),
+            'subtotal' => $item->getSubtotal(),
         ], $itens);
     }
 }
