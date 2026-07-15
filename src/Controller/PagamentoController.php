@@ -233,18 +233,23 @@ class PagamentoController extends DefaultController
 
                         if ($usuario && $estabelecimento) {
                             $emailService = $this->container->get(\App\Service\EmailService::class);
-                            $template = ($invoice->getTipo() === 'assinatura')
-                            ? 'emails/assinatura_confirmada.html.twig'
-                            : 'emails/assinatura_renovada.html.twig';
+                            $ehAssinatura = $invoice->getTipo() === 'assinatura';
+                            $template = $ehAssinatura
+                                ? 'emails/assinatura_confirmada.html.twig'
+                                : 'emails/assinatura_renovada.html.twig';
+
+                            $loginUrl = $this->generateUrl('app_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
                             $emailService->sendEmail(
                                 $usuario->getEmail(),
-                                $invoice->getTipo() === 'assinatura'
-                                ? 'Assinatura Confirmada - Sistema HomePet'
-                                : 'Assinatura Renovada - Sistema HomePet',
+                                $ehAssinatura
+                                    ? 'Assinatura Confirmada - Sistema HomePet'
+                                    : 'Assinatura Renovada - Sistema HomePet',
                                 $this->renderView($template, [
-                                    'invoice' => $invoice,
+                                    'invoice'         => $invoice,
                                     'estabelecimento' => $estabelecimento,
+                                    'usuario'         => $usuario,
+                                    'login_url'       => $loginUrl,
                                 ])
                             );
                         }
