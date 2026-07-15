@@ -47,6 +47,7 @@ class PagamentoController extends DefaultController
             try {
                 if ($preapprovalId) {
                     $subscription = $mercadoPagoService->getSubscriptionStatus($preapprovalId);
+                    dd($subscription);
                     if (!empty($subscription['success'])) {
                         $statusConsultado  = $subscription['status'] ?? $status;
                         $aprovado          = $aprovado || in_array($statusConsultado, ['authorized', 'approved'], true);
