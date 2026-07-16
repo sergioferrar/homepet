@@ -73,6 +73,18 @@ class Consulta
      */
     private $tipo;
 
+    /**
+     * Nome do arquivo salvo no servidor (randômico de 12 dígitos + extensão).
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $attachment;
+
+    /**
+     * Nome original do arquivo enviado (usado na hora do download).
+     * @ORM\Column(type="string", length=255, nullable=true, name="attachment_original")
+     */
+    private $attachmentOriginal;
+
 
 
     public function __construct()
@@ -168,6 +180,28 @@ class Consulta
     public function setVeterinarioId(?int $veterinarioId): self
     {
         $this->veterinarioId = $veterinarioId;
+        return $this;
+    }
+
+    public function getAttachment(): ?string
+    {
+        return $this->attachment;
+    }
+
+    public function setAttachment(?string $attachment): self
+    {
+        $this->attachment = $attachment;
+        return $this;
+    }
+
+    public function getAttachmentOriginal(): ?string
+    {
+        return $this->attachmentOriginal;
+    }
+
+    public function setAttachmentOriginal(?string $attachmentOriginal): self
+    {
+        $this->attachmentOriginal = $attachmentOriginal;
         return $this;
     }
 }

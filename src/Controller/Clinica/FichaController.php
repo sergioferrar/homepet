@@ -7,8 +7,10 @@ use App\Entity\Cliente;
 use App\Entity\Consulta;
 use App\Entity\Pet;
 use App\Entity\Veterinario;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -16,6 +18,9 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class FichaController extends DefaultController
 {
+    /** Extensões permitidas para o arquivo de encaminhamento */
+    private const ANEXO_EXTENSOES_PERMITIDAS = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
+
     /**
      * @Route("/pet/{petId}/atendimento/novo", name="clinica_novo_atendimento", methods={"POST"})
      */
@@ -23,9 +28,13 @@ class FichaController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
+        $isAjax = $request->isXmlHttpRequest();
 
         $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
         if (!$pet) {
+            if ($isAjax) {
+                return $this->json(['status' => 'error', 'mensagem' => 'Pet não encontrado.'], 404);
+            }
             throw $this->createNotFoundException('Pet não encontrado.');
         }
 
@@ -45,10 +54,89 @@ class FichaController extends DefaultController
         $consulta->setStatus('atendido');
         $consulta->setCriadoEm(new \DateTime());
 
+        // --- Upload do arquivo de encaminhamento (opcional) ---
+        $arquivo = $request->files->get('encaminhamento_arquivo');
+        if ($arquivo) {
+            $extensao = strtolower($arquivo->getClientOriginalExtension() ?: $arquivo->guessExtension() ?: '');
+
+            if (!in_array($extensao, self::ANEXO_EXTENSOES_PERMITIDAS, true)) {
+                $msg = 'Formato de arquivo não permitido. Use: ' . implode(', ', self::ANEXO_EXTENSOES_PERMITIDAS) . '.';
+                if ($isAjax) {
+                    return $this->json(['status' => 'error', 'mensagem' => $msg], 400);
+                }
+                $this->addFlash('error', $msg);
+                return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+            }
+
+            $diretorio = $this->getParameter('encaminhamentos_directory');
+            if (!is_dir($diretorio)) {
+                mkdir($diretorio, 0775, true);
+            }
+
+            // Nome randômico de 12 dígitos, garantindo que não exista arquivo igual no diretório
+            do {
+                $nomeArquivo = (string) random_int(100000000000, 999999999999) . '.' . $extensao;
+            } while (file_exists($diretorio . DIRECTORY_SEPARATOR . $nomeArquivo));
+
+            try {
+                $arquivo->move($diretorio, $nomeArquivo);
+            } catch (\Exception $e) {
+                $msg = 'Falha ao gravar o arquivo no servidor. Tente novamente.';
+                if ($isAjax) {
+                    return $this->json(['status' => 'error', 'mensagem' => $msg], 500);
+                }
+                $this->addFlash('error', $msg);
+                return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+            }
+
+            $consulta->setAttachment($nomeArquivo);
+            $consulta->setAttachmentOriginal($arquivo->getClientOriginalName());
+        }
+
         $this->getRepositorio(Consulta::class)->salvarConsulta($baseId, $consulta);
+
+        if ($isAjax) {
+            return $this->json([
+                'status' => 'success',
+                'mensagem' => 'Atendimento salvo com sucesso!',
+                'redirect' => $this->generateUrl('clinica_detalhes_pet', ['id' => $petId]),
+            ]);
+        }
 
         $this->addFlash('success', 'Atendimento salvo com sucesso!');
         return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+    }
+
+    /**
+     * Download do arquivo de encaminhamento anexado a um atendimento (timeline).
+     *
+     * @Route("/consulta/{id}/anexo", name="clinica_consulta_anexo", methods={"GET"})
+     */
+    public function baixarAnexoConsulta(int $id): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $anexo = $this->getRepositorio(Consulta::class)->findAnexoConsulta($baseId, $id);
+        if (!$anexo) {
+            throw $this->createNotFoundException('Nenhum anexo encontrado para este atendimento.');
+        }
+
+        // basename() impede path traversal caso o valor no banco seja adulterado
+        $nomeServidor = basename($anexo['attachment']);
+        $caminho = $this->getParameter('encaminhamentos_directory') . DIRECTORY_SEPARATOR . $nomeServidor;
+
+        if (!is_file($caminho)) {
+            throw $this->createNotFoundException('Arquivo não localizado no servidor.');
+        }
+
+        $response = new BinaryFileResponse($caminho);
+        $response->setContentDisposition(
+            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+            $anexo['attachment_original'] ?: $nomeServidor
+        );
+
+        return $response;
     }
 
     /**

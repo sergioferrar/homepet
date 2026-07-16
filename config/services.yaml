@@ -1,5 +1,7 @@
 parameters:
     diretorio_temp: '%kernel.project_dir%/var/tmp'
+    uploads_directory: '%kernel.project_dir%/public/uploads'
+    encaminhamentos_directory: '%kernel.project_dir%/public/uploads/encaminhamentos'
     mercado_pago_token: '%env(resolve:MERCADO_PAGO_TOKEN)%'
 
 services:

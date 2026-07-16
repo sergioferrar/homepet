@@ -216,11 +216,14 @@ class DashboardController extends DefaultController
             }
 
             $timeline_items[] = [
+                'id' => $item['id'],
                 'data' => new \DateTime($item['data'] . ' ' . $item['hora']),
                 'tipo' => $item['tipo'] ?? 'Consulta',
                 'observacoes' => $item['observacoes'],
                 'resumo' => trim($resumo),
                 'anamnese' => $item['anamnese'] ?? null,
+                'attachment' => $item['attachment'] ?? null,
+                'attachment_original' => $item['attachment_original'] ?? null,
                 'veterinario' => $item['veterinario_nome'] ?? null,
                 'veterinario_crmv' => $item['veterinario_crmv'] ?? null,
             ];

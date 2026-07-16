@@ -359,7 +359,7 @@
 
                         {# FORM ATENDIMENTO #}
                         <div id="atendimento-view" style="display: none;">
-                            <form id="form-atendimento" method="POST"
+                            <form id="form-atendimento" method="POST" enctype="multipart/form-data"
                                   action="{{ path('clinica_novo_atendimento', {'petId': pet.id}) }}">
                                 <div class="form-view-container">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -368,9 +368,10 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6 mb-3"><label class="form-label">Tipo*</label>
-                                            <select class="form-select" name="tipo">
+                                            <select class="form-select" name="tipo" id="atendimento-tipo">
                                                 <option value="Consulta" selected>Consulta</option>
                                                 <option value="Retorno">Retorno</option>
+                                                <option value="Encaminhamento">Encaminhamento</option>
                                             </select>
                                         </div>
                                         <div class="col-md-6 mb-3">
@@ -382,6 +383,12 @@
                                                 {% endfor %}
                                             </select>
                                         </div>
+                                    </div>
+                                    <div class="mb-3" id="encaminhamento-upload-wrapper" style="display:none;">
+                                        <label class="form-label">Arquivo do Encaminhamento</label>
+                                        <input type="file" class="form-control" name="encaminhamento_arquivo" id="encaminhamento-arquivo"
+                                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                        <small class="text-muted">Formatos aceitos: PDF, JPG, PNG, DOC, DOCX. O arquivo ficará disponível para download na linha do tempo.</small>
                                     </div>
                                     <div class="mb-3"><label class="form-label">Anamnese / Exame Clínico</label><div id="atendimento-editor"></div><input type="hidden" name="anamnese_delta" id="anamnese-input"></div>
                                     <input type="hidden" name="pet_id" value="{{ pet.id }}">
@@ -464,6 +471,7 @@
                         <ul class="timeline">
                             {% for item in timeline_items %}
                                 {% set borderClass =
+                                    'Encaminhamento' in item.tipo ? 'border-start border-5 border-info ps-3' :
                                     'Consulta' in item.tipo ? 'border-start border-5 border-primary ps-3' :
                                     'Retorno'  in item.tipo ? 'border-start border-5 border-success ps-3' :
                                     'Vacina'   in item.tipo ? 'border-start border-5 border-warning ps-3' :
@@ -484,6 +492,7 @@
                                                    data-resumo="{{ item.resumo|raw }}"
                                                    {% if item.veterinario is defined and item.veterinario %}data-veterinario="{{ item.veterinario|e('html_attr') }}{% if item.veterinario_crmv is defined and item.veterinario_crmv %} — CRMV: {{ item.veterinario_crmv }}{% endif %}"{% endif %}
                                                    {% if item.anamnese is defined %}data-atendimento-delta="{{ item.anamnese|e('html_attr') }}"{% endif %}
+                                                   {% if item.attachment is defined and item.attachment %}data-anexo-url="{{ path('clinica_consulta_anexo', {'id': item.id}) }}" data-anexo-nome="{{ item.attachment_original|default(item.attachment)|e('html_attr') }}"{% endif %}
                                                    {% if item.receita_cabecalho is defined %}data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}"{% endif %}
                                                    {% if item.receita_conteudo is defined %}data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}"{% endif %}
                                                    {% if item.receita_rodape is defined %}data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}"{% endif %}>
@@ -503,11 +512,18 @@
                                                data-resumo="{{ item.resumo|raw }}"
                                                {% if item.veterinario is defined and item.veterinario %}data-veterinario="{{ item.veterinario|e('html_attr') }}{% if item.veterinario_crmv is defined and item.veterinario_crmv %} — CRMV: {{ item.veterinario_crmv }}{% endif %}"{% endif %}
                                                {% if item.anamnese is defined %}data-atendimento-delta="{{ item.anamnese|e('html_attr') }}"{% endif %}
+                                               {% if item.attachment is defined and item.attachment %}data-anexo-url="{{ path('clinica_consulta_anexo', {'id': item.id}) }}" data-anexo-nome="{{ item.attachment_original|default(item.attachment)|e('html_attr') }}"{% endif %}
                                                {% if item.receita_cabecalho is defined %}data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}"{% endif %}
                                                {% if item.receita_conteudo is defined %}data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}"{% endif %}
                                                {% if item.receita_rodape is defined %}data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}"{% endif %}>
                                                 <span>Ver detalhes</span>
                                             </a>
+                                            {% if item.attachment is defined and item.attachment %}
+                                                <a href="{{ path('clinica_consulta_anexo', {'id': item.id}) }}"
+                                                   class="btn btn-sm btn-outline-info ms-1" title="{{ item.attachment_original|default(item.attachment) }}">
+                                                    <i class="bi bi-paperclip"></i> Baixar anexo
+                                                </a>
+                                            {% endif %}
                                             <p class="text-muted d-none">{{ item.resumo|raw }}</p>
                                         </div>
                                     </div>
@@ -935,9 +951,9 @@ $(document).ready(function() {
                     contentDiv.innerHTML = '<p>Nenhum detalhe disponível.</p>';
                 }
             };
-            if (tipo === 'Consulta' || tipo === 'Retorno') {
+            if (tipo === 'Consulta' || tipo === 'Retorno' || tipo === 'Encaminhamento') {
                 const anamneseDeltaString = this.dataset.atendimentoDelta;
-                const borderColorClass = (tipo === 'Consulta') ? 'border-primary' : 'border-success';
+                const borderColorClass = (tipo === 'Consulta') ? 'border-primary' : (tipo === 'Encaminhamento') ? 'border-info' : 'border-success';
                 const cardDiv = document.createElement('div');
                 cardDiv.className = `service-detail-card p-3 rounded ${borderColorClass} border-start border-4`;
                 const cardHeader = document.createElement('h5');
@@ -950,6 +966,14 @@ $(document).ready(function() {
                     vetDiv.className = 'mb-3 p-2 bg-light rounded';
                     vetDiv.innerHTML = `<i class="fas fa-user-md me-1"></i><strong>Veterinário responsável:</strong> ${veterinario}`;
                     cardDiv.appendChild(vetDiv);
+                }
+                if (this.dataset.anexoUrl) {
+                    const anexoDiv = document.createElement('div');
+                    anexoDiv.className = 'mb-3 p-2 bg-light rounded';
+                    const nomeAnexo = this.dataset.anexoNome || 'arquivo';
+                    anexoDiv.innerHTML = `<i class="bi bi-paperclip me-1"></i><strong>Anexo:</strong> ${nomeAnexo} ` +
+                        `<a href="${this.dataset.anexoUrl}" class="btn btn-sm btn-outline-info ms-2"><i class="bi bi-download me-1"></i>Baixar</a>`;
+                    cardDiv.appendChild(anexoDiv);
                 }
                 if (observacoes) {
                     const obsDiv = document.createElement('div');
@@ -1124,9 +1148,67 @@ $(document).ready(function() {
             });
         });
     };
-    setupFormSubmission('form-atendimento', {
-        'anamnese-input': quillAtendimento
+    // ── ATENDIMENTO: toggle do campo de upload (Encaminhamento) ──
+    const $tipoAtendimento = $('#atendimento-tipo');
+    const $uploadWrapper = $('#encaminhamento-upload-wrapper');
+    $tipoAtendimento.on('change', function() {
+        if ($(this).val() === 'Encaminhamento') {
+            $uploadWrapper.slideDown(150);
+        } else {
+            $uploadWrapper.slideUp(150);
+            $('#encaminhamento-arquivo').val('');
+        }
     });
+
+    // ── ATENDIMENTO: envio via AJAX (FormData suporta o arquivo anexado) ──
+    let _atendimentoEmAndamento = false;
+    $('#form-atendimento').on('submit', function(e) {
+        e.preventDefault();
+        if (_atendimentoEmAndamento) return;
+
+        // Sincroniza o conteúdo do editor Quill no input hidden antes de montar o FormData
+        if (quillAtendimento) {
+            $('#anamnese-input').val(JSON.stringify(quillAtendimento.getContents()));
+        }
+
+        _atendimentoEmAndamento = true;
+        const $btnSubmit = $(this).find('button[type="submit"]');
+        $btnSubmit.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Salvando...');
+
+        fetch(this.action, {
+            method: 'POST',
+            body: new FormData(this),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                if (window.Notify && Notify.toast) {
+                    Notify.toast(data.mensagem, 'success');
+                }
+                setTimeout(() => { window.location.href = data.redirect || window.location.href; }, 600);
+            } else {
+                _atendimentoEmAndamento = false;
+                $btnSubmit.prop('disabled', false).html('<i class="fas fa-save me-1"></i>Salvar Atendimento');
+                const msg = data.mensagem || 'Erro ao salvar o atendimento.';
+                if (window.Notify && Notify.toast) {
+                    Notify.toast(msg, 'danger');
+                } else {
+                    alert(msg);
+                }
+            }
+        })
+        .catch(() => {
+            _atendimentoEmAndamento = false;
+            $btnSubmit.prop('disabled', false).html('<i class="fas fa-save me-1"></i>Salvar Atendimento');
+            if (window.Notify && Notify.toast) {
+                Notify.toast('Falha de comunicação com o servidor.', 'danger');
+            } else {
+                alert('Falha de comunicação com o servidor.');
+            }
+        });
+    });
+
     setupFormSubmission('form-receita', {
         'conteudo-input': quillConteudo
     });

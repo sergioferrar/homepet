@@ -20,8 +20,8 @@ class ConsultaRepository extends ServiceEntityRepository
     {
        
         $sql = "INSERT INTO homepet_{$baseId}.consulta
-                (estabelecimento_id, cliente_id, pet_id, data, hora, observacoes, criado_em, status, anamnese, tipo, veterinario_id)
-                VALUES (:estabelecimento_id, :cliente_id, :pet_id, :data, :hora, :observacoes, :criado_em, :status, :anamnese, :tipo, :veterinario_id)";
+                (estabelecimento_id, cliente_id, pet_id, data, hora, observacoes, criado_em, status, anamnese, tipo, veterinario_id, attachment, attachment_original)
+                VALUES (:estabelecimento_id, :cliente_id, :pet_id, :data, :hora, :observacoes, :criado_em, :status, :anamnese, :tipo, :veterinario_id, :attachment, :attachment_original)";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('estabelecimento_id', $consulta->getEstabelecimentoId());
@@ -36,6 +36,8 @@ class ConsultaRepository extends ServiceEntityRepository
         $stmt->bindValue('anamnese', $consulta->getAnamnese());
         $stmt->bindValue('tipo', $consulta->getTipo());
         $stmt->bindValue('veterinario_id', $consulta->getVeterinarioId());
+        $stmt->bindValue('attachment', $consulta->getAttachment());
+        $stmt->bindValue('attachment_original', $consulta->getAttachmentOriginal());
 
         $stmt->executeStatement();
     }
@@ -202,6 +204,7 @@ class ConsultaRepository extends ServiceEntityRepository
         {
         
             $sql = "SELECT c.id, c.data, c.hora, c.observacoes, c.status, c.anamnese, c.tipo,
+                           c.attachment, c.attachment_original,
                            c.veterinario_id,
                            v.nome AS veterinario_nome, v.crmv AS veterinario_crmv,
                            cl.nome AS cliente, p.nome AS pet, p.id AS pet_id
@@ -217,6 +220,24 @@ class ConsultaRepository extends ServiceEntityRepository
             $stmt->bindValue('petId', $petId);
             return $stmt->executeQuery()->fetchAllAssociative();
         }
+
+    /**
+     * Retorna os dados do anexo (encaminhamento) de uma consulta para download.
+     */
+    public function findAnexoConsulta($baseId, int $consultaId): ?array
+    {
+        $sql = "SELECT c.attachment, c.attachment_original
+                FROM homepet_{$baseId}.consulta c
+                WHERE c.estabelecimento_id = :baseId AND c.id = :id
+                LIMIT 1";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('id', $consultaId);
+        $row = $stmt->executeQuery()->fetchAssociative();
+
+        return ($row && !empty($row['attachment'])) ? $row : null;
+    }
 
     /**
      * Retorna o veterinário do atendimento mais recente do pet (consulta ativa/último atendimento).
