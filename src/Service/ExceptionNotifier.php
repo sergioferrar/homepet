@@ -32,9 +32,9 @@ class ExceptionNotifier
         ?RequestStack $requestStack = null,
         ?LoggerInterface $logger = null
     ) {
-        $this->mailer       = $mailer;
+        $this->mailer = $mailer;
         $this->requestStack = $requestStack;
-        $this->logger       = $logger;
+        $this->logger = $logger;
     }
 
     /**
@@ -110,7 +110,7 @@ class ExceptionNotifier
      */
     private function montarHtml(\Throwable $e, array $contexto): string
     {
-        $esc = static fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+        $esc = static fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 
         $ctx = $this->contextoCompleto($e, $contexto);
         $ctxHtml = '';
@@ -120,7 +120,7 @@ class ExceptionNotifier
         }
 
         $trace = $esc($e->getTraceAsString());
-        $json  = $esc($this->jsonException($e));
+        $json = $esc($this->jsonException($e));
 
         return <<<HTML
 <!DOCTYPE html>
@@ -205,10 +205,10 @@ HTML;
         try {
             $request = $this->requestStack ? $this->requestStack->getCurrentRequest() : null;
             if ($request) {
-                $ctx['Rota']     = (string) $request->attributes->get('_route', '(desconhecida)');
-                $ctx['Método']   = $request->getMethod();
-                $ctx['URL']      = $request->getUri();
-                $ctx['IP']       = (string) $request->getClientIp();
+                $ctx['Rota'] = (string) $request->attributes->get('_route', '(desconhecida)');
+                $ctx['Método'] = $request->getMethod();
+                $ctx['URL'] = $request->getUri();
+                $ctx['IP'] = (string) $request->getClientIp();
             }
         } catch (\Throwable $ignore) {
             // Ambiente sem request (CLI, worker) — ignora.
@@ -235,19 +235,19 @@ HTML;
     private function jsonException(\Throwable $e): string
     {
         $dados = [
-            'class'   => get_class($e),
-            'code'    => $e->getCode(),
+            'class' => get_class($e),
+            'code' => $e->getCode(),
             'message' => $e->getMessage(),
-            'file'    => $e->getFile(),
-            'line'    => $e->getLine(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
         ];
 
         if ($previous = $e->getPrevious()) {
             $dados['previous'] = [
-                'class'   => get_class($previous),
+                'class' => get_class($previous),
                 'message' => $previous->getMessage(),
-                'file'    => $previous->getFile(),
-                'line'    => $previous->getLine(),
+                'file' => $previous->getFile(),
+                'line' => $previous->getLine(),
             ];
         }
 
