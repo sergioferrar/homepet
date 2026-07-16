@@ -209,6 +209,17 @@ class Produto
         return $this;
     }
 
+    public function getUnidade(): ?string
+    {
+        return $this->unidade;
+    }
+
+    public function setUnidade(?string $unidade): self
+    {
+        $this->unidade = $unidade;
+        return $this;
+    }
+
     public function getDataCadastro(): ?\DateTimeInterface
     {
         return $this->dataCadastro;

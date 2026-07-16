@@ -1,0 +1,246 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Relatório de Comissões{% endblock %}
+
+{% block body %}
+<style>
+    .comissao-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,.05); margin-bottom: 20px; }
+    .comissao-valor-input { max-width: 120px; text-align: right; }
+    .comissao-pct-input { max-width: 90px; text-align: right; }
+    .comissao-repasse { font-weight: 700; }
+    .vet-detalhe-header { cursor: pointer; }
+    #relatorio-print-header { display: none; }
+    .assinaturas-print { display: none; }
+
+    @media print {
+        .no-print, .nav-tabs, nav, aside, header, footer, .btn { display: none !important; }
+        #relatorio-print-header { display: block !important; margin-bottom: 16px; }
+        .assinaturas-print { display: block !important; margin-top: 60px; page-break-inside: avoid; }
+        .comissao-card { box-shadow: none; border: none; padding: 0; }
+        .comissao-valor-input, .comissao-pct-input {
+            border: none !important; background: transparent !important;
+            box-shadow: none !important; padding: 0 !important;
+        }
+        input[type="number"]::-webkit-inner-spin-button { display: none; }
+        body { background: #fff !important; }
+        .collapse { display: block !important; height: auto !important; }
+    }
+</style>
+
+<div class="container mt-4">
+
+    <ul class="nav nav-tabs mb-4 no-print">
+        <li class="nav-item"><a class="nav-link" href="{{ path('clinica_dashboard') }}">Painel</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ path('financeiro_dashboard') }}">Financeiro</a></li>
+        <li class="nav-item"><a class="nav-link active" href="#">Comissões</a></li>
+    </ul>
+
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+        <h2 class="mb-0">Relatório de Comissões — Veterinários</h2>
+        <button type="button" class="btn btn-outline-dark" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i>Imprimir Relatório
+        </button>
+    </div>
+
+    {# Cabeçalho que só aparece na impressão (comprovação) #}
+    <div id="relatorio-print-header">
+        <h3 class="mb-1">Relatório de Comissionamento de Veterinários</h3>
+        <p class="mb-0">Período: <strong>{{ inicio|date('d/m/Y') }}</strong> a <strong>{{ fim|date('d/m/Y') }}</strong></p>
+        <p class="mb-0"><small>Emitido em: {{ "now"|date('d/m/Y H:i:s') }} — System Home Pet</small></p>
+        <hr>
+    </div>
+
+    {# ── FILTROS ── #}
+    <div class="comissao-card no-print">
+        <form method="GET" action="{{ path('clinica_relatorio_comissoes') }}" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Data Início</label>
+                <input type="date" name="inicio" class="form-control" value="{{ inicio|date('Y-m-d') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Data Fim</label>
+                <input type="date" name="fim" class="form-control" value="{{ fim|date('Y-m-d') }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Veterinário</label>
+                <select name="veterinario_id" class="form-select">
+                    <option value="">Todos</option>
+                    {% for v in veterinarios %}
+                        <option value="{{ v.id }}" {% if vet_filtro == v.id %}selected{% endif %}>{{ v.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Filtrar</button>
+            </div>
+        </form>
+    </div>
+
+    {% if consultas_sem_vet > 0 %}
+        <div class="alert alert-warning no-print">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            <strong>{{ consultas_sem_vet }}</strong> atendimento(s) no período não possuem veterinário vinculado e ficaram fora deste relatório.
+        </div>
+    {% endif %}
+
+    {% if relatorio is empty %}
+        <div class="comissao-card text-center text-muted">
+            <i class="bi bi-clipboard-x fs-1 d-block mb-2"></i>
+            Nenhum atendimento com veterinário encontrado no período selecionado.
+        </div>
+    {% else %}
+
+    {# ── RESUMO POR VETERINÁRIO ── #}
+    <div class="comissao-card">
+        <h5 class="mb-3"><i class="bi bi-people me-2"></i>Resumo por Veterinário</h5>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle" id="tabela-resumo">
+                <thead class="table-light">
+                    <tr>
+                        <th>Veterinário</th>
+                        <th>CRMV</th>
+                        <th class="text-center">Qtde Atendimentos</th>
+                        <th class="text-end">Valor Total (R$)</th>
+                        <th class="text-end">% Comissão</th>
+                        <th class="text-end">Repasse ao Veterinário (R$)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vet in relatorio %}
+                    <tr data-vet-resumo="{{ vet.veterinario_id }}">
+                        <td>{{ vet.nome }}</td>
+                        <td>{{ vet.crmv|default('—') }}</td>
+                        <td class="text-center vet-qtd">{{ vet.quantidade }}</td>
+                        <td class="text-end vet-total">{{ vet.total|number_format(2, ',', '.') }}</td>
+                        <td class="text-end">
+                            <input type="number" step="0.01" min="0" max="100"
+                                   class="form-control form-control-sm comissao-pct-input ms-auto"
+                                   data-vet-pct="{{ vet.veterinario_id }}" value="0" title="Percentual de comissão">
+                        </td>
+                        <td class="text-end comissao-repasse text-success" data-vet-repasse="{{ vet.veterinario_id }}">0,00</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light fw-bold">
+                    <tr>
+                        <td colspan="2">TOTAL GERAL</td>
+                        <td class="text-center" id="total-geral-qtd">0</td>
+                        <td class="text-end" id="total-geral-valor">0,00</td>
+                        <td></td>
+                        <td class="text-end text-success" id="total-geral-repasse">0,00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <small class="text-muted no-print">
+            <i class="bi bi-info-circle me-1"></i>Informe o percentual de comissão de cada veterinário; o repasse é recalculado automaticamente.
+            Os valores das consultas vêm do serviço da clínica cadastrado com o mesmo nome do tipo de atendimento e podem ser ajustados no detalhamento abaixo.
+        </small>
+    </div>
+
+    {# ── DETALHAMENTO POR VETERINÁRIO ── #}
+    {% for vet in relatorio %}
+    <div class="comissao-card">
+        <h6 class="vet-detalhe-header d-flex justify-content-between align-items-center mb-0"
+            data-bs-toggle="collapse" data-bs-target="#detalhe-vet-{{ vet.veterinario_id }}">
+            <span><i class="bi bi-person-badge me-2"></i>{{ vet.nome }}{% if vet.crmv %} — CRMV: {{ vet.crmv }}{% endif %}</span>
+            <span class="badge bg-primary no-print">{{ vet.quantidade }} atendimento(s) <i class="bi bi-chevron-down ms-1"></i></span>
+        </h6>
+        <div class="collapse show mt-3" id="detalhe-vet-{{ vet.veterinario_id }}">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Pet</th>
+                            <th>Tutor</th>
+                            <th class="text-end">Valor (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in vet.consultas %}
+                        <tr>
+                            <td>{{ c.data|date('d/m/Y H:i') }}</td>
+                            <td>{{ c.tipo }}</td>
+                            <td>{{ c.pet }}</td>
+                            <td>{{ c.cliente }}</td>
+                            <td class="text-end">
+                                <input type="number" step="0.01" min="0"
+                                       class="form-control form-control-sm comissao-valor-input ms-auto"
+                                       data-vet-valor="{{ vet.veterinario_id }}"
+                                       value="{{ c.valor|number_format(2, '.', '') }}"
+                                       {% if not c.valor_cadastrado %}title="Serviço '{{ c.tipo }}' sem valor cadastrado — informe manualmente"{% endif %}>
+                                {% if not c.valor_cadastrado %}
+                                    <small class="text-danger no-print">sem valor cadastrado</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {# ── ASSINATURAS (somente na impressão) ── #}
+    <div class="assinaturas-print">
+        <div class="row">
+            <div class="col-6 text-center">
+                <hr style="border-top: 1px solid #000; width: 80%;">
+                <small>Responsável pela Clínica</small>
+            </div>
+            <div class="col-6 text-center">
+                <hr style="border-top: 1px solid #000; width: 80%;">
+                <small>Veterinário</small>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    const formatBR = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // Recalcula total do veterinário (soma dos valores do detalhamento),
+    // aplica o % de comissão informado e atualiza os totais gerais.
+    function recalcular() {
+        let geralQtd = 0, geralValor = 0, geralRepasse = 0;
+
+        document.querySelectorAll('[data-vet-resumo]').forEach(linha => {
+            const vetId = linha.dataset.vetResumo;
+
+            const inputsValor = document.querySelectorAll(`[data-vet-valor="${vetId}"]`);
+            let total = 0;
+            inputsValor.forEach(inp => { total += parseFloat(inp.value) || 0; });
+
+            const pct = parseFloat(document.querySelector(`[data-vet-pct="${vetId}"]`).value) || 0;
+            const repasse = total * (pct / 100);
+
+            linha.querySelector('.vet-total').textContent = formatBR(total);
+            document.querySelector(`[data-vet-repasse="${vetId}"]`).textContent = formatBR(repasse);
+
+            geralQtd += inputsValor.length;
+            geralValor += total;
+            geralRepasse += repasse;
+        });
+
+        document.getElementById('total-geral-qtd').textContent = geralQtd;
+        document.getElementById('total-geral-valor').textContent = formatBR(geralValor);
+        document.getElementById('total-geral-repasse').textContent = formatBR(geralRepasse);
+    }
+
+    document.querySelectorAll('.comissao-pct-input, .comissao-valor-input').forEach(inp => {
+        inp.addEventListener('input', recalcular);
+    });
+
+    recalcular();
+});
+</script>
+{% endblock %}

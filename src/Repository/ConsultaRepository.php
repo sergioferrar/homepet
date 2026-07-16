@@ -240,6 +240,69 @@ class ConsultaRepository extends ServiceEntityRepository
     }
 
     /**
+     * Lista as consultas de um período para o relatório de comissões, agrupáveis
+     * por veterinário. O valor de cada consulta é pré-carregado a partir do
+     * serviço da clínica cujo nome corresponde ao tipo do atendimento
+     * (ex.: serviço "Consulta" para atendimentos do tipo Consulta).
+     */
+    public function listarConsultasComissao($baseId, \DateTime $inicio, \DateTime $fim, ?int $vetId = null): array
+    {
+        $sql = "SELECT c.id, c.data, c.hora, c.tipo, c.veterinario_id,
+                       v.nome AS veterinario_nome, v.crmv AS veterinario_crmv,
+                       p.nome AS pet_nome, cl.nome AS cliente_nome,
+                       (SELECT s.valor
+                          FROM homepet_{$baseId}.servico s
+                         WHERE s.estabelecimento_id = :baseId
+                           AND s.tipo = 'clinica'
+                           AND LOWER(s.nome) = LOWER(c.tipo)
+                         LIMIT 1) AS valor_servico
+                FROM homepet_{$baseId}.consulta c
+                JOIN homepet_{$baseId}.pet p ON p.id = c.pet_id
+                JOIN homepet_{$baseId}.cliente cl ON cl.id = c.cliente_id
+                JOIN homepet_{$baseId}.veterinario v ON v.id = c.veterinario_id
+                WHERE c.estabelecimento_id = :baseId
+                  AND c.data BETWEEN :inicio AND :fim
+                  AND c.status <> 'cancelado'";
+
+        if ($vetId) {
+            $sql .= " AND c.veterinario_id = :vetId";
+        }
+
+        $sql .= " ORDER BY v.nome ASC, c.data ASC, c.hora ASC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('inicio', $inicio->format('Y-m-d'));
+        $stmt->bindValue('fim', $fim->format('Y-m-d'));
+        if ($vetId) {
+            $stmt->bindValue('vetId', $vetId);
+        }
+
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Conta consultas do período sem veterinário vinculado (ficam fora do
+     * relatório de comissões — exibido como alerta na tela).
+     */
+    public function contarConsultasSemVeterinario($baseId, \DateTime $inicio, \DateTime $fim): int
+    {
+        $sql = "SELECT COUNT(*)
+                FROM homepet_{$baseId}.consulta c
+                WHERE c.estabelecimento_id = :baseId
+                  AND c.data BETWEEN :inicio AND :fim
+                  AND c.status <> 'cancelado'
+                  AND c.veterinario_id IS NULL";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('inicio', $inicio->format('Y-m-d'));
+        $stmt->bindValue('fim', $fim->format('Y-m-d'));
+
+        return (int) $stmt->executeQuery()->fetchOne();
+    }
+
+    /**
      * Retorna o veterinário do atendimento mais recente do pet (consulta ativa/último atendimento).
      * Usado para pré-preencher a receita com o profissional que fez o atendimento.
      */

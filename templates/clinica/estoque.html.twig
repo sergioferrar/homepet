@@ -283,11 +283,12 @@
                             </td>
                             <td>
                                 <div class="action-btn-group justify-content-center">
-                                    <form method="post" action="{{ path('clinica_estoque_entrada', {'id': p.id}) }}" 
+                                    <form method="post" action="{{ path('clinica_estoque_entrada') }}"
                                           class="d-flex gap-1">
-                                        <input type="number" name="quantidade" 
-                                               class="form-control form-control-sm" 
-                                               min="1" placeholder="+Qtd" 
+                                        <input type="hidden" name="produto_id" value="{{ p.id }}">
+                                        <input type="number" name="quantidade"
+                                               class="form-control form-control-sm"
+                                               min="1" placeholder="+Qtd" required
                                                style="width: 70px;" title="Quantidade a adicionar">
                                         <button type="submit" class="btn btn-sm btn-success" title="Adicionar ao estoque">
                                             <i class="bi bi-plus-circle"></i>

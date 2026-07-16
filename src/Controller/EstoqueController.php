@@ -29,193 +29,162 @@ class EstoqueController extends DefaultController
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
 
         try {
-            // Busca produtos com seus estoques
-            $estoques = $this->em->getRepository(Estoque::class)
-                ->createQueryBuilder('e')
-                ->leftJoin('App\Entity\Produto', 'p', 'WITH', 'p.id = e.produtoId')
-                ->where('e.estabelecimentoId = :estab')
-                ->setParameter('estab', $estabelecimentoId)
-                ->orderBy('p.nome', 'ASC')
-                ->getQuery()
-                ->getResult();
+            // Parte da tabela produto para listar TODOS os produtos do estabelecimento,
+            // mesmo os que ainda não possuem registro na tabela estoque.
+            $produtosEntity = $this->em->getRepository(Produto::class)
+                ->findBy(['estabelecimentoId' => $estabelecimentoId], ['nome' => 'ASC']);
 
-            $produtos = array_map(function($estoque) {
-                $produto = $this->em->getRepository(Produto::class)->find($estoque->getProdutoId());
+            // Indexa os registros de estoque existentes por produtoId
+            $estoquesPorProduto = [];
+            $estoques = $this->em->getRepository(Estoque::class)
+                ->findBy(['estabelecimentoId' => $estabelecimentoId]);
+            foreach ($estoques as $estoque) {
+                $estoquesPorProduto[$estoque->getProdutoId()] = $estoque;
+            }
+
+            // A quantidade real do produto é mantida em produto.estoqueAtual
+            // (fonte de verdade usada pelo PDV/EstoqueService). O registro em
+            // estoque, quando existir, fornece apenas metadados (mínimo, etc.).
+            $produtos = array_map(function($produto) use ($estoquesPorProduto) {
+                $estoque = $estoquesPorProduto[$produto->getId()] ?? null;
+                $quantidade = $produto->getEstoqueAtual() ?? 0;
+
                 return [
                     'id' => $produto->getId(),
                     'nome' => $produto->getNome(),
                     'codigo' => $produto->getCodigo(),
                     'precoVenda' => $produto->getPrecoVenda(),
-                    'estoqueAtual' => $estoque->getQuantidadeAtual(),
-                    'estoque_disponivel' => $estoque->getQuantidadeDisponivel(),
-                    'estoque_minimo' => $estoque->getEstoqueMinimo(),
-                    'estoque_id' => $estoque->getId(),
+                    'unidade' => $produto->getUnidade(),
+                    'estoqueAtual' => $quantidade,
+                    'estoque_disponivel' => $quantidade,
+                    'estoque_minimo' => $estoque ? $estoque->getEstoqueMinimo() : 0,
+                    'estoque_id' => $estoque ? $estoque->getId() : null,
                 ];
-            }, $estoques);
+            }, $produtosEntity);
 
-            $estatisticas = $this->calcularEstatisticas($estoques);
+            $estatisticas = $this->calcularEstatisticas($produtos);
 
             return $this->render('clinica/estoque.html.twig', [
                 'produtos' => $produtos,
                 'estatisticas' => $estatisticas,
             ]);
         } catch (\Exception $e) {
-            dd($e);
             $this->addFlash('danger', 'Erro ao carregar estoque.');
-            // return $this->redirectToRoute('home');
+            return $this->redirectToRoute('home');
         }
     }
 
     /**
      * @Route("/entrada", name="clinica_estoque_entrada", methods={"POST"})
      */
-    public function entrada(Request $request): JsonResponse
+    public function entrada(Request $request): Response
     {
         $this->switchDB();
-        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
 
         try {
-            $produtoId = (int)$request->request->get('produto_id');
+            $produto = $this->resolverProduto($request);
             $quantidade = (int)$request->request->get('quantidade');
             $observacao = $request->request->get('observacao', '');
 
+            if (!$produto) {
+                return $this->responder($request, false, 'Produto não encontrado');
+            }
             if ($quantidade <= 0) {
-                return $this->json(['success' => false, 'message' => 'Quantidade inválida'], 400);
+                return $this->responder($request, false, 'Quantidade inválida');
             }
 
-            // Busca estoque
-            $estoque = $this->em->getRepository(Estoque::class)
-                ->findOneBy(['produtoId' => $produtoId, 'estabelecimentoId' => $estabelecimentoId]);
-
-            if (!$estoque) {
-                return $this->json(['success' => false, 'message' => 'Estoque não encontrado'], 404);
-            }
-
-            // Atualiza quantidade
-            $estoqueAnterior = $estoque->getQuantidadeAtual();
+            $estoqueAnterior = $produto->getEstoqueAtual() ?? 0;
             $novoEstoque = $estoqueAnterior + $quantidade;
-            $estoque->setQuantidadeAtual($novoEstoque);
+            $produto->setEstoqueAtual($novoEstoque);
 
-            // Registra movimento
-            $produto = $this->em->getRepository(Produto::class)->find($produtoId);
             $this->registrarMovimento($produto, 'ENTRADA', $quantidade, $observacao);
-
             $this->em->flush();
 
-            return $this->json([
-                'success' => true,
-                'message' => "Entrada de {$quantidade} unidade(s) registrada!",
+            return $this->responder($request, true, "Entrada de {$quantidade} unidade(s) registrada!", [
                 'estoque_anterior' => $estoqueAnterior,
                 'estoque_atual' => $novoEstoque,
-                'estoque_disponivel' => $estoque->getQuantidadeDisponivel()
             ]);
         } catch (\Exception $e) {
-            return $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return $this->responder($request, false, $e->getMessage());
         }
     }
 
     /**
      * @Route("/saida", name="clinica_estoque_saida", methods={"POST"})
      */
-    public function saida(Request $request): JsonResponse
+    public function saida(Request $request): Response
     {
         $this->switchDB();
-        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
 
         try {
-            $produtoId = (int)$request->request->get('produto_id');
+            $produto = $this->resolverProduto($request);
             $quantidade = (int)$request->request->get('quantidade');
             $observacao = $request->request->get('observacao', '');
 
+            if (!$produto) {
+                return $this->responder($request, false, 'Produto não encontrado');
+            }
             if ($quantidade <= 0) {
-                return $this->json(['success' => false, 'message' => 'Quantidade inválida'], 400);
+                return $this->responder($request, false, 'Quantidade inválida');
             }
 
-            $estoque = $this->em->getRepository(Estoque::class)
-                ->findOneBy(['produtoId' => $produtoId, 'estabelecimentoId' => $estabelecimentoId]);
-
-            if (!$estoque) {
-                return $this->json(['success' => false, 'message' => 'Estoque não encontrado'], 404);
+            $estoqueAnterior = $produto->getEstoqueAtual() ?? 0;
+            if ($estoqueAnterior < $quantidade) {
+                return $this->responder($request, false, "Estoque insuficiente! Disponível: {$estoqueAnterior}");
             }
 
-            $estoqueAtual = $estoque->getQuantidadeDisponivel();
+            $novoEstoque = $estoqueAnterior - $quantidade;
+            $produto->setEstoqueAtual($novoEstoque);
 
-            if ($estoqueAtual < $quantidade) {
-                return $this->json([
-                    'success' => false,
-                    'message' => "Estoque insuficiente! Disponível: {$estoqueAtual}"
-                ], 400);
-            }
-
-            // Atualiza quantidade
-            $novoEstoque = $estoque->getQuantidadeAtual() - $quantidade;
-            $estoque->setQuantidadeAtual($novoEstoque);
-
-            // Registra movimento
-            $produto = $this->em->getRepository(Produto::class)->find($produtoId);
             $this->registrarMovimento($produto, 'SAIDA', $quantidade, $observacao);
-
             $this->em->flush();
 
-            return $this->json([
-                'success' => true,
-                'message' => "Saída de {$quantidade} unidade(s) registrada!",
-                'estoque_anterior' => $estoqueAtual,
+            return $this->responder($request, true, "Saída de {$quantidade} unidade(s) registrada!", [
+                'estoque_anterior' => $estoqueAnterior,
                 'estoque_atual' => $novoEstoque,
-                'estoque_disponivel' => $estoque->getQuantidadeDisponivel()
             ]);
         } catch (\Exception $e) {
-            return $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return $this->responder($request, false, $e->getMessage());
         }
     }
 
     /**
      * @Route("/ajustar", name="clinica_estoque_ajustar", methods={"POST"})
      */
-    public function ajustar(Request $request): JsonResponse
+    public function ajustar(Request $request): Response
     {
         $this->switchDB();
-        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
 
         try {
-            $produtoId = (int)$request->request->get('produto_id');
+            $produto = $this->resolverProduto($request);
             $novoEstoque = (int)$request->request->get('estoque');
             $observacao = $request->request->get('observacao', 'Ajuste manual');
 
+            if (!$produto) {
+                return $this->responder($request, false, 'Produto não encontrado');
+            }
             if ($novoEstoque < 0) {
-                return $this->json(['success' => false, 'message' => 'Estoque não pode ser negativo'], 400);
+                return $this->responder($request, false, 'Estoque não pode ser negativo');
             }
 
-            $estoque = $this->em->getRepository(Estoque::class)
-                ->findOneBy(['produtoId' => $produtoId, 'estabelecimentoId' => $estabelecimentoId]);
-
-            if (!$estoque) {
-                return $this->json(['success' => false, 'message' => 'Estoque não encontrado'], 404);
-            }
-
-            $estoqueAnterior = $estoque->getQuantidadeAtual();
+            $estoqueAnterior = $produto->getEstoqueAtual() ?? 0;
             $diferenca = abs($novoEstoque - $estoqueAnterior);
+            $produto->setEstoqueAtual($novoEstoque);
 
-            $estoque->setQuantidadeAtual($novoEstoque);
-
-            $produto = $this->em->getRepository(Produto::class)->find($produtoId);
             $this->registrarMovimento(
                 $produto,
                 'AJUSTE',
                 $diferenca,
                 $observacao . " (de {$estoqueAnterior} para {$novoEstoque})"
             );
-
             $this->em->flush();
 
-            return $this->json([
-                'success' => true,
-                'message' => 'Estoque ajustado!',
+            return $this->responder($request, true, 'Estoque ajustado!', [
                 'estoque_anterior' => $estoqueAnterior,
-                'estoque_atual' => $novoEstoque
+                'estoque_atual' => $novoEstoque,
             ]);
         } catch (\Exception $e) {
-            return $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return $this->responder($request, false, $e->getMessage());
         }
     }
 
@@ -261,6 +230,46 @@ class EstoqueController extends DefaultController
 
     // ==================== MÉTODOS PRIVADOS ====================
 
+    /**
+     * Resolve o Produto a partir do request (aceita produto_id no corpo ou id na query),
+     * garantindo o isolamento por estabelecimento.
+     */
+    private function resolverProduto(Request $request): ?Produto
+    {
+        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+        $produtoId = (int)($request->request->get('produto_id') ?: $request->query->get('id'));
+
+        if (!$produtoId) {
+            return null;
+        }
+
+        return $this->em->getRepository(Produto::class)
+            ->findOneBy(['id' => $produtoId, 'estabelecimentoId' => $estabelecimentoId]);
+    }
+
+    /**
+     * Responde em JSON para requisições AJAX ou com redirect + flash para POST de formulário.
+     */
+    private function responder(Request $request, bool $sucesso, string $mensagem, array $extra = []): Response
+    {
+        if ($request->isXmlHttpRequest()) {
+            return $this->json(array_merge([
+                'success' => $sucesso,
+                'message' => $mensagem,
+            ], $extra), $sucesso ? 200 : 400);
+        }
+
+        $this->addFlash($sucesso ? 'success' : 'danger', $mensagem);
+
+        // Volta para a página de origem (ex.: histórico do produto) quando disponível
+        $referer = $request->headers->get('referer');
+        if ($referer) {
+            return $this->redirect($referer);
+        }
+
+        return $this->redirectToRoute('clinica_estoque_index');
+    }
+
     private function registrarMovimento(
         Produto $produto,
         string $tipo,
@@ -281,16 +290,16 @@ class EstoqueController extends DefaultController
         $this->em->persist($movimento);
     }
 
-    private function calcularEstatisticas(array $estoques): array
+    private function calcularEstatisticas(array $produtos): array
     {
-        $totalProdutos = count($estoques);
+        $totalProdutos = count($produtos);
         $estoqueBaixo = 0;
         $estoqueZerado = 0;
         $valorTotal = 0;
 
-        foreach ($estoques as $estoque) {
-            $disponivel = $estoque->getQuantidadeDisponivel();
-            $minimo = $estoque->getEstoqueMinimo();
+        foreach ($produtos as $produto) {
+            $disponivel = (int) ($produto['estoque_disponivel'] ?? 0);
+            $minimo = (int) ($produto['estoque_minimo'] ?? 0);
 
             if ($disponivel == 0) {
                 $estoqueZerado++;
@@ -298,7 +307,7 @@ class EstoqueController extends DefaultController
                 $estoqueBaixo++;
             }
 
-            $valorTotal += $estoque->getValorTotalEstoque();
+            $valorTotal += (float) ($produto['estoqueAtual'] ?? 0) * (float) ($produto['precoVenda'] ?? 0);
         }
 
         return [

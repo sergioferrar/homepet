@@ -1,4 +1,4 @@
-{% extends 'baseClinica.html.twig' %}
+{% extends 'base.html.twig' %}
 
 {% block title %}Financeiro da Clínica{% endblock %}
 
@@ -35,6 +35,9 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ path('clinica_dashboard') }}">Painel</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('clinica_relatorio_comissoes') }}">Comissões</a>
             </li>
         </ul>
 

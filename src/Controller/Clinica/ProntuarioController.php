@@ -46,7 +46,7 @@ class ProntuarioController extends DefaultController
 
         return $this->render('clinica/prontuario.html.twig', [
             'registros' => $registros,
-            'petId' => $petId
+            'petId' => $petId,
         ]);
     }
 
@@ -62,7 +62,7 @@ class ProntuarioController extends DefaultController
         $registros = $repo->listarPorPet($baseId, $petId);
 
         return $this->render('clinica/_prontuario_ajax.html.twig', [
-            'registros' => $registros
+            'registros' => $registros,
         ]);
     }
 }

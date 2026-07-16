@@ -98,7 +98,11 @@ class VendaController extends DefaultController
                     $nome = $servico['nome'] ?? 'Serviço';
                     $valorUnitario = (float) $servico['valor'];
                 } else {
-                    $produto = $produtoRepo->findByIdComEstoque((int) $realId, $baseId);
+                    $produto = $conn->fetchAssociative(
+                        'SELECT id, nome, preco_venda, estoque_atual
+                         FROM produto WHERE id = :id AND estabelecimento_id = :estab',
+                        ['id' => (int) $realId, 'estab' => $baseId]
+                    );
                     if (!$produto) {
                         continue;
                     }
@@ -122,6 +126,38 @@ class VendaController extends DefaultController
                 ]);
 
                 $valorTotal += $valorItem;
+
+                // Baixa de estoque + movimentação (apenas para produtos físicos)
+                if ($tipo === 'produto') {
+                    $estoqueAnterior = (int) ($produto['estoque_atual'] ?? 0);
+                    $novoEstoque = max(0, $estoqueAnterior - $quantidade);
+
+                    $conn->executeStatement(
+                        'UPDATE produto SET estoque_atual = :novo
+                         WHERE id = :id AND estabelecimento_id = :estab',
+                        ['novo' => $novoEstoque, 'id' => (int) $realId, 'estab' => $baseId]
+                    );
+
+                    $conn->executeStatement(
+                        'INSERT INTO estoque_movimento
+                            (produto_id, estabelecimento_id, quantidade, tipo, origem, data, observacao)
+                         VALUES (:pid, :estab, :qtd, :tipo, :origem, :data, :obs)',
+                        [
+                            'pid'    => (int) $realId,
+                            'estab'  => $baseId,
+                            'qtd'    => $quantidade,
+                            'tipo'   => 'SAIDA',
+                            'origem' => 'Venda Clínica #' . $vendaId,
+                            'data'   => (new \DateTime())->format('Y-m-d H:i:s'),
+                            'obs'    => sprintf(
+                                'Venda para: %s | Estoque anterior: %d | Novo estoque: %d',
+                                $pet['dono_nome'] ?? 'Consumidor Final',
+                                $estoqueAnterior,
+                                $novoEstoque
+                            ),
+                        ]
+                    );
+                }
             }
 
             // 3️⃣ Atualiza total da venda

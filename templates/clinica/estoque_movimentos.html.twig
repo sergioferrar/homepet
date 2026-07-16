@@ -6,7 +6,10 @@
 
         <!-- 🔹 Barra de navegação -->
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0"><i class="fas fa-history me-2"></i> Movimentos de {{ produto.nome }}</h3>
+            <div>
+                <h3 class="mb-0"><i class="fas fa-history me-2"></i> Movimentos de {{ produto.nome }}</h3>
+                <small class="text-muted">Estoque atual: <strong>{{ produto.estoqueAtual }}</strong> {{ produto.unidade|default('un') }}</small>
+            </div>
             <div class="d-flex gap-2">
                 <a href="{{ path('clinica_estoque_index') }}" class="btn btn-outline-dark">
                     <i class="fas fa-boxes"></i> Estoque
@@ -18,6 +21,73 @@
         </div>
         <hr>
 
+        <!-- 🔹 Estatísticas -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="text-muted small">Movimentos</div>
+                        <div class="fs-4 fw-bold">{{ estatisticas.total_movimentos }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="text-muted small">Entradas</div>
+                        <div class="fs-4 fw-bold text-success">+{{ estatisticas.total_entradas }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="text-muted small">Saídas</div>
+                        <div class="fs-4 fw-bold text-danger">-{{ estatisticas.total_saidas }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="text-muted small">Saldo</div>
+                        <div class="fs-4 fw-bold">{{ estatisticas.saldo }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔹 Registrar movimento -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h6 class="card-title mb-3"><i class="bi bi-arrow-left-right me-2"></i> Registrar Movimento</h6>
+                <form method="post" id="formMovimento" class="row g-2 align-items-end">
+                    <input type="hidden" name="produto_id" value="{{ produto.id }}">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Tipo</label>
+                        <select name="tipo_movimento" id="tipo_movimento" class="form-select" required>
+                            <option value="entrada">Entrada (+)</option>
+                            <option value="saida">Saída (-)</option>
+                            <option value="ajuste">Ajuste de inventário</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold" id="label-quantidade">Quantidade</label>
+                        <input type="number" name="quantidade" id="quantidade" class="form-control" min="1" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Observação</label>
+                        <input type="text" name="observacao" class="form-control" placeholder="Opcional">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check-circle"></i> Lançar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Tabela de movimentos -->
         <table class="table table-striped align-middle">
             <thead>
@@ -26,6 +96,7 @@
                 <th>Tipo</th>
                 <th>Quantidade</th>
                 <th>Origem</th>
+                <th>Observação</th>
             </tr>
             </thead>
             <tbody>
@@ -35,19 +106,51 @@
                     <td>
                         {% if m.tipo == 'ENTRADA' %}
                             <span class="badge bg-success">{{ m.tipo }}</span>
+                        {% elseif m.tipo == 'AJUSTE' %}
+                            <span class="badge bg-warning text-dark">{{ m.tipo }}</span>
                         {% else %}
                             <span class="badge bg-danger">{{ m.tipo }}</span>
                         {% endif %}
                     </td>
                     <td>{{ m.quantidade }}</td>
                     <td>{{ m.origem|default('-') }}</td>
+                    <td><small class="text-muted">{{ m.observacao|default('-') }}</small></td>
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="4" class="text-center text-muted">Nenhum movimento registrado.</td>
+                    <td colspan="5" class="text-center text-muted">Nenhum movimento registrado.</td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
     </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(function () {
+    var rotas = {
+        entrada: "{{ path('clinica_estoque_entrada') }}",
+        saida:   "{{ path('clinica_estoque_saida') }}",
+        ajuste:  "{{ path('clinica_estoque_ajustar') }}"
+    };
+
+    // Ajusta a action do form e os rótulos conforme o tipo escolhido
+    function aplicarTipo() {
+        var tipo = $('#tipo_movimento').val();
+        $('#formMovimento').attr('action', rotas[tipo]);
+
+        if (tipo === 'ajuste') {
+            $('#label-quantidade').text('Nova quantidade');
+            $('#quantidade').attr('name', 'estoque').attr('min', 0);
+        } else {
+            $('#label-quantidade').text('Quantidade');
+            $('#quantidade').attr('name', 'quantidade').attr('min', 1);
+        }
+    }
+
+    $('#tipo_movimento').on('change', aplicarTipo);
+    aplicarTipo();
+});
+</script>
 {% endblock %}

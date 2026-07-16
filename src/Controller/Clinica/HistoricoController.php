@@ -2,27 +2,13 @@
 
 namespace App\Controller\Clinica;
 
-use App\Entity\Cliente;
-use App\Entity\Consulta;
+use App\Controller\DefaultController;
 use App\Entity\DocumentoModelo;
-use App\Entity\Financeiro;
-use App\Entity\FinanceiroPendente;
-use App\Entity\Internacao;
-use App\Entity\InternacaoExecucao;
-use App\Entity\InternacaoPrescricao;
-use App\Entity\Medicamento;
 use App\Entity\Pet;
-use App\Entity\Servico;
-use App\Entity\Vacina;
-use App\Entity\Veterinario;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use App\Service\GeradorpdfService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Service\GeradorpdfService;
-use App\Controller\DefaultController;
-
 
 /**
  * @Route("dashboard/clinica")
@@ -65,7 +51,7 @@ class HistoricoController extends DefaultController
 
         return $this->render('clinica/documentos.html.twig', [
             'documentos' => $documentos,
-            'pet' => $pet
+            'pet' => $pet,
         ]);
     }
 
@@ -105,10 +91,9 @@ class HistoricoController extends DefaultController
      * @Route("/clinica/pet/{petId}/documento/{id}/excluir", name="clinica_documento_excluir", methods={"POST"})
      */
     public function excluirDocumento(
-        int                       $petId,
-        int                       $id
-    ): Response
-    {
+        int $petId,
+        int $id
+    ): Response {
         $this->switchDB();
         $baseId = $this->getIdBase();
         $repoDoc = $this->getRepositorio(DocumentoModelo::class);
@@ -129,11 +114,10 @@ class HistoricoController extends DefaultController
      * @Route("/clinica/pet/{petId}/documento/pdf", name="clinica_documento_pdf", methods={"POST"})
      */
     public function gerarDocumentoPdf(
-        int               $petId,
-        Request           $request,
+        int $petId,
+        Request $request,
         GeradorpdfService $pdf
-    ): Response
-    {
+    ): Response {
         // 🔹 Seleciona o banco de dados do tenant atual
         $this->switchDB();
         $petRepo = $this->getRepositorio(Pet::class);
@@ -164,7 +148,6 @@ class HistoricoController extends DefaultController
         </div>
         <hr>
         ';
-
 
         // 🔸 Monta o corpo completo com formatação leve
         $htmlCompleto = '

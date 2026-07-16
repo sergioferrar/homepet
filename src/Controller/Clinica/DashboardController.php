@@ -267,10 +267,10 @@ class DashboardController extends DefaultController
         $listaVendasPagas = $this->listaItemsVenda($vendasPagas, true);
         $listaVendasPendentes = $this->listaItemsVenda($vendasPendentes, true);
 
-        $timeline_items =  array_merge($timeline_items, $listaVendasCarrinho['timeline_items'], $listaVendasPagas['timeline_items'], $listaVendasPendentes['timeline_items']);
+        $timeline_items = array_merge($timeline_items, $listaVendasCarrinho['timeline_items'], $listaVendasPagas['timeline_items'], $listaVendasPendentes['timeline_items']);
         // $resumoVendaItem = array_merge($listaVendasCarrinho['resumoVendaItem'], $listaVendasPagas['resumoVendaItem'], $listaVendasPendentes['resumoVendaItem']);
         // dd($resumoVendaItem, $timeline_items);
-        $resumoVendaItem = $listaVendasCarrinho['resumoVendaItem']+$listaVendasPagas['resumoVendaItem']+$listaVendasPendentes['resumoVendaItem'];
+        $resumoVendaItem = $listaVendasCarrinho['resumoVendaItem'] + $listaVendasPagas['resumoVendaItem'] + $listaVendasPendentes['resumoVendaItem'];
 
         // $resumoVendaItem    = $listaVendasPagas['resumoVendaItem'];
 
@@ -448,7 +448,7 @@ class DashboardController extends DefaultController
 
     private function listaItemsVenda($vendas, $timeline = false)
     {
-        
+
         $vendaItemRepo = $this->getRepositorio(\App\Entity\VendaItem::class);
         $produtoRepo = $this->getRepositorio(\App\Entity\Produto::class);
         $servicoRepo = $this->getRepositorio(\App\Entity\Servico::class);
@@ -475,9 +475,9 @@ class DashboardController extends DefaultController
 
                 if ($item->getTipo() === 'servico') {
                     $servico = $servicoRepo->find($produtoId);
-                    if($servico){
+                    if ($servico) {
                         $descricao = 'Item sem descrição';
-                        if($servico->getDescricao() != ''){
+                        if ($servico->getDescricao() != '') {
                             $descricao = $servico->getDescricao();
                         }
                     }
