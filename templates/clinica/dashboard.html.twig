@@ -367,8 +367,7 @@
             <div class="card border-0 shadow-sm h-100 hover-lift">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-primary text-white" 
-     style="width: 45px; height: 45px;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-primary text-white" style="width: 45px; height: 45px;">
                             <i class="bi bi-heart-pulse text-primary"></i>
                         </div>
                         <span class="badge bg-primary bg-opacity-10 text-white">Total</span>
@@ -384,8 +383,8 @@
             <div class="card border-0 shadow-sm h-100 hover-lift">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                            <i class="bi bi-person text-success fs-2"></i>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-success" style="width: 45px; height: 45px;">
+                            <i class="bi bi-person text-success"></i>
                         </div>
                         <span class="badge bg-success bg-opacity-10 text-success">Ativos</span>
                     </div>
@@ -400,8 +399,8 @@
             <div class="card border-0 shadow-sm h-100 hover-lift">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="bg-danger bg-opacity-10 rounded-circle p-3">
-                            <i class="bi bi-cash-stack text-danger fs-2"></i>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-danger" style="width: 45px; height: 45px;">
+                            <i class="bi bi-cash-stack text-danger"></i>
                         </div>
                         <span class="badge bg-danger bg-opacity-10 text-danger">Pendente</span>
                     </div>
@@ -416,8 +415,8 @@
             <div class="card border-0 shadow-sm h-100 hover-lift">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                            <i class="bi bi-stopwatch text-warning fs-2"></i>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-warning" style="width: 45px; height: 45px;">
+                            <i class="bi bi-stopwatch text-warning"></i>
                         </div>
                         <span class="badge bg-warning bg-opacity-10 text-warning">Média</span>
                     </div>
@@ -440,7 +439,7 @@
             <div class="card border-0 shadow-sm rounded-3 mb-4 h-auto">
                 <div class="card-header bg-white border-0 p-4">
                     <div class="d-flex align-items-center gap-2">
-                        <div class="bg-primary bg-opacity-10 rounded-circle p-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-primary" style="width: 45px; height: 45px;">
                             <i class="bi bi-heart-pulse text-primary fs-5"></i>
                         </div>
                         <h5 class="mb-0 fw-bold">Últimos atendimentos (24h)</h5>
@@ -455,8 +454,8 @@
                         
                         <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-2 hover-shadow">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="bg-info bg-opacity-10 rounded-circle p-2">
-                                    <i class="bi bi-clipboard2-pulse text-info"></i>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-info" style="width: 45px; height: 45px;">
+                                    <i class="bi bi-clipboard2-pulse text-success"></i>
                                 </div>
                                 <div>
                                     <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}"
@@ -481,7 +480,7 @@
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header bg-white border-0 p-4">
                     <div class="d-flex align-items-center gap-2">
-                        <div class="bg-danger bg-opacity-10 rounded-circle p-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-danger" style="width: 45px; height: 45px;">
                             <i class="bi bi-hospital text-danger fs-5"></i>
                         </div>
                         <h5 class="mb-0 fw-bold">Animais internados</h5>
@@ -496,7 +495,7 @@
                         
                         <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-2 hover-shadow">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="bg-danger bg-opacity-10 rounded-circle p-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-danger" style="width: 45px; height: 45px;">
                                     <i class="bi bi-heart-pulse-fill text-danger"></i>
                                 </div>
                                 <div>
@@ -532,7 +531,7 @@
             <div class="card border-0 shadow-sm rounded-3 mb-4">
                 <div class="card-header bg-white border-0 p-4">
                     <div class="d-flex align-items-center gap-2">
-                        <div class="bg-success bg-opacity-10 rounded-circle p-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-success" style="width: 45px; height: 45px;">
                             <i class="bi bi-heart-pulse text-success fs-5"></i>
                         </div>
                         <h5 class="mb-0 fw-bold">Últimos animais cadastrados</h5>
@@ -542,8 +541,8 @@
                     {% for animal in animais_cadastrados %}
                         <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-2 hover-shadow">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="bg-success bg-opacity-10 rounded-circle p-2">
-                                    <i class="bi bi-paw-fill text-success"></i>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-success" style="width: 25px; height: 25px;">
+                                    <i class="bi bi-heart-pulse-fill text-success"></i>
                                 </div>
                                 <div>
                                     <a href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}"
@@ -567,7 +566,7 @@
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header bg-white border-0 p-4">
                     <div class="d-flex align-items-center gap-2">
-                        <div class="bg-warning bg-opacity-10 rounded-circle p-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-warning" style="width: 45px; height: 45px;">
                             <i class="bi bi-droplet text-warning fs-5"></i>
                         </div>
                         <h5 class="mb-0 fw-bold">Controle de Vacinas</h5>
@@ -601,7 +600,7 @@
                                 
                                 <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-2 hover-shadow">
                                     <div class="d-flex align-items-center gap-3">
-                                        <div class="bg-danger bg-opacity-10 rounded-circle p-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-danger" style="width: 25px; height: 25px;">
                                             <i class="bi bi-exclamation-triangle text-danger"></i>
                                         </div>
                                         <div>
