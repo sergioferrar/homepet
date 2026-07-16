@@ -758,7 +758,7 @@
 
 <!-- Botão flutuante para IA — oculto para Super Admin (não tem contexto de estabelecimento) -->
 {% if not is_granted('ROLE_SUPER_ADMIN') %}
-<button id="btnChatIA" class="btn rounded-circle"
+<button id="btnChatIA" class="btn rounded-circle d-none"
         style="position: fixed; bottom: 80px; right: 20px; z-index: 1050; width: 60px; height: 60px; font-size: 24px; background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); border: none; color: white; box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);">
     <i class="bi bi-robot"></i>
 </button>
