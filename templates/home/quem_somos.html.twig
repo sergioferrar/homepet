@@ -1,0 +1,147 @@
+{% extends 'home/baseLanding.html.twig' %}
+
+{% block title %}Quem Somos{% endblock %}
+{% block meta_description %}Conheça o System Home Pet: paixão por tecnologia e cuidado animal. Nossa missão é modernizar a gestão de pet shops e clínicas veterinárias no Brasil.{% endblock %}
+{% block meta_keywords %}quem somos system home pet, empresa software veterinário, sobre sistema pet shop, missão visão valores{% endblock %}
+
+{% block body %}
+{# ── Cabeçalho da página ─────────────────────────────────────────── #}
+<section class="page-hero-section">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-7" data-fade>
+                <span class="section-tag">Quem Somos</span>
+                <h1 class="hero-headline" style="font-size:clamp(2rem,5vw,3rem);">
+                    Paixão por tecnologia<br/>
+                    <span class="line-teal">e cuidado animal</span>
+                </h1>
+                <p class="hero-sub" style="max-width:560px;margin:0 auto 2rem;">
+                    Nascemos com a missão de modernizar o mercado pet brasileiro, eliminando a burocracia
+                    para que você foque no que realmente importa: a saúde dos animais.
+                </p>
+                <div class="d-flex flex-wrap gap-3 justify-content-center mb-2">
+                    <a href="{{ url('landing_home') }}#contato" class="btn btn-primary-custom">
+                        Fale Conosco <i class="bi bi-chat-dots"></i>
+                    </a>
+                    <a href="{{ url('landing_home') }}" class="btn btn-outline-custom">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar ao início
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── História / valores ──────────────────────────────────────────── #}
+<section class="about-section" id="quem-somos" style="padding-top:60px;">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6" data-fade>
+                <span class="section-tag">Nossa História</span>
+                <h2 class="section-title">Feito por quem entende de gestão e ama os pets</h2>
+                <p style="color:var(--text-secondary); margin-bottom: 2rem;">
+                    Desde 2018, desenvolvemos tecnologia para o mercado pet brasileiro. Ouvimos donos de
+                    pet shops, veterinários e atendentes para transformar as dores do dia a dia em uma
+                    plataforma simples, completa e acessível.
+                </p>
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <div class="about-card">
+                            <div class="about-icon"><i class="bi bi-shield-check"></i></div>
+                            <div>
+                                <h5>Segurança</h5>
+                                <p>Dados criptografados e em conformidade com a LGPD.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="about-card">
+                            <div class="about-icon"><i class="bi bi-rocket-takeoff"></i></div>
+                            <div>
+                                <h5>Inovação</h5>
+                                <p>Atualizações mensais com novos recursos.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="about-card">
+                            <div class="about-icon"><i class="bi bi-headset"></i></div>
+                            <div>
+                                <h5>Suporte Humano</h5>
+                                <p>Atendimento próximo, por gente de verdade.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="about-card">
+                            <div class="about-icon"><i class="bi bi-heart-fill"></i></div>
+                            <div>
+                                <h5>Amor pelos Pets</h5>
+                                <p>Cada recurso pensado no bem-estar animal.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6" data-fade>
+                <div style="background: var(--teal-light); border-radius: 24px; border: 1px solid var(--teal);" class="p-3 p-sm-4 p-md-5">
+                    <h4 class="mb-3">Nossa Visão</h4>
+                    <p class="text-secondary">Ser o sistema de gestão pet líder na América Latina, conectando tutores,
+                    profissionais e estabelecimentos em um ecossistema digital inteligente e humano.</p>
+                    <div class="divider-line"></div>
+                    <h4 class="mb-3">Nossa Missão</h4>
+                    <p class="text-secondary">Simplificar a rotina de pet shops e clínicas veterinárias com tecnologia
+                    acessível, devolvendo tempo às equipes para o que importa: cuidar dos animais.</p>
+                    <div class="divider-line"></div>
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--teal); display: flex; align-items: center; justify-content: center; color: white;" class="flex-shrink-0">
+                            <i class="bi bi-quote"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold">Equipe System Home Pet</div>
+                            <div class="small text-muted">Desde 2018</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── Números ─────────────────────────────────────────────────────── #}
+<section class="features-section" style="padding:70px 0;">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-6 col-lg-3" data-fade>
+                <div class="feature-card">
+                    <div class="hero-stat-num text-teal">+2.400</div>
+                    <div class="hero-stat-label">Estabelecimentos ativos</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3" data-fade>
+                <div class="feature-card">
+                    <div class="hero-stat-num text-teal">+18k</div>
+                    <div class="hero-stat-label">Pets cadastrados</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3" data-fade>
+                <div class="feature-card">
+                    <div class="hero-stat-num text-teal">99.9%</div>
+                    <div class="hero-stat-label">Uptime garantido</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3" data-fade>
+                <div class="feature-card">
+                    <div class="hero-stat-num text-teal">2018</div>
+                    <div class="hero-stat-label">No mercado desde</div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-5" data-fade>
+            <a href="{{ url('landing_planos') }}" class="btn btn-primary-custom">
+                Conhecer os Planos <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

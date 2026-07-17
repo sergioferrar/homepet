@@ -1,4 +1,9 @@
 {% extends 'home/baseLanding.html.twig' %}
+
+{% block title %}System Home Pet{% endblock %}
+{% block meta_description %}Sistema de gestão completo para pet shops e clínicas veterinárias: agenda, prontuário, vacinas, financeiro, estoque, banho e tosa. Comece em menos de 5 minutos.{% endblock %}
+{% block meta_keywords %}sistema para pet shop, sistema para clínica veterinária, software petshop, gestão pet, prontuário veterinário online{% endblock %}
+
 {% block body %}
     <section class="hero-section" id="inicio">
         <div class="container">
@@ -21,7 +26,7 @@
                         <a href="{{ url('landing_planos') }}" class="btn btn-primary-custom">
                             Começar Agora <i class="bi bi-arrow-right"></i>
                         </a>
-                        <a href="#planos" class="btn btn-outline-custom">Ver Planos</a>
+                        <a href="{{ url('landing_recursos') }}" class="btn btn-outline-custom">Conhecer os Recursos</a>
                     </div>
                     <div class="hero-stats row g-3 mt-4 row-cols-1 row-cols-sm-3">
                         <div class="col">
@@ -116,14 +121,23 @@
         </div>
     </section>
 
+    
+
+    
+
+    
+
+    
+
+    
+    {# ── RESUMO DE RECURSOS (versão enxuta — página completa em /recursos) ── #}
     <section class="features-section" id="recursos">
         <div class="container">
             <div class="text-center mb-5" data-fade>
                 <span class="section-tag">Recursos</span>
                 <h2 class="section-title">Tudo que seu negócio precisa,<br/>em um só lugar</h2>
                 <p style="color:var(--text-secondary);max-width:560px;margin:0 auto;">
-                    Do atendimento ao controle financeiro, o System HomePro cobre cada etapa da operação do seu
-                    estabelecimento.
+                    Do atendimento ao controle financeiro. Veja alguns destaques — a lista completa está na página de recursos.
                 </p>
             </div>
             <div class="row g-4">
@@ -131,184 +145,87 @@
                     <div class="feature-card">
                         <div class="feature-icon-wrap"><i class="bi bi-people-fill"></i></div>
                         <div class="feature-title">Gestão de Clientes e Pets</div>
-                        <div class="feature-desc">Cadastro completo de tutores e seus animais com histórico de atendimentos
-                            e informações detalhadas.
-                        </div>
+                        <div class="feature-desc">Cadastro completo de tutores e seus animais com histórico de atendimentos.</div>
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-lg-4" data-fade>
                     <div class="feature-card">
                         <div class="feature-icon-wrap"><i class="bi bi-clipboard2-pulse-fill"></i></div>
                         <div class="feature-title">Prontuário Veterinário</div>
-                        <div class="feature-desc">Registros clínicos completos, anotações, diagnósticos e prescrições
-                            organizados por pet e data.
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-lg-4" data-fade>
-                    <div class="feature-card">
-                        <div class="feature-icon-wrap"><i class="bi bi-shield-plus"></i></div>
-                        <div class="feature-title">Controle de Vacinas</div>
-                        <div class="feature-desc">Calendário vacinal automatizado com lembretes para tutores e visão
-                            completa do histórico imunológico.
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-lg-4" data-fade>
-                    <div class="feature-card">
-                        <div class="feature-icon-wrap"><i class="bi bi-currency-dollar"></i></div>
-                        <div class="feature-title">Controle Financeiro</div>
-                        <div class="feature-desc">Fluxo de caixa, contas a pagar/receber, DRE simplificado e conciliação
-                            financeira em tempo real.
-                        </div>
+                        <div class="feature-desc">Registros clínicos, diagnósticos e prescrições organizados por pet e data.</div>
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-lg-4" data-fade>
                     <div class="feature-card">
                         <div class="feature-icon-wrap"><i class="bi bi-calendar3-week-fill"></i></div>
                         <div class="feature-title">Agenda de Consultas</div>
-                        <div class="feature-desc">Agendamento online integrado, gestão de horários por veterinário e
-                            confirmação automática por e-mail.
-                        </div>
+                        <div class="feature-desc">Agendamento integrado, horários por veterinário e confirmação automática.</div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4" data-fade>
+                    <div class="feature-card">
+                        <div class="feature-icon-wrap"><i class="bi bi-currency-dollar"></i></div>
+                        <div class="feature-title">Controle Financeiro</div>
+                        <div class="feature-desc">Fluxo de caixa, contas a pagar/receber e conciliação em tempo real.</div>
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-lg-4" data-fade>
                     <div class="feature-card">
                         <div class="feature-icon-wrap"><i class="bi bi-scissors"></i></div>
                         <div class="feature-title">Banho &amp; Tosa</div>
-                        <div class="feature-desc">Controle completo de serviços de estética pet, fila de espera e
-                            acompanhamento em tempo real pelo tutor.
-                        </div>
+                        <div class="feature-desc">Fila de espera, controle dos serviços de estética e acompanhamento pelo tutor.</div>
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-lg-4" data-fade>
                     <div class="feature-card">
                         <div class="feature-icon-wrap"><i class="bi bi-box-seam-fill"></i></div>
                         <div class="feature-title">Controle de Estoque</div>
-                        <div class="feature-desc">Entradas, saídas, alertas de estoque mínimo e relatório de giro de
-                            produtos com curva ABC.
-                        </div>
+                        <div class="feature-desc">Entradas, saídas, alertas de mínimo e relatório de giro com curva ABC.</div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4" data-fade>
-                    <div class="feature-card">
-                        <div class="feature-icon-wrap"><i class="bi bi-graph-up-arrow"></i></div>
-                        <div class="feature-title">Relatórios Gerenciais</div>
-                        <div class="feature-desc">Dashboards personalizáveis, exportação em PDF/Excel e insights para tomada
-                            de decisão estratégica.
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-lg-4" data-fade>
-                    <div class="feature-card">
-                        <div class="feature-icon-wrap"><i class="bi bi-person-badge-fill"></i></div>
-                        <div class="feature-title">Usuários por Nível de Acesso</div>
-                        <div class="feature-desc">Admin, veterinário, atendente, caixa e outros perfis com permissões
-                            granulares para máxima segurança.
-                        </div>
-                    </div>
-                </div>
+            </div>
+            <div class="text-center mt-5" data-fade>
+                <a href="{{ url('landing_recursos') }}" class="btn btn-primary-custom">
+                    Ver todos os recursos <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
         </div>
     </section>
 
-    <section class="how-section" id="como-funciona">
+    {# ── CTA PLANOS (grid completo em /planos) ── #}
+    <section class="how-section" id="planos" style="padding:80px 0;">
         <div class="container">
-            <div class="row justify-content-center mb-5">
-                <div class="col-lg-6 text-center" data-fade>
-                    <span class="section-tag">Como Funciona</span>
-                    <h2 class="section-title">Pronto para usar em<br/>menos de 5 minutos</h2>
-                    <p style="color:var(--text-secondary);">Nosso processo de onboarding foi projetado para ser simples,
-                    rápido e seguro.</p>
-                </div>
-            </div>
-            <div class="row justify-content-center">
-                <div class="col-12 col-lg-8">
-                    <div class="timeline-wrap ps-2">
-                        <div class="timeline-line"></div>
-                        <div class="timeline-step" data-fade>
-                            <div class="step-number">1</div>
-                            <div class="step-content">
-                                <h4>Cadastro do Estabelecimento</h4>
-                                <p>O responsável acessa a página de cadastro e informa os dados do pet shop ou clínica. O
-                                processo leva menos de 2 minutos.</p>
-                            </div>
-                        </div>
-                        <div class="timeline-step" data-fade>
-                            <div class="step-number">2</div>
-                            <div class="step-content">
-                                <h4>Confirmação por E-mail</h4>
-                                <p>Um e-mail automático é enviado ao endereço cadastrado com um link de ativação exclusivo e
-                                com validade de 24 horas.</p>
-                            </div>
-                        </div>
-                        <div class="timeline-step" data-fade>
-                            <div class="step-number">3</div>
-                            <div class="step-content">
-                                <h4>Criação do Usuário Administrador</h4>
-                                <p>Ao clicar no link, o responsável cria o usuário ADMIN do estabelecimento — com acesso
-                                total ao sistema e configurações.</p>
-                            </div>
-                        </div>
-                        <div class="timeline-step" data-fade>
-                            <div class="step-number">4</div>
-                            <div class="step-content">
-                                <h4>Cadastro da Equipe</h4>
-                                <p>O administrador cadastra todos os colaboradores: <strong>operador de caixa, banho &amp;
-                                tosa, veterinários, atendentes</strong> e outros com permissões específicas.</p>
-                            </div>
-                        </div>
-                    </div>
+            <div class="row justify-content-center text-center">
+                <div class="col-lg-7" data-fade>
+                    <span class="section-tag">Planos</span>
+                    <h2 class="section-title">Escolha o plano ideal para o seu negócio</h2>
+                    <p style="color:var(--text-secondary);max-width:520px;margin:0 auto 2rem;">
+                        Sem taxa de setup. Cancele quando quiser. Migre de plano a qualquer momento.
+                    </p>
+                    <a href="{{ url('landing_planos') }}" class="btn btn-primary-custom">
+                        Ver Planos e Preços <i class="bi bi-arrow-right"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="plans-section" id="planos">
-        <div class="container">
-            <div class="text-center mb-5" data-fade>
-                <span class="section-tag">Planos</span>
-                <h2 class="section-title">Escolha o plano ideal<br/>para o seu negócio</h2>
-                <p style="color:var(--text-secondary);max-width:500px;margin:0 auto;">
-                    Sem taxa de setup. Cancele quando quiser. Migre de plano a qualquer momento.
-                </p>
-            </div>
-            <div class="row g-4 justify-content-center">
-                {% for plano in planos %}
-                    {% set isPopular = plano.trial == 1 or plano.trial == '1' %}
-                    <div class="col-12 col-md-6 col-lg-4 visible" data-fade="">
-                        <div class="plan-card {% if isPopular %}featured{% endif %}">
-                            {% if isPopular %}
-                                <div class="plan-badge">Mais Popular</div>
-                            {% endif %}
-                            <div class="plan-name">{{ plano.titulo }}</div>
-                            <div class="plan-price text-break">{{ plano.valor|formataValorEmRealLanding|raw }}</div>
-                            <div class="plan-period">por mês</div>
-                            <div class="plan-divider"></div>
-                            {{ plano.descricao|listaPlano|raw }}
-                            <a href="{{ url('landing_cadastro', {'planoId': plano.id}) }}"
-                            class="btn btn-outline-custom w-100 mt-4">Selecionar Plano</a>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="col-12 text-center py-5">
-                        <p class="text-muted">Planos em breve disponíveis.</p>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    </section>
-
-    <section class="about-section" id="quem-somos">
+    {# ── TEASER QUEM SOMOS (página completa em /quem-somos) ── #}
+    <section class="about-section" id="quem-somos" style="padding:80px 0;">
         <div class="container">
             <div class="row align-items-center g-5">
-                <div class="col-lg-6" data-fade>
+                <div class="col-lg-7" data-fade>
                     <span class="section-tag">Quem Somos</span>
                     <h2 class="section-title">Paixão por tecnologia e cuidado animal</h2>
-                    <p style="color:var(--text-secondary); margin-bottom: 2rem;">
-                        Nascemos com a missão de modernizar o mercado pet brasileiro, oferecendo ferramentas que eliminam a
-                        burocracia e permitem que você foque no que realmente importa: a saúde dos animais.
+                    <p style="color:var(--text-secondary); margin-bottom: 1.5rem;">
+                        Nascemos com a missão de modernizar o mercado pet brasileiro, oferecendo ferramentas
+                        que eliminam a burocracia e permitem que você foque na saúde dos animais.
                     </p>
+                    <a href="{{ url('landing_quem_somos') }}" class="btn btn-outline-custom">
+                        Conheça nossa história <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="col-lg-5" data-fade>
                     <div class="row g-3">
                         <div class="col-12 col-sm-6">
                             <div class="about-card">
@@ -326,23 +243,6 @@
                                     <h5>Inovação</h5>
                                     <p>Atualizações mensais.</p>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6" data-fade>
-                    <div style="background: var(--teal-light); border-radius: 24px; padding: 2rem; border: 1px solid var(--teal);" class="p-3 p-sm-4 p-md-5">
-                        <h4 class="mb-3">Nossa Visão</h4>
-                        <p class="text-secondary">Ser o sistema de gestão pet líder na América Latina, conectando tutores,
-                        profissionais e estabelecimentos em um ecossistema digital inteligente e humano.</p>
-                        <div class="divider-line"></div>
-                        <div class="d-flex align-items-center gap-3 flex-wrap">
-                            <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--teal); display: flex; align-items: center; justify-content: center; color: white;" class="flex-shrink-0">
-                                <i class="bi bi-quote"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold">Equipe System Home Pet</div>
-                                <div class="small text-muted">Desde 2018</div>
                             </div>
                         </div>
                     </div>

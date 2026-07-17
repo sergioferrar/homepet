@@ -81,7 +81,14 @@ class PagamentoController extends DefaultController
             }
 
             if (!$aprovado) {
-                // Pagamento pendente ou recusado — webhook confirmará depois.
+                // Recusado/cancelado pela operadora — tela específica de recusa.
+                if (in_array($status, ['rejected', 'cancelled'], true)) {
+                    return $this->render('pagamento/recusado.html.twig', [
+                        'status' => $status,
+                    ]);
+                }
+
+                // Pagamento pendente — webhook confirmará depois.
                 return $this->render('pagamento/pendente.html.twig', [
                     'status' => $status,
                     'mensagem' => 'Seu pagamento está sendo processado. Você receberá um e-mail quando for confirmado.',
@@ -292,6 +299,14 @@ class PagamentoController extends DefaultController
     public function fail(Request $request): Response
     {
         return $this->render('pagamento/falha.html.twig', []);
+    }
+
+    /**
+     * @Route("/pagamento/recusado", name="pagamento_recusado")
+     */
+    public function recusado(Request $request): Response
+    {
+        return $this->render('pagamento/recusado.html.twig', []);
     }
 
     /**

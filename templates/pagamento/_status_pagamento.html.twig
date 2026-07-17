@@ -1,0 +1,40 @@
+{# ─────────────────────────────────────────────────────────────────────
+   Parcial de status de pagamento (sucesso / recusado / falha / pendente)
+
+   Variáveis esperadas:
+   - icone        : classe do bootstrap-icon (ex.: 'bi-check-circle-fill')
+   - cor          : cor do ícone/destaque (ex.: '#16A34A')
+   - cor_fundo    : cor de fundo suave do círculo do ícone
+   - titulo       : título da tela
+   - linhas       : array de parágrafos explicativos
+   - acoes        : array de {href, label, primario (bool), icone (opcional)}
+   ──────────────────────────────────────────────────────────────────── #}
+<section class="page-hero-section" style="min-height:60vh;display:flex;align-items:center;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6" data-fade>
+                <div class="feature-card text-center p-4 p-md-5">
+                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                         style="width:88px;height:88px;border-radius:50%;background:{{ cor_fundo }};">
+                        <i class="bi {{ icone }}" style="font-size:2.6rem;color:{{ cor }};"></i>
+                    </div>
+                    <h1 class="section-title" style="font-size:1.7rem;">{{ titulo }}</h1>
+                    {% for linha in linhas %}
+                        <p style="color:var(--text-secondary);" class="mb-2">{{ linha }}</p>
+                    {% endfor %}
+                    {% if mensagem is defined and mensagem %}
+                        <p style="color:var(--text-secondary);" class="mb-2">{{ mensagem }}</p>
+                    {% endif %}
+                    <div class="d-flex flex-wrap gap-3 justify-content-center mt-4">
+                        {% for acao in acoes %}
+                            <a href="{{ acao.href }}"
+                               class="btn {{ acao.primario ? 'btn-primary-custom' : 'btn-outline-custom' }}">
+                                {% if acao.icone is defined %}<i class="bi {{ acao.icone }} me-1"></i>{% endif %}{{ acao.label }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -15,19 +15,51 @@ class LandingpageController extends DefaultController
 {
 
     /**
+     * Página inicial da landing — versão enxuta.
+     *
+     * As seções completas de Recursos, Quem Somos e Planos ficam em páginas
+     * próprias (/recursos, /quem-somos e /planos); aqui mantemos apenas o
+     * hero, um resumo de recursos, chamadas para as páginas e o contato.
+     *
      * @Route("/", name="landing_home")
      */
     public function landing(Request $request): Response
     {
         $data = [];
 
-        $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome();
-        $data['planos'] = $planos;
         $data['cookie_banner_ativo'] = true;
         $data['tracking'] = '';
         $data['modulos'] = $this->modulosSistema;
 
         return $this->render('home/landing.html.twig', $data);
+    }
+
+    /**
+     * Página pública — Recursos (grid completo + como funciona).
+     *
+     * @Route("/recursos", name="landing_recursos", methods={"GET"})
+     */
+    public function recursos(Request $request): Response
+    {
+        return $this->render('home/recursos.html.twig', [
+            'cookie_banner_ativo' => true,
+            'tracking' => '',
+            'modulos' => $this->modulosSistema,
+        ]);
+    }
+
+    /**
+     * Página pública — Quem Somos.
+     *
+     * @Route("/quem-somos", name="landing_quem_somos", methods={"GET"})
+     */
+    public function quemSomos(Request $request): Response
+    {
+        return $this->render('home/quem_somos.html.twig', [
+            'cookie_banner_ativo' => true,
+            'tracking' => '',
+            'modulos' => $this->modulosSistema,
+        ]);
     }
 
     /**

@@ -1,14 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>Login - Homepetshop</title>
-    <meta name="robots" content="noindex, nofollow">
-    <meta content="" name="description">
-    <meta content="" name="keywords">
+    {# ── SEO ─────────────────────────────────────────────────────── #}
+    <title>{% block title %}Login{% endblock %} — System Home Pet</title>
+    <meta name="robots" content="{% block meta_robots %}noindex, nofollow{% endblock %}">
+    <meta name="description" content="{% block meta_description %}Acesse o System Home Pet, sistema de gestão para pet shops e clínicas veterinárias.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}login system home pet, acesso sistema pet shop{% endblock %}">
+    <meta name="author" content="System Home Pet">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="System Home Pet">
+    <meta property="og:title" content="{{ block('title') }} — System Home Pet">
+    <meta property="og:description" content="{{ block('meta_description') }}">
+    <meta property="og:image" content="{{ absolute_url(asset('images/og-image.png')) }}">
+    <meta property="og:image:alt" content="System Home Pet — Gestão para Pet Shops e Clínicas Veterinárias">
+    <meta property="og:locale" content="pt_BR">
     <!-- Favicons -->
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('images/logo.png') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">

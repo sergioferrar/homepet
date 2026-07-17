@@ -1,0 +1,22 @@
+{% extends 'home/baseLanding.html.twig' %}
+
+{% block title %}Pagamento Recusado{% endblock %}
+{% block meta_description %}O pagamento foi recusado pela operadora. Verifique os dados e tente novamente.{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block body %}
+    {% include 'pagamento/_status_pagamento.html.twig' with {
+        icone: 'bi-x-circle-fill',
+        cor: '#DC2626',
+        cor_fundo: '#FEE2E2',
+        titulo: 'Pagamento recusado',
+        linhas: [
+            'A operadora não autorizou a transação.',
+            'Verifique os dados do cartão, o limite disponível ou utilize outro método de pagamento.'
+        ],
+        acoes: [
+            { href: url('landing_planos'), label: 'Tentar Novamente', primario: true, icone: 'bi-arrow-clockwise' },
+            { href: url('landing_home'), label: 'Página Inicial', primario: false, icone: 'bi-house' }
+        ]
+    } %}
+{% endblock %}

@@ -3,7 +3,49 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    {# ── SEO ─────────────────────────────────────────────────────── #}
     <title>{% block title %}System Home Pet{% endblock %} — Sistema de Gestão para Pet Shops e Clínicas Veterinárias</title>
+    <meta name="description" content="{% block meta_description %}Sistema completo de gestão para pet shops e clínicas veterinárias: agenda, prontuário, vacinas, financeiro, estoque, banho e tosa e muito mais.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}sistema para pet shop, sistema para clínica veterinária, gestão pet shop, prontuário veterinário, agenda veterinária, software petshop{% endblock %}">
+    <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+    <meta name="author" content="System Home Pet">
+    {% set canonical = app.request ? app.request.schemeAndHttpHost ~ app.request.pathInfo : '' %}
+    {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
+
+    {# Open Graph / Facebook / WhatsApp #}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="System Home Pet">
+    <meta property="og:title" content="{{ block('title') }} — System Home Pet">
+    <meta property="og:description" content="{{ block('meta_description') }}">
+    {% if canonical %}<meta property="og:url" content="{{ canonical }}">{% endif %}
+    <meta property="og:image" content="{{ absolute_url(asset('images/og-image.png')) }}">
+    <meta property="og:image:width" content="640">
+    <meta property="og:image:height" content="640">
+    <meta property="og:image:alt" content="System Home Pet — Gestão para Pet Shops e Clínicas Veterinárias">
+    <meta property="og:locale" content="pt_BR">
+
+    {# Twitter Card #}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ block('title') }} — System Home Pet">
+    <meta name="twitter:description" content="{{ block('meta_description') }}">
+    <meta name="twitter:image" content="{{ absolute_url(asset('images/og-image.png')) }}">
+
+    {# Dados estruturados (Schema.org) #}
+    {% block structured_data %}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "System Home Pet",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "description": "Sistema de gestão para pet shops e clínicas veterinárias.",
+        "offers": { "@type": "Offer", "priceCurrency": "BRL" }
+    }
+    </script>
+    {% endblock %}
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,300;1,400&display=swap"
@@ -204,6 +246,12 @@
             padding: 100px 0 80px;
             background: var(--bg-alt);
             overflow: hidden;
+        }
+
+        /* Hero compacto das páginas internas (Recursos, Quem Somos, Planos...) */
+        .page-hero-section {
+            padding: 120px 0 60px;
+            background: linear-gradient(135deg, var(--bg-base) 60%, var(--bg-subtle) 100%);
         }
 
         .hero-section::before {
@@ -842,7 +890,7 @@
 <body>
 <nav class="navbar-custom navbar navbar-expand-lg" id="navbar">
     <div class="container">
-        <a class="navbar-brand navbar-brand-text" href="#">
+        <a class="navbar-brand navbar-brand-text" href="{{ url('landing_home') }}" aria-label="System Home Pet — Início">
             <svg width="400" height="60" viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
                         <defs>
                         <linearGradient id="markGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -876,11 +924,11 @@
         </button>
         <div class="collapse navbar-collapse" id="navMain">
             <ul class="navbar-nav mx-auto gap-1">
-                <li class="nav-item"><a class="nav-link-custom nav-link" href="{{url('landing_home')}}">Início</a></li>
-                <li class="nav-item"><a class="nav-link-custom nav-link" href="#recursos">Recursos</a></li>
-                <li class="nav-item"><a class="nav-link-custom nav-link" href="{{ url('landing_planos') }}">Planos</a></li>
-                <li class="nav-item"><a class="nav-link-custom nav-link" href="#quem-somos">Quem Somos</a></li>
-                <li class="nav-item"><a class="nav-link-custom nav-link" href="#contato">Contato</a></li>
+                <li class="nav-item"><a class="nav-link-custom nav-link {% if app.request.get('_route') == 'landing_home' %}active-nav{% endif %}" href="{{ url('landing_home') }}">Início</a></li>
+                <li class="nav-item"><a class="nav-link-custom nav-link {% if app.request.get('_route') == 'landing_recursos' %}active-nav{% endif %}" href="{{ url('landing_recursos') }}">Recursos</a></li>
+                <li class="nav-item"><a class="nav-link-custom nav-link {% if app.request.get('_route') == 'landing_planos' %}active-nav{% endif %}" href="{{ url('landing_planos') }}">Planos</a></li>
+                <li class="nav-item"><a class="nav-link-custom nav-link {% if app.request.get('_route') == 'landing_quem_somos' %}active-nav{% endif %}" href="{{ url('landing_quem_somos') }}">Quem Somos</a></li>
+                <li class="nav-item"><a class="nav-link-custom nav-link" href="{{ url('landing_home') }}#contato">Contato</a></li>
             </ul>
             {# <a href="/cadastro-estabelecimento" class="btn btn-primary-custom ms-lg-3 mt-2 mt-lg-0">
                 Começar Agora <i class="bi bi-arrow-right"></i>
@@ -933,15 +981,15 @@ FOOTER
             </div>
             <div class="col-6 col-lg-2">
                 <div class="footer-heading">Navegação</div>
-                <a href="#inicio" class="footer-link">Início</a>
-                <a href="#recursos" class="footer-link">Recursos</a>
-                <a href="#como-funciona" class="footer-link">Como Funciona</a>
+                <a href="{{ url('landing_home') }}" class="footer-link">Início</a>
+                <a href="{{ url('landing_recursos') }}" class="footer-link">Recursos</a>
+                <a href="{{ url('landing_recursos') }}#como-funciona" class="footer-link">Como Funciona</a>
                 <a href="{{ url('landing_planos') }}" class="footer-link">Planos</a>
             </div>
             <div class="col-6 col-lg-2">
                 <div class="footer-heading">Empresa</div>
-                <a href="/quem-somos" class="footer-link">Quem Somos</a>
-                <a href="/contato" class="footer-link">Contato</a>
+                <a href="{{ url('landing_quem_somos') }}" class="footer-link">Quem Somos</a>
+                <a href="{{ url('landing_home') }}#contato" class="footer-link">Contato</a>
                 <a href="{{url('landing_politica_privacidade')}}" class="footer-link">Políticas de Privacidade</a>
                 <a href="{{ path('landing_termos_uso') }}" class="footer-link">Termos de Uso</a>
             </div>
