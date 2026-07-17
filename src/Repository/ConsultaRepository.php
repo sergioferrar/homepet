@@ -250,6 +250,7 @@ class ConsultaRepository extends ServiceEntityRepository
         $sql = "SELECT c.id, c.data, c.hora, c.tipo, c.veterinario_id,
                        v.nome AS veterinario_nome, v.crmv AS veterinario_crmv,
                        p.nome AS pet_nome, cl.nome AS cliente_nome,
+                       c.valor AS valor_editado,
                        (SELECT s.valor
                           FROM homepet_{$baseId}.servico s
                          WHERE s.estabelecimento_id = :baseId
@@ -262,7 +263,7 @@ class ConsultaRepository extends ServiceEntityRepository
                 JOIN homepet_{$baseId}.veterinario v ON v.id = c.veterinario_id
                 WHERE c.estabelecimento_id = :baseId
                   AND c.data BETWEEN :inicio AND :fim
-                  AND c.status <> 'cancelado'";
+                  AND c.status = 'atendido'";
 
         if ($vetId) {
             $sql .= " AND c.veterinario_id = :vetId";
@@ -282,8 +283,8 @@ class ConsultaRepository extends ServiceEntityRepository
     }
 
     /**
-     * Conta consultas do período sem veterinário vinculado (ficam fora do
-     * relatório de comissões — exibido como alerta na tela).
+     * Conta consultas concluídas do período sem veterinário vinculado (ficam
+     * fora do relatório de comissões — exibido como alerta na tela).
      */
     public function contarConsultasSemVeterinario($baseId, \DateTime $inicio, \DateTime $fim): int
     {
@@ -291,7 +292,7 @@ class ConsultaRepository extends ServiceEntityRepository
                 FROM homepet_{$baseId}.consulta c
                 WHERE c.estabelecimento_id = :baseId
                   AND c.data BETWEEN :inicio AND :fim
-                  AND c.status <> 'cancelado'
+                  AND c.status = 'atendido'
                   AND c.veterinario_id IS NULL";
 
         $stmt = $this->conn->prepare($sql);
@@ -300,6 +301,23 @@ class ConsultaRepository extends ServiceEntityRepository
         $stmt->bindValue('fim', $fim->format('Y-m-d'));
 
         return (int) $stmt->executeQuery()->fetchOne();
+    }
+
+    /**
+     * Grava o valor do atendimento ajustado manualmente no relatório de
+     * comissões. NULL volta a usar o valor do serviço de mesmo nome.
+     */
+    public function atualizarValorComissao($baseId, int $consultaId, ?float $valor): bool
+    {
+        $sql = "UPDATE homepet_{$baseId}.consulta
+                SET valor = :valor
+                WHERE id = :id AND estabelecimento_id = :baseId";
+
+        return $this->conn->executeStatement($sql, [
+            'valor'  => $valor,
+            'id'     => $consultaId,
+            'baseId' => $baseId,
+        ]) >= 0;
     }
 
     /**

@@ -11,6 +11,11 @@
     .vet-detalhe-header { cursor: pointer; }
     #relatorio-print-header { display: none; }
     .assinaturas-print { display: none; }
+    .valor-status { font-size: .72rem; }
+    .valor-status.salvando { color: #6c757d; }
+    .valor-status.salvo { color: #198754; }
+    .valor-status.erro { color: #dc3545; }
+    .subtitulo-detalhe { font-size: .85rem; letter-spacing: .3px; text-transform: uppercase; color: #6c757d; }
 
     @media print {
         .no-print, .nav-tabs, nav, aside, header, footer, .btn { display: none !important; }
@@ -24,6 +29,7 @@
         input[type="number"]::-webkit-inner-spin-button { display: none; }
         body { background: #fff !important; }
         .collapse { display: block !important; height: auto !important; }
+        .valor-status { display: none !important; }
     }
 </style>
 
@@ -74,23 +80,35 @@
                 <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Filtrar</button>
             </div>
         </form>
+        <small class="text-muted d-block mt-2">
+            <i class="bi bi-info-circle me-1"></i>São consideradas apenas as fichas <strong>concluídas</strong> (status "atendido") no período e as vendas feitas na clínica dentro das fichas dos pets.
+        </small>
     </div>
 
     {% if consultas_sem_vet > 0 %}
         <div class="alert alert-warning no-print">
             <i class="bi bi-exclamation-triangle me-1"></i>
-            <strong>{{ consultas_sem_vet }}</strong> atendimento(s) no período não possuem veterinário vinculado e ficaram fora deste relatório.
+            <strong>{{ consultas_sem_vet }}</strong> ficha(s) concluída(s) no período não possuem veterinário vinculado e ficaram fora deste relatório.
         </div>
     {% endif %}
 
-    {% if relatorio is empty %}
+    {% if vendas_sem_vet is not empty %}
+        <div class="alert alert-info no-print">
+            <i class="bi bi-cart-x me-1"></i>
+            <strong>{{ vendas_sem_vet|length }}</strong> venda(s) da clínica no período não puderam ser vinculadas a um veterinário
+            (o pet não teve atendimento no dia da venda) — veja o bloco "Vendas sem veterinário" ao final.
+        </div>
+    {% endif %}
+
+    {% if relatorio is empty and vendas_sem_vet is empty %}
         <div class="comissao-card text-center text-muted">
             <i class="bi bi-clipboard-x fs-1 d-block mb-2"></i>
-            Nenhum atendimento com veterinário encontrado no período selecionado.
+            Nenhuma ficha concluída ou venda da clínica encontrada no período selecionado.
         </div>
     {% else %}
 
     {# ── RESUMO POR VETERINÁRIO ── #}
+    {% if relatorio is not empty %}
     <div class="comissao-card">
         <h5 class="mb-3"><i class="bi bi-people me-2"></i>Resumo por Veterinário</h5>
         <div class="table-responsive">
@@ -99,10 +117,13 @@
                     <tr>
                         <th>Veterinário</th>
                         <th>CRMV</th>
-                        <th class="text-center">Qtde Atendimentos</th>
-                        <th class="text-end">Valor Total (R$)</th>
+                        <th class="text-center">Fichas Concluídas</th>
+                        <th class="text-end">Atendimentos (R$)</th>
+                        <th class="text-center">Vendas</th>
+                        <th class="text-end">Vendas (R$)</th>
+                        <th class="text-end">Total (R$)</th>
                         <th class="text-end">% Comissão</th>
-                        <th class="text-end">Repasse ao Veterinário (R$)</th>
+                        <th class="text-end">Repasse (R$)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -111,7 +132,10 @@
                         <td>{{ vet.nome }}</td>
                         <td>{{ vet.crmv|default('—') }}</td>
                         <td class="text-center vet-qtd">{{ vet.quantidade }}</td>
-                        <td class="text-end vet-total">{{ vet.total|number_format(2, ',', '.') }}</td>
+                        <td class="text-end vet-total-consultas">{{ vet.total|number_format(2, ',', '.') }}</td>
+                        <td class="text-center vet-qtd-vendas">{{ vet.vendas|length }}</td>
+                        <td class="text-end vet-total-vendas">{{ vet.total_vendas|number_format(2, ',', '.') }}</td>
+                        <td class="text-end vet-total fw-bold">{{ (vet.total + vet.total_vendas)|number_format(2, ',', '.') }}</td>
                         <td class="text-end">
                             <input type="number" step="0.01" min="0" max="100"
                                    class="form-control form-control-sm comissao-pct-input ms-auto"
@@ -125,6 +149,9 @@
                     <tr>
                         <td colspan="2">TOTAL GERAL</td>
                         <td class="text-center" id="total-geral-qtd">0</td>
+                        <td class="text-end" id="total-geral-consultas">0,00</td>
+                        <td class="text-center" id="total-geral-qtd-vendas">0</td>
+                        <td class="text-end" id="total-geral-vendas">0,00</td>
                         <td class="text-end" id="total-geral-valor">0,00</td>
                         <td></td>
                         <td class="text-end text-success" id="total-geral-repasse">0,00</td>
@@ -133,10 +160,11 @@
             </table>
         </div>
         <small class="text-muted no-print">
-            <i class="bi bi-info-circle me-1"></i>Informe o percentual de comissão de cada veterinário; o repasse é recalculado automaticamente.
-            Os valores das consultas vêm do serviço da clínica cadastrado com o mesmo nome do tipo de atendimento e podem ser ajustados no detalhamento abaixo.
+            <i class="bi bi-info-circle me-1"></i>Informe o percentual de comissão de cada veterinário; o repasse é recalculado automaticamente sobre o total (atendimentos + vendas).
+            Os valores dos atendimentos podem ser ajustados no detalhamento abaixo e ficam <strong>gravados</strong> para os próximos acessos.
         </small>
     </div>
+    {% endif %}
 
     {# ── DETALHAMENTO POR VETERINÁRIO ── #}
     {% for vet in relatorio %}
@@ -144,10 +172,15 @@
         <h6 class="vet-detalhe-header d-flex justify-content-between align-items-center mb-0"
             data-bs-toggle="collapse" data-bs-target="#detalhe-vet-{{ vet.veterinario_id }}">
             <span><i class="bi bi-person-badge me-2"></i>{{ vet.nome }}{% if vet.crmv %} — CRMV: {{ vet.crmv }}{% endif %}</span>
-            <span class="badge bg-primary no-print">{{ vet.quantidade }} atendimento(s) <i class="bi bi-chevron-down ms-1"></i></span>
+            <span class="badge bg-primary no-print">
+                {{ vet.quantidade }} ficha(s) · {{ vet.vendas|length }} venda(s) <i class="bi bi-chevron-down ms-1"></i>
+            </span>
         </h6>
         <div class="collapse show mt-3" id="detalhe-vet-{{ vet.veterinario_id }}">
-            <div class="table-responsive">
+
+            {% if vet.consultas is not empty %}
+            <p class="subtitulo-detalhe mb-1"><i class="bi bi-clipboard2-pulse me-1"></i>Fichas concluídas</p>
+            <div class="table-responsive mb-3">
                 <table class="table table-sm table-bordered align-middle">
                     <thead class="table-light">
                         <tr>
@@ -169,20 +202,105 @@
                                 <input type="number" step="0.01" min="0"
                                        class="form-control form-control-sm comissao-valor-input ms-auto"
                                        data-vet-valor="{{ vet.veterinario_id }}"
+                                       data-consulta-id="{{ c.id }}"
                                        value="{{ c.valor|number_format(2, '.', '') }}"
                                        {% if not c.valor_cadastrado %}title="Serviço '{{ c.tipo }}' sem valor cadastrado — informe manualmente"{% endif %}>
-                                {% if not c.valor_cadastrado %}
-                                    <small class="text-danger no-print">sem valor cadastrado</small>
-                                {% endif %}
+                                <small class="valor-status d-block text-end no-print" data-status-consulta="{{ c.id }}">
+                                    {%- if c.valor_editado -%}
+                                        <i class="bi bi-pencil-fill me-1"></i>valor ajustado
+                                    {%- elseif not c.valor_cadastrado -%}
+                                        <span class="text-danger">sem valor cadastrado</span>
+                                    {%- endif -%}
+                                </small>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% endif %}
+
+            {% if vet.vendas is not empty %}
+            <p class="subtitulo-detalhe mb-1"><i class="bi bi-cart-check me-1"></i>Vendas na clínica (dentro das fichas)</p>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Data</th>
+                            <th>Venda</th>
+                            <th>Pet</th>
+                            <th>Tutor</th>
+                            <th>Pagamento</th>
+                            <th class="text-end">Valor (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for venda in vet.vendas %}
+                        <tr>
+                            <td>{{ venda.data|date('d/m/Y H:i') }}</td>
+                            <td>#{{ venda.id }}</td>
+                            <td>{{ venda.pet }}</td>
+                            <td>{{ venda.cliente }}</td>
+                            <td>{{ venda.metodo_pagamento|default('—')|capitalize }}</td>
+                            <td class="text-end">
+                                <input type="number" step="0.01" min="0"
+                                       class="form-control form-control-sm comissao-venda-input comissao-valor-input ms-auto"
+                                       data-vet-venda="{{ vet.veterinario_id }}"
+                                       value="{{ venda.valor|number_format(2, '.', '') }}"
+                                       title="Ajuste apenas para o cálculo da comissão — não altera a venda no financeiro">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <small class="text-muted no-print d-block mb-1">
+                <i class="bi bi-info-circle me-1"></i>O ajuste do valor da venda vale apenas para o cálculo da comissão nesta tela — a venda original no financeiro não é alterada.
+            </small>
+            {% endif %}
+
+            {% if vet.consultas is empty and vet.vendas is empty %}
+                <p class="text-muted mb-0">Sem registros no período.</p>
+            {% endif %}
         </div>
     </div>
     {% endfor %}
+
+    {# ── VENDAS SEM VETERINÁRIO VINCULADO ── #}
+    {% if vendas_sem_vet is not empty %}
+    <div class="comissao-card">
+        <h6 class="mb-3"><i class="bi bi-cart-x me-2"></i>Vendas sem veterinário vinculado</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Data</th>
+                        <th>Venda</th>
+                        <th>Pet</th>
+                        <th>Tutor</th>
+                        <th>Pagamento</th>
+                        <th class="text-end">Valor (R$)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venda in vendas_sem_vet %}
+                    <tr>
+                        <td>{{ venda.data|date('d/m/Y H:i') }}</td>
+                        <td>#{{ venda.id }}</td>
+                        <td>{{ venda.pet }}</td>
+                        <td>{{ venda.cliente }}</td>
+                        <td>{{ venda.metodo_pagamento|default('—')|capitalize }}</td>
+                        <td class="text-end">{{ venda.valor|number_format(2, ',', '.') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <small class="text-muted no-print">
+            <i class="bi bi-info-circle me-1"></i>Essas vendas foram feitas na clínica, mas o pet não teve atendimento no dia da venda, então não entram no cálculo de comissão de nenhum veterinário.
+        </small>
+    </div>
+    {% endif %}
 
     {# ── ASSINATURAS (somente na impressão) ── #}
     <div class="assinaturas-print">
@@ -207,37 +325,90 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     const formatBR = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const urlSalvarValor = (id) => "{{ path('clinica_relatorio_comissoes_valor', {'id': '__ID__'}) }}".replace('__ID__', id);
 
-    // Recalcula total do veterinário (soma dos valores do detalhamento),
-    // aplica o % de comissão informado e atualiza os totais gerais.
+    // Recalcula os totais do veterinário (fichas + vendas), aplica o % de
+    // comissão informado e atualiza os totais gerais.
     function recalcular() {
-        let geralQtd = 0, geralValor = 0, geralRepasse = 0;
+        let geralQtd = 0, geralQtdVendas = 0, geralConsultas = 0, geralVendas = 0, geralRepasse = 0;
 
         document.querySelectorAll('[data-vet-resumo]').forEach(linha => {
             const vetId = linha.dataset.vetResumo;
 
-            const inputsValor = document.querySelectorAll(`[data-vet-valor="${vetId}"]`);
-            let total = 0;
-            inputsValor.forEach(inp => { total += parseFloat(inp.value) || 0; });
+            const inputsConsulta = document.querySelectorAll(`[data-vet-valor="${vetId}"]`);
+            let totalConsultas = 0;
+            inputsConsulta.forEach(inp => { totalConsultas += parseFloat(inp.value) || 0; });
 
+            const inputsVenda = document.querySelectorAll(`[data-vet-venda="${vetId}"]`);
+            let totalVendas = 0;
+            inputsVenda.forEach(inp => { totalVendas += parseFloat(inp.value) || 0; });
+
+            const total = totalConsultas + totalVendas;
             const pct = parseFloat(document.querySelector(`[data-vet-pct="${vetId}"]`).value) || 0;
             const repasse = total * (pct / 100);
 
+            linha.querySelector('.vet-total-consultas').textContent = formatBR(totalConsultas);
+            linha.querySelector('.vet-total-vendas').textContent = formatBR(totalVendas);
             linha.querySelector('.vet-total').textContent = formatBR(total);
             document.querySelector(`[data-vet-repasse="${vetId}"]`).textContent = formatBR(repasse);
 
-            geralQtd += inputsValor.length;
-            geralValor += total;
+            geralQtd += inputsConsulta.length;
+            geralQtdVendas += inputsVenda.length;
+            geralConsultas += totalConsultas;
+            geralVendas += totalVendas;
             geralRepasse += repasse;
         });
 
-        document.getElementById('total-geral-qtd').textContent = geralQtd;
-        document.getElementById('total-geral-valor').textContent = formatBR(geralValor);
-        document.getElementById('total-geral-repasse').textContent = formatBR(geralRepasse);
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        set('total-geral-qtd', geralQtd);
+        set('total-geral-qtd-vendas', geralQtdVendas);
+        set('total-geral-consultas', formatBR(geralConsultas));
+        set('total-geral-vendas', formatBR(geralVendas));
+        set('total-geral-valor', formatBR(geralConsultas + geralVendas));
+        set('total-geral-repasse', formatBR(geralRepasse));
+    }
+
+    // ── Persistência do valor do atendimento (com debounce por input) ──
+    const timers = {};
+    function salvarValorConsulta(input) {
+        const consultaId = input.dataset.consultaId;
+        if (!consultaId) return;
+
+        const statusEl = document.querySelector(`[data-status-consulta="${consultaId}"]`);
+        const setStatus = (cls, html) => {
+            if (!statusEl) return;
+            statusEl.className = 'valor-status d-block text-end no-print ' + cls;
+            statusEl.innerHTML = html;
+        };
+
+        setStatus('salvando', '<i class="bi bi-arrow-repeat me-1"></i>salvando...');
+
+        fetch(urlSalvarValor(consultaId), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ valor: input.value === '' ? null : input.value })
+        })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+            if (ok && data.status === 'success') {
+                setStatus('salvo', '<i class="bi bi-check-circle me-1"></i>valor salvo');
+            } else {
+                setStatus('erro', '<i class="bi bi-x-circle me-1"></i>' + (data.mensagem || 'erro ao salvar'));
+            }
+        })
+        .catch(() => setStatus('erro', '<i class="bi bi-x-circle me-1"></i>erro ao salvar'));
     }
 
     document.querySelectorAll('.comissao-pct-input, .comissao-valor-input').forEach(inp => {
-        inp.addEventListener('input', recalcular);
+        inp.addEventListener('input', function() {
+            recalcular();
+
+            // Salva no banco apenas os valores de atendimento (fichas)
+            if (this.dataset.consultaId) {
+                clearTimeout(timers[this.dataset.consultaId]);
+                timers[this.dataset.consultaId] = setTimeout(() => salvarValorConsulta(this), 600);
+            }
+        });
     });
 
     recalcular();

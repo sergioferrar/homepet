@@ -162,6 +162,45 @@ class VendaRepository extends ServiceEntityRepository
     }
 
     /**
+     * Vendas feitas na clínica (dentro das fichas dos pets) no período,
+     * para o relatório de comissões.
+     *
+     * Cada venda é atribuída ao veterinário do atendimento do pet no mesmo
+     * dia da venda (o mais recente do dia). Vendas sem atendimento
+     * correspondente retornam veterinario_id NULL e são exibidas em um bloco
+     * próprio no relatório. Vendas canceladas ficam de fora.
+     */
+    public function listarVendasClinicaComissao(int $baseId, \DateTime $inicio, \DateTime $fim): array
+    {
+        $sql = "SELECT v.id, v.data, v.total, v.pet_id, v.metodo_pagamento, v.status,
+                       p.nome AS pet_nome,
+                       COALESCE(cl.nome, v.cliente) AS cliente_nome,
+                       (SELECT c.veterinario_id
+                          FROM homepet_{$baseId}.consulta c
+                         WHERE c.estabelecimento_id = :estab
+                           AND c.pet_id = v.pet_id
+                           AND c.data = DATE(v.data)
+                           AND c.status <> 'cancelado'
+                           AND c.veterinario_id IS NOT NULL
+                         ORDER BY c.hora DESC, c.id DESC
+                         LIMIT 1) AS veterinario_id
+                FROM homepet_{$baseId}.venda v
+                LEFT JOIN homepet_{$baseId}.pet p ON p.id = v.pet_id
+                LEFT JOIN homepet_{$baseId}.cliente cl ON cl.id = p.dono_id
+                WHERE v.estabelecimento_id = :estab
+                  AND v.origem = 'clinica'
+                  AND DATE(v.data) BETWEEN :inicio AND :fim
+                  AND v.status <> 'Cancelada'
+                ORDER BY v.data ASC, v.id ASC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'estab'  => $baseId,
+            'inicio' => $inicio->format('Y-m-d'),
+            'fim'    => $fim->format('Y-m-d'),
+        ]);
+    }
+
+    /**
      * Insere uma nova venda (origem clínica/PDV) e retorna o ID gerado.
      */
     public function inserirVenda(int $baseId, array $dados): int

@@ -74,6 +74,13 @@ class Consulta
     private $tipo;
 
     /**
+     * Valor do atendimento ajustado manualmente no relatório de comissões.
+     * NULL = usa o valor do serviço da clínica cadastrado com o mesmo nome do tipo.
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
+     */
+    private $valor;
+
+    /**
      * Nome do arquivo salvo no servidor (randômico de 12 dígitos + extensão).
      * @ORM\Column(type="string", length=255, nullable=true)
      */
@@ -169,6 +176,17 @@ class Consulta
     public function setTipo(?string $tipo): self
     {
         $this->tipo = $tipo;
+        return $this;
+    }
+
+    public function getValor(): ?string
+    {
+        return $this->valor;
+    }
+
+    public function setValor(?string $valor): self
+    {
+        $this->valor = $valor;
         return $this;
     }
 
