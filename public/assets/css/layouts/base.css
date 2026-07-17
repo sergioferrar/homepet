@@ -1,0 +1,361 @@
+/* ============================================================
+   Tema global do dashboard (base.html.twig) — cores Home Pet, sidebar, cards, botões.
+   Extraído do bloco <style> inline do template para arquivo próprio.
+   ============================================================ */
+
+/* 🎨 TEMA HOME PET - Cores principais (alinhadas à logo) */
+:root {
+    --purple-primary: #14B8A6;
+    --purple-dark: #0E7490;
+    --purple-light: #EAFBF8;
+    --purple-gradient: linear-gradient(135deg, #14B8A6 0%, #0E7490 100%);
+    --pet-accent: #F97316;
+    --pet-accent-light: #FFF1E6;
+}
+
+/* 🔤 Tipografia - segue a fonte usada na logo (Poppins para títulos/marca, Nunito para leitura) */
+body {
+    font-family: 'Nunito', 'Open Sans', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6,
+.btn,
+.card-header,
+.header .logo span,
+.sidebar-nav .nav-link,
+.nav-tabs .nav-link,
+.page-title,
+#page-title {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Cor de fundo do sistema */
+body {
+    background-color: #f5f7fa !important;
+}
+
+.main {
+    background-color: #f5f7fa !important;
+    transition: margin-left 0.3s ease;
+}
+
+/* 🎨 Botões primários (teal da logo) */
+.btn-primary {
+    background: var(--purple-gradient) !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0d9488 0%, #0b5563 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.4) !important;
+}
+
+/* 🎨 Botão de destaque secundário (laranja da logo, para CTAs pontuais) */
+.btn-accent {
+    background: var(--pet-accent) !important;
+    border: none !important;
+    color: #fff !important;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600 !important;
+}
+
+.btn-accent:hover {
+    background: #ea580c !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4) !important;
+}
+
+/* 🎨 Links e elementos ativos (teal) */
+.sidebar-nav .nav-link:hover,
+.sidebar-nav .nav-link.active {
+    color: var(--purple-primary) !important;
+    background: var(--purple-light) !important;
+}
+
+.sidebar-nav .nav-link.active i {
+    color: var(--purple-primary) !important;
+}
+
+/* 🎨 Badges e alertas (teal) */
+.badge.bg-primary {
+    background: var(--purple-gradient) !important;
+}
+
+.alert-primary {
+    background-color: var(--purple-light) !important;
+    border-color: var(--purple-primary) !important;
+    color: var(--purple-dark) !important;
+}
+
+/* 🎨 Cards com destaque (teal) */
+.card-header.bg-primary {
+    background: var(--purple-gradient) !important;
+    color: white !important;
+}
+
+/* 🎨 Tabs (teal) */
+.nav-tabs .nav-link.active {
+    color: var(--purple-primary) !important;
+    border-bottom: 2px solid var(--purple-primary) !important;
+}
+
+/* 🎨 Progress bars (teal) */
+.progress-bar {
+    background: var(--purple-gradient) !important;
+}
+
+/* 🎨 Formulários com foco (teal) */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--purple-primary) !important;
+    box-shadow: 0 0 0 0.2rem rgba(20, 184, 166, 0.25) !important;
+}
+
+/* 🎨 Checkboxes e radios (teal) */
+.form-check-input:checked {
+    background-color: var(--purple-primary) !important;
+    border-color: var(--purple-primary) !important;
+}
+
+/* Cards com fundo branco limpo */
+.card {
+    background-color: #ffffff;
+    border: 1px solid #e4e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Sidebar com fundo mais escuro */
+.sidebar {
+    background-color: #ffffff;
+    border-right: 1px solid #e4e7eb;
+    transition: width 0.3s ease;
+    overflow: hidden;
+}
+
+/* Sidebar colapsada - modo mini com ícones */
+.sidebar.collapsed {
+    width: 80px !important;
+}
+
+/* Esconde apenas o texto (span), mantém os ícones (i) */
+.sidebar.collapsed .nav-link > span {
+    display: none !important;
+}
+
+.sidebar.collapsed .logo span {
+    display: none !important;
+}
+
+.sidebar.collapsed .nav-link {
+    text-align: center !important;
+    padding: 15px 0 !important;
+    justify-content: center !important;
+    display: flex !important;
+}
+
+/* Garante que os ícones apareçam */
+.sidebar.collapsed .nav-link > i {
+    margin: 0 !important;
+    margin-right: 0 !important;
+    font-size: 24px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Esconde a seta de dropdown */
+.sidebar.collapsed .bi-chevron-down {
+    display: none !important;
+}
+
+/* Esconde submenus quando colapsado */
+.sidebar.collapsed .nav-content {
+    display: none !important;
+}
+
+/* Ajusta o logo quando colapsado */
+.sidebar.collapsed .logo {
+    justify-content: center !important;
+    padding: 20px 0 !important;
+}
+
+/* Remove padding lateral dos itens */
+.sidebar.collapsed .nav-item {
+    padding: 0 !important;
+}
+
+/* Header com gradiente teal (identidade Home Pet) */
+.header {
+    background: linear-gradient(135deg, #14B8A6 0%, #0E7490 100%) !important;
+    border-bottom: none !important;
+    box-shadow: 0 2px 10px rgba(20, 184, 166, 0.3) !important;
+    transition: left 0.3s ease;
+}
+
+/* Texto branco na navbar - FORÇADO */
+.header .logo span,
+.header #page-title,
+.header .search-form input,
+.header .nav-link,
+.header .toggle-sidebar-btn,
+.header .nav-icon,
+.header .nav-profile,
+.header .nav-profile span,
+.header .search-form button i {
+    color: white !important;
+}
+
+/* Logo sempre visível */
+.header .logo span {
+    display: block !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+}
+
+.header .search-form input::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.header .search-form input {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.header .search-form button {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+}
+
+.header .sidebar-toggle {
+    color: white !important;
+}
+
+.header .badge-number {
+    background: #ef4444 !important;
+}
+
+.header.collapsed {
+    left: 80px !important;
+}
+
+/* Main expandido quando sidebar colapsada */
+.main.collapsed {
+    margin-left: 80px !important;
+}
+
+/* Containers com fundo suave */
+.container-fluid {
+    background-color: transparent;
+}
+
+/* Modais com fundo branco */
+.modal-content {
+    background-color: #ffffff;
+}
+
+/* Offcanvas com fundo branco */
+.offcanvas {
+    background-color: #ffffff;
+}
+
+/* Footer */
+.footer {
+    background-color: #ffffff;
+    border-top: 1px solid #e4e7eb;
+}
+
+/* 🎨 Ícones de dashboard roxos */
+.dashboard .sales-card .card-icon {
+    color: var(--purple-primary) !important;
+    background: var(--purple-light) !important;
+}
+
+/* 🎨 Tabelas com cabeçalho roxo */
+.table thead {
+    background: var(--purple-light) !important;
+    color: var(--purple-dark) !important;
+}
+
+/* 🎨 Dropdown hover roxo */
+.dropdown-item:hover {
+    background-color: var(--purple-light) !important;
+    color: var(--purple-primary) !important;
+}
+
+/* 🎨 Paginação roxa */
+.pagination .page-item.active .page-link {
+    background: var(--purple-gradient) !important;
+    border-color: var(--purple-primary) !important;
+}
+
+.pagination .page-link:hover {
+    color: var(--purple-primary) !important;
+    background-color: var(--purple-light) !important;
+}
+
+/* 🎨 Spinner roxo */
+.spinner-border {
+    color: var(--purple-primary) !important;
+}
+
+/* 🎨 Toast roxo */
+.toast-header {
+    background: var(--purple-gradient) !important;
+    color: white !important;
+}
+
+/* 🎨 Accordion roxo */
+.accordion-button:not(.collapsed) {
+    background-color: var(--purple-light) !important;
+    color: var(--purple-primary) !important;
+}
+
+/* 🎨 Back to top roxo */
+.back-to-top {
+    background: var(--purple-gradient) !important;
+}
+
+.back-to-top:hover {
+    background: linear-gradient(135deg, #0d9488 0%, #0b5563 100%) !important;
+}
+
+
+/* Estilos para resultados de busca */
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e4e7eb;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 5px;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    text-decoration: none;
+    color: #333;
+    transition: background 0.2s;
+}
+
+.search-result-item:hover {
+    background: #f6f5ff;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-bar {
+    position: relative;
+}
