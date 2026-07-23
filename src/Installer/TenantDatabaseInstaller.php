@@ -627,10 +627,12 @@ final class TenantDatabaseInstaller
                     data datetime DEFAULT current_timestamp(),
                     observacao text DEFAULT NULL,
                     pet_id int(11) DEFAULT NULL,
+                    consulta_id int(11) DEFAULT NULL,
                     origem varchar(255) DEFAULT NULL,
-                    status enum('Aberta','Pendente','Paga','Inativa','Carrinho') DEFAULT 'Carrinho',
+                    status enum('Aberta','Pendente','Paga','Inativa','Carrinho','Cancelada') DEFAULT 'Carrinho',
                     PRIMARY KEY (id),
-                    KEY idx_venda_pet_id (pet_id)
+                    KEY idx_venda_pet_id (pet_id),
+                    KEY idx_venda_consulta_id (consulta_id)
                 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
            SQL,
 

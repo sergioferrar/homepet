@@ -49,6 +49,14 @@ class Venda
     private $petId;
 
     /**
+     * Atendimento (consulta) ao qual esta venda pertence.
+     * Nulo para vendas avulsas / PDV sem atendimento vinculado.
+     *
+     * @ORM\Column(type="integer", nullable=true, name="consulta_id")
+     */
+    private $consultaId;
+
+    /**
      * @ORM\Column(type="string", length=255)
      */
     private $origem;
@@ -172,6 +180,17 @@ class Venda
     public function setPetId(?int $petId): self
     {
         $this->petId = $petId;
+        return $this;
+    }
+
+    public function getConsultaId(): ?int
+    {
+        return $this->consultaId;
+    }
+
+    public function setConsultaId(?int $consultaId): self
+    {
+        $this->consultaId = $consultaId;
         return $this;
     }
 

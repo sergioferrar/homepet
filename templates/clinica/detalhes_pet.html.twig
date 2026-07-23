@@ -85,6 +85,20 @@
     .venda-card { border-radius: var(--dp-radius) !important; border-left-width: 4px !important; box-shadow: var(--dp-shadow-sm) !important; margin-bottom: 0.75rem; }
     .vendas-total-bar { background: var(--dp-teal-light); border-radius: var(--dp-radius); padding: 0.75rem 1.1rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: 700; color: var(--dp-slate); margin-top: 1rem; }
     .vendas-total-bar .total-val { color: #2b9e82; font-size: 1.1rem; }
+    /* ── Navegação de vendas por atendimento ── */
+    .vendas-nav-consultas .nav-pills { scrollbar-width: thin; }
+    .vendas-nav-consultas .consulta-pill {
+        border: 1px solid #e2e8f0; background: #fff; color: var(--dp-slate);
+        border-radius: var(--dp-radius); padding: .5rem .9rem; min-width: 170px;
+        font-size: .8rem; line-height: 1.25; text-align: left; transition: all .15s ease;
+    }
+    .vendas-nav-consultas .consulta-pill:hover { border-color: #2b9e82; background: var(--dp-teal-light); }
+    .vendas-nav-consultas .consulta-pill.active { background: #2b9e82 !important; border-color: #2b9e82; color: #fff; }
+    .vendas-nav-consultas .consulta-pill.active .badge { background: rgba(255,255,255,.85) !important; }
+    .consulta-header { background: var(--dp-teal-light); border-radius: var(--dp-radius); padding: .75rem 1.1rem; }
+    /* ── Linhas de item no modal de venda ── */
+    .item-venda-linha { border: 1px solid #e2e8f0; border-radius: var(--dp-radius); padding: .9rem; margin-bottom: .75rem; background: #fbfdfc; }
+    .item-venda-linha .linha-subtotal { font-size: .8rem; font-weight: 700; color: #2b9e82; }
     .dp-table { font-size: 0.83rem; }
     .dp-table thead th { background: var(--dp-teal-light) !important; color: var(--dp-teal-dark) !important; font-weight: 700; border-bottom: 2px solid var(--dp-teal-mid) !important; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .badge.bg-secondary { background: #7a8fa0 !important; font-size: 0.7rem; }
@@ -542,80 +556,164 @@
                                 <i class="bi bi-plus-lg me-1"></i>Adicionar
                             </button>
                         </div>
-                        <div class="vendas-lista-scroll" style="max-height: 480px; overflow-y: auto;">
-                            {% set todas_vendas = (vendas_pagas|merge(vendas_pendentes)|merge(vendas_carrinho|default([]))) %}
-                            {% for v in todas_vendas %}
-                                {% set status = v.status %}
-                                <div class="card shadow-sm mb-2 rounded-4 border-start border-5 venda-card
-                                    {% if status == 'Paga' or status == 'Aberta' %}border-success
-                                    {% elseif status == 'Pendente' %}border-warning
-                                    {% elseif status == 'Carrinho' %}border-info
-                                    {% else %}border-secondary{% endif %}">
-                                    <div class="card-body py-2">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div class="flex-grow-1 pe-3">
-                                                <p class="mb-2 fw-bold">
-                                                    Venda #{{ v.id }}
-                                                    {% if status == 'Carrinho' %}
-                                                        <span class="badge bg-info text-dark ms-2"><i class="bi bi-cart-check me-1"></i>Aguardando Finalização no PDV</span>
-                                                    {% endif %}
-                                                    <small class="ms-3 fw-normal">Pagamento via:
-                                                        {% if v.metodo_pagamento %}{{ v.metodo_pagamento|metodoPagamento|raw }}{% else %}<span class="badge bg-warning text-dark">Pendente</span>{% endif %}
-                                                    </small>
-                                                </p>
-                                                <p class="mt-2 mb-0"></p>
-                                                <div class="border rounded-3 p-2 bg-light">
-                                                    {% if vendas_items[v.id] is defined %}
-                                                        {% for vitem in vendas_items[v.id] %}
-                                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                                <div class="text-truncate">
-                                                                    <span class="fw-semibold">{{ vitem.item }}</span>
-                                                                    <small class="text-muted d-block">{{ vitem.quantidade }} × R$ {{ vitem.valor|number_format(2, ',', '.') }}</small>
-                                                                </div>
-                                                                <div class="text-end fw-semibold">R$ {{ vitem.subtotal|number_format(2, ',', '.') }}</div>
-                                                            </div>
-                                                        {% else %}
-                                                            <p class="text-muted mb-0">Nenhum item na venda.</p>
-                                                        {% endfor %}
+                        {# ── NAVEGAÇÃO POR ATENDIMENTO ─────────────────────────────
+                           vendas_por_consulta vem do DashboardController já
+                           agrupado: chave = consulta_id (0 = sem atendimento). #}
+                        {% set grupos = vendas_por_consulta|default({}) %}
+
+                        {% if grupos|length > 0 %}
+                            <div class="vendas-nav-consultas mb-3">
+                                <ul class="nav nav-pills flex-nowrap overflow-auto pb-2" id="nav-consultas-vendas" role="tablist">
+                                    {% for chave, grupo in grupos %}
+                                        <li class="nav-item flex-shrink-0 me-2" role="presentation">
+                                            <button class="nav-link consulta-pill {% if loop.first %}active{% endif %}"
+                                                    id="pill-consulta-{{ chave }}"
+                                                    data-bs-toggle="pill"
+                                                    data-bs-target="#pane-consulta-{{ chave }}"
+                                                    data-consulta-id="{{ grupo.consulta_id|default('') }}"
+                                                    type="button" role="tab">
+                                                {% if grupo.consulta_id %}
+                                                    <span class="d-block text-start">
+                                                        <strong>{{ grupo.tipo|default('Atendimento') }}</strong>
+                                                        <small class="d-block opacity-75">
+                                                            {{ grupo.data ? grupo.data|date('d/m/Y') : '—' }}
+                                                            {% if grupo.hora %} · {{ grupo.hora|date('H:i') }}{% endif %}
+                                                        </small>
+                                                    </span>
+                                                {% else %}
+                                                    <span class="d-block text-start">
+                                                        <strong>Sem atendimento</strong>
+                                                        <small class="d-block opacity-75">Lançamentos avulsos</small>
+                                                    </span>
+                                                {% endif %}
+                                                <span class="badge rounded-pill bg-light text-dark mt-1">
+                                                    {{ grupo.qtd_vendas }} venda{{ grupo.qtd_vendas > 1 ? 's' : '' }}
+                                                    · R$ {{ grupo.total|number_format(2, ',', '.') }}
+                                                </span>
+                                            </button>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+
+                            <div class="tab-content" id="conteudo-consultas-vendas">
+                                {% for chave, grupo in grupos %}
+                                    <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
+                                         id="pane-consulta-{{ chave }}" role="tabpanel">
+
+                                        {# Cabeçalho do atendimento #}
+                                        <div class="consulta-header mb-3">
+                                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                                <div>
+                                                    {% if grupo.consulta_id %}
+                                                        <span class="fw-bold">
+                                                            {{ grupo.tipo|default('Atendimento') }} #{{ grupo.consulta_id }}
+                                                        </span>
+                                                        <small class="text-muted d-block">
+                                                            {{ grupo.data ? grupo.data|date('d/m/Y') : 'Data não informada' }}
+                                                            {% if grupo.hora %} às {{ grupo.hora|date('H:i') }}{% endif %}
+                                                            {% if grupo.veterinario %} · Dr(a). {{ grupo.veterinario }}{% endif %}
+                                                        </small>
+                                                    {% else %}
+                                                        <span class="fw-bold">Lançamentos sem atendimento vinculado</span>
+                                                        <small class="text-muted d-block">
+                                                            Vendas avulsas ou anteriores à vinculação por consulta
+                                                        </small>
                                                     {% endif %}
                                                 </div>
-                                            </div>
-                                            <div class="text-end" style="min-width: 140px;">
-                                                <p class="mb-1 text-muted small">Total</p>
-                                                <p class="mb-2 fw-bold fs-6 text-success">R$ {{ v.total|number_format(2, ',', '.') }}</p>
-                                                <div class="d-flex justify-content-end gap-1">
-                                                    <button type="button" class="btn btn-sm btn-primary btn-editar-venda"
-                                                            data-id="{{ v.id }}" data-valor="{{ v.total }}"
-                                                            data-metodo="{{ v.metodo_pagamento|default('') }}"
-                                                            data-status="{{ v.status }}"
-                                                            data-bs-toggle="modal" data-bs-target="#modalEditarVenda">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                    {% if v.status in ['Carrinho', 'carrinho', 'Aberta'] %}
-                                                    <button type="button"
-                                                            class="btn btn-sm btn-success btn-lancar-pdv"
-                                                            data-id="{{ v.id }}"
-                                                            title="Abrir esta venda no PDV para finalização">
-                                                        <i class="bi bi-cash-stack"></i>
-                                                    </button>
-                                                    {% endif %}
-                                                    <form method="POST" action="{{ path('clinica_inativar_venda', { petId: pet.id, id: v.id }) }}">
-                                                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-slash-circle"></i></button>
-                                                    </form>
+                                                <div class="text-end">
+                                                    <small class="text-muted d-block">Subtotal do atendimento</small>
+                                                    <span class="fw-bold fs-6 text-success">
+                                                        R$ {{ grupo.total|number_format(2, ',', '.') }}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <div class="vendas-lista-scroll" style="max-height: 420px; overflow-y: auto;">
+                                            {% for v in grupo.vendas %}
+                                                {% set status = v.status %}
+                                                <div class="card shadow-sm mb-2 rounded-4 border-start border-5 venda-card
+                                                    {% if status == 'Paga' or status == 'Aberta' %}border-success
+                                                    {% elseif status == 'Pendente' %}border-warning
+                                                    {% elseif status == 'Carrinho' %}border-info
+                                                    {% else %}border-secondary{% endif %}">
+                                                    <div class="card-body py-2">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="flex-grow-1 pe-3">
+                                                                <p class="mb-2 fw-bold">
+                                                                    Venda #{{ v.id }}
+                                                                    <small class="text-muted fw-normal ms-2">
+                                                                        {{ v.data ? v.data|date('d/m/Y H:i') : '' }}
+                                                                    </small>
+                                                                    {% if status == 'Carrinho' or status == 'Aberta' %}
+                                                                        <span class="badge bg-info text-dark ms-2">
+                                                                            <i class="bi bi-cart-check me-1"></i>Aguardando Finalização no PDV
+                                                                        </span>
+                                                                    {% endif %}
+                                                                    <small class="ms-3 fw-normal">Pagamento via:
+                                                                        {% if v.metodo_pagamento %}{{ v.metodo_pagamento|metodoPagamento|raw }}{% else %}<span class="badge bg-warning text-dark">Pendente</span>{% endif %}
+                                                                    </small>
+                                                                </p>
+                                                                <div class="border rounded-3 p-2 bg-light">
+                                                                    {% for vitem in v.itens|default([]) %}
+                                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                            <div class="text-truncate">
+                                                                                <span class="fw-semibold">{{ vitem.item }}</span>
+                                                                                <small class="text-muted d-block">
+                                                                                    {{ vitem.quantidade }} × R$ {{ vitem.valor|number_format(2, ',', '.') }}
+                                                                                    {% if vitem.desconto > 0 %}
+                                                                                        <span class="text-danger">− R$ {{ vitem.desconto|number_format(2, ',', '.') }}</span>
+                                                                                    {% endif %}
+                                                                                </small>
+                                                                            </div>
+                                                                            <div class="text-end fw-semibold">R$ {{ vitem.subtotal|number_format(2, ',', '.') }}</div>
+                                                                        </div>
+                                                                    {% else %}
+                                                                        <p class="text-muted mb-0">Nenhum item na venda.</p>
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-end" style="min-width: 140px;">
+                                                                <p class="mb-1 text-muted small">Total</p>
+                                                                <p class="mb-2 fw-bold fs-6 text-success">R$ {{ v.total|number_format(2, ',', '.') }}</p>
+                                                                <div class="d-flex justify-content-end gap-1">
+                                                                    <button type="button" class="btn btn-sm btn-primary btn-editar-venda"
+                                                                            data-id="{{ v.id }}" data-valor="{{ v.total }}"
+                                                                            data-metodo="{{ v.metodo_pagamento|default('') }}"
+                                                                            data-status="{{ v.status }}"
+                                                                            data-bs-toggle="modal" data-bs-target="#modalEditarVenda">
+                                                                        <i class="fas fa-edit"></i>
+                                                                    </button>
+                                                                    {% if v.status in ['Carrinho', 'carrinho', 'Aberta'] %}
+                                                                    <button type="button"
+                                                                            class="btn btn-sm btn-success btn-lancar-pdv"
+                                                                            data-id="{{ v.id }}"
+                                                                            title="Abrir esta venda no PDV para finalização">
+                                                                        <i class="bi bi-cash-stack"></i>
+                                                                    </button>
+                                                                    {% endif %}
+                                                                    <button type="button" class="btn btn-sm btn-danger btn-inativar-venda"
+                                                                            data-id="{{ v.id }}" title="Inativar venda">
+                                                                        <i class="bi bi-slash-circle"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
                                     </div>
-                                </div>
-                            {% else %}
-                                <p class="text-muted text-center mt-3">Nenhuma venda registrada.</p>
-                            {% endfor %}
-                        </div>
-                        {% set total_vendas = 0 %}
-                        {% for v in todas_vendas %}{% set total_vendas = total_vendas + (v.total ?? v.valorFinal ?? 0) %}{% endfor %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center mt-3">Nenhuma venda registrada.</p>
+                        {% endif %}
+
                         <div class="vendas-total-bar">
-                            <span>Total geral</span>
-                            <span class="total-val">R$ {{ total_vendas|number_format(2, ',', '.') }}</span>
+                            <span>Total geral (todos os atendimentos)</span>
+                            <span class="total-val">R$ {{ total_vendas_geral|default(0)|number_format(2, ',', '.') }}</span>
                         </div>
 
                         {# MODAL EDITAR VENDA #}
@@ -635,7 +733,6 @@
                                         <button type="submit" class="btn btn-primary">Salvar</button>
                                         <button type="button" class="btn btn-secondary" id="btn-cancelar-editar">Cancelar</button>
                                     </div>
-                                    <button type="button" class="btn btn-primary add-servico"><i class="bi bi-plus-lg"></i> Adicionar novo serviço</button>
                                 </form>
                             </div>
                         </div>
@@ -732,7 +829,7 @@
 
 {# ══ MODAL ADICIONAR SERVIÇO ══ #}
 <div class="modal fade" id="modalAdicionarServico" tabindex="-1" aria-labelledby="modalAdicionarServicoLabel" aria-hidden="false">
-<div class="modal-dialog modal-lg modal-dialog-centered">
+<div class="modal-dialog modal-xl modal-dialog-centered">
 <form class="modal-content" id="form-novo-servico" method="post" action="{{ path('clinica_concluir_venda', {'petId': pet.id}) }}">
     <div class="modal-header bg-primary text-white">
         <div class="d-flex flex-column w-100">
@@ -744,16 +841,27 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
     </div>
     <div class="modal-body">
+        {# ── Atendimento ao qual a venda pertence ─────────────────────────── #}
         <div class="mb-3">
-            <label for="servico-descricao" class="form-label">Descrição do Serviço*</label>
-            <select class="form-select" id="servico-descricao-1" name="descricao[]" required>
-                <option value="">Selecione um serviço...</option>
-                {% for servico in servicos_clinica %}
-                    <option value="{{ servico.id }}" data-valor="{{ servico.valor }}">{{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}</option>
+            <label for="venda-consulta" class="form-label">Atendimento vinculado</label>
+            <select class="form-select" id="venda-consulta" name="consulta_id">
+                <option value="">Sem atendimento (lançamento avulso)</option>
+                {% for c in consultas|default([]) %}
+                    <option value="{{ c.id }}" {% if loop.first %}selected{% endif %}>
+                        {{ c.tipo|default('Consulta') }} — {{ c.data ? c.data|date('d/m/Y') : '' }}{% if c.hora %} {{ c.hora|date('H:i') }}{% endif %}{% if c.veterinario_nome %} · Dr(a). {{ c.veterinario_nome }}{% endif %}
+                    </option>
                 {% endfor %}
             </select>
+            <small class="text-muted">As vendas ficam agrupadas por atendimento na aba Venda.</small>
         </div>
-        <div class="mb-3"><label for="servico-desconto" class="form-label">Desconto (R$)</label><input type="number" step="0.01" class="form-control" id="servico-desconto" name="desconto[]" value="0"></div>
+
+        {# ── Itens da venda ────────────────────────────────────────────────
+           IMPORTANTE: cada linha usa nomes INDEXADOS
+           itens[i][ref] / itens[i][quantidade] / itens[i][desconto].
+           Antes eram três arrays paralelos (descricao[], desconto[],
+           quantidade_diarias[]) casados por índice no PHP — e como o campo de
+           quantidade só existia para internação, o array chegava compactado e
+           a quantidade era aplicada ao item errado. #}
         <div id="servicos-container"></div>
         <div class="mb-3">
             <label for="servico-metodo" class="form-label">Método de Pagamento*</label>
@@ -1213,7 +1321,6 @@ $(document).ready(function() {
         'conteudo-input': quillConteudo
     });
     const $formNovoServico = $('#form-novo-servico');
-    const $selectServico = $('#servico-descricao-1');
     const $inputValor = $('#servico-valor');
     const servicosMap = {}; 
     
@@ -1238,8 +1345,8 @@ $(document).ready(function() {
                     if (window.Notify && Notify.toast) {
                         Notify.toast(data.mensagem, "success");
                     }
-                    $('#servico-descricao-1').val('').trigger('change');
                     $('#servicos-container').empty();
+                    $('#total-servicos').text('0,00');
                     modalAdicionarServico.hide();
                     setTimeout(() => location.reload(), 800);
                 } else {
@@ -1264,30 +1371,15 @@ $(document).ready(function() {
             });
     });
     $btnAdicionarServico.on('click', function() {
-        $('#servico-descricao-1').val('').trigger('change');
         $('#servicos-container').empty();
         $('#cartao-opcoes').addClass('d-none');
         $('#total-servicos').text('0,00');
+        adicionarLinhaItem(); // o modal sempre abre com uma linha pronta
         if (!$('#modalAdicionarServico').hasClass('show')) {
             modalAdicionarServico.show();
         }
     });
-    $(document).on('change', '#servico-descricao', function() {
-        const nomeServico = $(this).val();
-        $(document).next('input[name="valor[]"]').val($(this).find('option:selected').data('valor'));
-    });
-    $('#servico-descricao-1').select2({
-        dropdownParent: $('#modalAdicionarServico .modal-content'),
-        placeholder: "Selecione ou pesquise um serviço...",
-        allowClear: true,
-        width: '100%',
-        language: {
-            noResults: function() {
-                return "Nenhum serviço encontrado";
-            }
-        }
-    });
-    $(document).on('focus', '.servico-item select', function() {
+    $(document).on('focus', '.item-venda-linha select', function() {
         if (!$(this).data('select2')) {
             $(this).select2({
                 placeholder: "Selecione ou pesquise um serviço...",
@@ -1297,31 +1389,29 @@ $(document).ready(function() {
             });
         }
     });
-    $(document).on('change', 'select[name="descricao[]"]', function() {
-        const $select = $(this);
-        const servicoSelecionado = $select.find('option:selected').text().toLowerCase();
-        const valorBase = parseFloat($select.find('option:selected').data('valor')) || 0;
-        $select.closest('.servico-item, .modal-body').find('.diarias-container').remove();
-        $select.closest('.servico-item, .modal-body').find('.preview-total').remove();
-        const index = $select.attr('id').replace(/\D/g, '') || '1';
-        if (servicoSelecionado.includes('internação')) {
-            const htmlDiarias = `<div class="diarias-container mb-3"><label for="quantidade-diarias-${index}" class="form-label">Quantidade de Diárias</label><input type="number" class="form-control quantidade-diarias" id="quantidade-diarias-${index}" name="quantidade_diarias[]" min="1" value="1" data-valor-base="${valorBase}"><small class="text-muted">O valor total será calculado automaticamente (valor × diárias).</small><input type="hidden" id="valor-total-${index}" name="valor_calculado[]" value="${valorBase.toFixed(2)}"><div id="preview-total-${index}" class="preview-total mt-2 fw-bold text-primary"></div></div>`;
-            $select.closest('.mb-3').after(htmlDiarias);
-            atualizarTotal($(`#quantidade-diarias-${index}`));
-        }
+    // ── Rótulo dinâmico da quantidade ────────────────────────────────────
+    // A quantidade agora existe em TODA linha (name="itens[i][quantidade]").
+    // O nome do serviço só muda o RÓTULO — nunca a existência do campo.
+    // Era exatamente isso que quebrava: o input só nascia para internação,
+    // então o array quantidade_diarias[] chegava compactado no PHP e a
+    // quantidade caía no item errado.
+    $(document).on('change', 'select.select-servico', function() {
+        const $linha = $(this).closest('.item-venda-linha');
+        const nome = $(this).find('option:selected').text().toLowerCase();
+        const ehInternacao = nome.includes('internação') || nome.includes('internacao') || nome.includes('diária') || nome.includes('diaria');
+
+        $linha.find('.label-quantidade').text(ehInternacao ? 'Quantidade de Diárias' : 'Quantidade');
+        $linha.find('.ajuda-quantidade').text(
+            ehInternacao ? 'O total desta linha = valor da diária × nº de diárias.' : ''
+        );
+
+        recalcularLinha($linha);
     });
 
-    function atualizarTotal($input) {
-        const qtd = parseInt($input.val()) || 1;
-        const valorBase = parseFloat($input.data('valor-base')) || 0;
-        const total = valorBase * qtd;
-        const id = $input.attr('id').replace('quantidade-diarias-', '');
-        $(`#valor-total-${id}`).val(total.toFixed(2));
-        $(`#preview-total-${id}`).text(`💰 Total: R$ ${total.toFixed(2).replace('.', ',')}`);
-    }
-    $(document).on('input', '.quantidade-diarias', function() {
-        atualizarTotal($(this));
+    $(document).on('input change', '.qtd-item, .desconto-item', function() {
+        recalcularLinha($(this).closest('.item-venda-linha'));
     });
+
     $(".btn-editar-venda").on("click", function() {
         $("#editar-id").val($(this).data("id"));
         $("#editar-descricao").val($(this).data("descricao"));
@@ -1414,17 +1504,14 @@ $(document).ready(function() {
         document.getElementById('pdvLoadingOverlay').innerHTML = '<div class="text-center text-muted"><div class="spinner-border text-success mb-3" role="status"></div><p class="mb-0">Carregando PDV...</p></div>';
     });
     // ─────────────────────────────────────────────────────────────────────────────
-    $(".btn-inativar-venda").on("click", function() {
+    $(document).on("click", ".btn-inativar-venda", function() {
         if (!confirm("Tem certeza que deseja inativar esta venda?")) return;
-        fetch(`/clinica/pet/{{ pet.id }}/venda/${$(this).data("id")}/inativar`, {
-            method: "POST"
-        }).then(r => r.json()).then(d => {
-            if (d.status === "success") {
-                location.reload();
-            } else {
-                alert(d.mensagem || "Erro ao inativar venda.");
-            }
-        }).catch(() => alert("Erro ao inativar venda."));
+        const url = "{{ path('clinica_inativar_venda', {petId: pet.id, id: '__ID__'}) }}"
+            .replace('__ID__', $(this).data("id"));
+        // A action responde com redirect (não JSON) — basta recarregar depois.
+        fetch(url, { method: "POST" })
+            .then(() => location.reload())
+            .catch(() => alert("Erro ao inativar venda."));
     });
     $("#form-editar-venda").on("submit", function(e) {
         e.preventDefault();
@@ -1443,32 +1530,121 @@ $(document).ready(function() {
         }).catch(() => alert("Erro ao editar venda."));
     });
 });
-$(document).on("click", ".add-servico", function() {
-    let index = $(".servico-item").length + 1;
-    let servicoHtml = `
-<div class="mb-3 servico-item border rounded-3 p-3 bg-light">
-<div class="mb-3">
-<label class="form-label">Descrição do Serviço*</label>
-<select class="form-select select-servico" name="descricao[]" required id="servico-descricao-${index}">
-    <option value="">Selecione um serviço...</option>
-    {% for servico in servicos_clinica %}
-        <option value="{{ servico.id }}" data-valor="{{ servico.valor }}">
-            {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
-        </option>
-    {% endfor %}
-</select>
-</div>
-<div class="mb-3">
-<label class="form-label">Desconto (R$)</label>
-<input type="number" step="0.01" class="form-control" name="desconto[]" value="0">
-</div>
-<button type="button" class="btn btn-danger remove-servico">
-<i class="bx bx-trash"></i> Remover Serviço
-</button>
-</div>
-`;
-    $('#servicos-container').append(servicoHtml);
-    const $novoSelect = $(`#servico-descricao-${index}`);
+// ─────────────────────────────────────────────────────────────────────────────
+// LINHAS DE ITEM DA VENDA
+//
+// Cada linha carrega os SEUS próprios campos, com índice explícito:
+//   itens[i][ref]        → "S-12" (serviço) ou "P-7" (produto)
+//   itens[i][quantidade] → sempre presente, default 1
+//   itens[i][desconto]   → sempre presente, default 0
+//
+// Com nomes indexados o PHP recebe as três informações já amarradas na mesma
+// linha. Não existe mais "casar por posição", que era a origem do bug de a
+// quantidade de diárias multiplicar o produto errado.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function montarLinhaItem(index) {
+    return `
+<div class="item-venda-linha" data-index="${index}">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="fw-bold text-muted" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;">
+            Item <span class="numero-linha">${index + 1}</span>
+        </span>
+        <button type="button" class="btn btn-sm btn-outline-danger remove-servico" title="Remover item">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+    <div class="row g-2">
+        <div class="col-12 mb-2">
+            <label class="form-label">Serviço / Produto*</label>
+            <select class="form-select select-servico" name="itens[${index}][ref]" required>
+                <option value="">Selecione...</option>
+                {% for servico in servicos_clinica %}
+                    <option value="S-{{ servico.id }}" data-valor="{{ servico.valor|number_format(2, '.', '') }}">
+                        {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6">
+            <label class="form-label label-quantidade">Quantidade</label>
+            <input type="number" class="form-control qtd-item" name="itens[${index}][quantidade]" min="1" step="1" value="1">
+            <small class="text-muted ajuda-quantidade"></small>
+        </div>
+        <div class="col-6">
+            <label class="form-label">Desconto (R$)</label>
+            <input type="number" class="form-control desconto-item" name="itens[${index}][desconto]" step="0.01" min="0" value="0">
+        </div>
+    </div>
+    <div class="text-end mt-2 linha-subtotal">Subtotal: R$ 0,00</div>
+</div>`;
+}
+
+// Reindexa os names após remover uma linha do meio.
+// Sem isso, remover o item 2 de 3 deixava índices repetidos/furados.
+function reindexarLinhas() {
+    $('#servicos-container .item-venda-linha').each(function(i) {
+        $(this).attr('data-index', i);
+        $(this).find('.numero-linha').text(i + 1);
+        $(this).find('.select-servico').attr('name', `itens[${i}][ref]`);
+        $(this).find('.qtd-item').attr('name', `itens[${i}][quantidade]`);
+        $(this).find('.desconto-item').attr('name', `itens[${i}][desconto]`);
+    });
+}
+
+function recalcularLinha($linha) {
+    if (!$linha || !$linha.length) return;
+
+    const $select = $linha.find('.select-servico');
+    const valorUnit = parseFloat($select.find('option:selected').data('valor')) || 0;
+    const qtd = Math.max(1, parseInt($linha.find('.qtd-item').val(), 10) || 1);
+    const bruto = valorUnit * qtd;
+
+    // desconto nunca pode passar do valor bruto da linha
+    let desconto = parseFloat($linha.find('.desconto-item').val()) || 0;
+    if (desconto < 0) desconto = 0;
+    if (desconto > bruto) {
+        desconto = bruto;
+        $linha.find('.desconto-item').val(desconto.toFixed(2));
+    }
+
+    const subtotal = bruto - desconto;
+    $linha.find('.linha-subtotal').text(
+        `Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')}` +
+        (qtd > 1 ? ` (${qtd} × R$ ${valorUnit.toFixed(2).replace('.', ',')})` : '')
+    );
+
+    calcularTotal();
+    return subtotal;
+}
+
+function calcularTotal() {
+    let total = 0;
+
+    $('#servicos-container .item-venda-linha').each(function() {
+        const $linha = $(this);
+        const $select = $linha.find('.select-servico');
+        if (!$select.val()) return;
+
+        const valorUnit = parseFloat($select.find('option:selected').data('valor')) || 0;
+        const qtd = Math.max(1, parseInt($linha.find('.qtd-item').val(), 10) || 1);
+        const bruto = valorUnit * qtd;
+        let desconto = parseFloat($linha.find('.desconto-item').val()) || 0;
+        if (desconto < 0) desconto = 0;
+        if (desconto > bruto) desconto = bruto;
+
+        total += (bruto - desconto);
+    });
+
+    $('#total-servicos').text(total.toFixed(2).replace('.', ','));
+    return total;
+}
+
+function adicionarLinhaItem() {
+    const index = $('#servicos-container .item-venda-linha').length;
+    $('#servicos-container').append(montarLinhaItem(index));
+
+    const $novoSelect = $(`#servicos-container .item-venda-linha[data-index="${index}"] .select-servico`);
     if ($novoSelect.data('select2')) {
         $novoSelect.select2('destroy');
     }
@@ -1478,44 +1654,32 @@ $(document).on("click", ".add-servico", function() {
         allowClear: true,
         width: '100%'
     });
-});
-$(document).on("click", ".remove-servico", function() {
-    $(this).closest(".servico-item").remove();
+
     calcularTotal();
+    return $novoSelect;
+}
+
+$(document).on("click", ".add-servico", function() {
+    adicionarLinhaItem();
 });
 
-function calcularTotal() {
-    let total = 0;
-    const servicoPrincipal = $('#servico-descricao-1');
-    if (servicoPrincipal.length && servicoPrincipal.val()) {
-        let valorPrincipal = parseFloat(servicoPrincipal.find('option:selected').data('valor')) || 0;
-        const descontoPrincipal = parseFloat($('#servico-desconto').val()) || 0;
-        const diarias1 = $('#quantidade-diarias-1');
-        if (diarias1.length && diarias1.val()) {
-            const qtdDiarias = parseInt(diarias1.val()) || 1;
-            valorPrincipal = valorPrincipal * qtdDiarias;
-        }
-        total += (valorPrincipal - descontoPrincipal);
+$(document).on("click", ".remove-servico", function() {
+    const $container = $('#servicos-container');
+    $(this).closest(".item-venda-linha").remove();
+
+    // Nunca deixa o formulário sem nenhuma linha
+    if ($container.find('.item-venda-linha').length === 0) {
+        adicionarLinhaItem();
+    } else {
+        reindexarLinhas();
     }
-    $('.servico-item').each(function() {
-        const select = $(this).find('.select-servico');
-        const desconto = parseFloat($(this).find('input[name="desconto[]"]').val()) || 0;
-        if (select.val()) {
-            let valor = parseFloat(select.find('option:selected').data('valor')) || 0;
-            const diariasInput = $(this).find('.quantidade-diarias');
-            if (diariasInput.length && diariasInput.val()) {
-                const qtdDiarias = parseInt(diariasInput.val()) || 1;
-                valor = valor * qtdDiarias;
-            }
-            total += (valor - desconto);
-        }
-    });
-    $('#total-servicos').text(total.toFixed(2).replace('.', ','));
-}
-$(document).on('change input', '#servico-descricao-1, #servico-desconto, .select-servico, input[name="desconto[]"], .quantidade-diarias', function() {
+
     calcularTotal();
 });
 $('#modalAdicionarServico').on('shown.bs.modal', function() {
+    if ($('#servicos-container .item-venda-linha').length === 0) {
+        adicionarLinhaItem();
+    }
     calcularTotal();
 });
 $('.modal').on('hidden.modal.bs', function() {
@@ -1572,7 +1736,8 @@ const modalConfirmacao = new bootstrap.Modal($('#modalConfirmacao')[0]);
 let acaoConfirmacao = null;
 $('#btn-cancelar-servico').on('click', function(e) {
     e.preventDefault();
-    const temDados = $('#servico-descricao-1').val() || $('.servico-item').length > 0;
+    const temDados = $('#servicos-container .item-venda-linha .select-servico')
+        .filter(function() { return !!$(this).val(); }).length > 0;
     if (temDados) {
         acaoConfirmacao = function() {
             window.modalAdicionarServico.hide();

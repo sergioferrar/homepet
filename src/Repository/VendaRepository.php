@@ -149,6 +149,11 @@ class VendaRepository extends ServiceEntityRepository
     /**
      * Inativa (cancela) uma venda
      */
+    /**
+     * Requer o ENUM com 'Cancelada' — ver migrations/add_consulta_id_to_venda.sql.
+     * Sem isso, em sql_mode STRICT o MySQL rejeita o UPDATE
+     * ("Data truncated for column 'status'") sem que o erro chegue à tela.
+     */
     public function inativar(int $baseId, int $vendaId): bool
     {
         $sql = "UPDATE homepet_{$baseId}.venda
@@ -206,16 +211,17 @@ class VendaRepository extends ServiceEntityRepository
     public function inserirVenda(int $baseId, array $dados): int
     {
         $sql = "INSERT INTO homepet_{$baseId}.venda
-                    (estabelecimento_id, cliente, pet_id, parcelas, origem,
+                    (estabelecimento_id, cliente, pet_id, consulta_id, parcelas, origem,
                      metodo_pagamento, status, data, observacao, total)
                 VALUES
-                    (:estabelecimento_id, :cliente, :pet_id, :parcelas, :origem,
+                    (:estabelecimento_id, :cliente, :pet_id, :consulta_id, :parcelas, :origem,
                      :metodo_pagamento, :status, NOW(), :observacao, 0)";
 
         $this->conn->executeStatement($sql, [
             'estabelecimento_id' => $dados['estabelecimento_id'],
             'cliente'            => $dados['cliente'],
             'pet_id'             => $dados['pet_id'],
+            'consulta_id'        => $dados['consulta_id'] ?? null,
             'parcelas'           => $dados['parcelas'],
             'origem'             => $dados['origem'],
             'metodo_pagamento'   => $dados['metodo_pagamento'],
@@ -314,11 +320,16 @@ class VendaRepository extends ServiceEntityRepository
             $params['parcelas'] = $parcelas;
         }
 
+        // ATENÇÃO: o WHERE anterior era
+        //   ... AND estabelecimento_id = :estab AND status = 'Aberta' OR status = 'Pendente'
+        // Como AND tem precedência sobre OR, a condição virava
+        //   (id AND estab AND status='Aberta') OR (status='Pendente')
+        // ou seja: qualquer venda Pendente da tabela inteira era atualizada.
         $sql = "UPDATE venda
                 SET {$set}
                 WHERE id = :id
                   AND estabelecimento_id = :estab
-                  AND status = 'Aberta' OR status = 'Pendente'";
+                  AND status IN ('Aberta', 'Pendente')";
 
         return $this->conn->executeStatement($sql, $params) > 0;
     }
@@ -355,50 +366,108 @@ class VendaRepository extends ServiceEntityRepository
      */
     public function findByPet(int $baseId, int $petId, $status = null): array
     {
-        $sqlPart = "v.status NOT IN ('Aberta', 'Cancelada')";
-        
-        if($status != null){
-            $sqlPart = "v.status = '{$status}'";
+        $params = ['estab' => $baseId, 'petId' => $petId];
+
+        if ($status !== null) {
+            $sqlPart          = 'v.status = :status';
+            $params['status'] = (string) $status;
+        } else {
+            $sqlPart = "v.status NOT IN ('Aberta', 'Cancelada')";
         }
 
-        $sql = "SELECT v.id, v.pet_id, v.total, v.data, v.status,
+        $sql = "SELECT v.id, v.pet_id, v.consulta_id, v.total, v.data, v.status,
                        v.metodo_pagamento, v.origem, v.observacao,
                        p.nome  AS pet_nome,
-                       c.nome  AS cliente_nome
+                       c.nome  AS cliente_nome,
+                       cs.data AS consulta_data,
+                       cs.hora AS consulta_hora,
+                       cs.tipo AS consulta_tipo,
+                       vt.nome AS consulta_veterinario
                 FROM homepet_{$baseId}.venda v
-                LEFT JOIN homepet_{$baseId}.pet    p ON p.id = v.pet_id
-                LEFT JOIN homepet_{$baseId}.cliente c ON c.id = p.dono_id
+                LEFT JOIN homepet_{$baseId}.pet     p  ON p.id  = v.pet_id
+                LEFT JOIN homepet_{$baseId}.cliente c  ON c.id  = p.dono_id
+                LEFT JOIN homepet_{$baseId}.consulta cs ON cs.id = v.consulta_id
+                LEFT JOIN homepet_{$baseId}.veterinario vt ON vt.id = cs.veterinario_id
                 WHERE v.estabelecimento_id = :estab
                   AND v.pet_id = :petId
                   AND {$sqlPart}
-                ORDER BY v.data DESC";
+                ORDER BY v.data DESC, v.id DESC";
 
-        return $this->conn->fetchAllAssociative($sql, [
-            'estab' => $baseId,
-            'petId' => $petId,
-        ]);
+        return $this->conn->fetchAllAssociative($sql, $params);
     }
 
     /**
-     * Busca vendas de um pet com LEFT JOIN em pet e cliente
+     * Busca vendas de um pet por status.
+     *
+     * Antes: status era concatenado direto no SQL (injeção) e o Result era
+     * usado como Statement (`$query->fetchAllAssociative($sql)`), o que só
+     * funcionava por acaso. Agora usa bind + fetchAllAssociative da Connection.
      */
     public function vendaPorStatus(int $baseId, int $petId, $status): array
     {
-        $sql = "SELECT v.id, v.pet_id, v.total, v.data, v.status,
+        return $this->findByPet($baseId, $petId, $status);
+    }
+
+    /**
+     * Vendas de um pet agrupadas por atendimento (consulta).
+     *
+     * Retorna uma lista ordenada de "grupos", cada um com os dados do
+     * atendimento e as vendas correspondentes. Vendas sem consulta_id caem
+     * no grupo especial de chave 0 ("Sem atendimento vinculado").
+     *
+     * @param string[] $statusIn Status considerados (padrão: tudo menos canceladas)
+     */
+    public function listarPorPetAgrupadoPorConsulta(
+        int $baseId,
+        int $petId,
+        array $statusIn = ['Aberta', 'Pendente', 'Paga', 'Carrinho']
+    ): array {
+        $sql = "SELECT v.id, v.pet_id, v.consulta_id, v.total, v.data, v.status,
                        v.metodo_pagamento, v.origem, v.observacao,
-                       p.nome  AS pet_nome,
-                       c.nome  AS cliente_nome
+                       cs.data AS consulta_data,
+                       cs.hora AS consulta_hora,
+                       cs.tipo AS consulta_tipo,
+                       vt.nome AS consulta_veterinario
                 FROM homepet_{$baseId}.venda v
-                LEFT JOIN homepet_{$baseId}.pet    p ON p.id = v.pet_id
-                LEFT JOIN homepet_{$baseId}.cliente c ON c.id = p.dono_id
-                WHERE v.estabelecimento_id = {$baseId}
-                  AND v.pet_id = {$petId}
-                  AND v.status = '$status'
-                ORDER BY v.data DESC";
+                LEFT JOIN homepet_{$baseId}.consulta cs   ON cs.id = v.consulta_id
+                LEFT JOIN homepet_{$baseId}.veterinario vt ON vt.id = cs.veterinario_id
+                WHERE v.estabelecimento_id = :estab
+                  AND v.pet_id = :petId
+                  AND v.status IN (:statusIn)
+                ORDER BY (v.consulta_id IS NULL) ASC,
+                         cs.data DESC, cs.hora DESC,
+                         v.data DESC, v.id DESC";
 
-        $query = $this->conn->executeQuery($sql);
+        $linhas = $this->conn->fetchAllAssociative(
+            $sql,
+            ['estab' => $baseId, 'petId' => $petId, 'statusIn' => $statusIn],
+            ['statusIn' => \Doctrine\DBAL\ArrayParameterType::STRING]
+        );
 
-        return $query->fetchAllAssociative($sql);
+        $grupos = [];
+
+        foreach ($linhas as $linha) {
+            $chave = (int) ($linha['consulta_id'] ?? 0);
+
+            if (! isset($grupos[$chave])) {
+                $grupos[$chave] = [
+                    'consulta_id'  => $chave ?: null,
+                    'data'         => $linha['consulta_data'] ?? null,
+                    'hora'         => $linha['consulta_hora'] ?? null,
+                    'tipo'         => $linha['consulta_tipo'] ?? null,
+                    'veterinario'  => $linha['consulta_veterinario'] ?? null,
+                    'vendas'       => [],
+                    'total'        => 0.0,
+                    'qtd_vendas'   => 0,
+                ];
+            }
+
+            $grupos[$chave]['vendas'][] = $linha;
+            $grupos[$chave]['total'] += (float) $linha['total'];
+            $grupos[$chave]['qtd_vendas']++;
+        }
+
+        return $grupos;
     }
 
     /**

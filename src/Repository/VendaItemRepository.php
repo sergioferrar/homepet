@@ -117,6 +117,64 @@ class VendaItemRepository extends ServiceEntityRepository
     }
 
     /**
+     * Itens de várias vendas em UMA query, indexados por venda_id.
+     *
+     * Substitui o laço `findBy(['vendaId' => $id])` dentro de foreach
+     * (N+1 queries + hidratação de entidade desnecessária) e devolve o
+     * subtotal REAL gravado no banco — que já considera o desconto.
+     *
+     * @param int[] $vendaIds
+     * @return array<int, array<int, array>>
+     */
+    public function listarPorVendas(int $baseId, array $vendaIds): array
+    {
+        $vendaIds = array_values(array_filter(array_map('intval', $vendaIds)));
+
+        if ($vendaIds === []) {
+            return [];
+        }
+
+        $sql = "SELECT vi.id, vi.venda_id, vi.tipo, vi.produto_id,
+                       vi.produto AS produto_nome,
+                       vi.quantidade, vi.valor_unitario, vi.subtotal
+                FROM homepet_{$baseId}.venda_item vi
+                INNER JOIN homepet_{$baseId}.venda v
+                        ON v.id = vi.venda_id
+                       AND v.estabelecimento_id = :estab
+                WHERE vi.venda_id IN (:ids)
+                ORDER BY vi.venda_id ASC, vi.id ASC";
+
+        $linhas = $this->conn->fetchAllAssociative(
+            $sql,
+            ['estab' => $baseId, 'ids' => $vendaIds],
+            ['ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER]
+        );
+
+        $porVenda = [];
+
+        foreach ($linhas as $linha) {
+            $vendaId    = (int) $linha['venda_id'];
+            $quantidade = (int) $linha['quantidade'];
+            $unitario   = (float) $linha['valor_unitario'];
+            $subtotal   = (float) $linha['subtotal'];
+
+            $porVenda[$vendaId][] = [
+                'id'         => (int) $linha['id'],
+                'item'       => $linha['produto_nome'] ?: 'Item sem descrição',
+                'tipo'       => $linha['tipo'],
+                'produto_id' => $linha['produto_id'] !== null ? (int) $linha['produto_id'] : null,
+                'quantidade' => $quantidade,
+                'valor'      => $unitario,
+                // subtotal vem do banco: unitário × qtd − desconto da linha
+                'subtotal'   => $subtotal,
+                'desconto'   => round(($unitario * $quantidade) - $subtotal, 2),
+            ];
+        }
+
+        return $porVenda;
+    }
+
+    /**
      * Insere um item de venda (serviço ou produto) com isolamento por tenant.
      */
     public function inserirItem(int $baseId, array $dados): void

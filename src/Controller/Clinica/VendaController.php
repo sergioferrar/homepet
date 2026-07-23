@@ -53,6 +53,41 @@ class VendaController extends DefaultController
             $origem = $request->get('origem', 'clinica');
             $status = ($metodoPagamento === 'pendente') ? 'Pendente' : 'Aberta';
 
+            $consultaIdRaw = $request->get('consulta_id');
+            $consultaId = ($consultaIdRaw !== null && $consultaIdRaw !== '')
+                ? (int) $consultaIdRaw
+                : null;
+
+            // Valida que a consulta pertence a este pet/estabelecimento antes de vincular
+            if ($consultaId !== null) {
+                $consultaValida = $conn->fetchOne(
+                    'SELECT id FROM consulta
+                     WHERE id = :id AND pet_id = :pet AND estabelecimento_id = :estab
+                     LIMIT 1',
+                    ['id' => $consultaId, 'pet' => (int) $petIdFromRequest, 'estab' => $baseId]
+                );
+
+                if (!$consultaValida) {
+                    return $this->json([
+                        'status'   => 'error',
+                        'mensagem' => 'Atendimento informado não pertence a este pet.',
+                    ], 422);
+                }
+            }
+
+            // ── Normaliza os itens ANTES de abrir a transação ─────────────────
+            // Cada linha do formulário vira uma entrada própria com sua
+            // quantidade e seu desconto. É isso que corrige o bug de a
+            // quantidade de diárias "vazar" para os outros itens da venda.
+            $linhas = $this->normalizarItens($request);
+
+            if ($linhas === []) {
+                return $this->json([
+                    'status'   => 'error',
+                    'mensagem' => 'Nenhum item informado para a venda.',
+                ], 422);
+            }
+
             // ── Transação atômica — abre ANTES de qualquer escrita ────────────
             $conn->beginTransaction();
 
@@ -61,6 +96,7 @@ class VendaController extends DefaultController
                 'estabelecimento_id' => $baseId,
                 'cliente'            => $pet['dono_nome'] ?? 'Consumidor Final',
                 'pet_id'             => $petIdFromRequest,
+                'consulta_id'        => $consultaId,
                 'parcelas'           => $request->get('parcelas', 1),
                 'origem'             => $origem,
                 'metodo_pagamento'   => $metodoPagamento,
@@ -69,25 +105,16 @@ class VendaController extends DefaultController
             ]);
 
             // 2️⃣ Processa itens via DBAL
-            $descricoes = (array) $request->get('descricao', []);
-            $descontos = (array) $request->get('desconto', []);
-            $quantidades = (array) $request->get('quantidade_diarias', []);
             $valorTotal = 0.0;
+            $itensGravados = 0;
 
-            foreach ($descricoes as $i => $itemId) {
-                $tipo = 'servico';
-                $realId = $itemId;
-
-                if (str_starts_with((string) $itemId, 'S-')) {
-                    $tipo = 'servico';
-                    $realId = substr($itemId, 2);
-                } elseif (str_starts_with((string) $itemId, 'P-')) {
-                    $tipo = 'produto';
-                    $realId = substr($itemId, 2);
-                }
+            foreach ($linhas as $linha) {
+                $tipo   = $linha['tipo'];
+                $realId = $linha['id'];
 
                 $nome = 'Item';
                 $valorUnitario = 0.0;
+                $produto = null;
 
                 if ($tipo === 'servico') {
                     $servico = $servicoRepo->listaServicoPorId($baseId, $realId);
@@ -111,9 +138,12 @@ class VendaController extends DefaultController
                     $valorUnitario = (float) $produto['preco_venda'];
                 }
 
-                $quantidade = (int) ($quantidades[$i] ?? 1);
-                $desconto = (float) ($descontos[$i] ?? 0);
-                $valorItem = ($valorUnitario * $quantidade) - $desconto;
+                // Quantidade e desconto SÃO DESTA LINHA — nunca herdados de outra
+                $quantidade = max(1, (int) $linha['quantidade']);
+                $bruto      = $valorUnitario * $quantidade;
+                // desconto nunca pode deixar o item negativo
+                $desconto   = min(max(0.0, (float) $linha['desconto']), $bruto);
+                $valorItem  = round($bruto - $desconto, 2);
 
                 $vendaItemRepo->inserirItem($baseId, [
                     'venda_id'       => $vendaId,
@@ -126,6 +156,7 @@ class VendaController extends DefaultController
                 ]);
 
                 $valorTotal += $valorItem;
+                $itensGravados++;
 
                 // Baixa de estoque + movimentação (apenas para produtos físicos)
                 if ($tipo === 'produto') {
@@ -160,6 +191,18 @@ class VendaController extends DefaultController
                 }
             }
 
+            // Se nenhum item pôde ser resolvido, não deixa venda "fantasma" de R$ 0
+            if ($itensGravados === 0) {
+                $conn->rollBack();
+
+                return $this->json([
+                    'status'   => 'error',
+                    'mensagem' => 'Nenhum dos itens informados foi encontrado no cadastro.',
+                ], 422);
+            }
+
+            $valorTotal = round($valorTotal, 2);
+
             // 3️⃣ Atualiza total da venda
             $vendaRepo->atualizarTotal($baseId, $vendaId, $valorTotal);
 
@@ -193,24 +236,168 @@ class VendaController extends DefaultController
             : 'Venda adicionada ao carrinho! Finalize no PDV.';
 
             return $this->json([
-                'status' => 'success',
-                'mensagem' => $mensagem,
-                'venda_id' => $vendaId,
+                'status'      => 'success',
+                'mensagem'    => $mensagem,
+                'venda_id'    => $vendaId,
+                'consulta_id' => $consultaId,
+                'total'       => $valorTotal,
+                'itens'       => $itensGravados,
             ]);
 
         } catch (\Throwable $e) {
             if ($conn->isTransactionActive()) {
                 $conn->rollBack();
             }
+            // Contexto suficiente para achar a venda problemática no log
             $this->logger->error('Erro ao concluir venda', [
-                'erro' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'erro'        => $e->getMessage(),
+                'excecao'     => get_class($e),
+                'arquivo'     => $e->getFile() . ':' . $e->getLine(),
+                'base_id'     => $baseId,
+                'pet_id'      => $request->get('pet_id'),
+                'consulta_id' => $request->get('consulta_id'),
+                'payload'     => $request->request->all(),
+                'trace'       => $e->getTraceAsString(),
             ]);
             return $this->json([
                 'status' => 'error',
                 'mensagem' => 'Erro ao registrar venda: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Normaliza os itens enviados pelo formulário em uma lista fechada de linhas:
+     *
+     *   [['tipo' => 'servico', 'id' => 12, 'quantidade' => 3, 'desconto' => 0.0], ...]
+     *
+     * ── Por que este método existe ────────────────────────────────────────────
+     * O formulário antigo enviava três arrays paralelos: descricao[], desconto[]
+     * e quantidade_diarias[]. O backend casava os três pelo índice numérico
+     * ($quantidades[$i]). Só que o input de quantidade só era criado para
+     * serviços de internação — então o array de quantidades vinha COMPACTADO.
+     *
+     *   Linha 0: Produto      R$ 45  → sem input de quantidade
+     *   Linha 1: Internação   R$ 80  → quantidade_diarias[0] = 3
+     *
+     * Resultado: o backend lia $quantidades[0] = 3 e aplicava no PRODUTO
+     * (45 × 3 = 135), enquanto a internação caía no default 1 (80 × 1).
+     * Exatamente o sintoma relatado.
+     *
+     * Agora o formato preferido é indexado — `itens[0][ref]`, `itens[0][quantidade]`,
+     * `itens[0][desconto]` — em que a quantidade está fisicamente amarrada à
+     * linha, não à posição num array separado. O formato antigo continua
+     * aceito, mas quantidade_diarias[] só é usado quando a contagem bate com
+     * descricao[]; caso contrário assume 1 e registra um alerta no log, em vez
+     * de multiplicar o item errado silenciosamente.
+     *
+     * @return array<int, array{tipo: string, id: int, quantidade: int, desconto: float}>
+     */
+    private function normalizarItens(Request $request): array
+    {
+        $linhas = [];
+
+        // ── Formato novo: itens[i][ref|quantidade|desconto] ───────────────────
+        $itens = $request->get('itens');
+
+        if (is_array($itens) && $itens !== []) {
+            foreach ($itens as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+
+                $ref = trim((string) ($item['ref'] ?? $item['descricao'] ?? ''));
+                if ($ref === '') {
+                    continue;
+                }
+
+                $resolvido = $this->resolverReferencia($ref);
+                if ($resolvido === null) {
+                    continue;
+                }
+
+                $linhas[] = [
+                    'tipo'       => $resolvido['tipo'],
+                    'id'         => $resolvido['id'],
+                    'quantidade' => max(1, (int) ($item['quantidade'] ?? 1)),
+                    'desconto'   => max(0.0, (float) str_replace(',', '.', (string) ($item['desconto'] ?? 0))),
+                ];
+            }
+
+            return $linhas;
+        }
+
+        // ── Formato legado: descricao[] + desconto[] (+ quantidade[]) ─────────
+        $descricoes = array_values((array) $request->get('descricao', []));
+        $descontos  = array_values((array) $request->get('desconto', []));
+        $quantidades = array_values((array) $request->get('quantidade', []));
+        $diarias     = array_values((array) $request->get('quantidade_diarias', []));
+
+        // quantidade_diarias[] só é confiável se tiver uma entrada por linha
+        $usarDiarias = $quantidades === []
+            && $diarias !== []
+            && count($diarias) === count($descricoes);
+
+        if ($quantidades === [] && $diarias !== [] && !$usarDiarias) {
+            $this->logger->warning(
+                'Venda clínica: quantidade_diarias[] desalinhado com descricao[] — quantidades ignoradas.',
+                ['descricoes' => count($descricoes), 'diarias' => count($diarias)]
+            );
+        }
+
+        foreach ($descricoes as $i => $ref) {
+            $ref = trim((string) $ref);
+            if ($ref === '') {
+                continue;
+            }
+
+            $resolvido = $this->resolverReferencia($ref);
+            if ($resolvido === null) {
+                continue;
+            }
+
+            if ($usarDiarias) {
+                $quantidade = (int) ($diarias[$i] ?? 1);
+            } else {
+                $quantidade = (int) ($quantidades[$i] ?? 1);
+            }
+
+            $linhas[] = [
+                'tipo'       => $resolvido['tipo'],
+                'id'         => $resolvido['id'],
+                'quantidade' => max(1, $quantidade),
+                'desconto'   => max(0.0, (float) str_replace(',', '.', (string) ($descontos[$i] ?? 0))),
+            ];
+        }
+
+        return $linhas;
+    }
+
+    /**
+     * Interpreta a referência de um item: "S-12" (serviço), "P-7" (produto)
+     * ou apenas "12" (serviço, formato legado do select da ficha).
+     *
+     * @return array{tipo: string, id: int}|null
+     */
+    private function resolverReferencia(string $ref): ?array
+    {
+        if (str_starts_with($ref, 'S-')) {
+            $tipo = 'servico';
+            $id   = substr($ref, 2);
+        } elseif (str_starts_with($ref, 'P-')) {
+            $tipo = 'produto';
+            $id   = substr($ref, 2);
+        } else {
+            // Sem prefixo = serviço (comportamento histórico do select da ficha)
+            $tipo = 'servico';
+            $id   = $ref;
+        }
+
+        if (!ctype_digit((string) $id) || (int) $id <= 0) {
+            return null;
+        }
+
+        return ['tipo' => $tipo, 'id' => (int) $id];
     }
 
     /**

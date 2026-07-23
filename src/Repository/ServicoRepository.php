@@ -26,12 +26,20 @@ class ServicoRepository extends ServiceEntityRepository
 
     public function listaServicoPorId($baseId, $idServico)
     {
-        $sql = "SELECT id, nome, descricao, valor 
+        // Connection::query() + Result::fetch() não existem mais no DBAL 3
+        // (fatal "Call to undefined method Doctrine\DBAL\Result::fetch()"),
+        // e o id vinha concatenado direto na query (injeção).
+        $sql = "SELECT id, nome, descricao, valor
             FROM homepet_{$baseId}.servico
-            WHERE estabelecimento_id = '{$baseId}' AND id = {$idServico}";
+            WHERE estabelecimento_id = :estab AND id = :id
+            LIMIT 1";
 
-        $query = $this->conn->query($sql);
-        return $query->fetch();
+        $row = $this->conn->fetchAssociative($sql, [
+            'estab' => $baseId,
+            'id'    => (int) $idServico,
+        ]);
+
+        return $row ?: null;
     }
 
     public function findAllService($baseId, $tipo = null): array

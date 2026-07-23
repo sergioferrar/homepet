@@ -186,16 +186,37 @@ class DashboardController extends DefaultController
         $vendasPagas = $vendasRepo->findByPet($baseId, $pet['id'], 'Paga');
         $vendasPendentes = $vendasRepo->vendaPorStatus($baseId, $pet['id'], 'Pendente');
         $vendasCarrinho = $vendasRepo->vendaPorStatus($baseId, $pet['id'], 'Aberta');
-        // $vendasPendentes = $vendasRepo->findBy([
-        //     'estabelecimentoId' => $baseId,
-        //     'petId'             => $pet['id'],
-        //     'status'            => 'Pendente',
-        // ]);
-        // $vendasCarrinho = $vendasRepo->findBy([
-        //     'estabelecimentoId' => $baseId,
-        //     'petId'             => $pet['id'],
-        //     'status'            => 'Aberta',
-        // ]);
+
+        // --- VENDAS AGRUPADAS POR ATENDIMENTO ---
+        // Uma query traz todas as vendas do pet já separadas por consulta;
+        // outra traz os itens de todas elas de uma vez (sem N+1).
+        $vendasPorConsulta = $vendasRepo->listarPorPetAgrupadoPorConsulta($baseId, $pet['id']);
+
+        $todosVendaIds = [];
+        foreach ($vendasPorConsulta as $grupo) {
+            foreach ($grupo['vendas'] as $venda) {
+                $todosVendaIds[] = (int) $venda['id'];
+            }
+        }
+
+        $itensPorVenda = $vendaItemRepo->listarPorVendas($baseId, $todosVendaIds);
+
+        // Enriquece cada venda com seus itens e recalcula o total do grupo
+        // a partir dos subtotais gravados (evita divergência com venda.total).
+        foreach ($vendasPorConsulta as $chave => $grupo) {
+            $totalGrupo = 0.0;
+
+            foreach ($grupo['vendas'] as $i => $venda) {
+                $itens = $itensPorVenda[(int) $venda['id']] ?? [];
+
+                $vendasPorConsulta[$chave]['vendas'][$i]['itens'] = $itens;
+                $vendasPorConsulta[$chave]['vendas'][$i]['qtd_itens'] = count($itens);
+
+                $totalGrupo += (float) $venda['total'];
+            }
+
+            $vendasPorConsulta[$chave]['total'] = round($totalGrupo, 2);
+        }
 
         // --- TIMELINE ---
         $timeline_items = [];
@@ -259,20 +280,28 @@ class DashboardController extends DefaultController
             ];
         }
 
-        // --- VENDAS PAGAS (COM ITENS) ---
-        $resumoVendaItem = [];
+        // --- ITENS DAS VENDAS ---
+        // $itensPorVenda já veio numa única query, indexado por venda_id.
+        // A view continua acessando como vendas_items[venda.id].
+        $resumoVendaItem = $itensPorVenda;
 
-        // $itensVenda
-        $listaVendasCarrinho = $this->listaItemsVenda($vendasCarrinho);
-        $listaVendasPagas = $this->listaItemsVenda($vendasPagas, true);
-        $listaVendasPendentes = $this->listaItemsVenda($vendasPendentes, true);
+        // Timeline: uma entrada por venda, com os itens DAQUELA venda.
+        foreach (array_merge($vendasPagas, $vendasPendentes) as $venda) {
+            $vendaId = (int) $venda['id'];
+            $itens = $itensPorVenda[$vendaId] ?? [];
 
-        $timeline_items = array_merge($timeline_items, $listaVendasCarrinho['timeline_items'], $listaVendasPagas['timeline_items'], $listaVendasPendentes['timeline_items']);
-        // $resumoVendaItem = array_merge($listaVendasCarrinho['resumoVendaItem'], $listaVendasPagas['resumoVendaItem'], $listaVendasPendentes['resumoVendaItem']);
-        // dd($resumoVendaItem, $timeline_items);
-        $resumoVendaItem = $listaVendasCarrinho['resumoVendaItem'] + $listaVendasPagas['resumoVendaItem'] + $listaVendasPendentes['resumoVendaItem'];
-
-        // $resumoVendaItem    = $listaVendasPagas['resumoVendaItem'];
+            $timeline_items[] = [
+                'data' => $venda['data'],
+                'tipo' => 'Venda',
+                'resumo' => implode(' + ', array_column($itens, 'item')),
+                'observacoes' => 'Venda ' . ($venda['status'] ?? ''),
+                'valor' => (float) $venda['total'],
+                'status' => strtolower((string) ($venda['status'] ?? '')),
+                'venda_itens' => $itens,
+                'venda_id' => $vendaId,
+                'consulta_id' => $venda['consulta_id'] ?? null,
+            ];
+        }
 
         // --- VENDAS PENDENTES ---
         foreach ($vendasPendentes as $venda) {
@@ -328,6 +357,8 @@ class DashboardController extends DefaultController
         $data['vendas_pendentes'] = $vendasPendentes;
         $data['vendas_carrinho'] = $vendasCarrinho;
         $data['vendas_items'] = $resumoVendaItem;
+        $data['vendas_por_consulta'] = $vendasPorConsulta;
+        $data['total_vendas_geral'] = round(array_sum(array_column($vendasPorConsulta, 'total')), 2);
         $data['veterinario'] = $vet;
         // Veterinário do último atendimento (consulta ativa) — pré-seleciona na receita
         $data['receita_vet_id'] = $consultaRepo->findVetIdUltimaConsulta($baseId, $pet['id']);
@@ -446,81 +477,64 @@ class DashboardController extends DefaultController
         }
     }
 
+    /**
+     * Monta itens/timeline de uma lista de vendas.
+     *
+     * Correções aplicadas:
+     *  - $itensVenda e $descricao eram declarados FORA dos laços, então os itens
+     *    de uma venda vazavam para a próxima (era isso que "embolava" a tela) e
+     *    a descrição do item anterior era reaproveitada quando a busca falhava.
+     *  - itens do tipo "produto" eram buscados no ServicoRepository e o retorno
+     *    (possivelmente null) ia direto para ->getNome() → fatal error.
+     *  - o subtotal era recalculado como qtd × unitário, ignorando o desconto
+     *    já gravado na linha.
+     *
+     * @deprecated Prefira VendaItemRepository::listarPorVendas(), que resolve
+     *             tudo em uma query só. Mantido para chamadas legadas.
+     */
     private function listaItemsVenda($vendas, $timeline = false)
     {
-
+        $baseId = $this->getIdBase();
         $vendaItemRepo = $this->getRepositorio(\App\Entity\VendaItem::class);
-        $produtoRepo = $this->getRepositorio(\App\Entity\Produto::class);
-        $servicoRepo = $this->getRepositorio(\App\Entity\Servico::class);
 
-        $itensVenda = [];
-        $resumoItens = [];
+        $vendaIds = [];
+        foreach ($vendas as $venda) {
+            $vendaIds[] = (int) (is_object($venda) ? $venda->getId() : $venda['id']);
+        }
+
+        $itensPorVenda = $vendaItemRepo->listarPorVendas($baseId, $vendaIds);
+
+        $todosItens = [];
         $resumoVendaItem = [];
         $timeline_items = [];
 
         foreach ($vendas as $venda) {
-            // Localizar items pela vendaId
-            $vendaId = $venda['id'];
-            // dd($venda);
-            $vendaTotal = $venda['total'];
-            $vendaData = $venda['data'];
+            $vendaId = (int) (is_object($venda) ? $venda->getId() : $venda['id']);
+            $vendaTotal = is_object($venda) ? $venda->getTotal() : ($venda['total'] ?? 0);
+            $vendaData = is_object($venda) ? $venda->getData() : ($venda['data'] ?? null);
 
-            $itens = $vendaItemRepo->findBy(['vendaId' => $vendaId]);
+            // ESCOPO POR VENDA — não pode acumular entre iterações
+            $itensDestaVenda = $itensPorVenda[$vendaId] ?? [];
 
-            foreach ($itens as $item) {
-                $produtoId = $item->getProdutoId();
-                $quantidade = $item->getQuantidade();
-                $valorUnitario = $item->getValorUnitario();
-                $snapshotNome = $item->getProduto(); // nome gravado no momento da venda
-
-                if ($item->getTipo() === 'servico') {
-                    $servico = $servicoRepo->find($produtoId);
-                    if ($servico) {
-                        $descricao = 'Item sem descrição';
-                        if ($servico->getDescricao() != '') {
-                            $descricao = $servico->getDescricao();
-                        }
-                    }
-                }
-
-                if ($item->getTipo() === 'produto') {
-                    $idBusca = $produtoId ?? (int) trim($snapshotNome);
-                    $servico = $servicoRepo->find($produtoId);
-                    $descricao = $servico->getNome() ?: "Item #{$idBusca}";
-                }
-
-                // if($item->getTipo() === 'medicamento'){}
-                $itensVenda[] = [
-                    'descricao' => $descricao,
-                    'quantidade' => $quantidade,
-                    'valor_unitario' => $valorUnitario,
-                    'subtotal' => $quantidade * $valorUnitario,
-                ];
-
-                $resumoVendaItem[$vendaId][] = [
-                    'item' => $descricao,
-                    'valor' => $valorUnitario,
-                    'quantidade' => $quantidade,
-                    'subtotal' => $quantidade * $valorUnitario,
-                ];
-            }
+            $resumoVendaItem[$vendaId] = $itensDestaVenda;
+            $todosItens = array_merge($todosItens, $itensDestaVenda);
 
             if ($timeline == true) {
                 $timeline_items[] = [
                     'data' => $vendaData,
                     'tipo' => 'Venda',
-                    'resumo' => implode(' + ', $resumoItens),
+                    'resumo' => implode(' + ', array_column($itensDestaVenda, 'item')),
                     'observacoes' => 'Venda concluída',
                     'valor' => $vendaTotal,
                     'status' => 'paga',
-                    'venda_itens' => $itensVenda,
+                    'venda_itens' => $itensDestaVenda,
                     'venda_id' => $vendaId,
                 ];
             }
         }
 
         return [
-            'itensVenda' => $itensVenda,
+            'itensVenda' => $todosItens,
             'resumoVendaItem' => $resumoVendaItem,
             'timeline_items' => $timeline_items,
         ];
