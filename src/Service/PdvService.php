@@ -52,6 +52,10 @@ class PdvService
     {
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
 
+        // Lê as formas de pagamento de forma defensiva (?? []) para não falhar
+        // caso a DTO em cache seja de uma versão anterior.
+        $pagamentos = $dto->pagamentos ?? [];
+
         $this->em->beginTransaction();
         
         try {
@@ -80,10 +84,10 @@ class PdvService
             );
 
             // 5.1 Registra as formas de pagamento (pagamento dividido)
-            $this->registrarPagamentos($venda, $dto->pagamentos, $estabelecimentoId);
+            $this->registrarPagamentos($venda, $pagamentos, $estabelecimentoId);
 
             // 6. Registra no financeiro
-            $this->registrarFinanceiro($venda, $nomeCliente, count($dto->itens), $dto->pagamentos);
+            $this->registrarFinanceiro($venda, $nomeCliente, count($dto->itens), $pagamentos);
 
             $this->em->flush();
             $this->em->commit();
@@ -361,11 +365,12 @@ class PdvService
      */
     private function metodoEfetivo(RegistrarVendaDTO $dto): string
     {
-        if (empty($dto->pagamentos)) {
+        $pagamentos = $dto->pagamentos ?? [];
+        if (empty($pagamentos)) {
             return $dto->metodo;
         }
-        if (count($dto->pagamentos) === 1) {
-            return $dto->pagamentos[0]['metodo'];
+        if (count($pagamentos) === 1) {
+            return $pagamentos[0]['metodo'];
         }
         return 'multiplo';
     }
