@@ -59,14 +59,26 @@ class EstoqueController extends DefaultController
                     'estoque_disponivel' => $quantidade,
                     'estoque_minimo' => $estoque ? $estoque->getEstoqueMinimo() : 0,
                     'estoque_id' => $estoque ? $estoque->getId() : null,
+                    'tipo_estoque' => $produto->getTipoEstoque(),
+                    'pertence_loja' => $produto->pertenceAoEstoqueLoja(),
+                    'pertence_interno' => $produto->pertenceAoEstoqueInterno(),
                 ];
             }, $produtosEntity);
 
-            $estatisticas = $this->calcularEstatisticas($produtos);
+            // Separa em duas visões: estoque da LOJA (venda no PDV) e estoque
+            // INTERNO da clínica (produtos que a veterinária usa para aplicar/
+            // medicar os animais em consultas e internações). Um mesmo produto
+            // marcado como "ambos" aparece nas duas listas.
+            $produtosLoja = array_values(array_filter($produtos, fn($p) => $p['pertence_loja']));
+            $produtosInterno = array_values(array_filter($produtos, fn($p) => $p['pertence_interno']));
 
             return $this->render('clinica/estoque.html.twig', [
                 'produtos' => $produtos,
-                'estatisticas' => $estatisticas,
+                'produtosLoja' => $produtosLoja,
+                'produtosInterno' => $produtosInterno,
+                'estatisticas' => $this->calcularEstatisticas($produtos),
+                'estatisticasLoja' => $this->calcularEstatisticas($produtosLoja),
+                'estatisticasInterno' => $this->calcularEstatisticas($produtosInterno),
             ]);
         } catch (\Exception $e) {
             $this->addFlash('danger', 'Erro ao carregar estoque.');
@@ -189,6 +201,88 @@ class EstoqueController extends DefaultController
     }
 
     /**
+     * Define a qual estoque o produto pertence (loja, interno ou ambos).
+     *
+     * @Route("/tipo", name="clinica_estoque_tipo", methods={"POST"})
+     */
+    public function definirTipoEstoque(Request $request): Response
+    {
+        $this->switchDB();
+
+        try {
+            $produto = $this->resolverProduto($request);
+            $tipo = strtolower(trim((string) $request->request->get('tipo_estoque')));
+
+            if (!$produto) {
+                return $this->responder($request, false, 'Produto não encontrado');
+            }
+            if (!in_array($tipo, ['loja', 'interno', 'ambos'], true)) {
+                return $this->responder($request, false, 'Tipo de estoque inválido');
+            }
+
+            $produto->setTipoEstoque($tipo);
+            $this->em->flush();
+
+            $rotulos = ['loja' => 'Loja', 'interno' => 'Interno (Clínica)', 'ambos' => 'Loja + Interno'];
+
+            return $this->responder($request, true, "Produto movido para: {$rotulos[$tipo]}", [
+                'produto_id' => $produto->getId(),
+                'tipo_estoque' => $tipo,
+            ]);
+        } catch (\Exception $e) {
+            return $this->responder($request, false, $e->getMessage());
+        }
+    }
+
+    /**
+     * Registra o uso interno de um produto (baixa do estoque) durante consultas
+     * ou internações — ex.: aplicação de vacina, anestésico ou medicação.
+     *
+     * @Route("/uso-interno", name="clinica_estoque_uso_interno", methods={"POST"})
+     */
+    public function registrarUsoInterno(Request $request): Response
+    {
+        $this->switchDB();
+
+        try {
+            $produto = $this->resolverProduto($request);
+            $quantidade = (int) $request->request->get('quantidade');
+            $observacao = trim((string) $request->request->get('observacao', ''));
+
+            if (!$produto) {
+                return $this->responder($request, false, 'Produto não encontrado');
+            }
+            if ($quantidade <= 0) {
+                return $this->responder($request, false, 'Informe uma quantidade válida');
+            }
+
+            $estoqueAnterior = $produto->getEstoqueAtual() ?? 0;
+            if ($estoqueAnterior < $quantidade) {
+                return $this->responder($request, false, "Estoque insuficiente! Disponível: {$estoqueAnterior}");
+            }
+
+            $novoEstoque = $estoqueAnterior - $quantidade;
+            $produto->setEstoqueAtual($novoEstoque);
+
+            $descricao = 'Uso interno na clínica';
+            if ($observacao !== '') {
+                $descricao .= ' - ' . $observacao;
+            }
+
+            $this->registrarMovimento($produto, 'SAIDA', $quantidade, $descricao, 'Uso Interno');
+            $this->em->flush();
+
+            return $this->responder($request, true, "Uso interno registrado: {$quantidade} unidade(s) de {$produto->getNome()}.", [
+                'produto_id' => $produto->getId(),
+                'estoque_anterior' => $estoqueAnterior,
+                'estoque_atual' => $novoEstoque,
+            ]);
+        } catch (\Exception $e) {
+            return $this->responder($request, false, $e->getMessage());
+        }
+    }
+
+    /**
      * @Route("/movimentos/{id}", name="clinica_estoque_movimentos", methods={"GET"})
      */
     public function movimentos(int $id): Response
@@ -274,7 +368,8 @@ class EstoqueController extends DefaultController
         Produto $produto,
         string $tipo,
         int $quantidade,
-        string $observacao
+        string $observacao,
+        string $origem = 'Sistema'
     ): void {
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
 
@@ -285,7 +380,7 @@ class EstoqueController extends DefaultController
         $movimento->setQuantidade($quantidade);
         $movimento->setData(new \DateTime());
         $movimento->setObservacao($observacao);
-        $movimento->setOrigem('Sistema');
+        $movimento->setOrigem($origem);
 
         $this->em->persist($movimento);
     }

@@ -54,6 +54,16 @@ class Produto
     private int $estoqueAtual = 0;
 
     /**
+     * Define a qual estoque o produto pertence:
+     *  - 'loja'    : vendido no PDV (estoque da loja)
+     *  - 'interno' : uso interno da clínica (aplicação/medicação em consultas e internações)
+     *  - 'ambos'   : pode ser vendido no PDV E usado internamente (ex.: vacinas, anestésicos)
+     *
+     * @ORM\Column(type="string", length=10, options={"default": "loja"})
+     */
+    private string $tipoEstoque = 'loja';
+
+    /**
      * @ORM\Column(type="string", length=50, nullable=true)
      */
     private ?string $unidade = null;
@@ -207,6 +217,37 @@ class Produto
     {
         $this->estoqueAtual = $estoqueAtual;
         return $this;
+    }
+
+    public function getTipoEstoque(): string
+    {
+        return $this->tipoEstoque ?: 'loja';
+    }
+
+    public function setTipoEstoque(?string $tipoEstoque): self
+    {
+        $valor = strtolower(trim((string) $tipoEstoque));
+        if (!in_array($valor, ['loja', 'interno', 'ambos'], true)) {
+            $valor = 'loja';
+        }
+        $this->tipoEstoque = $valor;
+        return $this;
+    }
+
+    /**
+     * Verdadeiro se o produto aparece no estoque da loja (loja ou ambos).
+     */
+    public function pertenceAoEstoqueLoja(): bool
+    {
+        return in_array($this->getTipoEstoque(), ['loja', 'ambos'], true);
+    }
+
+    /**
+     * Verdadeiro se o produto aparece no estoque interno da clínica (interno ou ambos).
+     */
+    public function pertenceAoEstoqueInterno(): bool
+    {
+        return in_array($this->getTipoEstoque(), ['interno', 'ambos'], true);
     }
 
     public function getUnidade(): ?string

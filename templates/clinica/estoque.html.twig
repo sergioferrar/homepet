@@ -67,6 +67,27 @@
         padding: 1rem;
         border-left: 4px solid #0d6efd;
     }
+
+    /* ===== Impressão da planilha de uso interno ===== */
+    #planilhaInternaPrint .tabela-print {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+    #planilhaInternaPrint .tabela-print th,
+    #planilhaInternaPrint .tabela-print td {
+        border: 1px solid #333;
+        padding: 6px 8px;
+        text-align: left;
+        height: 28px;
+    }
+    #planilhaInternaPrint .tabela-print th { background: #eee; }
+    #planilhaInternaPrint .tabela-print .tc { text-align: center; }
+    #planilhaInternaPrint .print-cabecalho h2 { font-size: 18px; margin: 0 0 4px; }
+    #planilhaInternaPrint .print-cabecalho p { font-size: 12px; margin: 0 0 12px; }
+
+    /* A impressão da planilha é feita de forma isolada via iframe (ver JS),
+       garantindo que APENAS a tabela seja impressa, sem o restante da página. */
 </style>
 {% endblock %}
 
@@ -168,6 +189,26 @@
         </div>
     </div>
 
+    <!-- Navegação entre Estoque da Loja e Estoque Interno -->
+    <ul class="nav nav-pills nav-pills-custom gap-2 mb-4" id="tabsEstoque" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#estoqueLoja" type="button">
+                <i class="bi bi-shop me-1"></i> Estoque da Loja
+                <span class="badge bg-light text-dark ms-1">{{ produtosLoja|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#estoqueInterno" type="button">
+                <i class="bi bi-hospital me-1"></i> Estoque Interno (Clínica)
+                <span class="badge bg-light text-dark ms-1">{{ produtosInterno|length }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+    <!-- ==================== ABA: ESTOQUE DA LOJA ==================== -->
+    <div class="tab-pane fade show active" id="estoqueLoja" role="tabpanel">
+
     <!-- Formulário de Cadastro Rápido -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
@@ -226,7 +267,12 @@
                     <i class="bi bi-list-ul me-2"></i>
                     Produtos Cadastrados
                 </h5>
-                
+                <div class="input-group" style="width: 300px;">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" placeholder="Buscar produto...">
+                </div>
             </div>
         </div>
         
@@ -247,13 +293,16 @@
                             <th>
                                 <i class="bi bi-rulers me-1"></i> Unidade
                             </th>
+                            <th class="text-center">
+                                <i class="bi bi-diagram-3 me-1"></i> Tipo de Estoque
+                            </th>
                             <th class="text-center" width="280">
                                 <i class="bi bi-gear me-1"></i> Ações
                             </th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for p in produtos %}
+                        {% for p in produtosLoja %}
                         <tr class="product-row">
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
@@ -276,6 +325,16 @@
                             <td>
                                 <span class="badge bg-secondary">{{ p.unidade|default('un') }}</span>
                             </td>
+                            <td class="text-center">
+                                <select class="form-select form-select-sm select-tipo-estoque"
+                                        data-produto-id="{{ p.id }}"
+                                        style="min-width: 150px; margin: 0 auto;"
+                                        title="Definir onde este produto é controlado">
+                                    <option value="loja" {{ p.tipo_estoque == 'loja' ? 'selected' : '' }}>Somente Loja</option>
+                                    <option value="ambos" {{ p.tipo_estoque == 'ambos' ? 'selected' : '' }}>Loja + Interno</option>
+                                    <option value="interno" {{ p.tipo_estoque == 'interno' ? 'selected' : '' }}>Somente Interno</option>
+                                </select>
+                            </td>
                             <td>
                                 <div class="action-btn-group d-flex justify-content-center">
                                     <form method="post" action="{{ path('clinica_estoque_entrada') }}"
@@ -290,7 +349,7 @@
                                         </button>
                                     </form>
                                     
-                                    <button class="btn btn-sm btn-info ms-2 me-2 text-white btn-gerenciar-estoque" 
+                                    <button class="btn btn-sm btn-info text-white btn-gerenciar-estoque ms-2 me-2" 
                                             data-produto-id="{{ p.id }}" 
                                             data-produto-nome="{{ p.nome }}"
                                             title="Gerenciar Estoque">
@@ -307,10 +366,10 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                <p class="mb-0">Nenhum produto cadastrado ainda.</p>
-                                <small>Use o formulário acima para adicionar seu primeiro produto.</small>
+                                <p class="mb-0">Nenhum produto no estoque da loja.</p>
+                                <small>Cadastre um produto ou mude o "Tipo de Estoque" de um item para "Loja".</small>
                             </td>
                         </tr>
                         {% endfor %}
@@ -319,6 +378,163 @@
             </div>
         </div>
     </div>
+    </div>
+    <!-- ==================== FIM ABA LOJA ==================== -->
+
+    <!-- ==================== ABA: ESTOQUE INTERNO (CLÍNICA) ==================== -->
+    <div class="tab-pane fade" id="estoqueInterno" role="tabpanel">
+
+        <div class="alert alert-info d-flex align-items-start gap-2">
+            <i class="bi bi-info-circle-fill fs-5"></i>
+            <div>
+                <strong>Estoque interno da clínica.</strong>
+                Aqui ficam os produtos que você separou para <strong>uso interno</strong> — vacinas,
+                anestésicos, medicações etc. — aplicados nos animais durante consultas e internações.
+                Use a planilha abaixo para conferir o que tem em estoque e anotar o que vai usar.
+                Você pode <strong>registrar a baixa direto no sistema</strong> (botão de aplicar) ou
+                <strong>imprimir a planilha</strong> para marcar à mão.
+                Para incluir um produto aqui, mude o "Tipo de Estoque" dele na aba <em>Estoque da Loja</em>
+                para <em>Interno</em> ou <em>Loja + Interno</em>.
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>
+                        Planilha de Uso Interno
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <div class="input-group" style="width: 260px;">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" id="buscaInterno" class="form-control" placeholder="Buscar produto...">
+                        </div>
+                        <button type="button" class="btn btn-outline-dark" id="btnImprimirPlanilha">
+                            <i class="bi bi-printer me-1"></i> Imprimir planilha
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="tabelaInterno">
+                        <thead class="table-custom">
+                            <tr>
+                                <th class="ps-4"><i class="bi bi-capsule me-1"></i> Produto</th>
+                                <th><i class="bi bi-rulers me-1"></i> Unidade</th>
+                                <th class="text-center"><i class="bi bi-stack me-1"></i> Qtd. em Estoque</th>
+                                <th class="text-center" width="130"><i class="bi bi-eyedropper me-1"></i> Qtd. a Usar</th>
+                                <th width="240"><i class="bi bi-clipboard-heart me-1"></i> Animal / Observação</th>
+                                <th class="text-center" width="170"><i class="bi bi-gear me-1"></i> Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in produtosInterno %}
+                            <tr class="product-row linha-interno" data-nome="{{ p.nome|lower }}">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-danger bg-opacity-10 rounded p-2 me-2">
+                                            <i class="bi bi-capsule text-danger"></i>
+                                        </div>
+                                        <div>
+                                            <span class="fw-semibold d-block">{{ p.nome }}</span>
+                                            {% if p.tipo_estoque == 'ambos' %}
+                                                <small class="text-muted"><i class="bi bi-shop"></i> Também vendido na loja</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ p.unidade|default('un') }}</span></td>
+                                <td class="text-center">
+                                    <span class="badge badge-stock {{ p.estoqueAtual > 0 ? 'bg-primary' : 'bg-danger' }}"
+                                          id="estoque-interno-{{ p.id }}">
+                                        {{ p.estoqueAtual }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <input type="number" min="1" max="{{ p.estoqueAtual }}"
+                                           class="form-control form-control-sm input-qtd-interno text-center"
+                                           data-produto-id="{{ p.id }}" placeholder="0">
+                                </td>
+                                <td>
+                                    <input type="text"
+                                           class="form-control form-control-sm input-obs-interno"
+                                           data-produto-id="{{ p.id }}"
+                                           placeholder="Ex.: Rex (internação) / dose">
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-danger btn-usar-interno"
+                                            data-produto-id="{{ p.id }}"
+                                            data-produto-nome="{{ p.nome }}"
+                                            title="Registrar aplicação / baixa do estoque">
+                                        <i class="bi bi-check2-circle me-1"></i> Aplicar
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-clipboard-x fs-1 d-block mb-2"></i>
+                                    <p class="mb-0">Nenhum produto no estoque interno.</p>
+                                    <small>Na aba "Estoque da Loja", mude o "Tipo de Estoque" de uma vacina,
+                                    anestésico ou medicação para <em>Interno</em> ou <em>Loja + Interno</em>.</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-muted small mt-2 mb-0">
+            <i class="bi bi-lightbulb me-1"></i>
+            Ao clicar em <strong>Aplicar</strong>, a quantidade é baixada do estoque e fica registrada no
+            histórico de movimentações do produto com a origem "Uso Interno".
+        </p>
+    </div>
+    <!-- ==================== FIM ABA INTERNO ==================== -->
+    </div>
+</div>
+
+<!-- Área imprimível da planilha de uso interno (visível apenas na impressão) -->
+<div id="planilhaInternaPrint" class="d-none">
+    <div class="print-cabecalho">
+        <h2>Planilha de Uso Interno — Clínica</h2>
+        <p>Data: ____/____/________ &nbsp;&nbsp; Responsável: ______________________________</p>
+    </div>
+    <table class="tabela-print">
+        <thead>
+            <tr>
+                <th style="width:32%">Produto</th>
+                <th style="width:10%">Unid.</th>
+                <th style="width:12%">Qtd. em Estoque</th>
+                <th style="width:12%">Qtd. Usada</th>
+                <th style="width:22%">Animal / Tutor</th>
+                <th style="width:12%">Data/Hora</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in produtosInterno %}
+            <tr>
+                <td>{{ p.nome }}{% if p.tipo_estoque == 'ambos' %} (loja+interno){% endif %}</td>
+                <td class="tc">{{ p.unidade|default('un') }}</td>
+                <td class="tc">{{ p.estoqueAtual }}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            {% endfor %}
+            {# Linhas em branco extras para anotações manuais #}
+            {% for i in 1..6 %}
+            <tr class="linha-branco"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 
 <!-- Conteúdo oculto para o modal de cadastro -->
@@ -1018,6 +1234,150 @@ $(function () {
     $('#formLancarMovimento').on('submit', function(e) {
         e.preventDefault();
         alert('Funcionalidade de movimento será implementada no backend');
+    });
+
+    // ========== SEPARAÇÃO DE ESTOQUE (LOJA x INTERNO) ==========
+
+    // Alterar o tipo de estoque de um produto (loja / interno / ambos)
+    $('.select-tipo-estoque').on('change', function () {
+        var $select = $(this);
+        var produtoId = $select.data('produto-id');
+        var tipo = $select.val();
+        var valorAnterior = $select.data('anterior') || 'loja';
+
+        $select.prop('disabled', true);
+
+        $.ajax({
+            url: "{{ path('clinica_estoque_tipo') }}",
+            method: 'POST',
+            data: { produto_id: produtoId, tipo_estoque: tipo },
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).done(function (resp) {
+            if (resp && resp.success) {
+                // Recarrega para refletir o produto na(s) aba(s) correta(s)
+                location.reload();
+            } else {
+                alert((resp && resp.message) ? resp.message : 'Não foi possível alterar o tipo de estoque.');
+                $select.val(valorAnterior).prop('disabled', false);
+            }
+        }).fail(function () {
+            alert('Erro de comunicação ao alterar o tipo de estoque.');
+            $select.val(valorAnterior).prop('disabled', false);
+        });
+    });
+    // Guarda o valor atual para poder reverter em caso de erro
+    $('.select-tipo-estoque').each(function () {
+        $(this).data('anterior', $(this).val());
+    }).on('focus', function () {
+        $(this).data('anterior', $(this).val());
+    });
+
+    // Registrar uso interno (baixa de estoque)
+    $('.btn-usar-interno').on('click', function () {
+        var $btn = $(this);
+        var produtoId = $btn.data('produto-id');
+        var produtoNome = $btn.data('produto-nome');
+        var qtd = parseInt($('.input-qtd-interno[data-produto-id="' + produtoId + '"]').val(), 10);
+        var obs = $('.input-obs-interno[data-produto-id="' + produtoId + '"]').val() || '';
+
+        if (!qtd || qtd <= 0) {
+            alert('Informe a quantidade a usar de "' + produtoNome + '".');
+            return;
+        }
+
+        if (!confirm('Registrar uso de ' + qtd + ' unidade(s) de "' + produtoNome + '"? A quantidade será baixada do estoque.')) {
+            return;
+        }
+
+        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+
+        $.ajax({
+            url: "{{ path('clinica_estoque_uso_interno') }}",
+            method: 'POST',
+            data: { produto_id: produtoId, quantidade: qtd, observacao: obs },
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).done(function (resp) {
+            if (resp && resp.success) {
+                var $badge = $('#estoque-interno-' + produtoId);
+                $badge.text(resp.estoque_atual);
+                if (resp.estoque_atual <= 0) {
+                    $badge.removeClass('bg-primary').addClass('bg-danger');
+                }
+                $('.input-qtd-interno[data-produto-id="' + produtoId + '"]')
+                    .val('').attr('max', resp.estoque_atual);
+                $('.input-obs-interno[data-produto-id="' + produtoId + '"]').val('');
+            } else {
+                alert((resp && resp.message) ? resp.message : 'Não foi possível registrar o uso interno.');
+            }
+        }).fail(function (xhr) {
+            var msg = 'Erro ao registrar o uso interno.';
+            try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
+            alert(msg);
+        }).always(function () {
+            $btn.prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Aplicar');
+        });
+    });
+
+    // Busca dentro da planilha de uso interno
+    $('#buscaInterno').on('keyup', function () {
+        var termo = $(this).val().toLowerCase().trim();
+        $('#tabelaInterno tbody tr.linha-interno').each(function () {
+            var nome = ($(this).data('nome') || '').toString();
+            $(this).toggle(nome.indexOf(termo) !== -1);
+        });
+    });
+
+    // Imprimir a planilha de uso interno — imprime SOMENTE a tabela,
+    // isolando o conteúdo em um iframe temporário (não imprime a página inteira).
+    $('#btnImprimirPlanilha').on('click', function () {
+        var conteudo = document.getElementById('planilhaInternaPrint').innerHTML;
+
+        var estilos =
+            '<style>' +
+            '* { box-sizing: border-box; }' +
+            'body { font-family: Arial, Helvetica, sans-serif; color: #000; margin: 12px; }' +
+            '.print-cabecalho h2 { font-size: 18px; margin: 0 0 4px; }' +
+            '.print-cabecalho p { font-size: 12px; margin: 0 0 12px; }' +
+            '.tabela-print { width: 100%; border-collapse: collapse; font-size: 12px; }' +
+            '.tabela-print th, .tabela-print td { border: 1px solid #333; padding: 6px 8px; text-align: left; height: 28px; }' +
+            '.tabela-print th { background: #eee; }' +
+            '.tabela-print .tc { text-align: center; }' +
+            '@page { margin: 12mm; }' +
+            '</style>';
+
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute('aria-hidden', 'true');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+
+        var doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Planilha de Uso Interno</title>' +
+                  estilos + '</head><body>' + conteudo + '</body></html>');
+        doc.close();
+
+        var imprimir = function () {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            // Remove o iframe após a impressão
+            setTimeout(function () {
+                if (iframe && iframe.parentNode) {
+                    iframe.parentNode.removeChild(iframe);
+                }
+            }, 1000);
+        };
+
+        // Aguarda o conteúdo do iframe carregar antes de imprimir
+        if (iframe.contentWindow.document.readyState === 'complete') {
+            setTimeout(imprimir, 150);
+        } else {
+            iframe.onload = function () { setTimeout(imprimir, 150); };
+        }
     });
 });
 </script>
