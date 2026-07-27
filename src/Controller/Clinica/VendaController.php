@@ -9,6 +9,7 @@ use App\Entity\Produto;
 use App\Entity\Servico;
 use App\Entity\Venda;
 use App\Entity\VendaItem;
+use App\Service\Venda\VendaItemNormalizer;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -140,10 +141,12 @@ class VendaController extends DefaultController
 
                 // Quantidade e desconto SÃO DESTA LINHA — nunca herdados de outra
                 $quantidade = max(1, (int) $linha['quantidade']);
-                $bruto      = $valorUnitario * $quantidade;
-                // desconto nunca pode deixar o item negativo
-                $desconto   = min(max(0.0, (float) $linha['desconto']), $bruto);
-                $valorItem  = round($bruto - $desconto, 2);
+                $calculo    = $this->normalizer()->calcularSubtotal(
+                    $valorUnitario,
+                    $quantidade,
+                    (float) $linha['desconto']
+                );
+                $valorItem = $calculo['subtotal'];
 
                 $vendaItemRepo->inserirItem($baseId, [
                     'venda_id'       => $vendaId,
@@ -267,137 +270,24 @@ class VendaController extends DefaultController
     }
 
     /**
-     * Normaliza os itens enviados pelo formulário em uma lista fechada de linhas:
+     * Normaliza os itens do formulário em linhas fechadas
+     * (tipo, id, quantidade, desconto).
      *
-     *   [['tipo' => 'servico', 'id' => 12, 'quantidade' => 3, 'desconto' => 0.0], ...]
-     *
-     * ── Por que este método existe ────────────────────────────────────────────
-     * O formulário antigo enviava três arrays paralelos: descricao[], desconto[]
-     * e quantidade_diarias[]. O backend casava os três pelo índice numérico
-     * ($quantidades[$i]). Só que o input de quantidade só era criado para
-     * serviços de internação — então o array de quantidades vinha COMPACTADO.
-     *
-     *   Linha 0: Produto      R$ 45  → sem input de quantidade
-     *   Linha 1: Internação   R$ 80  → quantidade_diarias[0] = 3
-     *
-     * Resultado: o backend lia $quantidades[0] = 3 e aplicava no PRODUTO
-     * (45 × 3 = 135), enquanto a internação caía no default 1 (80 × 1).
-     * Exatamente o sintoma relatado.
-     *
-     * Agora o formato preferido é indexado — `itens[0][ref]`, `itens[0][quantidade]`,
-     * `itens[0][desconto]` — em que a quantidade está fisicamente amarrada à
-     * linha, não à posição num array separado. O formato antigo continua
-     * aceito, mas quantidade_diarias[] só é usado quando a contagem bate com
-     * descricao[]; caso contrário assume 1 e registra um alerta no log, em vez
-     * de multiplicar o item errado silenciosamente.
+     * A regra vive em VendaItemNormalizer para poder ser testada sem
+     * container, banco nem sessão — ver tests/Unit/Service/Venda/.
      *
      * @return array<int, array{tipo: string, id: int, quantidade: int, desconto: float}>
      */
     private function normalizarItens(Request $request): array
     {
-        $linhas = [];
-
-        // ── Formato novo: itens[i][ref|quantidade|desconto] ───────────────────
-        $itens = $request->get('itens');
-
-        if (is_array($itens) && $itens !== []) {
-            foreach ($itens as $item) {
-                if (!is_array($item)) {
-                    continue;
-                }
-
-                $ref = trim((string) ($item['ref'] ?? $item['descricao'] ?? ''));
-                if ($ref === '') {
-                    continue;
-                }
-
-                $resolvido = $this->resolverReferencia($ref);
-                if ($resolvido === null) {
-                    continue;
-                }
-
-                $linhas[] = [
-                    'tipo'       => $resolvido['tipo'],
-                    'id'         => $resolvido['id'],
-                    'quantidade' => max(1, (int) ($item['quantidade'] ?? 1)),
-                    'desconto'   => max(0.0, (float) str_replace(',', '.', (string) ($item['desconto'] ?? 0))),
-                ];
-            }
-
-            return $linhas;
-        }
-
-        // ── Formato legado: descricao[] + desconto[] (+ quantidade[]) ─────────
-        $descricoes = array_values((array) $request->get('descricao', []));
-        $descontos  = array_values((array) $request->get('desconto', []));
-        $quantidades = array_values((array) $request->get('quantidade', []));
-        $diarias     = array_values((array) $request->get('quantidade_diarias', []));
-
-        // quantidade_diarias[] só é confiável se tiver uma entrada por linha
-        $usarDiarias = $quantidades === []
-            && $diarias !== []
-            && count($diarias) === count($descricoes);
-
-        if ($quantidades === [] && $diarias !== [] && !$usarDiarias) {
-            $this->logger->warning(
-                'Venda clínica: quantidade_diarias[] desalinhado com descricao[] — quantidades ignoradas.',
-                ['descricoes' => count($descricoes), 'diarias' => count($diarias)]
-            );
-        }
-
-        foreach ($descricoes as $i => $ref) {
-            $ref = trim((string) $ref);
-            if ($ref === '') {
-                continue;
-            }
-
-            $resolvido = $this->resolverReferencia($ref);
-            if ($resolvido === null) {
-                continue;
-            }
-
-            if ($usarDiarias) {
-                $quantidade = (int) ($diarias[$i] ?? 1);
-            } else {
-                $quantidade = (int) ($quantidades[$i] ?? 1);
-            }
-
-            $linhas[] = [
-                'tipo'       => $resolvido['tipo'],
-                'id'         => $resolvido['id'],
-                'quantidade' => max(1, $quantidade),
-                'desconto'   => max(0.0, (float) str_replace(',', '.', (string) ($descontos[$i] ?? 0))),
-            ];
-        }
-
-        return $linhas;
+        return $this->normalizer()->normalizar(
+            array_merge($request->query->all(), $request->request->all())
+        );
     }
 
-    /**
-     * Interpreta a referência de um item: "S-12" (serviço), "P-7" (produto)
-     * ou apenas "12" (serviço, formato legado do select da ficha).
-     *
-     * @return array{tipo: string, id: int}|null
-     */
-    private function resolverReferencia(string $ref): ?array
+    private function normalizer(): VendaItemNormalizer
     {
-        if (str_starts_with($ref, 'S-')) {
-            $tipo = 'servico';
-            $id   = substr($ref, 2);
-        } elseif (str_starts_with($ref, 'P-')) {
-            $tipo = 'produto';
-            $id   = substr($ref, 2);
-        } else {
-            // Sem prefixo = serviço (comportamento histórico do select da ficha)
-            $tipo = 'servico';
-            $id   = $ref;
-        }
-
-        if (!ctype_digit((string) $id) || (int) $id <= 0) {
-            return null;
-        }
-
-        return ['tipo' => $tipo, 'id' => (int) $id];
+        return new VendaItemNormalizer($this->logger);
     }
 
     /**

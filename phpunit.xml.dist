@@ -18,8 +18,20 @@
     </php>
 
     <testsuites>
-        <testsuite name="Project Test Suite">
-            <directory>tests</directory>
+        <!-- Rápidos, sem banco nem container. Rodam sempre. -->
+        <testsuite name="unit">
+            <directory>tests/Unit</directory>
+            <directory>tests/Service</directory>
+        </testsuite>
+
+        <!-- Rotas e sintaxe dos templates. Precisa do kernel, não do banco. -->
+        <testsuite name="smoke">
+            <directory>tests/Functional</directory>
+        </testsuite>
+
+        <!-- Exigem MySQL com permissao de CREATE DATABASE. Pulam se nao houver. -->
+        <testsuite name="integracao">
+            <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
 
