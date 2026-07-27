@@ -390,6 +390,36 @@ class PdvController extends DefaultController
             $bandeira = $dados['bandeira_cartao'] ?? null;
             $parcelas = !empty($dados['parcelas']) ? (int) $dados['parcelas'] : null;
 
+            // Formas de pagamento divididas (opcional). Cada item:
+            //   ['metodo' => 'pix', 'valor' => 100.0, 'bandeira' => null, 'parcelas' => null]
+            $pagamentos = [];
+            foreach ($dados['pagamentos'] ?? [] as $p) {
+                $m = trim((string) ($p['metodo'] ?? ''));
+                $v = (float) ($p['valor'] ?? 0);
+                if ($m === '' || $v <= 0) {
+                    continue;
+                }
+                $pagamentos[] = [
+                    'metodo'   => $m,
+                    'valor'    => round($v, 2),
+                    'bandeira' => !empty($p['bandeira']) ? (string) $p['bandeira'] : null,
+                    'parcelas' => !empty($p['parcelas']) ? (int) $p['parcelas'] : null,
+                ];
+            }
+
+            // Se veio pagamento dividido, ele define o método efetivo da venda.
+            if (!empty($pagamentos)) {
+                foreach ($pagamentos as $p) {
+                    if ($p['metodo'] === 'pendente') {
+                        return new JsonResponse([
+                            'status' => 'error',
+                            'mensagem' => 'Pagamento dividido não pode incluir a forma "Pendente".',
+                        ], 400);
+                    }
+                }
+                $metodo = count($pagamentos) === 1 ? $pagamentos[0]['metodo'] : 'multiplo';
+            }
+
             if (empty($metodo)) {
                 return new JsonResponse([
                     'status' => 'error',
@@ -409,6 +439,18 @@ class PdvController extends DefaultController
                 ], 404);
             }
 
+            // Valida a soma quando há pagamento dividido
+            if (!empty($pagamentos)) {
+                $soma = array_sum(array_column($pagamentos, 'valor'));
+                if ($soma + 0.01 < (float) $venda['total']) {
+                    return new JsonResponse([
+                        'status' => 'error',
+                        'mensagem' => 'A soma das formas (R$ ' . number_format($soma, 2, ',', '.')
+                            . ') é menor que o total da venda (R$ ' . number_format((float) $venda['total'], 2, ',', '.') . ').',
+                    ], 400);
+                }
+            }
+
             // Determina status final e registra no financeiro
             if ($metodo === 'pendente') {
                 $statusFinal = 'Pendente';
@@ -420,14 +462,39 @@ class PdvController extends DefaultController
                 );
             } else {
                 $statusFinal = 'Paga';
-                $vendaRepo->inserirFinanceiro(
-                    $estabelecimentoId,
-                    $metodo,
-                    (float) $venda['total'],
-                    $venda['cliente'] ?? 'Consumidor Final',
-                    $venda['pet_id'] ?? null,
-                    $id
-                );
+
+                if (!empty($pagamentos)) {
+                    // Um lançamento no financeiro por forma (relatórios corretos)
+                    // e registra cada forma em venda_pagamento.
+                    $vpRepo = $this->getRepositorio(\App\Entity\VendaPagamento::class);
+                    foreach ($pagamentos as $p) {
+                        $vendaRepo->inserirFinanceiro(
+                            $estabelecimentoId,
+                            $p['metodo'],
+                            (float) $p['valor'],
+                            $venda['cliente'] ?? 'Consumidor Final',
+                            $venda['pet_id'] ?? null,
+                            $id
+                        );
+                        $vpRepo->inserir(
+                            $estabelecimentoId,
+                            $id,
+                            $p['metodo'],
+                            (float) $p['valor'],
+                            $p['bandeira'],
+                            $p['parcelas']
+                        );
+                    }
+                } else {
+                    $vendaRepo->inserirFinanceiro(
+                        $estabelecimentoId,
+                        $metodo,
+                        (float) $venda['total'],
+                        $venda['cliente'] ?? 'Consumidor Final',
+                        $venda['pet_id'] ?? null,
+                        $id
+                    );
+                }
             }
 
             // Atualiza a venda com SQL nativo — banco correto garantido

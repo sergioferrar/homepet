@@ -9,6 +9,7 @@ use App\Entity\Financeiro;
 use App\Entity\FinanceiroPendente;
 use App\Entity\Venda;
 use App\Entity\VendaItem;
+use App\Entity\VendaPagamento;
 use App\Service\NotaFiscal\NotaFiscalServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -78,8 +79,11 @@ class PdvService
                 $nomeCliente
             );
 
+            // 5.1 Registra as formas de pagamento (pagamento dividido)
+            $this->registrarPagamentos($venda, $dto->pagamentos, $estabelecimentoId);
+
             // 6. Registra no financeiro
-            $this->registrarFinanceiro($venda, $nomeCliente, count($dto->itens));
+            $this->registrarFinanceiro($venda, $nomeCliente, count($dto->itens), $dto->pagamentos);
 
             $this->em->flush();
             $this->em->commit();
@@ -211,7 +215,7 @@ class PdvService
         $venda->setEstabelecimentoId($estabelecimentoId);
         $venda->setCliente($nomeCliente);
         $venda->setTotal($dto->total);
-        $venda->setMetodoPagamento($dto->metodo);
+        $venda->setMetodoPagamento($this->metodoEfetivo($dto));
         $venda->setData(new \DateTime());
         $venda->setOrigem($dto->origem);
         $venda->setStatus('Carrinho');
@@ -296,7 +300,7 @@ class PdvService
     /**
      * Registra venda no financeiro
      */
-    private function registrarFinanceiro(Venda $venda, string $nomeCliente, int $qtdItens): void
+    private function registrarFinanceiro(Venda $venda, string $nomeCliente, int $qtdItens, array $pagamentos = []): void
     {
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
         $descricao = "Venda PDV - {$nomeCliente} | {$qtdItens} item(ns)";
@@ -316,18 +320,76 @@ class PdvService
             }
 
             $this->em->persist($finPendente);
-        } else {
-            $financeiro = new Financeiro();
-            $financeiro->setDescricao($descricao);
-            $financeiro->setValor($venda->getTotal());
-            $financeiro->setData(new \DateTime());
-            $financeiro->setMetodoPagamento($venda->getMetodoPagamento());
-            $financeiro->setOrigem('PDV');
-            $financeiro->setStatus('Pago');
-            $financeiro->setTipo('ENTRADA');
-            $financeiro->setEstabelecimentoId($estabelecimentoId);
+            return;
+        }
 
-            $this->em->persist($financeiro);
+        // Pagamento dividido: um lançamento no financeiro por forma, para que
+        // os relatórios (fechamento de caixa) separem corretamente pix, cartão etc.
+        if (!empty($pagamentos)) {
+            foreach ($pagamentos as $p) {
+                $financeiro = new Financeiro();
+                $financeiro->setDescricao($descricao . ' (' . ucfirst($p['metodo']) . ')');
+                $financeiro->setValor((float) $p['valor']);
+                $financeiro->setData(new \DateTime());
+                $financeiro->setMetodoPagamento($p['metodo']);
+                $financeiro->setOrigem('PDV');
+                $financeiro->setStatus('Pago');
+                $financeiro->setTipo('ENTRADA');
+                $financeiro->setEstabelecimentoId($estabelecimentoId);
+                $this->em->persist($financeiro);
+            }
+            return;
+        }
+
+        // Pagamento simples (comportamento original)
+        $financeiro = new Financeiro();
+        $financeiro->setDescricao($descricao);
+        $financeiro->setValor($venda->getTotal());
+        $financeiro->setData(new \DateTime());
+        $financeiro->setMetodoPagamento($venda->getMetodoPagamento());
+        $financeiro->setOrigem('PDV');
+        $financeiro->setStatus('Pago');
+        $financeiro->setTipo('ENTRADA');
+        $financeiro->setEstabelecimentoId($estabelecimentoId);
+
+        $this->em->persist($financeiro);
+    }
+
+    /**
+     * Define o método de pagamento gravado na própria venda:
+     * 'multiplo' quando há mais de uma forma; caso contrário, a forma única.
+     */
+    private function metodoEfetivo(RegistrarVendaDTO $dto): string
+    {
+        if (empty($dto->pagamentos)) {
+            return $dto->metodo;
+        }
+        if (count($dto->pagamentos) === 1) {
+            return $dto->pagamentos[0]['metodo'];
+        }
+        return 'multiplo';
+    }
+
+    /**
+     * Persiste as formas de pagamento (pagamento dividido) da venda.
+     * Não faz nada quando a venda tem forma única.
+     */
+    private function registrarPagamentos(Venda $venda, array $pagamentos, int $estabelecimentoId): void
+    {
+        if (empty($pagamentos)) {
+            return;
+        }
+
+        foreach ($pagamentos as $p) {
+            $pagamento = new VendaPagamento();
+            $pagamento->setEstabelecimentoId($estabelecimentoId);
+            $pagamento->setVendaId($venda->getId());
+            $pagamento->setMetodo($p['metodo']);
+            $pagamento->setValor((float) $p['valor']);
+            $pagamento->setBandeiraCartao($p['bandeira'] ?? null);
+            $pagamento->setParcelas($p['parcelas'] ?? null);
+            $pagamento->setData(new \DateTime());
+            $this->em->persist($pagamento);
         }
     }
 

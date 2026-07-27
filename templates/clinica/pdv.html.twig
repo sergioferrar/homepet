@@ -248,7 +248,7 @@
                     </div>
 
                     <!-- Método de Pagamento -->
-                    <div class="mb-3">
+                    <div class="mb-3" id="blocoMetodoSimples">
                         <label class="form-label fw-bold">Método de Pagamento:</label>
                         <select id="metodo" class="form-select">
                             <option value="dinheiro">Dinheiro</option>
@@ -257,6 +257,14 @@
                             <option value="pix">PIX</option>
                             <option value="pendente">Pendente</option>
                         </select>
+                    </div>
+
+                    <!-- Alternar pagamento dividido -->
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="toggleDividir">
+                        <label class="form-check-label fw-bold" for="toggleDividir">
+                            <i class="bi bi-columns-gap me-1"></i>Dividir pagamento em mais de uma forma
+                        </label>
                     </div>
 
                     <!-- Opções de Cartão (oculto por padrão) -->
@@ -294,6 +302,29 @@
                         <div class="d-flex justify-content-between align-items-center mt-2">
                             <span class="fw-bold">Troco:</span>
                             <span class="troco-valor" id="trocoValor">R$ 0,00</span>
+                        </div>
+                    </div>
+
+                    <!-- Pagamento dividido (oculto por padrão) -->
+                    <div id="pagamentoDividido" class="mb-3" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold mb-0">Formas de Pagamento:</label>
+                            <button type="button" id="btnAddPagamento" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-plus-lg"></i> Adicionar forma
+                            </button>
+                        </div>
+
+                        <div id="listaPagamentos"></div>
+
+                        <div class="border-top mt-2 pt-2 small">
+                            <div class="d-flex justify-content-between">
+                                <span>Soma das formas:</span>
+                                <span id="somaPagamentos" class="fw-bold">R$ 0,00</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span id="rotuloRestante">Falta:</span>
+                                <span id="restantePagamentos" class="fw-bold text-danger">R$ 0,00</span>
+                            </div>
                         </div>
                     </div>
 
@@ -826,6 +857,146 @@ function inicializarEventos() {
 
     // Salvar venda
     $('#btnSalvarVenda').on('click', salvarVenda);
+
+    // ===== Pagamento dividido =====
+    $('#toggleDividir').on('change', function () {
+        const dividir = $(this).is(':checked');
+        if (dividir) {
+            $('#blocoMetodoSimples, #opcoesCartao, #opcoesDinheiro').hide();
+            $('#pagamentoDividido').show();
+            if ($('#listaPagamentos .linha-pagamento').length === 0) {
+                // Primeira forma já sugere o valor total restante
+                adicionarLinhaPagamento();
+            }
+            recalcularDivididos();
+        } else {
+            $('#pagamentoDividido').hide();
+            $('#blocoMetodoSimples').show();
+            $('#metodo').trigger('change');
+        }
+    });
+
+    $('#btnAddPagamento').on('click', function () {
+        adicionarLinhaPagamento();
+        recalcularDivididos();
+    });
+
+    // Recalcula quando muda valor/método de qualquer linha ou o desconto
+    $('#listaPagamentos').on('input change', '.pg-valor, .pg-metodo', recalcularDivididos);
+    $('#desconto').on('input', function () {
+        if ($('#toggleDividir').is(':checked')) recalcularDivididos();
+    });
+
+    // Remover linha
+    $('#listaPagamentos').on('click', '.btn-remover-pg', function () {
+        $(this).closest('.linha-pagamento').remove();
+        recalcularDivididos();
+    });
+
+    // Mostra bandeira quando a forma for cartão
+    $('#listaPagamentos').on('change', '.pg-metodo', function () {
+        const metodo = $(this).val();
+        const $bandeira = $(this).closest('.linha-pagamento').find('.pg-bandeira');
+        if (metodo === 'credito' || metodo === 'debito') {
+            $bandeira.removeClass('d-none');
+        } else {
+            $bandeira.addClass('d-none').val('');
+        }
+    });
+}
+
+// ==================== PAGAMENTO DIVIDIDO ====================
+function adicionarLinhaPagamento() {
+    const subtotal = calcularSubtotal();
+    const desconto = parseFloat($('#desconto').val()) || 0;
+    const total = Math.max(0, subtotal - desconto);
+
+    // Sugere o valor que ainda falta para a nova linha
+    const jaInformado = somaPagamentosAtual();
+    const restante = Math.max(0, total - jaInformado).toFixed(2);
+
+    const html = `
+        <div class="linha-pagamento border rounded p-2 mb-2">
+            <div class="d-flex gap-2 align-items-center">
+                <select class="form-select form-select-sm pg-metodo" style="max-width: 130px;">
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="debito">Débito</option>
+                    <option value="credito">Crédito</option>
+                    <option value="pix">PIX</option>
+                </select>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">R$</span>
+                    <input type="number" class="form-control pg-valor" min="0" step="0.01" value="${restante}">
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-remover-pg" title="Remover">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            <select class="form-select form-select-sm mt-2 pg-bandeira d-none">
+                <option value="">Bandeira do cartão...</option>
+                <option value="visa">Visa</option>
+                <option value="mastercard">Mastercard</option>
+                <option value="elo">Elo</option>
+                <option value="amex">American Express</option>
+            </select>
+        </div>`;
+    $('#listaPagamentos').append(html);
+}
+
+function somaPagamentosAtual() {
+    let soma = 0;
+    $('#listaPagamentos .pg-valor').each(function () {
+        soma += parseFloat($(this).val()) || 0;
+    });
+    return soma;
+}
+
+function recalcularDivididos() {
+    const subtotal = calcularSubtotal();
+    const desconto = parseFloat($('#desconto').val()) || 0;
+    const total = Math.max(0, subtotal - desconto);
+    const soma = somaPagamentosAtual();
+
+    $('#somaPagamentos').text('R$ ' + formatarMoeda(soma));
+
+    const diff = +(total - soma).toFixed(2);
+    if (diff > 0.001) {
+        $('#rotuloRestante').text('Falta:');
+        $('#restantePagamentos').text('R$ ' + formatarMoeda(diff))
+            .removeClass('text-success').addClass('text-danger');
+    } else {
+        // Excedente = troco (relevante quando há dinheiro)
+        $('#rotuloRestante').text('Troco:');
+        $('#restantePagamentos').text('R$ ' + formatarMoeda(Math.abs(diff)))
+            .removeClass('text-danger').addClass('text-success');
+    }
+}
+
+// Coleta e valida as formas divididas. Retorna array ou null (inválido).
+function coletarPagamentos() {
+    const pagamentos = [];
+    let valido = true;
+
+    $('#listaPagamentos .linha-pagamento').each(function () {
+        const metodo = $(this).find('.pg-metodo').val();
+        const valor = parseFloat($(this).find('.pg-valor').val()) || 0;
+        const bandeira = $(this).find('.pg-bandeira').val() || null;
+
+        if (valor <= 0) { valido = false; return; }
+        if ((metodo === 'credito' || metodo === 'debito') && !bandeira) {
+            showToast('Selecione a bandeira do cartão na forma de pagamento.', 'warning');
+            valido = false;
+            return;
+        }
+        pagamentos.push({ metodo: metodo, valor: valor, bandeira: bandeira, parcelas: null });
+    });
+
+    if (!valido) return null;
+    if (pagamentos.length === 0) {
+        showToast('Adicione ao menos uma forma de pagamento.', 'warning');
+        return null;
+    }
+    return pagamentos;
 }
 
 // ==================== SALVAR VENDA ====================
@@ -836,7 +1007,20 @@ async function salvarVenda() {
     const desconto = parseFloat($('#desconto').val()) || 0;
     const total    = Math.max(0, subtotal - desconto);
 
-    if ((metodo === 'credito' || metodo === 'debito') && !$('#bandeiraCartao').val()) {
+    // Pagamento dividido (opcional)
+    const dividir = $('#toggleDividir').is(':checked');
+    let pagamentos = null;
+    if (dividir) {
+        pagamentos = coletarPagamentos();
+        if (pagamentos === null) {
+            return; // mensagem já exibida em coletarPagamentos
+        }
+        const soma = pagamentos.reduce((s, p) => s + p.valor, 0);
+        if (soma + 0.01 < total) {
+            showToast('A soma das formas é menor que o total da venda.', 'warning');
+            return;
+        }
+    } else if ((metodo === 'credito' || metodo === 'debito') && !$('#bandeiraCartao').val()) {
         showToast('Selecione a bandeira do cartão!', 'warning');
         return;
     }
@@ -854,7 +1038,8 @@ async function salvarVenda() {
         const payload = {
             metodo_pagamento: metodo,
             bandeira_cartao:  $('#bandeiraCartao').val() || null,
-            parcelas:         parseInt($('#parcelas').val()) || null
+            parcelas:         parseInt($('#parcelas').val()) || null,
+            pagamentos:       dividir ? pagamentos : []
         };
 
         try {
@@ -912,7 +1097,8 @@ async function salvarVenda() {
         bandeira:   $('#bandeiraCartao').val() || null,
         parcelas:   parseInt($('#parcelas').val()) || null,
         troco:      metodo === 'dinheiro' ? (parseFloat($('#valorRecebido').val()) - total) : null,
-        observacao: $('#observacao').val().trim() || null
+        observacao: $('#observacao').val().trim() || null,
+        pagamentos: dividir ? pagamentos : []
     };
 
     try {
@@ -953,6 +1139,12 @@ function limparFormulario() {
     $('#valorRecebido').val(0);
     $('#observacao').val('');
     $('#metodo').val('dinheiro').trigger('change');
+
+    // Reseta pagamento dividido
+    $('#toggleDividir').prop('checked', false);
+    $('#listaPagamentos').empty();
+    $('#pagamentoDividido').hide();
+    $('#blocoMetodoSimples').show();
     
     renderizarCarrinho();
     atualizarResumo();
