@@ -86,6 +86,54 @@
     #planilhaInternaPrint .print-cabecalho h2 { font-size: 18px; margin: 0 0 4px; }
     #planilhaInternaPrint .print-cabecalho p { font-size: 12px; margin: 0 0 12px; }
 
+    .nav-pills-custom .nav-link{
+    border:1px solid #dee2e6;
+    border-radius:16px;
+    background:#fff;
+    color:#495057;
+    transition:.25s ease;
+    box-shadow:0 .125rem .25rem rgba(0,0,0,.05);
+}
+
+.nav-pills-custom .nav-link:hover{
+    transform:translateY(-2px);
+    box-shadow:0 .5rem 1rem rgba(0,0,0,.12);
+    border-color:#0d6efd33;
+}
+
+.nav-pills-custom .nav-link.active{
+    background:#0d6efd;
+    color:#fff;
+    border-color:#0d6efd;
+    box-shadow:0 .75rem 1.5rem rgba(13,110,253,.25);
+}
+
+.nav-pills-custom .nav-link.active .text-muted{
+    color:rgba(255,255,255,.75)!important;
+}
+
+.nav-pills-custom .nav-link.active .badge{
+    padding: 5px;
+    background:#fff!important;
+    color:#0d6efd!important;
+}
+
+.icon-circle{
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.2rem;
+    transition:.25s;
+}
+
+.nav-pills-custom .nav-link.active .icon-circle{
+    background:rgba(255,255,255,.18)!important;
+    color:#fff!important;
+}
+
     /* A impressão da planilha é feita de forma isolada via iframe (ver JS),
        garantindo que APENAS a tabela seja impressa, sem o restante da página. */
 </style>
@@ -190,20 +238,59 @@
     </div>
 
     <!-- Navegação entre Estoque da Loja e Estoque Interno -->
-    <ul class="nav nav-pills nav-pills-custom gap-2 mb-4" id="tabsEstoque" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#estoqueLoja" type="button">
-                <i class="bi bi-shop me-1"></i> Estoque da Loja
-                <span class="badge bg-light text-dark ms-1">{{ produtosLoja|length }}</span>
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#estoqueInterno" type="button">
-                <i class="bi bi-hospital me-1"></i> Estoque Interno (Clínica)
-                <span class="badge bg-light text-dark ms-1">{{ produtosInterno|length }}</span>
-            </button>
-        </li>
-    </ul>
+<ul class="nav nav-pills nav-pills-custom gap-3 mb-4" id="tabsEstoque" role="tablist">
+
+    <li class="nav-item flex-fill">
+        <button
+            class="nav-link active border d-flex align-items-center justify-content-between w-100 px-4 py-3"
+            data-bs-toggle="tab"
+            data-bs-target="#estoqueLoja"
+            type="button">
+
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle pt-2 bg-primary-subtle text-primary me-3" style="width: 45px; height: 45px; ">
+                    <i class="bi bi-shop"></i>
+                </div>
+
+                <div class="text-start">
+                    <div class="fw-semibold">Estoque da Loja</div>
+                    <small class="text-muted">Produtos disponíveis para venda</small>
+                </div>
+            </div>
+
+            <span class="badge rounded-pill bg-dark text-white">
+                {{ produtosLoja|length }}
+            </span>
+
+        </button>
+    </li>
+
+    <li class="nav-item flex-fill">
+        <button
+            class="nav-link d-flex border align-items-center justify-content-between w-100 px-4 py-3"
+            data-bs-toggle="tab"
+            data-bs-target="#estoqueInterno"
+            type="button">
+
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle pt-2 bg-success-subtle text-success me-3" style="width: 45px; height: 45px; ">
+                    <i class="bi bi-hospital"></i>
+                </div>
+
+                <div class="text-start">
+                    <div class="fw-semibold">Estoque Interno</div>
+                    <small class="text-muted">Uso exclusivo da clínica</small>
+                </div>
+            </div>
+
+            <span class="badge rounded-pill bg-dark text-white">
+                {{ produtosInterno|length }}
+            </span>
+
+        </button>
+    </li>
+
+</ul>
 
     <div class="tab-content">
     <!-- ==================== ABA: ESTOQUE DA LOJA ==================== -->
