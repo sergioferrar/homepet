@@ -503,38 +503,61 @@
 
 <!-- Área imprimível da planilha de uso interno (visível apenas na impressão) -->
 <div id="planilhaInternaPrint" class="d-none">
-    <div class="print-cabecalho">
-        <h2>Planilha de Uso Interno — Clínica</h2>
-        <p>Data: ____/____/________ &nbsp;&nbsp; Responsável: ______________________________</p>
+    <div class="receita-container">
+        <div class="cabecalho">
+            <h4>{{ estabelecimento.razaoSocial|default('Clínica Veterinária') }}</h4>
+            {% if estabelecimento %}
+                <p class="endereco">
+                    {{ estabelecimento.rua }}{% if estabelecimento.numero %}, {{ estabelecimento.numero }}{% endif %}{% if estabelecimento.complemento %} - {{ estabelecimento.complemento }}{% endif %}
+                    {% if estabelecimento.bairro %} - {{ estabelecimento.bairro }}{% endif %}
+                    {% if estabelecimento.cidade %} - {{ estabelecimento.cidade }}{% endif %}
+                    {% if estabelecimento.cnpj %}<br>CNPJ: {{ estabelecimento.cnpj }}{% endif %}
+                </p>
+            {% endif %}
+            <hr>
+            <h5 class="titulo-doc">Planilha de Uso Interno — Estoque da Clínica</h5>
+            <p class="linha-data">
+                Data: ____ / ____ / ________ &nbsp;&nbsp;&nbsp;
+                Responsável: _______________________________________
+            </p>
+        </div>
+
+        <div class="conteudo">
+            <table class="tabela-print">
+                <thead>
+                    <tr>
+                        <th style="width:30%">Produto</th>
+                        <th style="width:9%">Unid.</th>
+                        <th style="width:13%">Qtd. em Estoque</th>
+                        <th style="width:12%">Qtd. Usada</th>
+                        <th style="width:24%">Animal / Tutor</th>
+                        <th style="width:12%">Data/Hora</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in produtosInterno %}
+                    <tr>
+                        <td>{{ p.nome }}{% if p.tipo_estoque == 'ambos' %} <small>(loja+interno)</small>{% endif %}</td>
+                        <td class="tc">{{ p.unidade|default('un') }}</td>
+                        <td class="tc">{{ p.estoqueAtual }}</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    {% endfor %}
+                    {# Linhas em branco extras para anotações manuais #}
+                    {% for i in 1..6 %}
+                    <tr class="linha-branco"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="rodape">
+            <p>_______________________________________</p>
+            <p class="assinatura">Assinatura do(a) Médico(a) Veterinário(a) &nbsp;&nbsp; CRMV: ______________</p>
+        </div>
     </div>
-    <table class="tabela-print">
-        <thead>
-            <tr>
-                <th style="width:32%">Produto</th>
-                <th style="width:10%">Unid.</th>
-                <th style="width:12%">Qtd. em Estoque</th>
-                <th style="width:12%">Qtd. Usada</th>
-                <th style="width:22%">Animal / Tutor</th>
-                <th style="width:12%">Data/Hora</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for p in produtosInterno %}
-            <tr>
-                <td>{{ p.nome }}{% if p.tipo_estoque == 'ambos' %} (loja+interno){% endif %}</td>
-                <td class="tc">{{ p.unidade|default('un') }}</td>
-                <td class="tc">{{ p.estoqueAtual }}</td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            {% endfor %}
-            {# Linhas em branco extras para anotações manuais #}
-            {% for i in 1..6 %}
-            <tr class="linha-branco"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
 </div>
 
 <!-- Conteúdo oculto para o modal de cadastro -->
@@ -1335,14 +1358,24 @@ $(function () {
         var estilos =
             '<style>' +
             '* { box-sizing: border-box; }' +
-            'body { font-family: Arial, Helvetica, sans-serif; color: #000; margin: 12px; }' +
-            '.print-cabecalho h2 { font-size: 18px; margin: 0 0 4px; }' +
-            '.print-cabecalho p { font-size: 12px; margin: 0 0 12px; }' +
+            'body { font-family: "DejaVu Sans", Arial, Helvetica, sans-serif; color: #000; margin: 0; padding: 20px; }' +
+            '.receita-container { padding: 24px; border: 1px solid #ccc; border-radius: 12px; }' +
+            '.cabecalho { text-align: center; margin-bottom: 24px; }' +
+            '.cabecalho h4 { font-size: 20px; margin: 0 0 4px; }' +
+            '.cabecalho h5.titulo-doc { font-size: 15px; margin: 8px 0 6px; font-weight: bold; }' +
+            '.cabecalho .endereco { font-size: 11px; color: #333; margin: 0; }' +
+            '.cabecalho .linha-data { font-size: 12px; margin: 6px 0 0; }' +
+            '.cabecalho hr { border: 0; border-top: 1px solid #999; margin: 14px 0; }' +
+            '.conteudo { margin: 16px 0 28px; }' +
             '.tabela-print { width: 100%; border-collapse: collapse; font-size: 12px; }' +
-            '.tabela-print th, .tabela-print td { border: 1px solid #333; padding: 6px 8px; text-align: left; height: 28px; }' +
+            '.tabela-print th, .tabela-print td { border: 1px solid #333; padding: 6px 8px; text-align: left; height: 30px; }' +
             '.tabela-print th { background: #eee; }' +
             '.tabela-print .tc { text-align: center; }' +
-            '@page { margin: 12mm; }' +
+            '.tabela-print small { color: #555; }' +
+            '.rodape { text-align: center; margin-top: 40px; }' +
+            '.rodape p { margin: 0; font-size: 12px; }' +
+            '.rodape .assinatura { font-size: 11px; color: #333; }' +
+            '@page { size: A4 landscape; margin: 12mm; }' +
             '</style>';
 
         var iframe = document.createElement('iframe');

@@ -28,6 +28,19 @@ class EstoqueController extends DefaultController
         $this->switchDB();
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
 
+        // Dados do estabelecimento para o cabeçalho da planilha impressa
+        // (a tabela de estabelecimentos fica no banco de login).
+        $estabelecimento = null;
+        try {
+            $this->restauraLoginDB();
+            $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)
+                ->find($this->getIdBase());
+        } catch (\Throwable $e) {
+            $estabelecimento = null;
+        } finally {
+            $this->switchDB();
+        }
+
         try {
             // Parte da tabela produto para listar TODOS os produtos do estabelecimento,
             // mesmo os que ainda não possuem registro na tabela estoque.
@@ -76,6 +89,7 @@ class EstoqueController extends DefaultController
                 'produtos' => $produtos,
                 'produtosLoja' => $produtosLoja,
                 'produtosInterno' => $produtosInterno,
+                'estabelecimento' => $estabelecimento,
                 'estatisticas' => $this->calcularEstatisticas($produtos),
                 'estatisticasLoja' => $this->calcularEstatisticas($produtosLoja),
                 'estatisticasInterno' => $this->calcularEstatisticas($produtosInterno),
