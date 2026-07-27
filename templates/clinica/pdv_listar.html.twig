@@ -44,7 +44,7 @@
         </div>
         <hr>
 
-        <table class="table table-striped table-hover align-middle">
+        <table id="tabelaVendas" class="table table-striped table-hover align-middle">
             <thead class="table-light">
             <tr>
                 <th>#ID</th>
@@ -100,4 +100,30 @@
             </tbody>
         </table>
     </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% if vendas is not empty %}
+    <script>
+        $(document).ready(function () {
+            if ($.fn.DataTable && $('#tabelaVendas').length) {
+                $('#tabelaVendas').DataTable({
+                    language: {
+                        url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/pt-BR.json'
+                    },
+                    // Mantém a ordem vinda do servidor (mais recentes primeiro)
+                    order: [],
+                    pageLength: 25,
+                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Todos']],
+                    responsive: true,
+                    // Coluna "Ações" não entra na ordenação nem na busca
+                    columnDefs: [
+                        { orderable: false, searchable: false, targets: -1 }
+                    ]
+                });
+            }
+        });
+    </script>
+    {% endif %}
 {% endblock %}
