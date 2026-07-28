@@ -266,7 +266,7 @@
             petSelect.innerHTML = '<option value="">Carregando pets...</option>';
             petSelect.disabled = true;
 
-            fetch(`${$('meta[name="base"]').attr('content')}/orcamento/api/cliente/${clienteId}/pets`)
+            fetch('{{ path('api_cliente_pets', {id: '__CLIENTE_ID__'}) }}'.replace('__CLIENTE_ID__', clienteId))
                 .then(r => {
                     console.log('Resposta recebida:', r);
                     return r.json();
