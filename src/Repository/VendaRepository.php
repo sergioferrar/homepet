@@ -55,14 +55,34 @@ class VendaRepository extends ServiceEntityRepository
      */
     public function totalPorFormaPagamento(int $baseId, \DateTime $data): array
     {
-        $sql = "SELECT metodo_pagamento AS metodo,
-                       COALESCE(SUM(total), 0) AS total
-                FROM homepet_{$baseId}.venda
-                WHERE estabelecimento_id = :baseId
-                  AND DATE(data) = :data
-                  AND status NOT IN ('Carrinho', 'Cancelada')
-                GROUP BY metodo_pagamento
-                ORDER BY metodo_pagamento ASC";
+        // Vendas com pagamento dividido usam as linhas de venda_pagamento;
+        // as demais usam o método/total da própria venda. O NOT EXISTS evita
+        // contar em dobro as vendas divididas.
+        $sql = "SELECT metodo, COALESCE(SUM(valor), 0) AS total FROM (
+                    SELECT vp.metodo AS metodo, vp.valor AS valor
+                    FROM homepet_{$baseId}.venda_pagamento vp
+                    JOIN homepet_{$baseId}.venda v
+                      ON v.id = vp.venda_id
+                     AND v.estabelecimento_id = vp.estabelecimento_id
+                    WHERE vp.estabelecimento_id = :baseId
+                      AND DATE(v.data) = :data
+                      AND v.status NOT IN ('Carrinho', 'Cancelada')
+
+                    UNION ALL
+
+                    SELECT v.metodo_pagamento AS metodo, v.total AS valor
+                    FROM homepet_{$baseId}.venda v
+                    WHERE v.estabelecimento_id = :baseId
+                      AND DATE(v.data) = :data
+                      AND v.status NOT IN ('Carrinho', 'Cancelada')
+                      AND NOT EXISTS (
+                          SELECT 1 FROM homepet_{$baseId}.venda_pagamento vp2
+                          WHERE vp2.venda_id = v.id
+                            AND vp2.estabelecimento_id = v.estabelecimento_id
+                      )
+                ) t
+                GROUP BY metodo
+                ORDER BY metodo ASC";
 
         return $this->conn->fetchAllAssociative($sql, [
             'baseId' => $baseId,
@@ -358,6 +378,33 @@ class VendaRepository extends ServiceEntityRepository
             'valor'     => $total,
             'metodo'    => $metodo,
             'pet_id'    => $petId,
+        ]);
+    }
+
+    /**
+     * Insere uma forma de pagamento da venda (pagamento dividido) via SQL nativo.
+     * Usa a conexão já apontada para o banco do tenant (switchDB).
+     */
+    public function inserirPagamento(
+        int $estabelecimentoId,
+        int $vendaId,
+        string $metodo,
+        float $valor,
+        ?string $bandeiraCartao = null,
+        ?int $parcelas = null
+    ): void {
+        $sql = "INSERT INTO venda_pagamento
+                    (estabelecimento_id, venda_id, metodo, valor, bandeira_cartao, parcelas, data)
+                VALUES
+                    (:estab, :venda, :metodo, :valor, :bandeira, :parcelas, NOW())";
+
+        $this->conn->executeStatement($sql, [
+            'estab'    => $estabelecimentoId,
+            'venda'    => $vendaId,
+            'metodo'   => $metodo,
+            'valor'    => $valor,
+            'bandeira' => $bandeiraCartao,
+            'parcelas' => $parcelas,
         ]);
     }
 

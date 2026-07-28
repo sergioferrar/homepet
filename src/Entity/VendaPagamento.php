@@ -2,7 +2,6 @@
 
 namespace App\Entity;
 
-use App\Repository\VendaPagamentoRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -11,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * Uma venda pode ter uma ou mais formas (pagamento dividido). Ex.: uma venda de
  * R$ 300,00 paga com R$ 200,00 no cartão e R$ 100,00 no PIX gera dois registros.
  *
- * @ORM\Entity(repositoryClass=VendaPagamentoRepository::class)
+ * @ORM\Entity
  * @ORM\Table(name="venda_pagamento")
  */
 class VendaPagamento

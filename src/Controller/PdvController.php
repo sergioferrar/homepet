@@ -466,7 +466,6 @@ class PdvController extends DefaultController
                 if (!empty($pagamentos)) {
                     // Um lançamento no financeiro por forma (relatórios corretos)
                     // e registra cada forma em venda_pagamento.
-                    $vpRepo = $this->getRepositorio(\App\Entity\VendaPagamento::class);
                     foreach ($pagamentos as $p) {
                         $vendaRepo->inserirFinanceiro(
                             $estabelecimentoId,
@@ -476,7 +475,7 @@ class PdvController extends DefaultController
                             $venda['pet_id'] ?? null,
                             $id
                         );
-                        $vpRepo->inserir(
+                        $vendaRepo->inserirPagamento(
                             $estabelecimentoId,
                             $id,
                             $p['metodo'],

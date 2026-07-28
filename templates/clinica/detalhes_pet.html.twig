@@ -409,6 +409,23 @@
                                     <input type="hidden" name="cliente_id" value="{{ pet.dono_id }}">
                                     <input type="hidden" name="data" value="{{ "now"|date("Y-m-d") }}">
                                     <input type="hidden" name="hora" value="{{ "now"|date("H:i:s") }}">
+
+                                    <!-- Atendimento para mais de um pet do mesmo tutor -->
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="ficha-toggle-mais-pets">
+                                        <label class="form-check-label" for="ficha-toggle-mais-pets">
+                                            <i class="bi bi-collection me-1"></i>Atendimento para mais de um pet do mesmo tutor
+                                        </label>
+                                    </div>
+                                    <div class="mb-3 d-none" id="ficha-bloco-pets-adicionais"
+                                         data-dono-id="{{ pet.dono_id }}" data-pet-atual="{{ pet.id }}">
+                                        <label class="form-label mb-1">Incluir também estes pets no mesmo atendimento:</label>
+                                        <div id="ficha-lista-pets-adicionais" class="border rounded p-2" style="max-height:150px; overflow-y:auto;">
+                                            <small class="text-muted">Carregando pets do tutor...</small>
+                                        </div>
+                                        <small class="text-muted d-block mt-1">Um único atendimento cobre todos os pets marcados — um pagamento e uma nota só.</small>
+                                    </div>
+
                                     <div class="d-flex justify-content-end"><button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Salvar Atendimento</button></div>
                                 </div>
                             </form>
@@ -1780,6 +1797,49 @@ document.getElementById('pdvIframe').addEventListener('load', function () {
     if (loading) {
         loading.style.display = 'none';
     }
+});
+
+// ===== Atendimento para mais de um pet do mesmo tutor (ficha) =====
+$(document).ready(function () {
+    const bloco = document.getElementById('ficha-bloco-pets-adicionais');
+    if (!bloco) return;
+
+    const donoId = bloco.dataset.donoId;
+    const petAtual = bloco.dataset.petAtual;
+    const lista = document.getElementById('ficha-lista-pets-adicionais');
+    let carregado = false;
+
+    function carregarPetsDoTutor() {
+        if (carregado || !donoId) return;
+        carregado = true;
+
+        const url = '{{ path("clinica_api_pets", {"clienteId": "CLIENTE_ID"}) }}'.replace('CLIENTE_ID', donoId);
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                const outros = (data || []).filter(p => String(p.id) !== String(petAtual));
+                if (outros.length === 0) {
+                    lista.innerHTML = '<small class="text-muted">Este tutor não tem outros pets cadastrados.</small>';
+                    return;
+                }
+                lista.innerHTML = outros.map(p => `
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="pets_adicionais[]"
+                               value="${p.id}" id="ficha_petadd_${p.id}">
+                        <label class="form-check-label" for="ficha_petadd_${p.id}">${p.nome}</label>
+                    </div>
+                `).join('');
+            })
+            .catch(() => {
+                lista.innerHTML = '<small class="text-danger">Erro ao carregar os pets do tutor.</small>';
+                carregado = false;
+            });
+    }
+
+    document.getElementById('ficha-toggle-mais-pets').addEventListener('change', function () {
+        bloco.classList.toggle('d-none', !this.checked);
+        if (this.checked) carregarPetsDoTutor();
+    });
 });
 </script>
 {% endblock %}

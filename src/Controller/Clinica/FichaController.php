@@ -93,7 +93,17 @@ class FichaController extends DefaultController
             $consulta->setAttachmentOriginal($arquivo->getClientOriginalName());
         }
 
-        $this->getRepositorio(Consulta::class)->salvarConsulta($baseId, $consulta);
+        $consultaId = $this->getRepositorio(Consulta::class)->salvarConsulta($baseId, $consulta);
+
+        // Atendimento para mais de um pet do mesmo tutor (pets adicionais).
+        $petsAdicionais = array_filter(
+            array_map('intval', (array) $request->get('pets_adicionais', [])),
+            fn($id) => $id > 0 && $id !== $petId
+        );
+        if (!empty($petsAdicionais)) {
+            $this->getRepositorio(Consulta::class)
+                ->salvarPetsAdicionais($baseId, $consultaId, (int) $baseId, $petsAdicionais);
+        }
 
         if ($isAjax) {
             return $this->json([
@@ -351,7 +361,9 @@ class FichaController extends DefaultController
     public function novaConsulta(Request $request): Response
     {
         $this->switchDB();
-        $baseId = $this->session->get('userId');
+        // Usa o ID do tenant conectado (mesmo do switchDB), e não o userId,
+        // para as queries apontarem para o banco correto (homepet_<tenant>).
+        $baseId = $this->getIdBase();
 
         $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($baseId);
 
@@ -370,8 +382,23 @@ class FichaController extends DefaultController
             $consulta->setObservacoes($request->get('observacoes'));
             $consulta->setStatus('aguardando');
 
-            $this->getRepositorio(Consulta::class)->salvarConsulta($baseId, $consulta);
-            $this->addFlash('success', 'Consulta marcada com sucesso!');
+            $consultaId = $this->getRepositorio(Consulta::class)->salvarConsulta($baseId, $consulta);
+
+            // Atendimento para mais de um pet do mesmo tutor: salva os pets
+            // adicionais (o pet principal já está na própria consulta).
+            $petsAdicionais = array_filter(
+                array_map('intval', (array) $request->get('pets_adicionais', [])),
+                fn($id) => $id > 0 && $id !== (int) $request->get('pet_id')
+            );
+
+            if (!empty($petsAdicionais)) {
+                $this->getRepositorio(Consulta::class)
+                    ->salvarPetsAdicionais($baseId, $consultaId, (int) $baseId, $petsAdicionais);
+                $this->addFlash('success', 'Atendimento marcado para ' . (count($petsAdicionais) + 1) . ' pets do mesmo tutor!');
+            } else {
+                $this->addFlash('success', 'Consulta marcada com sucesso!');
+            }
+
             return $this->redirectToRoute('clinica_nova_consulta');
         }
 

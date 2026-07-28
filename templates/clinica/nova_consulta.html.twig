@@ -26,6 +26,24 @@
                                 <select id="pet_id" name="pet_id" class="form-control" required></select>
                             </div>
 
+                            <!-- Atendimento para mais de um pet do mesmo tutor -->
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="toggleMaisPets">
+                                <label class="form-check-label" for="toggleMaisPets">
+                                    <i class="bi bi-collection me-1"></i>Atendimento para mais de um pet do mesmo tutor
+                                </label>
+                            </div>
+
+                            <div class="form-group mb-3 d-none" id="blocoPetsAdicionais">
+                                <label class="mb-1">Incluir também estes pets no mesmo atendimento:</label>
+                                <div id="listaPetsAdicionais" class="border rounded p-2" style="max-height: 160px; overflow-y:auto;">
+                                    <small class="text-muted">Selecione um cliente para listar os pets.</small>
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    Um único atendimento cobre todos os pets marcados — gerando um pagamento e uma nota fiscal só.
+                                </small>
+                            </div>
+
                             <div class="form-group mb-3">
                                 <label for="data">Data</label>
                                 <input type="date" id="data" name="data" class="form-control" required>
@@ -85,7 +103,7 @@
                                          id="consulta-{{ c.id }}">
                                         <div>
                                             <strong>🕒 {{ c.hora|date('H:i') }}</strong><br>
-                                            <strong>🐶 Pet:</strong> {{ c.pet_nome }}<br>
+                                            <strong>🐶 Pet:</strong> {{ c.pet_nome }}{% if c.pets_extra is defined and c.pets_extra > 0 %} <span class="badge bg-info text-dark">+{{ c.pets_extra }} pet{{ c.pets_extra > 1 ? 's' : '' }}</span>{% endif %}<br>
                                             <strong>👤 Dono:</strong> {{ c.cliente_nome }}<br>
                                             {% if c.observacoes %}
                                                 <strong>📌 Obs:</strong> {{ c.observacoes }}
@@ -120,6 +138,8 @@
     </div>
 
     <script>
+        let petsDoCliente = [];
+
         document.getElementById('cliente_id').addEventListener('change', function () {
             const clienteId = this.value;
             const url = '{{ path("clinica_api_pets", {"clienteId": "CLIENTE_ID"}) }}'.replace('CLIENTE_ID', clienteId);
@@ -127,23 +147,57 @@
             fetch(url)
                 .then(resp => resp.json())
                 .then(data => {
+                    petsDoCliente = data || [];
                     const select = document.getElementById('pet_id');
                     select.innerHTML = '';
-                    if (data.length === 0) {
+                    if (petsDoCliente.length === 0) {
                         const opt = document.createElement('option');
                         opt.text = 'Nenhum pet encontrado';
                         select.appendChild(opt);
                     } else {
-                        data.forEach(pet => {
+                        petsDoCliente.forEach(pet => {
                             const opt = document.createElement('option');
                             opt.value = pet.id;
                             opt.innerText = pet.nome;
                             select.appendChild(opt);
                         });
                     }
+                    renderPetsAdicionais();
                 })
                 .catch(err => console.error(err));
         });
+
+        // Ao trocar o pet principal, remove-o da lista de adicionais
+        document.getElementById('pet_id').addEventListener('change', renderPetsAdicionais);
+
+        // Liga/desliga o bloco de pets adicionais
+        document.getElementById('toggleMaisPets').addEventListener('change', function () {
+            document.getElementById('blocoPetsAdicionais').classList.toggle('d-none', !this.checked);
+            renderPetsAdicionais();
+        });
+
+        function renderPetsAdicionais() {
+            const container = document.getElementById('listaPetsAdicionais');
+            const principal = document.getElementById('pet_id').value;
+            const ativo = document.getElementById('toggleMaisPets').checked;
+
+            if (!ativo) { return; }
+
+            const outros = petsDoCliente.filter(p => String(p.id) !== String(principal));
+
+            if (outros.length === 0) {
+                container.innerHTML = '<small class="text-muted">Este tutor não tem outros pets cadastrados.</small>';
+                return;
+            }
+
+            container.innerHTML = outros.map(p => `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="pets_adicionais[]"
+                           value="${p.id}" id="petadd_${p.id}">
+                    <label class="form-check-label" for="petadd_${p.id}">${p.nome}</label>
+                </div>
+            `).join('');
+        }
 
         function setStatus(id, status) {
             const url = '{{ path("clinica_consulta_status", {"id": "CONSULTA_ID", "status": "STATUS"}) }}'

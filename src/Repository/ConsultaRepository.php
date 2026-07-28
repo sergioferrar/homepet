@@ -16,7 +16,7 @@ class ConsultaRepository extends ServiceEntityRepository
         $this->conn = $this->getEntityManager()->getConnection();
     }
 
-    public function salvarConsulta($baseId, Consulta $consulta): void // Removido $baseId, pois já está no objeto
+    public function salvarConsulta($baseId, Consulta $consulta): int // Removido $baseId, pois já está no objeto
     {
        
         $sql = "INSERT INTO homepet_{$baseId}.consulta
@@ -40,6 +40,50 @@ class ConsultaRepository extends ServiceEntityRepository
         $stmt->bindValue('attachment_original', $consulta->getAttachmentOriginal());
 
         $stmt->executeStatement();
+
+        return (int) $this->conn->lastInsertId();
+    }
+
+    /**
+     * Salva os pets adicionais de um atendimento (além do pet principal).
+     * Ignora silenciosamente duplicados (chave única consulta_id + pet_id).
+     */
+    public function salvarPetsAdicionais($baseId, int $consultaId, int $estabelecimentoId, array $petIds): void
+    {
+        if (empty($petIds)) {
+            return;
+        }
+
+        $sql = "INSERT IGNORE INTO homepet_{$baseId}.consulta_pet
+                    (estabelecimento_id, consulta_id, pet_id)
+                VALUES (:estab, :consulta, :pet)";
+        $stmt = $this->conn->prepare($sql);
+
+        foreach (array_unique($petIds) as $petId) {
+            $petId = (int) $petId;
+            if ($petId <= 0) {
+                continue;
+            }
+            $stmt->bindValue('estab', $estabelecimentoId);
+            $stmt->bindValue('consulta', $consultaId);
+            $stmt->bindValue('pet', $petId);
+            $stmt->executeStatement();
+        }
+    }
+
+    /**
+     * Lista os pets adicionais de uma consulta (com nome), para exibição.
+     */
+    public function listarPetsDaConsulta($baseId, int $consultaId): array
+    {
+        $sql = "SELECT p.id, p.nome
+                FROM homepet_{$baseId}.consulta_pet cp
+                JOIN homepet_{$baseId}.pet p ON p.id = cp.pet_id
+                WHERE cp.consulta_id = :consulta
+                ORDER BY p.nome";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('consulta', $consultaId);
+        return $stmt->executeQuery()->fetchAllAssociative();
     }
 
 
@@ -62,7 +106,9 @@ class ConsultaRepository extends ServiceEntityRepository
     public function listarConsultasDoDia($baseId, \DateTime $data): array
     {
         $sql = "SELECT c.id, c.data, c.hora, c.observacoes, c.status,
-                       p.nome as pet_nome, cl.nome as cliente_nome
+                       p.nome as pet_nome, cl.nome as cliente_nome,
+                       (SELECT COUNT(*) FROM homepet_{$baseId}.consulta_pet cp
+                         WHERE cp.consulta_id = c.id) AS pets_extra
                 FROM homepet_{$baseId}.consulta c
                 JOIN homepet_{$baseId}.pet p ON c.pet_id = p.id
                 JOIN homepet_{$baseId}.cliente cl ON c.cliente_id = cl.id
