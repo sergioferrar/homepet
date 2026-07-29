@@ -442,13 +442,21 @@
                                     <div class="row">
                                         <div class="col-md-12 mb-3">
                                             <label class="form-label">Veterinário responsável</label>
-                                            <select class="form-select" name="veterinario_id">
+                                            {% set vetSessao = veterinario_sessao_id() %}
+                                            {% set vetPreSel = receita_vet_id is defined and receita_vet_id ? receita_vet_id : vetSessao %}
+                                            <select class="form-select" name="veterinario_id" required>
                                                 <option value="">Selecione o veterinário</option>
                                                 {% for row in veterinario %}
-                                                <option value="{{ row.id }}" {% if receita_vet_id is defined and receita_vet_id == row.id %}selected{% endif %}>{{ row.nome }}{% if row.crmv %} — CRMV: {{ row.crmv }}{% endif %}</option>
+                                                <option value="{{ row.id }}" {% if vetPreSel and vetPreSel == row.id %}selected{% endif %}>{{ row.nome }}{% if row.crmv %} — CRMV: {{ row.crmv }}{% endif %}{% if vetSessao and vetSessao == row.id %} (meu cadastro){% endif %}</option>
                                                 {% endfor %}
                                             </select>
-                                            <small class="text-muted">Pré-selecionado com o profissional do último atendimento. Altere se necessário.</small>
+                                            <small class="text-muted">
+                                                {% if vetSessao %}
+                                                    Já vem com o seu cadastro (usuário logado). Você pode trocar por outro veterinário se necessário.
+                                                {% else %}
+                                                    Selecione o veterinário responsável pela receita.
+                                                {% endif %}
+                                            </small>
                                         </div>
                                     </div>
                                     <div class="mb-3"><label class="form-label">Conteúdo da Receita</label><div id="editor-conteudo"></div><input type="hidden" name="conteudo" id="conteudo-input"></div>

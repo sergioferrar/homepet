@@ -40,6 +40,7 @@ class AppExtension extends AbstractExtension
         return [
             new TwigFunction('pode_ver_financeiro', [$this, 'podeVerFinanceiro']),
             new TwigFunction('rota_financeira', [$this, 'rotaFinanceira']),
+            new TwigFunction('veterinario_sessao_id', [$this, 'veterinarioSessaoId']),
             new TwigFunction('function_name', [$this, 'getEstate']),
             new TwigFunction('routeExists', [$this, 'routeExists']),
         ];
@@ -55,6 +56,20 @@ class AppExtension extends AbstractExtension
             return false;
         }
         return in_array($user->getAccessLevel(), ['Admin', 'Super Admin', 'Financeiro'], true);
+    }
+
+    /**
+     * ID do veterinário vinculado ao usuário logado (nível "Veterinário"),
+     * ou null. Usado para pré-selecionar o veterinário na receita.
+     */
+    public function veterinarioSessaoId(): ?int
+    {
+        $user = $this->security->getUser();
+        if ($user && method_exists($user, 'getVeterinarioId')) {
+            $id = $user->getVeterinarioId();
+            return $id ? (int) $id : null;
+        }
+        return null;
     }
 
     /**

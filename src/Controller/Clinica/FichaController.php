@@ -183,6 +183,14 @@ class FichaController extends DefaultController
             $vet = $vetRepo->find((int) $vetIdSelecionado);
         }
 
+        // Se nada foi escolhido, usa o veterinário vinculado ao usuário logado (sessão)
+        if (!$vet) {
+            $user = $this->getUser();
+            if ($user && method_exists($user, 'getVeterinarioId') && $user->getVeterinarioId()) {
+                $vet = $vetRepo->find((int) $user->getVeterinarioId());
+            }
+        }
+
         if (!$vet) {
             $vetIdConsulta = $this->getRepositorio(Consulta::class)->findVetIdUltimaConsulta($baseId, $petId);
             if ($vetIdConsulta) {
