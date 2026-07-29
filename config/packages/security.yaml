@@ -72,6 +72,7 @@ security:
         - { path: ^/landing, roles: PUBLIC_ACCESS }
         - { path: ^/estabelecimento/cadastrar, roles: PUBLIC_ACCESS }
         - { path: ^/usuario/cadastrar, roles: PUBLIC_ACCESS }
+        - { path: ^/usuario/definir-senha, roles: PUBLIC_ACCESS }
         - { path: ^/assinatura/*, roles: PUBLIC_ACCESS }
         - { path: ^/pagamento/*, roles: PUBLIC_ACCESS }
         - { path: ^/dashboard/nota-fiscal/*, roles: PUBLIC_ACCESS }

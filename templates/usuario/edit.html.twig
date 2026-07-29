@@ -1,76 +1,116 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Editar informações do usuário {{ usuario.nomeUsuario }}{% endblock %}
-{% block page_title %}Editar informações do usuário {{ usuario.nomeUsuario }}{% endblock %}
+{% block title %}Editar usuário {{ usuario.nomeUsuario }}{% endblock %}
+{% block page_title %}Editar usuário{% endblock %}
+
 {% block body %}
+<div class="container-fluid px-4 py-3">
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'danger' ? 'danger' : (label == 'warning' ? 'warning' : 'success') }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
 
-
-    <div class="pagetitle">
-        <h1>Editar informações do usuário {{ usuario.nomeUsuario }}
-            <a href="{{ path('app_usuario') }}" class="btn btn-primary float-end">
-                <i class="bi bi-arrow-left me-1"></i>Voltar
-            </a>
-        </h1>
-        <nav></h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
-                    <li class="breadcrumb-item">Gestão</li>
-                    <li class="breadcrumb-item">Listagem de usuários</li>
-                    <li class="breadcrumb-item active">Editar informações do usuário {{ usuario.nomeUsuario }}</li>
-                </ol>
-            </nav>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="bi bi-person-gear me-2"></i>Editar usuário</h4>
+        <a href="{{ path('app_usuario') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
     </div>
-    <div class="container-fluid mt-5">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Preencha as informações abaixo</h5>
-                <form method="post" action="{{ url('usuario_edit_save') }}">
-                    <div class="form-group mb-3">
-                        <label for="nome_usuario">Nome do usuário</label>
-                        <input type="text" class="form-control" id="nome_usuario" name="nome_usuario"
-                               value="{{ usuario.nomeUsuario }}" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="email">E-mail</label>
-                        <input type="email" class="form-control" id="email" name="email" value="{{ usuario.email }}"
-                               required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="senha">Senha</label>
-                        <input type="password" class="form-control" id="senha" name="senha" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="pet_id">Nivel de acesso</label>
-                        <select name="access_level" id="access_level" class="form-select">
-                            <option value="">Selecione o nivel de acesso</option>
-                            {% if app.session.get('accessLevel') == 'Super Admin' %}
-                                <option {% if usuario.accessLevel == 'Super Admin' %} selected {% endif %}
-                                        value="Super Admin">Super Admin
-                                </option>
-                            {% endif %}
-                            <option {% if usuario.accessLevel == 'Admin' %} selected {% endif %} value="Admin">Admin
-                            </option>
-                            <option {% if usuario.accessLevel == 'Balconista' %} selected {% endif %}value="Balconista">
-                                Balconista
-                            </option>
-                            <option {% if usuario.accessLevel == 'Atendente' %} selected {% endif %} value="Atendente">
-                                Atendente
-                            </option>
-                            <option {% if usuario.accessLevel == 'Tosador' %} selected {% endif %} value="Tosador">
-                                Tosador
-                            </option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                </form>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>Dados do usuário</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url('usuario_edit_save') }}">
+                        <input type="hidden" name="id" value="{{ usuario.id }}">
+
+                        <div class="form-group mb-3">
+                            <label for="nome_usuario">Nome do usuário</label>
+                            <input type="text" class="form-control" id="nome_usuario" name="nome_usuario"
+                                   value="{{ usuario.nomeUsuario }}" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="email">E-mail (usado para login)</label>
+                            <input type="email" class="form-control" id="email" name="email"
+                                   value="{{ usuario.email }}" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="access_level">Nível de acesso</label>
+                            <select name="access_level" id="access_level" class="form-select">
+                                <option value="">Selecione o nível de acesso</option>
+                                {% if app.session.get('accessLevel') == 'Super Admin' %}
+                                    <option value="Super Admin" {{ usuario.accessLevel == 'Super Admin' ? 'selected' : '' }}>Super Admin</option>
+                                {% endif %}
+                                <option value="Admin" {{ usuario.accessLevel == 'Admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="Balconista" {{ usuario.accessLevel == 'Balconista' ? 'selected' : '' }}>Balconista</option>
+                                <option value="Atendente" {{ usuario.accessLevel == 'Atendente' ? 'selected' : '' }}>Atendente</option>
+                                <option value="Tosador" {{ usuario.accessLevel == 'Tosador' ? 'selected' : '' }}>Tosador</option>
+                                <option value="Financeiro" {{ usuario.accessLevel == 'Financeiro' ? 'selected' : '' }}>Financeiro</option>
+                                <option value="Veterinário" {{ usuario.accessLevel == 'Veterinário' ? 'selected' : '' }}>Veterinário</option>
+                            </select>
+                        </div>
+
+                        <!-- Vínculo com veterinário (aparece quando o nível é Veterinário) -->
+                        <div class="form-group mb-3 d-none" id="blocoVeterinario">
+                            <label for="veterinario_id">Veterinário vinculado</label>
+                            <select name="veterinario_id" id="veterinario_id" class="form-select">
+                                <option value="">Selecione o veterinário</option>
+                                {% for vet in veterinarios|default([]) %}
+                                    <option value="{{ vet.id }}" {{ usuario.veterinarioId == vet.id ? 'selected' : '' }}>
+                                        {{ vet.nome }}{% if vet.crmv %} — CRMV {{ vet.crmv }}{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">
+                                Ao logar, este usuário fica identificado como o veterinário selecionado (usado nas fichas e receitas).
+                            </small>
+                        </div>
+
+                        <div class="alert alert-light border small">
+                            <i class="bi bi-info-circle me-1"></i>
+                            A senha não é alterada aqui. Cada usuário define e altera a própria senha
+                            pelo convite por e-mail ou pela tela <strong>Meu Perfil</strong>.
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i>Salvar
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-
     </div>
+</div>
 {% endblock %}
+
 {% block javascripts %}
     <script>
         $('.search-bar').hide();
+
+        (function () {
+            const nivel = document.getElementById('access_level');
+            const bloco = document.getElementById('blocoVeterinario');
+            const selVet = document.getElementById('veterinario_id');
+
+            function atualizar() {
+                const isVet = nivel.value === 'Veterinário';
+                bloco.classList.toggle('d-none', !isVet);
+                if (selVet) selVet.required = isVet;
+            }
+
+            nivel.addEventListener('change', atualizar);
+            atualizar();
+        })();
     </script>
 {% endblock %}

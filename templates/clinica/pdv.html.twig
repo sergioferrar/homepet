@@ -1090,6 +1090,7 @@ async function salvarVenda() {
             tipo:       item.tipo
         })),
         total:      total,
+        desconto:   desconto,
         metodo:     metodo,
         origem:     'PDV',
         cliente_id: clienteSelecionado ? clienteSelecionado.id : null,

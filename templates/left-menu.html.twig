@@ -18,11 +18,13 @@
 
 {% if not isSuperAdminPuro %}
 
+    {% set podeFin = pode_ver_financeiro() %}
+
     {% for rows in menuService.getMenu() %}
 
         {% if rows.submenu == false %}
 
-            {% if rows.menu.status == 'ativo' %}
+            {% if rows.menu.status == 'ativo' and (podeFin or not rota_financeira(rows.menu.rota)) %}
                 <li class="nav-item">
                     <a class="nav-link {% if rotaAtual == rows.menu.rota %} active {% else %} collapsed {% endif %}"
                        href="{% if rows.menu.rota != '#' %}{{ path(rows.menu.rota) }}{% endif %}">
@@ -36,40 +38,49 @@
 
             {% if rows.menu.status == 'ativo' %}
 
-                {# Verifica se algum submenu está ativo #}
-                {% set menuAberto = false %}
+                {# Submenus visíveis para o nível atual (oculta os financeiros quando não permitido) #}
+                {% set subsVisiveis = [] %}
                 {% for sub in rows.submenu %}
-                    {% if sub.rota == rotaAtual %}
-                        {% set menuAberto = true %}
+                    {% if podeFin or not rota_financeira(sub.rota) %}
+                        {% set subsVisiveis = subsVisiveis|merge([sub]) %}
                     {% endif %}
                 {% endfor %}
 
-                <li class="nav-item">
-                    <a class="nav-link {% if not menuAberto %}collapsed{% else %}active{% endif %}"
-                       href="#"
-                       data-bs-toggle="collapse"
-                       data-bs-target="#menu-{{ rows.menu.id }}">
-                        <i class="bi bi-{{ rows.menu.icone }}"></i>
-                        <span>{{ rows.menu.titulo }}</span>
-                        <i class="bi bi-chevron-down ms-auto"></i>
-                    </a>
+                {% if subsVisiveis|length > 0 %}
+                    {% set menuAberto = false %}
+                    {% for sub in subsVisiveis %}
+                        {% if sub.rota == rotaAtual %}
+                            {% set menuAberto = true %}
+                        {% endif %}
+                    {% endfor %}
 
-                    <ul id="menu-{{ rows.menu.id }}"
-                        class="nav-content collapse {% if menuAberto %}show{% endif %}"
-                        data-bs-parent="#sidebar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link {% if not menuAberto %}collapsed{% else %}active{% endif %}"
+                           href="#"
+                           data-bs-toggle="collapse"
+                           data-bs-target="#menu-{{ rows.menu.id }}">
+                            <i class="bi bi-{{ rows.menu.icone }}"></i>
+                            <span>{{ rows.menu.titulo }}</span>
+                            <i class="bi bi-chevron-down ms-auto"></i>
+                        </a>
 
-                        {% for sub in rows.submenu %}
-                            <li>
-                                <a href="{{ path(sub.rota) }}"
-                                   class="{% if rotaAtual == sub.rota %}active{% endif %}">
-                                    <i class="bi bi-circle"></i>
-                                    <span>{{ sub.titulo }}</span>
-                                </a>
-                            </li>
-                        {% endfor %}
+                        <ul id="menu-{{ rows.menu.id }}"
+                            class="nav-content collapse {% if menuAberto %}show{% endif %}"
+                            data-bs-parent="#sidebar-nav">
 
-                    </ul>
-                </li>
+                            {% for sub in subsVisiveis %}
+                                <li>
+                                    <a href="{{ path(sub.rota) }}"
+                                       class="{% if rotaAtual == sub.rota %}active{% endif %}">
+                                        <i class="bi bi-circle"></i>
+                                        <span>{{ sub.titulo }}</span>
+                                    </a>
+                                </li>
+                            {% endfor %}
+
+                        </ul>
+                    </li>
+                {% endif %}
 
             {% endif %}
 

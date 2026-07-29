@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Meu Perfil{% endblock %}
+{% block page_title %}Meu Perfil{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 py-3">
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'danger' ? 'danger' : (label == 'warning' ? 'warning' : 'success') }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="row g-4">
+        <!-- Dados do usuário -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>Meus Dados</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ path('perfil_salvar_dados') }}">
+                        <div class="mb-3">
+                            <label class="form-label">Nome</label>
+                            <input type="text" name="nome_usuario" class="form-control"
+                                   value="{{ usuario.nomeUsuario }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">E-mail (usado para login)</label>
+                            <input type="email" name="email" class="form-control"
+                                   value="{{ usuario.email }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nível de acesso</label>
+                            <input type="text" class="form-control" value="{{ usuario.accessLevel }}" disabled>
+                            <small class="text-muted">Somente o administrador pode alterar o nível de acesso.</small>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i>Salvar dados
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alterar senha -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>Alterar Senha</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ path('perfil_alterar_senha') }}">
+                        <div class="mb-3">
+                            <label class="form-label">Senha atual</label>
+                            <input type="password" name="senha_atual" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nova senha</label>
+                            <input type="password" name="nova_senha" class="form-control" required minlength="6">
+                            <small class="text-muted">Mínimo de 6 caracteres.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirmar nova senha</label>
+                            <input type="password" name="confirmar_senha" class="form-control" required minlength="6">
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-key me-1"></i>Alterar senha
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

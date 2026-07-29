@@ -9,6 +9,7 @@ class RegistrarVendaDTO
 {
     public array $itens = [];
     public float $total;
+    public float $desconto = 0.0;
     public string $metodo;
     public ?int $clienteId = null;
     public ?float $troco = null;
@@ -33,6 +34,7 @@ class RegistrarVendaDTO
         
         $dto->itens = $dados['itens'] ?? [];
         $dto->total = (float)($dados['total'] ?? 0);
+        $dto->desconto = (float)($dados['desconto'] ?? 0);
         $dto->metodo = $dados['metodo'] ?? '';
         $dto->clienteId = !empty($dados['cliente_id']) ? (int)$dados['cliente_id'] : null;
         $dto->troco = !empty($dados['troco']) ? (float)$dados['troco'] : null;

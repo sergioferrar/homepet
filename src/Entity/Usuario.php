@@ -50,6 +50,29 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
      */
     private $petshop_id;
 
+    /**
+     * Vínculo com a tabela veterinario quando o nível de acesso é "Veterinário".
+     * @ORM\Column(type="integer", nullable=true, name="veterinario_id")
+     */
+    private $veterinarioId;
+
+    /**
+     * Usuário ativo. Fica inativo até definir a senha pelo link enviado por e-mail.
+     * @ORM\Column(type="boolean", options={"default": true})
+     */
+    private $ativo = true;
+
+    /**
+     * Token para o usuário definir a própria senha (cadastro sem senha).
+     * @ORM\Column(type="string", length=64, nullable=true, name="token_senha")
+     */
+    private $tokenSenha;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true, name="token_expira")
+     */
+    private $tokenExpira;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -170,7 +193,50 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPetshopId(?int $petshop_id): self
     {
         $this->petshop_id = $petshop_id;
+        return $this;
+    }
 
+    public function getVeterinarioId(): ?int
+    {
+        return $this->veterinarioId;
+    }
+
+    public function setVeterinarioId(?int $veterinarioId): self
+    {
+        $this->veterinarioId = $veterinarioId;
+        return $this;
+    }
+
+    public function getAtivo(): bool
+    {
+        return (bool) $this->ativo;
+    }
+
+    public function setAtivo(bool $ativo): self
+    {
+        $this->ativo = $ativo;
+        return $this;
+    }
+
+    public function getTokenSenha(): ?string
+    {
+        return $this->tokenSenha;
+    }
+
+    public function setTokenSenha(?string $tokenSenha): self
+    {
+        $this->tokenSenha = $tokenSenha;
+        return $this;
+    }
+
+    public function getTokenExpira(): ?\DateTimeInterface
+    {
+        return $this->tokenExpira;
+    }
+
+    public function setTokenExpira(?\DateTimeInterface $tokenExpira): self
+    {
+        $this->tokenExpira = $tokenExpira;
         return $this;
     }
 }

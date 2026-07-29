@@ -1,3 +1,7 @@
 framework:
     mailer:
         dsn: '%env(MAILER_DSN)%'
+        # Remetente padrão para todos os e-mails que não definirem um "From"
+        # explicitamente (evita o erro "must have a From or Sender header").
+        headers:
+            From: 'suporte@systemhomepet.com'

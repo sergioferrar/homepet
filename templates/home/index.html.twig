@@ -140,6 +140,7 @@
                         </div>
                     </div><!-- End Revenue Card -->
 
+                    {% if pode_ver_financeiro() %}
                     <!-- Customers Card -->
                     <div class="col-xxl-3 col-xl-12">
 
@@ -165,6 +166,7 @@
                         </div>
 
                     </div><!-- End Customers Card -->
+                    {% endif %}
                     <div class="col-xxl-3 col-xl-12">
 
                         <div class="card info-card customers-card">
@@ -201,6 +203,7 @@
 
             <!-- Right side columns -->
             <!-- Reports -->
+            {% if pode_ver_financeiro() %}
             <div class="col-12">
                 <div class="card">
 
@@ -263,6 +266,7 @@
 
                 </div>
             </div><!-- End Reports -->
+            {% endif %}
         </div>
     </section>
 

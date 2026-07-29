@@ -71,9 +71,10 @@ class PdvService
             $this->em->persist($venda);
             $this->em->flush(); // Flush para obter ID da venda
 
-            // 4. Adiciona itens e valida total
+            // 4. Adiciona itens e valida total (considerando o desconto aplicado)
             $totalCalculado = $this->adicionarItensVenda($venda, $dto->itens);
-            $this->validarTotalVenda($totalCalculado, $dto->total);
+            $desconto = max(0, (float) ($dto->desconto ?? 0));
+            $this->validarTotalVenda($totalCalculado - $desconto, $dto->total);
 
             // 5. Baixa estoque dos produtos
             $this->estoqueService->baixarEstoque(

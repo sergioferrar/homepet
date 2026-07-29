@@ -5,6 +5,7 @@ namespace App\Twig;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\Security;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
@@ -13,6 +14,7 @@ class AppExtension extends AbstractExtension
 {
     private $entityManager;
     private $router;
+    private $security;
 
     private $modulosSistema = [
         'agendamentosDePets' => 'Agendamentos de Pets',
@@ -26,10 +28,50 @@ class AppExtension extends AbstractExtension
         'clínicaVeterinária' => 'Clínica Veterinária',
     ];
 
-    public function __construct(EntityManagerInterface $entityManager, RouterInterface $router)
+    public function __construct(EntityManagerInterface $entityManager, RouterInterface $router, Security $security)
     {
         $this->entityManager = $entityManager;
         $this->router = $router;
+        $this->security = $security;
+    }
+
+    public function getFunctions(): array
+    {
+        return [
+            new TwigFunction('pode_ver_financeiro', [$this, 'podeVerFinanceiro']),
+            new TwigFunction('rota_financeira', [$this, 'rotaFinanceira']),
+            new TwigFunction('function_name', [$this, 'getEstate']),
+            new TwigFunction('routeExists', [$this, 'routeExists']),
+        ];
+    }
+
+    /**
+     * Apenas Admin, Super Admin ou Financeiro podem ver dados financeiros.
+     */
+    public function podeVerFinanceiro(): bool
+    {
+        $user = $this->security->getUser();
+        if (!$user || !method_exists($user, 'getAccessLevel')) {
+            return false;
+        }
+        return in_array($user->getAccessLevel(), ['Admin', 'Super Admin', 'Financeiro'], true);
+    }
+
+    /**
+     * Indica se uma rota é de conteúdo financeiro (financeiro, comissões, relatórios),
+     * usada para ocultar itens de menu de quem não tem permissão.
+     */
+    public function rotaFinanceira(?string $rota): bool
+    {
+        if (!$rota) {
+            return false;
+        }
+        foreach (['financeiro', 'comiss', 'relatorio'] as $frag) {
+            if (stripos($rota, $frag) !== false) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function getFilters(): array
@@ -259,14 +301,6 @@ class AppExtension extends AbstractExtension
         }
 
         return $html;
-    }
-
-    public function getFunctions(): array
-    {
-        return [
-            new TwigFunction('function_name', [$this, 'getEstate']),
-            new TwigFunction('routeExists', [$this, 'routeExists']),
-        ];
     }
 
     public function mesExtenso($intMes)

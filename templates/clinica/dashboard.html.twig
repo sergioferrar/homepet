@@ -394,7 +394,8 @@
             </div>
         </div>
 
-        <!-- Card: Débitos em Aberto -->
+        <!-- Card: Débitos em Aberto (somente financeiro/admin) -->
+        {% if pode_ver_financeiro() %}
         <div class="col-xl-3 col-lg-6 col-md-6 col-12">
             <div class="card border-0 shadow-sm h-100 hover-lift">
                 <div class="card-body p-4">
@@ -409,6 +410,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- Card: Média de Atendimento -->
         <div class="col-xl-3 col-lg-6 col-md-6 col-12">

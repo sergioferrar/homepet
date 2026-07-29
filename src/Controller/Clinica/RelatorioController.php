@@ -34,6 +34,7 @@ class RelatorioController extends DefaultController
      */
     public function comissoes(Request $request): Response
     {
+        if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
         $this->switchDB();
         $baseId = $this->getIdBase();
 

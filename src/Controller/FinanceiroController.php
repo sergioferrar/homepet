@@ -24,6 +24,8 @@ class FinanceiroController extends DefaultController
      */
     public function index(Request $request): Response
     {
+        if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
+
         $this->switchDB();
         $baseId = $this->getIdBase();
         $financeiroRepo = $this->getRepositorio(Financeiro::class);
@@ -96,6 +98,8 @@ class FinanceiroController extends DefaultController
      */
     public function novo(Request $request): Response
     {
+        if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
+
         $this->switchDB();
         $baseId = $this->getIdBase();
         $financeiroRepo = $this->getRepositorio(Financeiro::class);
@@ -125,6 +129,8 @@ class FinanceiroController extends DefaultController
      */
     public function editar(Request $request, int $id): Response
     {
+        if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
+
         $this->switchDB();
         $baseId = $this->getIdBase();
         $financeiroRepo = $this->getRepositorio(Financeiro::class);
@@ -161,6 +167,8 @@ class FinanceiroController extends DefaultController
      */
     public function deletar(int $id): Response
     {
+        if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
+
         $this->switchDB();
         $baseId = $this->getIdBase();
         $financeiroRepo = $this->getRepositorio(Financeiro::class);
@@ -180,6 +188,8 @@ class FinanceiroController extends DefaultController
      */
     public function confirmarPagamento(int $id): Response
     {
+        if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
+
         $this->switchDB();
         $baseId = $this->getIdBase();
         $financeiroPendenteRepository = $this->getRepositorio(FinanceiroPendente::class);
@@ -203,6 +213,8 @@ class FinanceiroController extends DefaultController
      */
     public function deletarPendente(int $id): Response
     {
+        if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
+
         $this->switchDB();
         $baseId = $this->getIdBase();
         $financeiroPendenteRepository = $this->getRepositorio(FinanceiroPendente::class);
@@ -225,6 +237,8 @@ class FinanceiroController extends DefaultController
      */
     public function exportRelatorioExcel(Request $request): Response
     {
+        if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
+
         $this->switchDB();
         $baseId = $this->getIdBase();
         $financeiroRepo = $this->getRepositorio(Financeiro::class);
@@ -265,6 +279,8 @@ class FinanceiroController extends DefaultController
      */
     public function debugFluxo(Request $request): Response
     {
+        if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
+
         $this->switchDB();
         $baseId = $this->getIdBase();
         $data = new \DateTime();

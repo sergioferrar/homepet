@@ -379,6 +379,7 @@ class DashboardController extends DefaultController
      */
     public function financeirodash(Request $request): Response
     {
+        if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
         $this->switchDB();
         $baseId = $this->getIdBase();
 

@@ -14,6 +14,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Security;
 
 class DefaultController extends AbstractController
@@ -181,6 +182,32 @@ class DefaultController extends AbstractController
         }
 
         return false;
+    }
+
+    /**
+     * Somente Admin, Super Admin ou Financeiro podem ver valores financeiros,
+     * relatórios e totais (lucro etc.). Demais níveis (ex.: Veterinário) não.
+     */
+    protected function podeVerFinanceiro(): bool
+    {
+        $user = $this->security->getUser();
+        if (!$user || !method_exists($user, 'getAccessLevel')) {
+            return false;
+        }
+        return in_array($user->getAccessLevel(), ['Admin', 'Super Admin', 'Financeiro'], true);
+    }
+
+    /**
+     * Bloqueia o acesso a telas financeiras para quem não tem permissão,
+     * redirecionando para a home com um aviso.
+     */
+    protected function negarSeNaoFinanceiro(): ?Response
+    {
+        if (!$this->podeVerFinanceiro()) {
+            $this->addFlash('warning', 'Acesso restrito: apenas administradores ou o financeiro podem ver esses dados.');
+            return $this->redirectToRoute('home');
+        }
+        return null;
     }
 
     protected function filterSecurity($numbers, $aumentaConta = 1)
