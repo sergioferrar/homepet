@@ -370,4 +370,41 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         return $query->fetchAllAssociative();
 
     }
+
+    /**
+     * Atendimentos/serviços em aberto (não pagos) de um cliente, com o pet,
+     * para agrupar por pet na venda.
+     */
+    public function findAbertosPorCliente(int $baseId, int $clienteId): array
+    {
+        $sql = "SELECT f.id, f.descricao, f.valor, f.pet_id, p.nome AS pet_nome
+                FROM homepet_{$baseId}.financeiropendente f
+                JOIN homepet_{$baseId}.pet p ON f.pet_id = p.id
+                WHERE f.estabelecimento_id = :baseId
+                  AND p.dono_id = :clienteId
+                  AND (f.status IS NULL OR f.status NOT IN ('inativo','pago'))
+                ORDER BY p.nome ASC, f.id ASC";
+
+        return $this->conn->fetchAllAssociative($sql, [
+            'baseId'    => $baseId,
+            'clienteId' => $clienteId,
+        ]);
+    }
+
+    /**
+     * Marca pendências como pagas (baixa após serem incluídas numa venda).
+     */
+    public function marcarPagos(int $baseId, array $ids): void
+    {
+        $ids = array_values(array_filter(array_map('intval', $ids), fn($v) => $v > 0));
+        if (empty($ids)) {
+            return;
+        }
+        $in = implode(',', array_fill(0, count($ids), '?'));
+        $sql = "UPDATE homepet_{$baseId}.financeiropendente
+                SET status = 'pago'
+                WHERE estabelecimento_id = ? AND id IN ($in)";
+        $params = array_merge([$baseId], $ids);
+        $this->conn->executeStatement($sql, $params);
+    }
 }

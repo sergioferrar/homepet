@@ -79,6 +79,8 @@ final class VendaItemNormalizer
                 'id'         => $resolvido['id'],
                 'quantidade' => $this->paraQuantidade($item['quantidade'] ?? 1),
                 'desconto'   => $this->paraDinheiro($item['desconto'] ?? 0),
+                'pet_id'     => (isset($item['pet_id']) && ctype_digit((string) $item['pet_id']) && (int) $item['pet_id'] > 0)
+                    ? (int) $item['pet_id'] : null,
             ];
         }
 

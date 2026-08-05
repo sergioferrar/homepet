@@ -296,6 +296,73 @@ class PdvController extends DefaultController
     }
 
     /**
+     * Atendimentos/serviços em aberto do tutor, agrupados por pet, para trazer à venda.
+     *
+     * @Route("/pendentes-cliente/{clienteId}", name="clinica_pdv_pendentes_cliente", methods={"GET"})
+     */
+    public function pendentesCliente(int $clienteId): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->tenantContext->getEstabelecimentoId();
+
+        $rows = $this->getRepositorio(\App\Entity\FinanceiroPendente::class)
+            ->findAbertosPorCliente($baseId, $clienteId);
+
+        // Agrupa por pet
+        $petsMap = [];
+        $total = 0.0;
+        foreach ($rows as $r) {
+            $petId = (int) $r['pet_id'];
+            if (!isset($petsMap[$petId])) {
+                $petsMap[$petId] = [
+                    'pet_id' => $petId,
+                    'pet_nome' => $r['pet_nome'],
+                    'itens' => [],
+                ];
+            }
+            $valor = (float) $r['valor'];
+            $total += $valor;
+            $petsMap[$petId]['itens'][] = [
+                'id' => (int) $r['id'],
+                'descricao' => $r['descricao'],
+                'valor' => $valor,
+            ];
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'pets' => array_values($petsMap),
+            'total' => $total,
+            'quantidade' => count($rows),
+        ]);
+    }
+
+    /**
+     * Marca as pendências como pagas depois de incluídas numa venda.
+     *
+     * @Route("/baixar-pendentes", name="clinica_pdv_baixar_pendentes", methods={"POST"})
+     */
+    public function baixarPendentes(Request $request): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->tenantContext->getEstabelecimentoId();
+
+        $dados = json_decode($request->getContent(), true);
+        $ids = $dados['ids'] ?? $request->request->all('ids');
+
+        if (empty($ids) || !is_array($ids)) {
+            return new JsonResponse(['success' => false, 'mensagem' => 'Nenhuma pendência informada.'], 400);
+        }
+
+        try {
+            $this->getRepositorio(\App\Entity\FinanceiroPendente::class)->marcarPagos($baseId, $ids);
+            return new JsonResponse(['success' => true]);
+        } catch (\Throwable $e) {
+            return new JsonResponse(['success' => false, 'mensagem' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Lista clientes para Select2
      *
      * @Route("/clientes/listar", name="clinica_pdv_clientes_listar", methods={"GET"})

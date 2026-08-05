@@ -410,8 +410,10 @@
                                     <input type="hidden" name="data" value="{{ "now"|date("Y-m-d") }}">
                                     <input type="hidden" name="hora" value="{{ "now"|date("H:i:s") }}">
 
-                                    <!-- Atendimento para mais de um pet do mesmo tutor -->
-                                    <div class="form-check form-switch mb-2">
+                                    <!-- Atendimento para mais de um pet do mesmo tutor (descontinuado:
+                                         a junção agora é feita na VENDA, trazendo os atendimentos em aberto
+                                         do tutor agrupados por pet. A anamnese continua individual por pet.) -->
+                                    <div class="form-check form-switch mb-2 d-none">
                                         <input class="form-check-input" type="checkbox" id="ficha-toggle-mais-pets">
                                         <label class="form-check-label" for="ficha-toggle-mais-pets">
                                             <i class="bi bi-collection me-1"></i>Atendimento para mais de um pet do mesmo tutor
@@ -887,6 +889,22 @@
            quantidade_diarias[]) casados por índice no PHP — e como o campo de
            quantidade só existia para internação, o array chegava compactado e
            a quantidade era aplicada ao item errado. #}
+        {# ── Pets deste atendimento (vincular itens a mais de um pet do tutor) ── #}
+        <div class="mb-3" id="pets-venda-bloco"
+             data-pet-id="{{ pet.id }}" data-pet-nome="{{ pet.nome }}" data-dono-id="{{ pet.dono_id }}">
+            <label class="form-label">Pets neste atendimento</label>
+            <div id="pets-incluidos-chips" class="d-flex flex-wrap gap-2 mb-2"></div>
+            <div class="input-group input-group-sm" style="max-width:420px;">
+                <select id="pet-adicionar-select" class="form-select">
+                    <option value="">Adicionar outro pet do tutor...</option>
+                </select>
+                <button type="button" class="btn btn-outline-primary" id="btn-adicionar-pet-venda">
+                    <i class="bi bi-plus-lg"></i> Incluir pet
+                </button>
+            </div>
+            <small class="text-muted">Inclua outros pets do mesmo tutor e escolha, em cada item abaixo, para qual pet ele é. Tudo fica numa venda só.</small>
+        </div>
+
         <div id="servicos-container"></div>
         <div class="mb-3">
             <label for="servico-metodo" class="form-label">Método de Pagamento*</label>
@@ -1313,7 +1331,25 @@ $(document).ready(function() {
             body: new FormData(this),
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
-        .then(r => r.json())
+        .then(async r => {
+            // Lê a resposta como texto e tenta interpretar como JSON.
+            // Se o servidor devolver HTML (ex.: página de erro 500), extrai uma
+            // mensagem útil em vez do genérico "Falha de comunicação".
+            const texto = await r.text();
+            let data;
+            try {
+                data = JSON.parse(texto);
+            } catch (e) {
+                throw new Error(
+                    'O servidor não retornou uma resposta válida (HTTP ' + r.status + '). ' +
+                    (texto ? texto.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200) : '')
+                );
+            }
+            if (!r.ok && !(data && data.mensagem)) {
+                throw new Error('Erro no servidor (HTTP ' + r.status + ').');
+            }
+            return data;
+        })
         .then(data => {
             if (data.status === 'success') {
                 if (window.Notify && Notify.toast) {
@@ -1331,13 +1367,14 @@ $(document).ready(function() {
                 }
             }
         })
-        .catch(() => {
+        .catch((err) => {
             _atendimentoEmAndamento = false;
             $btnSubmit.prop('disabled', false).html('<i class="fas fa-save me-1"></i>Salvar Atendimento');
+            const msg = (err && err.message) ? err.message : 'Falha de comunicação com o servidor.';
             if (window.Notify && Notify.toast) {
-                Notify.toast('Falha de comunicação com o servidor.', 'danger');
+                Notify.toast(msg, 'danger');
             } else {
-                alert('Falha de comunicação com o servidor.');
+                alert(msg);
             }
         });
     });
@@ -1568,6 +1605,85 @@ $(document).ready(function() {
 // quantidade de diárias multiplicar o produto errado.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Pets vinculados à venda (itens por pet) ──────────────────────────────────
+let petsIncluidosVenda = [];
+
+window.opcoesPetsVenda = function (selectedId) {
+    return petsIncluidosVenda.map(function (p) {
+        const sel = (selectedId && String(selectedId) === String(p.id)) ? ' selected' : '';
+        return '<option value="' + p.id + '"' + sel + '>' + p.nome + '</option>';
+    }).join('');
+};
+
+function renderChipsPetsVenda() {
+    const $chips = $('#pets-incluidos-chips');
+    if (!$chips.length) return;
+    const petPrincipal = $('#pets-venda-bloco').data('pet-id');
+    $chips.html(petsIncluidosVenda.map(function (p) {
+        const removivel = String(p.id) !== String(petPrincipal);
+        return '<span class="badge bg-info text-dark">' + p.nome +
+            (removivel ? ' <a href="#" class="text-dark remover-pet-venda" data-id="' + p.id + '" style="text-decoration:none;">&times;</a>' : '') +
+            '</span>';
+    }).join(''));
+}
+
+function atualizarSelectsPetItens() {
+    // Repopula o dropdown de pet de cada linha mantendo a seleção atual
+    $('#servicos-container .select-pet-item').each(function () {
+        const atual = $(this).val();
+        $(this).html(window.opcoesPetsVenda(atual));
+    });
+}
+
+$(document).ready(function () {
+    const $bloco = $('#pets-venda-bloco');
+    if ($bloco.length) {
+        // Pet principal da ficha já entra incluído
+        petsIncluidosVenda = [{ id: String($bloco.data('pet-id')), nome: $bloco.data('pet-nome') }];
+        renderChipsPetsVenda();
+
+        // Carrega os outros pets do tutor para o select "incluir pet"
+        const donoId = $bloco.data('dono-id');
+        if (donoId) {
+            $.ajax({
+                url: '{{ path("clinica_pets_by_tutor", {"id": "ID_PLACEHOLDER"}) }}'.replace('ID_PLACEHOLDER', donoId),
+                method: 'GET'
+            }).done(function (pets) {
+                const petPrincipal = String($bloco.data('pet-id'));
+                (pets || []).forEach(function (p) {
+                    if (String(p.id) !== petPrincipal) {
+                        $('#pet-adicionar-select').append($('<option>').val(p.id).text(p.nome));
+                    }
+                });
+            });
+        }
+    }
+
+    $('#btn-adicionar-pet-venda').on('click', function () {
+        const $sel = $('#pet-adicionar-select');
+        const id = $sel.val();
+        if (!id) return;
+        const nome = $sel.find('option:selected').text();
+        if (!petsIncluidosVenda.find(function (p) { return String(p.id) === String(id); })) {
+            petsIncluidosVenda.push({ id: String(id), nome: nome });
+            renderChipsPetsVenda();
+            atualizarSelectsPetItens();
+        }
+        $sel.find('option:selected').remove();
+        $sel.val('');
+    });
+
+    $(document).on('click', '.remover-pet-venda', function (e) {
+        e.preventDefault();
+        const id = String($(this).data('id'));
+        petsIncluidosVenda = petsIncluidosVenda.filter(function (p) { return String(p.id) !== id; });
+        // Devolve o pet ao select de inclusão
+        $('#pet-adicionar-select').append($('<option>').val(id).text($(this).parent().text().replace('×', '').trim()));
+        renderChipsPetsVenda();
+        atualizarSelectsPetItens();
+    });
+});
+
 function montarLinhaItem(index) {
     return `
 <div class="item-venda-linha" data-index="${index}">
@@ -1589,6 +1705,12 @@ function montarLinhaItem(index) {
                         {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
                     </option>
                 {% endfor %}
+            </select>
+        </div>
+        <div class="col-12 mb-2 col-pet-item">
+            <label class="form-label">Pet</label>
+            <select class="form-select select-pet-item" name="itens[${index}][pet_id]">
+                ${window.opcoesPetsVenda ? window.opcoesPetsVenda() : ''}
             </select>
         </div>
         <div class="col-6">
@@ -1614,6 +1736,7 @@ function reindexarLinhas() {
         $(this).find('.select-servico').attr('name', `itens[${i}][ref]`);
         $(this).find('.qtd-item').attr('name', `itens[${i}][quantidade]`);
         $(this).find('.desconto-item').attr('name', `itens[${i}][desconto]`);
+        $(this).find('.select-pet-item').attr('name', `itens[${i}][pet_id]`);
     });
 }
 

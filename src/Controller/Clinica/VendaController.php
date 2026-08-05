@@ -141,6 +141,23 @@ class VendaController extends DefaultController
 
                 // Quantidade e desconto SÃO DESTA LINHA — nunca herdados de outra
                 $quantidade = max(1, (int) $linha['quantidade']);
+
+                // Vincula o item a um pet específico do mesmo tutor (quando informado),
+                // prefixando o nome com o pet — unifica vários pets numa venda só.
+                $petDoItem = $linha['pet_id'] ?? null;
+                if ($petDoItem && $petDoItem !== (int) $petIdFromRequest) {
+                    if (!isset($petNomesCache)) { $petNomesCache = []; }
+                    if (!array_key_exists($petDoItem, $petNomesCache)) {
+                        $petNomesCache[$petDoItem] = $conn->fetchOne(
+                            'SELECT nome FROM pet WHERE id = :id AND estabelecimento_id = :estab',
+                            ['id' => $petDoItem, 'estab' => $baseId]
+                        ) ?: null;
+                    }
+                    if (!empty($petNomesCache[$petDoItem])) {
+                        $nome = $petNomesCache[$petDoItem] . ' — ' . $nome;
+                    }
+                }
+
                 $calculo    = $this->normalizer()->calcularSubtotal(
                     $valorUnitario,
                     $quantidade,

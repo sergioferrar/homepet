@@ -204,6 +204,18 @@
                     </div>
                 </div>
 
+                <!-- Atendimentos em aberto do tutor (contas por pet) -->
+                <div id="bannerPendentes" class="alert alert-warning d-none align-items-center justify-content-between" style="display:flex;">
+                    <div>
+                        <i class="bi bi-clipboard2-pulse me-1"></i>
+                        Este tutor tem <strong><span id="pendentesQtd">0</span></strong> atendimento(s) em aberto
+                        (<strong>R$ <span id="pendentesTotal">0,00</span></strong>).
+                    </div>
+                    <button type="button" id="btnTrazerPendentes" class="btn btn-sm btn-warning">
+                        <i class="bi bi-plus-circle me-1"></i> Trazer para a venda
+                    </button>
+                </div>
+
                 <!-- Carrinho de Itens -->
                 <div class="card">
                     <div class="card-header bg-primary text-white">
@@ -564,7 +576,58 @@ function selecionarCliente(cliente) {
 
     // Buscar pets do cliente
     carregarPetsDoCliente(cliente.id);
+
+    // Buscar atendimentos em aberto (contas por pet) do tutor
+    carregarPendentesDoTutor(cliente.id);
 }
+
+// ==================== ATENDIMENTOS EM ABERTO (por pet) ====================
+let pendentesDoTutor = null; // { pets:[{pet_id,pet_nome,itens:[{id,descricao,valor}]}], total }
+
+function carregarPendentesDoTutor(clienteId) {
+    pendentesDoTutor = null;
+    $('#bannerPendentes').addClass('d-none');
+    if (!clienteId) return;
+
+    $.ajax({
+        url: '{{ path("clinica_pdv_pendentes_cliente", {"clienteId": "ID_PLACEHOLDER"}) }}'.replace('ID_PLACEHOLDER', clienteId),
+        method: 'GET'
+    }).done(function (resp) {
+        if (resp && resp.success && resp.quantidade > 0) {
+            pendentesDoTutor = resp;
+            $('#pendentesQtd').text(resp.quantidade);
+            $('#pendentesTotal').text(formatarMoeda(resp.total));
+            $('#bannerPendentes').removeClass('d-none');
+        }
+    });
+}
+
+function trazerPendentesParaVenda() {
+    if (!pendentesDoTutor || !pendentesDoTutor.pets) return;
+
+    pendentesDoTutor.pets.forEach(function (pet) {
+        pet.itens.forEach(function (item) {
+            var idCarrinho = 'pend_' + item.id;
+            if (carrinhoItens.find(function (i) { return i.id === idCarrinho; })) return; // evita duplicar
+            carrinhoItens.push({
+                id: idCarrinho,
+                nome: item.descricao,
+                valor: item.valor,
+                quantidade: 1,
+                tipo: 'Atendimento',
+                petNome: pet.pet_nome,
+                pendenteId: item.id
+            });
+        });
+    });
+
+    renderizarCarrinho();
+    atualizarResumo();
+    $('#bannerPendentes').addClass('d-none');
+    showToast('Atendimentos em aberto adicionados à venda.', 'success');
+}
+
+$(document).on('click', '#btnTrazerPendentes', trazerPendentesParaVenda);
 
 function carregarPetsDoCliente(clienteId) {
     $.ajax({
@@ -741,10 +804,25 @@ function renderizarCarrinho() {
         return;
     }
 
+    let ultimoPet = null;
     carrinhoItens.forEach(item => {
-        const badge = item.tipo === 'Produto' 
-            ? '<span class="badge badge-produto">Produto</span>' 
-            : '<span class="badge badge-servico">Serviço</span>';
+        // Cabeçalho do pet para itens de atendimento em aberto (agrupamento por pet)
+        if (item.tipo === 'Atendimento' && item.petNome && item.petNome !== ultimoPet) {
+            ultimoPet = item.petNome;
+            $container.append(
+                '<div class="fw-bold text-primary mt-2 mb-1" style="border-bottom:1px solid #eee;">' +
+                '<i class="bi bi-heart-pulse me-1"></i>' + item.petNome + '</div>'
+            );
+        }
+        if (item.tipo !== 'Atendimento') {
+            ultimoPet = null;
+        }
+
+        const badge = item.tipo === 'Produto'
+            ? '<span class="badge badge-produto">Produto</span>'
+            : (item.tipo === 'Atendimento'
+                ? '<span class="badge bg-warning text-dark">Atendimento</span>'
+                : '<span class="badge badge-servico">Serviço</span>');
 
         const subtotal = item.quantidade * item.valor;
 
@@ -1112,10 +1190,21 @@ async function salvarVenda() {
 
         if (response.ok) {
             showToast('Venda registrada com sucesso!', 'success');
-            setTimeout(() => {
-                limparFormulario();
-                location.reload();
-            }, 1500);
+            // Baixa as pendências (atendimentos em aberto) incluídas nesta venda
+            const pendenteIds = carrinhoItens
+                .filter(i => i.tipo === 'Atendimento' && i.pendenteId)
+                .map(i => i.pendenteId);
+            const finalizar = () => { limparFormulario(); location.reload(); };
+            if (pendenteIds.length > 0) {
+                $.ajax({
+                    url: '{{ path("clinica_pdv_baixar_pendentes") }}',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ ids: pendenteIds })
+                }).always(() => setTimeout(finalizar, 1200));
+            } else {
+                setTimeout(finalizar, 1500);
+            }
         } else {
             showToast(response.msg || 'Erro ao salvar venda', 'danger');
             $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Salvar Venda');

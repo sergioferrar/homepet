@@ -38,6 +38,7 @@ class FichaController extends DefaultController
             throw $this->createNotFoundException('Pet não encontrado.');
         }
 
+        try {
         $consulta = new Consulta();
         $consulta->setEstabelecimentoId($baseId);
         $consulta->setClienteId((int) $request->get('cliente_id'));
@@ -115,6 +116,21 @@ class FichaController extends DefaultController
 
         $this->addFlash('success', 'Atendimento salvo com sucesso!');
         return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+
+        } catch (\Throwable $e) {
+            // Converte qualquer erro inesperado em resposta legível (JSON no AJAX),
+            // evitando o genérico "Falha de comunicação com o servidor".
+            $msg = $e->getMessage();
+            if (stripos($msg, "doesn't exist") !== false
+                || stripos($msg, 'base table or view not found') !== false) {
+                $msg = 'A tabela consulta_pet não existe neste banco. Rode o SQL de criação (add_consulta_pet.sql) ou desmarque os pets adicionais.';
+            }
+            if ($isAjax) {
+                return $this->json(['status' => 'error', 'mensagem' => 'Erro ao salvar o atendimento: ' . $msg], 500);
+            }
+            $this->addFlash('error', 'Erro ao salvar o atendimento: ' . $msg);
+            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+        }
     }
 
     /**
@@ -214,6 +230,35 @@ class FichaController extends DefaultController
 
             $conteudoHtml = $this->quillDeltaToHtml($conteudoDelta);
 
+            // --- Dados do pet e do tutor (formatados e escapados) ---
+            $esc = function ($v) { return htmlspecialchars((string) ($v ?? ''), ENT_QUOTES); };
+            $ou = function ($v) { $v = trim((string) ($v ?? '')); return $v !== '' ? $v : '—'; };
+
+            $petNome     = $esc($ou($pet['nome'] ?? ''));
+            $petEspecie  = $esc($ou($pet['especie'] ?? ''));
+            $petRaca     = $esc($ou($pet['raca'] ?? ''));
+            $petSexo     = $esc($ou($pet['sexo'] ?? ''));
+            $petPorte    = $esc($ou($pet['porte'] ?? ''));
+            $idadeRaw    = trim((string) ($pet['idade'] ?? ''));
+            $petIdade    = $esc($idadeRaw !== '' ? ($idadeRaw . (is_numeric($idadeRaw) ? ' ano(s)' : '')) : '—');
+            $pesoRaw     = trim((string) ($pet['peso'] ?? ''));
+            $petPeso     = $esc($pesoRaw !== '' ? ($pesoRaw . ' kg') : '—');
+            $castradoRaw = $pet['castrado'] ?? null;
+            $petCastrado = ($castradoRaw === null || $castradoRaw === '') ? '—' : (((int) $castradoRaw === 1) ? 'Sim' : 'Não');
+            $petNasc     = !empty($pet['dataNascimento']) ? date('d/m/Y', strtotime($pet['dataNascimento'])) : '—';
+
+            $tutorNome     = $esc($ou($clienteNome));
+            $tutorCpf      = $esc($ou($cliente ? $cliente->getCpf() : ''));
+            $telefoneRaw   = $cliente ? ($cliente->getTelefone() ?: '') : ($pet['dono_telefone'] ?? '');
+            $whatsRaw      = $cliente ? ($cliente->getWhatsapp() ?: '') : '';
+            $tutorTel      = $esc($ou($telefoneRaw));
+            $tutorWhats    = $esc($ou($whatsRaw));
+            $tutorEmail    = $esc($ou($cliente ? $cliente->getEmail() : ($pet['dono_email'] ?? '')));
+            $tutorEndereco = $esc($ou(trim((string) ($pet['dono_endereco'] ?? ''), " ,-")));
+
+            $lblStyle  = "font-size:8px; text-transform:uppercase; letter-spacing:0.5px; color:#94A3B8;";
+            $valStyle  = "font-size:10.5px; color:#0F172A;";
+
             $cabecalhoHtml = "
 <table width='100%' style='border-collapse:collapse;'>
   <tr>
@@ -241,9 +286,9 @@ class FichaController extends DefaultController
   </tr>
 </table>
 
-<table width='100%' style='border-collapse:collapse; margin-top:14px;'>
+<table width='100%' style='border-collapse:collapse; margin-top:12px;'>
   <tr>
-    <td style='text-align:center; padding-bottom:10px;'>
+    <td style='text-align:center; padding-bottom:8px;'>
       <span style='font-size:11px; font-weight:bold; letter-spacing:2.5px; color:#5d57f4;'>RECEITUÁRIO VETERINÁRIO</span>
     </td>
   </tr>
@@ -251,10 +296,18 @@ class FichaController extends DefaultController
 
 <table width='100%' style='border-collapse:collapse; background-color:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px;'>
   <tr>
-    <td style='padding:10px 14px; font-size:11px; color:#0F172A; line-height:1.8;'>
-      <strong style='color:#475569;'>TUTOR:</strong> {$clienteNome} &nbsp;&nbsp;|&nbsp;&nbsp;
-      <strong style='color:#475569;'>PET:</strong> {$pet['nome']} ({$pet['especie']} - {$pet['raca']}, {$pet['idade']} anos) &nbsp;&nbsp;|&nbsp;&nbsp;
-      <strong style='color:#475569;'>SEXO:</strong> {$pet['sexo']}
+    <td style='width:50%; vertical-align:top; padding:10px 14px; border-right:1px solid #E2E8F0;'>
+      <div style='font-size:9px; font-weight:bold; letter-spacing:1px; color:#5d57f4; padding-bottom:5px;'>TUTOR</div>
+      <div style='padding-bottom:3px;'><span style='{$lblStyle}'>Nome</span> <span style='{$valStyle}'>{$tutorNome}</span> &nbsp; <span style='{$lblStyle}'>CPF</span> <span style='{$valStyle}'>{$tutorCpf}</span></div>
+      <div style='padding-bottom:3px;'><span style='{$lblStyle}'>Telefone</span> <span style='{$valStyle}'>{$tutorTel}</span> &nbsp; <span style='{$lblStyle}'>WhatsApp</span> <span style='{$valStyle}'>{$tutorWhats}</span></div>
+      <div style='padding-bottom:3px;'><span style='{$lblStyle}'>E-mail</span> <span style='{$valStyle}'>{$tutorEmail}</span></div>
+      <div><span style='{$lblStyle}'>Endereço</span> <span style='{$valStyle}'>{$tutorEndereco}</span></div>
+    </td>
+    <td style='width:50%; vertical-align:top; padding:10px 14px;'>
+      <div style='font-size:9px; font-weight:bold; letter-spacing:1px; color:#5d57f4; padding-bottom:5px;'>PACIENTE</div>
+      <div style='padding-bottom:4px;'><span style='{$lblStyle}'>Nome</span> <span style='{$valStyle}'>{$petNome}</span> &nbsp; <span style='{$lblStyle}'>Espécie</span> <span style='{$valStyle}'>{$petEspecie}</span></div>
+      <div style='padding-bottom:4px;'><span style='{$lblStyle}'>Raça</span> <span style='{$valStyle}'>{$petRaca}</span> &nbsp; <span style='{$lblStyle}'>Sexo</span> <span style='{$valStyle}'>{$petSexo}</span> &nbsp; <span style='{$lblStyle}'>Porte</span> <span style='{$valStyle}'>{$petPorte}</span></div>
+      <div><span style='{$lblStyle}'>Idade</span> <span style='{$valStyle}'>{$petIdade}</span> &nbsp; <span style='{$lblStyle}'>Peso</span> <span style='{$valStyle}'>{$petPeso}</span> &nbsp; <span style='{$lblStyle}'>Castrado</span> <span style='{$valStyle}'>{$petCastrado}</span> &nbsp; <span style='{$lblStyle}'>Nasc.</span> <span style='{$valStyle}'>{$petNasc}</span></div>
     </td>
   </tr>
 </table>
@@ -262,19 +315,19 @@ class FichaController extends DefaultController
 
 // --- Rodapé HTML fixo (assinatura do veterinário + emissão) ---
             $rodapeCustomHtml = $rodapeCustom !== ''
-                ? "<tr><td style='text-align:center; padding-top:12px; font-size:10px; color:#475569; line-height:1.6;'>" . nl2br(htmlspecialchars($rodapeCustom, ENT_QUOTES)) . "</td></tr>"
+                ? "<tr><td style='text-align:center; padding-top:6px; font-size:9px; color:#475569; line-height:1.4;'>" . nl2br(htmlspecialchars($rodapeCustom, ENT_QUOTES)) . "</td></tr>"
                 : "";
 
             $rodapeHtml = "
-<table width='100%' style='border-collapse:collapse; margin-top:6px;'>
+<table width='100%' style='border-collapse:collapse; margin-top:2px;'>
   <tr>
-    <td style='border-top:1px solid #E2E8F0; padding-top:18px; text-align:center;'>
+    <td style='border-top:1px solid #E2E8F0; padding-top:8px; text-align:center;'>
       <table style='margin:0 auto; border-collapse:collapse;'>
         <tr>
-          <td style='border-top:1px solid #0F172A; padding-top:6px; text-align:center; min-width:240px;'>
-            <span style='font-size:9px; text-transform:uppercase; letter-spacing:1px; color:#94A3B8;'>Assinatura do Veterinário</span><br>
-            <span style='font-size:12px; font-weight:bold; color:#0F172A;'>{$vet->getNome()}</span><br>
-            <span style='font-size:10.5px; color:#475569;'>CRMV: {$vet->getCrmv()}</span>
+          <td style='border-top:1px solid #0F172A; padding-top:3px; text-align:center; min-width:220px;'>
+            <span style='font-size:8px; text-transform:uppercase; letter-spacing:1px; color:#94A3B8;'>Assinatura do Veterinário</span><br>
+            <span style='font-size:11px; font-weight:bold; color:#0F172A;'>{$vet->getNome()}</span> &nbsp;
+            <span style='font-size:9.5px; color:#475569;'>CRMV: {$vet->getCrmv()}</span>
           </td>
         </tr>
       </table>
@@ -282,13 +335,9 @@ class FichaController extends DefaultController
   </tr>
   {$rodapeCustomHtml}
   <tr>
-    <td style='text-align:center; padding-top:14px;'>
-      <span style='font-size:8.5px; color:#94A3B8;'>Documento emitido em: " . date('d/m/Y H:i:s') . "</span>
-    </td>
-  </tr>
-  <tr>
-    <td style='text-align:center; padding-top:4px;'>
-      <span style='font-size:8px; color:#cbd5e1;'>System Home Pet — Seu CRM para clínicas e pet shops</span>
+    <td style='text-align:center; padding-top:6px;'>
+      <span style='font-size:8px; color:#94A3B8;'>Documento emitido em: " . date('d/m/Y H:i:s') . "</span>
+      <span style='font-size:7.5px; color:#cbd5e1;'> &nbsp;·&nbsp; System Home Pet — Seu CRM para clínicas e pet shops</span>
     </td>
   </tr>
 </table>
