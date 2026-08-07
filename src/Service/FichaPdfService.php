@@ -2,7 +2,9 @@
 
 namespace App\Service;
 
+use App\Entity\Cliente;
 use App\Entity\Consulta;
+use App\Entity\Estabelecimento;
 use App\Entity\Internacao;
 use App\Entity\Pet;
 use App\Entity\Receita;
@@ -12,17 +14,6 @@ class FichaPdfService
 {
     private QuillDeltaConverterService $deltaConverter;
     private GeradorpdfService $gerador;
-
-    /**
-     * Dados da clínica exibidos no cabeçalho do documento.
-     * ALTERE os valores abaixo com os dados reais do estabelecimento.
-     */
-    private array $configClinica = [
-        'nome'     => 'CLÍNICA VETERINÁRIA [ALTERAR]',
-        'cnpj'     => '',
-        'endereco' => '',
-        'telefone' => '',
-    ];
 
     public function __construct(
         QuillDeltaConverterService $deltaConverter,
@@ -47,6 +38,13 @@ class FichaPdfService
             throw new \Exception('Pet não encontrado');
         }
 
+        // Dados da clínica e do tutor vêm do banco — nada é preenchido à mão.
+        $clinica = $em->getRepository(Estabelecimento::class)->find($baseId);
+
+        $cliente = !empty($pet['dono_id'])
+            ? $em->getRepository(Cliente::class)->find($pet['dono_id'])
+            : null;
+
         // findAllByPetId já traz veterinario_nome e veterinario_crmv via JOIN.
         $consultas   = $em->getRepository(Consulta::class)->findAllByPetId($baseId, $petId);
         $internacoes = $em->getRepository(Internacao::class)->listarInternacoesPorPet($baseId, $petId);
@@ -55,13 +53,13 @@ class FichaPdfService
         $emitidoEm  = date('d/m/Y H:i:s');
         $referencia = $this->gerarReferencia($petId);
 
-        $html = $this->montarHtml($pet, $consultas, $internacoes, $receitas, $referencia, $emitidoEm);
+        $html = $this->montarHtml($pet, $cliente, $clinica, $consultas, $internacoes, $receitas, $referencia, $emitidoEm);
 
         $this->gerador->configuracaoPagina('A4', 10, 10, 50, 15, 10, 12);
         $this->gerador->setNomeArquivo(
             'Ficha_' . preg_replace('/[^a-zA-Z0-9]/', '_', $pet['nome'] ?? 'Pet') . '_' . date('YmdHis')
         );
-        $this->gerador->montaCabecalhoPadrao($this->montarCabecalho($pet, $referencia));
+        $this->gerador->montaCabecalhoPadrao($this->montarCabecalho($pet, $cliente, $referencia));
         $this->gerador->setRodape($this->montarRodape($referencia, $emitidoEm));
         $this->gerador->addPagina('P');
         $this->gerador->conteudo($html);
@@ -83,6 +81,8 @@ class FichaPdfService
 
     private function montarHtml(
         array $pet,
+        $cliente,
+        $clinica,
         array $consultas,
         array $internacoes,
         array $receitas,
@@ -91,7 +91,7 @@ class FichaPdfService
     ): string {
         $html = '<div style="font-family: Arial, sans-serif; color:#333; line-height:1.55; font-size:12px;">';
 
-        $html .= $this->montarSecaoClinica();
+        $html .= $this->montarSecaoClinica($clinica);
         $html .= $this->montarSecaoIdentificacao(
             $referencia,
             $emitidoEm,
@@ -100,7 +100,7 @@ class FichaPdfService
             count($receitas)
         );
         $html .= $this->montarSecaoPet($pet);
-        $html .= $this->montarSecaoTutor($pet);
+        $html .= $this->montarSecaoTutor($pet, $cliente);
 
         if (!empty($consultas)) {
             $html .= $this->montarSecaoConsultas($consultas);
@@ -130,22 +130,53 @@ class FichaPdfService
              . '</div>';
     }
 
-    private function montarSecaoClinica(): string
+    /**
+     * Cabeçalho com os dados do estabelecimento, lidos da entidade
+     * Estabelecimento (mesmo padrão usado no receituário).
+     */
+    private function montarSecaoClinica($clinica): string
     {
-        $c = $this->configClinica;
+        $nome = 'Clínica Veterinária';
+        $cnpj = '';
+        $endereco = '';
+        $cidadeCep = '';
 
-        $html = '<div style="background:#2a6762; color:#fff; padding:14px 18px; text-align:center; margin-bottom:14px;">';
-        $html .= '<div style="font-size:15px; font-weight:bold;">' . htmlspecialchars($c['nome'], ENT_QUOTES) . '</div>';
+        if ($clinica) {
+            $nome = trim((string) ($clinica->getRazaoSocial() ?? '')) ?: $nome;
+            $cnpj = trim((string) ($clinica->getCnpj() ?? ''));
 
-        if (!empty($c['endereco'])) {
-            $html .= '<div style="font-size:10px; margin-top:3px;">' . htmlspecialchars($c['endereco'], ENT_QUOTES) . '</div>';
+            // Rua, nº, complemento — bairro
+            $logradouro = trim((string) ($clinica->getRua() ?? ''));
+            $numero     = trim((string) ($clinica->getNumero() ?? ''));
+            $compl      = trim((string) ($clinica->getComplemento() ?? ''));
+            $bairro     = trim((string) ($clinica->getBairro() ?? ''));
+
+            $partes = [];
+            if ($logradouro !== '') { $partes[] = $logradouro . ($numero !== '' ? ', ' . $numero : ''); }
+            if ($compl !== '')      { $partes[] = $compl; }
+            if ($bairro !== '')     { $partes[] = $bairro; }
+            $endereco = implode(' - ', $partes);
+
+            // Cidade - CEP
+            $cidade = trim((string) ($clinica->getCidade() ?? ''));
+            $cep    = trim((string) ($clinica->getCep() ?? ''));
+            $partes2 = [];
+            if ($cidade !== '') { $partes2[] = $cidade; }
+            if ($cep !== '')    { $partes2[] = 'CEP: ' . $cep; }
+            $cidadeCep = implode(' - ', $partes2);
         }
 
-        $linha = [];
-        if (!empty($c['cnpj']))     { $linha[] = 'CNPJ: ' . htmlspecialchars($c['cnpj'], ENT_QUOTES); }
-        if (!empty($c['telefone'])) { $linha[] = 'Tel.: ' . htmlspecialchars($c['telefone'], ENT_QUOTES); }
-        if ($linha) {
-            $html .= '<div style="font-size:10px; margin-top:2px;">' . implode(' &nbsp;|&nbsp; ', $linha) . '</div>';
+        $html  = '<div style="background:#2a6762; color:#fff; padding:14px 18px; text-align:center; margin-bottom:14px;">';
+        $html .= '<div style="font-size:15px; font-weight:bold;">' . htmlspecialchars($nome, ENT_QUOTES) . '</div>';
+
+        if ($cnpj !== '') {
+            $html .= '<div style="font-size:10px; margin-top:3px;">CNPJ: ' . htmlspecialchars($cnpj, ENT_QUOTES) . '</div>';
+        }
+        if ($endereco !== '') {
+            $html .= '<div style="font-size:10px; margin-top:2px;">' . htmlspecialchars($endereco, ENT_QUOTES) . '</div>';
+        }
+        if ($cidadeCep !== '') {
+            $html .= '<div style="font-size:10px; margin-top:1px;">' . htmlspecialchars($cidadeCep, ENT_QUOTES) . '</div>';
         }
 
         $html .= '</div>';
@@ -191,20 +222,29 @@ class FichaPdfService
 
     private function montarSecaoPet(array $pet): string
     {
-        $castrado = isset($pet['castrado']) && $pet['castrado'] ? 'Sim' : 'Não';
-        $peso     = (isset($pet['peso']) && $pet['peso'] !== null && $pet['peso'] !== '') ? $pet['peso'] . ' kg' : '—';
+        $castradoRaw = $pet['castrado'] ?? null;
+        $castrado = ($castradoRaw === null || $castradoRaw === '')
+            ? ''
+            : (((int) $castradoRaw === 1) ? 'Sim' : 'Não');
 
-        $nasc = '—';
+        $pesoRaw = trim((string) ($pet['peso'] ?? ''));
+        $peso    = $pesoRaw !== '' ? $pesoRaw . ' kg' : '';
+
+        $idadeRaw = trim((string) ($pet['idade'] ?? ''));
+        $idade    = $idadeRaw !== '' ? $idadeRaw . (is_numeric($idadeRaw) ? ' ano(s)' : '') : '';
+
+        $nasc = '';
         if (!empty($pet['dataNascimento'])) {
             $ts = strtotime($pet['dataNascimento']);
             if ($ts) { $nasc = date('d/m/Y', $ts); }
         }
 
         $linhas = [
-            ['Nome',     $pet['nome']    ?? '—', 'Espécie',  $pet['especie'] ?? '—'],
-            ['Raça',     $pet['raca']    ?? '—', 'Sexo',     $pet['sexo']    ?? '—'],
-            ['Porte',    $pet['porte']   ?? '—', 'Peso',     $peso],
-            ['Nascim.',  $nasc,                  'Castrado', $castrado],
+            ['Nome',    $pet['nome']  ?? '', 'Espécie',  $pet['especie'] ?? ''],
+            ['Raça',    $pet['raca']  ?? '', 'Sexo',     $pet['sexo']    ?? ''],
+            ['Porte',   $pet['porte'] ?? '', 'Peso',     $peso],
+            ['Idade',   $idade,              'Nascim.',  $nasc],
+            ['Castrado', $castrado,          'Registro', '#' . ($pet['id'] ?? '')],
         ];
 
         $html  = $this->tituloSecao('IDENTIFICAÇÃO DO ANIMAL');
@@ -214,9 +254,9 @@ class FichaPdfService
             $bg = $i % 2 === 0 ? '#f7fbfb' : '#ffffff';
             $html .= '<tr style="background:' . $bg . ';">';
             $html .= '<td style="padding:5px 8px; font-weight:bold; width:16%; border:1px solid #dde8e7;">' . $l[0] . '</td>';
-            $html .= '<td style="padding:5px 8px; width:34%; border:1px solid #dde8e7;">' . htmlspecialchars((string) $l[1], ENT_QUOTES) . '</td>';
+            $html .= '<td style="padding:5px 8px; width:34%; border:1px solid #dde8e7;">' . $this->valor($l[1]) . '</td>';
             $html .= '<td style="padding:5px 8px; font-weight:bold; width:16%; border:1px solid #dde8e7;">' . $l[2] . '</td>';
-            $html .= '<td style="padding:5px 8px; width:34%; border:1px solid #dde8e7;">' . htmlspecialchars((string) $l[3], ENT_QUOTES) . '</td>';
+            $html .= '<td style="padding:5px 8px; width:34%; border:1px solid #dde8e7;">' . $this->valor($l[3]) . '</td>';
             $html .= '</tr>';
         }
 
@@ -231,17 +271,33 @@ class FichaPdfService
         return $html;
     }
 
-    private function montarSecaoTutor(array $pet): string
+    /**
+     * Dados do tutor. A base do array $pet já traz nome/telefone/email/endereço
+     * pelo JOIN do findPetById; a entidade Cliente acrescenta CPF e WhatsApp,
+     * que não vêm naquela query. Tudo lido do banco — nada preenchido à mão.
+     */
+    private function montarSecaoTutor(array $pet, $cliente): string
     {
-        $endereco = trim((string) ($pet['dono_endereco'] ?? ''));
-        $endereco = trim($endereco, " ,-");
-        if ($endereco === '') { $endereco = '—'; }
+        $nome = $cliente && $cliente->getNome()
+            ? $cliente->getNome()
+            : ($pet['dono_nome'] ?? '');
+
+        $telefone = $cliente && $cliente->getTelefone()
+            ? $cliente->getTelefone()
+            : ($pet['dono_telefone'] ?? '');
+
+        $email = $cliente && $cliente->getEmail()
+            ? $cliente->getEmail()
+            : ($pet['dono_email'] ?? '');
+
+        $cpf      = $cliente ? (string) ($cliente->getCpf() ?? '') : '';
+        $whatsapp = $cliente ? (string) ($cliente->getWhatsapp() ?? '') : '';
+
+        $endereco = trim(trim((string) ($pet['dono_endereco'] ?? '')), " ,-");
 
         $linhas = [
-            ['Nome',     $pet['dono_nome']     ?? '—'],
-            ['Telefone', $pet['dono_telefone'] ?? '—'],
-            ['E-mail',   $pet['dono_email']    ?? '—'],
-            ['Endereço', $endereco],
+            ['Nome',     $nome,     'CPF',      $cpf],
+            ['Telefone', $telefone, 'WhatsApp', $whatsapp],
         ];
 
         $html  = $this->tituloSecao('TUTOR RESPONSÁVEL');
@@ -251,13 +307,33 @@ class FichaPdfService
             $bg = $i % 2 === 0 ? '#f7fbfb' : '#ffffff';
             $html .= '<tr style="background:' . $bg . ';">';
             $html .= '<td style="padding:5px 8px; font-weight:bold; width:16%; border:1px solid #dde8e7;">' . $l[0] . '</td>';
-            $html .= '<td style="padding:5px 8px; border:1px solid #dde8e7;">' . htmlspecialchars((string) $l[1], ENT_QUOTES) . '</td>';
+            $html .= '<td style="padding:5px 8px; width:34%; border:1px solid #dde8e7;">' . $this->valor($l[1]) . '</td>';
+            $html .= '<td style="padding:5px 8px; font-weight:bold; width:16%; border:1px solid #dde8e7;">' . $l[2] . '</td>';
+            $html .= '<td style="padding:5px 8px; width:34%; border:1px solid #dde8e7;">' . $this->valor($l[3]) . '</td>';
             $html .= '</tr>';
         }
+
+        $html .= '<tr style="background:#f7fbfb;">';
+        $html .= '<td style="padding:5px 8px; font-weight:bold; border:1px solid #dde8e7;">E-mail</td>';
+        $html .= '<td colspan="3" style="padding:5px 8px; border:1px solid #dde8e7;">' . $this->valor($email) . '</td>';
+        $html .= '</tr>';
+
+        $html .= '<tr style="background:#ffffff;">';
+        $html .= '<td style="padding:5px 8px; font-weight:bold; border:1px solid #dde8e7;">Endereço</td>';
+        $html .= '<td colspan="3" style="padding:5px 8px; border:1px solid #dde8e7;">' . $this->valor($endereco) . '</td>';
+        $html .= '</tr>';
 
         $html .= '</table>';
 
         return $html;
+    }
+
+    /** Escapa e troca vazio por travessão. */
+    private function valor($v): string
+    {
+        $v = trim((string) ($v ?? ''));
+
+        return $v === '' ? '&mdash;' : htmlspecialchars($v, ENT_QUOTES);
     }
 
     private function montarSecaoConsultas(array $consultas): string
@@ -500,10 +576,14 @@ class FichaPdfService
              . $texto . '</div>';
     }
 
-    private function montarCabecalho(array $pet, string $referencia): string
+    private function montarCabecalho(array $pet, $cliente, string $referencia): string
     {
-        $petNome  = htmlspecialchars((string) ($pet['nome'] ?? 'Pet'), ENT_QUOTES);
-        $donoNome = htmlspecialchars((string) ($pet['dono_nome'] ?? 'Tutor não vinculado'), ENT_QUOTES);
+        $petNome = htmlspecialchars((string) ($pet['nome'] ?? 'Pet'), ENT_QUOTES);
+
+        $dono = $cliente && $cliente->getNome()
+            ? $cliente->getNome()
+            : ($pet['dono_nome'] ?? 'Tutor não vinculado');
+        $donoNome = htmlspecialchars((string) $dono, ENT_QUOTES);
 
         $html  = '<table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">';
         $html .= '<tr>';
