@@ -43,8 +43,14 @@ class FichaController extends DefaultController
         $consulta->setEstabelecimentoId($baseId);
         $consulta->setClienteId((int) $request->get('cliente_id'));
         $consulta->setPetId($petId);
-        $consulta->setData(new \DateTime($request->get('data')));
-        $consulta->setHora(new \DateTime($request->get('hora')));
+
+        // Data e hora do atendimento: se não vierem preenchidas, usa o momento atual.
+        // Permite lançar atendimento retroativo (ex.: registro feito depois do fato).
+        $dataInformada = trim((string) $request->get('data'));
+        $horaInformada = trim((string) $request->get('hora'));
+        $consulta->setData($dataInformada !== '' ? new \DateTime($dataInformada) : new \DateTime());
+        $consulta->setHora($horaInformada !== '' ? new \DateTime($horaInformada) : new \DateTime());
+
         $veterinarioId = $request->get('veterinario');
         $consulta->setVeterinarioId($veterinarioId !== null && $veterinarioId !== '' ? (int) $veterinarioId : null);
         $consulta->setObservacoes($request->get('observacoes'));
@@ -504,11 +510,124 @@ class FichaController extends DefaultController
     }
 
     /**
+     * Tela de edição de um atendimento — permite corrigir data, hora, tipo,
+     * status, veterinário, valor, observações, anamnese e o anexo.
+     *
+     * @Route("/consulta/{id}/editar", name="clinica_editar_consulta", methods={"GET"})
+     */
+    public function editarConsulta(int $id): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $consulta = $this->getRepositorio(Consulta::class)->findConsultaCompletaById($baseId, $id);
+        if (!$consulta) {
+            throw $this->createNotFoundException('Atendimento não encontrado.');
+        }
+
+        return $this->render('clinica/editar_consulta.html.twig', [
+            'consulta'     => $consulta,
+            'veterinarios' => $this->getRepositorio(Veterinario::class)->findAll(),
+        ]);
+    }
+
+    /**
+     * Grava as alterações feitas na tela de edição do atendimento.
+     *
+     * @Route("/consulta/{id}/editar", name="clinica_editar_consulta_salvar", methods={"POST"})
+     */
+    public function salvarEdicaoConsulta(Request $request, int $id): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $consultaRepo = $this->getRepositorio(Consulta::class);
+        $atual = $consultaRepo->findConsultaCompletaById($baseId, $id);
+        if (!$atual) {
+            throw $this->createNotFoundException('Atendimento não encontrado.');
+        }
+
+        $petId = (int) $atual['pet_id'];
+
+        try {
+            $consulta = new Consulta();
+            $consulta->setEstabelecimentoId($baseId);
+
+            // Data e hora: em branco mantém o valor que já estava gravado.
+            $dataInformada = trim((string) $request->get('data'));
+            $horaInformada = trim((string) $request->get('hora'));
+            $consulta->setData(new \DateTime($dataInformada !== '' ? $dataInformada : $atual['data']));
+            $consulta->setHora(new \DateTime($horaInformada !== '' ? $horaInformada : ($atual['hora'] ?? '00:00:00')));
+
+            // Data de cadastro (criado_em): editável, pois em registros antigos
+            // ela pode ter ficado incorreta.
+            $criadoInformado = trim((string) $request->get('criado_em'));
+            $consulta->setCriadoEm(new \DateTime(
+                $criadoInformado !== '' ? str_replace('T', ' ', $criadoInformado) : ($atual['criado_em'] ?: 'now')
+            ));
+
+            $consulta->setTipo($request->get('tipo'));
+            $consulta->setStatus($request->get('status') ?: 'atendido');
+
+            $vetId = $request->get('veterinario');
+            $consulta->setVeterinarioId($vetId !== null && $vetId !== '' ? (int) $vetId : null);
+
+            $consulta->setObservacoes($request->get('observacoes'));
+            $consulta->setAnamnese($request->get('anamnese_delta'));
+
+            $valor = trim((string) $request->get('valor'));
+            $consulta->setValor($valor !== '' ? (float) str_replace(',', '.', $valor) : null);
+
+            // --- Anexo ---
+            // Só mexe no anexo se o usuário enviar um arquivo novo ou marcar para remover.
+            $alterarAnexo = false;
+            $arquivo = $request->files->get('encaminhamento_arquivo');
+
+            if ($request->get('remover_anexo')) {
+                $consulta->setAttachment(null);
+                $consulta->setAttachmentOriginal(null);
+                $alterarAnexo = true;
+            } elseif ($arquivo) {
+                $extensao = strtolower($arquivo->getClientOriginalExtension() ?: $arquivo->guessExtension() ?: '');
+
+                if (!in_array($extensao, self::ANEXO_EXTENSOES_PERMITIDAS, true)) {
+                    $this->addFlash('error', 'Formato de arquivo não permitido. Use: ' . implode(', ', self::ANEXO_EXTENSOES_PERMITIDAS) . '.');
+                    return $this->redirectToRoute('clinica_editar_consulta', ['id' => $id]);
+                }
+
+                $diretorio = $this->getParameter('encaminhamentos_directory');
+                if (!is_dir($diretorio)) {
+                    mkdir($diretorio, 0775, true);
+                }
+
+                do {
+                    $nomeArquivo = (string) random_int(100000000000, 999999999999) . '.' . $extensao;
+                } while (file_exists($diretorio . DIRECTORY_SEPARATOR . $nomeArquivo));
+
+                $arquivo->move($diretorio, $nomeArquivo);
+
+                $consulta->setAttachment($nomeArquivo);
+                $consulta->setAttachmentOriginal($arquivo->getClientOriginalName());
+                $alterarAnexo = true;
+            }
+
+            $consultaRepo->atualizarConsulta($baseId, $id, $consulta, $alterarAnexo);
+
+            $this->addFlash('success', 'Atendimento atualizado com sucesso!');
+            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+
+        } catch (\Throwable $e) {
+            $this->addFlash('error', 'Erro ao atualizar o atendimento: ' . $e->getMessage());
+            return $this->redirectToRoute('clinica_editar_consulta', ['id' => $id]);
+        }
+    }
+
+    /**
      * Gera PDF completo da ficha do pet com todas as consultas
      * 
      * @Route("/pet/{petId}/ficha/pdf", name="clinica_ficha_pdf", methods={"GET"})
      */
-    public function gerarFichaPdf(Request $request, \App\Service\FichaPdfService $fichaPdfService, int $petId): Response
+    public function gerarFichaPdf(int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -526,7 +645,7 @@ class FichaController extends DefaultController
 
         try {
             /** @var \App\Service\FichaPdfService $fichaPdfService */
-            // $fichaPdfService = $this->container->get('App\Service\FichaPdfService');
+            $fichaPdfService = $this->container->get('App\Service\FichaPdfService');
             return $fichaPdfService->gerarFichaPet($baseId, $petId, $this->getDoctrine()->getManager(), $clinica);
         } catch (\Exception $e) {
             $this->addFlash('error', 'Erro ao gerar PDF: ' . $e->getMessage());

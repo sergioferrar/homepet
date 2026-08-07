@@ -1,0 +1,290 @@
+{% extends 'baseClinica.html.twig' %}
+{% block title %}Editar Atendimento — {{ consulta.pet_nome }}{% endblock %}
+
+{% block body %}
+<style>
+    :root { --dp-teal: #14B8A6; --dp-teal-dark: #2a6762; --dp-teal-light: #eef6f5; --dp-teal-mid: #c5e5e3; --dp-slate: #3d4f5c; --dp-muted: #7a8fa0; --dp-border: #dde8e7; --dp-bg: #f4f7f7; --dp-surface: #ffffff; --dp-radius: 12px; --dp-radius-lg: 18px; }
+    .ec-page { background: var(--dp-bg); min-height: 100vh; padding: 0 0 3rem; }
+    .ec-hero { background: linear-gradient(135deg, var(--dp-teal) 0%, var(--dp-teal-dark) 100%); padding: 1.5rem 2rem 3rem; }
+    .ec-hero .voltar { font-size: .78rem; padding: .3rem .8rem; border-radius: 8px; color: rgba(255,255,255,.85) !important; border: 1px solid rgba(255,255,255,.35) !important; background: transparent !important; text-decoration: none; display: inline-flex; align-items: center; gap: .35rem; }
+    .ec-wrap { margin-top: -2rem; padding: 0 1.5rem; position: relative; z-index: 10; max-width: 1100px; margin-left: auto; margin-right: auto; }
+    .ec-card { background: var(--dp-surface); border: 1px solid var(--dp-border); border-radius: var(--dp-radius-lg); box-shadow: 0 4px 16px rgba(42,103,98,.12); margin-bottom: 1.25rem; }
+    .ec-card-head { padding: 1rem 1.5rem; border-bottom: 1px solid var(--dp-border); display: flex; align-items: center; gap: .6rem; }
+    .ec-card-head h2 { font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--dp-muted); margin: 0; }
+    .ec-card-body { padding: 1.25rem 1.5rem; }
+    .ec-readonly { background: var(--dp-teal-light); border-radius: var(--dp-radius); padding: .9rem 1.1rem; }
+    .ec-readonly .item { font-size: .85rem; color: var(--dp-slate); }
+    .ec-readonly .lbl { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--dp-teal-dark); display: block; }
+    .form-label { font-size: .78rem; font-weight: 600; color: var(--dp-slate); }
+    .ec-hint { font-size: .74rem; color: var(--dp-muted); }
+    .ec-editor { background: #fff; }
+    .ec-editor .ql-container { min-height: 190px; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+    .ec-actions { position: sticky; bottom: 0; background: var(--dp-surface); border-top: 1px solid var(--dp-border); padding: .9rem 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap; border-radius: 0 0 var(--dp-radius-lg) var(--dp-radius-lg); }
+    .btn-salvar { background: var(--dp-teal); border-color: var(--dp-teal); font-weight: 600; }
+    .btn-salvar:hover { background: var(--dp-teal-dark); border-color: var(--dp-teal-dark); }
+    .ec-anexo-atual { background: #f9fbfb; border: 1px solid var(--dp-border); border-radius: var(--dp-radius); padding: .75rem 1rem; font-size: .84rem; }
+</style>
+
+<div class="ec-page">
+
+    <div class="ec-hero">
+        <a href="{{ path('clinica_detalhes_pet', {'id': consulta.pet_id}) }}" class="voltar">
+            <i class="bi bi-arrow-left"></i> Voltar à ficha
+        </a>
+        <div class="mt-3 text-white">
+            <h1 style="font-size:1.35rem;font-weight:800;margin:0;">Editar Atendimento</h1>
+            <div style="opacity:.85;font-size:.8rem;margin-top:.2rem;">
+                {{ consulta.pet_nome }}{% if consulta.pet_especie %} &middot; {{ consulta.pet_especie }}{% endif %}
+                {% if consulta.cliente_nome %} &middot; Tutor: {{ consulta.cliente_nome }}{% endif %}
+                &nbsp;|&nbsp; Registro #{{ consulta.id }}
+            </div>
+        </div>
+    </div>
+
+    <div class="ec-wrap">
+
+        {% for label, mensagens in app.flashes %}
+            {% for mensagem in mensagens %}
+                <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show" role="alert">
+                    {{ mensagem }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <form id="form-editar-consulta" method="POST" enctype="multipart/form-data"
+              action="{{ path('clinica_editar_consulta_salvar', {'id': consulta.id}) }}">
+
+            {# ── VÍNCULOS (somente leitura) ── #}
+            <div class="ec-card">
+                <div class="ec-card-head">
+                    <i class="bi bi-link-45deg" style="color:var(--dp-teal);"></i>
+                    <h2>Vínculos do registro</h2>
+                </div>
+                <div class="ec-card-body">
+                    <div class="ec-readonly">
+                        <div class="row g-3">
+                            <div class="col-6 col-md-3 item">
+                                <span class="lbl">Registro</span>#{{ consulta.id }}
+                            </div>
+                            <div class="col-6 col-md-3 item">
+                                <span class="lbl">Pet</span>{{ consulta.pet_nome }} (#{{ consulta.pet_id }})
+                            </div>
+                            <div class="col-6 col-md-3 item">
+                                <span class="lbl">Tutor</span>{{ consulta.cliente_nome|default('—') }} (#{{ consulta.cliente_id }})
+                            </div>
+                            <div class="col-6 col-md-3 item">
+                                <span class="lbl">Estabelecimento</span>#{{ consulta.estabelecimento_id }}
+                            </div>
+                        </div>
+                    </div>
+                    <p class="ec-hint mt-2 mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Estes vínculos não são editáveis aqui — mudá-los moveria o atendimento
+                        para outro prontuário. Se precisar corrigir o pet ou o tutor de um lançamento,
+                        fale com o suporte.
+                    </p>
+                </div>
+            </div>
+
+            {# ── DADOS DO ATENDIMENTO ── #}
+            <div class="ec-card">
+                <div class="ec-card-head">
+                    <i class="bi bi-calendar-event" style="color:var(--dp-teal);"></i>
+                    <h2>Dados do atendimento</h2>
+                </div>
+                <div class="ec-card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="ec-data">Data do atendimento *</label>
+                            <input type="date" class="form-control" id="ec-data" name="data" required
+                                   value="{{ consulta.data ? consulta.data|date('Y-m-d') : '' }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="ec-hora">Hora</label>
+                            <input type="time" class="form-control" id="ec-hora" name="hora" step="1"
+                                   value="{{ consulta.hora ? consulta.hora|date('H:i:s') : '' }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="ec-tipo">Tipo *</label>
+                            <select class="form-select" id="ec-tipo" name="tipo">
+                                {% set tipos = ['Consulta', 'Retorno', 'Encaminhamento'] %}
+                                {% for t in tipos %}
+                                    <option value="{{ t }}" {% if consulta.tipo == t %}selected{% endif %}>{{ t }}</option>
+                                {% endfor %}
+                                {% if consulta.tipo and consulta.tipo not in tipos %}
+                                    <option value="{{ consulta.tipo }}" selected>{{ consulta.tipo }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="ec-status">Status</label>
+                            <select class="form-select" id="ec-status" name="status">
+                                {% set statuses = ['aguardando', 'atendido', 'cancelado'] %}
+                                {% for s in statuses %}
+                                    <option value="{{ s }}" {% if consulta.status == s %}selected{% endif %}>{{ s|capitalize }}</option>
+                                {% endfor %}
+                                {% if consulta.status and consulta.status not in statuses %}
+                                    <option value="{{ consulta.status }}" selected>{{ consulta.status|capitalize }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label" for="ec-vet">Veterinário responsável</label>
+                            <select class="form-select" id="ec-vet" name="veterinario">
+                                <option value="">Não informado</option>
+                                {% for v in veterinarios %}
+                                    <option value="{{ v.getId() }}"
+                                        {% if consulta.veterinario_id == v.getId() %}selected{% endif %}>
+                                        {{ v.getNome() }}{% if v.getCrmv() %} — CRMV {{ v.getCrmv() }}{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="ec-valor">Valor (R$)</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="ec-valor" name="valor"
+                                   value="{{ consulta.valor is not null ? consulta.valor : '' }}">
+                            <span class="ec-hint">Usado no cálculo de comissão.</span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="ec-criado">Data de cadastro no sistema</label>
+                            <input type="datetime-local" class="form-control" id="ec-criado" name="criado_em"
+                                   value="{{ consulta.criado_em ? consulta.criado_em|date('Y-m-d\\TH:i') : '' }}">
+                            <span class="ec-hint">Quando o registro foi lançado — diferente da data do atendimento.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ── ANAMNESE ── #}
+            <div class="ec-card">
+                <div class="ec-card-head">
+                    <i class="bi bi-clipboard2-pulse" style="color:var(--dp-teal);"></i>
+                    <h2>Anamnese / exame clínico</h2>
+                </div>
+                <div class="ec-card-body">
+                    <div id="ec-anamnese-editor" class="ec-editor"></div>
+                    <input type="hidden" name="anamnese_delta" id="ec-anamnese-input">
+                    <textarea id="ec-anamnese-original" class="d-none">{{ consulta.anamnese|default('') }}</textarea>
+                </div>
+            </div>
+
+            {# ── OBSERVAÇÕES ── #}
+            <div class="ec-card">
+                <div class="ec-card-head">
+                    <i class="bi bi-sticky" style="color:var(--dp-teal);"></i>
+                    <h2>Observações</h2>
+                </div>
+                <div class="ec-card-body">
+                    <textarea class="form-control" name="observacoes" rows="4"
+                              placeholder="Observações gerais do atendimento">{{ consulta.observacoes }}</textarea>
+                </div>
+            </div>
+
+            {# ── ANEXO ── #}
+            <div class="ec-card">
+                <div class="ec-card-head">
+                    <i class="bi bi-paperclip" style="color:var(--dp-teal);"></i>
+                    <h2>Arquivo de encaminhamento</h2>
+                </div>
+                <div class="ec-card-body">
+                    {% if consulta.attachment %}
+                        <div class="ec-anexo-atual d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                            <span>
+                                <i class="bi bi-file-earmark-text me-1"></i>
+                                {{ consulta.attachment_original|default(consulta.attachment) }}
+                            </span>
+                            <span class="d-flex align-items-center gap-3">
+                                <a href="{{ path('clinica_consulta_anexo', {'id': consulta.id}) }}"
+                                   class="btn btn-sm btn-outline-secondary" target="_blank">
+                                    <i class="bi bi-download me-1"></i>Baixar
+                                </a>
+                                <span class="form-check mb-0">
+                                    <input class="form-check-input" type="checkbox" name="remover_anexo" value="1" id="ec-remover-anexo">
+                                    <label class="form-check-label" for="ec-remover-anexo" style="font-size:.82rem;">Remover</label>
+                                </span>
+                            </span>
+                        </div>
+                    {% else %}
+                        <p class="ec-hint mb-3">Nenhum arquivo anexado a este atendimento.</p>
+                    {% endif %}
+
+                    <label class="form-label" for="ec-arquivo">
+                        {% if consulta.attachment %}Substituir por outro arquivo{% else %}Anexar arquivo{% endif %}
+                    </label>
+                    <input type="file" class="form-control" id="ec-arquivo" name="encaminhamento_arquivo"
+                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                    <span class="ec-hint">PDF, JPG, PNG, DOC ou DOCX. Deixe em branco para manter o arquivo atual.</span>
+                </div>
+            </div>
+
+            <div class="ec-card">
+                <div class="ec-actions">
+                    <a href="{{ path('clinica_detalhes_pet', {'id': consulta.pet_id}) }}" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-salvar">
+                        <i class="bi bi-check-lg me-1"></i>Salvar alterações
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var toolbar = [
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        [{ 'header': [1, 2, 3, false] }],
+        ['link'],
+        ['clean']
+    ];
+
+    var quill = new Quill('#ec-anamnese-editor', {
+        theme: 'snow',
+        modules: { toolbar: toolbar }
+    });
+
+    // Carrega o Delta já gravado. Se o conteúdo não for um Delta válido
+    // (registros antigos podem ter texto puro), joga como texto simples.
+    var bruto = (document.getElementById('ec-anamnese-original').value || '').trim();
+    if (bruto !== '') {
+        try {
+            var delta = JSON.parse(bruto);
+            if (delta && delta.ops) {
+                quill.setContents(delta.ops);
+            } else {
+                quill.setText(bruto);
+            }
+        } catch (e) {
+            quill.setText(bruto);
+        }
+    }
+
+    document.getElementById('form-editar-consulta').addEventListener('submit', function () {
+        document.getElementById('ec-anamnese-input').value =
+            JSON.stringify(quill.getContents());
+    });
+
+    // Marcar "remover" desabilita o campo de upload, para não mandar as duas coisas.
+    var chkRemover = document.getElementById('ec-remover-anexo');
+    var inputArquivo = document.getElementById('ec-arquivo');
+    if (chkRemover && inputArquivo) {
+        chkRemover.addEventListener('change', function () {
+            inputArquivo.disabled = chkRemover.checked;
+            if (chkRemover.checked) { inputArquivo.value = ''; }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -388,5 +388,85 @@ class ConsultaRepository extends ServiceEntityRepository
         return $vetId !== false && $vetId !== null ? (int) $vetId : null;
     }
 
+    /**
+     * Retorna uma consulta completa pelo ID, com os nomes já resolvidos.
+     * Usado pela tela de edição e pela visualização do atendimento.
+     */
+    public function findConsultaCompletaById($baseId, int $consultaId): ?array
+    {
+        $sql = "SELECT c.id, c.estabelecimento_id, c.cliente_id, c.pet_id,
+                       c.data, c.hora, c.observacoes, c.status, c.criado_em,
+                       c.anamnese, c.tipo, c.valor, c.veterinario_id,
+                       c.attachment, c.attachment_original,
+                       v.nome AS veterinario_nome, v.crmv AS veterinario_crmv,
+                       cl.nome AS cliente_nome,
+                       p.nome AS pet_nome, p.especie AS pet_especie, p.raca AS pet_raca
+                FROM homepet_{$baseId}.consulta c
+                LEFT JOIN homepet_{$baseId}.veterinario v ON v.id = c.veterinario_id
+                LEFT JOIN homepet_{$baseId}.cliente cl ON cl.id = c.cliente_id
+                LEFT JOIN homepet_{$baseId}.pet p ON p.id = c.pet_id
+                WHERE c.estabelecimento_id = :baseId AND c.id = :id
+                LIMIT 1";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('id', $consultaId);
+
+        $row = $stmt->executeQuery()->fetchAssociative();
+
+        return $row ?: null;
+    }
+
+    /**
+     * Atualiza todos os campos editáveis de uma consulta.
+     *
+     * Não altera estabelecimento_id, pet_id nem cliente_id: mover um atendimento
+     * para outro paciente corromperia o prontuário. Se isso for necessário algum
+     * dia, faça por um método próprio e explícito.
+     *
+     * O anexo só é sobrescrito quando $novoAnexo for informado — assim salvar o
+     * formulário sem escolher arquivo não apaga o encaminhamento já existente.
+     */
+    public function atualizarConsulta($baseId, int $consultaId, Consulta $consulta, bool $alterarAnexo = false): bool
+    {
+        $campos = [
+            'data = :data',
+            'hora = :hora',
+            'tipo = :tipo',
+            'status = :status',
+            'veterinario_id = :veterinario_id',
+            'observacoes = :observacoes',
+            'anamnese = :anamnese',
+            'valor = :valor',
+            'criado_em = :criado_em',
+        ];
+
+        $params = [
+            'data'           => $consulta->getData() ? $consulta->getData()->format('Y-m-d') : null,
+            'hora'           => $consulta->getHora() ? $consulta->getHora()->format('H:i:s') : null,
+            'tipo'           => $consulta->getTipo(),
+            'status'         => $consulta->getStatus(),
+            'veterinario_id' => $consulta->getVeterinarioId(),
+            'observacoes'    => $consulta->getObservacoes(),
+            'anamnese'       => $consulta->getAnamnese(),
+            'valor'          => $consulta->getValor(),
+            'criado_em'      => $consulta->getCriadoEm() ? $consulta->getCriadoEm()->format('Y-m-d H:i:s') : null,
+            'id'             => $consultaId,
+            'baseId'         => $baseId,
+        ];
+
+        if ($alterarAnexo) {
+            $campos[] = 'attachment = :attachment';
+            $campos[] = 'attachment_original = :attachment_original';
+            $params['attachment'] = $consulta->getAttachment();
+            $params['attachment_original'] = $consulta->getAttachmentOriginal();
+        }
+
+        $sql = "UPDATE homepet_{$baseId}.consulta
+                SET " . implode(', ', $campos) . "
+                WHERE id = :id AND estabelecimento_id = :baseId";
+
+        return $this->conn->executeStatement($sql, $params) >= 0;
+    }
 
 }

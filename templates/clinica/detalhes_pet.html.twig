@@ -409,6 +409,20 @@
                                             </select>
                                         </div>
                                     </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Data do atendimento</label>
+                                            <input type="date" class="form-control" name="data"
+                                                   value="{{ "now"|date("Y-m-d") }}">
+                                            <small class="text-muted">Deixe como está para hoje, ou informe outra data para lançar um atendimento retroativo.</small>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Hora</label>
+                                            <input type="time" class="form-control" name="hora" step="1"
+                                                   value="{{ "now"|date("H:i:s") }}">
+                                            <small class="text-muted">Em branco, usa a hora atual.</small>
+                                        </div>
+                                    </div>
                                     <div class="mb-3" id="encaminhamento-upload-wrapper" style="display:none;">
                                         <label class="form-label">Arquivo do Encaminhamento</label>
                                         <input type="file" class="form-control" name="encaminhamento_arquivo" id="encaminhamento-arquivo"
@@ -418,8 +432,6 @@
                                     <div class="mb-3"><label class="form-label">Anamnese / Exame Clínico</label><div id="atendimento-editor"></div><input type="hidden" name="anamnese_delta" id="anamnese-input"></div>
                                     <input type="hidden" name="pet_id" value="{{ pet.id }}">
                                     <input type="hidden" name="cliente_id" value="{{ pet.dono_id }}">
-                                    <input type="hidden" name="data" value="{{ "now"|date("Y-m-d") }}">
-                                    <input type="hidden" name="hora" value="{{ "now"|date("H:i:s") }}">
 
                                     <!-- Atendimento para mais de um pet do mesmo tutor (descontinuado:
                                          a junção agora é feita na VENDA, trazendo os atendimentos em aberto
@@ -574,6 +586,15 @@
                                                 <a href="{{ path('clinica_consulta_anexo', {'id': item.id}) }}"
                                                    class="btn btn-sm btn-outline-info ms-1" title="{{ item.attachment_original|default(item.attachment) }}">
                                                     <i class="bi bi-paperclip"></i> Baixar anexo
+                                                </a>
+                                            {% endif %}
+                                            {# Editar: só para atendimentos (consulta), que são os únicos
+                                               itens da timeline com id próprio. #}
+                                            {% if item.anamnese is defined and item.id is defined and item.id %}
+                                                <a href="{{ path('clinica_editar_consulta', {'id': item.id}) }}"
+                                                   class="btn btn-sm btn-outline-secondary ms-1"
+                                                   title="Corrigir data, veterinário, anamnese e demais dados">
+                                                    <i class="bi bi-pencil"></i> Editar
                                                 </a>
                                             {% endif %}
                                             <p class="text-muted d-none">{{ item.resumo|raw }}</p>
