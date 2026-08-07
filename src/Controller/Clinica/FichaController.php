@@ -518,13 +518,17 @@ class FichaController extends DefaultController
             throw $this->createNotFoundException('Pet não encontrado.');
         }
 
+        // A tabela `estabelecimento` fica no banco de login, não no do tenant.
+        // Mesmo vai-e-vem usado na geração de receita.
+        $this->restauraLoginDB();
+        $clinica = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($baseId);
+        $this->switchDB();
+
         try {
             /** @var \App\Service\FichaPdfService $fichaPdfService */
-            // $fichaPdfService = new \App\Service\FichaPdfService();
-
-            return $fichaPdfService->gerarFichaPet($baseId, $petId, $this->getDoctrine()->getManager());
+            // $fichaPdfService = $this->container->get('App\Service\FichaPdfService');
+            return $fichaPdfService->gerarFichaPet($baseId, $petId, $this->getDoctrine()->getManager(), $clinica);
         } catch (\Exception $e) {
-            dd($e);
             $this->addFlash('error', 'Erro ao gerar PDF: ' . $e->getMessage());
             return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
         }

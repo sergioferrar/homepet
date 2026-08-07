@@ -28,9 +28,12 @@ class FichaPdfService
      *
      * @param int $baseId ID da clínica/base (multi-tenant)
      * @param int $petId  ID do pet
+     * @param Estabelecimento|null $clinica Dados da clínica. A tabela `estabelecimento`
+     *        fica no banco de login, não no banco do tenant, então ela precisa ser
+     *        carregada pelo controller (que tem restauraLoginDB/switchDB) e passada aqui.
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function gerarFichaPet(int $baseId, int $petId, EntityManagerInterface $em)
+    public function gerarFichaPet(int $baseId, int $petId, EntityManagerInterface $em, $clinica = null)
     {
         $pet = $em->getRepository(Pet::class)->findPetById($baseId, $petId);
 
@@ -38,9 +41,8 @@ class FichaPdfService
             throw new \Exception('Pet não encontrado');
         }
 
-        // Dados da clínica e do tutor vêm do banco — nada é preenchido à mão.
-        $clinica = $em->getRepository(Estabelecimento::class)->find($baseId);
-
+        // Tutor: o findPetById já traz nome/telefone/email/endereço, mas CPF e
+        // WhatsApp só existem na entidade Cliente (tabela do banco do tenant).
         $cliente = !empty($pet['dono_id'])
             ? $em->getRepository(Cliente::class)->find($pet['dono_id'])
             : null;
