@@ -3,7 +3,9 @@
 namespace App\Service;
 
 use App\Entity\Consulta;
+use App\Entity\Internacao;
 use App\Entity\Pet;
+use App\Entity\Receita;
 use Doctrine\ORM\EntityManagerInterface;
 
 class FichaPdfService
@@ -46,12 +48,14 @@ class FichaPdfService
         }
 
         // findAllByPetId já traz veterinario_nome e veterinario_crmv via JOIN.
-        $consultas = $em->getRepository(Consulta::class)->findAllByPetId($baseId, $petId);
+        $consultas   = $em->getRepository(Consulta::class)->findAllByPetId($baseId, $petId);
+        $internacoes = $em->getRepository(Internacao::class)->listarInternacoesPorPet($baseId, $petId);
+        $receitas    = $em->getRepository(Receita::class)->listarPorPet($baseId, $petId);
 
         $emitidoEm  = date('d/m/Y H:i:s');
         $referencia = $this->gerarReferencia($petId);
 
-        $html = $this->montarHtml($pet, $consultas, $referencia, $emitidoEm);
+        $html = $this->montarHtml($pet, $consultas, $internacoes, $receitas, $referencia, $emitidoEm);
 
         $this->gerador->configuracaoPagina('A4', 10, 10, 50, 15, 10, 12);
         $this->gerador->setNomeArquivo(
@@ -77,27 +81,53 @@ class FichaPdfService
         return sprintf('%s-%s-%d', date('Ymd'), date('His'), $petId);
     }
 
-    private function montarHtml(array $pet, array $consultas, string $referencia, string $emitidoEm): string
-    {
+    private function montarHtml(
+        array $pet,
+        array $consultas,
+        array $internacoes,
+        array $receitas,
+        string $referencia,
+        string $emitidoEm
+    ): string {
         $html = '<div style="font-family: Arial, sans-serif; color:#333; line-height:1.55; font-size:12px;">';
 
         $html .= $this->montarSecaoClinica();
-        $html .= $this->montarSecaoIdentificacao($referencia, $emitidoEm, count($consultas));
+        $html .= $this->montarSecaoIdentificacao(
+            $referencia,
+            $emitidoEm,
+            count($consultas),
+            count($internacoes),
+            count($receitas)
+        );
         $html .= $this->montarSecaoPet($pet);
         $html .= $this->montarSecaoTutor($pet);
 
         if (!empty($consultas)) {
             $html .= $this->montarSecaoConsultas($consultas);
         } else {
-            $html .= '<div style="background:#f9f9f9; padding:10px; margin:12px 0;">';
-            $html .= '<p style="margin:0; color:#666;"><em>Nenhum atendimento registrado para este pet.</em></p>';
-            $html .= '</div>';
+            $html .= $this->tituloSecao('HISTÓRICO DE ATENDIMENTOS');
+            $html .= $this->blocoVazio('Nenhum atendimento registrado para este pet.');
+        }
+
+        if (!empty($internacoes)) {
+            $html .= $this->montarSecaoInternacoes($internacoes);
+        }
+
+        if (!empty($receitas)) {
+            $html .= $this->montarSecaoReceitas($receitas);
         }
 
         $html .= $this->montarSecaoAssinatura($consultas);
         $html .= '</div>';
 
         return $html;
+    }
+
+    private function blocoVazio(string $texto): string
+    {
+        return '<div style="background:#f9f9f9; padding:10px; margin:0 0 14px 0;">'
+             . '<p style="margin:0; color:#666;"><em>' . htmlspecialchars($texto, ENT_QUOTES) . '</em></p>'
+             . '</div>';
     }
 
     private function montarSecaoClinica(): string
@@ -123,8 +153,13 @@ class FichaPdfService
         return $html;
     }
 
-    private function montarSecaoIdentificacao(string $referencia, string $emitidoEm, int $totalConsultas): string
-    {
+    private function montarSecaoIdentificacao(
+        string $referencia,
+        string $emitidoEm,
+        int $totalConsultas,
+        int $totalInternacoes,
+        int $totalReceitas
+    ): string {
         $html = '<div style="border:1px solid #2a6762; padding:10px 14px; margin-bottom:16px;">';
         $html .= '<div style="font-size:13px; font-weight:bold; color:#2a6762; text-align:center; margin-bottom:8px;">';
         $html .= 'FICHA CLÍNICA — HISTÓRICO DE ATENDIMENTOS';
@@ -132,9 +167,15 @@ class FichaPdfService
 
         $html .= '<table style="width:100%; border-collapse:collapse; font-size:11px;">';
         $html .= '<tr>';
-        $html .= '<td style="padding:2px 0; width:33%;"><strong>Referência:</strong> ' . htmlspecialchars($referencia, ENT_QUOTES) . '</td>';
-        $html .= '<td style="padding:2px 0; width:34%;"><strong>Emitido em:</strong> ' . $emitidoEm . '</td>';
-        $html .= '<td style="padding:2px 0; width:33%;"><strong>Atendimentos:</strong> ' . $totalConsultas . '</td>';
+        $html .= '<td style="padding:2px 0; width:50%;"><strong>Referência:</strong> ' . htmlspecialchars($referencia, ENT_QUOTES) . '</td>';
+        $html .= '<td style="padding:2px 0; width:50%;"><strong>Emitido em:</strong> ' . $emitidoEm . '</td>';
+        $html .= '</tr>';
+        $html .= '<tr>';
+        $html .= '<td colspan="2" style="padding:2px 0;"><strong>Registros:</strong> ';
+        $html .= $totalConsultas . ' atendimento(s)';
+        $html .= ' &nbsp;&middot;&nbsp; ' . $totalInternacoes . ' interna&ccedil;&atilde;o(&otilde;es)';
+        $html .= ' &nbsp;&middot;&nbsp; ' . $totalReceitas . ' receita(s)';
+        $html .= '</td>';
         $html .= '</tr>';
         $html .= '</table>';
 
@@ -291,6 +332,114 @@ class FichaPdfService
                 $html .= ' <em>(arquivo não incluído neste PDF)</em>';
                 $html .= '</div>';
             }
+
+            $html .= '</div>';
+            $html .= '</div>';
+        }
+
+        return $html;
+    }
+
+    private function montarSecaoInternacoes(array $internacoes): string
+    {
+        $html = $this->tituloSecao('INTERNAÇÕES');
+
+        // O repositório ordena DESC; invertemos para leitura cronológica.
+        $internacoes = array_reverse($internacoes);
+        $total = count($internacoes);
+
+        $html .= '<table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom:16px;">';
+        $html .= '<tr style="background:#eef6f5;">';
+        foreach (['#', 'Início', 'Motivo', 'Situação', 'Risco', 'Box', 'Status'] as $th) {
+            $html .= '<th style="padding:5px 7px; text-align:left; border:1px solid #dde8e7; color:#2a6762;">' . $th . '</th>';
+        }
+        $html .= '</tr>';
+
+        foreach ($internacoes as $index => $i) {
+            $inicio = '—';
+            if (!empty($i['data_inicio'])) {
+                $ts = strtotime($i['data_inicio']);
+                if ($ts) { $inicio = date('d/m/Y H:i', $ts); }
+            }
+
+            $celulas = [
+                (string) ($index + 1),
+                $inicio,
+                $i['motivo']   ?? '—',
+                $i['situacao'] ?? '—',
+                $i['risco']    ?? '—',
+                $i['box']      ?? '—',
+                isset($i['status']) ? ucfirst((string) $i['status']) : '—',
+            ];
+
+            $bg = $index % 2 === 0 ? '#ffffff' : '#f7fbfb';
+            $html .= '<tr style="background:' . $bg . ';">';
+            foreach ($celulas as $c) {
+                $valor = ($c === '' || $c === null) ? '—' : $c;
+                $html .= '<td style="padding:5px 7px; border:1px solid #dde8e7; vertical-align:top;">'
+                       . htmlspecialchars((string) $valor, ENT_QUOTES) . '</td>';
+            }
+            $html .= '</tr>';
+        }
+
+        $html .= '</table>';
+
+        $html .= '<div style="font-size:10px; color:#666; margin:-10px 0 16px 0;">';
+        $html .= $total . ' interna&ccedil;&atilde;o(&otilde;es) registrada(s). ';
+        $html .= 'A evolu&ccedil;&atilde;o di&aacute;ria e as prescri&ccedil;&otilde;es de cada interna&ccedil;&atilde;o constam na ficha de interna&ccedil;&atilde;o correspondente.';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    private function montarSecaoReceitas(array $receitas): string
+    {
+        $html = $this->tituloSecao('RECEITUÁRIO');
+
+        // O repositório ordena DESC; invertemos para leitura cronológica.
+        $receitas = array_reverse($receitas);
+        $total = count($receitas);
+
+        foreach ($receitas as $index => $r) {
+            $numero = $index + 1;
+
+            $data = '—';
+            if (!empty($r['data'])) {
+                $ts = strtotime($r['data']);
+                if ($ts) { $data = date('d/m/Y', $ts); }
+            }
+
+            $html .= '<div style="border:1px solid #dde8e7; margin-bottom:12px; page-break-inside:avoid;">';
+
+            $html .= '<table style="width:100%; border-collapse:collapse; background:#f6f2fb;">';
+            $html .= '<tr>';
+            $html .= '<td style="padding:6px 10px; font-weight:bold; color:#5b3f96; font-size:11.5px;">';
+            $html .= 'Receita ' . $numero . ' de ' . $total;
+            $html .= '</td>';
+            $html .= '<td style="padding:6px 10px; text-align:right; font-size:11px; color:#555;">' . $data . '</td>';
+            $html .= '</tr>';
+            $html .= '</table>';
+
+            $html .= '<div style="padding:8px 10px;">';
+
+            // O campo `conteudo` guarda o Delta do editor; `resumo` é texto puro.
+            $corpo = '';
+            if (!empty($r['conteudo'])) {
+                $convertido = $this->deltaConverter->deltaToHtml($r['conteudo']);
+                if (trim(strip_tags($convertido)) !== '') {
+                    $corpo = $convertido;
+                }
+            }
+            if ($corpo === '' && !empty($r['resumo'])) {
+                $corpo = nl2br(htmlspecialchars((string) $r['resumo'], ENT_QUOTES));
+            }
+            if ($corpo === '') {
+                $corpo = '<em style="color:#666;">Receita sem conteúdo registrado.</em>';
+            }
+
+            $html .= '<div style="border-left:3px solid #d9cdf0; padding:6px 10px; background:#fdfcfe; font-size:11.5px;">';
+            $html .= $corpo;
+            $html .= '</div>';
 
             $html .= '</div>';
             $html .= '</div>';
