@@ -1,0 +1,153 @@
+{# 
+    SNIPPET: Botão para Gerar PDF da Ficha Completa
+    
+    Local de inserção: templates/clinica/detalhes_pet.html.twig
+    Posição: Próximo aos dados do cliente/pet (topo da página, ao lado de outros botões de ação)
+    
+    Este botão abre a rota: clinica_ficha_pdf com o petId
+#}
+
+{# ============================================
+   VERSÃO 1: Botão Simples (Bootstrap)
+   ============================================ #}
+<a href="{{ path('clinica_ficha_pdf', { petId: pet.id }) }}" 
+   class="btn btn-primary me-2" 
+   target="_blank"
+   title="Gerar PDF completo da ficha do pet">
+    <i class="bi bi-file-pdf"></i> Gerar PDF da Ficha
+</a>
+
+{# ============================================
+   VERSÃO 2: Botão com Dropdown (Múltiplas Opções)
+   ============================================ #}
+<div class="dropdown d-inline">
+    <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownFichaPdf" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-file-pdf"></i> Exportar Ficha
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdownFichaPdf">
+        <li>
+            <a class="dropdown-item" href="{{ path('clinica_ficha_pdf', { petId: pet.id }) }}" target="_blank">
+                <i class="bi bi-file-pdf"></i> Gerar PDF Completo
+            </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <a class="dropdown-item" href="#" onclick="window.print(); return false;">
+                <i class="bi bi-printer"></i> Imprimir Página
+            </a>
+        </li>
+    </ul>
+</div>
+
+{# ============================================
+   VERSÃO 3: Botão Estilizado (Teal - Tema da App)
+   ============================================ #}
+<a href="{{ path('clinica_ficha_pdf', { petId: pet.id }) }}" 
+   class="btn" 
+   style="background-color: #14B8A6; color: white; border: none; border-radius: 8px; padding: 0.5rem 1rem; font-weight: 600;"
+   target="_blank"
+   title="Gerar PDF completo da ficha do pet com todas as consultas e informações">
+    <i class="bi bi-file-pdf" style="margin-right: 0.4rem;"></i> 
+    Gerar PDF da Ficha
+</a>
+
+{# ============================================
+   VERSÃO 4: Card de Ação (Maior e mais Visual)
+   ============================================ #}
+<div class="dp-action-card" style="display: inline-flex; align-items: center; gap: 0.75rem; background: #eef6f5; border: 1px solid #c5e5e3; padding: 1rem; border-radius: 12px;">
+    <a href="{{ path('clinica_ficha_pdf', { petId: pet.id }) }}" 
+       class="btn btn-teal" 
+       style="background-color: #14B8A6; color: white; border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 600; white-space: nowrap;"
+       target="_blank"
+       title="Gerar PDF completo da ficha do pet">
+        <i class="bi bi-file-pdf"></i> Gerar PDF da Ficha
+    </a>
+    <small style="color: #7a8fa0; font-size: 0.85rem;">
+        Relatório completo com consultas e anamnese
+    </small>
+</div>
+
+{# ============================================
+   LOCAL RECOMENDADO DE INSERÇÃO
+   ============================================ #}
+{# 
+    No template detalhes_pet.html.twig, próximo a linha com os dados do cliente e pet,
+    você pode inserir o botão em um dos seguintes locais:
+    
+    1. TOPO DA PÁGINA (Hero Section)
+       - Próximo ao nome do pet e botão de voltar
+       - Altura do cabeçalho com dados do cliente
+    
+    2. BARRA DE AÇÕES (Action Buttons)
+       - Se existir uma área de botões de ação na página
+       - Próximo a outros botões como "Nova Consulta", "Editar Pet", etc
+    
+    3. SEÇÃO DE ABAS (Tabs)
+       - Acima das abas de conteúdo (Consultas, Internações, etc)
+       - Ao lado de filtros ou outras opções de busca
+    
+    Exemplo de estrutura completa:
+    
+    <div class="dp-profile-wrap">
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <!-- Dados do pet e cliente -->
+            </div>
+            <div class="col-md-4">
+                <!-- Botões de ação -->
+                [INSIRA O BOTÃO AQUI - VERSÃO 1 ou 3 RECOMENDADA]
+            </div>
+        </div>
+    </div>
+#}
+
+{# ============================================
+   SCRIPT AUXILIAR (OPCIONAL)
+   ============================================ #}
+<script>
+    // Adicionar confirmação antes de abrir o PDF
+    document.querySelectorAll('a[href*="ficha/pdf"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Se desejar uma confirmação antes de abrir:
+            // if (!confirm('Deseja gerar o PDF da ficha?')) {
+            //     e.preventDefault();
+            // }
+        });
+    });
+    
+    // Alternativa: Mostrar toast/notificação
+    // document.querySelectorAll('a[href*="ficha/pdf"]').forEach(link => {
+    //     link.addEventListener('click', function() {
+    //         showToast('Gerando PDF... Aguarde', 'info');
+    //     });
+    // });
+</script>
+
+{# ============================================
+   ESTILOS ADICIONAIS (CSS)
+   Se quiser personalizar ainda mais, adicione no <style>
+   ============================================ #}
+<style>
+    .dp-action-card {
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(42, 103, 98, 0.08);
+    }
+    
+    .dp-action-card:hover {
+        box-shadow: 0 4px 12px rgba(42, 103, 98, 0.12);
+        background-color: #dff2f0;
+    }
+    
+    .btn-teal {
+        transition: all 0.2s ease;
+    }
+    
+    .btn-teal:hover {
+        background-color: #0f9f8f !important;
+        box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
+    }
+    
+    .btn-teal:active {
+        background-color: #0d8074 !important;
+    }
+</style>

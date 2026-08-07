@@ -502,4 +502,31 @@ class FichaController extends DefaultController
             'consulta' => $consulta,
         ]);
     }
+
+    /**
+     * Gera PDF completo da ficha do pet com todas as consultas
+     * 
+     * @Route("/pet/{petId}/ficha/pdf", name="clinica_ficha_pdf", methods={"GET"})
+     */
+    public function gerarFichaPdf(Request $request, \App\Service\FichaPdfService $fichaPdfService, int $petId): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
+        if (!$pet) {
+            throw $this->createNotFoundException('Pet não encontrado.');
+        }
+
+        try {
+            /** @var \App\Service\FichaPdfService $fichaPdfService */
+            // $fichaPdfService = new \App\Service\FichaPdfService();
+
+            return $fichaPdfService->gerarFichaPet($baseId, $petId, $this->getDoctrine()->getManager());
+        } catch (\Exception $e) {
+            dd($e);
+            $this->addFlash('error', 'Erro ao gerar PDF: ' . $e->getMessage());
+            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+        }
+    }
 }
