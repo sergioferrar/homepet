@@ -685,7 +685,7 @@ class FichaController extends DefaultController
      * 
      * @Route("/pet/{petId}/ficha/pdf", name="clinica_ficha_pdf", methods={"GET"})
      */
-    public function gerarFichaPdf(int $petId): Response
+    public function gerarFichaPdf(App\Service\FichaPdfService $fichaPdfService, int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -703,7 +703,7 @@ class FichaController extends DefaultController
 
         try {
             /** @var \App\Service\FichaPdfService $fichaPdfService */
-            $fichaPdfService = $this->container->get('App\Service\FichaPdfService');
+            // $fichaPdfService = $this->container->get('App\Service\FichaPdfService');
             return $fichaPdfService->gerarFichaPet($baseId, $petId, $this->getDoctrine()->getManager(), $clinica);
         } catch (\Exception $e) {
             $this->addFlash('error', 'Erro ao gerar PDF: ' . $e->getMessage());
