@@ -39,89 +39,89 @@ class FichaController extends DefaultController
         }
 
         try {
-        $consulta = new Consulta();
-        $consulta->setEstabelecimentoId($baseId);
-        $consulta->setClienteId((int) $request->get('cliente_id'));
-        $consulta->setPetId($petId);
+            $consulta = new Consulta();
+            $consulta->setEstabelecimentoId($baseId);
+            $consulta->setClienteId((int) $request->get('cliente_id'));
+            $consulta->setPetId($petId);
 
-        // Data e hora do atendimento: se não vierem preenchidas, usa o momento atual.
-        // Permite lançar atendimento retroativo (ex.: registro feito depois do fato).
-        $dataInformada = trim((string) $request->get('data'));
-        $horaInformada = trim((string) $request->get('hora'));
-        $consulta->setData($dataInformada !== '' ? new \DateTime($dataInformada) : new \DateTime());
-        $consulta->setHora($horaInformada !== '' ? new \DateTime($horaInformada) : new \DateTime());
+            // Data e hora do atendimento: se não vierem preenchidas, usa o momento atual.
+            // Permite lançar atendimento retroativo (ex.: registro feito depois do fato).
+            $dataInformada = trim((string) $request->get('data'));
+            $horaInformada = trim((string) $request->get('hora'));
+            $consulta->setData($dataInformada !== '' ? new \DateTime($dataInformada) : new \DateTime());
+            $consulta->setHora($horaInformada !== '' ? new \DateTime($horaInformada) : new \DateTime());
 
-        $veterinarioId = $request->get('veterinario');
-        $consulta->setVeterinarioId($veterinarioId !== null && $veterinarioId !== '' ? (int) $veterinarioId : null);
-        $consulta->setObservacoes($request->get('observacoes'));
+            $veterinarioId = $request->get('veterinario');
+            $consulta->setVeterinarioId($veterinarioId !== null && $veterinarioId !== '' ? (int) $veterinarioId : null);
+            $consulta->setObservacoes($request->get('observacoes'));
 
-        $consulta->setAnamnese($request->get('anamnese_delta'));
+            $consulta->setAnamnese($request->get('anamnese_delta'));
 
-        $consulta->setTipo($request->get('tipo'));
-        $consulta->setStatus('atendido');
-        $consulta->setCriadoEm(new \DateTime());
+            $consulta->setTipo($request->get('tipo'));
+            $consulta->setStatus('atendido');
+            $consulta->setCriadoEm(new \DateTime());
 
-        // --- Upload do arquivo de encaminhamento (opcional) ---
-        $arquivo = $request->files->get('encaminhamento_arquivo');
-        if ($arquivo) {
-            $extensao = strtolower($arquivo->getClientOriginalExtension() ?: $arquivo->guessExtension() ?: '');
+            // --- Upload do arquivo de encaminhamento (opcional) ---
+            $arquivo = $request->files->get('encaminhamento_arquivo');
+            if ($arquivo) {
+                $extensao = strtolower($arquivo->getClientOriginalExtension() ?: $arquivo->guessExtension() ?: '');
 
-            if (!in_array($extensao, self::ANEXO_EXTENSOES_PERMITIDAS, true)) {
-                $msg = 'Formato de arquivo não permitido. Use: ' . implode(', ', self::ANEXO_EXTENSOES_PERMITIDAS) . '.';
-                if ($isAjax) {
-                    return $this->json(['status' => 'error', 'mensagem' => $msg], 400);
+                if (!in_array($extensao, self::ANEXO_EXTENSOES_PERMITIDAS, true)) {
+                    $msg = 'Formato de arquivo não permitido. Use: ' . implode(', ', self::ANEXO_EXTENSOES_PERMITIDAS) . '.';
+                    if ($isAjax) {
+                        return $this->json(['status' => 'error', 'mensagem' => $msg], 400);
+                    }
+                    $this->addFlash('error', $msg);
+                    return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
                 }
-                $this->addFlash('error', $msg);
-                return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
-            }
 
-            $diretorio = $this->getParameter('encaminhamentos_directory');
-            if (!is_dir($diretorio)) {
-                mkdir($diretorio, 0775, true);
-            }
-
-            // Nome randômico de 12 dígitos, garantindo que não exista arquivo igual no diretório
-            do {
-                $nomeArquivo = (string) random_int(100000000000, 999999999999) . '.' . $extensao;
-            } while (file_exists($diretorio . DIRECTORY_SEPARATOR . $nomeArquivo));
-
-            try {
-                $arquivo->move($diretorio, $nomeArquivo);
-            } catch (\Exception $e) {
-                $msg = 'Falha ao gravar o arquivo no servidor. Tente novamente.';
-                if ($isAjax) {
-                    return $this->json(['status' => 'error', 'mensagem' => $msg], 500);
+                $diretorio = $this->getParameter('encaminhamentos_directory');
+                if (!is_dir($diretorio)) {
+                    mkdir($diretorio, 0775, true);
                 }
-                $this->addFlash('error', $msg);
-                return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+
+                // Nome randômico de 12 dígitos, garantindo que não exista arquivo igual no diretório
+                do {
+                    $nomeArquivo = (string) random_int(100000000000, 999999999999) . '.' . $extensao;
+                } while (file_exists($diretorio . DIRECTORY_SEPARATOR . $nomeArquivo));
+
+                try {
+                    $arquivo->move($diretorio, $nomeArquivo);
+                } catch (\Exception $e) {
+                    $msg = 'Falha ao gravar o arquivo no servidor. Tente novamente.';
+                    if ($isAjax) {
+                        return $this->json(['status' => 'error', 'mensagem' => $msg], 500);
+                    }
+                    $this->addFlash('error', $msg);
+                    return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+                }
+
+                $consulta->setAttachment($nomeArquivo);
+                $consulta->setAttachmentOriginal($arquivo->getClientOriginalName());
             }
 
-            $consulta->setAttachment($nomeArquivo);
-            $consulta->setAttachmentOriginal($arquivo->getClientOriginalName());
-        }
+            $consultaId = $this->getRepositorio(Consulta::class)->salvarConsulta($baseId, $consulta);
 
-        $consultaId = $this->getRepositorio(Consulta::class)->salvarConsulta($baseId, $consulta);
+            // Atendimento para mais de um pet do mesmo tutor (pets adicionais).
+            $petsAdicionais = array_filter(
+                array_map('intval', (array) $request->get('pets_adicionais', [])),
+                fn($id) => $id > 0 && $id !== $petId
+            );
+            if (!empty($petsAdicionais)) {
+                $this->getRepositorio(Consulta::class)
+                    ->salvarPetsAdicionais($baseId, $consultaId, (int) $baseId, $petsAdicionais);
+            }
 
-        // Atendimento para mais de um pet do mesmo tutor (pets adicionais).
-        $petsAdicionais = array_filter(
-            array_map('intval', (array) $request->get('pets_adicionais', [])),
-            fn($id) => $id > 0 && $id !== $petId
-        );
-        if (!empty($petsAdicionais)) {
-            $this->getRepositorio(Consulta::class)
-                ->salvarPetsAdicionais($baseId, $consultaId, (int) $baseId, $petsAdicionais);
-        }
+            if ($isAjax) {
+                return $this->json([
+                    'status' => 'success',
+                    'mensagem' => 'Atendimento salvo com sucesso!',
+                    'redirect' => $this->generateUrl('clinica_detalhes_pet', ['id' => $petId]),
+                ]);
+            }
 
-        if ($isAjax) {
-            return $this->json([
-                'status' => 'success',
-                'mensagem' => 'Atendimento salvo com sucesso!',
-                'redirect' => $this->generateUrl('clinica_detalhes_pet', ['id' => $petId]),
-            ]);
-        }
-
-        $this->addFlash('success', 'Atendimento salvo com sucesso!');
-        return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+            $this->addFlash('success', 'Atendimento salvo com sucesso!');
+            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
 
         } catch (\Throwable $e) {
             // Converte qualquer erro inesperado em resposta legível (JSON no AJAX),
@@ -237,33 +237,33 @@ class FichaController extends DefaultController
             $conteudoHtml = $this->quillDeltaToHtml($conteudoDelta);
 
             // --- Dados do pet e do tutor (formatados e escapados) ---
-            $esc = function ($v) { return htmlspecialchars((string) ($v ?? ''), ENT_QUOTES); };
-            $ou = function ($v) { $v = trim((string) ($v ?? '')); return $v !== '' ? $v : '—'; };
+            $esc = function ($v) {return htmlspecialchars((string) ($v ?? ''), ENT_QUOTES);};
+            $ou = function ($v) {$v = trim((string) ($v ?? ''));return $v !== '' ? $v : '—';};
 
-            $petNome     = $esc($ou($pet['nome'] ?? ''));
-            $petEspecie  = $esc($ou($pet['especie'] ?? ''));
-            $petRaca     = $esc($ou($pet['raca'] ?? ''));
-            $petSexo     = $esc($ou($pet['sexo'] ?? ''));
-            $petPorte    = $esc($ou($pet['porte'] ?? ''));
-            $idadeRaw    = trim((string) ($pet['idade'] ?? ''));
-            $petIdade    = $esc($idadeRaw !== '' ? ($idadeRaw . (is_numeric($idadeRaw) ? ' ano(s)' : '')) : '—');
-            $pesoRaw     = trim((string) ($pet['peso'] ?? ''));
-            $petPeso     = $esc($pesoRaw !== '' ? ($pesoRaw . ' kg') : '—');
+            $petNome = $esc($ou($pet['nome'] ?? ''));
+            $petEspecie = $esc($ou($pet['especie'] ?? ''));
+            $petRaca = $esc($ou($pet['raca'] ?? ''));
+            $petSexo = $esc($ou($pet['sexo'] ?? ''));
+            $petPorte = $esc($ou($pet['porte'] ?? ''));
+            $idadeRaw = trim((string) ($pet['idade'] ?? ''));
+            $petIdade = $esc($idadeRaw !== '' ? ($idadeRaw . (is_numeric($idadeRaw) ? ' ano(s)' : '')) : '—');
+            $pesoRaw = trim((string) ($pet['peso'] ?? ''));
+            $petPeso = $esc($pesoRaw !== '' ? ($pesoRaw . ' kg') : '—');
             $castradoRaw = $pet['castrado'] ?? null;
             $petCastrado = ($castradoRaw === null || $castradoRaw === '') ? '—' : (((int) $castradoRaw === 1) ? 'Sim' : 'Não');
-            $petNasc     = !empty($pet['dataNascimento']) ? date('d/m/Y', strtotime($pet['dataNascimento'])) : '—';
+            $petNasc = !empty($pet['dataNascimento']) ? date('d/m/Y', strtotime($pet['dataNascimento'])) : '—';
 
-            $tutorNome     = $esc($ou($clienteNome));
-            $tutorCpf      = $esc($ou($cliente ? $cliente->getCpf() : ''));
-            $telefoneRaw   = $cliente ? ($cliente->getTelefone() ?: '') : ($pet['dono_telefone'] ?? '');
-            $whatsRaw      = $cliente ? ($cliente->getWhatsapp() ?: '') : '';
-            $tutorTel      = $esc($ou($telefoneRaw));
-            $tutorWhats    = $esc($ou($whatsRaw));
-            $tutorEmail    = $esc($ou($cliente ? $cliente->getEmail() : ($pet['dono_email'] ?? '')));
+            $tutorNome = $esc($ou($clienteNome));
+            $tutorCpf = $esc($ou($cliente ? $cliente->getCpf() : ''));
+            $telefoneRaw = $cliente ? ($cliente->getTelefone() ?: ''): ($pet['dono_telefone'] ?? '');
+            $whatsRaw = $cliente ? ($cliente->getWhatsapp() ?: ''): '';
+            $tutorTel = $esc($ou($telefoneRaw));
+            $tutorWhats = $esc($ou($whatsRaw));
+            $tutorEmail = $esc($ou($cliente ? $cliente->getEmail() : ($pet['dono_email'] ?? '')));
             $tutorEndereco = $esc($ou(trim((string) ($pet['dono_endereco'] ?? ''), " ,-")));
 
-            $lblStyle  = "font-size:8px; text-transform:uppercase; letter-spacing:0.5px; color:#94A3B8;";
-            $valStyle  = "font-size:10.5px; color:#0F172A;";
+            $lblStyle = "font-size:8px; text-transform:uppercase; letter-spacing:0.5px; color:#94A3B8;";
+            $valStyle = "font-size:10.5px; color:#0F172A;";
 
             $cabecalhoHtml = "
 <table width='100%' style='border-collapse:collapse;'>
@@ -321,8 +321,8 @@ class FichaController extends DefaultController
 
 // --- Rodapé HTML fixo (assinatura do veterinário + emissão) ---
             $rodapeCustomHtml = $rodapeCustom !== ''
-                ? "<tr><td style='text-align:center; padding-top:6px; font-size:9px; color:#475569; line-height:1.4;'>" . nl2br(htmlspecialchars($rodapeCustom, ENT_QUOTES)) . "</td></tr>"
-                : "";
+            ? "<tr><td style='text-align:center; padding-top:6px; font-size:9px; color:#475569; line-height:1.4;'>" . nl2br(htmlspecialchars($rodapeCustom, ENT_QUOTES)) . "</td></tr>"
+            : "";
 
             $rodapeHtml = "
 <table width='100%' style='border-collapse:collapse; margin-top:2px;'>
@@ -530,7 +530,7 @@ class FichaController extends DefaultController
         }
 
         return $this->render('clinica/editar_consulta.html.twig', [
-            'consulta'     => $consulta,
+            'consulta' => $consulta,
             'veterinarios' => $this->getRepositorio(Veterinario::class)->findAll(),
         ]);
     }
@@ -682,7 +682,7 @@ class FichaController extends DefaultController
 
     /**
      * Gera PDF completo da ficha do pet com todas as consultas
-     * 
+     *
      * @Route("/pet/{petId}/ficha/pdf", name="clinica_ficha_pdf", methods={"GET"})
      */
     public function gerarFichaPdf(Request $request, \App\Service\FichaPdfService $fichaPdfService, int $petId): Response
