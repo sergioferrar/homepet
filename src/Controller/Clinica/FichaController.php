@@ -685,7 +685,7 @@ class FichaController extends DefaultController
      * 
      * @Route("/pet/{petId}/ficha/pdf", name="clinica_ficha_pdf", methods={"GET"})
      */
-    public function gerarFichaPdf(App\Service\FichaPdfService $fichaPdfService, int $petId): Response
+    public function gerarFichaPdf(Request $request, App\Service\FichaPdfService $fichaPdfService, int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
