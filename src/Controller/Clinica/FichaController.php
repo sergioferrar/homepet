@@ -39,89 +39,89 @@ class FichaController extends DefaultController
         }
 
         try {
-        $consulta = new Consulta();
-        $consulta->setEstabelecimentoId($baseId);
-        $consulta->setClienteId((int) $request->get('cliente_id'));
-        $consulta->setPetId($petId);
+            $consulta = new Consulta();
+            $consulta->setEstabelecimentoId($baseId);
+            $consulta->setClienteId((int) $request->get('cliente_id'));
+            $consulta->setPetId($petId);
 
-        // Data e hora do atendimento: se não vierem preenchidas, usa o momento atual.
-        // Permite lançar atendimento retroativo (ex.: registro feito depois do fato).
-        $dataInformada = trim((string) $request->get('data'));
-        $horaInformada = trim((string) $request->get('hora'));
-        $consulta->setData($dataInformada !== '' ? new \DateTime($dataInformada) : new \DateTime());
-        $consulta->setHora($horaInformada !== '' ? new \DateTime($horaInformada) : new \DateTime());
+            // Data e hora do atendimento: se não vierem preenchidas, usa o momento atual.
+            // Permite lançar atendimento retroativo (ex.: registro feito depois do fato).
+            $dataInformada = trim((string) $request->get('data'));
+            $horaInformada = trim((string) $request->get('hora'));
+            $consulta->setData($dataInformada !== '' ? new \DateTime($dataInformada) : new \DateTime());
+            $consulta->setHora($horaInformada !== '' ? new \DateTime($horaInformada) : new \DateTime());
 
-        $veterinarioId = $request->get('veterinario');
-        $consulta->setVeterinarioId($veterinarioId !== null && $veterinarioId !== '' ? (int) $veterinarioId : null);
-        $consulta->setObservacoes($request->get('observacoes'));
+            $veterinarioId = $request->get('veterinario');
+            $consulta->setVeterinarioId($veterinarioId !== null && $veterinarioId !== '' ? (int) $veterinarioId : null);
+            $consulta->setObservacoes($request->get('observacoes'));
 
-        $consulta->setAnamnese($request->get('anamnese_delta'));
+            $consulta->setAnamnese($request->get('anamnese_delta'));
 
-        $consulta->setTipo($request->get('tipo'));
-        $consulta->setStatus('atendido');
-        $consulta->setCriadoEm(new \DateTime());
+            $consulta->setTipo($request->get('tipo'));
+            $consulta->setStatus('atendido');
+            $consulta->setCriadoEm(new \DateTime());
 
-        // --- Upload do arquivo de encaminhamento (opcional) ---
-        $arquivo = $request->files->get('encaminhamento_arquivo');
-        if ($arquivo) {
-            $extensao = strtolower($arquivo->getClientOriginalExtension() ?: $arquivo->guessExtension() ?: '');
+            // --- Upload do arquivo de encaminhamento (opcional) ---
+            $arquivo = $request->files->get('encaminhamento_arquivo');
+            if ($arquivo) {
+                $extensao = strtolower($arquivo->getClientOriginalExtension() ?: $arquivo->guessExtension() ?: '');
 
-            if (!in_array($extensao, self::ANEXO_EXTENSOES_PERMITIDAS, true)) {
-                $msg = 'Formato de arquivo não permitido. Use: ' . implode(', ', self::ANEXO_EXTENSOES_PERMITIDAS) . '.';
-                if ($isAjax) {
-                    return $this->json(['status' => 'error', 'mensagem' => $msg], 400);
+                if (!in_array($extensao, self::ANEXO_EXTENSOES_PERMITIDAS, true)) {
+                    $msg = 'Formato de arquivo não permitido. Use: ' . implode(', ', self::ANEXO_EXTENSOES_PERMITIDAS) . '.';
+                    if ($isAjax) {
+                        return $this->json(['status' => 'error', 'mensagem' => $msg], 400);
+                    }
+                    $this->addFlash('error', $msg);
+                    return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
                 }
-                $this->addFlash('error', $msg);
-                return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
-            }
 
-            $diretorio = $this->getParameter('encaminhamentos_directory');
-            if (!is_dir($diretorio)) {
-                mkdir($diretorio, 0775, true);
-            }
-
-            // Nome randômico de 12 dígitos, garantindo que não exista arquivo igual no diretório
-            do {
-                $nomeArquivo = (string) random_int(100000000000, 999999999999) . '.' . $extensao;
-            } while (file_exists($diretorio . DIRECTORY_SEPARATOR . $nomeArquivo));
-
-            try {
-                $arquivo->move($diretorio, $nomeArquivo);
-            } catch (\Exception $e) {
-                $msg = 'Falha ao gravar o arquivo no servidor. Tente novamente.';
-                if ($isAjax) {
-                    return $this->json(['status' => 'error', 'mensagem' => $msg], 500);
+                $diretorio = $this->getParameter('encaminhamentos_directory');
+                if (!is_dir($diretorio)) {
+                    mkdir($diretorio, 0775, true);
                 }
-                $this->addFlash('error', $msg);
-                return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+
+                // Nome randômico de 12 dígitos, garantindo que não exista arquivo igual no diretório
+                do {
+                    $nomeArquivo = (string) random_int(100000000000, 999999999999) . '.' . $extensao;
+                } while (file_exists($diretorio . DIRECTORY_SEPARATOR . $nomeArquivo));
+
+                try {
+                    $arquivo->move($diretorio, $nomeArquivo);
+                } catch (\Exception $e) {
+                    $msg = 'Falha ao gravar o arquivo no servidor. Tente novamente.';
+                    if ($isAjax) {
+                        return $this->json(['status' => 'error', 'mensagem' => $msg], 500);
+                    }
+                    $this->addFlash('error', $msg);
+                    return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+                }
+
+                $consulta->setAttachment($nomeArquivo);
+                $consulta->setAttachmentOriginal($arquivo->getClientOriginalName());
             }
 
-            $consulta->setAttachment($nomeArquivo);
-            $consulta->setAttachmentOriginal($arquivo->getClientOriginalName());
-        }
+            $consultaId = $this->getRepositorio(Consulta::class)->salvarConsulta($baseId, $consulta);
 
-        $consultaId = $this->getRepositorio(Consulta::class)->salvarConsulta($baseId, $consulta);
+            // Atendimento para mais de um pet do mesmo tutor (pets adicionais).
+            $petsAdicionais = array_filter(
+                array_map('intval', (array) $request->get('pets_adicionais', [])),
+                fn($id) => $id > 0 && $id !== $petId
+            );
+            if (!empty($petsAdicionais)) {
+                $this->getRepositorio(Consulta::class)
+                    ->salvarPetsAdicionais($baseId, $consultaId, (int) $baseId, $petsAdicionais);
+            }
 
-        // Atendimento para mais de um pet do mesmo tutor (pets adicionais).
-        $petsAdicionais = array_filter(
-            array_map('intval', (array) $request->get('pets_adicionais', [])),
-            fn($id) => $id > 0 && $id !== $petId
-        );
-        if (!empty($petsAdicionais)) {
-            $this->getRepositorio(Consulta::class)
-                ->salvarPetsAdicionais($baseId, $consultaId, (int) $baseId, $petsAdicionais);
-        }
+            if ($isAjax) {
+                return $this->json([
+                    'status' => 'success',
+                    'mensagem' => 'Atendimento salvo com sucesso!',
+                    'redirect' => $this->generateUrl('clinica_detalhes_pet', ['id' => $petId]),
+                ]);
+            }
 
-        if ($isAjax) {
-            return $this->json([
-                'status' => 'success',
-                'mensagem' => 'Atendimento salvo com sucesso!',
-                'redirect' => $this->generateUrl('clinica_detalhes_pet', ['id' => $petId]),
-            ]);
-        }
-
-        $this->addFlash('success', 'Atendimento salvo com sucesso!');
-        return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+            $this->addFlash('success', 'Atendimento salvo com sucesso!');
+            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
 
         } catch (\Throwable $e) {
             // Converte qualquer erro inesperado em resposta legível (JSON no AJAX),
@@ -237,44 +237,44 @@ class FichaController extends DefaultController
             $conteudoHtml = $this->quillDeltaToHtml($conteudoDelta);
 
             // --- Dados do pet e do tutor (formatados e escapados) ---
-            $esc = function ($v) { return htmlspecialchars((string) ($v ?? ''), ENT_QUOTES); };
-            $ou = function ($v) { $v = trim((string) ($v ?? '')); return $v !== '' ? $v : '—'; };
+            $esc = function ($v) {return htmlspecialchars((string) ($v ?? ''), ENT_QUOTES);};
+            $ou = function ($v) {$v = trim((string) ($v ?? ''));return $v !== '' ? $v : '—';};
 
-            $petNome     = $esc($ou($pet['nome'] ?? ''));
-            $petEspecie  = $esc($ou($pet['especie'] ?? ''));
-            $petRaca     = $esc($ou($pet['raca'] ?? ''));
-            $petSexo     = $esc($ou($pet['sexo'] ?? ''));
-            $petPorte    = $esc($ou($pet['porte'] ?? ''));
-            $idadeRaw    = trim((string) ($pet['idade'] ?? ''));
-            $petIdade    = $esc($idadeRaw !== '' ? ($idadeRaw . (is_numeric($idadeRaw) ? ' ano(s)' : '')) : '—');
-            $pesoRaw     = trim((string) ($pet['peso'] ?? ''));
-            $petPeso     = $esc($pesoRaw !== '' ? ($pesoRaw . ' kg') : '—');
+            $petNome = $esc($ou($pet['nome'] ?? ''));
+            $petEspecie = $esc($ou($pet['especie'] ?? ''));
+            $petRaca = $esc($ou($pet['raca'] ?? ''));
+            $petSexo = $esc($ou($pet['sexo'] ?? ''));
+            $petPorte = $esc($ou($pet['porte'] ?? ''));
+            $idadeRaw = trim((string) ($pet['idade'] ?? ''));
+            $petIdade = $esc($idadeRaw !== '' ? ($idadeRaw . (is_numeric($idadeRaw) ? ' ano(s)' : '')) : '—');
+            $pesoRaw = trim((string) ($pet['peso'] ?? ''));
+            $petPeso = $esc($pesoRaw !== '' ? ($pesoRaw . ' kg') : '—');
             $castradoRaw = $pet['castrado'] ?? null;
             $petCastrado = ($castradoRaw === null || $castradoRaw === '') ? '—' : (((int) $castradoRaw === 1) ? 'Sim' : 'Não');
-            $petNasc     = !empty($pet['dataNascimento']) ? date('d/m/Y', strtotime($pet['dataNascimento'])) : '—';
+            $petNasc = !empty($pet['dataNascimento']) ? date('d/m/Y', strtotime($pet['dataNascimento'])) : '—';
 
-            $tutorNome     = $esc($ou($clienteNome));
-            $tutorCpf      = $esc($ou($cliente ? $cliente->getCpf() : ''));
-            $telefoneRaw   = $cliente ? ($cliente->getTelefone() ?: '') : ($pet['dono_telefone'] ?? '');
-            $whatsRaw      = $cliente ? ($cliente->getWhatsapp() ?: '') : '';
-            $tutorTel      = $esc($ou($telefoneRaw));
-            $tutorWhats    = $esc($ou($whatsRaw));
-            $tutorEmail    = $esc($ou($cliente ? $cliente->getEmail() : ($pet['dono_email'] ?? '')));
+            $tutorNome = $esc($ou($clienteNome));
+            $tutorCpf = $esc($ou($cliente ? $cliente->getCpf() : ''));
+            $telefoneRaw = $cliente ? ($cliente->getTelefone() ?: ''): ($pet['dono_telefone'] ?? '');
+            $whatsRaw = $cliente ? ($cliente->getWhatsapp() ?: ''): '';
+            $tutorTel = $esc($ou($telefoneRaw));
+            $tutorWhats = $esc($ou($whatsRaw));
+            $tutorEmail = $esc($ou($cliente ? $cliente->getEmail() : ($pet['dono_email'] ?? '')));
             $tutorEndereco = $esc($ou(trim((string) ($pet['dono_endereco'] ?? ''), " ,-")));
 
-            $lblStyle  = "font-size:8px; text-transform:uppercase; letter-spacing:0.5px; color:#94A3B8;";
-            $valStyle  = "font-size:10.5px; color:#0F172A;";
+            $lblStyle = "font-size:8px; text-transform:uppercase; letter-spacing:0.5px; color:#94A3B8;";
+            $valStyle = "font-size:10.5px; color:#0F172A;";
 
             $cabecalhoHtml = "
 <table width='100%' style='border-collapse:collapse;'>
   <tr>
-    <td style='padding:0 0 10px 0; border-bottom:2.5px solid #5d57f4;'>
+    <td style='padding:0 0 7px 0; border-bottom:2px solid #5d57f4;'>
       <table width='100%' style='border-collapse:collapse;'>
         <tr>
-          <td style='width:55px; vertical-align:middle; padding-right:10px;'>
+          <td style='width:48px; vertical-align:middle; padding-right:8px;'>
             <table style='border-collapse:collapse;'>
               <tr>
-                <td style='width:44px; height:44px; border:2px solid #5d57f4; border-radius:50%; text-align:center; vertical-align:middle; font-size:18px; font-weight:bold; color:#5d57f4;'>+</td>
+                <td style='width:38px; height:38px; border:2px solid #5d57f4; border-radius:50%; text-align:center; vertical-align:middle; font-size:16px; font-weight:bold; color:#5d57f4;'>+</td>
               </tr>
             </table>
           </td>
@@ -292,9 +292,9 @@ class FichaController extends DefaultController
   </tr>
 </table>
 
-<table width='100%' style='border-collapse:collapse; margin-top:12px;'>
+<table width='100%' style='border-collapse:collapse; margin-top:8px;'>
   <tr>
-    <td style='text-align:center; padding-bottom:8px;'>
+    <td style='text-align:center; padding-bottom:5px;'>
       <span style='font-size:11px; font-weight:bold; letter-spacing:2.5px; color:#5d57f4;'>RECEITUÁRIO VETERINÁRIO</span>
     </td>
   </tr>
@@ -302,17 +302,17 @@ class FichaController extends DefaultController
 
 <table width='100%' style='border-collapse:collapse; background-color:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px;'>
   <tr>
-    <td style='width:50%; vertical-align:top; padding:10px 14px; border-right:1px solid #E2E8F0;'>
-      <div style='font-size:9px; font-weight:bold; letter-spacing:1px; color:#5d57f4; padding-bottom:5px;'>TUTOR</div>
-      <div style='padding-bottom:3px;'><span style='{$lblStyle}'>Nome</span> <span style='{$valStyle}'>{$tutorNome}</span> &nbsp; <span style='{$lblStyle}'>CPF</span> <span style='{$valStyle}'>{$tutorCpf}</span></div>
-      <div style='padding-bottom:3px;'><span style='{$lblStyle}'>Telefone</span> <span style='{$valStyle}'>{$tutorTel}</span> &nbsp; <span style='{$lblStyle}'>WhatsApp</span> <span style='{$valStyle}'>{$tutorWhats}</span></div>
-      <div style='padding-bottom:3px;'><span style='{$lblStyle}'>E-mail</span> <span style='{$valStyle}'>{$tutorEmail}</span></div>
+    <td style='width:50%; vertical-align:top; padding:7px 11px; border-right:1px solid #E2E8F0;'>
+      <div style='font-size:9px; font-weight:bold; letter-spacing:1px; color:#5d57f4; padding-bottom:3px;'>TUTOR</div>
+      <div style='padding-bottom:2px;'><span style='{$lblStyle}'>Nome</span> <span style='{$valStyle}'>{$tutorNome}</span> &nbsp; <span style='{$lblStyle}'>CPF</span> <span style='{$valStyle}'>{$tutorCpf}</span></div>
+      <div style='padding-bottom:2px;'><span style='{$lblStyle}'>Telefone</span> <span style='{$valStyle}'>{$tutorTel}</span> &nbsp; <span style='{$lblStyle}'>WhatsApp</span> <span style='{$valStyle}'>{$tutorWhats}</span></div>
+      <div style='padding-bottom:2px;'><span style='{$lblStyle}'>E-mail</span> <span style='{$valStyle}'>{$tutorEmail}</span></div>
       <div><span style='{$lblStyle}'>Endereço</span> <span style='{$valStyle}'>{$tutorEndereco}</span></div>
     </td>
-    <td style='width:50%; vertical-align:top; padding:10px 14px;'>
-      <div style='font-size:9px; font-weight:bold; letter-spacing:1px; color:#5d57f4; padding-bottom:5px;'>PACIENTE</div>
-      <div style='padding-bottom:4px;'><span style='{$lblStyle}'>Nome</span> <span style='{$valStyle}'>{$petNome}</span> &nbsp; <span style='{$lblStyle}'>Espécie</span> <span style='{$valStyle}'>{$petEspecie}</span></div>
-      <div style='padding-bottom:4px;'><span style='{$lblStyle}'>Raça</span> <span style='{$valStyle}'>{$petRaca}</span> &nbsp; <span style='{$lblStyle}'>Sexo</span> <span style='{$valStyle}'>{$petSexo}</span> &nbsp; <span style='{$lblStyle}'>Porte</span> <span style='{$valStyle}'>{$petPorte}</span></div>
+    <td style='width:50%; vertical-align:top; padding:7px 11px;'>
+      <div style='font-size:9px; font-weight:bold; letter-spacing:1px; color:#5d57f4; padding-bottom:3px;'>PACIENTE</div>
+      <div style='padding-bottom:2px;'><span style='{$lblStyle}'>Nome</span> <span style='{$valStyle}'>{$petNome}</span> &nbsp; <span style='{$lblStyle}'>Espécie</span> <span style='{$valStyle}'>{$petEspecie}</span></div>
+      <div style='padding-bottom:2px;'><span style='{$lblStyle}'>Raça</span> <span style='{$valStyle}'>{$petRaca}</span> &nbsp; <span style='{$lblStyle}'>Sexo</span> <span style='{$valStyle}'>{$petSexo}</span> &nbsp; <span style='{$lblStyle}'>Porte</span> <span style='{$valStyle}'>{$petPorte}</span></div>
       <div><span style='{$lblStyle}'>Idade</span> <span style='{$valStyle}'>{$petIdade}</span> &nbsp; <span style='{$lblStyle}'>Peso</span> <span style='{$valStyle}'>{$petPeso}</span> &nbsp; <span style='{$lblStyle}'>Castrado</span> <span style='{$valStyle}'>{$petCastrado}</span> &nbsp; <span style='{$lblStyle}'>Nasc.</span> <span style='{$valStyle}'>{$petNasc}</span></div>
     </td>
   </tr>
@@ -321,8 +321,8 @@ class FichaController extends DefaultController
 
 // --- Rodapé HTML fixo (assinatura do veterinário + emissão) ---
             $rodapeCustomHtml = $rodapeCustom !== ''
-                ? "<tr><td style='text-align:center; padding-top:6px; font-size:9px; color:#475569; line-height:1.4;'>" . nl2br(htmlspecialchars($rodapeCustom, ENT_QUOTES)) . "</td></tr>"
-                : "";
+            ? "<tr><td style='text-align:center; padding-top:6px; font-size:9px; color:#475569; line-height:1.4;'>" . nl2br(htmlspecialchars($rodapeCustom, ENT_QUOTES)) . "</td></tr>"
+            : "";
 
             $rodapeHtml = "
 <table width='100%' style='border-collapse:collapse; margin-top:2px;'>
@@ -361,7 +361,11 @@ class FichaController extends DefaultController
             $this->getRepositorio(\App\Entity\Receita::class)->salvar($receita);
 
             $gerarPDF = new \App\Service\GeradorpdfService($this->tempDirManager, $this->requestStack);
-            $gerarPDF->configuracaoPagina('A4', 10, 10, 50, 6, 10, 3);
+            // Margens: o cabeçalho da receita (logo + título + caixa TUTOR/PACIENTE)
+            // ocupa ~45mm. Com tMargin 50 e margin_header 10 sobravam 40mm e o
+            // conteúdo invadia o cabeçalho. tMargin 64 dá 56mm, com folga para o
+            // endereço do tutor quebrar em duas linhas.
+            $gerarPDF->configuracaoPagina('A4', 10, 10, 64, 26, 8, 8);
             $gerarPDF->setNomeArquivo('Receita_' . $pet['nome'] . '_' . date('YmdHis'));
             $gerarPDF->setRodape($rodapeHtml); // Usa o novo rodapé fixo
             $gerarPDF->montaCabecalhoPadrao($cabecalhoHtml);
@@ -526,7 +530,7 @@ class FichaController extends DefaultController
         }
 
         return $this->render('clinica/editar_consulta.html.twig', [
-            'consulta'     => $consulta,
+            'consulta' => $consulta,
             'veterinarios' => $this->getRepositorio(Veterinario::class)->findAll(),
         ]);
     }
@@ -623,11 +627,65 @@ class FichaController extends DefaultController
     }
 
     /**
+     * Gera o PDF de uma receita já emitida, a partir do cabeçalho, conteúdo e
+     * rodapé gravados no momento da emissão.
+     *
+     * Substitui a impressão via window.print() sobre o HTML do modal: aquele
+     * caminho não respeitava as margens do papel timbrado e sobrepunha o
+     * conteúdo ao cabeçalho. Aqui o mPDF trata cabeçalho e rodapé como camadas
+     * próprias, com as mesmas margens usadas na emissão.
+     *
+     * O PDF abre inline na aba; imprimir ou salvar fica a cargo do
+     * visualizador do navegador.
+     *
+     * @Route("/receita/{id}/pdf", name="clinica_receita_pdf", methods={"GET"})
+     */
+    public function gerarReceitaPdf(int $id): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $receita = $this->getRepositorio(\App\Entity\Receita::class)->findById($baseId, $id);
+        if (!$receita) {
+            throw $this->createNotFoundException('Receita não encontrada.');
+        }
+
+        // O conteúdo é o Delta do Quill; cabeçalho e rodapé já foram gravados
+        // como HTML pronto na emissão — não precisam ser remontados.
+        $conteudoHtml = $this->quillDeltaToHtml($receita['conteudo'] ?? null);
+        if (trim(strip_tags($conteudoHtml)) === '') {
+            $conteudoHtml = '<p style="color:#666;"><em>Receita sem conteúdo registrado.</em></p>';
+        }
+
+        $dataReceita = !empty($receita['data']) ? strtotime($receita['data']) : false;
+        $sufixo = $dataReceita ? date('Ymd', $dataReceita) : date('Ymd');
+        $nomePet = preg_replace('/[^a-zA-Z0-9]/', '_', (string) ($receita['pet_nome'] ?? 'Pet'));
+
+        $gerarPDF = new \App\Service\GeradorpdfService($this->tempDirManager, $this->requestStack);
+
+        // Mesmas margens da emissão: 64-8 = 56mm para o cabeçalho timbrado.
+        $gerarPDF->configuracaoPagina('A4', 10, 10, 64, 26, 8, 8);
+        $gerarPDF->setNomeArquivo('Receita_' . $nomePet . '_' . $sufixo . '.pdf');
+
+        if (!empty($receita['rodape'])) {
+            $gerarPDF->setRodape($receita['rodape']);
+        }
+        if (!empty($receita['cabecalho'])) {
+            $gerarPDF->montaCabecalhoPadrao($receita['cabecalho']);
+        }
+
+        $gerarPDF->addPagina('P');
+        $gerarPDF->conteudo($conteudoHtml);
+
+        return $gerarPDF->gerarInline();
+    }
+
+    /**
      * Gera PDF completo da ficha do pet com todas as consultas
-     * 
+     *
      * @Route("/pet/{petId}/ficha/pdf", name="clinica_ficha_pdf", methods={"GET"})
      */
-    public function gerarFichaPdf(Request $request, App\Service\FichaPdfService $fichaPdfService, int $petId): Response
+    public function gerarFichaPdf(Request $request, \App\Service\FichaPdfService $fichaPdfService, int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();

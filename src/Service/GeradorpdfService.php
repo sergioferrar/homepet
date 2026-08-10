@@ -143,6 +143,21 @@ class GeradorpdfService
             $this->pdf->Output($this->nomeArquivo, 'D');
         }
     }
+
+    /**
+     * Envia o PDF para o navegador em modo INLINE ('I'), abrindo no leitor de
+     * PDF da própria aba em vez de forçar o download.
+     *
+     * A partir daí o usuário pode imprimir pelo visualizador do navegador ou
+     * salvar o arquivo — sem depender de window.print() sobre HTML, que não
+     * respeita as margens do papel timbrado.
+     *
+     * O gerar() acima continua com o comportamento antigo ('D' = download).
+     */
+    public function gerarInline()
+    {
+        $this->pdf->Output($this->nomeArquivo, 'I');
+    }
     ## parametros para o output ####
     #
     #  I: envia o arquivo interno para o navegador. O plug-in é usado se estiver disponível. O nome dado pelo nome do arquivo é usado quando alguém escolhe a opção "Salvar como" opção no link gerar o PDF.

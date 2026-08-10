@@ -559,7 +559,8 @@
                                                    {% if item.attachment is defined and item.attachment %}data-anexo-url="{{ path('clinica_consulta_anexo', {'id': item.id}) }}" data-anexo-nome="{{ item.attachment_original|default(item.attachment)|e('html_attr') }}"{% endif %}
                                                    {% if item.receita_cabecalho is defined %}data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}"{% endif %}
                                                    {% if item.receita_conteudo is defined %}data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}"{% endif %}
-                                                   {% if item.receita_rodape is defined %}data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}"{% endif %}>
+                                                   {% if item.receita_rodape is defined %}data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}"{% endif %}
+                                                   {% if item.receita_conteudo is defined and item.id is defined and item.id %}data-receita-pdf-url="{{ path('clinica_receita_pdf', {'id': item.id}) }}"{% endif %}>
                                                     <span>{{ item.tipo }}</span>
                                                 </a>
                                             </h4>
@@ -579,7 +580,8 @@
                                                {% if item.attachment is defined and item.attachment %}data-anexo-url="{{ path('clinica_consulta_anexo', {'id': item.id}) }}" data-anexo-nome="{{ item.attachment_original|default(item.attachment)|e('html_attr') }}"{% endif %}
                                                {% if item.receita_cabecalho is defined %}data-receita-cabecalho-html="{{ item.receita_cabecalho|e('html_attr') }}"{% endif %}
                                                {% if item.receita_conteudo is defined %}data-receita-conteudo-delta="{{ item.receita_conteudo|e('html_attr') }}"{% endif %}
-                                               {% if item.receita_rodape is defined %}data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}"{% endif %}>
+                                               {% if item.receita_rodape is defined %}data-receita-rodape-html="{{ item.receita_rodape|e('html_attr') }}"{% endif %}
+                                                   {% if item.receita_conteudo is defined and item.id is defined and item.id %}data-receita-pdf-url="{{ path('clinica_receita_pdf', {'id': item.id}) }}"{% endif %}>
                                                 <span>Ver detalhes</span>
                                             </a>
                                             {% if item.attachment is defined and item.attachment %}
@@ -595,6 +597,15 @@
                                                    class="btn btn-sm btn-outline-secondary ms-1"
                                                    title="Corrigir data, veterinário, anamnese e demais dados">
                                                     <i class="bi bi-pencil"></i> Editar
+                                                </a>
+                                            {% endif %}
+                                            {# PDF da receita: gerado no servidor, abre inline em nova aba. #}
+                                            {% if item.receita_conteudo is defined and item.id is defined and item.id %}
+                                                <a href="{{ path('clinica_receita_pdf', {'id': item.id}) }}"
+                                                   class="btn btn-sm btn-outline-primary ms-1"
+                                                   target="_blank" rel="noopener"
+                                                   title="Abrir a receita em PDF para imprimir ou salvar">
+                                                    <i class="bi bi-file-earmark-pdf"></i> PDF
                                                 </a>
                                             {% endif %}
                                             <p class="text-muted d-none">{{ item.resumo|raw }}</p>
@@ -1248,43 +1259,24 @@ $(document).ready(function() {
                 serviceDetailsContent.appendChild(cardDiv);
             }
             if (tipo === 'Receita') {
-                Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html(), 'Imprimir Receita', 'Fechar', 'imprimir-receita');
-                $(document).off('click', '.imprimir-receita').on('click', '.imprimir-receita', function() {
-                    var elementoParaImprimir = $(this).closest('.modal-content').find('#receita-para-impressao');
-                    if (!elementoParaImprimir.length) {
-                        elementoParaImprimir = $(this).closest('.modal-content').find('#service-details-content');
-                    }
-                    if (!elementoParaImprimir.length) {
-                        alert('Não foi possível encontrar o conteúdo da receita.');
+                // O PDF é gerado no servidor (mPDF), com o mesmo papel timbrado e as
+                // mesmas margens da emissão. Substitui o antigo window.print() sobre o
+                // HTML do modal, que ignorava as margens e sobrepunha o cabeçalho.
+                var receitaPdfUrl = this.dataset.receitaPdfUrl || '';
+
+                Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html(), 'Baixar PDF', 'Fechar', 'baixar-receita-pdf');
+
+                $(document).off('click', '.baixar-receita-pdf').on('click', '.baixar-receita-pdf', function(e) {
+                    e.preventDefault();
+
+                    if (!receitaPdfUrl) {
+                        alert('Não foi possível identificar esta receita para gerar o PDF.');
                         return;
                     }
-                    $('#iframe-impressao-receita').remove();
-                    var iframe = document.createElement('iframe');
-                    iframe.id = 'iframe-impressao-receita';
-                    iframe.style.position = 'fixed';
-                    iframe.style.right = '0';
-                    iframe.style.bottom = '0';
-                    iframe.style.width = '0';
-                    iframe.style.height = '0';
-                    iframe.style.border = '0';
-                    document.body.appendChild(iframe);
-                    var doc = iframe.contentWindow.document;
-                    doc.open();
-                    doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receita Médica Veterinária</title><style>* {margin: 0;padding: 0;box-sizing: border-box;}body {font-family: 'Times New Roman', Times, serif;font-size: 14pt;line-height: 1.6;padding: 20mm;color: #000;}.receita-container {max-width: 100%;border: none !important;padding: 0 !important;}.receita-cabecalho {text-align: center;margin-bottom: 30px;padding-bottom: 15px;border-bottom: 2px solid #333;}.receita-cabecalho h1,.receita-cabecalho h2,.receita-cabecalho h3 {margin-bottom: 5px;}.receita-conteudo {min-height: 300px;margin: 30px 0;padding: 20px 0;}.receita-conteudo .ql-editor {padding: 0 !important;}.receita-conteudo p {margin-bottom: 10px;}.receita-rodape {text-align: center;margin-top: 50px;padding-top: 20px;border-top: 1px solid #333;}.border, .border-bottom, .border-top {border: none !important;}.p-4, .p-3, .my-4, .mb-4, .mt-4, .pb-3, .pt-3 {padding: 0 !important;margin: 0 !important;}@media print {body {-webkit-print-color-adjust: exact;print-color-adjust: exact;}@page {margin: 15mm;}}</style></head><body>${elementoParaImprimir.html()}</body></html>`);
-                    doc.close();
-                    const removerIframe = () => {
-                        if (iframe && iframe.parentNode) {
-                            document.body.removeChild(iframe);
-                        }
-                    };
-                    iframe.onload = function() {
-                        setTimeout(() => {
-                            iframe.contentWindow.focus();
-                            iframe.contentWindow.print();
-                            iframe.contentWindow.onafterprint = removerIframe;
-                            setTimeout(removerIframe, 10000);
-                        }, 300);
-                    };
+
+                    // Abre em nova aba: o PDF vem inline, então o visualizador do
+                    // navegador cuida de imprimir ou salvar.
+                    window.open(receitaPdfUrl, '_blank', 'noopener');
                 });
             } else {
                 Utils.modal(serviceDisplayContainer.html(), 'secondary', null, 'lg', $('#service-display-title').html());

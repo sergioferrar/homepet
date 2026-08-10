@@ -35,4 +35,28 @@ class ReceitaRepository extends ServiceEntityRepository
         $em->persist($receita);
         $em->flush();
     }
+
+    /**
+     * Busca uma receita pelo ID, com o HTML de cabeçalho/rodapé e o Delta do
+     * conteúdo já gravados na emissão. Usado para reimprimir a receita em PDF
+     * sem precisar remontar o papel timbrado.
+     */
+    public function findById($baseId, int $receitaId): ?array
+    {
+        $sql = "SELECT r.id, r.pet_id, r.data, r.resumo, r.cabecalho, r.conteudo, r.rodape,
+                       p.nome AS pet_nome
+                FROM homepet_{$baseId}.receita r
+                LEFT JOIN homepet_{$baseId}.pet p ON p.id = r.pet_id
+                WHERE r.estabelecimento_id = :baseId AND r.id = :id
+                LIMIT 1";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('id', $receitaId);
+
+        $row = $stmt->executeQuery()->fetchAssociative();
+
+        return $row ?: null;
+    }
+
 }

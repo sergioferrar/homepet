@@ -253,6 +253,7 @@ class DashboardController extends DefaultController
         // Receitas
         foreach ($receitas as $r) {
             $timeline_items[] = [
+                'id' => $r['id'],
                 'data' => new \DateTime($r['data']),
                 'tipo' => 'Receita',
                 'resumo' => $r['resumo'] ?? '',
