@@ -1,0 +1,458 @@
+{% extends "base.html.twig" %}
+
+{% block title %}{{ pageTitle }} - HomePet{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-2">
+                <i class="fas fa-file-import me-2"></i>{{ pageTitle }}
+            </h1>
+            <p class="text-muted">Importe dados herdados de outros sistemas para o HomePet</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ path('importacao_download_modelo') }}" class="btn btn-outline-primary">
+                <i class="fas fa-download me-2"></i>Baixar Modelo
+            </a>
+        </div>
+    </div>
+
+    <!-- Abas de navegação -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="instrucoes-tab" data-bs-toggle="tab" data-bs-target="#instrucoes" type="button">
+                <i class="fas fa-info-circle me-2"></i>Instruções
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="importar-tab" data-bs-toggle="tab" data-bs-target="#importar" type="button">
+                <i class="fas fa-upload me-2"></i>Importar Dados
+            </button>
+        </li>
+    </ul>
+
+    <!-- Conteúdo das abas -->
+    <div class="tab-content">
+        <!-- Aba Instruções -->
+        <div class="tab-pane fade show active" id="instrucoes" role="tabpanel">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-light border-bottom">
+                            <h5 class="mb-0">
+                                <i class="fas fa-book me-2"></i>Como usar
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="mb-3">Passo 1: Baixe o arquivo modelo</h6>
+                            <p>
+                                Clique no botão "Baixar Modelo" para obter um arquivo Excel com a estrutura correta.
+                                Este arquivo contém abas para:
+                            </p>
+                            <ul class="ms-3">
+                                <li><strong>Clientes:</strong> Dados dos clientes</li>
+                                <li><strong>Pets:</strong> Dados dos animais de estimação</li>
+                                <li><strong>Produtos:</strong> Inventário de produtos</li>
+                                <li><strong>Serviços:</strong> Serviços oferecidos</li>
+                            </ul>
+
+                            <h6 class="mb-3 mt-4">Passo 2: Preencha os dados</h6>
+                            <p>
+                                Abra o arquivo em Excel e preencha as linhas com seus dados. Observe que:
+                            </p>
+                            <ul class="ms-3">
+                                <li>Campos marcados com asterisco (*) são <strong>obrigatórios</strong></li>
+                                <li>Não modifique o cabeçalho das colunas</li>
+                                <li>Mantenha o nome das abas iguais</li>
+                                <li>Use datas no formato DD/MM/YYYY</li>
+                            </ul>
+
+                            <h6 class="mb-3 mt-4">Passo 3: Faça o upload</h6>
+                            <p>
+                                Vá para a aba "Importar Dados" e selecione seu arquivo preenchido para fazer upload.
+                                O sistema irá validar e mostrar um preview dos dados antes de importar.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light border-bottom">
+                            <h5 class="mb-0">
+                                <i class="fas fa-lightbulb me-2"></i>Dicas importantes
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info mb-3">
+                                <strong>Clientes:</strong> Se um cliente com o mesmo email ou CPF já existir, ele será ignorado.
+                            </div>
+                            <div class="alert alert-info mb-3">
+                                <strong>Pets:</strong> O cliente deve existir no sistema para que o pet seja associado.
+                            </div>
+                            <div class="alert alert-info mb-3">
+                                <strong>Produtos:</strong> Use Tipo de Estoque como 'loja', 'interno' ou 'ambos'.
+                            </div>
+                            <div class="alert alert-info mb-0">
+                                <strong>Tamanho máximo:</strong> O arquivo não pode ultrapassar 5MB.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar de estrutura -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light border-bottom">
+                            <h5 class="mb-0">
+                                <i class="fas fa-th-list me-2"></i>Campos das abas
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6 class="text-primary mb-2">👥 Clientes</h6>
+                                <small class="d-block text-muted mb-1">Nome, Email, Telefone, CPF, Rua, Número, Complemento, Bairro, Cidade, CEP, WhatsApp</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="text-success mb-2">🐾 Pets</h6>
+                                <small class="d-block text-muted mb-1">Nome Pet, Nome Cliente, Espécie, Raça, Sexo, Idade, Data Nascimento, Porte, Peso, Castrado, Observações</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="text-warning mb-2">📦 Produtos</h6>
+                                <small class="d-block text-muted mb-1">Nome, Código, Preço Custo, Preço Venda, Estoque Atual, Tipo Estoque, Unidade, Refrigerado</small>
+                            </div>
+
+                            <div>
+                                <h6 class="text-info mb-2">🔧 Serviços</h6>
+                                <small class="d-block text-muted mb-1">Nome, Descrição, Valor, Tipo</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Importar -->
+        <div class="tab-pane fade" id="importar" role="tabpanel">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <!-- Zona de upload -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-5">
+                            <form id="formImportacao" enctype="multipart/form-data">
+                                {{ csrf_token('importacao') | raw }}
+                                
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-file-upload me-2"></i>Selecione o arquivo
+                                    </label>
+                                    <div class="drop-zone border-2 border-dashed rounded p-5 text-center bg-light" 
+                                         id="dropZone"
+                                         style="border-color: #dee2e6; cursor: pointer; transition: all 0.3s ease;">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3 d-block"></i>
+                                        <p class="mb-2 text-muted">
+                                            Arraste o arquivo aqui ou clique para selecionar
+                                        </p>
+                                        <p class="small text-muted mb-0">
+                                            Formatos aceitos: .xlsx, .xls | Tamanho máximo: 5MB
+                                        </p>
+                                        <input type="file" id="arquivo" name="arquivo" 
+                                               accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                                               class="d-none">
+                                    </div>
+                                </div>
+
+                                <!-- Nome do arquivo selecionado -->
+                                <div id="nomeArquivo" class="alert alert-info d-none mb-3">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong id="nomeArquivoTexto"></strong>
+                                    <button type="button" class="btn-close btn-sm" id="limparArquivo"></button>
+                                </div>
+
+                                <!-- Preview dos dados -->
+                                <div id="previewDados" class="mb-4"></div>
+
+                                <!-- Botões de ação -->
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="button" class="btn btn-secondary" id="btnCancelar">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" id="btnImportar" disabled>
+                                        <i class="fas fa-upload me-2"></i>Importar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Resultados da importação -->
+                    <div id="resultados" class="mb-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos adicionais -->
+<style>
+    .drop-zone {
+        transition: all 0.3s ease;
+    }
+
+    .drop-zone.dragover {
+        background-color: #e7f3ff !important;
+        border-color: #0d6efd !important;
+    }
+
+    .nav-link {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .nav-link.active {
+        color: #0d6efd;
+        border-bottom-color: #0d6efd !important;
+    }
+
+    .card {
+        border: 1px solid rgba(0,0,0,.125);
+    }
+
+    .resultado-item {
+        padding: 0.75rem 1rem;
+        border-left: 4px solid #dee2e6;
+    }
+
+    .resultado-item.sucesso {
+        background-color: #d1e7dd;
+        border-color: #198754;
+        color: #0f5132;
+    }
+
+    .resultado-item.erro {
+        background-color: #f8d7da;
+        border-color: #dc3545;
+        color: #842029;
+    }
+
+    .resultado-item.aviso {
+        background-color: #fff3cd;
+        border-color: #ffc107;
+        color: #664d03;
+    }
+</style>
+
+<!-- Scripts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('dropZone');
+    const input = document.getElementById('arquivo');
+    const nomeArquivo = document.getElementById('nomeArquivo');
+    const nomeArquivoTexto = document.getElementById('nomeArquivoTexto');
+    const btnImportar = document.getElementById('btnImportar');
+    const btnCancelar = document.getElementById('btnCancelar');
+    const limparArquivo = document.getElementById('limparArquivo');
+    const formImportacao = document.getElementById('formImportacao');
+    const previewDados = document.getElementById('previewDados');
+    const resultados = document.getElementById('resultados');
+
+    // Drag and drop
+    dropZone.addEventListener('click', () => input.click());
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            input.files = e.dataTransfer.files;
+            handleFileSelect();
+        }
+    });
+
+    input.addEventListener('change', handleFileSelect);
+
+    function handleFileSelect() {
+        if (!input.files.length) return;
+
+        const file = input.files[0];
+        nomeArquivoTexto.textContent = file.name;
+        nomeArquivo.classList.remove('d-none');
+
+        // Valida o arquivo
+        validarArquivo(file);
+    }
+
+    function validarArquivo(file) {
+        const formData = new FormData();
+        formData.append('arquivo', file);
+
+        fetch('{{ path("importacao_validar") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            previewDados.innerHTML = '';
+
+            if (data.valido) {
+                btnImportar.disabled = false;
+                exibirPreview(data);
+            } else {
+                btnImportar.disabled = true;
+                previewDados.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${data.erro}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            btnImportar.disabled = true;
+            previewDados.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Erro ao validar arquivo
+                </div>
+            `;
+        });
+    }
+
+    function exibirPreview(data) {
+        let html = '<div class="card border-0 shadow-sm"><div class="card-body">';
+        html += '<h6 class="mb-3"><i class="fas fa-search me-2"></i>Preview do arquivo</h6>';
+        html += '<div class="row g-3">';
+
+        const icones = {
+            'Clientes': '👥',
+            'Pets': '🐾',
+            'Produtos': '📦',
+            'Serviços': '🔧'
+        };
+
+        for (const [aba, presente] of Object.entries(data.abas_presentes)) {
+            const registros = data.registros[aba];
+            const icone = icones[aba];
+            const status = presente ? 'success' : 'secondary';
+            const badge = presente ? 
+                `<span class="badge bg-${status} ms-2">${registros} registros</span>` : 
+                `<span class="badge bg-secondary ms-2">Não encontrada</span>`;
+
+            html += `
+                <div class="col-md-6">
+                    <div class="p-3 border rounded-2 ${presente ? 'border-success bg-light' : 'border-danger opacity-50'}">
+                        <div class="d-flex align-items-center">
+                            <span class="fs-5 me-2">${icone}</span>
+                            <div>
+                                <strong>${aba}</strong>
+                                ${badge}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        html += `<hr><small class="text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            Total de ${data.total_registros} registros para importar
+        </small>`;
+        html += '</div></div>';
+
+        previewDados.innerHTML = html;
+    }
+
+    limparArquivo.addEventListener('click', () => {
+        input.value = '';
+        nomeArquivo.classList.add('d-none');
+        btnImportar.disabled = true;
+        previewDados.innerHTML = '';
+        resultados.innerHTML = '';
+    });
+
+    btnCancelar.addEventListener('click', () => {
+        limparArquivo.click();
+    });
+
+    formImportacao.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        if (!input.files.length) return;
+
+        btnImportar.disabled = true;
+        const originalText = btnImportar.innerHTML;
+        btnImportar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Importando...';
+
+        const formData = new FormData(formImportacao);
+
+        fetch('{{ path("importacao_processar") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            exibirResultados(data);
+            if (data.sucesso) {
+                input.value = '';
+                nomeArquivo.classList.add('d-none');
+            }
+        })
+        .catch(error => {
+            resultados.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Erro ao processar importação
+                </div>
+            `;
+        })
+        .finally(() => {
+            btnImportar.disabled = false;
+            btnImportar.innerHTML = originalText;
+        });
+    });
+
+    function exibirResultados(data) {
+        let html = '<div class="card border-0 shadow-sm"><div class="card-body">';
+        html += `<h6 class="mb-3">
+            ${data.sucesso ? 
+                '<i class="fas fa-check-circle text-success me-2"></i>Importação concluída' :
+                '<i class="fas fa-exclamation-circle text-danger me-2"></i>Erros durante importação'
+            }
+        </h6>`;
+
+        if (data.mensagens_sucesso && data.mensagens_sucesso.length) {
+            html += '<div class="mb-3">';
+            data.mensagens_sucesso.forEach(msg => {
+                html += `<div class="resultado-item sucesso mb-2"><i class="fas fa-check me-2"></i>${msg}</div>`;
+            });
+            html += '</div>';
+        }
+
+        if (data.avisos && data.avisos.length) {
+            html += '<div class="mb-3">';
+            data.avisos.forEach(msg => {
+                html += `<div class="resultado-item aviso mb-2"><i class="fas fa-exclamation-triangle me-2"></i>${msg}</div>`;
+            });
+            html += '</div>';
+        }
+
+        if (data.erros && data.erros.length) {
+            html += '<div>';
+            data.erros.forEach(msg => {
+                html += `<div class="resultado-item erro mb-2"><i class="fas fa-times me-2"></i>${msg}</div>`;
+            });
+            html += '</div>';
+        }
+
+        html += '</div></div>';
+        resultados.innerHTML = html;
+    }
+});
+</script>
+{% endblock %}
