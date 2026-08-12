@@ -10,9 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ApiLoginController extends DefaultController
 {
-    /**
-     * @Route("/api/login", name="api_login")
-     */
+    #[Route("/api/login", name:"api_login")]
     public function login(Request $request, AuthenticationUtils $authenticationUtils): JsonResponse
     {
         // Capturar erros de autenticação, se houver

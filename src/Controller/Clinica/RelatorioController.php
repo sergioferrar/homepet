@@ -12,8 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("dashboard/clinica")
+ * @
  */
+#[Route("dashboard/clinica")]
 class RelatorioController extends DefaultController
 {
     /**
@@ -30,8 +31,9 @@ class RelatorioController extends DefaultController
      * tela e são gravados no banco. O percentual de comissão é informado na
      * tela e o repasse é calculado dinamicamente (JS), com opção de impressão.
      *
-     * @Route("/relatorios/comissoes", name="clinica_relatorio_comissoes", methods={"GET"})
+     * @
      */
+    #[Route("/relatorios/comissoes", name: "clinica_relatorio_comissoes")]
     public function comissoes(Request $request): Response
     {
         if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
@@ -168,8 +170,9 @@ class RelatorioController extends DefaultController
      * Recebe JSON { "valor": 123.45 }. Valor vazio/null limpa o ajuste manual
      * (o relatório volta a usar o valor do serviço de mesmo nome).
      *
-     * @Route("/relatorios/comissoes/consulta/{id}/valor", name="clinica_relatorio_comissoes_valor", methods={"POST"})
+     * @
      */
+    #[Route("/relatorios/comissoes/consulta/{id}/valor", name: "clinica_relatorio_comissoes_valor")]
     public function salvarValorComissao(Request $request, int $id): JsonResponse
     {
         $this->switchDB();

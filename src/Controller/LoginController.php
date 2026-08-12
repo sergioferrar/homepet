@@ -42,7 +42,7 @@ class LoginController extends DefaultController
             return $this->redirectToRoute('app_login');
         }
 
-        if ($this->security->getUser()) {
+        if (!empty($this->security) && $this->security->getUser()) {
             return $this->redirectToRoute('app_login_valida');
         }
         // dd($request);

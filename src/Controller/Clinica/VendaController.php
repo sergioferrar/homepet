@@ -15,14 +15,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * @Route("dashboard/clinica")
- */
+
+#[Route("dashboard/clinica")]
 class VendaController extends DefaultController
 {
-    /**
-     * @Route("/pet/{petId}/venda/concluir", name="clinica_concluir_venda", methods={"POST"})
-     */
+
+    #[Route("/pet/{petId}/venda/concluir", name: "clinica_concluir_venda")]
     public function concluirVenda(Request $request, int $petId): JsonResponse
     {
         $this->switchDB();
@@ -308,8 +306,9 @@ class VendaController extends DefaultController
     }
 
     /**
-     * @Route("/pet/{petId}/venda/{id}/inativar", name="clinica_inativar_venda", methods={"POST"})
+     * @
      */
+    #[Route("/pet/{petId}/venda/{id}/inativar", name: "clinica_inativar_venda")]
     public function inativarVenda(Request $request, int $petId, int $id): Response
     {
         $this->switchDB();
@@ -335,8 +334,9 @@ class VendaController extends DefaultController
     }
 
     /**
-     * @Route("/clinica/pet/{petId}/venda/{id}/editar", name="clinica_editar_venda", methods={"POST"})
+     * @
      */
+    #[Route("/clinica/pet/{petId}/venda/{id}/editar", name: "clinica_editar_venda")]
     public function editarVenda(Request $request, int $petId, int $id): JsonResponse
     {
         try {
