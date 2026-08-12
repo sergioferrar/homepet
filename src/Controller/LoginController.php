@@ -16,8 +16,9 @@ class LoginController extends DefaultController
 
 
     /**
-     * @Route("/login", name="app_login")
+     * @
      */
+    #[Route("/login", name: "app_login")]
     public function login(AuthenticationUtils $authUtils, Request $request, $firewall = 'main'): Response
     {
         $error = $authUtils->getLastAuthenticationError();
@@ -70,8 +71,9 @@ class LoginController extends DefaultController
     }
 
     /**
-     * @Route("/valida-login", name="app_login_valida")
+     * @
      */
+    #[Route("/valida-login", name: "app_login_valida")]
     public function index(EmailService $emailService, Request $request): Response
     {
         if (!$this->security->getUser()) {
@@ -172,8 +174,9 @@ class LoginController extends DefaultController
     }
 
     /**
-     * @Route("/logout", name="logout")
+     * @
      */
+    #[Route("/logout", name: "logout")]
     public function logout(Request $request): Response
     {
         // Limpar flag de processamento
@@ -184,8 +187,9 @@ class LoginController extends DefaultController
     }
 
     /**
-     * @Route("/login/pagamento-pendente", name="app_login_pagamento_pendente")
+     * @
      */
+    #[Route("/login/pagamento-pendente", name: "app_login_pagamento_pendente")]
     public function pagamentoPendente(Request $request): Response
     {
         
@@ -193,8 +197,9 @@ class LoginController extends DefaultController
     }
 
     /**
-     * @Route("/login/recupera-senha", name="app_login_recover")
+     * @
      */
+    #[Route("/login/recupera-senha", name: "app_login_recover")]
     public function recorver(EmailService $emailService, Request $request): Response
     {
         $data = [];
@@ -246,8 +251,9 @@ Caso não encontre o e-mail, verifique também sua pasta de spam ou lixo eletrô
     }
 
     /**
-     * @Route("/login/alterar-senha/{token}", name="app_login_altera")
+     * @
      */
+    #[Route("/login/alterar-senha/{token}", name: "app_login_altera")]
     public function doRecorver(EmailService $emailService, Request $request, EntityManagerInterface $em): Response
     {
         $token = $request->get('token');
@@ -303,8 +309,9 @@ Caso não encontre o e-mail, verifique também sua pasta de spam ou lixo eletrô
     }
 
     /**
-     * @Route("/login/gerasenha/{senha}", name="app_gerasenha")
+     * @
      */
+    #[Route("/login/gerasenha/{senha}", name: "app_gerasenha")]
     public function geraSenha(Request $request): Response
     {
         return $this->json(['senha' => password_hash($request->get('senha'), PASSWORD_DEFAULT, ["cost" => 10])]);

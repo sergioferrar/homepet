@@ -9,14 +9,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * @Route("dashboard/clinica")
- */
+#[Route("dashboard/clinica")]
 class ProntuarioController extends DefaultController
 {
-    /**
-     * @Route("/prontuario/{petId}", name="clinica_prontuario", methods={"GET", "POST"})
-     */
+    #[Route("/prontuario/{petId}", name: "clinica_prontuario")]
     public function prontuarioPet(int $petId, Request $request): Response
     {
         $this->switchDB();
@@ -50,9 +46,7 @@ class ProntuarioController extends DefaultController
         ]);
     }
 
-    /**
-     * @Route("/prontuario/ajax/{petId}", name="clinica_prontuario_ajax", methods={"GET"})
-     */
+    #[Route("/prontuario/ajax/{petId}", name: "clinica_prontuario_ajax")]
     public function prontuarioAjax(int $petId): Response
     {
         $this->switchDB();

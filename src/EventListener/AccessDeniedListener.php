@@ -16,30 +16,23 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Component\Security\Core\Security;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use App\Service\DynamicConnectionManager;
 
 class AccessDeniedListener implements EventSubscriberInterface
 {
-    protected $security;
-    protected $request;
-    private $urlGenerator;
-    private $entityManager;
-    private $router;
-    private $managerRegistry;
-    
     // Flag para prevenir recursão infinita
     private static $processing = false;
 
-    public function __construct(EntityManagerInterface $entityManager, ?Security $security, UrlGeneratorInterface $urlGenerator, RouterInterface $router, ManagerRegistry $managerRegistry, RequestStack $request)
-    {
-        $this->entityManager = $entityManager;
-        $this->security = $security;
-        $this->urlGenerator = $urlGenerator;
-        $this->router = $router;
-        $this->request = $request->getCurrentRequest();
-        $this->managerRegistry = $managerRegistry;
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private TokenStorageInterface $tokenStorage,
+        private UrlGeneratorInterface $urlGenerator,
+        private RouterInterface $router,
+        private ManagerRegistry $managerRegistry,
+        private RequestStack $requestStack
+    ) {
     }
 
     public static function getSubscribedEvents(): array
@@ -58,16 +51,16 @@ class AccessDeniedListener implements EventSubscriberInterface
             // Já está processando, não fazer nada para evitar loop
             return;
         }
-        
+
         self::$processing = true;
-        
+
         try {
             $this->handleException($event);
         } finally {
             self::$processing = false;
         }
     }
-    
+
     private function handleException(ExceptionEvent $event)
     {
         $exception = $event->getThrowable();
@@ -79,7 +72,7 @@ class AccessDeniedListener implements EventSubscriberInterface
         // ============================================================
         $route = $request->attributes->get('_route');
         $ignoredRoutes = ['logout', 'app_login', 'api_login', '_wdt', '_profiler'];
-        
+
         if (in_array($route, $ignoredRoutes)) {
             return; // Não interceptar essas rotas
         }
@@ -87,49 +80,65 @@ class AccessDeniedListener implements EventSubscriberInterface
         // ============================================================
         // VERIFICAÇÃO DE SESSÃO E USUÁRIO
         // ============================================================
-        if (!$request->getSession()->has('login') && !$this->security->getUser()) {
-            $mensagem = ($exception);//'';
+
+        $usuario = null;
+        $token = $this->tokenStorage->getToken();
+
+        if ($token !== null) {
+            $usuario = $token->getUser();
+        }
+
+        if (!$request->getSession()->has('login') && !$usuario) {
+            $mensagem = ($exception) ? $exception->getMessage() : '';
             $param = ($mensagem != '' ? ['error' => $mensagem] : []);
 
-            $url = $this->router->generate('logout', $param);
-            $event->getRequest()->getSession()->save();
-            $response = new RedirectResponse($url);
-            $event->setResponse($response);
-            $event->stopPropagation();
+            try {
+                $url = $this->router->generate('logout', $param);
+                $event->getRequest()->getSession()->save();
+                $response = new RedirectResponse($url);
+                $event->setResponse($response);
+                $event->stopPropagation();
+            } catch (\Exception $e) {
+                // Ignorar erro ao redirecionar
+            }
             return;
         }
 
-        if (!$request->getSession()->has('login') && $this->security->getUser()) {
-            $mensagem = ($exception);//'A-sua-sessão-expirou';
-            // if ($this->security->getUser()->getStatus() == "Inativo") {
-            //     $mensagem = 'Usuário-Inativo';
-            // }
-            $url = $this->router->generate('logout', ['error' => $mensagem]);
-            $event->getRequest()->getSession()->save();
-            $response = new RedirectResponse($url);
-            $event->setResponse($response);
-            $event->stopPropagation();
+        if (!$request->getSession()->has('login') && $usuario) {
+            $mensagem = ($exception) ? $exception->getMessage() : '';
+            try {
+                $url = $this->router->generate('logout', ['error' => $mensagem]);
+                $event->getRequest()->getSession()->save();
+                $response = new RedirectResponse($url);
+                $event->setResponse($response);
+                $event->stopPropagation();
+            } catch (\Exception $e) {
+                // Ignorar erro ao redirecionar
+            }
             return;
         }
 
-        if (!$this->security->getUser()) {
-            $mensagem = ($exception);//'A-sua-sessão-expirou';
-            $url = $this->router->generate('logout', ['error' => $mensagem]);
-            $event->getRequest()->getSession()->save();
-            $response = new RedirectResponse($url);
-            $event->setResponse($response);
-            $event->stopPropagation();
+        if (!$usuario) {
+            $mensagem = ($exception) ? $exception->getMessage() : '';
+            try {
+                $url = $this->router->generate('logout', ['error' => $mensagem]);
+                $event->getRequest()->getSession()->save();
+                $response = new RedirectResponse($url);
+                $event->setResponse($response);
+                $event->stopPropagation();
+            } catch (\Exception $e) {
+                // Ignorar erro ao redirecionar
+            }
             return;
         }
 
         // ============================================================
         // PULAR VALIDAÇÕES PARA SUPER ADMIN
         // ============================================================
-        $user = $this->security->getUser();
-        $roles = $user->getRoles();
-        
-        // // Se é Super Admin, NÃO valida plano nem estabelecimento
-        if ($user->getAccessLevel() === 'Super Admin') {
+        $user = $usuario;
+
+        // Se é Super Admin, NÃO valida plano nem estabelecimento
+        if (method_exists($user, 'getAccessLevel') && $user->getAccessLevel() === 'Super Admin') {
             return;
         }
 
@@ -145,16 +154,24 @@ class AccessDeniedListener implements EventSubscriberInterface
         // ============================================================
         // VALIDAÇÕES APENAS PARA USUÁRIOS NORMAIS
         // ============================================================
+        if (!method_exists($user, 'getPetshopId')) {
+            return;
+        }
+
         $petshopId = $user->getPetshopId();
-        
+
         // Se não tem petshop_id, redireciona para login
         if ($petshopId === null) {
-            $mensagem = ($exception);//'Usuário-sem-estabelecimento';
-            $url = $this->router->generate('logout', ['error' => $mensagem]);
-            $event->getRequest()->getSession()->save();
-            $response = new RedirectResponse($url);
-            $event->setResponse($response);
-            $event->stopPropagation();
+            $mensagem = 'Usuário sem estabelecimento';
+            try {
+                $url = $this->router->generate('logout', ['error' => $mensagem]);
+                $event->getRequest()->getSession()->save();
+                $response = new RedirectResponse($url);
+                $event->setResponse($response);
+                $event->stopPropagation();
+            } catch (\Exception $e) {
+                // Ignorar erro ao redirecionar
+            }
             return;
         }
 
@@ -165,7 +182,7 @@ class AccessDeniedListener implements EventSubscriberInterface
             // Se falhar ao restaurar conexão, apenas retornar
             return;
         }
-        
+
         // Buscar estabelecimento
         try {
             $estabelecimento = $this->entityManager
@@ -177,29 +194,39 @@ class AccessDeniedListener implements EventSubscriberInterface
         }
 
         if (!$estabelecimento) {
-            $mensagem = ($exception);//'Estabelecimento-não-encontrado';
-            $url = $this->router->generate('logout', ['error' => $mensagem]);
-            $event->getRequest()->getSession()->save();
-            $response = new RedirectResponse($url);
-            $event->setResponse($response);
-            $event->stopPropagation();
+            $mensagem = 'Estabelecimento não encontrado';
+            try {
+                $url = $this->router->generate('logout', ['error' => $mensagem]);
+                $event->getRequest()->getSession()->save();
+                $response = new RedirectResponse($url);
+                $event->setResponse($response);
+                $event->stopPropagation();
+            } catch (\Exception $e) {
+                // Ignorar erro ao redirecionar
+            }
             return;
         }
 
         // Validar plano
-        $validaPlano = $this->verificarPlanoPorPeriodo(
-            $estabelecimento->getDataPlanoInicio(), 
-            $estabelecimento->getDataPlanoFim()
-        );
-        
-        if ($validaPlano) {
-            $mensagem = str_replace(' ', '-', $validaPlano);
-            $url = $this->router->generate('logout', ['error' => $mensagem]);
-            $event->getRequest()->getSession()->save();
-            $response = new RedirectResponse($url);
-            $event->setResponse($response);
-            $event->stopPropagation();
-            return;
+        if (method_exists($estabelecimento, 'getDataPlanoInicio') && method_exists($estabelecimento, 'getDataPlanoFim')) {
+            $validaPlano = $this->verificarPlanoPorPeriodo(
+                $estabelecimento->getDataPlanoInicio(),
+                $estabelecimento->getDataPlanoFim()
+            );
+
+            if ($validaPlano) {
+                $mensagem = str_replace(' ', '-', $validaPlano);
+                try {
+                    $url = $this->router->generate('logout', ['error' => $mensagem]);
+                    $event->getRequest()->getSession()->save();
+                    $response = new RedirectResponse($url);
+                    $event->setResponse($response);
+                    $event->stopPropagation();
+                } catch (\Exception $e) {
+                    // Ignorar erro ao redirecionar
+                }
+                return;
+            }
         }
 
         // Se não é AccessDeniedException, não fazer nada
@@ -215,7 +242,7 @@ class AccessDeniedListener implements EventSubscriberInterface
 
             if ($hoje > $dataFim) {
                 return "Seu plano expirou em " . $dataFim->format('d/m/Y') . ". Por favor, renove seu plano.";
-            } 
+            }
         }
 
         return false;
@@ -245,10 +272,15 @@ class AccessDeniedListener implements EventSubscriberInterface
             $listaGrupo[$row['idGrupo']] = (int)$row['idGrupo'];
         }
 
-        $habilitado = true;
-        if (!empty($listaGrupo) && !in_array($this->security->getUser()->getIdGrupo(), $listaGrupo)) {
-            throw new AccessDeniedException("Você não tem permissao de acesso a esta pagina");
+        $token = $this->tokenStorage->getToken();
+        if ($token === null) {
+            throw new AccessDeniedException("Você não tem permissão de acesso a esta página");
+        }
 
+        $usuario = $token->getUser();
+        $habilitado = true;
+        if (!empty($listaGrupo) && !in_array($usuario->getIdGrupo(), $listaGrupo)) {
+            throw new AccessDeniedException("Você não tem permissão de acesso a esta página");
             return false;
         }
 

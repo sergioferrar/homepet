@@ -18,14 +18,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * @Route("dashboard/clinica")
- */
+#[Route("dashboard/clinica")]
 class DashboardController extends DefaultController
 {
-    /**
-     * @Route("/administrativo", name="clinica_dashboard", methods={"GET"})
-     */
+    #[Route("/administrativo", name: "clinica_dashboard")]
     public function dashboard(Request $request, EntityManagerInterface $em): Response
     {
         $this->switchDB();
@@ -146,9 +142,7 @@ class DashboardController extends DefaultController
         ]);
     }
 
-    /**
-     * @Route("/pet/{id}", name="clinica_detalhes_pet", methods={"GET"})
-     */
+    #[Route("/pet/{id}", name: "clinica_detalhes_pet")]
     public function detalhesPet(Request $request, int $id): Response
     {
         $this->switchDB();
@@ -375,9 +369,7 @@ class DashboardController extends DefaultController
         return $this->render('clinica/detalhes_pet.html.twig', $data);
     }
 
-    /**
-     * @Route("/financeiro", name="financeiro_dashboard", methods={"GET"})
-     */
+    #[Route("/financeiro", name: "financeiro_dashboard")]
     public function financeirodash(Request $request): Response
     {
         if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
@@ -415,9 +407,7 @@ class DashboardController extends DefaultController
         ]);
     }
 
-    /**
-     * @Route("/buscar", name="clinica_buscar", methods={"GET"})
-     */
+    #[Route("/buscar", name: "clinica_buscar")]
     public function buscar(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $this->switchDB();

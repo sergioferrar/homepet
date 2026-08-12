@@ -14,16 +14,16 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("dashboard/clinica")
  */
+#[Route("dashboard/clinica")]
 class FichaController extends DefaultController
 {
     /** Extensões permitidas para o arquivo de encaminhamento */
     private const ANEXO_EXTENSOES_PERMITIDAS = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
 
     /**
-     * @Route("/pet/{petId}/atendimento/novo", name="clinica_novo_atendimento", methods={"POST"})
      */
+    #[Route("/pet/{petId}/atendimento/novo", name: "clinica_novo_atendimento")]
     public function novoAtendimento(Request $request, int $petId): Response
     {
         $this->switchDB();
@@ -142,8 +142,8 @@ class FichaController extends DefaultController
     /**
      * Download do arquivo de encaminhamento anexado a um atendimento (timeline).
      *
-     * @Route("/consulta/{id}/anexo", name="clinica_consulta_anexo", methods={"GET"})
      */
+    #[Route("/consulta/{id}/anexo", name: "clinica_consulta_anexo")]
     public function baixarAnexoConsulta(int $id): Response
     {
         $this->switchDB();
@@ -172,8 +172,8 @@ class FichaController extends DefaultController
     }
 
     /**
-     * @Route("/pet/{petId}/receita", name="clinica_nova_receita", methods={"GET","POST"})
      */
+    #[Route("/pet/{petId}/receita", name: "clinica_nova_receita")]
     public function receita(Request $request, int $petId): Response
     {
         $this->switchDB();
@@ -384,8 +384,8 @@ class FichaController extends DefaultController
     }
 
     /**
-     * @Route("/pet/{petId}/peso/novo", name="clinica_novo_peso", methods={"GET", "POST"})
      */
+    #[Route("/pet/{petId}/peso/novo", name: "clinica_novo_peso")]
     public function novoPeso(Request $request, int $petId): Response
     {
         $this->switchDB();
@@ -402,8 +402,8 @@ class FichaController extends DefaultController
     }
 
     /**
-     * @Route("/pet/{petId}/documento/novo", name="clinica_novo_documento_pet", methods={"GET"})
      */
+    #[Route("/pet/{petId}/documento/novo", name: "clinica_novo_documento_pet")]
     public function novoDocumentoPet(int $petId): Response
     {
         // Redireciona para a tela de documentos, ou implementa uma lógica específica aqui
@@ -412,8 +412,8 @@ class FichaController extends DefaultController
     }
 
     /**
-     * @Route("/pet/{petId}/exame/novo", name="clinica_novo_exame", methods={"GET", "POST"})
      */
+    #[Route("/pet/{petId}/exame/novo", name: "clinica_novo_exame")]
     public function novoExame(Request $request, int $petId): Response
     {
         $this->switchDB();
@@ -423,8 +423,8 @@ class FichaController extends DefaultController
         return $this->render('clinica/placeholder.html.twig', ['pet' => $pet, 'feature' => 'Exame']);
     }
     /**
-     * @Route("/consulta/nova", name="clinica_nova_consulta", methods={"GET", "POST"})
      */
+    #[Route("/consulta/nova", name: "clinica_nova_consulta")]
     public function novaConsulta(Request $request): Response
     {
         $this->switchDB();
@@ -476,8 +476,8 @@ class FichaController extends DefaultController
     }
 
     /**
-     * @Route("/consulta/{id}/status/{status}", name="clinica_consulta_status", methods={"POST"})
      */
+    #[Route("/consulta/{id}/status/{status}", name: "clinica_consulta_status")]
     public function atualizarStatusConsulta(int $id, string $status): Response
     {
         $this->switchDB();
@@ -493,8 +493,8 @@ class FichaController extends DefaultController
     }
 
     /**
-     * @Route("/consulta/{id}", name="clinica_ver_consulta", methods={"GET"})
      */
+    #[Route("/consulta/{id}", name: "clinica_ver_consulta")]
     public function verConsulta(int $id): Response
     {
         $this->switchDB();
@@ -517,8 +517,8 @@ class FichaController extends DefaultController
      * Tela de edição de um atendimento — permite corrigir data, hora, tipo,
      * status, veterinário, valor, observações, anamnese e o anexo.
      *
-     * @Route("/consulta/{id}/editar", name="clinica_editar_consulta", methods={"GET"})
      */
+    #[Route("/consulta/{id}/editar", name: "clinica_editar_consulta")]
     public function editarConsulta(int $id): Response
     {
         $this->switchDB();
@@ -538,8 +538,8 @@ class FichaController extends DefaultController
     /**
      * Grava as alterações feitas na tela de edição do atendimento.
      *
-     * @Route("/consulta/{id}/editar", name="clinica_editar_consulta_salvar", methods={"POST"})
      */
+    #[Route("/consulta/{id}/editar", name: "clinica_editar_consulta_salvar")]
     public function salvarEdicaoConsulta(Request $request, int $id): Response
     {
         $this->switchDB();
@@ -638,8 +638,8 @@ class FichaController extends DefaultController
      * O PDF abre inline na aba; imprimir ou salvar fica a cargo do
      * visualizador do navegador.
      *
-     * @Route("/receita/{id}/pdf", name="clinica_receita_pdf", methods={"GET"})
      */
+    #[Route("/receita/{id}/pdf", name: "clinica_receita_pdf")]
     public function gerarReceitaPdf(int $id): Response
     {
         $this->switchDB();
@@ -683,8 +683,8 @@ class FichaController extends DefaultController
     /**
      * Gera PDF completo da ficha do pet com todas as consultas
      *
-     * @Route("/pet/{petId}/ficha/pdf", name="clinica_ficha_pdf", methods={"GET"})
      */
+    #[Route("/pet/{petId}/ficha/pdf", name: "clinica_ficha_pdf")]
     public function gerarFichaPdf(Request $request, \App\Service\FichaPdfService $fichaPdfService, int $petId): Response
     {
         $this->switchDB();

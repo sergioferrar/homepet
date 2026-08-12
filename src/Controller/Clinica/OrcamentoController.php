@@ -31,14 +31,10 @@ use App\Repository\PetRepository;
 use App\Controller\DefaultController;
 
 
-/**
- * @Route("dashboard/clinica")
- */
+#[Route("dashboard/clinica")]
 class OrcamentoController extends DefaultController
 {
-    /**
-     * @Route("/clinica/orcamento", name="app_clinica_orcamento")
-     */
+    #[Route("/clinica/orcamento", name: "app_clinica_orcamento")]
     public function index(): Response
     {
         return $this->render('clinica/orcamento/index.html.twig', [

@@ -13,9 +13,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 /**
  * Gestão de Boxes — área do administrador do estabelecimento.
- *
- * @Route("dashboard/clinica/boxes", name="clinica_box_")
  */
+#[Route("dashboard/clinica/boxes", name: "clinica_box_")]
 class BoxController extends DefaultController
 {
     // ── Labels estáticos reutilizados nas views ──────────────────────
@@ -55,9 +54,7 @@ class BoxController extends DefaultController
 
     // ── Listagem / painel de controle ────────────────────────────────
 
-    /**
-     * @Route("", name="index", methods={"GET"})
-     */
+    #[Route("", name: "index")]
     public function index(Request $request): Response
     {
         $this->switchDB();
@@ -80,9 +77,7 @@ class BoxController extends DefaultController
 
     // ── Criar ────────────────────────────────────────────────────────
 
-    /**
-     * @Route("/novo", name="novo", methods={"GET","POST"})
-     */
+    #[Route("/novo", name: "novo")]
     public function novo(Request $request): Response
     {
         $this->switchDB();
@@ -114,11 +109,8 @@ class BoxController extends DefaultController
         ]);
     }
 
-    // ── Editar ───────────────────────────────────────────────────────
 
-    /**
-     * @Route("/{id}/editar", name="editar", methods={"GET","POST"})
-     */
+    #[Route("/{id}/editar", name: "editar")]
     public function editar(int $id, Request $request): Response
     {
         $this->switchDB();
@@ -159,11 +151,7 @@ class BoxController extends DefaultController
 
     // ── Alterar status (AJAX) ────────────────────────────────────────
 
-    /**
-     * Altera o status manualmente (manutenção, higienização etc.)
-     *
-     * @Route("/{id}/status", name="status", methods={"POST"})
-     */
+    #[Route("/{id}/status", name: "status")]
     public function alterarStatus(int $id, Request $request): JsonResponse
     {
         $this->switchDB();
@@ -207,9 +195,7 @@ class BoxController extends DefaultController
 
     // ── Excluir ──────────────────────────────────────────────────────
 
-    /**
-     * @Route("/{id}/excluir", name="excluir", methods={"POST"})
-     */
+    #[Route("/{id}/excluir", name: "excluir")]
     public function excluir(int $id, Request $request): Response
     {
         $this->switchDB();

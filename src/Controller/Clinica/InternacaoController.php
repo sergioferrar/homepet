@@ -25,15 +25,15 @@ use App\Controller\DefaultController;
 
 
 /**
- * @Route("dashboard/clinica")
  */
+#[Route("dashboard/clinica")]
 class InternacaoController extends DefaultController
 {
 
 
     /**
-     * @Route("/pet/{petId}/internacao/nova", name="clinica_nova_internacao", methods={"GET", "POST"})
      */
+    #[Route("/pet/{petId}/internacao/nova", name: "clinica_nova_internacao")]
     public function novaInternacao(Request $request, int $petId): Response
     {
         $this->switchDB();
@@ -121,8 +121,8 @@ class InternacaoController extends DefaultController
      * com grade de horários de medicação (07h–02h), checkboxes de execução,
      * controle de parâmetros e campo de observações.
      *
-     * @Route("/internacao/{id}/imprimir-ficha", name="clinica_internacao_imprimir_ficha", methods={"GET"})
      */
+    #[Route("/internacao/{id}/imprimir-ficha", name: "clinica_internacao_imprimir_ficha")]
     public function imprimirFicha(
         int                    $id,
         EntityManagerInterface $em
@@ -199,8 +199,8 @@ class InternacaoController extends DefaultController
     }
 
     /**
-     * @Route("/internacao/{id}/ficha", name="clinica_ficha_internacao", methods={"GET"})
      */
+    #[Route("/internacao/{id}/ficha", name: "clinica_ficha_internacao")]
     public function fichaInternacao(
         int                    $id,
         EntityManagerInterface $em
@@ -301,8 +301,8 @@ class InternacaoController extends DefaultController
     }
 
     /**
-     * @Route("/internacao/{id}/acao/{acao}", name="clinica_internacao_acao", methods={"POST"})
      */
+    #[Route("/internacao/{id}/acao/{acao}", name: "clinica_internacao_acao")]
     public function acaoInternacao(
         int $id,
         string $acao,
@@ -367,8 +367,8 @@ class InternacaoController extends DefaultController
 
 
     /**
-     * @Route("/internacao/{id}/prescricao/nova", name="clinica_internacao_prescricao_nova", methods={"GET","POST"})
      */
+    #[Route("/internacao/{id}/prescricao/nova", name: "clinica_internacao_prescricao_nova")]
     public function novaPrescricao(
         int                    $id,
         Request                $request,
@@ -464,8 +464,8 @@ class InternacaoController extends DefaultController
     }
 
     /**
-     * @Route("/internacao/{id}/prescricao/{eventoId}/executar", name="clinica_internacao_prescricao_executar", methods={"POST"})
      */
+    #[Route("/internacao/{id}/prescricao/{eventoId}/executar", name: "clinica_internacao_prescricao_executar")]
     public function executarPrescricao(
         int                    $id,
         int                    $eventoId,
@@ -512,8 +512,8 @@ class InternacaoController extends DefaultController
     }
 
     /**
-     * @Route("/internacao/{id}/evento/{eventoId}/executar", name="clinica_internacao_evento_executar", methods={"POST"})
      */
+    #[Route("/internacao/{id}/evento/{eventoId}/executar", name: "clinica_internacao_evento_executar")]
     public function executarEvento(
         int                    $id,
         int                    $eventoId,
@@ -558,8 +558,8 @@ class InternacaoController extends DefaultController
     }
 
     /**
-     * @Route("/internacao/medicamento/novo", name="clinica_internacao_medicamento_novo", methods={"POST"})
      */
+    #[Route("/internacao/medicamento/novo", name: "clinica_internacao_medicamento_novo")]
     public function novoMedicamentoViaInternacao(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $this->switchDB();
