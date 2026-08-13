@@ -23,18 +23,8 @@ class ExceptionNotifier
     /** Remetente (mesma conta configurada no MAILER_DSN). */
     private const REMETENTE = 'suporte@systemhomepet.com';
 
-    private MailerInterface $mailer;
-    private ?RequestStack $requestStack;
-    private ?LoggerInterface $logger;
-
-    public function __construct(
-        MailerInterface $mailer,
-        ?RequestStack $requestStack = null,
-        ?LoggerInterface $logger = null
-    ) {
-        $this->mailer = $mailer;
-        $this->requestStack = $requestStack;
-        $this->logger = $logger;
+    public function __construct(private readonly MailerInterface $mailer, private readonly ?RequestStack $requestStack = null, private readonly ?LoggerInterface $logger = null)
+    {
     }
 
     /**
@@ -210,12 +200,12 @@ HTML;
                 $ctx['URL'] = $request->getUri();
                 $ctx['IP'] = (string) $request->getClientIp();
             }
-        } catch (\Throwable $ignore) {
+        } catch (\Throwable) {
             // Ambiente sem request (CLI, worker) — ignora.
         }
 
         $ctx['Data/Hora'] = date('d/m/Y H:i:s');
-        $ctx['Exception'] = get_class($e);
+        $ctx['Exception'] = $e::class;
 
         // Extras informados pelo chamador têm prioridade.
         foreach ($extra as $chave => $valor) {
@@ -235,7 +225,7 @@ HTML;
     private function jsonException(\Throwable $e): string
     {
         $dados = [
-            'class' => get_class($e),
+            'class' => $e::class,
             'code' => $e->getCode(),
             'message' => $e->getMessage(),
             'file' => $e->getFile(),
@@ -244,7 +234,7 @@ HTML;
 
         if ($previous = $e->getPrevious()) {
             $dados['previous'] = [
-                'class' => get_class($previous),
+                'class' => $previous::class,
                 'message' => $previous->getMessage(),
                 'file' => $previous->getFile(),
                 'line' => $previous->getLine(),
@@ -261,7 +251,7 @@ HTML;
     {
         $msg = trim($e->getMessage());
         if ($msg === '') {
-            return get_class($e);
+            return $e::class;
         }
 
         return mb_strlen($msg) > 80 ? mb_substr($msg, 0, 77) . '...' : $msg;

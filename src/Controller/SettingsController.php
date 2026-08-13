@@ -8,13 +8,14 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("dashboard/")
+ * @
  */
 class SettingsController extends DefaultController
 {
     /**
-     * @Route("settings", name="app_settings")
+     * @
      */
+    #[Route('dashboard/settings', name: 'app_settings')]
     public function index(): Response
     {
         // Usa o usuário autenticado pelo Symfony — não depende de userId na sessão.
@@ -37,16 +38,16 @@ class SettingsController extends DefaultController
 
         return $this->render('settings/index.html.twig', [
             'estabelecimento' => $dadosEstabelecimentoLogado,
-            'planoLogado'     => $dadosEstabelecimentoLogado,
-            'planos'          => $dadosPlanos,
-            'gateway'         => $this->getRepositorio(Config::class)->findBy(['estabelecimento_id' => $petshopId, 'tipo' => 'gateway_payment']),
-            'mailer'          => $this->getRepositorio(Config::class)->findBy(['estabelecimento_id' => $petshopId, 'tipo' => 'mailer']),
+            'planoLogado' => $dadosEstabelecimentoLogado,
+            'planos' => $dadosPlanos,
+            'gateway' => $this->getRepositorio(Config::class)->findBy(['estabelecimento_id' => $petshopId, 'tipo' => 'gateway_payment']),
+            'mailer' => $this->getRepositorio(Config::class)->findBy(['estabelecimento_id' => $petshopId, 'tipo' => 'mailer']),
         ]);
     }
-
     /**
-     * @Route("settings/payment", name="setting_payment_estabelecimento")
+     * @
      */
+    #[Route('dashboard/settings/payment', name: 'setting_payment_estabelecimento')]
     public function setPayments(Request $request): Response
     {
         $usuarioLogado = $this->security->getUser();
@@ -63,10 +64,10 @@ class SettingsController extends DefaultController
 
             if (!$buscaConfigEID) {
                 $campos = [
-                    'gateway_chave'           => $request->get('gateway_chave'),
-                    'gateway_payment_env'     => $request->get('gateway_payment_env'),
-                    'gateway_payment_token'   => $request->get('gateway_payment_token'),
-                    'gateway_payment_email'   => $request->get('gateway_payment_email'),
+                    'gateway_chave' => $request->get('gateway_chave'),
+                    'gateway_payment_env' => $request->get('gateway_payment_env'),
+                    'gateway_payment_token' => $request->get('gateway_payment_token'),
+                    'gateway_payment_email' => $request->get('gateway_payment_email'),
                     'gateway_payment_key_secret' => $request->get('gateway_payment_key_secret'),
                     'gateway_payment_key_public' => $request->get('gateway_payment_key_public'),
                 ];
@@ -101,10 +102,10 @@ class SettingsController extends DefaultController
 
         return $this->json($this->message('Este método só pode ser acessado via POST', 'alert'));
     }
-
     /**
-     * @Route("settings/mailer", name="setting_mailer_estabelecimento")
+     * @
      */
+    #[Route('dashboard/settings/mailer', name: 'setting_mailer_estabelecimento')]
     public function setMail(Request $request): Response
     {
         $usuarioLogado = $this->security->getUser();
@@ -121,11 +122,11 @@ class SettingsController extends DefaultController
 
             if (!$buscaConfigEID) {
                 $campos = [
-                    'mailer_server'    => $request->get('mailer_server'),
-                    'mailer_port'      => $request->get('mailer_port'),
-                    'mailer_crypt'     => $request->get('mailer_crypt'),
-                    'mailer_user'      => $request->get('mailer_user'),
-                    'mailer_paswd'     => $request->get('mailer_paswd'),
+                    'mailer_server' => $request->get('mailer_server'),
+                    'mailer_port' => $request->get('mailer_port'),
+                    'mailer_crypt' => $request->get('mailer_crypt'),
+                    'mailer_user' => $request->get('mailer_user'),
+                    'mailer_paswd' => $request->get('mailer_paswd'),
                     'mailer_remetente' => $request->get('mailer_remetente'),
                 ];
 

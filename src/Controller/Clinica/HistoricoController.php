@@ -10,17 +10,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * @Route("dashboard/clinica")
- */
-#[Route("dashboard/clinica")]
 class HistoricoController extends DefaultController
 {
-
-    /**
-     * @Route("/pet/{petId}/documentos", name: "clinica_documentos")
-     */
-    #[Route("/pet/{petId}/documentos", name: "clinica_documentos")]
+    #[Route('dashboard/clinica/pet/{petId}/documentos', name: 'clinica_documentos')]
     public function documentos(Request $request, int $petId): Response
     {
         $this->switchDB();
@@ -56,11 +48,7 @@ class HistoricoController extends DefaultController
             'pet' => $pet,
         ]);
     }
-
-    /**
-     * @Route("/documento/{id}/editar", name: "clinica_documento_editar", methods={"GET", "POST"})
-     */
-    #[Route("/documento/{id}/editar", name: "clinica_documento_editar")]
+    #[Route('dashboard/clinica/documento/{id}/editar', name: 'clinica_documento_editar')]
     public function editarDocumento(Request $request, int $id): Response
     {
         $this->switchDB();
@@ -89,11 +77,7 @@ class HistoricoController extends DefaultController
             'documento' => $documento,
         ]);
     }
-
-    /**
-     * @Route("/clinica/pet/{petId}/documento/{id}/excluir", name: "clinica_documento_excluir")
-     */
-    #[Route("/clinica/pet/{petId}/documento/{id}/excluir", name: "clinica_documento_excluir")]
+    #[Route('dashboard/clinica/clinica/pet/{petId}/documento/{id}/excluir', name: 'clinica_documento_excluir')]
     public function excluirDocumento(
         int $petId,
         int $id
@@ -113,11 +97,7 @@ class HistoricoController extends DefaultController
         $this->addFlash('success', 'Documento excluído com sucesso!');
         return $this->redirectToRoute('clinica_documentos', ['petId' => $petId]);
     }
-
-    /**
-     * @Route("/clinica/pet/{petId}/documento/pdf", name: "clinica_documento_pdf")
-     */
-    #[Route("/clinica/pet/{petId}/documento/pdf", name: "clinica_documento_pdf")]
+    #[Route('dashboard/clinica/clinica/pet/{petId}/documento/pdf', name: 'clinica_documento_pdf')]
     public function gerarDocumentoPdf(
         int $petId,
         Request $request,

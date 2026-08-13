@@ -11,15 +11,16 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("dashboard/clinica")
+ * @
  */
 class VacinaController extends DefaultController
 {
     /**
      * Lista todas as vacinas do pet
      *
-     * @Route("/pet/{petId}/vacinas", name="clinica_vacinas", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/pet/{petId}/vacinas', name: 'clinica_vacinas', methods: "{GET}")]
     public function listar(int $petId): Response
     {
         $this->switchDB();
@@ -37,12 +38,12 @@ class VacinaController extends DefaultController
             'petId' => $petId,
         ]);
     }
-
     /**
      * Cria uma nova vacina (POST)
      *
-     * @Route("/pet/{petId}/vacina/nova", name="clinica_vacina_nova", methods={"POST"})
+     * @
      */
+    #[Route('dashboard/clinica/pet/{petId}/vacina/nova', name: 'clinica_vacina_nova')]
     public function novaVacina(int $petId, Request $request): JsonResponse
     {
         $this->switchDB();
@@ -68,13 +69,13 @@ class VacinaController extends DefaultController
 
         return new JsonResponse(['ok' => true, 'msg' => 'Vacina registrada com sucesso!']);
     }
-
     /**
      * Remove uma vacina
      *
-     * @Route("/pet/{petId}/vacina/{id}/remover", name="clinica_vacina_remover", methods={"POST"})
+     * @
      */
-    public function remover(int $petId, int $id, Request $request): JsonResponse
+    #[Route('dashboard/clinica/pet/{petId}/vacina/{id}/remover', name: 'clinica_vacina_remover')]
+    public function remover(int $petId, int $id): JsonResponse
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -89,5 +90,4 @@ class VacinaController extends DefaultController
 
         return new JsonResponse(['ok' => true, 'msg' => 'Vacina removida com sucesso!']);
     }
-
 }

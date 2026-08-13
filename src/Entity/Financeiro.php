@@ -5,56 +5,36 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\FinanceiroRepository;
 
-/**
- * @ORM\Entity(repositoryClass=App\Repository\FinanceiroRepository::class)
- */
+#[ORM\Entity(repositoryClass: App\Repository\FinanceiroRepository::class)]
 class Financeiro
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(name="id", type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: 'id', type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $descricao;
 
-    /**
-     * @ORM\Column(type="decimal", nullable=true)
-     */
+    #[ORM\Column(type: 'decimal', nullable: true)]
     private $valor;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     */
+    #[ORM\Column(type: 'datetime', nullable: true)]
     private $data;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true, name="pet_id")
-     */
+    #[ORM\Column(type: 'integer', nullable: true, name: 'pet_id')]
     private $petId;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $petNome;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $origem;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $status;
     
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $metodoPagamento; // Nova propriedade
 
     private $especie;
@@ -62,24 +42,16 @@ class Financeiro
     private $porte;
     private $observacoes;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $estabelecimentoId;
 
-    /**
-     * @ORM\Column(type="boolean", options={"default": 0})
-     */
+    #[ORM\Column(type: 'boolean', options: ['default' => 0])]
     private $inativar = false;
 
-    /**
-     * @ORM\Column(type="string", length=20, options={"default": "ENTRADA"})
-     */
+    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'ENTRADA'])]
     private $tipo = 'ENTRADA';
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     private $venda;
 
     public function getId(): ?int

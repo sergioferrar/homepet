@@ -5,65 +5,56 @@ namespace App\Entity;
 use App\Repository\VendaRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=VendaRepository::class)
- * @ORM\Table(name="venda")
- */
+#[ORM\Table(name: 'venda')]
+#[ORM\Entity(repositoryClass: VendaRepository::class)]
 class Venda
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /** @ORM\Column(type="integer", name="estabelecimento_id") */
+    #[ORM\Column(type: 'integer', name: 'estabelecimento_id')]
     private $estabelecimentoId;
 
-    /** @ORM\Column(type="string", length=255) */
+    #[ORM\Column(type: 'string', length: 255)]
     private $cliente;
 
-    /** @ORM\Column(type="decimal", precision=10, scale=2) */
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     private $total;
 
-    /** @ORM\Column(type="decimal", precision=10, scale=2, nullable=true) */
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private $troco;
 
-    /** @ORM\Column(type="string", length=50, name="metodo_pagamento") */
+    #[ORM\Column(type: 'string', length: 50, name: 'metodo_pagamento')]
     private $metodoPagamento;
 
-    /** @ORM\Column(type="string", length=50, nullable=true, name="bandeira_cartao") */
+    #[ORM\Column(type: 'string', length: 50, nullable: true, name: 'bandeira_cartao')]
     private $bandeiraCartao;
 
-    /** @ORM\Column(type="integer", nullable=true) */
+    #[ORM\Column(type: 'integer', nullable: true)]
     private $parcelas;
 
-    /** @ORM\Column(type="datetime") */
+    #[ORM\Column(type: 'datetime')]
     private $data;
 
-    /** @ORM\Column(type="text", nullable=true) */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $observacao;
 
-    /** @ORM\Column(type="integer", nullable=true, name="pet_id") */
+    #[ORM\Column(type: 'integer', nullable: true, name: 'pet_id')]
     private $petId;
 
     /**
      * Atendimento (consulta) ao qual esta venda pertence.
      * Nulo para vendas avulsas / PDV sem atendimento vinculado.
-     *
-     * @ORM\Column(type="integer", nullable=true, name="consulta_id")
      */
+    #[ORM\Column(type: 'integer', nullable: true, name: 'consulta_id')]
     private $consultaId;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $origem;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $status;
 
     // --- Getters e Setters ---

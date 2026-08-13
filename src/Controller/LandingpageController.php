@@ -21,25 +21,25 @@ class LandingpageController extends DefaultController
      * próprias (/recursos, /quem-somos e /planos); aqui mantemos apenas o
      * hero, um resumo de recursos, chamadas para as páginas e o contato.
      *
-     * @Route("/", name="landing_home")
+     * @
      */
-    public function landing(Request $request): Response
+    #[Route("/", name: "landing_home")]
+    public function landing(): Response
     {
         $data = [];
-
         $data['cookie_banner_ativo'] = true;
         $data['tracking'] = '';
         $data['modulos'] = $this->modulosSistema;
-
         return $this->render('home/landing.html.twig', $data);
     }
 
     /**
      * Página pública — Recursos (grid completo + como funciona).
      *
-     * @Route("/recursos", name="landing_recursos", methods={"GET"})
+     * @
      */
-    public function recursos(Request $request): Response
+    #[Route("/recursos", name: "landing_recursos", methods: "{GET}")]
+    public function recursos(): Response
     {
         return $this->render('home/recursos.html.twig', [
             'cookie_banner_ativo' => true,
@@ -51,9 +51,10 @@ class LandingpageController extends DefaultController
     /**
      * Página pública — Quem Somos.
      *
-     * @Route("/quem-somos", name="landing_quem_somos", methods={"GET"})
+     * @
      */
-    public function quemSomos(Request $request): Response
+    #[Route("/quem-somos", name: "landing_quem_somos", methods: "{GET}")]
+    public function quemSomos(): Response
     {
         return $this->render('home/quem_somos.html.twig', [
             'cookie_banner_ativo' => true,
@@ -63,12 +64,12 @@ class LandingpageController extends DefaultController
     }
 
     /**
-     * @Route("/planos", name="landing_planos")
+     * @
      */
-    public function planos(Request $request): Response
+    #[Route("/planos", name: "landing_planos")]
+    public function planos(): Response
     {
         $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome();
-
         return $this->render('home/planos.html.twig', [
             'planos' => $planos,
             'cookie_banner_ativo' => true,
@@ -78,8 +79,9 @@ class LandingpageController extends DefaultController
     }
 
     /**
-     * @Route("/landing/cadastro", name="landing_cadastro")
+     * @
      */
+    #[Route("/landing/cadastro", name: "landing_cadastro")]
     public function cadastro(Request $request): Response
     {
         $data = [];
@@ -91,8 +93,9 @@ class LandingpageController extends DefaultController
     }
 
     /**
-     * @Route("/landing/cadastrar", name="estabelecimento_cadastrar", methods="POST")
+     * @
      */
+    #[Route("/landing/cadastrar", name: "estabelecimento_cadastrar", methods: "POST")]
     public function cadastrar(Request $request): Response
     {
 
@@ -181,8 +184,9 @@ class LandingpageController extends DefaultController
     }
 
     /**
-     * @Route("/landing/usuario/cadastrar", name="petshop_usuario_cadastrar")
+     * @
      */
+    #[Route("/landing/usuario/cadastrar", name: "petshop_usuario_cadastrar")]
     public function cadastrarUsuario(EmailService $emailService, Request $request): Response
     {
         if (!$request->isMethod('POST')) {
@@ -218,20 +222,11 @@ class LandingpageController extends DefaultController
         /**
          * 3. Definição de roles
          */
-        switch ($request->get('access_level')) {
-            case 'Super Admin':
-            case 'Admin':
-                $roles = ['ROLE_ADMIN'];
-                break;
-            case 'Atendente':
-            case 'Tosador':
-            case 'Balconista':
-                $roles = ['ROLE_ADMIN_USER'];
-                break;
-            default:
-                $roles = ['ROLE_USER'];
-                break;
-        }
+        $roles = match ($request->get('access_level')) {
+            'Super Admin', 'Admin' => ['ROLE_ADMIN'],
+            'Atendente', 'Tosador', 'Balconista' => ['ROLE_ADMIN_USER'],
+            default => ['ROLE_USER'],
+        };
 
         $usuario->setRoles($roles);
 
@@ -274,8 +269,9 @@ class LandingpageController extends DefaultController
     }
 
     /**
-     * @Route("/assinatura/pagamento/efetuar/{estabelecimento}", name="confirma_cadastro")
+     * @
      */
+    #[Route("/assinatura/pagamento/efetuar/{estabelecimento}", name: "confirma_cadastro")]
     public function confirmacaoCadastro(
         Request $request,
         \App\Service\Payment\PaymentGatewayFactory $paymentGatewayFactory,
@@ -315,7 +311,7 @@ class LandingpageController extends DefaultController
                 try {
                     $subStatus = $gateway->getSubscriptionStatus($invoicePendente->getSubscriptionId());
                     $initPoint = $subStatus['init_point'] ?? null;
-                } catch (\Exception $e) {
+                } catch (\Exception) {
                     $initPoint = null;
                 }
                 if ($initPoint) {
@@ -403,8 +399,9 @@ class LandingpageController extends DefaultController
     /**
      * Recebe o formulário de contato da landing page e envia e-mail para contato@systemhomepet.com
      *
-     * @Route("/landing/contato", name="landing_contato", methods={"POST"})
+     * @
      */
+    #[Route("/landing/contato", name: "landing_contato")]
     public function contato(Request $request, EmailService $emailService): Response
     {
         // Valida CSRF
@@ -460,8 +457,9 @@ class LandingpageController extends DefaultController
      * Página pública — Política de Privacidade.
      * Lê o conteúdo da tabela config (banco homepet_login, estab=0, tipo=lgpd).
      *
-     * @Route("/politicas-de-privacidade", name="landing_politica_privacidade", methods={"GET"})
+     * @
      */
+    #[Route("/politicas-de-privacidade", name: "landing_politica_privacidade", methods: "{GET}")]
     public function politicaPrivacidade(): Response
     {
         $config = $this->getRepositorio(\App\Entity\Config::class);
@@ -484,8 +482,9 @@ class LandingpageController extends DefaultController
     /**
      * Página pública — Termos de Uso.
      *
-     * @Route("/termos-de-uso", name="landing_termos_uso", methods={"GET"})
+     * @
      */
+    #[Route("/termos-de-uso", name: "landing_termos_uso", methods: "{GET}")]
     public function termosUso(): Response
     {
         $config = $this->getRepositorio(\App\Entity\Config::class);
@@ -509,8 +508,9 @@ class LandingpageController extends DefaultController
      * Endpoint AJAX — registra o consentimento de cookies do visitante.
      * Recebe a escolha (aceitar/recusar) e retorna JSON.
      *
-     * @Route("/lgpd/consentimento", name="landing_lgpd_consentimento")
+     * @
      */
+    #[Route("/lgpd/consentimento", name: "landing_lgpd_consentimento")]
     public function registrarConsentimento(Request $request): \Symfony\Component\HttpFoundation\JsonResponse
     {
         $escolha = $request->get('escolha'); // 'aceito' ou 'recusado'

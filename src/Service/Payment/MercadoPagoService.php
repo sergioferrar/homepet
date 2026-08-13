@@ -7,18 +7,10 @@ use Ramsey\Uuid\Uuid;
 
 class MercadoPagoService implements PaymentGatewayInterface
 {
-    private HttpClientInterface $client;
-    private string $accessToken;
-    private string $environment; // 'sandbox' | 'production'
+    // 'sandbox' | 'production'
 
-    public function __construct(
-        HttpClientInterface $client,
-        string $mercadoPagoToken,
-        string $mercadoPagoEnv = 'production'
-    ) {
-        $this->client      = $client;
-        $this->accessToken = $mercadoPagoToken;
-        $this->environment = $mercadoPagoEnv;
+    public function __construct(private readonly HttpClientInterface $client, private readonly string $accessToken, private readonly string $environment = 'production')
+    {
     }
 
     public function getGatewayName(): string
@@ -123,9 +115,7 @@ class MercadoPagoService implements PaymentGatewayInterface
         $notifUrl = $baseUrl . '/pagamento/webhook/mercadopago';
 
         // MP exige start_date no futuro, no formato "2025-06-19T10:00:00.000-03:00"
-        $startDate = isset($data['start_date'])
-            ? $data['start_date']
-            : (new \DateTime('+1 day', new \DateTimeZone('America/Sao_Paulo')))->format('Y-m-d\TH:i:s.000P');
+        $startDate = $data['start_date'] ?? (new \DateTime('+1 day', new \DateTimeZone('America/Sao_Paulo')))->format('Y-m-d\TH:i:s.000P');
 
         $body = [
             'reason'             => $data['title'] ?? 'Assinatura Sistema',
@@ -184,7 +174,7 @@ class MercadoPagoService implements PaymentGatewayInterface
             ]);
 
             return $response->getStatusCode() === 200;
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return false;
         }
     }

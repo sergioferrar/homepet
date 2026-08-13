@@ -26,12 +26,12 @@ class AccessDeniedListener implements EventSubscriberInterface
     private static $processing = false;
 
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private TokenStorageInterface $tokenStorage,
-        private UrlGeneratorInterface $urlGenerator,
-        private RouterInterface $router,
-        private ManagerRegistry $managerRegistry,
-        private RequestStack $requestStack
+        private readonly EntityManagerInterface $entityManager,
+        private readonly TokenStorageInterface $tokenStorage,
+        private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly RouterInterface $router,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly RequestStack $requestStack
     ) {
     }
 
@@ -98,7 +98,7 @@ class AccessDeniedListener implements EventSubscriberInterface
                 $response = new RedirectResponse($url);
                 $event->setResponse($response);
                 $event->stopPropagation();
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 // Ignorar erro ao redirecionar
             }
             return;
@@ -112,7 +112,7 @@ class AccessDeniedListener implements EventSubscriberInterface
                 $response = new RedirectResponse($url);
                 $event->setResponse($response);
                 $event->stopPropagation();
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 // Ignorar erro ao redirecionar
             }
             return;
@@ -126,7 +126,7 @@ class AccessDeniedListener implements EventSubscriberInterface
                 $response = new RedirectResponse($url);
                 $event->setResponse($response);
                 $event->stopPropagation();
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 // Ignorar erro ao redirecionar
             }
             return;
@@ -169,7 +169,7 @@ class AccessDeniedListener implements EventSubscriberInterface
                 $response = new RedirectResponse($url);
                 $event->setResponse($response);
                 $event->stopPropagation();
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 // Ignorar erro ao redirecionar
             }
             return;
@@ -188,7 +188,7 @@ class AccessDeniedListener implements EventSubscriberInterface
             $estabelecimento = $this->entityManager
                 ->getRepository(\App\Entity\Estabelecimento::class)
                 ->findOneById($petshopId);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             // Se falhar ao buscar, apenas retornar
             return;
         }
@@ -201,7 +201,7 @@ class AccessDeniedListener implements EventSubscriberInterface
                 $response = new RedirectResponse($url);
                 $event->setResponse($response);
                 $event->stopPropagation();
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 // Ignorar erro ao redirecionar
             }
             return;
@@ -222,7 +222,7 @@ class AccessDeniedListener implements EventSubscriberInterface
                     $response = new RedirectResponse($url);
                     $event->setResponse($response);
                     $event->stopPropagation();
-                } catch (\Exception $e) {
+                } catch (\Exception) {
                     // Ignorar erro ao redirecionar
                 }
                 return;

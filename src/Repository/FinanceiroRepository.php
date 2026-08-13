@@ -242,8 +242,8 @@ return $financeiro; // Retorna um objeto válido
 
     public function totalLucroPorMes($baseId, $mes = null, $ano = null)
     {
-        $mes = $mes ?? date('m');
-        $ano = $ano ?? date('Y');
+        $mes ??= date('m');
+        $ano ??= date('Y');
 
         $sql = "SELECT SUM(total) AS lucroTotal
                 FROM homepet_{$baseId}.venda
@@ -253,11 +253,7 @@ return $financeiro; // Retorna um objeto válido
                   AND status NOT IN ('Inativa', 'Pendente', 'Carrinho')";
 
         $stmt = $this->conn->prepare($sql);
-        $result = $stmt->executeQuery([
-            'baseId' => $baseId,
-            'mes' => $mes,
-            'ano' => $ano,
-        ]);
+        $result = $stmt->executeQuery();
 
         return $result->fetchAssociative();
     }

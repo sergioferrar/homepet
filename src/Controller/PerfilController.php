@@ -12,23 +12,24 @@ use Symfony\Component\Routing\Annotation\Route;
  * Área de perfil: o usuário logado edita seus próprios dados e troca a senha.
  * A tabela usuario fica no banco de login (não usamos switchDB aqui).
  *
- * @Route("/dashboard")
+ * @
  */
 class PerfilController extends DefaultController
 {
     /**
-     * @Route("/perfil", name="perfil_usuario", methods={"GET"})
+     * @
      */
+    #[Route('/dashboard/perfil', name: 'perfil_usuario', methods: "{GET}")]
     public function index(): Response
     {
         return $this->render('usuario/perfil.html.twig', [
             'usuario' => $this->getUser(),
         ]);
     }
-
     /**
-     * @Route("/perfil/dados", name="perfil_salvar_dados", methods={"POST"})
+     * @
      */
+    #[Route('/dashboard/perfil/dados', name: 'perfil_salvar_dados')]
     public function salvarDados(Request $request, EntityManagerInterface $em): Response
     {
         $usuario = $em->getRepository(Usuario::class)->find($this->getUser()->getId());
@@ -59,10 +60,10 @@ class PerfilController extends DefaultController
         $this->addFlash('success', 'Dados atualizados com sucesso!');
         return $this->redirectToRoute('perfil_usuario');
     }
-
     /**
-     * @Route("/perfil/senha", name="perfil_alterar_senha", methods={"POST"})
+     * @
      */
+    #[Route('/dashboard/perfil/senha', name: 'perfil_alterar_senha')]
     public function alterarSenha(Request $request, EntityManagerInterface $em): Response
     {
         $usuario = $em->getRepository(Usuario::class)->find($this->getUser()->getId());

@@ -4,55 +4,53 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass="App\Repository\HospedagemRepository")
- * @ORM\Table(name="hospedagem")
- */
+#[ORM\Table(name: 'hospedagem')]
+#[ORM\Entity(repositoryClass: \App\Repository\HospedagemRepository::class)]
 class Hospedagem
 {
-    /** @ORM\Id @ORM\GeneratedValue @ORM\Column(type="integer") */
+    #[ORM\Id]
     private $id;
     
-    /** @ORM\Column(name="estabelecimento_id", type="integer") */
+    #[ORM\Column(name: 'estabelecimento_id', type: 'integer')]
     private $estabelecimentoId;
     
-    /** @ORM\Column(name="pet_id", type="integer") */
+    #[ORM\Column(name: 'pet_id', type: 'integer')]
     private $petId;
     
-    /** @ORM\Column(name="cliente_id", type="integer") */
+    #[ORM\Column(name: 'cliente_id', type: 'integer')]
     private $clienteId;
     
-    /** @ORM\Column(name="box_id", type="integer") */
+    #[ORM\Column(name: 'box_id', type: 'integer')]
     private $boxId;
     
-    /** @ORM\Column(name="reserva_id", type="integer", nullable=true) */
+    #[ORM\Column(name: 'reserva_id', type: 'integer', nullable: true)]
     private $reservaId;
     
-    /** @ORM\Column(name="data_entrada", type="datetime") */
+    #[ORM\Column(name: 'data_entrada', type: 'datetime')]
     private $dataEntrada;
     
-    /** @ORM\Column(name="data_saida_prevista", type="date") */
+    #[ORM\Column(name: 'data_saida_prevista', type: 'date')]
     private $dataSaidaPrevista;
     
-    /** @ORM\Column(name="data_saida_real", type="datetime", nullable=true) */
+    #[ORM\Column(name: 'data_saida_real', type: 'datetime', nullable: true)]
     private $dataSaidaReal;
     
-    /** @ORM\Column(name="valor_diaria", type="decimal", precision=10, scale=2) */
+    #[ORM\Column(name: 'valor_diaria', type: 'decimal', precision: 10, scale: 2)]
     private $valorDiaria;
     
-    /** @ORM\Column(name="valor_servicos", type="decimal", precision=10, scale=2) */
+    #[ORM\Column(name: 'valor_servicos', type: 'decimal', precision: 10, scale: 2)]
     private $valorServicos = 0;
     
-    /** @ORM\Column(name="valor_total", type="decimal", precision=10, scale=2, nullable=true) */
+    #[ORM\Column(name: 'valor_total', type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private $valorTotal;
     
-    /** @ORM\Column(type="string", columnDefinition="ENUM('ativa', 'concluida', 'cancelada')") */
+    #[ORM\Column(type: 'string', columnDefinition: "ENUM('ativa', 'concluida', 'cancelada')")]
     private $status = 'ativa';
     
-    /** @ORM\Column(name="observacoes_entrada", type="text", nullable=true) */
+    #[ORM\Column(name: 'observacoes_entrada', type: 'text', nullable: true)]
     private $observacoesEntrada;
     
-    /** @ORM\Column(name="instrucoes_especiais", type="text", nullable=true) */
+    #[ORM\Column(name: 'instrucoes_especiais', type: 'text', nullable: true)]
     private $instrucoesEspeciais;
 
     // Getters and Setters

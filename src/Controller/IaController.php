@@ -21,8 +21,6 @@ use Psr\Log\LoggerInterface;
 
 class IaController extends DefaultController
 {
-    private $iaGeminiService;
-
     public function __construct(
         ?Security $security,
         ManagerRegistry $managerRegistry,
@@ -35,7 +33,7 @@ class IaController extends DefaultController
         CaixaService $caixaService,
         EntityManagerInterface $em,
         TenantContext $tenantContext,
-        IaGeminiService $iaGeminiService
+        private readonly IaGeminiService $iaGeminiService
     )
     {
         parent::__construct(
@@ -51,13 +49,10 @@ class IaController extends DefaultController
             $em,
             $tenantContext
         );
-        $this->iaGeminiService = $iaGeminiService;
     }
 
-    /**
-     * @Route("/ia/perguntar", name="ia_perguntar", methods={"POST"})
-     */
-    public function perguntar(Request $request)
+    #[Route("/ia/perguntar", name: "ia_perguntar")]
+    public function perguntar(Request $request): \Symfony\Component\HttpFoundation\JsonResponse
     {
         $petRepository = $this->getRepositorio(Pet::class);
         $agendamentoRepository = $this->getRepositorio(Agendamento::class);
@@ -84,7 +79,7 @@ class IaController extends DefaultController
 
             return new JsonResponse(['resposta' => $resposta]);
         } catch (\Throwable $e) {
-            return new JsonResponse(['resposta' => 'Erro: ' . $e->getMessage()], 500);
+            return new JsonResponse(['resposta' => 'Erro: ' . $e->getMessage()], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

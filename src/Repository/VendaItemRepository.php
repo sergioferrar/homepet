@@ -128,7 +128,7 @@ class VendaItemRepository extends ServiceEntityRepository
      */
     public function listarPorVendas(int $baseId, array $vendaIds): array
     {
-        $vendaIds = array_values(array_filter(array_map('intval', $vendaIds)));
+        $vendaIds = array_values(array_filter(array_map(intval(...), $vendaIds)));
 
         if ($vendaIds === []) {
             return [];

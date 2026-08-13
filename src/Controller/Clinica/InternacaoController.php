@@ -26,14 +26,11 @@ use App\Controller\DefaultController;
 
 /**
  */
-#[Route("dashboard/clinica")]
 class InternacaoController extends DefaultController
 {
-
-
     /**
      */
-    #[Route("/pet/{petId}/internacao/nova", name: "clinica_nova_internacao")]
+    #[Route('dashboard/clinica/pet/{petId}/internacao/nova', name: 'clinica_nova_internacao')]
     public function novaInternacao(Request $request, int $petId): Response
     {
         $this->switchDB();
@@ -74,7 +71,7 @@ class InternacaoController extends DefaultController
             if ($altaPrevistaStr !== '') {
                 try {
                     $internacao->setAltaPrevista(new \DateTime($altaPrevistaStr));
-                } catch (\Exception $e) {
+                } catch (\Exception) {
                     $internacao->setAltaPrevista(null);
                 }
             }
@@ -113,8 +110,6 @@ class InternacaoController extends DefaultController
             'boxes'        => $boxes,
         ]);
     }
-
-
     /**
      * Gera a tela de impressão da Ficha de Internação — Controle Completo de Plantão.
      * Replica o layout do formulário físico usado pela equipe veterinária,
@@ -122,7 +117,7 @@ class InternacaoController extends DefaultController
      * controle de parâmetros e campo de observações.
      *
      */
-    #[Route("/internacao/{id}/imprimir-ficha", name: "clinica_internacao_imprimir_ficha")]
+    #[Route('dashboard/clinica/internacao/{id}/imprimir-ficha', name: 'clinica_internacao_imprimir_ficha')]
     public function imprimirFicha(
         int                    $id,
         EntityManagerInterface $em
@@ -197,10 +192,9 @@ class InternacaoController extends DefaultController
             'execucoes_por_prescricao'=> $execucoesPorPrescricao,
         ]);
     }
-
     /**
      */
-    #[Route("/internacao/{id}/ficha", name: "clinica_ficha_internacao")]
+    #[Route('dashboard/clinica/internacao/{id}/ficha', name: 'clinica_ficha_internacao')]
     public function fichaInternacao(
         int                    $id,
         EntityManagerInterface $em
@@ -221,11 +215,11 @@ class InternacaoController extends DefaultController
         $timeline = array_map(function (array $r) {
             try {
                 $r['data_hora'] = !empty($r['data_hora']) ? new \DateTime($r['data_hora']) : new \DateTime();
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 $r['data_hora'] = new \DateTime();
             }
-            $r['titulo'] = $r['titulo'] ?? '—';
-            $r['descricao'] = $r['descricao'] ?? '';
+            $r['titulo'] ??= '—';
+            $r['descricao'] ??= '';
             $r['tipo'] = (string)($r['tipo'] ?? 'internacao');
             return $r;
         }, $rows);
@@ -299,10 +293,9 @@ class InternacaoController extends DefaultController
         // dd($data);
         return $this->render('clinica/ficha_internacao.html.twig', $data);
     }
-
     /**
      */
-    #[Route("/internacao/{id}/acao/{acao}", name: "clinica_internacao_acao")]
+    #[Route('dashboard/clinica/internacao/{id}/acao/{acao}', name: 'clinica_internacao_acao')]
     public function acaoInternacao(
         int $id,
         string $acao,
@@ -363,12 +356,9 @@ class InternacaoController extends DefaultController
 
         return $this->json(['ok' => true]);
     }
-
-
-
     /**
      */
-    #[Route("/internacao/{id}/prescricao/nova", name: "clinica_internacao_prescricao_nova")]
+    #[Route('dashboard/clinica/internacao/{id}/prescricao/nova', name: 'clinica_internacao_prescricao_nova')]
     public function novaPrescricao(
         int                    $id,
         Request                $request,
@@ -462,10 +452,9 @@ class InternacaoController extends DefaultController
             ], 500);
         }
     }
-
     /**
      */
-    #[Route("/internacao/{id}/prescricao/{eventoId}/executar", name: "clinica_internacao_prescricao_executar")]
+    #[Route('dashboard/clinica/internacao/{id}/prescricao/{eventoId}/executar', name: 'clinica_internacao_prescricao_executar')]
     public function executarPrescricao(
         int                    $id,
         int                    $eventoId,
@@ -510,10 +499,9 @@ class InternacaoController extends DefaultController
             return $this->json(['ok' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
         }
     }
-
     /**
      */
-    #[Route("/internacao/{id}/evento/{eventoId}/executar", name: "clinica_internacao_evento_executar")]
+    #[Route('dashboard/clinica/internacao/{id}/evento/{eventoId}/executar', name: 'clinica_internacao_evento_executar')]
     public function executarEvento(
         int                    $id,
         int                    $eventoId,
@@ -556,10 +544,9 @@ class InternacaoController extends DefaultController
             return $this->json(['ok' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
         }
     }
-
     /**
      */
-    #[Route("/internacao/medicamento/novo", name: "clinica_internacao_medicamento_novo")]
+    #[Route('dashboard/clinica/internacao/medicamento/novo', name: 'clinica_internacao_medicamento_novo')]
     public function novoMedicamentoViaInternacao(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $this->switchDB();

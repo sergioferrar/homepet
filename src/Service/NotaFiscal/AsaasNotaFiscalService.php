@@ -46,21 +46,8 @@ class AsaasNotaFiscalService implements NotaFiscalServiceInterface
     private const URL_SANDBOX    = 'https://sandbox.asaas.com/api/v3';
     private const URL_PRODUCTION = 'https://api.asaas.com/v3';
 
-    private HttpClientInterface $http;
-    private EntityManagerInterface $em;
-    private LoggerInterface $logger;
-    private ManagerRegistry $managerRegistry;
-
-    public function __construct(
-        HttpClientInterface $http,
-        EntityManagerInterface $em,
-        LoggerInterface $logger,
-        ManagerRegistry $managerRegistry
-    ) {
-        $this->http            = $http;
-        $this->em              = $em;
-        $this->logger          = $logger;
-        $this->managerRegistry = $managerRegistry;
+    public function __construct(private readonly HttpClientInterface $http, private readonly EntityManagerInterface $em, private readonly LoggerInterface $logger, private readonly ManagerRegistry $managerRegistry)
+    {
     }
 
     private function switchToTenant(string $dbName): void

@@ -30,10 +30,9 @@ use App\Service\GeradorpdfService;
 use App\Repository\PetRepository;
 use App\Controller\DefaultController;
 
-#[Route("dashboard/clinica")]
 class AgendaController extends DefaultController
 {
-    #[Route("/clinica/agenda", name: "app_clinica_agenda")]
+    #[Route('dashboard/clinica/clinica/agenda', name: 'app_clinica_agenda')]
     public function index(): Response
     {
         return $this->render('clinica/agenda/index.html.twig', [

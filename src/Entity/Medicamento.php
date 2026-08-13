@@ -4,32 +4,22 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity()
- * @ORM\Table(name="medicamentos")
- */
+#[ORM\Table(name: 'medicamentos')]
+#[ORM\Entity]
 class Medicamento
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    /**
-     * @ORM\Column(type="string", length=150)
-     */
+    #[ORM\Column(type: 'string', length: 150)]
     private string $nome;
 
-    /**
-     * @ORM\Column(type="string", length=50, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private ?string $via = null;
 
-    /**
-     * @ORM\Column(type="string", length=50, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private ?string $concentracao = null;
 
     // --- getters/setters ---

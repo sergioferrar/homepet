@@ -9,21 +9,8 @@ use Symfony\Bundle\SecurityBundle\Security;
 
 class MenuService
 {
-    private EntityManagerInterface $em;
-    private Security $security;
-    private ManagerRegistry $managerRegistry;
-    private RequestStack $requestStack;
-
-    public function __construct(
-        Security $security,
-        EntityManagerInterface $em,
-        ManagerRegistry $managerRegistry,
-        RequestStack $requestStack
-    ) {
-        $this->security        = $security;
-        $this->em              = $em;
-        $this->managerRegistry = $managerRegistry;
-        $this->requestStack    = $requestStack;
+    public function __construct(private readonly Security $security, private readonly EntityManagerInterface $em, private readonly ManagerRegistry $managerRegistry, private readonly RequestStack $requestStack)
+    {
     }
 
     public function getUser()

@@ -5,52 +5,34 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\ProdutoRepository;
 
-/**
- * @ORM\Entity(repositoryClass=ProdutoRepository::class)
- * @ORM\Table(name="produto")
- */
+#[ORM\Table(name: 'produto')]
+#[ORM\Entity(repositoryClass: ProdutoRepository::class)]
 class Produto
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private int $estabelecimentoId;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private string $nome;
 
-    /**
-     * @ORM\Column(type="bigint", nullable=true)
-     */
+    #[ORM\Column(type: 'bigint', nullable: true)]
     private ?string $codigo = null;
 
-    /**
-     * @ORM\Column(type="string", length=3, options={"default": "Não"})
-     */
+    #[ORM\Column(type: 'string', length: 3, options: ['default' => 'Não'])]
     private string $refrigerado = 'Não';
 
-    /**
-     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
-     */
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private ?string $precoCusto = null;
 
-    /**
-     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
-     */
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private ?string $precoVenda = null;
 
-    /**
-     * @ORM\Column(type="integer", options={"default": 0})
-     */
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
     private int $estoqueAtual = 0;
 
     /**
@@ -58,79 +40,50 @@ class Produto
      *  - 'loja'    : vendido no PDV (estoque da loja)
      *  - 'interno' : uso interno da clínica (aplicação/medicação em consultas e internações)
      *  - 'ambos'   : pode ser vendido no PDV E usado internamente (ex.: vacinas, anestésicos)
-     *
-     * @ORM\Column(type="string", length=10, options={"default": "loja"})
      */
+    #[ORM\Column(type: 'string', length: 10, options: ['default' => 'loja'])]
     private string $tipoEstoque = 'loja';
 
-    /**
-     * @ORM\Column(type="string", length=50, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private ?string $unidade = null;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     */
+    #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $dataCadastro = null;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     */
+    #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $dataValidade = null;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $codigoFabrica = null;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $ncm = null;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $cfop = null;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $cest = null;
 
-    /**
-     * @ORM\Column(type="float", nullable=true)
-     */
+    #[ORM\Column(type: 'float', nullable: true)]
     private ?float $aliquotaIcms = null;
 
-    /**
-     * @ORM\Column(type="float", nullable=true)
-     */
+    #[ORM\Column(type: 'float', nullable: true)]
     private ?float $aliquotaPis = null;
 
-    /**
-     * @ORM\Column(type="float", nullable=true)
-     */
+    #[ORM\Column(type: 'float', nullable: true)]
     private ?float $aliquotaCofins = null;
 
-    /**
-     * @ORM\Column(type="float", nullable=true)
-     */
+    #[ORM\Column(type: 'float', nullable: true)]
     private ?float $aliquotaIpi = null;
 
-    /**
-     * @ORM\Column(type="float", nullable=true)
-     */
+    #[ORM\Column(type: 'float', nullable: true)]
     private ?float $aliquotaIss = null;
 
-    /**
-     * @ORM\Column(type="float", nullable=true)
-     */
+    #[ORM\Column(type: 'float', nullable: true)]
     private ?float $aliquotaIbs = null;
 
-    /**
-     * @ORM\Column(type="float", nullable=true)
-     */
+    #[ORM\Column(type: 'float', nullable: true)]
     private ?float $aliquotaCbs = null;
 
     /* =======================

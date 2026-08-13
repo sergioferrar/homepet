@@ -25,9 +25,9 @@ services:
         arguments:
             $diretorioProjeto: '%kernel.project_dir%'
 
-    App\Service\DatabaseBkp:
-        arguments:
-            $connection: '@doctrine.dbal.default_connection'
+    # App\Service\DatabaseBkp:
+    #     arguments:
+    #         $connection: '@doctrine.dbal.default_connection'
 
     # App\Repository\AgendamentoClinicaRepository:
     #     arguments:
@@ -101,3 +101,5 @@ services:
             - '@request_stack'                            # RequestStack
         tags:
             - { name: kernel.event_listener, event: kernel.exception, priority: -100 }
+    # ✅ Deixe assim:
+    App\Service\DatabaseBkp: ~

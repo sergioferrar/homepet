@@ -15,14 +15,14 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * Controller de Estoque - Usa tabela estoque
  * 
- * @Route("dashboard/clinica/estoque")
+ * @
  */
 class EstoqueController extends DefaultController
 {
-
     /**
-     * @Route("", name="clinica_estoque_index", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/estoque', name: 'clinica_estoque_index', methods: "{GET}")]
     public function index(): Response
     {
         $this->switchDB();
@@ -94,15 +94,15 @@ class EstoqueController extends DefaultController
                 'estatisticasLoja' => $this->calcularEstatisticas($produtosLoja),
                 'estatisticasInterno' => $this->calcularEstatisticas($produtosInterno),
             ]);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             $this->addFlash('danger', 'Erro ao carregar estoque.');
             return $this->redirectToRoute('home');
         }
     }
-
     /**
-     * @Route("/entrada", name="clinica_estoque_entrada", methods={"POST"})
+     * @
      */
+    #[Route('dashboard/clinica/estoque/entrada', name: 'clinica_estoque_entrada')]
     public function entrada(Request $request): Response
     {
         $this->switchDB();
@@ -134,10 +134,10 @@ class EstoqueController extends DefaultController
             return $this->responder($request, false, $e->getMessage());
         }
     }
-
     /**
-     * @Route("/saida", name="clinica_estoque_saida", methods={"POST"})
+     * @
      */
+    #[Route('dashboard/clinica/estoque/saida', name: 'clinica_estoque_saida')]
     public function saida(Request $request): Response
     {
         $this->switchDB();
@@ -173,10 +173,10 @@ class EstoqueController extends DefaultController
             return $this->responder($request, false, $e->getMessage());
         }
     }
-
     /**
-     * @Route("/ajustar", name="clinica_estoque_ajustar", methods={"POST"})
+     * @
      */
+    #[Route('dashboard/clinica/estoque/ajustar', name: 'clinica_estoque_ajustar')]
     public function ajustar(Request $request): Response
     {
         $this->switchDB();
@@ -213,12 +213,12 @@ class EstoqueController extends DefaultController
             return $this->responder($request, false, $e->getMessage());
         }
     }
-
     /**
      * Define a qual estoque o produto pertence (loja, interno ou ambos).
      *
-     * @Route("/tipo", name="clinica_estoque_tipo", methods={"POST"})
+     * @
      */
+    #[Route('dashboard/clinica/estoque/tipo', name: 'clinica_estoque_tipo')]
     public function definirTipoEstoque(Request $request): Response
     {
         $this->switchDB();
@@ -247,13 +247,13 @@ class EstoqueController extends DefaultController
             return $this->responder($request, false, $e->getMessage());
         }
     }
-
     /**
      * Registra o uso interno de um produto (baixa do estoque) durante consultas
      * ou internações — ex.: aplicação de vacina, anestésico ou medicação.
      *
-     * @Route("/uso-interno", name="clinica_estoque_uso_interno", methods={"POST"})
+     * @
      */
+    #[Route('dashboard/clinica/estoque/uso-interno', name: 'clinica_estoque_uso_interno')]
     public function registrarUsoInterno(Request $request): Response
     {
         $this->switchDB();
@@ -295,10 +295,10 @@ class EstoqueController extends DefaultController
             return $this->responder($request, false, $e->getMessage());
         }
     }
-
     /**
-     * @Route("/movimentos/{id}", name="clinica_estoque_movimentos", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/estoque/movimentos/{id}', name: 'clinica_estoque_movimentos', methods: "{GET}")]
     public function movimentos(int $id): Response
     {
         $this->switchDB();
@@ -330,14 +330,12 @@ class EstoqueController extends DefaultController
                 'movimentos' => $movimentos,
                 'estatisticas' => $estatisticas,
             ]);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             $this->addFlash('danger', 'Erro ao carregar movimentações');
             return $this->redirectToRoute('clinica_estoque_index');
         }
     }
-
     // ==================== MÉTODOS PRIVADOS ====================
-
     /**
      * Resolve o Produto a partir do request (aceita produto_id no corpo ou id na query),
      * garantindo o isolamento por estabelecimento.
@@ -354,7 +352,6 @@ class EstoqueController extends DefaultController
         return $this->em->getRepository(Produto::class)
             ->findOneBy(['id' => $produtoId, 'estabelecimentoId' => $estabelecimentoId]);
     }
-
     /**
      * Responde em JSON para requisições AJAX ou com redirect + flash para POST de formulário.
      */
@@ -377,7 +374,6 @@ class EstoqueController extends DefaultController
 
         return $this->redirectToRoute('clinica_estoque_index');
     }
-
     private function registrarMovimento(
         Produto $produto,
         string $tipo,
@@ -398,7 +394,6 @@ class EstoqueController extends DefaultController
 
         $this->em->persist($movimento);
     }
-
     private function calcularEstatisticas(array $produtos): array
     {
         $totalProdutos = count($produtos);
@@ -426,7 +421,6 @@ class EstoqueController extends DefaultController
             'valor_total_estoque' => $valorTotal,
         ];
     }
-
     private function calcularEstatisticasMovimento(array $movimentos): array
     {
         $totalEntradas = 0;

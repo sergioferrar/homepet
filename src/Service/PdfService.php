@@ -8,11 +8,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PdfService
 {
-    private Environment $twig;
-
-    public function __construct(Environment $twig)
+    public function __construct(private readonly Environment $twig)
     {
-        $this->twig = $twig;
     }
 
     public function gerarPdf(string $template, array $dados = [], string $nomeArquivo = 'documento.pdf', string $modo = 'I'): Response
@@ -29,7 +26,7 @@ class PdfService
 
         $mpdf->WriteHTML($html);
 
-        return new Response($mpdf->Output($nomeArquivo, $modo), 200, [
+        return new Response($mpdf->Output($nomeArquivo, $modo), \Symfony\Component\HttpFoundation\Response::HTTP_OK, [
             'Content-Type' => 'application/pdf',
         ]);
     }

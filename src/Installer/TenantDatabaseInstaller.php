@@ -19,10 +19,10 @@ use Psr\Log\NullLogger;
  *   $installer = new TenantDatabaseInstaller($logger);
  *   $result = $installer->install($connection);
  */
-final class TenantDatabaseInstaller
+final readonly class TenantDatabaseInstaller
 {
     public function __construct(
-        private readonly LoggerInterface $logger = new NullLogger(),
+        private LoggerInterface $logger = new NullLogger(),
     ) {}
 
     // -------------------------------------------------------------------------

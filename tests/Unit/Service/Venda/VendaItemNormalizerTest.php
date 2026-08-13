@@ -71,7 +71,7 @@ class VendaItemNormalizerTest extends TestCase
         ]);
 
         $total = 0.0;
-        foreach ($linhas as $i => $linha) {
+        foreach ($linhas as $linha) {
             $ref = ($linha['tipo'] === 'produto' ? 'P-' : 'S-') . $linha['id'];
             $total += $this->normalizer->calcularSubtotal(
                 $precos[$ref],

@@ -6,12 +6,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class PaymentGatewayFactory
 {
-    private $container;
     private $gateways = [];
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(private readonly ContainerInterface $container)
     {
-        $this->container = $container;
     }
 
     /**

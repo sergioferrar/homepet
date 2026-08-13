@@ -11,22 +11,17 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 
-/**
- * @Route("/admin/importacao")
- * @IsGranted("ROLE_ADMIN")
- */
+#[IsGranted("ROLE_ADMIN")]
 class ImportacaoController extends DefaultController
 {
-    private $importacaoService;
-
-    public function __construct(ImportacaoExcelService $importacaoService)
+    public function __construct(private readonly ImportacaoExcelService $importacaoService)
     {
-        $this->importacaoService = $importacaoService;
     }
 
     /**
-     * @Route("/", name="importacao_index", methods={"GET"})
+     * @
      */
+    #[Route('/admin/importacao/', name: 'importacao_index', methods: "{GET}")]
     public function index(): Response
     {
         $this->switchDB();
@@ -37,28 +32,30 @@ class ImportacaoController extends DefaultController
     }
 
     /**
-     * @Route("/download-modelo", name="importacao_download_modelo", methods={"GET"})
+     * @
      */
+    #[Route('/admin/importacao/download-modelo', name: 'importacao_download_modelo', methods: "{GET}")]
     public function downloadModelo(): StreamedResponse
     {
         $this->switchDB();
 
         $arquivoExcel = $this->importacaoService->gerarArquivoModelo();
 
-        $response = new StreamedResponse(function () use ($arquivoExcel) {
+        $response = new StreamedResponse(function () use ($arquivoExcel): void {
             echo $arquivoExcel;
         });
 
         $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        $response->headers->set('Content-Disposition', 'attachment; filename="Modelo_Importacao_HomePet.xlsx"');
+        $response->headers->set('Content-Disposition', 'attachment; filename: "Modelo_Importacao_HomePet.xlsx"');
         $response->headers->set('Cache-Control', 'public, max-age=0');
 
         return $response;
     }
 
     /**
-     * @Route("/validar", name="importacao_validar", methods={"POST"})
+     * @
      */
+    #[Route('/admin/importacao/validar', name: 'importacao_validar')]
     public function validar(Request $request): JsonResponse
     {
         $this->switchDB();
@@ -68,7 +65,7 @@ class ImportacaoController extends DefaultController
             return new JsonResponse([
                 'sucesso' => false,
                 'mensagem' => 'Token CSRF inválido. Tente novamente.',
-            ], 400);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
 
         $file = $request->files->get('arquivo');
@@ -77,7 +74,7 @@ class ImportacaoController extends DefaultController
             return new JsonResponse([
                 'sucesso' => false,
                 'mensagem' => 'Nenhum arquivo foi enviado.',
-            ], 400);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
 
         $mimeType = $file->getMimeType();
@@ -92,14 +89,14 @@ class ImportacaoController extends DefaultController
             return new JsonResponse([
                 'sucesso' => false,
                 'mensagem' => 'Formato de arquivo inválido. Use .xlsx ou .xls',
-            ], 400);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
 
         if ($file->getSize() > 5 * 1024 * 1024) {
             return new JsonResponse([
                 'sucesso' => false,
                 'mensagem' => 'Arquivo muito grande. Máximo 5MB.',
-            ], 400);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -115,13 +112,14 @@ class ImportacaoController extends DefaultController
             return new JsonResponse([
                 'sucesso' => false,
                 'mensagem' => 'Erro ao validar arquivo: ' . $e->getMessage(),
-            ], 400);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
     }
 
     /**
-     * @Route("/processar", name="importacao_processar", methods={"POST"})
+     * @
      */
+    #[Route('/admin/importacao/processar', name: 'importacao_processar')]
     public function processar(Request $request): JsonResponse
     {
         $this->switchDB();
@@ -131,7 +129,7 @@ class ImportacaoController extends DefaultController
             return new JsonResponse([
                 'sucesso' => false,
                 'mensagem' => 'Token CSRF inválido. Tente novamente.',
-            ], 400);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
 
         $file = $request->files->get('arquivo');
@@ -140,7 +138,7 @@ class ImportacaoController extends DefaultController
             return new JsonResponse([
                 'sucesso' => false,
                 'mensagem' => 'Nenhum arquivo foi enviado.',
-            ], 400);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
 
         $mimeType = $file->getMimeType();
@@ -152,14 +150,14 @@ class ImportacaoController extends DefaultController
             return new JsonResponse([
                 'sucesso' => false,
                 'mensagem' => 'Formato de arquivo inválido. Use .xlsx ou .xls',
-            ], 400);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
 
         if ($file->getSize() > 5 * 1024 * 1024) {
             return new JsonResponse([
                 'sucesso' => false,
                 'mensagem' => 'Arquivo muito grande. Máximo 5MB.',
-            ], 400);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -177,7 +175,7 @@ class ImportacaoController extends DefaultController
             return new JsonResponse([
                 'sucesso' => false,
                 'erros' => ['Erro ao processar importação: ' . $e->getMessage()],
-            ], 400);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
     }
 }

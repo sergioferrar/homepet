@@ -10,13 +10,11 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class TenantContext
 {
-    private RequestStack $requestStack;
     private ?int $estabelecimentoId = null;
     private bool $isSuperAdmin = false;
 
-    public function __construct(RequestStack $requestStack)
+    public function __construct(private readonly RequestStack $requestStack)
     {
-        $this->requestStack = $requestStack;
         $this->loadFromSession();
     }
 

@@ -8,10 +8,9 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Relacionamento entre um estabelecimento e os módulos adicionais
  * que ele contratou além do plano base.
- *
- * @ORM\Entity(repositoryClass=AssinaturaModuloRepository::class)
- * @ORM\Table(name="assinatura_modulo")
  */
+#[ORM\Table(name: 'assinatura_modulo')]
+#[ORM\Entity(repositoryClass: AssinaturaModuloRepository::class)]
 class AssinaturaModulo
 {
     // Status possíveis
@@ -20,89 +19,76 @@ class AssinaturaModulo
     public const STATUS_CANCELADO  = 'cancelado';
     public const STATUS_SUSPENSO   = 'suspenso';
 
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
     /**
      * ID do estabelecimento (tabela central, fora do tenant)
-     *
-     * @ORM\Column(type="integer", name="estabelecimento_id")
      */
+    #[ORM\Column(type: 'integer', name: 'estabelecimento_id')]
     private int $estabelecimentoId;
 
     /**
      * ID do módulo (referência à tabela modulo)
-     *
-     * @ORM\Column(type="integer", name="modulo_id")
      */
+    #[ORM\Column(type: 'integer', name: 'modulo_id')]
     private int $moduloId;
 
     /**
      * Título do módulo ao momento da contratação (snapshot)
-     *
-     * @ORM\Column(type="string", length=255, name="modulo_titulo")
      */
+    #[ORM\Column(type: 'string', length: 255, name: 'modulo_titulo')]
     private string $moduloTitulo;
 
     /**
      * Valor mensal adicional cobrado por este módulo
-     *
-     * @ORM\Column(type="decimal", precision=10, scale=2, name="valor_mensal")
      */
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, name: 'valor_mensal')]
     private string $valorMensal;
 
     /**
      * Status da contratação do módulo
-     *
-     * @ORM\Column(type="string", length=20)
      */
+    #[ORM\Column(type: 'string', length: 20)]
     private string $status = self::STATUS_PENDENTE;
 
     /**
      * ID da assinatura no Mercado Pago (preapproval_id).
      * Quando null, está pendente de aprovação do gateway.
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, name="subscription_id")
      */
+    #[ORM\Column(type: 'string', length: 255, nullable: true, name: 'subscription_id')]
     private ?string $subscriptionId = null;
 
     /**
      * Link de pagamento gerado pelo gateway para o cliente aprovar.
-     *
-     * @ORM\Column(type="string", length=500, nullable=true, name="init_point")
      */
+    #[ORM\Column(type: 'string', length: 500, nullable: true, name: 'init_point')]
     private ?string $initPoint = null;
 
     /**
      * Data em que o módulo foi contratado
-     *
-     * @ORM\Column(type="datetime", name="contratado_em")
      */
+    #[ORM\Column(type: 'datetime', name: 'contratado_em')]
     private \DateTimeInterface $contratadoEm;
 
     /**
      * Data em que o módulo foi cancelado (se aplicável)
-     *
-     * @ORM\Column(type="datetime", nullable=true, name="cancelado_em")
      */
+    #[ORM\Column(type: 'datetime', nullable: true, name: 'cancelado_em')]
     private ?\DateTimeInterface $canceladoEm = null;
 
     /**
      * Próxima data de cobrança (sincronizado com MP)
-     *
-     * @ORM\Column(type="datetime", nullable=true, name="proxima_cobranca")
      */
+    #[ORM\Column(type: 'datetime', nullable: true, name: 'proxima_cobranca')]
     private ?\DateTimeInterface $proximaCobranca = null;
 
     /**
      * Observações internas / log
-     *
-     * @ORM\Column(type="text", nullable=true)
      */
+    #[ORM\Column(type: 'text', nullable: true)]
     private ?string $observacoes = null;
 
     public function __construct()

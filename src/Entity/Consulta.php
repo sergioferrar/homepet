@@ -5,91 +5,65 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\ConsultaRepository;
 
-/**
- * @ORM\Entity(repositoryClass=ConsultaRepository::class)
- * @ORM\Table(name="consulta")
- */
+#[ORM\Table(name: 'consulta')]
+#[ORM\Entity(repositoryClass: ConsultaRepository::class)]
 class Consulta
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $estabelecimento_id;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $cliente_id;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $pet_id;
 
-    /**
-     * @ORM\Column(type="date")
-     */
+    #[ORM\Column(type: 'date')]
     private $data;
 
-    /**
-     * @ORM\Column(type="time")
-     */
+    #[ORM\Column(type: 'time')]
     private $hora;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $observacoes;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     private $veterinarioId;
 
-    /**
-     * @ORM\Column(type="string", length=20, options={"default": "aguardando"})
-     */
+    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'aguardando'])]
     private $status = 'aguardando';
 
-    /**
-     * @ORM\Column(type="datetime")
-     */
+    #[ORM\Column(type: 'datetime')]
     private $criado_em;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $anamnese;
 
-    /**
-     * @ORM\Column(type="string", length=100, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private $tipo;
 
     /**
      * Valor do atendimento ajustado manualmente no relatório de comissões.
      * NULL = usa o valor do serviço da clínica cadastrado com o mesmo nome do tipo.
-     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
      */
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private $valor;
 
     /**
      * Nome do arquivo salvo no servidor (randômico de 12 dígitos + extensão).
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $attachment;
 
     /**
      * Nome original do arquivo enviado (usado na hora do download).
-     * @ORM\Column(type="string", length=255, nullable=true, name="attachment_original")
      */
+    #[ORM\Column(type: 'string', length: 255, nullable: true, name: 'attachment_original')]
     private $attachmentOriginal;
 
 

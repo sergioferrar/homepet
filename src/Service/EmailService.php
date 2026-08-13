@@ -7,11 +7,8 @@ use Symfony\Component\Mime\Email;
 
 class EmailService
 {
-    private MailerInterface $mailer;
-
-    public function __construct(MailerInterface $mailer)
+    public function __construct(private readonly MailerInterface $mailer)
     {
-        $this->mailer = $mailer;
     }
 
     /**

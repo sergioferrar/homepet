@@ -15,14 +15,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * @Route("dashboard/agendamento")
- */
 class AgendamentoController extends DefaultController
 {
-    /**
-     * @Route("/", name="agendamento_index", methods={"GET"})
-     */
+    #[Route('dashboard/agendamento/', name: 'agendamento_index')]
     public function index(Request $request): Response
     {
         $this->switchDB();
@@ -36,10 +31,7 @@ class AgendamentoController extends DefaultController
             'totalAgendamentos' => $totalAgendamentos,
         ]);
     }
-
-    /**
-     * @Route("/novo", name="agendamento_novo", methods={"GET", "POST"})
-     */
+    #[Route('dashboard/agendamento/novo', name: 'agendamento_novo')]
     public function novo(Request $request): Response
     {
         $this->switchDB();
@@ -88,10 +80,7 @@ class AgendamentoController extends DefaultController
             'servicos' => $this->getRepositorio(Agendamento::class)->findAllServicos($this->getIdBase()),
         ]);
     }
-
-    /**
-     * @Route("/editar/{id}", name="agendamento_editar", methods={"GET", "POST"})
-     */
+    #[Route('dashboard/agendamento/editar/{id}', name: 'agendamento_editar')]
     public function editar(Request $request, int $id): Response
     {
         $this->switchDB();
@@ -137,20 +126,14 @@ class AgendamentoController extends DefaultController
             'servicos' => $repo->findAllServicos($this->getIdBase()),
         ]);
     }
-
-    /**
-     * @Route("/deletar/{id}", name="agendamento_deletar", methods={"POST"})
-     */
+    #[Route('dashboard/agendamento/deletar/{id}', name: 'agendamento_deletar')]
     public function deletar(int $id): Response
     {
         $this->switchDB();
         $this->getRepositorio(Agendamento::class)->delete($this->getIdBase(), $id);
         return $this->redirectToRoute('agendamento_index');
     }
-
-    /**
-     * @Route("/concluir/{id}", name="agendamento_concluir", methods={"GET"})
-     */
+    #[Route('dashboard/agendamento/concluir/{id}', name: 'agendamento_concluir')]
     public function concluir(int $id): JsonResponse
     {
         $this->switchDB();
@@ -215,10 +198,7 @@ class AgendamentoController extends DefaultController
             'pendentes' => $pendentes,
         ]);
     }
-
-    /**
-     * @Route("/alterar-pagamento/{id}", name="agendamento_alterar_pagamento", methods={"POST"})
-     */
+    #[Route('dashboard/agendamento/alterar-pagamento/{id}', name: 'agendamento_alterar_pagamento')]
     public function alterarPagamento(int $id, Request $request): Response
     {
         $this->switchDB();
@@ -249,10 +229,7 @@ class AgendamentoController extends DefaultController
 
         return $this->json(['status' => 'success', 'mensagem' => 'A forma de pagamento foi alterada com sucesso!']);
     }
-
-    /**
-     * @Route("/alterar-saida/{id}", name="agendamento_alterar_saida", methods={"POST"})
-     */
+    #[Route('dashboard/agendamento/alterar-saida/{id}', name: 'agendamento_alterar_saida')]
     public function alterarHoraSaida(Request $request, int $id): Response
     {
         $this->switchDB();
@@ -276,11 +253,8 @@ class AgendamentoController extends DefaultController
 
         return $this->json(['status' => 'erro', 'mensagem' => 'Hora de saída não informada.'], Response::HTTP_BAD_REQUEST);
     }
-
-    /**
-     * @Route("/agendamento/executar-acao/{id}/{acao}", name="agendamento_executar_acao")
-     */
-    public function executarAcao(Request $request, int $id, string $acao): Response
+    #[Route('dashboard/agendamento/agendamento/executar-acao/{id}/{acao}', name: 'agendamento_executar_acao')]
+    public function executarAcao(int $id, string $acao): Response
     {
         $this->switchDB();
         $repo = $this->getRepositorio(Agendamento::class);
@@ -378,7 +352,7 @@ class AgendamentoController extends DefaultController
                 }
 
                 // Criar um registro no financeiro pendente por cliente
-                foreach ($clientes as $clienteNome => $info) {
+                foreach ($clientes as $info) {
                     $descricaoFinal = "Pagamento pendente - " . implode(', ', $info['descricao']);
 
                     if ($dados['taxi_dog']) {
@@ -440,12 +414,8 @@ class AgendamentoController extends DefaultController
                 return $this->json(['status' => 'erro', 'mensagem' => 'Ação inválida.'], Response::HTTP_BAD_REQUEST);
         }
 
-
     }
-
-    /**
-     * @Route("/api/buscar-cliente", name="api_buscar_cliente", methods="POST")
-     */
+    #[Route('dashboard/agendamento/api/buscar-cliente', name: 'api_buscar_cliente', methods: "POST")]
     public function buscarCliente(Request $request): JsonResponse
     {
         $this->switchDB();
@@ -465,11 +435,7 @@ class AgendamentoController extends DefaultController
 
         return $this->json(['status' => 'sucesso', 'cliente' => $cliente]);
     }
-
-
-    /**
-     * @Route("/agendamento/quadro", name="agendamento_quadro")
-     */
+    #[Route('dashboard/agendamento/agendamento/quadro', name: 'agendamento_quadro')]
     public function quadroDeTarefas(Request $request): Response
     {
         $this->switchDB();
@@ -512,10 +478,7 @@ class AgendamentoController extends DefaultController
             'data' => $data, // Passa a data para o template
         ]);
     }
-
-    /**
-     * @Route("/alterar-status-pet/{id}", name="alterar_status_pet", methods={"POST"})
-     */
+    #[Route('dashboard/agendamento/alterar-status-pet/{id}', name: 'alterar_status_pet')]
     public function alterarStatusPet(Request $request, int $id): JsonResponse
     {
         $this->switchDB();
@@ -533,10 +496,7 @@ class AgendamentoController extends DefaultController
 
         return $this->json(['status' => 'sucesso', 'mensagem' => 'Status atualizado com sucesso.']);
     }
-
-    /**
-     * @Route("/concluir-pagamento/{id}", name="agendamento_concluir_pagamento", methods={"POST"})
-     */
+    #[Route('dashboard/agendamento/concluir-pagamento/{id}', name: 'agendamento_concluir_pagamento')]
     public function concluirPagamento(Request $request, int $id): JsonResponse
     {
         $this->switchDB();
@@ -672,6 +632,4 @@ class AgendamentoController extends DefaultController
             'mensagem' => 'Pagamento concluído com sucesso!',
         ]);
     }
-
-
 }

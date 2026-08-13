@@ -13,8 +13,7 @@ use Doctrine\ORM\EntityManagerInterface;
 class VendaService
 {
 	
-	private EntityManagerInterface $em;
-    private VendaCalculoService $calculoService;
+	private readonly VendaCalculoService $calculoService;
 
     const VENDA_ABERTA = 'Aberta';
     const VENDA_FINALIZADA = 'Finalizada';
@@ -23,10 +22,9 @@ class VendaService
     const VENDA_FIADO = 'Fiado';
 
     public function __construct(
-        EntityManagerInterface $em,
+        private readonly EntityManagerInterface $em,
         VendaCalculoService $calculoService
     ) {
-        $this->em = $em;
         $this->calculoService = $calculoService;
     }
 

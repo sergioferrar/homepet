@@ -15,15 +15,13 @@ use Symfony\Component\Routing\Annotation\Route;
 
 /**
  */
-#[Route("dashboard/clinica")]
 class FichaController extends DefaultController
 {
     /** Extensões permitidas para o arquivo de encaminhamento */
     private const ANEXO_EXTENSOES_PERMITIDAS = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
-
     /**
      */
-    #[Route("/pet/{petId}/atendimento/novo", name: "clinica_novo_atendimento")]
+    #[Route('dashboard/clinica/pet/{petId}/atendimento/novo', name: 'clinica_novo_atendimento')]
     public function novoAtendimento(Request $request, int $petId): Response
     {
         $this->switchDB();
@@ -87,7 +85,7 @@ class FichaController extends DefaultController
 
                 try {
                     $arquivo->move($diretorio, $nomeArquivo);
-                } catch (\Exception $e) {
+                } catch (\Exception) {
                     $msg = 'Falha ao gravar o arquivo no servidor. Tente novamente.';
                     if ($isAjax) {
                         return $this->json(['status' => 'error', 'mensagem' => $msg], 500);
@@ -104,7 +102,7 @@ class FichaController extends DefaultController
 
             // Atendimento para mais de um pet do mesmo tutor (pets adicionais).
             $petsAdicionais = array_filter(
-                array_map('intval', (array) $request->get('pets_adicionais', [])),
+                array_map(intval(...), (array) $request->get('pets_adicionais', [])),
                 fn($id) => $id > 0 && $id !== $petId
             );
             if (!empty($petsAdicionais)) {
@@ -138,12 +136,11 @@ class FichaController extends DefaultController
             return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
         }
     }
-
     /**
      * Download do arquivo de encaminhamento anexado a um atendimento (timeline).
      *
      */
-    #[Route("/consulta/{id}/anexo", name: "clinica_consulta_anexo")]
+    #[Route('dashboard/clinica/consulta/{id}/anexo', name: 'clinica_consulta_anexo')]
     public function baixarAnexoConsulta(int $id): Response
     {
         $this->switchDB();
@@ -170,10 +167,9 @@ class FichaController extends DefaultController
 
         return $response;
     }
-
     /**
      */
-    #[Route("/pet/{petId}/receita", name: "clinica_nova_receita")]
+    #[Route('dashboard/clinica/pet/{petId}/receita', name: 'clinica_nova_receita')]
     public function receita(Request $request, int $petId): Response
     {
         $this->switchDB();
@@ -237,7 +233,7 @@ class FichaController extends DefaultController
             $conteudoHtml = $this->quillDeltaToHtml($conteudoDelta);
 
             // --- Dados do pet e do tutor (formatados e escapados) ---
-            $esc = function ($v) {return htmlspecialchars((string) ($v ?? ''), ENT_QUOTES);};
+            $esc = (fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES));
             $ou = function ($v) {$v = trim((string) ($v ?? ''));return $v !== '' ? $v : '—';};
 
             $petNome = $esc($ou($pet['nome'] ?? ''));
@@ -382,10 +378,9 @@ class FichaController extends DefaultController
             'veterinario' => $vet,
         ]);
     }
-
     /**
      */
-    #[Route("/pet/{petId}/peso/novo", name: "clinica_novo_peso")]
+    #[Route('dashboard/clinica/pet/{petId}/peso/novo', name: 'clinica_novo_peso')]
     public function novoPeso(Request $request, int $petId): Response
     {
         $this->switchDB();
@@ -400,21 +395,19 @@ class FichaController extends DefaultController
 
         return $this->render('clinica/novo_peso.html.twig', ['pet' => $pet]);
     }
-
     /**
      */
-    #[Route("/pet/{petId}/documento/novo", name: "clinica_novo_documento_pet")]
+    #[Route('dashboard/clinica/pet/{petId}/documento/novo', name: 'clinica_novo_documento_pet')]
     public function novoDocumentoPet(int $petId): Response
     {
         // Redireciona para a tela de documentos, ou implementa uma lógica específica aqui
         return $this->redirectToRoute('clinica_documentos', ['petId' => $petId]);
 
     }
-
     /**
      */
-    #[Route("/pet/{petId}/exame/novo", name: "clinica_novo_exame")]
-    public function novoExame(Request $request, int $petId): Response
+    #[Route('dashboard/clinica/pet/{petId}/exame/novo', name: 'clinica_novo_exame')]
+    public function novoExame(int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -424,7 +417,7 @@ class FichaController extends DefaultController
     }
     /**
      */
-    #[Route("/consulta/nova", name: "clinica_nova_consulta")]
+    #[Route('dashboard/clinica/consulta/nova', name: 'clinica_nova_consulta')]
     public function novaConsulta(Request $request): Response
     {
         $this->switchDB();
@@ -454,7 +447,7 @@ class FichaController extends DefaultController
             // Atendimento para mais de um pet do mesmo tutor: salva os pets
             // adicionais (o pet principal já está na própria consulta).
             $petsAdicionais = array_filter(
-                array_map('intval', (array) $request->get('pets_adicionais', [])),
+                array_map(intval(...), (array) $request->get('pets_adicionais', [])),
                 fn($id) => $id > 0 && $id !== (int) $request->get('pet_id')
             );
 
@@ -474,10 +467,9 @@ class FichaController extends DefaultController
             'consultas' => $consultas,
         ]);
     }
-
     /**
      */
-    #[Route("/consulta/{id}/status/{status}", name: "clinica_consulta_status")]
+    #[Route('dashboard/clinica/consulta/{id}/status/{status}', name: 'clinica_consulta_status')]
     public function atualizarStatusConsulta(int $id, string $status): Response
     {
         $this->switchDB();
@@ -491,10 +483,9 @@ class FichaController extends DefaultController
         $this->getRepositorio(Consulta::class)->atualizarStatusConsulta($baseId, $id, $status);
         return $this->json(['success' => true]);
     }
-
     /**
      */
-    #[Route("/consulta/{id}", name: "clinica_ver_consulta")]
+    #[Route('dashboard/clinica/consulta/{id}', name: 'clinica_ver_consulta')]
     public function verConsulta(int $id): Response
     {
         $this->switchDB();
@@ -512,13 +503,12 @@ class FichaController extends DefaultController
             'consulta' => $consulta,
         ]);
     }
-
     /**
      * Tela de edição de um atendimento — permite corrigir data, hora, tipo,
      * status, veterinário, valor, observações, anamnese e o anexo.
      *
      */
-    #[Route("/consulta/{id}/editar", name: "clinica_editar_consulta")]
+    #[Route('dashboard/clinica/consulta/{id}/editar', name: 'clinica_editar_consulta')]
     public function editarConsulta(int $id): Response
     {
         $this->switchDB();
@@ -534,12 +524,11 @@ class FichaController extends DefaultController
             'veterinarios' => $this->getRepositorio(Veterinario::class)->findAll(),
         ]);
     }
-
     /**
      * Grava as alterações feitas na tela de edição do atendimento.
      *
      */
-    #[Route("/consulta/{id}/editar", name: "clinica_editar_consulta_salvar")]
+    #[Route('dashboard/clinica/consulta/{id}/editar', name: 'clinica_editar_consulta_salvar')]
     public function salvarEdicaoConsulta(Request $request, int $id): Response
     {
         $this->switchDB();
@@ -625,7 +614,6 @@ class FichaController extends DefaultController
             return $this->redirectToRoute('clinica_editar_consulta', ['id' => $id]);
         }
     }
-
     /**
      * Gera o PDF de uma receita já emitida, a partir do cabeçalho, conteúdo e
      * rodapé gravados no momento da emissão.
@@ -639,7 +627,7 @@ class FichaController extends DefaultController
      * visualizador do navegador.
      *
      */
-    #[Route("/receita/{id}/pdf", name: "clinica_receita_pdf")]
+    #[Route('dashboard/clinica/receita/{id}/pdf', name: 'clinica_receita_pdf')]
     public function gerarReceitaPdf(int $id): Response
     {
         $this->switchDB();
@@ -679,13 +667,12 @@ class FichaController extends DefaultController
 
         return $gerarPDF->gerarInline();
     }
-
     /**
      * Gera PDF completo da ficha do pet com todas as consultas
      *
      */
-    #[Route("/pet/{petId}/ficha/pdf", name: "clinica_ficha_pdf")]
-    public function gerarFichaPdf(Request $request, \App\Service\FichaPdfService $fichaPdfService, int $petId): Response
+    #[Route('dashboard/clinica/pet/{petId}/ficha/pdf', name: 'clinica_ficha_pdf')]
+    public function gerarFichaPdf(\App\Service\FichaPdfService $fichaPdfService, int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();

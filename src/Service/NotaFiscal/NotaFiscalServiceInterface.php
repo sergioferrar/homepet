@@ -51,12 +51,9 @@ interface NotaFiscalServiceInterface
  */
 class NotaFiscalException extends \Exception
 {
-    private ?array $detalhes = null;
-
-    public function __construct(string $message, ?array $detalhes = null, int $code = 0, ?\Throwable $previous = null)
+    public function __construct(string $message, private readonly ?array $detalhes = null, int $code = 0, ?\Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
-        $this->detalhes = $detalhes;
     }
 
     public function getDetalhes(): ?array

@@ -4,101 +4,97 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass="App\Repository\BoxRepository")
- * @ORM\Table(name="box")
- */
+#[ORM\Table(name: 'box')]
+#[ORM\Entity(repositoryClass: \App\Repository\BoxRepository::class)]
 class Box
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /** @ORM\Column(name="estabelecimento_id", type="integer") */
+    #[ORM\Column(name: 'estabelecimento_id', type: 'integer')]
     private $estabelecimentoId;
 
     /**
      * Identificador do box: ex. "INT-01", "EMG-02", "OBS-03"
-     * @ORM\Column(type="string", length=20)
      */
+    #[ORM\Column(type: 'string', length: 20)]
     private $numero;
 
     /**
      * Finalidade do box
-     * @ORM\Column(type="string", length=50, columnDefinition="ENUM('internacao','emergencia','observacao','isolamento','cirurgia','recuperacao')")
      */
+    #[ORM\Column(type: 'string', length: 50, columnDefinition: "ENUM('internacao','emergencia','observacao','isolamento','cirurgia','recuperacao')")]
     private $tipo;
 
     /**
      * Porte do animal suportado
-     * @ORM\Column(type="string", length=20, columnDefinition="ENUM('pequeno','medio','grande','gigante','todos')")
      */
+    #[ORM\Column(type: 'string', length: 20, columnDefinition: "ENUM('pequeno','medio','grande','gigante','todos')")]
     private $porte = 'todos';
 
     /**
      * Estrutura física: maca, canil, gaiola, cercado
-     * @ORM\Column(type="string", length=30, columnDefinition="ENUM('maca','canil','gaiola','cercado','baia')")
      */
+    #[ORM\Column(type: 'string', length: 30, columnDefinition: "ENUM('maca','canil','gaiola','cercado','baia')")]
     private $estrutura = 'canil';
 
     /**
      * Localização física no estabelecimento
-     * @ORM\Column(type="string", length=100, nullable=true)
      */
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private $localizacao;
 
     /**
      * Status operacional do box
-     * @ORM\Column(type="string", length=20, columnDefinition="ENUM('disponivel','ocupado','manutencao','reservado','higienizacao')")
      */
+    #[ORM\Column(type: 'string', length: 20, columnDefinition: "ENUM('disponivel','ocupado','manutencao','reservado','higienizacao')")]
     private $status = 'disponivel';
 
     /**
      * Possui suporte para soro/IV
-     * @ORM\Column(name="suporte_soro", type="boolean")
      */
+    #[ORM\Column(name: 'suporte_soro', type: 'boolean')]
     private $suporteSoro = false;
 
     /**
      * Possui suporte para oxigenoterapia
-     * @ORM\Column(name="suporte_oxigenio", type="boolean")
      */
+    #[ORM\Column(name: 'suporte_oxigenio', type: 'boolean')]
     private $suporteOxigenio = false;
 
     /**
      * Possui aquecimento (para filhotes e pós-cirúrgico)
-     * @ORM\Column(name="tem_aquecimento", type="boolean")
      */
+    #[ORM\Column(name: 'tem_aquecimento', type: 'boolean')]
     private $temAquecimento = false;
 
     /**
      * Possui monitoramento via câmera
-     * @ORM\Column(name="tem_camera", type="boolean")
      */
+    #[ORM\Column(name: 'tem_camera', type: 'boolean')]
     private $temCamera = false;
 
     /**
      * Peso máximo suportado em kg
-     * @ORM\Column(name="peso_maximo_kg", type="decimal", precision=5, scale=1, nullable=true)
      */
+    #[ORM\Column(name: 'peso_maximo_kg', type: 'decimal', precision: 5, scale: 1, nullable: true)]
     private $pesoMaximoKg;
 
     /**
      * Valor da diária (se cobrado separadamente)
-     * @ORM\Column(name="valor_diaria", type="decimal", precision=10, scale=2, nullable=true)
      */
+    #[ORM\Column(name: 'valor_diaria', type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private $valorDiaria;
 
-    /** @ORM\Column(type="text", nullable=true) */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $observacoes;
 
-    /** @ORM\Column(name="created_at", type="datetime") */
+    #[ORM\Column(name: 'created_at', type: 'datetime')]
     private $createdAt;
 
-    /** @ORM\Column(name="updated_at", type="datetime") */
+    #[ORM\Column(name: 'updated_at', type: 'datetime')]
     private $updatedAt;
 
     public function __construct()

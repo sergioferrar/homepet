@@ -5,41 +5,27 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\ServicoRepository;
 
-/**
- * @ORM\Entity(repositoryClass=ServicoRepository::class)
- */
+#[ORM\Entity(repositoryClass: ServicoRepository::class)]
 class Servico
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(name="id", type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: 'id', type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $nome;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $descricao;
 
-    /**
-     * @ORM\Column(type="decimal", nullable=true)
-     */
+    #[ORM\Column(type: 'decimal', nullable: true)]
     private $valor;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $estabelecimentoId;
 
-    /**
-     * @ORM\Column(type="string", length=20, options={"default": "clinica"})
-     */
+    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'clinica'])]
     private $tipo = 'clinica';
 
     public function getId(): ?int

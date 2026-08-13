@@ -15,13 +15,14 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /**
- * @Route("dashboard/financeiro")
+ * @
  */
 class FinanceiroController extends DefaultController
 {
     /**
-     * @Route("/", name="financeiro_index")
+     * @
      */
+    #[Route('dashboard/financeiro/', name: 'financeiro_index')]
     public function index(Request $request): Response
     {
         if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
@@ -67,9 +68,7 @@ class FinanceiroController extends DefaultController
         $financeirosInativos = array_merge($vendasInativas, $pendentesInativos);
 
         // Ordena por data decrescente
-        usort($financeirosInativos, function ($a, $b) {
-            return strtotime($b['data']) - strtotime($a['data']);
-        });
+        usort($financeirosInativos, fn($a, $b) => strtotime($b['data']) - strtotime($a['data']));
 
         // --- Aba Fluxo de Caixa ---
         $dataFluxo = $request->query->get('data_fluxo') ? new \DateTime($request->query->get('data_fluxo')) : new \DateTime();
@@ -92,10 +91,10 @@ class FinanceiroController extends DefaultController
 
         return $this->render('financeiro/index.html.twig', $data);
     }
-
     /**
-     * @Route("/novo", name="financeiro_novo")
+     * @
      */
+    #[Route('dashboard/financeiro/novo', name: 'financeiro_novo')]
     public function novo(Request $request): Response
     {
         if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
@@ -121,12 +120,12 @@ class FinanceiroController extends DefaultController
             'pets' => $petRepo->findAllPets($baseId)
         ]);
     }
-
     /**
-     * @Route("/editar/{id}", name="financeiro_editar")
-     * 
-     * CORRIGIDO: findFinanceiro agora retorna array, não objeto
-     */
+    * @
+    * 
+    #[Route("/editar/{id}", name: "financeiro_editar")]
+    * CORRIGIDO: findFinanceiro agora retorna array, não objeto
+    */
     public function editar(Request $request, int $id): Response
     {
         if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
@@ -161,10 +160,10 @@ class FinanceiroController extends DefaultController
             'pets'       => $petRepo->findAllPets($baseId)
         ]);
     }
-
     /**
-     * @Route("/deletar/{id}", name="financeiro_deletar")
+     * @
      */
+    #[Route('dashboard/financeiro/deletar/{id}', name: 'financeiro_deletar')]
     public function deletar(int $id): Response
     {
         if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
@@ -182,10 +181,10 @@ class FinanceiroController extends DefaultController
         $financeiroRepo->delete($baseId, $id);
         return $this->redirectToRoute('financeiro_index');
     }
-
     /**
-     * @Route("/pendente/confirmar/{id}", name="financeiro_confirmar_pagamento", methods={"POST"})
+     * @
      */
+    #[Route('dashboard/financeiro/pendente/confirmar/{id}', name: 'financeiro_confirmar_pagamento')]
     public function confirmarPagamento(int $id): Response
     {
         if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
@@ -207,10 +206,10 @@ class FinanceiroController extends DefaultController
 
         return $this->redirectToRoute('financeiro_index', ['aba' => 'fiado']);
     }
-
     /**
-     * @Route("/pendente/deletar/{id}", name="financeiro_deletar_pendente", methods={"POST"})
+     * @
      */
+    #[Route('dashboard/financeiro/pendente/deletar/{id}', name: 'financeiro_deletar_pendente')]
     public function deletarPendente(int $id): Response
     {
         if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
@@ -231,10 +230,10 @@ class FinanceiroController extends DefaultController
 
         return $this->redirectToRoute('financeiro_index', ['aba' => 'pendente']);
     }
-
     /**
-     * @Route("/relatorio/export", name="financeiro_relatorio_export")
+     * @
      */
+    #[Route('dashboard/financeiro/relatorio/export', name: 'financeiro_relatorio_export')]
     public function exportRelatorioExcel(Request $request): Response
     {
         if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
@@ -273,20 +272,17 @@ class FinanceiroController extends DefaultController
 
         return $this->file($temp_file, $fileName, ResponseHeaderBag::DISPOSITION_ATTACHMENT);
     }
-
     /**
-     * @Route("/fluxo/debug", name="financeiro_fluxo_debug")
+     * @
      */
-    public function debugFluxo(Request $request): Response
+    #[Route('dashboard/financeiro/fluxo/debug', name: 'financeiro_fluxo_debug')]
+    public function debugFluxo(): Response
     {
         if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
-
         $this->switchDB();
         $baseId = $this->getIdBase();
         $data = new \DateTime();
-
         $fluxo = $this->getFluxoCaixa($baseId, $data);
-
         return new JsonResponse([
             'total_entradas'       => $fluxo['total_entradas'],
             'total_saidas'         => $fluxo['total_saidas'],
@@ -295,7 +291,6 @@ class FinanceiroController extends DefaultController
             'movimentos'           => $fluxo['movimentos']
         ]);
     }
-
     /**
      * Método auxiliar para buscar o fluxo de caixa consolidado
      */
@@ -372,9 +367,7 @@ class FinanceiroController extends DefaultController
         }
 
         // 🔹 4. Ordena por data
-        usort($movimentos, function ($a, $b) {
-            return $a['data'] <=> $b['data'];
-        });
+        usort($movimentos, fn($a, $b) => $a['data'] <=> $b['data']);
 
         return [
             'movimentos'     => $movimentos,

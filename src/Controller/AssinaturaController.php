@@ -14,38 +14,29 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * Gerencia o plano e os módulos adicionais do estabelecimento logado.
- *
- * @Route("dashboard/assinatura")
- */
+
 class AssinaturaController extends DefaultController
 {
     // IDs de módulos adicionais possíveis (espelha PlanoController)
     private const MODULOS_ADICIONAIS_IDS = [7, 8, 9, 10];
-
     // Preços-base de cada módulo adicional (R$/mês).
     // Podem ser movidos para banco futuramente.
     private const PRECOS_ADICIONAIS = [
-        7  => 49.90,   // Banho e Tosa
-        8  => 59.90,   // Hospedagem de Cães
-        9  => 79.90,   // Clínica Veterinária
-        10 => 95.00,   // PDV / Emissão de Notas Fiscais
+        7 => 49.90, // Banho e Tosa
+        8 => 59.90, // Hospedagem de Cães
+        9 => 79.90, // Clínica Veterinária
+        10 => 95.00, // PDV / Emissão de Notas Fiscais
     ];
-
     // ──────────────────────────────────────────────────────────────────
     // PAINEL PRINCIPAL (aba "Meu Plano" dentro de Settings)
     // ──────────────────────────────────────────────────────────────────
-
-    /**
-     * @Route("/painel", name="assinatura_painel")
-     */
+    #[Route('dashboard/assinatura/painel', name: 'assinatura_painel')]
     public function painel(): Response
     {
-        $eid           = $this->getIdBase();
+        $eid = $this->getIdBase();
         $estabelecimento = $this->em->getRepository(Estabelecimento::class)->find($eid);
-        $planoAtual    = $this->em->getRepository(Plano::class)->find($estabelecimento->getPlanoId());
-        $todosPlanos   = $this->em->getRepository(Plano::class)->findBy(['status' => 'Ativo'], ['valor' => 'ASC']);
+        $planoAtual = $this->em->getRepository(Plano::class)->find($estabelecimento->getPlanoId());
+        $todosPlanos = $this->em->getRepository(Plano::class)->findBy(['status' => 'Ativo'], ['valor' => 'ASC']);
 
         // Módulos adicionais
         $modulosAdicionaisDisp = $this->em->getRepository(Modulo::class)->findBy(
@@ -63,7 +54,7 @@ class AssinaturaController extends DefaultController
 
         // Totais
         $totalAdicionais = $this->em->getRepository(AssinaturaModulo::class)->totalMensalAtivos($eid);
-        $totalMensal     = (float)$planoAtual->getValor() + $totalAdicionais;
+        $totalMensal = (float) $planoAtual->getValor() + $totalAdicionais;
 
         // Fatura mais recente (para exibir status da assinatura principal)
         $faturaAtual = $this->em->getRepository(Fatura::class)->findOneBy(
@@ -72,32 +63,23 @@ class AssinaturaController extends DefaultController
         );
 
         return $this->render('assinatura/painel.html.twig', [
-            'estabelecimento'      => $estabelecimento,
-            'planoAtual'           => $planoAtual,
-            'todosPlanos'          => $todosPlanos,
-            'modulosAdicionaisDisp'=> $modulosAdicionaisDisp,
-            'assinaturasIdx'       => $assinaturasIdx,
-            'precosAdicionais'     => self::PRECOS_ADICIONAIS,
-            'totalAdicionais'      => $totalAdicionais,
-            'totalMensal'          => $totalMensal,
-            'faturaAtual'          => $faturaAtual,
+            'estabelecimento' => $estabelecimento,
+            'planoAtual' => $planoAtual,
+            'todosPlanos' => $todosPlanos,
+            'modulosAdicionaisDisp' => $modulosAdicionaisDisp,
+            'assinaturasIdx' => $assinaturasIdx,
+            'precosAdicionais' => self::PRECOS_ADICIONAIS,
+            'totalAdicionais' => $totalAdicionais,
+            'totalMensal' => $totalMensal,
+            'faturaAtual' => $faturaAtual,
         ]);
     }
-
     // ──────────────────────────────────────────────────────────────────
     // CONTRATAR MÓDULO ADICIONAL
-    // ──────────────────────────────────────────────────────────────────
-
-    /**
-     * @Route("/modulo/contratar/{moduloId}", name="assinatura_contratar_modulo",
-     *        methods={"POST"}, requirements={"moduloId"="\d+"})
-     */
-    public function contratarModulo(
-        int $moduloId,
-        Request $request,
-        PaymentGatewayFactory $gatewayFactory,
-        InvoiceService $invoiceService
-    ): Response {
+    // ───────────────────────────────────────────────────────────────
+    #[Route('dashboard/assinatura/modulo/contratar/{moduloId}', name: 'assinatura_contratar_modulo')]
+    public function contratarModulo(int $moduloId, PaymentGatewayFactory $gatewayFactory, InvoiceService $invoiceService): Response
+    {
         $eid = $this->getIdBase();
 
         // Valida módulo
@@ -122,9 +104,9 @@ class AssinaturaController extends DefaultController
         }
 
         $estabelecimento = $this->em->getRepository(Estabelecimento::class)->find($eid);
-        $plano           = $this->em->getRepository(Plano::class)->find($estabelecimento->getPlanoId());
-        $usuario         = $this->em->getRepository(\App\Entity\Usuario::class)
-                               ->findOneBy(['petshop_id' => $eid]);
+        $plano = $this->em->getRepository(Plano::class)->find($estabelecimento->getPlanoId());
+        $usuario = $this->em->getRepository(\App\Entity\Usuario::class)
+            ->findOneBy(['petshop_id' => $eid]);
 
         $valorModulo = self::PRECOS_ADICIONAIS[$moduloId] ?? 49.90;
 
@@ -143,9 +125,9 @@ class AssinaturaController extends DefaultController
         try {
             // Cria fatura para o adicional
             $invoice = $invoiceService->createInvoice($estabelecimento, [
-                'tipo'            => 'modulo_adicional',
-                'valor_total'     => $valorModulo,
-                'plano_id'        => $plano->getId(),
+                'tipo' => 'modulo_adicional',
+                'valor_total' => $valorModulo,
+                'plano_id' => $plano->getId(),
                 'data_vencimento' => new \DateTime('+1 month'),
             ]);
 
@@ -153,12 +135,12 @@ class AssinaturaController extends DefaultController
 
             // Monta assinatura recorrente no MP apenas para o valor do módulo
             $dadosPagamento = [
-                'title'              => "Módulo: {$modulo->getTitulo()} — {$estabelecimento->getRazaoSocial()}",
-                'price'              => $valorModulo,
-                'email'              => $usuario->getEmail() ?? 'noreply@homepet.com.br',
+                'title' => "Módulo: {$modulo->getTitulo()} — {$estabelecimento->getRazaoSocial()}",
+                'price' => $valorModulo,
+                'email' => $usuario->getEmail() ?? 'noreply@homepet.com.br',
                 'external_reference' => $invoice->getId(),
-                'comprador'          => [
-                    'name'  => $usuario->getNomeUsuario() ?? $estabelecimento->getRazaoSocial(),
+                'comprador' => [
+                    'name' => $usuario->getNomeUsuario() ?? $estabelecimento->getRazaoSocial(),
                     'email' => $usuario->getEmail() ?? '',
                 ],
             ];
@@ -190,15 +172,10 @@ class AssinaturaController extends DefaultController
             return $this->redirectToRoute('assinatura_painel');
         }
     }
-
     // ──────────────────────────────────────────────────────────────────
     // CANCELAR MÓDULO ADICIONAL
-    // ──────────────────────────────────────────────────────────────────
-
-    /**
-     * @Route("/modulo/cancelar/{id}", name="assinatura_cancelar_modulo",
-     *        methods={"POST"}, requirements={"id"="\d+"})
-     */
+    // ───────────────────────────────────────────────────────────────
+    #[Route('dashboard/assinatura/modulo/cancelar/{id}', name: 'assinatura_cancelar_modulo')]
     public function cancelarModulo(int $id, PaymentGatewayFactory $gatewayFactory): Response
     {
         $eid = $this->getIdBase();
@@ -232,17 +209,13 @@ class AssinaturaController extends DefaultController
         $this->addFlash('success', "Módulo \"{$assinaturaModulo->getModuloTitulo()}\" cancelado. O acesso será encerrado ao final do período pago.");
         return $this->redirectToRoute('assinatura_painel');
     }
-
     // ──────────────────────────────────────────────────────────────────
     // CANCELAR PLANO PRINCIPAL (cancela assinatura MP + marca inativo)
-    // ──────────────────────────────────────────────────────────────────
-
-    /**
-     * @Route("/cancelar-plano", name="assinatura_cancelar_plano", methods={"POST"})
-     */
+    // ───────────────────────────────────────────────────────────────
+    #[Route('dashboard/assinatura/cancelar-plano', name: 'assinatura_cancelar_plano')]
     public function cancelarPlano(Request $request, PaymentGatewayFactory $gatewayFactory): Response
     {
-        $eid    = $this->getIdBase();
+        $eid = $this->getIdBase();
         $motivo = $request->get('motivo', 'Cancelado pelo usuário.');
 
         $fatura = $this->em->getRepository(Fatura::class)->findOneBy(
@@ -267,25 +240,19 @@ class AssinaturaController extends DefaultController
         $this->addFlash('success', 'Seu plano foi cancelado. O acesso permanece até o fim do período já pago.');
         return $this->redirectToRoute('assinatura_painel');
     }
-
     // ──────────────────────────────────────────────────────────────────
     // UPGRADE / MUDANÇA DE PLANO
-    // ──────────────────────────────────────────────────────────────────
-
-    /**
-     * @Route("/upgrade/{planoId}", name="assinatura_upgrade",
-     *        methods={"POST"}, requirements={"planoId"="\d+"})
-     */
+    // ───────────────────────────────────────────────────────────────
+    #[Route('dashboard/assinatura/upgrade/{planoId}', name: 'assinatura_upgrade', methods: "POST")]
     public function upgrade(
         int $planoId,
-        Request $request,
         PaymentGatewayFactory $gatewayFactory,
         InvoiceService $invoiceService
     ): Response {
-        $eid             = $this->getIdBase();
+        $eid = $this->getIdBase();
         $estabelecimento = $this->em->getRepository(Estabelecimento::class)->find($eid);
-        $novoPlanoDB     = $this->em->getRepository(Plano::class)->find($planoId);
-        $planoAtual      = $this->em->getRepository(Plano::class)->find($estabelecimento->getPlanoId());
+        $novoPlanoDB = $this->em->getRepository(Plano::class)->find($planoId);
+        $planoAtual = $this->em->getRepository(Plano::class)->find($estabelecimento->getPlanoId());
 
         if (!$novoPlanoDB || $novoPlanoDB->getStatus() !== 'Ativo') {
             $this->addFlash('error', 'Plano não disponível.');
@@ -298,10 +265,10 @@ class AssinaturaController extends DefaultController
         }
 
         $usuario = $this->em->getRepository(\App\Entity\Usuario::class)
-                       ->findOneBy(['petshop_id' => $eid]);
+            ->findOneBy(['petshop_id' => $eid]);
 
         $totalAdicionais = $this->em->getRepository(AssinaturaModulo::class)->totalMensalAtivos($eid);
-        $novoTotal       = (float) $novoPlanoDB->getValor() + $totalAdicionais;
+        $novoTotal = (float) $novoPlanoDB->getValor() + $totalAdicionais;
 
         try {
             // Cancela assinatura antiga no gateway
@@ -320,19 +287,19 @@ class AssinaturaController extends DefaultController
 
             // Cria nova assinatura com valor total (plano + adicionais)
             $invoice = $invoiceService->createInvoice($estabelecimento, [
-                'tipo'            => 'upgrade',
-                'valor_total'     => $novoTotal,
-                'plano_id'        => $planoId,
+                'tipo' => 'upgrade',
+                'valor_total' => $novoTotal,
+                'plano_id' => $planoId,
                 'data_vencimento' => new \DateTime('+1 month'),
             ]);
 
             $result = $gateway->createSubscription([
-                'title'              => "Plano {$novoPlanoDB->getTitulo()} — {$estabelecimento->getRazaoSocial()}",
-                'price'              => $novoTotal,
-                'email'              => $usuario->getEmail() ?? '',
+                'title' => "Plano {$novoPlanoDB->getTitulo()} — {$estabelecimento->getRazaoSocial()}",
+                'price' => $novoTotal,
+                'email' => $usuario->getEmail() ?? '',
                 'external_reference' => $invoice->getId(),
-                'comprador'          => [
-                    'name'  => $usuario->getNomeUsuario() ?? '',
+                'comprador' => [
+                    'name' => $usuario->getNomeUsuario() ?? '',
                     'email' => $usuario->getEmail() ?? '',
                 ],
             ]);
@@ -357,22 +324,18 @@ class AssinaturaController extends DefaultController
             return $this->redirectToRoute('assinatura_painel');
         }
     }
-
     // ──────────────────────────────────────────────────────────────────
     // WEBHOOK — Mercado Pago notifica aprovação de módulo adicional
-    // ──────────────────────────────────────────────────────────────────
-
-    /**
-     * @Route("/webhook/modulo", name="assinatura_webhook_modulo", methods={"POST"})
-     */
+    // ───────────────────────────────────────────────────────────────
+    #[Route('dashboard/assinatura/webhook/modulo', name: 'assinatura_webhook_modulo')]
     public function webhookModulo(Request $request): JsonResponse
     {
         $payload = json_decode($request->getContent(), true) ?? [];
-        $type    = $payload['type'] ?? null;
-        $id      = $payload['data']['id'] ?? null;
+        $type = $payload['type'] ?? null;
+        $id = $payload['data']['id'] ?? null;
 
         if (!$id) {
-            return new JsonResponse(['ok' => false, 'msg' => 'ID ausente'], 400);
+            return new JsonResponse(['ok' => false, 'msg' => 'ID ausente'], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
 
         if ($type === 'preapproval') {
@@ -392,14 +355,10 @@ class AssinaturaController extends DefaultController
 
         return new JsonResponse(['ok' => true]);
     }
-
     // ──────────────────────────────────────────────────────────────────
     // SUCESSO pós-aprovação de módulo adicional no MP
-    // ──────────────────────────────────────────────────────────────────
-
-    /**
-     * @Route("/modulo/sucesso", name="assinatura_modulo_sucesso")
-     */
+    // ───────────────────────────────────────────────────────────────
+    #[Route('dashboard/assinatura/modulo/sucesso', name: 'assinatura_modulo_sucesso')]
     public function moduloSucesso(Request $request): Response
     {
         $subscriptionId = $request->get('preapproval_id');

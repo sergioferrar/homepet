@@ -3,20 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\Cliente;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * @Route("dashboard/cliente")
- */
 class ClienteController extends DefaultController
 {
-    /**
-     * @Route("/", name="cliente_index", methods={"GET"})
-     */
+    #[Route('dashboard/cliente/', name: 'cliente_index', methods: "{GET}")]
     public function index(Request $request): Response
     {
         $this->switchDB();
@@ -25,10 +19,7 @@ class ClienteController extends DefaultController
 
         return $this->render('cliente/index.html.twig', ['clientes' => $clientes]);
     }
-
-    /**
-     * @Route("/novo", name="cliente_novo", methods={"GET", "POST"})
-     */
+    #[Route('dashboard/cliente/novo', name: 'cliente_novo')]
     public function novo(Request $request): Response
     {
         $this->switchDB();
@@ -61,15 +52,11 @@ class ClienteController extends DefaultController
 
         return $this->render('cliente/novo.html.twig');
     }
-
-    /**
-     * @Route("/editar/{id}", name="cliente_editar", methods={"GET", "POST"})
-     */
+    #[Route('dashboard/cliente/editar/{id}', name: 'cliente_editar')]
     public function editar(
-        Request           $request,
-        int               $id
-    ): Response
-    {
+        Request $request,
+        int $id
+    ): Response {
         $this->switchDB();
         $baseId = $this->getIdBase();
         $clienteRepository = $this->getRepositorio(Cliente::class);
@@ -103,15 +90,11 @@ class ClienteController extends DefaultController
         }
 
         return $this->render('cliente/editar.html.twig', [
-            'cliente' => $cliente
+            'cliente' => $cliente,
         ]);
     }
-
-
-    /**
-     * @Route("/deletar/{id}", name="cliente_deletar", methods={"POST"})
-     */
-    public function deletar(Request $request, int $id): Response
+    #[Route('dashboard/cliente/deletar/{id}', name: 'cliente_deletar')]
+    public function deletar(int $id): Response
     {
         $this->switchDB();
         $cliente = $this->getRepositorio(Cliente::class)->localizaTodosClientePorID($this->getIdBase(), $id);
@@ -128,11 +111,8 @@ class ClienteController extends DefaultController
         $this->getRepositorio(Cliente::class)->delete($this->getIdBase(), $id);
         return $this->redirectToRoute('cliente_index');
     }
-
-    /**
-     * @Route("/{id}/agendamentos", name="cliente_agendamentos", methods={"GET"})
-     */
-    public function agendamentos(Request $request, int $id): Response
+    #[Route('dashboard/cliente/{id}/agendamentos', name: 'cliente_agendamentos', methods: "{GET}")]
+    public function agendamentos(int $id): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -147,23 +127,17 @@ class ClienteController extends DefaultController
 
         return $this->render('cliente/agendamentos.html.twig', [
             'cliente' => $clienteData,
-            'agendamentos' => $agendamentos
+            'agendamentos' => $agendamentos,
         ]);
     }
-
-    /**
-     * @Route("/cadastro", name="cadastro_cliente")
-     */
+    #[Route('dashboard/cliente/cadastro', name: 'cadastro_cliente')]
     public function cadastro(): Response
     {
         $this->switchDB();
         return $this->render('cliente/cadastro_cliente.html.twig');
     }
-
-    /**
-     * @Route("/{id}/detalhes", name="cliente_detalhes", methods={"GET"})
-     */
-    public function detalhes(Request $request, int $id): JsonResponse
+    #[Route('dashboard/cliente/{id}/detalhes', name: 'cliente_detalhes', methods: "{GET}")]
+    public function detalhes(int $id): JsonResponse
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -188,23 +162,17 @@ class ClienteController extends DefaultController
             'cliente' => array_merge($cliente, [
                 'temFinanceiroPendente' => $temPendencia,
                 'pets' => $pets,
-                'agendamentos' => array_map(function ($ag) {
-                    return [
-                        'data' => (new \DateTime($ag['data']))->format('d/m/Y'),
-                        'pet' => $ag['pet_nome'],
-                        'servico' => $ag['servico_nome']
-                    ];
-                }, $agendamentos),
-                'pendencias' => array_map(function ($p) {
-                    return [
-                        'descricao' => $p['descricao'],
-                        'valor' => number_format($p['valor'], 2, ',', '.'),
-                        'data' => (new \DateTime($p['data']))->format('d/m/Y'),
-                    ];
-                }, $pendencias)
-            ])
+                'agendamentos' => array_map(fn($ag) => [
+                    'data' => (new \DateTime($ag['data']))->format('d/m/Y'),
+                    'pet' => $ag['pet_nome'],
+                    'servico' => $ag['servico_nome'],
+                ], $agendamentos),
+                'pendencias' => array_map(fn($p) => [
+                    'descricao' => $p['descricao'],
+                    'valor' => number_format($p['valor'], 2, ',', '.'),
+                    'data' => (new \DateTime($p['data']))->format('d/m/Y'),
+                ], $pendencias),
+            ]),
         ]);
     }
-
-
 }

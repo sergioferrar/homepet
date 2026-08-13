@@ -21,24 +21,8 @@ use Psr\Log\LoggerInterface;
  */
 class PdvService
 {
-    private EntityManagerInterface $em;
-    private TenantContext $tenantContext;
-    private EstoqueService $estoqueService;
-    private NotaFiscalServiceInterface $notaFiscalService;
-    private LoggerInterface $logger;
-
-    public function __construct(
-        EntityManagerInterface $em,
-        TenantContext $tenantContext,
-        EstoqueService $estoqueService,
-        NotaFiscalServiceInterface $notaFiscalService,
-        LoggerInterface $logger
-    ) {
-        $this->em = $em;
-        $this->tenantContext = $tenantContext;
-        $this->estoqueService = $estoqueService;
-        $this->notaFiscalService = $notaFiscalService;
-        $this->logger = $logger;
+    public function __construct(private readonly EntityManagerInterface $em, private readonly TenantContext $tenantContext, private readonly EstoqueService $estoqueService, private readonly NotaFiscalServiceInterface $notaFiscalService, private readonly LoggerInterface $logger)
+    {
     }
 
     /**

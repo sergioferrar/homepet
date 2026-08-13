@@ -9,18 +9,8 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class InvoiceService
 {
-    private $em;
-    private $invoiceRepository;
-    private $emailService;
-
-    public function __construct(
-        EntityManagerInterface $em,
-        FaturaRepository $invoiceRepository,
-        EmailService $emailService
-    ) {
-        $this->em = $em;
-        $this->invoiceRepository = $invoiceRepository;
-        $this->emailService = $emailService;
+    public function __construct(private readonly EntityManagerInterface $em, private readonly FaturaRepository $invoiceRepository, private readonly EmailService $emailService)
+    {
     }
 
     /**
@@ -154,10 +144,10 @@ class InvoiceService
     {
         // TODO: Buscar email do estabelecimento
         $email = ""; // implementar busca
-        
+
         $subject = "Sua assinatura expira em {$diasRestantes} dias";
         $message = "Sua assinatura está próxima do vencimento. Renove agora para continuar utilizando o sistema.";
-        
+
         // $this->emailService->sendEmail($email, $subject, $message);
     }
 

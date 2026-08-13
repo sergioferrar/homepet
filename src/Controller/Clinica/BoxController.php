@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * Gestão de Boxes — área do administrador do estabelecimento.
  */
-#[Route("dashboard/clinica/boxes", name: "clinica_box_")]
+#[Route(name: "clinica_box_")]
 class BoxController extends DefaultController
 {
     // ── Labels estáticos reutilizados nas views ──────────────────────
@@ -54,17 +54,14 @@ class BoxController extends DefaultController
 
     // ── Listagem / painel de controle ────────────────────────────────
 
-    #[Route("", name: "index")]
-    public function index(Request $request): Response
+    #[Route('dashboard/clinica/boxes', name: 'clinica_box_index')]
+    public function index(): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
-
         $boxRepo = $this->getRepositorio(\App\Entity\Box::class);
-
         $boxes      = $boxRepo->findAllComOcupacao($baseId);
         $contadores = $boxRepo->contadoresPorStatus($baseId);
-
         return $this->render('clinica/boxes/index.html.twig', [
             'boxes'           => $boxes,
             'contadores'      => $contadores,
@@ -77,7 +74,7 @@ class BoxController extends DefaultController
 
     // ── Criar ────────────────────────────────────────────────────────
 
-    #[Route("/novo", name: "novo")]
+    #[Route('dashboard/clinica/boxes/novo', name: 'clinica_box_novo')]
     public function novo(Request $request): Response
     {
         $this->switchDB();
@@ -110,7 +107,7 @@ class BoxController extends DefaultController
     }
 
 
-    #[Route("/{id}/editar", name: "editar")]
+    #[Route('dashboard/clinica/boxes/{id}/editar', name: 'clinica_box_editar')]
     public function editar(int $id, Request $request): Response
     {
         $this->switchDB();
@@ -151,7 +148,7 @@ class BoxController extends DefaultController
 
     // ── Alterar status (AJAX) ────────────────────────────────────────
 
-    #[Route("/{id}/status", name: "status")]
+    #[Route('dashboard/clinica/boxes/{id}/status', name: 'clinica_box_status')]
     public function alterarStatus(int $id, Request $request): JsonResponse
     {
         $this->switchDB();
@@ -195,8 +192,8 @@ class BoxController extends DefaultController
 
     // ── Excluir ──────────────────────────────────────────────────────
 
-    #[Route("/{id}/excluir", name: "excluir")]
-    public function excluir(int $id, Request $request): Response
+    #[Route('dashboard/clinica/boxes/{id}/excluir', name: 'clinica_box_excluir')]
+    public function excluir(int $id): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -256,7 +253,6 @@ class BoxController extends DefaultController
         $box = new Box();
         // Inject id via reflection (no setter by design)
         $ref = new \ReflectionProperty(Box::class, 'id');
-        $ref->setAccessible(true);
         $ref->setValue($box, (int) $row['id']);
 
         $box->setEstabelecimentoId((int) $row['estabelecimento_id']);

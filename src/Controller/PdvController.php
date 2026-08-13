@@ -25,16 +25,16 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * Controller do PDV - Apenas coordena requests, toda lógica está nos Services
  *
- * @Route("dashboard/clinica/pdv")
+ * @
  */
 class PdvController extends DefaultController
 {
-
     /**
      * Tela principal do PDV
      *
-     * @Route("", name="clinica_pdv_index", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv', name: 'clinica_pdv_index', methods: "{GET}")]
     public function index(EntityManagerInterface $em, Request $request): Response
     {
         $this->switchDB();
@@ -54,14 +54,12 @@ class PdvController extends DefaultController
         $clientesEntities = $em->getRepository(Cliente::class)
             ->findBy(['estabelecimentoId' => $estabelecimentoId]);
 
-        $clientesNormalizados = array_map(function ($cliente) {
-            return [
-                'id' => $cliente->getId(),
-                'nome' => $cliente->getNome(),
-                'email' => $cliente->getEmail(),
-                'telefone' => $cliente->getTelefone(),
-            ];
-        }, $clientesEntities);
+        $clientesNormalizados = array_map(fn($cliente) => [
+            'id' => $cliente->getId(),
+            'nome' => $cliente->getNome(),
+            'email' => $cliente->getEmail(),
+            'telefone' => $cliente->getTelefone(),
+        ], $clientesEntities);
 
         // Busca vendas em carrinho
         $vendasCarrinho = $em->getRepository(Venda::class)
@@ -81,12 +79,12 @@ class PdvController extends DefaultController
             'vendaPreCarregada' => $vendaPreCarregada, // null quando não há pré-carregamento
         ]);
     }
-
     /**
      * Carrega uma venda da clínica no PDV (Lançar no Caixa)
      *
-     * @Route("/carregar/{id}", name="pdv_carregar", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/carregar/{id}', name: 'pdv_carregar', methods: "{GET}")]
     public function carregarVendaNopdv(
         int $id,
         EntityManagerInterface $em,
@@ -173,12 +171,12 @@ class PdvController extends DefaultController
         // 7. Redireciona para a tela principal do PDV
         return $this->redirectToRoute('clinica_pdv_index', ['vendaId' => $venda->getId()]);
     }
-
     /**
      * Registra nova venda
      *
-     * @Route("/registrar", name="clinica_pdv_registrar", methods={"POST"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/registrar', name: 'clinica_pdv_registrar')]
     public function registrar(Request $request): JsonResponse
     {
         $this->switchDB();
@@ -193,7 +191,7 @@ class PdvController extends DefaultController
                 return new JsonResponse([
                     'ok' => false,
                     'msg' => implode(' ', $errors),
-                ], 400);
+                ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
             }
 
             // Processa venda via service
@@ -205,15 +203,15 @@ class PdvController extends DefaultController
             return new JsonResponse([
                 'ok' => false,
                 'msg' => $e->getMessage(),
-            ], 500);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
     /**
      * Registra saída de caixa
      *
-     * @Route("/saida", name="clinica_pdv_saida", methods={"POST"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/saida', name: 'clinica_pdv_saida')]
     public function registrarSaida(Request $request): JsonResponse
     {
         $this->switchDB();
@@ -228,7 +226,7 @@ class PdvController extends DefaultController
                 return new JsonResponse([
                     'ok' => false,
                     'msg' => implode(' ', $errors),
-                ], 400);
+                ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
             }
 
             // Processa saída via service
@@ -240,15 +238,15 @@ class PdvController extends DefaultController
             return new JsonResponse([
                 'ok' => false,
                 'msg' => 'Erro ao registrar saída: ' . $e->getMessage(),
-            ], 500);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
     /**
      * Tela de controle de caixa
      *
-     * @Route("/caixa", name="clinica_pdv_caixa", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/caixa', name: 'clinica_pdv_caixa', methods: "{GET}")]
     public function caixa(): Response
     {
         $this->switchDB();
@@ -273,12 +271,12 @@ class PdvController extends DefaultController
             'totalGeral' => $totalGeral,
         ]);
     }
-
     /**
      * Listagem de vendas
      *
-     * @Route("/listar", name="clinica_pdv_listar", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/listar', name: 'clinica_pdv_listar', methods: "{GET}")]
     public function listar(EntityManagerInterface $em): Response
     {
         $this->switchDB();
@@ -294,12 +292,12 @@ class PdvController extends DefaultController
             'vendas' => $vendas,
         ]);
     }
-
     /**
      * Atendimentos/serviços em aberto do tutor, agrupados por pet, para trazer à venda.
      *
-     * @Route("/pendentes-cliente/{clienteId}", name="clinica_pdv_pendentes_cliente", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/pendentes-cliente/{clienteId}', name: 'clinica_pdv_pendentes_cliente', methods: "{GET}")]
     public function pendentesCliente(int $clienteId): JsonResponse
     {
         $this->switchDB();
@@ -336,12 +334,12 @@ class PdvController extends DefaultController
             'quantidade' => count($rows),
         ]);
     }
-
     /**
      * Marca as pendências como pagas depois de incluídas numa venda.
      *
-     * @Route("/baixar-pendentes", name="clinica_pdv_baixar_pendentes", methods={"POST"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/baixar-pendentes', name: 'clinica_pdv_baixar_pendentes')]
     public function baixarPendentes(Request $request): JsonResponse
     {
         $this->switchDB();
@@ -351,22 +349,22 @@ class PdvController extends DefaultController
         $ids = $dados['ids'] ?? $request->request->all('ids');
 
         if (empty($ids) || !is_array($ids)) {
-            return new JsonResponse(['success' => false, 'mensagem' => 'Nenhuma pendência informada.'], 400);
+            return new JsonResponse(['success' => false, 'mensagem' => 'Nenhuma pendência informada.'], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
 
         try {
             $this->getRepositorio(\App\Entity\FinanceiroPendente::class)->marcarPagos($baseId, $ids);
             return new JsonResponse(['success' => true]);
         } catch (\Throwable $e) {
-            return new JsonResponse(['success' => false, 'mensagem' => $e->getMessage()], 500);
+            return new JsonResponse(['success' => false, 'mensagem' => $e->getMessage()], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
     /**
      * Lista clientes para Select2
      *
-     * @Route("/clientes/listar", name="clinica_pdv_clientes_listar", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/clientes/listar', name: 'clinica_pdv_clientes_listar', methods: "{GET}")]
     public function listarClientes(): JsonResponse
     {
         $this->switchDB();
@@ -384,12 +382,12 @@ class PdvController extends DefaultController
 
         return new JsonResponse($resultado);
     }
-
     /**
      * Autocomplete de tutores
      *
-     * @Route("/autocomplete/tutor", name="clinica_autocomplete_tutor", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/autocomplete/tutor', name: 'clinica_autocomplete_tutor', methods: "{GET}")]
     public function autocompleteTutor(Request $request): JsonResponse
     {
         $this->switchDB();
@@ -410,12 +408,12 @@ class PdvController extends DefaultController
 
         return new JsonResponse($resultado);
     }
-
     /**
      * Busca pets de um tutor
      *
-     * @Route("/pets-by-tutor/{id}", name="clinica_pets_by_tutor", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/pets-by-tutor/{id}', name: 'clinica_pets_by_tutor', methods: "{GET}")]
     public function getPetsByTutor(int $id): JsonResponse
     {
         $this->switchDB();
@@ -431,12 +429,12 @@ class PdvController extends DefaultController
 
         return new JsonResponse($resultado);
     }
-
     /**
      * Finaliza venda em carrinho
      *
-     * @Route("/carrinho/finalizar/{id}", name="pdv_finalizar_carrinho", methods={"POST"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/carrinho/finalizar/{id}', name: 'pdv_finalizar_carrinho')]
     public function finalizarCarrinho(
         Request $request,
         int $id,
@@ -481,7 +479,7 @@ class PdvController extends DefaultController
                         return new JsonResponse([
                             'status' => 'error',
                             'mensagem' => 'Pagamento dividido não pode incluir a forma "Pendente".',
-                        ], 400);
+                        ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
                     }
                 }
                 $metodo = count($pagamentos) === 1 ? $pagamentos[0]['metodo'] : 'multiplo';
@@ -491,7 +489,7 @@ class PdvController extends DefaultController
                 return new JsonResponse([
                     'status' => 'error',
                     'mensagem' => 'Método de pagamento não informado.',
-                ], 400);
+                ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
             }
 
             $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
@@ -503,7 +501,7 @@ class PdvController extends DefaultController
                 return new JsonResponse([
                     'status' => 'error',
                     'mensagem' => 'Venda não encontrada ou já finalizada.',
-                ], 404);
+                ], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
             }
 
             // Valida a soma quando há pagamento dividido
@@ -514,7 +512,7 @@ class PdvController extends DefaultController
                         'status' => 'error',
                         'mensagem' => 'A soma das formas (R$ ' . number_format($soma, 2, ',', '.')
                             . ') é menor que o total da venda (R$ ' . number_format((float) $venda['total'], 2, ',', '.') . ').',
-                    ], 400);
+                    ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
                 }
             }
 
@@ -577,7 +575,7 @@ class PdvController extends DefaultController
                 return new JsonResponse([
                     'status' => 'error',
                     'mensagem' => 'Não foi possível atualizar a venda. Tente novamente.',
-                ], 500);
+                ], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
             // ── Emissão automática de NFS-e (Asaas) ──
@@ -624,15 +622,15 @@ class PdvController extends DefaultController
             return new JsonResponse([
                 'status' => 'error',
                 'mensagem' => 'Erro ao finalizar venda: ' . $e->getMessage(),
-            ], 500);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
     /**
      * Retorna os dados de uma venda em JSON para pré-carregar o PDV via popup (sem usar sessão).
      *
-     * @Route("/dados-venda/{id}", name="pdv_dados_venda", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/dados-venda/{id}', name: 'pdv_dados_venda', methods: "{GET}")]
     public function dadosVenda(int $id, EntityManagerInterface $em): JsonResponse
     {
         $this->switchDB();
@@ -644,7 +642,7 @@ class PdvController extends DefaultController
         ]);
 
         if (!$venda) {
-            return new JsonResponse(['ok' => false, 'msg' => 'Venda não encontrada.'], 404);
+            return new JsonResponse(['ok' => false, 'msg' => 'Venda não encontrada.'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
         }
 
         $nomeCliente = $venda->getCliente() ?? 'Consumidor Final';
@@ -691,12 +689,12 @@ class PdvController extends DefaultController
             'observacao' => $venda->getObservacao(),
         ]);
     }
-
     /**
      * Busca vendas de um pet
      *
-     * @Route("/pet/{petId}/vendas", name="clinica_pdv_pet_vendas", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/pet/{petId}/vendas', name: 'clinica_pdv_pet_vendas', methods: "{GET}")]
     public function vendasPorPet(int $petId, EntityManagerInterface $em): JsonResponse
     {
         $this->switchDB();
@@ -708,7 +706,7 @@ class PdvController extends DefaultController
                 ->findOneBy(['id' => $petId, 'estabelecimentoId' => $estabelecimentoId]);
 
             if (!$pet) {
-                return new JsonResponse(['ok' => false, 'msg' => 'Pet não encontrado'], 404);
+                return new JsonResponse(['ok' => false, 'msg' => 'Pet não encontrado'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
             }
 
             // Busca vendas do pet
@@ -763,15 +761,15 @@ class PdvController extends DefaultController
             return new JsonResponse([
                 'ok' => false,
                 'msg' => 'Erro: ' . $e->getMessage(),
-            ], 500);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
     /**
      * Resumo de vendas do dia
      *
-     * @Route("/resumo-dia", name="clinica_pdv_resumo_dia", methods={"GET"})
+     * @
      */
+    #[Route('dashboard/clinica/pdv/resumo-dia', name: 'clinica_pdv_resumo_dia', methods: "{GET}")]
     public function resumoDia(Request $request): JsonResponse
     {
         $this->switchDB();
@@ -800,14 +798,12 @@ class PdvController extends DefaultController
             return new JsonResponse([
                 'ok' => false,
                 'msg' => 'Erro: ' . $e->getMessage(),
-            ], 500);
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
     /**
      * Helpers privados
      */
-
     /**
      * Resolve o nome de exibição de um VendaItem.
      *
@@ -829,7 +825,6 @@ class PdvController extends DefaultController
 
         return in_array(strtolower(trim((string) $flag)), ['on', 'true', '1', 'enabled'], true);
     }
-
     /**
      * Resolve o ID numérico de um VendaItem garantindo que nunca seja null/zero.
      *
@@ -851,7 +846,6 @@ class PdvController extends DefaultController
         // Sem ID válido — retorna 0 (tratado no EstoqueService)
         return 0;
     }
-
     private function resolverNomeItem(EntityManagerInterface $em, VendaItem $item): string
     {
         $snapshot = $item->getProdutoNome();
@@ -877,7 +871,6 @@ class PdvController extends DefaultController
 
         return $entidade ? $entidade->getNome() : ($snapshot ?? "Item #{$idBusca}");
     }
-
     private function normalizarItens(array $produtos, array $servicos): array
     {
         $itens = [];
@@ -908,7 +901,6 @@ class PdvController extends DefaultController
 
         return $itens;
     }
-
     private function buscarItensVenda(EntityManagerInterface $em, int $vendaId): array
     {
         $itens = $em->getRepository(VendaItem::class)->findBy(['vendaId' => $vendaId]);

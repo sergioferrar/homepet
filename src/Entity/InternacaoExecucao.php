@@ -6,48 +6,32 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Repository\InternacaoExecucaoRepository;
 use DateTimeInterface;
 
-/**
- * @ORM\Entity(repositoryClass=InternacaoExecucaoRepository::class)
- * @ORM\Table(name="internacao_execucao")
- */
+#[ORM\Table(name: 'internacao_execucao')]
+#[ORM\Entity(repositoryClass: InternacaoExecucaoRepository::class)]
 class InternacaoExecucao
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $internacaoId;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $prescricaoId;
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Veterinario::class, inversedBy="execucoes")
-     * @ORM\JoinColumn(name="veterinario_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
-     */
+    #[ORM\JoinColumn(name: 'veterinario_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: Veterinario::class, inversedBy: 'execucoes')]
     private $veterinario;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     */
+    #[ORM\Column(type: 'datetime', nullable: true)]
     private $dataExecucao;
 
-    /**
-     * @ORM\Column(type="string", length=50, options={"default": "pendente"})
-     */
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'pendente'])]
     private $status = 'pendente';
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $anotacoes;
 
     // 🔹 Getters e Setters

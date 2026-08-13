@@ -4,68 +4,44 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\FinanceiroPendenteRepository;
 
-/**
- * @ORM\Entity(repositoryClass=FinanceiroPendenteRepository::class)
- * @ORM\Table(name="financeiropendente")
- */
+#[ORM\Table(name: 'financeiropendente')]
+#[ORM\Entity(repositoryClass: FinanceiroPendenteRepository::class)]
 class FinanceiroPendente
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $descricao;
 
-    /**
-     * @ORM\Column(type="decimal", precision=10, scale=2)
-     */
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     private $valor;
 
-    /**
-     * @ORM\Column(type="datetime")
-     */
+    #[ORM\Column(type: 'datetime')]
     private $data;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     private $petId;
 
-    /**
-     * @ORM\Column(type="string", columnDefinition="ENUM('dinheiro', 'pix', 'credito', 'debito', 'pendente')")
-     */
+    #[ORM\Column(type: 'string', columnDefinition: "ENUM('dinheiro', 'pix', 'credito', 'debito', 'pendente')")]
     private $metodoPagamento;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     private $agendamentoId;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $estabelecimentoId;
 
     // --- Novas propriedades e métodos para 'status' e 'origem' ---
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $origem;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $status;
 
-    /**
-     * @ORM\Column(type="boolean", options={"default": 0})
-     */
+    #[ORM\Column(type: 'boolean', options: ['default' => 0])]
     private $inativar = false;
 
     // --- Fim das novas propriedades ---
@@ -174,7 +150,7 @@ class FinanceiroPendente
         $this->origem = $origem;
         return $this;
     }
-    
+
     public function isInativar(): bool
     {
         return $this->inativar;

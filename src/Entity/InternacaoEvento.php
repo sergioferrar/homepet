@@ -5,43 +5,37 @@ namespace App\Entity;
 use App\Repository\InternacaoEventoRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=InternacaoEventoRepository::class)
- * @ORM\Table(name="internacao_evento")
- */
+#[ORM\Table(name: 'internacao_evento')]
+#[ORM\Entity(repositoryClass: InternacaoEventoRepository::class)]
 class InternacaoEvento
 {
-    /** 
-     * @ORM\Id 
-     * @ORM\GeneratedValue 
-     * @ORM\Column(type="integer") 
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /** @ORM\Column(name="estabelecimento_id", type="integer") */
+    #[ORM\Column(name: 'estabelecimento_id', type: 'integer')]
     private $estabelecimentoId;
 
-    /** @ORM\Column(name="internacao_id", type="integer") */
+    #[ORM\Column(name: 'internacao_id', type: 'integer')]
     private $internacaoId;
 
-    /** @ORM\Column(name="pet_id", type="integer") */
+    #[ORM\Column(name: 'pet_id', type: 'integer')]
     private $petId;
 
-    /** 
-     * @ORM\Column(type="string", columnDefinition="ENUM('internacao','alta','ocorrencia','peso','prescricao','medicacao_exec')") 
-     */
+    #[ORM\Column(type: 'string', columnDefinition: "ENUM('internacao','alta','ocorrencia','peso','prescricao','medicacao_exec')")]
     private $tipo;
 
-    /** @ORM\Column(type="string", length=255) */
+    #[ORM\Column(type: 'string', length: 255)]
     private $titulo;
 
-    /** @ORM\Column(type="text", nullable=true) */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $descricao;
 
-    /** @ORM\Column(name="data_hora", type="datetime") */
+    #[ORM\Column(name: 'data_hora', type: 'datetime')]
     private $dataHora;
 
-    /** @ORM\Column(name="criado_em", type="datetime") */
+    #[ORM\Column(name: 'criado_em', type: 'datetime')]
     private $criadoEm;
 
     // --- GETTERS & SETTERS ---

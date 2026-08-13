@@ -14,7 +14,6 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * @
  */
-#[Route("dashboard/clinica")]
 class RelatorioController extends DefaultController
 {
     /**
@@ -33,7 +32,7 @@ class RelatorioController extends DefaultController
      *
      * @
      */
-    #[Route("/relatorios/comissoes", name: "clinica_relatorio_comissoes")]
+    #[Route('dashboard/clinica/relatorios/comissoes', name: 'clinica_relatorio_comissoes')]
     public function comissoes(Request $request): Response
     {
         if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
@@ -163,7 +162,6 @@ class RelatorioController extends DefaultController
             'vendas_sem_vet' => $vendasSemVet,
         ]);
     }
-
     /**
      * Grava o valor editado de um atendimento no relatório de comissões.
      *
@@ -172,7 +170,7 @@ class RelatorioController extends DefaultController
      *
      * @
      */
-    #[Route("/relatorios/comissoes/consulta/{id}/valor", name: "clinica_relatorio_comissoes_valor")]
+    #[Route('dashboard/clinica/relatorios/comissoes/consulta/{id}/valor', name: 'clinica_relatorio_comissoes_valor')]
     public function salvarValorComissao(Request $request, int $id): JsonResponse
     {
         $this->switchDB();

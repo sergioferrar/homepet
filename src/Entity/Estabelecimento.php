@@ -5,91 +5,57 @@ namespace App\Entity;
 use App\Repository\EstabelecimentoRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=EstabelecimentoRepository::class)
- */
+#[ORM\Entity(repositoryClass: EstabelecimentoRepository::class)]
 class Estabelecimento
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=255, name="razaoSocial")
-     */
+    #[ORM\Column(type: 'string', length: 255, name: 'razaoSocial')]
     private $razaoSocial;
 
-    /**
-     * @ORM\Column(type="string", length=20)
-     */
+    #[ORM\Column(type: 'string', length: 20)]
     private $cnpj;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $rua;
 
-    /**
-     * @ORM\Column(type="string", length=60)
-     */
+    #[ORM\Column(type: 'string', length: 60)]
     private $numero;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $complemento;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $bairro;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $cidade;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $pais;
 
-    /**
-     * @ORM\Column(type="string", length=10)
-     */
+    #[ORM\Column(type: 'string', length: 10)]
     private $cep;
 
-    /**
-     * @ORM\Column(type="string", length=25)
-     */
+    #[ORM\Column(type: 'string', length: 25)]
     private $status;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="dataCadastro")
-     */
+    #[ORM\Column(type: 'datetime', nullable: true, name: 'dataCadastro')]
     private $dataCadastro;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="dataAtualizacao")
-     */
+    #[ORM\Column(type: 'datetime', nullable: true, name: 'dataAtualizacao')]
     private $dataAtualizacao;
 
-    /**
-     * @ORM\Column(type="integer", name="planoId")
-     */
+    #[ORM\Column(type: 'integer', name: 'planoId')]
     private $planoId;
 
-    /**
-     * @ORM\Column(type="datetime", name="dataPlanoInicio")
-     */
+    #[ORM\Column(type: 'datetime', name: 'dataPlanoInicio')]
     private $dataPlanoInicio;
     
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="dataPlanoFim")
-     */
+    #[ORM\Column(type: 'datetime', nullable: true, name: 'dataPlanoFim')]
     private ?\DateTimeInterface $dataPlanoFim = null;
 
     public function getId(): ?int

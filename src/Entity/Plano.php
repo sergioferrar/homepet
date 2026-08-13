@@ -6,57 +6,37 @@ use App\Repository\PlanoRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\Collection;
 
-/**
- * @ORM\Entity(repositoryClass=PlanoRepository::class)
- * @ORM\Table(name="planos")
- */
+#[ORM\Table(name: 'planos')]
+#[ORM\Entity(repositoryClass: PlanoRepository::class)]
 class Plano
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $titulo;
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: 'text')]
     private $descricao;
 
-    /**
-     * @ORM\Column(type="decimal", precision=10, scale=2)
-     */
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     private $valor;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $status;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $trial;
 
-    /**
-     * @ORM\Column(type="datetime", name="dataTrial", nullable=true)
-     */
+    #[ORM\Column(type: 'datetime', name: 'dataTrial', nullable: true)]
     private $dataTrial;
 
-    /**
-     * @ORM\Column(type="datetime", name="dataPlano")
-     */
+    #[ORM\Column(type: 'datetime', name: 'dataPlano')]
     private $dataPlano;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $modulos;
 
     public function getId(): ?int

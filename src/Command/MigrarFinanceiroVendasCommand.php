@@ -35,12 +35,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class MigrarFinanceiroVendasCommand extends Command
 {
-    private ManagerRegistry $mr;
-
-    public function __construct(ManagerRegistry $mr)
+    public function __construct(private readonly ManagerRegistry $mr)
     {
         parent::__construct();
-        $this->mr = $mr;
     }
 
     protected function configure(): void
@@ -338,7 +335,7 @@ class MigrarFinanceiroVendasCommand extends Command
                     "ALTER TABLE {$tabela} ADD COLUMN migrado TINYINT(1) NOT NULL DEFAULT 0"
                 );
                 $io->text("  + Coluna `migrado` criada em {$tabela}");
-            } catch (\Throwable $ignored) {
+            } catch (\Throwable) {
                 // Coluna já existe — ignorar
             }
         }
@@ -411,8 +408,8 @@ class MigrarFinanceiroVendasCommand extends Command
         $descricaoLimpa = trim(trim($descricao), '+');
 
         $partes = array_values(array_filter(
-            array_map('trim', explode('+', $descricaoLimpa)),
-            function ($s) { return $s !== ''; }
+            array_map(trim(...), explode('+', $descricaoLimpa)),
+            fn($s) => $s !== ''
         ));
 
         if (empty($partes)) {

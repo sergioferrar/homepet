@@ -6,8 +6,8 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class DynamicConnectionManager
 {
-    private Connection $connection;
-    private array $originalParams;
+    private readonly Connection $connection;
+    private readonly array $originalParams;
 
     public function __construct(ManagerRegistry $registry)
     {
@@ -34,7 +34,6 @@ class DynamicConnectionManager
 
         $reflection = new \ReflectionClass($this->connection);
         $property = $reflection->getProperty('params');
-        $property->setAccessible(true);
         $property->setValue($this->connection, $params);
 
         $this->connection->connect();

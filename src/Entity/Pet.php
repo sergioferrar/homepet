@@ -5,53 +5,49 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\PetRepository;
 
-/**
- * @ORM\Entity(repositoryClass=App\Repository\PetRepository::class)
- * @ORM\Table(name="pet") 
- */
+#[ORM\Table(name: 'pet')]
+#[ORM\Entity(repositoryClass: App\Repository\PetRepository::class)]
 class Pet
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(name="id", type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: 'id', type: 'integer')]
     private $id;
 
-    /** @ORM\Column(type="string", length=255, nullable=true) */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $nome;
 
-    /** @ORM\Column(type="integer", nullable=true) */
+    #[ORM\Column(type: 'integer', nullable: true)]
     private $idade;
 
-    /** @ORM\Column(type="date", nullable=true) */
+    #[ORM\Column(type: 'date', nullable: true)]
     private $dataNascimento;
 
-    /** @ORM\Column(type="string", length=255, nullable=true) */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $sexo;
 
-    /** @ORM\Column(type="string", length=255, nullable=true) */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $raca;
 
-    /** @ORM\Column(type="string", length=255, nullable=true) */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $porte;
 
-    /** @ORM\Column(type="text", nullable=true) */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $observacoes;
 
-    /** @ORM\Column(type="string", length=255, nullable=true, name="dono_id") */
+    #[ORM\Column(type: 'string', length: 255, nullable: true, name: 'dono_id')]
     private $dono_id;
 
-    /** @ORM\Column(type="string", length=255, nullable=true) */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $especie;
 
-    /** @ORM\Column(type="integer") */
+    #[ORM\Column(type: 'integer')]
     private $estabelecimentoId;
 
-    /** @ORM\Column(type="decimal", precision=5, scale=2, nullable=true) */
+    #[ORM\Column(type: 'decimal', precision: 5, scale: 2, nullable: true)]
     private $peso;
 
-    /** @ORM\Column(type="boolean", options={"default": false}) */
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private $castrado = false;
 
     // ===================== Getters & Setters =====================

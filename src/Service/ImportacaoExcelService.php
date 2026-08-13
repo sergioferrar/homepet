@@ -13,14 +13,12 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class ImportacaoExcelService
 {
-    private $entityManager;
     private $errors = [];
     private $warnings = [];
     private $success = [];
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(private readonly EntityManagerInterface $entityManager)
     {
-        $this->entityManager = $entityManager;
     }
 
     /**
@@ -200,7 +198,7 @@ class ImportacaoExcelService
                                 $pet->setDataNascimento($data);
                             }
                         }
-                    } catch (\Exception $e) {
+                    } catch (\Exception) {
                         $this->warnings[] = "Linha {$row} (Pets): Data inválida";
                     }
                 }

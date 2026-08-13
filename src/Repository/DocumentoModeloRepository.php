@@ -26,7 +26,7 @@ class DocumentoModeloRepository extends ServiceEntityRepository
                 ORDER BY criado_em DESC";
         $rows = $this->conn->fetchAllAssociative($sql);
 
-        return array_map(fn($row) => $this->mapToEntity($row), $rows);
+        return array_map($this->mapToEntity(...), $rows);
     }
 
     /**

@@ -45,15 +45,6 @@ class DefaultController extends AbstractController
         'clínicaVeterinária' => 'Clínica Veterinária',
     ];
 
-    public EntityManagerInterface $entityManager;
-    public LoggerInterface $logger;
-
-    protected PdvService $pdvService;
-    protected CaixaService $caixaService;
-    protected TenantContext $tenantContext;
-
-    protected EntityManagerInterface $em;
-
     /**
      * @param Security $security
      */
@@ -63,12 +54,12 @@ class DefaultController extends AbstractController
         RequestStack $request,
         TempDirManager $tempDirManager,
         DatabaseBkp $databaseBkp,
-        EntityManagerInterface $entityManager,
-        LoggerInterface $logger,
-        PdvService $pdvService,
-        CaixaService $caixaService,
-        EntityManagerInterface $em,
-        TenantContext $tenantContext
+        public EntityManagerInterface $entityManager,
+        public LoggerInterface $logger,
+        protected PdvService $pdvService,
+        protected CaixaService $caixaService,
+        protected EntityManagerInterface $em,
+        protected TenantContext $tenantContext
     ) {
         date_default_timezone_set('America/Sao_Paulo');
         $this->security        = $security;
@@ -80,13 +71,6 @@ class DefaultController extends AbstractController
         $this->databaseBkp     = $databaseBkp;
         // CORRIGIDO: Lazy loading - só carrega quando necessário, evita problemas na autenticação
         $this->estabelecimentoId = null;
-        $this->entityManager     = $entityManager;
-        $this->logger            = $logger;
-
-        $this->pdvService    = $pdvService;
-        $this->caixaService  = $caixaService;
-        $this->tenantContext = $tenantContext;
-        $this->em            = $em;
     }
 
     public function switchDB(): void

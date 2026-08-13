@@ -12,10 +12,6 @@ use Twig\TwigFunction;
 
 class AppExtension extends AbstractExtension
 {
-    private $entityManager;
-    private $router;
-    private $security;
-
     private $modulosSistema = [
         'agendamentosDePets' => 'Agendamentos de Pets',
         'cadastroDeClientes' => 'Cadastro de Clientes',
@@ -28,21 +24,18 @@ class AppExtension extends AbstractExtension
         'clínicaVeterinária' => 'Clínica Veterinária',
     ];
 
-    public function __construct(EntityManagerInterface $entityManager, RouterInterface $router, Security $security)
+    public function __construct(private readonly EntityManagerInterface $entityManager, private readonly RouterInterface $router, private readonly Security $security)
     {
-        $this->entityManager = $entityManager;
-        $this->router = $router;
-        $this->security = $security;
     }
 
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('pode_ver_financeiro', [$this, 'podeVerFinanceiro']),
-            new TwigFunction('rota_financeira', [$this, 'rotaFinanceira']),
-            new TwigFunction('veterinario_sessao_id', [$this, 'veterinarioSessaoId']),
-            new TwigFunction('function_name', [$this, 'getEstate']),
-            new TwigFunction('routeExists', [$this, 'routeExists']),
+            new TwigFunction('pode_ver_financeiro', $this->podeVerFinanceiro(...)),
+            new TwigFunction('rota_financeira', $this->rotaFinanceira(...)),
+            new TwigFunction('veterinario_sessao_id', $this->veterinarioSessaoId(...)),
+            new TwigFunction('function_name', $this->getEstate(...)),
+            new TwigFunction('routeExists', $this->routeExists(...)),
         ];
     }
 
@@ -92,35 +85,35 @@ class AppExtension extends AbstractExtension
     public function getFilters(): array
     {
         return [
-            new TwigFilter('getEstate', [$this, 'getEstate']),
+            new TwigFilter('getEstate', $this->getEstate(...)),
             new TwigFilter('base64_encode', 'base64_encode'),
             new TwigFilter('json_decode', fn($v) => json_decode($v, true) ?? []),
-            new TwigFilter('generateBreadCrumb', [$this, 'generateBreadCrumb']),
-            new TwigFilter('formataTelefone', [$this, 'formataTelefone']),
-            new TwigFilter('cnpjMask', [$this, 'cnpjMask']),
-            new TwigFilter('mask9Digit', [$this, 'mask9Digit']),
+            new TwigFilter('generateBreadCrumb', $this->generateBreadCrumb(...)),
+            new TwigFilter('formataTelefone', $this->formataTelefone(...)),
+            new TwigFilter('cnpjMask', $this->cnpjMask(...)),
+            new TwigFilter('mask9Digit', $this->mask9Digit(...)),
             // new TwigFilter('nfTipoMask', [$this, 'nfTipoMask']),
-            new TwigFilter('formataValorEmRealLanding', [$this, 'formataValorEmRealLanding']),
-            new TwigFilter('formataValorEmReal', [$this, 'formataValorEmReal']),
-            new TwigFilter('formatDateTime', [$this, 'formatDateTime']),
-            new TwigFilter('formatDate', [$this, 'formatDate']),
-            new TwigFilter('uppercase', [$this, 'uppercase']),
-            new TwigFilter('limpaZero', [$this, 'limpaZero']),
-            new TwigFilter('mesExtenso', [$this, 'mesExtenso']),
-            new TwigFilter('regimeSimpleNacional', [$this, 'regimeSimpleNacional']),
-            new TwigFilter('filterDate', [$this, 'filterDate']),
-            new TwigFilter('filterCnae', [$this, 'filterCnae']),
-            new TwigFilter('slug', [$this, 'slug']),
-            new TwigFilter('onlyNumber', [$this, 'onlyNumber']),
-            new TwigFilter('getTrial', [$this, 'getTrial']),
-            new TwigFilter('getStatus', [$this, 'getStatus']),
-            new TwigFilter('validaPlano', [$this, 'validaPlano']),
-            new TwigFilter('listaPlano', [$this, 'listaPlano']),
-            new TwigFilter('especie', [$this, 'especie']),
-            new TwigFilter('sexo', [$this, 'sexo']),
-            new TwigFilter('mes_br', [$this, 'mes_br']),
-            new TwigFilter('metodoPagamento', [$this, 'metodoPagamento']),
-            new TwigFilter('idadeFormatada', [$this, 'idadeFormatada']),
+            new TwigFilter('formataValorEmRealLanding', $this->formataValorEmRealLanding(...)),
+            new TwigFilter('formataValorEmReal', $this->formataValorEmReal(...)),
+            new TwigFilter('formatDateTime', $this->formatDateTime(...)),
+            new TwigFilter('formatDate', $this->formatDate(...)),
+            new TwigFilter('uppercase', $this->uppercase(...)),
+            new TwigFilter('limpaZero', $this->limpaZero(...)),
+            new TwigFilter('mesExtenso', $this->mesExtenso(...)),
+            new TwigFilter('regimeSimpleNacional', $this->regimeSimpleNacional(...)),
+            new TwigFilter('filterDate', $this->filterDate(...)),
+            new TwigFilter('filterCnae', $this->filterCnae(...)),
+            new TwigFilter('slug', $this->slug(...)),
+            new TwigFilter('onlyNumber', $this->onlyNumber(...)),
+            new TwigFilter('getTrial', $this->getTrial(...)),
+            new TwigFilter('getStatus', $this->getStatus(...)),
+            new TwigFilter('validaPlano', $this->validaPlano(...)),
+            new TwigFilter('listaPlano', $this->listaPlano(...)),
+            new TwigFilter('especie', $this->especie(...)),
+            new TwigFilter('sexo', $this->sexo(...)),
+            new TwigFilter('mes_br', $this->mes_br(...)),
+            new TwigFilter('metodoPagamento', $this->metodoPagamento(...)),
+            new TwigFilter('idadeFormatada', $this->idadeFormatada(...)),
         ];
     }
 
@@ -216,18 +209,11 @@ class AppExtension extends AbstractExtension
 
     public function especie($string)
     {
-        switch ($string) {
-            case 'canina':
-            return '<i class="bx bxs-dog"></i>';
-            break;
-            case 'felina':
-            return '<i class="fs-5 bx bxs-cat"></i>';
-            break;
-            
-            default:
-            return '<i class="bx bxs-dog"></i>';
-            break;
-        }
+        return match ($string) {
+            'canina' => '<i class="bx bxs-dog"></i>',
+            'felina' => '<i class="fs-5 bx bxs-cat"></i>',
+            default => '<i class="bx bxs-dog"></i>',
+        };
     }
 
 
@@ -349,7 +335,7 @@ class AppExtension extends AbstractExtension
     {
         try {
             $url = $this->router->generate($url, $routeParameters);
-        } catch (RouteNotFoundException $e) {
+        } catch (RouteNotFoundException) {
             return false;
         }
         return true;
@@ -358,42 +344,24 @@ class AppExtension extends AbstractExtension
     public function getEstate($uf)
     {
 
-        switch ($uf) {
-            case 'MG':
-            $estado = 'Minas Gerais';
-            break;
-            case 'MA':
-            $estado = 'Maranhão';
-            break;
-            case 'ES':
-            $estado = 'Espirito Santo';
-            break;
-            case 'RJ':
-            $estado = 'Rio de Janeiro';
-            break;
-            case 'PI':
-            $estado = 'Piaui';
-            break;
-            case 'GO':
-            $estado = 'Goias';
-            break;
-            case 'BA':
-            $estado = 'Bahia';
-            break;
-            case 'SP':
-            $estado = 'São Paulo';
-            break;
-            default:
-            $estado = '';
-            break;
-        }
+        $estado = match ($uf) {
+            'MG' => 'Minas Gerais',
+            'MA' => 'Maranhão',
+            'ES' => 'Espirito Santo',
+            'RJ' => 'Rio de Janeiro',
+            'PI' => 'Piaui',
+            'GO' => 'Goias',
+            'BA' => 'Bahia',
+            'SP' => 'São Paulo',
+            default => '',
+        };
         return $estado;
     }
 
     public function filterDate($itens, $campo = 'dataEmissao')
     {
         $array = [];
-        foreach ($itens as $key => $value) {
+        foreach ($itens as $value) {
             $year = (new \Datetime($value[$campo]))->format("Y");
             $mes = (new \Datetime($value[$campo]))->format("m");
             $dados['chave'] = "{$mes}/{$year}";
@@ -470,7 +438,7 @@ class AppExtension extends AbstractExtension
                         } else {
                             //$nomeRota = $listaMenuForaDaBase[$link[0]] ?? '';
                             if (isset($rotaLink[0]) && isset($listaMenuForaDaBase[$rotaLink[0]])) {
-                                $breadcrumbs[] = $listaMenuForaDaBase[$rotaLink[1]] ?? null . ' ' . implode(' ', array_map('ucfirst', $rotaLink));
+                                $breadcrumbs[] = $listaMenuForaDaBase[$rotaLink[1]] ?? null . ' ' . implode(' ', array_map(ucfirst(...), $rotaLink));
                             } else {
                                 $breadcrumbs[] = $menuAtivo['tituloPagina'];
                             }
@@ -482,7 +450,7 @@ class AppExtension extends AbstractExtension
                             // dd($breadcrumbs,$rotaLink);
                     // unset($rotaLink[0]);
                     $rotaLink = array_reverse($rotaLink);
-                    $breadcrumbs[] = $listaMenuForaDaBase[$rotaLink[1]] ?? null . ' ' . implode(' ', array_map('ucfirst', $rotaLink));
+                    $breadcrumbs[] = $listaMenuForaDaBase[$rotaLink[1]] ?? null . ' ' . implode(' ', array_map(ucfirst(...), $rotaLink));
                 }
 
                 // montar estrutura
@@ -528,13 +496,13 @@ class AppExtension extends AbstractExtension
                         if (isset($listaMenuForaDaBase[$rotaLink[0]])) {
                             $breadcrumbs[] = $listaMenuForaDaBase[$rotaLink[0]] . ' ' . $menuAtivo['link'];
                         } else {
-                            $breadcrumbs[] = implode(' ', array_map('ucfirst', $rotaLink)) . ' ' . $menuAtivo['link'];
+                            $breadcrumbs[] = implode(' ', array_map(ucfirst(...), $rotaLink)) . ' ' . $menuAtivo['link'];
                         }
                     }
                 } else {
                     unset($rotaLink[0]);
 
-                    $breadcrumbs[] = $listaMenuForaDaBase[$rotaLink[1]] ?? null . ' ' . implode(' ', array_map('ucfirst', $rotaLink));
+                    $breadcrumbs[] = $listaMenuForaDaBase[$rotaLink[1]] ?? null . ' ' . implode(' ', array_map(ucfirst(...), $rotaLink));
                 }
                 // dd($menuAtivo, $breadcrumbs,$rotaLink);
                 // $father = [];
@@ -594,7 +562,7 @@ class AppExtension extends AbstractExtension
         $html = '<nav aria-label="breadcrumb" class="mt-2">';
         $html .= '<ol class="breadcrumb">';
 
-        foreach ($breadcrumbs as $key => $value) {
+        foreach ($breadcrumbs as $value) {
 
             if (isset($value['link']) && isset($value['title'])) {
                 $html .= '<li class="breadcrumb-item"><a href="' . $value['link'] . '">' . $value['title'] . '</a></li>';
@@ -623,7 +591,7 @@ class AppExtension extends AbstractExtension
 
     public function formataTelefone($telefone, $ddd): string
     {
-        $char = array('(', ')', '-', '.', '/', '\\', ' ');
+        $char = ['(', ')', '-', '.', '/', '\\', ' '];
         $var = str_replace($char, '', $telefone);
 
         $telInt = (int) $var;

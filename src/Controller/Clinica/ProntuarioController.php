@@ -9,10 +9,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route("dashboard/clinica")]
 class ProntuarioController extends DefaultController
 {
-    #[Route("/prontuario/{petId}", name: "clinica_prontuario")]
+    #[Route('dashboard/clinica/prontuario/{petId}', name: 'clinica_prontuario')]
     public function prontuarioPet(int $petId, Request $request): Response
     {
         $this->switchDB();
@@ -45,8 +44,7 @@ class ProntuarioController extends DefaultController
             'petId' => $petId,
         ]);
     }
-
-    #[Route("/prontuario/ajax/{petId}", name: "clinica_prontuario_ajax")]
+    #[Route('dashboard/clinica/prontuario/ajax/{petId}', name: 'clinica_prontuario_ajax')]
     public function prontuarioAjax(int $petId): Response
     {
         $this->switchDB();

@@ -12,15 +12,8 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class FichaPdfService
 {
-    private QuillDeltaConverterService $deltaConverter;
-    private GeradorpdfService $gerador;
-
-    public function __construct(
-        QuillDeltaConverterService $deltaConverter,
-        GeradorpdfService $gerador
-    ) {
-        $this->deltaConverter = $deltaConverter;
-        $this->gerador = $gerador;
+    public function __construct(private readonly QuillDeltaConverterService $deltaConverter, private readonly GeradorpdfService $gerador)
+    {
     }
 
     /**
