@@ -51,9 +51,24 @@ final class VendaItemNormalizer
     }
 
     /**
-     * Formato preferido: itens[i][ref], itens[i][quantidade], itens[i][desconto].
+     * Formato preferido: itens[i][ref], itens[i][quantidade], itens[i][desconto],
+     * itens[i][pets][] (um ou mais pets do mesmo tutor).
      *
-     * @return array<int, array{tipo: string, id: int, quantidade: int, desconto: float}>
+     * ── Atendimento com 2 ou mais pets ───────────────────────────────────────
+     * Quando o mesmo procedimento é feito em vários pets do tutor (ex.: coleta
+     * de sangue e exame de fezes nos dois cachorros), o formulário manda UMA
+     * linha com vários pets marcados. Aqui essa linha é EXPANDIDA em uma linha
+     * por pet — é isso que faz o valor multiplicar pela quantidade de pets
+     * atendidos em vez de ser cobrado uma vez só.
+     *
+     *   itens[0][ref]=S-3, itens[0][pets][]=10, itens[0][pets][]=11
+     *   → 2 linhas de S-3 (pet 10 e pet 11)
+     *
+     * A quantidade e o desconto informados valem POR PET: cada linha gerada
+     * carrega os mesmos valores, exatamente como se o veterinário tivesse
+     * lançado o item manualmente para cada pet.
+     *
+     * @return array<int, array{tipo: string, id: int, quantidade: int, desconto: float, pet_id: int|null}>
      */
     private function normalizarFormatoIndexado(array $itens): array
     {
@@ -74,17 +89,57 @@ final class VendaItemNormalizer
                 continue;
             }
 
-            $linhas[] = [
-                'tipo'       => $resolvido['tipo'],
-                'id'         => $resolvido['id'],
-                'quantidade' => $this->paraQuantidade($item['quantidade'] ?? 1),
-                'desconto'   => $this->paraDinheiro($item['desconto'] ?? 0),
-                'pet_id'     => (isset($item['pet_id']) && ctype_digit((string) $item['pet_id']) && (int) $item['pet_id'] > 0)
-                    ? (int) $item['pet_id'] : null,
-            ];
+            $quantidade = $this->paraQuantidade($item['quantidade'] ?? 1);
+            $desconto   = $this->paraDinheiro($item['desconto'] ?? 0);
+
+            foreach ($this->extrairPets($item) as $petId) {
+                $linhas[] = [
+                    'tipo'       => $resolvido['tipo'],
+                    'id'         => $resolvido['id'],
+                    'quantidade' => $quantidade,
+                    'desconto'   => $desconto,
+                    'pet_id'     => $petId,
+                ];
+            }
         }
 
         return $linhas;
+    }
+
+    /**
+     * Lê os pets aos quais um item se aplica.
+     *
+     * Aceita o formato novo — itens[i][pets][] com vários ids — e o antigo,
+     * itens[i][pet_id] com um id só, para não quebrar telas/integrações que
+     * ainda mandam o campo único.
+     *
+     * Ids repetidos são descartados: marcar o mesmo pet duas vezes não pode
+     * cobrar em dobro.
+     *
+     * @return array<int, int|null> Nunca vazio — sem pet informado devolve [null],
+     *                              que gera uma linha única (comportamento antigo).
+     */
+    private function extrairPets(array $item): array
+    {
+        $brutos = $item['pets'] ?? $item['pet_ids'] ?? $item['pet_id'] ?? null;
+
+        if (! is_array($brutos)) {
+            $brutos = ($brutos === null || $brutos === '') ? [] : [$brutos];
+        }
+
+        $pets = [];
+
+        foreach ($brutos as $bruto) {
+            $bruto = trim((string) $bruto);
+
+            if ($bruto === '' || ! ctype_digit($bruto) || (int) $bruto <= 0) {
+                continue;
+            }
+
+            $pets[(int) $bruto] = (int) $bruto; // chave = id → dedupe preservando a ordem
+        }
+
+        return $pets === [] ? [null] : array_values($pets);
     }
 
     /**
@@ -137,6 +192,9 @@ final class VendaItemNormalizer
                 'id'         => $resolvido['id'],
                 'quantidade' => $this->paraQuantidade($quantidadeBruta),
                 'desconto'   => $this->paraDinheiro($descontos[$i] ?? 0),
+                // O formato legado não tem vínculo com pet — mantém a chave
+                // presente para o consumidor não precisar de ?? null.
+                'pet_id'     => null,
             ];
         }
 

@@ -123,24 +123,7 @@ class PdvController extends DefaultController
         $itensEntities = $em->getRepository(VendaItem::class)->findBy(['vendaId' => $venda->getId()]);
 
         // 4. Monta payload de itens para a sessão
-        $itensNormalizados = [];
-        foreach ($itensEntities as $item) {
-            $tipo = $item->getTipo(); // já normalizado para lowercase
-            $produtoId = $this->resolverProdutoId($item); // trata legado com produtoId null
-
-            $idFrontend = ($tipo === 'produto')
-            ? 'prod_' . $produtoId
-            : 'serv_' . $produtoId;
-
-            $itensNormalizados[] = [
-                'id' => $idFrontend,
-                'nome' => $this->resolverNomeItem($em, $item),
-                'tipo' => ucfirst($tipo),
-                'quantidade' => $item->getQuantidade(),
-                'valor_unitario' => $item->getValorUnitario(),
-                'subtotal' => $item->getSubtotal(),
-            ];
-        }
+        $itensNormalizados = $this->normalizarItensDaVenda($em, $itensEntities);
 
         // 5. Resolve nome do cliente e pet
         $nomeCliente = $venda->getCliente() ?? 'Consumidor Final';
@@ -659,25 +642,7 @@ class PdvController extends DefaultController
         }
 
         $itensEntities = $em->getRepository(VendaItem::class)->findBy(['vendaId' => $venda->getId()]);
-        $itensNormalizados = [];
-
-        foreach ($itensEntities as $item) {
-            $tipo = $item->getTipo(); // já lowercase pela entity
-            $produtoId = $this->resolverProdutoId($item); // trata legado com produtoId null
-
-            $idFrontend = ($tipo === 'produto')
-            ? 'prod_' . $produtoId
-            : 'serv_' . $produtoId;
-
-            $itensNormalizados[] = [
-                'id' => $idFrontend,
-                'nome' => $this->resolverNomeItem($em, $item),
-                'tipo' => ucfirst($tipo),
-                'quantidade' => $item->getQuantidade(),
-                'valor_unitario' => $item->getValorUnitario(),
-                'subtotal' => $item->getSubtotal(),
-            ];
-        }
+        $itensNormalizados = $this->normalizarItensDaVenda($em, $itensEntities);
 
         return new JsonResponse([
             'ok' => true,
@@ -850,6 +815,66 @@ class PdvController extends DefaultController
 
         // Sem ID válido — retorna 0 (tratado no EstoqueService)
         return 0;
+    }
+
+    /**
+     * Converte os VendaItem de uma venda no payload que o carrinho do PDV lê.
+     *
+     * ── Por que o id leva o sufixo "#<id do venda_item>" ─────────────────────
+     * O carrinho do PDV identifica cada linha pelo campo `id` ('serv_12').
+     * Numa venda de atendimento com 2+ pets, o MESMO serviço aparece uma vez
+     * por pet (coleta de sangue do Rex + coleta de sangue da Mel) — duas linhas
+     * de venda_item com o mesmo produto_id. Com o id repetido, o JS tratava as
+     * duas como a mesma linha: remover uma apagava as duas e alterar a
+     * quantidade só pegava a primeira, e o total do caixa saía diferente do
+     * total lançado na ficha.
+     *
+     * O sufixo torna cada linha única sem quebrar quem extrai o id numérico —
+     * PdvService::extrairIdNumerico() e EstoqueService::extrairProdutoId()
+     * fazem cast para int, e 'serv_12#48' → '12#48' → 12.
+     *
+     * ── Por que o unitário é o efetivo ───────────────────────────────────────
+     * O carrinho recalcula subtotal = quantidade × unitário; ele não tem
+     * desconto por linha. Repassando o unitário cheio, uma venda lançada com
+     * desconto na ficha aparecia no caixa por um valor maior que o da venda.
+     * Repassamos o unitário já líquido para o carrinho fechar no mesmo total,
+     * mantendo o valor de tabela em `valor_unitario_bruto` para exibição.
+     *
+     * @param VendaItem[] $itens
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizarItensDaVenda(EntityManagerInterface $em, array $itens): array
+    {
+        $normalizados = [];
+
+        foreach ($itens as $item) {
+            $tipo = $item->getTipo(); // já normalizado para lowercase na entity
+            $produtoId = $this->resolverProdutoId($item); // trata legado com produtoId null
+
+            $idFrontend = ($tipo === 'produto' ? 'prod_' : 'serv_') . $produtoId;
+
+            if ($item->getId()) {
+                $idFrontend .= '#' . $item->getId();
+            }
+
+            $quantidade = max(1, (int) $item->getQuantidade());
+            $unitario   = (float) $item->getValorUnitario();
+            $subtotal   = (float) $item->getSubtotal();
+            $desconto   = round(($unitario * $quantidade) - $subtotal, 2);
+
+            $normalizados[] = [
+                'id' => $idFrontend,
+                'nome' => $this->resolverNomeItem($em, $item),
+                'tipo' => ucfirst($tipo),
+                'quantidade' => $quantidade,
+                'valor_unitario' => $desconto > 0 ? round($subtotal / $quantidade, 2) : $unitario,
+                'valor_unitario_bruto' => $unitario,
+                'desconto' => max(0.0, $desconto),
+                'subtotal' => $subtotal,
+            ];
+        }
+
+        return $normalizados;
     }
 
     private function resolverNomeItem(EntityManagerInterface $em, VendaItem $item): string

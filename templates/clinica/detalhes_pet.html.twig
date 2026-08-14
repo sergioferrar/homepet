@@ -928,11 +928,16 @@
 
         {# ── Itens da venda ────────────────────────────────────────────────
            IMPORTANTE: cada linha usa nomes INDEXADOS
-           itens[i][ref] / itens[i][quantidade] / itens[i][desconto].
+           itens[i][ref] / itens[i][quantidade] / itens[i][desconto] / itens[i][pets][].
            Antes eram três arrays paralelos (descricao[], desconto[],
            quantidade_diarias[]) casados por índice no PHP — e como o campo de
            quantidade só existia para internação, o array chegava compactado e
-           a quantidade era aplicada ao item errado. #}
+           a quantidade era aplicada ao item errado.
+
+           itens[i][pets][] aceita VÁRIOS pets do tutor no mesmo item: o
+           backend gera um lançamento por pet marcado. Antes cada linha
+           aceitava um pet só, então um procedimento feito em 2 animais era
+           cobrado uma vez e o total no PDV saía menor que o executado. #}
         {# ── Pets deste atendimento (vincular itens a mais de um pet do tutor) ── #}
         <div class="mb-3" id="pets-venda-bloco"
              data-pet-id="{{ pet.id }}" data-pet-nome="{{ pet.nome }}" data-dono-id="{{ pet.dono_id }}">
@@ -946,7 +951,7 @@
                     <i class="bi bi-plus-lg"></i> Incluir pet
                 </button>
             </div>
-            <small class="text-muted">Inclua outros pets do mesmo tutor e escolha, em cada item abaixo, para qual pet ele é. Tudo fica numa venda só.</small>
+            <small class="text-muted">Inclua outros pets do mesmo tutor e marque, em cada item abaixo, <strong>todos os pets que receberam aquele item</strong>. O valor é multiplicado pelo número de pets marcados e tudo fica numa venda só.</small>
         </div>
 
         <div id="servicos-container"></div>
@@ -1419,6 +1424,31 @@ $(document).ready(function() {
     $formNovoServico.on('submit', function(e) {
         e.preventDefault();
         if (_vendaEmAndamento) return; // ignora segundo clique
+
+        // Nenhum item pode ir sem pet: sem essa checagem a linha seria gravada
+        // uma única vez, sem vínculo, e o valor voltaria a sair errado no PDV.
+        let $linhaSemPet = null;
+        $('#servicos-container .item-venda-linha').each(function() {
+            const $linha = $(this);
+            if (!$linha.find('.select-servico').val()) return;      // linha ainda vazia
+            if (!$linha.find('.check-pet-item').length) return;     // formato antigo
+            if ($linha.find('.check-pet-item:checked').length === 0 && !$linhaSemPet) {
+                $linhaSemPet = $linha;
+            }
+        });
+
+        if ($linhaSemPet) {
+            const numero = $linhaSemPet.find('.numero-linha').text();
+            const msg = `Marque ao menos um pet no item ${numero} antes de concluir.`;
+            if (window.Notify && Notify.toast) {
+                Notify.toast(msg, 'warning');
+            } else {
+                alert(msg);
+            }
+            $linhaSemPet.find('.check-pet-item').first().focus();
+            return;
+        }
+
         _vendaEmAndamento = true;
         const $btnSubmit = $(this).find('button[type="submit"]');
         $btnSubmit.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Salvando...');
@@ -1497,6 +1527,30 @@ $(document).ready(function() {
 
     $(document).on('input change', '.qtd-item, .desconto-item', function() {
         recalcularLinha($(this).closest('.item-venda-linha'));
+    });
+
+    // Marcar/desmarcar um pet muda o valor da linha: o mesmo procedimento em
+    // 2 animais custa 2 vezes, então o subtotal recalcula na hora.
+    $(document).on('change', '.check-pet-item', function() {
+        recalcularLinha($(this).closest('.item-venda-linha'));
+    });
+
+    $(document).on('click', '.marcar-todos-pets', function() {
+        const $linha = $(this).closest('.item-venda-linha');
+        $linha.find('.check-pet-item').prop('checked', true);
+        recalcularLinha($linha);
+    });
+
+    // "Só o principal": deixa marcado apenas o pet da ficha aberta
+    $(document).on('click', '.desmarcar-todos-pets', function() {
+        const $linha = $(this).closest('.item-venda-linha');
+        const principal = String($('#pets-venda-bloco').data('pet-id'));
+
+        $linha.find('.check-pet-item').each(function() {
+            $(this).prop('checked', String($(this).val()) === principal);
+        });
+
+        recalcularLinha($linha);
     });
 
     $(".btn-editar-venda").on("click", function() {
@@ -1633,12 +1687,53 @@ $(document).ready(function() {
 // ── Pets vinculados à venda (itens por pet) ──────────────────────────────────
 let petsIncluidosVenda = [];
 
+function escaparHtmlVenda(texto) {
+    return String(texto == null ? '' : texto)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 window.opcoesPetsVenda = function (selectedId) {
     return petsIncluidosVenda.map(function (p) {
         const sel = (selectedId && String(selectedId) === String(p.id)) ? ' selected' : '';
-        return '<option value="' + p.id + '"' + sel + '>' + p.nome + '</option>';
+        return '<option value="' + p.id + '"' + sel + '>' + escaparHtmlVenda(p.nome) + '</option>';
     }).join('');
 };
+
+// ── Checkboxes de pets de UMA linha de item ──────────────────────────────────
+// Um mesmo procedimento (coleta de sangue, exame de fezes) costuma ser feito em
+// todos os pets que o tutor trouxe. Antes cada linha só aceitava UM pet, então
+// o item era cobrado uma vez e o total no PDV saía menor do que o realmente
+// executado — era preciso duplicar a linha manualmente. Agora a linha aceita
+// vários pets (itens[i][pets][]) e o backend gera um lançamento por pet.
+window.checksPetsVenda = function (index, selecionados) {
+    const marcados = (Array.isArray(selecionados) && selecionados.length)
+        ? selecionados.map(String)
+        : [String($('#pets-venda-bloco').data('pet-id'))]; // por padrão, o pet da ficha
+
+    return petsIncluidosVenda.map(function (p) {
+        const uid = 'item-' + index + '-pet-' + p.id;
+        const checked = marcados.indexOf(String(p.id)) !== -1 ? ' checked' : '';
+
+        return '<div class="form-check form-check-inline me-2">' +
+            '<input class="form-check-input check-pet-item" type="checkbox" ' +
+            'name="itens[' + index + '][pets][]" value="' + p.id + '" id="' + uid + '"' + checked + '>' +
+            '<label class="form-check-label" for="' + uid + '">' + escaparHtmlVenda(p.nome) + '</label>' +
+            '</div>';
+    }).join('');
+};
+
+/** Quantos pets estão marcados nesta linha (0 = nenhum, bloqueia o envio). */
+function petsMarcadosNaLinha($linha) {
+    const $checks = $linha.find('.check-pet-item');
+
+    // Linha renderizada no formato antigo (select único) → sempre 1 pet
+    if (!$checks.length) {
+        return 1;
+    }
+
+    return $checks.filter(':checked').length;
+}
 
 function renderChipsPetsVenda() {
     const $chips = $('#pets-incluidos-chips');
@@ -1657,6 +1752,20 @@ function atualizarSelectsPetItens() {
     $('#servicos-container .select-pet-item').each(function () {
         const atual = $(this).val();
         $(this).html(window.opcoesPetsVenda(atual));
+    });
+
+    // Repopula os checkboxes de pet preservando o que já estava marcado.
+    // Um pet removido da venda some da lista e, por consequência, do item.
+    $('#servicos-container .item-venda-linha').each(function () {
+        const $linha = $(this);
+        const $grupo = $linha.find('.pets-item-checks');
+        if (!$grupo.length) return;
+
+        const marcados = $grupo.find('.check-pet-item:checked')
+            .map(function () { return $(this).val(); }).get();
+
+        $grupo.html(window.checksPetsVenda($linha.attr('data-index'), marcados));
+        recalcularLinha($linha);
     });
 }
 
@@ -1733,10 +1842,18 @@ function montarLinhaItem(index) {
             </select>
         </div>
         <div class="col-12 mb-2 col-pet-item">
-            <label class="form-label">Pet</label>
-            <select class="form-select select-pet-item" name="itens[${index}][pet_id]">
-                ${window.opcoesPetsVenda ? window.opcoesPetsVenda() : ''}
-            </select>
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <label class="form-label mb-1">Pets que receberam este item*</label>
+                <div class="mb-1">
+                    <button type="button" class="btn btn-link btn-sm p-0 marcar-todos-pets">Marcar todos</button>
+                    <span class="text-muted mx-1">·</span>
+                    <button type="button" class="btn btn-link btn-sm p-0 desmarcar-todos-pets">Só o principal</button>
+                </div>
+            </div>
+            <div class="pets-item-checks d-flex flex-wrap">
+                ${window.checksPetsVenda ? window.checksPetsVenda(index) : ''}
+            </div>
+            <small class="text-muted ajuda-pets"></small>
         </div>
         <div class="col-6">
             <label class="form-label label-quantidade">Quantidade</label>
@@ -1744,7 +1861,7 @@ function montarLinhaItem(index) {
             <small class="text-muted ajuda-quantidade"></small>
         </div>
         <div class="col-6">
-            <label class="form-label">Desconto (R$)</label>
+            <label class="form-label">Desconto (R$) <span class="text-muted">por pet</span></label>
             <input type="number" class="form-control desconto-item" name="itens[${index}][desconto]" step="0.01" min="0" value="0">
         </div>
     </div>
@@ -1762,6 +1879,15 @@ function reindexarLinhas() {
         $(this).find('.qtd-item').attr('name', `itens[${i}][quantidade]`);
         $(this).find('.desconto-item').attr('name', `itens[${i}][desconto]`);
         $(this).find('.select-pet-item').attr('name', `itens[${i}][pet_id]`);
+
+        // Os checkboxes de pet também carregam o índice — sem reindexar, remover
+        // uma linha do meio faria dois itens dividirem o mesmo índice e o PHP
+        // sobrescreveria a lista de pets de um deles.
+        $(this).find('.check-pet-item').each(function () {
+            const uid = `item-${i}-pet-${$(this).val()}`;
+            $(this).attr('name', `itens[${i}][pets][]`).attr('id', uid);
+            $(this).next('label').attr('for', uid);
+        });
     });
 }
 
@@ -1771,21 +1897,35 @@ function recalcularLinha($linha) {
     const $select = $linha.find('.select-servico');
     const valorUnit = parseFloat($select.find('option:selected').data('valor')) || 0;
     const qtd = Math.max(1, parseInt($linha.find('.qtd-item').val(), 10) || 1);
-    const bruto = valorUnit * qtd;
+    const pets = petsMarcadosNaLinha($linha);
 
-    // desconto nunca pode passar do valor bruto da linha
+    // Valor de um pet: quantidade × unitário. O desconto é POR PET, porque o
+    // backend replica a linha para cada pet marcado (um venda_item por pet).
+    const brutoPorPet = valorUnit * qtd;
+
     let desconto = parseFloat($linha.find('.desconto-item').val()) || 0;
     if (desconto < 0) desconto = 0;
-    if (desconto > bruto) {
-        desconto = bruto;
+    if (desconto > brutoPorPet) {
+        desconto = brutoPorPet;
         $linha.find('.desconto-item').val(desconto.toFixed(2));
     }
 
-    const subtotal = bruto - desconto;
-    $linha.find('.linha-subtotal').text(
-        `Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')}` +
-        (qtd > 1 ? ` (${qtd} × R$ ${valorUnit.toFixed(2).replace('.', ',')})` : '')
-    );
+    const subtotal = Math.max(0, (brutoPorPet - desconto) * pets);
+
+    if (pets === 0) {
+        $linha.find('.linha-subtotal').html('<span class="text-danger">Marque ao menos um pet para este item</span>');
+        $linha.find('.ajuda-pets').text('');
+    } else {
+        let detalhe = '';
+        if (qtd > 1 || pets > 1) {
+            detalhe = ` (${qtd} × R$ ${valorUnit.toFixed(2).replace('.', ',')}` +
+                (pets > 1 ? ` × ${pets} pets` : '') + ')';
+        }
+        $linha.find('.linha-subtotal').text(`Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')}${detalhe}`);
+        $linha.find('.ajuda-pets').text(
+            pets > 1 ? `Este item será lançado ${pets} vezes — uma para cada pet marcado.` : ''
+        );
+    }
 
     calcularTotal();
     return subtotal;
@@ -1801,12 +1941,15 @@ function calcularTotal() {
 
         const valorUnit = parseFloat($select.find('option:selected').data('valor')) || 0;
         const qtd = Math.max(1, parseInt($linha.find('.qtd-item').val(), 10) || 1);
-        const bruto = valorUnit * qtd;
+        const pets = petsMarcadosNaLinha($linha);
+        const brutoPorPet = valorUnit * qtd;
+
         let desconto = parseFloat($linha.find('.desconto-item').val()) || 0;
         if (desconto < 0) desconto = 0;
-        if (desconto > bruto) desconto = bruto;
+        if (desconto > brutoPorPet) desconto = brutoPorPet;
 
-        total += (bruto - desconto);
+        // × pets: o mesmo procedimento feito em 2 animais custa 2 vezes
+        total += Math.max(0, (brutoPorPet - desconto) * pets);
     });
 
     $('#total-servicos').text(total.toFixed(2).replace('.', ','));

@@ -109,6 +109,18 @@ class VendaController extends DefaultController
             $valorTotal = 0.0;
             $itensGravados = 0;
 
+            // Pets efetivamente atendidos nesta venda. O normalizer já expandiu
+            // cada item marcado para vários pets em uma linha por pet, então
+            // basta contar os distintos. Com mais de um pet, TODOS os itens vão
+            // prefixados com o nome do pet — inclusive os do pet da ficha —
+            // senão fica impossível saber, no PDV, qual linha é de qual animal.
+            $petsDaVenda = array_values(array_unique(array_filter(
+                array_map(fn(array $l): ?int => $l['pet_id'] ?? null, $linhas),
+                fn(?int $id): bool => $id !== null
+            )));
+            $vendaMultiPet = count($petsDaVenda) > 1;
+            $petNomesCache = [];
+
             foreach ($linhas as $linha) {
                 $tipo   = $linha['tipo'];
                 $realId = $linha['id'];
@@ -144,9 +156,11 @@ class VendaController extends DefaultController
 
                 // Vincula o item a um pet específico do mesmo tutor (quando informado),
                 // prefixando o nome com o pet — unifica vários pets numa venda só.
+                // Em venda com 2+ pets o prefixo vale para todos os itens; com um
+                // pet só, mantém o comportamento antigo (prefixa apenas quando o
+                // item é de outro pet que não o da ficha aberta).
                 $petDoItem = $linha['pet_id'] ?? null;
-                if ($petDoItem && $petDoItem !== (int) $petIdFromRequest) {
-                    if (!isset($petNomesCache)) { $petNomesCache = []; }
+                if ($petDoItem && ($vendaMultiPet || $petDoItem !== (int) $petIdFromRequest)) {
                     if (!array_key_exists($petDoItem, $petNomesCache)) {
                         $petNomesCache[$petDoItem] = $conn->fetchOne(
                             'SELECT nome FROM pet WHERE id = :id AND estabelecimento_id = :estab',
@@ -262,6 +276,9 @@ class VendaController extends DefaultController
                 'consulta_id' => $consultaId,
                 'total'       => $valorTotal,
                 'itens'       => $itensGravados,
+                // Quantos pets do tutor entraram nesta venda — permite ao
+                // front conferir que o lançamento pegou todos os animais.
+                'pets'        => max(1, count($petsDaVenda)),
             ]);
 
         } catch (\Throwable $e) {
