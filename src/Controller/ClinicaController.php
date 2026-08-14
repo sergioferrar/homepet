@@ -31,15 +31,16 @@ use App\Repository\PetRepository;
 
 
 /**
- * @
+ * @Route("dashboard/clinica")
  */
 class ClinicaController extends DefaultController
 {
+
+
     /**
-     * @
+     * @Route("/pet/{petId}/fotos/nova", name="clinica_novas_fotos", methods={"GET", "POST"})
      */
-    #[Route('dashboard/clinica/pet/{petId}/fotos/nova', name: 'clinica_novas_fotos', methods: "{GET, POST}")]
-    public function novasFotos(int $petId): Response
+    public function novasFotos(Request $request, int $petId): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -47,10 +48,10 @@ class ClinicaController extends DefaultController
         // Lógica para fotos
         return $this->render('clinica/placeholder.html.twig', ['pet' => $pet, 'feature' => 'Fotos']);
     }
+
     /**
-     * @
+     * @Route("/pet/{petId}/vacina/nova", name="clinica_nova_vacina", methods={"GET", "POST"})
      */
-    #[Route('dashboard/clinica/pet/{petId}/vacina/nova', name: 'clinica_nova_vacina', methods: "{GET, POST}")]
     // public function novaVacina(Request $request, int $petId): Response
     // {
     //     $this->switchDB();
@@ -92,9 +93,8 @@ class ClinicaController extends DefaultController
 
 
     /**
-     * @
+     * @Route("/api/pets/{clienteId}", name="clinica_api_pets", methods={"GET"})
      */
-    #[Route('dashboard/clinica/api/pets/{clienteId}', name: 'clinica_api_pets', methods: "{GET}")]
     public function apiPetsPorCliente(int $clienteId): Response
     {
         $this->switchDB();
@@ -104,10 +104,10 @@ class ClinicaController extends DefaultController
 
         return $this->json(array_map(fn($pet) => ['id' => $pet['id'], 'nome' => $pet['nome']], $pets));
     }
+
     /**
-     * @
+     * @Route("/notificacoes", name="clinica_notificacoes", methods={"GET"})
      */
-    #[Route('dashboard/clinica/notificacoes', name: 'clinica_notificacoes', methods: "{GET}")]
     public function notificacoes(EntityManagerInterface $em): JsonResponse
     {
         $this->switchDB();
@@ -172,10 +172,10 @@ class ClinicaController extends DefaultController
             return new JsonResponse(['notificacoes' => [], 'error' => $e->getMessage()]);
         }
     }
+
     /**
-     * @
+     * @Route("/medicamentos", name="clinica_medicamentos", methods={"GET","POST"})
      */
-    #[Route('dashboard/clinica/medicamentos', name: 'clinica_medicamentos', methods: "{GET,POST}")]
     public function medicamentos(Request $request, EntityManagerInterface $em): Response
     {
         $this->switchDB();
@@ -202,10 +202,10 @@ class ClinicaController extends DefaultController
             'medicamentos' => $medicamentos,
         ]);
     }
+
     /**
-     * @
+     * @Route("/medicamentos/{id}/editar", name="clinica_medicamento_editar", methods={"GET","POST"})
      */
-    #[Route('dashboard/clinica/medicamentos/{id}/editar', name: 'clinica_medicamento_editar', methods: "{GET,POST}")]
     public function editarMedicamento(int $id, Request $request, EntityManagerInterface $em): Response
     {
         $this->switchDB();
@@ -230,10 +230,10 @@ class ClinicaController extends DefaultController
             'medicamento' => $medicamento,
         ]);
     }
+
     /**
-     * @
+     * @Route("/medicamentos/{id}/excluir", name="clinica_medicamento_excluir", methods={"POST"})
      */
-    #[Route('dashboard/clinica/medicamentos/{id}/excluir', name: 'clinica_medicamento_excluir')]
     public function excluirMedicamento(int $id, EntityManagerInterface $em): Response
     {
         $this->switchDB();
@@ -248,9 +248,8 @@ class ClinicaController extends DefaultController
         return $this->redirectToRoute('clinica_medicamentos');
     }
     /**
-     * @
+     * @Route("/calendario/geral", name="clinica_calendario_geral", methods={"GET"})
      */
-    #[Route('dashboard/clinica/calendario/geral', name: 'clinica_calendario_geral', methods: "{GET}")]
     public function calendarioGeral(EntityManagerInterface $em): Response
     {
         $this->switchDB();
@@ -298,4 +297,5 @@ class ClinicaController extends DefaultController
             'eventos' => $eventos,
         ]);
     }
+
 }

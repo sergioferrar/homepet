@@ -15,10 +15,14 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-
+/**
+ * @Route("dashboard/clinica")
+ */
 class VendaController extends DefaultController
 {
-    #[Route('dashboard/clinica/pet/{petId}/venda/concluir', name: 'clinica_concluir_venda')]
+    /**
+     * @Route("/pet/{petId}/venda/concluir", name="clinica_concluir_venda", methods={"POST"})
+     */
     public function concluirVenda(Request $request, int $petId): JsonResponse
     {
         $this->switchDB();
@@ -267,7 +271,7 @@ class VendaController extends DefaultController
             // Contexto suficiente para achar a venda problemática no log
             $this->logger->error('Erro ao concluir venda', [
                 'erro'        => $e->getMessage(),
-                'excecao'     => $e::class,
+                'excecao'     => get_class($e),
                 'arquivo'     => $e->getFile() . ':' . $e->getLine(),
                 'base_id'     => $baseId,
                 'pet_id'      => $request->get('pet_id'),
@@ -281,6 +285,7 @@ class VendaController extends DefaultController
             ], 500);
         }
     }
+
     /**
      * Normaliza os itens do formulário em linhas fechadas
      * (tipo, id, quantidade, desconto).
@@ -296,15 +301,16 @@ class VendaController extends DefaultController
             array_merge($request->query->all(), $request->request->all())
         );
     }
+
     private function normalizer(): VendaItemNormalizer
     {
         return new VendaItemNormalizer($this->logger);
     }
+
     /**
-     * @
+     * @Route("/pet/{petId}/venda/{id}/inativar", name="clinica_inativar_venda", methods={"POST"})
      */
-    #[Route('dashboard/clinica/pet/{petId}/venda/{id}/inativar', name: 'clinica_inativar_venda')]
-    public function inativarVenda(int $petId, int $id): Response
+    public function inativarVenda(Request $request, int $petId, int $id): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -327,10 +333,10 @@ class VendaController extends DefaultController
             return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
         }
     }
+
     /**
-     * @
+     * @Route("/clinica/pet/{petId}/venda/{id}/editar", name="clinica_editar_venda", methods={"POST"})
      */
-    #[Route('dashboard/clinica/clinica/pet/{petId}/venda/{id}/editar', name: 'clinica_editar_venda')]
     public function editarVenda(Request $request, int $petId, int $id): JsonResponse
     {
         try {
@@ -340,7 +346,7 @@ class VendaController extends DefaultController
 
             $financeiro = $financeiroRepository->findFinanceiro($baseId, $id);
             if (!$financeiro) {
-                return new JsonResponse(['status' => 'error', 'mensagem' => 'Venda não encontrada.'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
+                return new JsonResponse(['status' => 'error', 'mensagem' => 'Venda não encontrada.'], 404);
             }
 
             $financeiro->setDescricao($request->get('descricao'));
@@ -357,7 +363,7 @@ class VendaController extends DefaultController
 
             return new JsonResponse(['status' => 'success', 'mensagem' => 'Venda atualizada com sucesso.']);
         } catch (\Throwable $e) {
-            return new JsonResponse(['status' => 'error', 'mensagem' => 'Erro ao editar venda: ' . $e->getMessage()], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['status' => 'error', 'mensagem' => 'Erro ao editar venda: ' . $e->getMessage()], 500);
         }
     }
 }

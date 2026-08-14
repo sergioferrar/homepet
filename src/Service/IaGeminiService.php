@@ -3,8 +3,11 @@ namespace App\Service;
 
 class IaGeminiService
 {
-    public function __construct(private readonly string $apiKey)
+    private $apiKey;
+
+    public function __construct(string $apiKey)
     {
+        $this->apiKey = $apiKey;
     }
 
     public function conversar(string $pergunta, string $contexto = ''): string

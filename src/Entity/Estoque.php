@@ -6,84 +6,127 @@ use App\Repository\EstoqueRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
-#[ORM\Table(name: 'estoque')]
-#[ORM\Entity(repositoryClass: EstoqueRepository::class)]
-#[ORM\HasLifecycleCallbacks]
-class Estoque implements \Stringable
+/**
+ * @ORM\Entity(repositoryClass=EstoqueRepository::class)
+ * @ORM\Table(name="estoque")
+ * @ORM\HasLifecycleCallbacks()
+ */
+class Estoque
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private ?int $id = null;
 
-    #[ORM\Column(type: 'integer', nullable: true, name: 'produtoId')]
+    /**
+     * @ORM\Column(type="integer", nullable=true, name="produtoId")
+     */
     private ?int $produtoId = null;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private ?int $estabelecimentoId = null;
 
-    #[ORM\Column(type: 'string', length: 45, nullable: true)]
+    /**
+     * @ORM\Column(type="string", length=45, nullable=true)
+     */
     private ?string $localEstoqueId = null;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
-    #[Assert\PositiveOrZero(message: 'A quantidade atual não pode ser negativa')]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @Assert\PositiveOrZero(message="A quantidade atual não pode ser negativa")
+     */
     private ?int $quantidadeAtual = 0;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
-    #[Assert\PositiveOrZero(message: 'A quantidade reservada não pode ser negativa')]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @Assert\PositiveOrZero(message="A quantidade reservada não pode ser negativa")
+     */
     private ?int $quantidadeReserva = 0;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
-    #[Assert\PositiveOrZero(message: 'A quantidade disponível não pode ser negativa')]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @Assert\PositiveOrZero(message="A quantidade disponível não pode ser negativa")
+     */
     private ?int $quantidadeDisponivel = 0;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
-    #[Assert\PositiveOrZero(message: 'O estoque mínimo não pode ser negativo')]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @Assert\PositiveOrZero(message="O estoque mínimo não pode ser negativo")
+     */
     private ?int $estoqueMinimo = 0;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
-    #[Assert\PositiveOrZero(message: 'O estoque máximo não pode ser negativo')]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @Assert\PositiveOrZero(message="O estoque máximo não pode ser negativo")
+     */
     private ?int $etoqueMaximo = 0;
 
-    #[ORM\Column(type: 'float', nullable: true)]
-    #[Assert\PositiveOrZero(message: 'O custo médio não pode ser negativo')]
+    /**
+     * @ORM\Column(type="float", nullable=true)
+     * @Assert\PositiveOrZero(message="O custo médio não pode ser negativo")
+     */
     private ?float $custoMedio = 0.0;
 
-    #[ORM\Column(type: 'float', nullable: true)]
-    #[Assert\PositiveOrZero(message: 'O custo da última compra não pode ser negativo')]
+    /**
+     * @ORM\Column(type="float", nullable=true)
+     * @Assert\PositiveOrZero(message="O custo da última compra não pode ser negativo")
+     */
     private ?float $custoUltimaCompra = 0.0;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private ?int $refrigerado = 0;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private ?int $controlaLote = 0;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private ?int $controlaValidade = 0;
 
-    #[ORM\Column(type: 'string', length: 20, nullable: true)]
-    #[Assert\Choice(choices: ['ativo', 'inativo', 'suspenso'], message: 'Status inválido')]
+    /**
+     * @ORM\Column(type="string", length=20, nullable=true)
+     * @Assert\Choice(choices={"ativo", "inativo", "suspenso"}, message="Status inválido")
+     */
     private ?string $status = 'ativo';
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
     private ?\DateTimeInterface $createdAt = null;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
     private ?\DateTimeInterface $updatedAt = null;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private ?int $updatedBy = null;
 
     // ==================== LIFECYCLE CALLBACKS ====================
-    #[ORM\PrePersist]
+
+    /**
+     * @ORM\PrePersist
+     */
     public function onPrePersist(): void
     {
         $this->createdAt = new \DateTime();
         $this->updatedAt = new \DateTime();
     }
 
-    #[ORM\PreUpdate]
+    /**
+     * @ORM\PreUpdate
+     */
     public function onPreUpdate(): void
     {
         $this->updatedAt = new \DateTime();

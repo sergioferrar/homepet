@@ -15,14 +15,13 @@ use App\Entity\Servico;
 use App\Entity\Pet;
 
 /**
- * @
+ * @Route("dashboard")
  */
 class OrcamentoController extends DefaultController
 {
     /**
-     * @
+     * @Route("/orcamento", name="orcamento_index")
      */
-    #[Route('dashboard/orcamento', name: 'orcamento_index')]
     public function index(Request $request, EntityManagerInterface $em): Response
     {
         $this->switchDB();
@@ -56,10 +55,10 @@ class OrcamentoController extends DefaultController
             'busca' => $busca
         ]);
     }
+
     /**
-     * @
+     * @Route("/orcamento/novo", name="orcamento_novo")
      */
-    #[Route('dashboard/orcamento/novo', name: 'orcamento_novo')]
     public function novo(Request $request, EntityManagerInterface $em): Response
     {
         $this->switchDB();
@@ -117,10 +116,10 @@ class OrcamentoController extends DefaultController
             'servicos' => $servicos
         ]);
     }
+
     /**
-     * @
+     * @Route("/orcamento/salvar", name="orcamento_salvar", methods={"POST"})
      */
-    #[Route('dashboard/orcamento/salvar', name: 'orcamento_salvar')]
     public function salvar(Request $request, EntityManagerInterface $em): JsonResponse
     {
         try {
@@ -174,13 +173,13 @@ class OrcamentoController extends DefaultController
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Erro ao criar orçamento: ' . $e->getMessage()
-            ], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], 500);
         }
     }
+
     /**
-     * @
+     * @Route("/orcamento/{id}", name="orcamento_visualizar")
      */
-    #[Route('dashboard/orcamento/{id}', name: 'orcamento_visualizar')]
     public function visualizar(int $id, EntityManagerInterface $em): Response
     {
         $this->switchDB();
@@ -200,10 +199,10 @@ class OrcamentoController extends DefaultController
             'itens' => $itens
         ]);
     }
+
     /**
-     * @
+     * @Route("/orcamento/{id}/status", name="orcamento_status", methods={"POST"})
      */
-    #[Route('dashboard/orcamento/{id}/status', name: 'orcamento_status')]
     public function alterarStatus(int $id, Request $request, EntityManagerInterface $em): JsonResponse
     {
         try {
@@ -212,7 +211,7 @@ class OrcamentoController extends DefaultController
             $orcamento = $em->getRepository(Orcamento::class)->find($id);
 
             if (!$orcamento) {
-                return new JsonResponse(['success' => false, 'message' => 'Orçamento não encontrado'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
+                return new JsonResponse(['success' => false, 'message' => 'Orçamento não encontrado'], 404);
             }
 
             $novoStatus = $request->request->get('status');
@@ -229,13 +228,13 @@ class OrcamentoController extends DefaultController
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Erro ao atualizar status: ' . $e->getMessage()
-            ], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], 500);
         }
     }
+
     /**
-     * @
+     * @Route("/orcamento/{id}/converter", name="orcamento_converter", methods={"POST"})
      */
-    #[Route('dashboard/orcamento/{id}/converter', name: 'orcamento_converter')]
     public function converter(int $id, EntityManagerInterface $em): JsonResponse
     {
         try {
@@ -244,7 +243,7 @@ class OrcamentoController extends DefaultController
             $orcamento = $em->getRepository(Orcamento::class)->find($id);
 
             if (!$orcamento) {
-                return new JsonResponse(['success' => false, 'message' => 'Orçamento não encontrado'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
+                return new JsonResponse(['success' => false, 'message' => 'Orçamento não encontrado'], 404);
             }
 
             // Aqui você pode implementar a lógica para converter em venda
@@ -261,13 +260,13 @@ class OrcamentoController extends DefaultController
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Erro ao converter orçamento: ' . $e->getMessage()
-            ], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], 500);
         }
     }
+
     /**
-     * @
+     * @Route("/orcamento/api/cliente/{id}/pets", name="api_cliente_pets")
      */
-    #[Route('dashboard/orcamento/api/cliente/{id}/pets', name: 'api_cliente_pets')]
     public function getPetsCliente(int $id, EntityManagerInterface $em): JsonResponse
     {
         try {
@@ -302,7 +301,7 @@ class OrcamentoController extends DefaultController
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Erro ao buscar pets: ' . $e->getMessage()
-            ], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], 500);
         }
     }
 }

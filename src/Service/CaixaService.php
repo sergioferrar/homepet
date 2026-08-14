@@ -14,8 +14,18 @@ use Psr\Log\LoggerInterface;
  */
 class CaixaService
 {
-    public function __construct(private readonly EntityManagerInterface $em, private readonly TenantContext $tenantContext, private readonly LoggerInterface $logger)
-    {
+    private EntityManagerInterface $em;
+    private TenantContext $tenantContext;
+    private LoggerInterface $logger;
+
+    public function __construct(
+        EntityManagerInterface $em,
+        TenantContext $tenantContext,
+        LoggerInterface $logger
+    ) {
+        $this->em = $em;
+        $this->tenantContext = $tenantContext;
+        $this->logger = $logger;
     }
 
     /**
@@ -88,7 +98,7 @@ class CaixaService
     public function calcularSaldoDoDia(): float
     {
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
-        [$inicioDia, $fimDia] = $this->getIntervaloHoje();
+        list($inicioDia, $fimDia) = $this->getIntervaloHoje();
 
         $saldo = 0;
 
@@ -133,7 +143,7 @@ class CaixaService
     public function getResumoDoDia(): array
     {
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
-        [$inicioDia, $fimDia] = $this->getIntervaloHoje();
+        list($inicioDia, $fimDia) = $this->getIntervaloHoje();
 
         $entradas = 0;
         $saidas = 0;

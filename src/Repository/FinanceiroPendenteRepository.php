@@ -396,7 +396,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
      */
     public function marcarPagos(int $baseId, array $ids): void
     {
-        $ids = array_values(array_filter(array_map(intval(...), $ids), fn($v) => $v > 0));
+        $ids = array_values(array_filter(array_map('intval', $ids), fn($v) => $v > 0));
         if (empty($ids)) {
             return;
         }

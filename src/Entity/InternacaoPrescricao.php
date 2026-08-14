@@ -4,39 +4,47 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Table(name: 'internacao_prescricao')]
-#[ORM\Entity]
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="internacao_prescricao")
+ */
 class InternacaoPrescricao
 {
-    #[ORM\Id]
+    /** @ORM\Id @ORM\GeneratedValue @ORM\Column(type="integer") */
     private $id;
 
-    #[ORM\Column(type: 'integer', name: 'internacao_id')]
+    /** @ORM\Column(type="integer", name="internacao_id") */
     private $internacaoId;
 
-    #[ORM\JoinColumn(name: 'medicamento_id', referencedColumnName: 'id', nullable: false)]
-    #[ORM\ManyToOne(targetEntity: Medicamento::class)]
+    /**
+     * @ORM\ManyToOne(targetEntity=Medicamento::class)
+     * @ORM\JoinColumn(name="medicamento_id", referencedColumnName="id", nullable=false)
+     */
     private $medicamento;
 
-    #[ORM\Column(type: 'text')]
+    /** @ORM\Column(type="text") */
     private $descricao;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    /** @ORM\Column(type="string", length=255, nullable=true) */
     private $dose;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    /** @ORM\Column(type="string", length=255, nullable=true) */
     private $frequencia;
 
-    #[ORM\Column(type: 'integer', name: 'frequencia_horas')]
+    /**
+     * @ORM\Column(type="integer", name="frequencia_horas")
+     */
     private $frequenciaHoras = 6;
 
-    #[ORM\Column(type: 'integer', name: 'duracao_dias')]
+    /**
+     * @ORM\Column(type="integer", name="duracao_dias")
+     */
     private $duracaoDias = 1;
 
-    #[ORM\Column(type: 'datetime', name: 'data_hora')]
+    /** @ORM\Column(type="datetime", name="data_hora") */
     private $dataHora;
 
-    #[ORM\Column(type: 'datetime', name: 'criado_em')]
+    /** @ORM\Column(type="datetime", name="criado_em") */
     private $criadoEm;
 
     // --- GETTERS & SETTERS ---

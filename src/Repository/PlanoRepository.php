@@ -18,7 +18,7 @@ use Doctrine\Persistence\ManagerRegistry;
 class PlanoRepository extends ServiceEntityRepository
 {
     private $conn;
-    private readonly EntityManagerInterface $em;
+    private EntityManagerInterface $em;
 
     public function __construct(ManagerRegistry $registry)
     {

@@ -12,32 +12,36 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @
+ * @Route("/invoice")
  */
 class InvoiceController extends DefaultController
 {
+
+
     /**
-     * @
+     * @Route("/minhas", name="invoice_minhas")
      */
-    #[Route('/invoice/minhas', name: 'invoice_minhas')]
-    public function minhasInvoices(): Response
+    public function minhasInvoices(Request $request): Response
     {
         $user = $this->getUser();
         if (!$user) {
             return $this->redirectToRoute('app_login');
         }
+
         // Buscar estabelecimento do usuário
         $estabelecimentoId = $user->getPetshopId();
+        
         $invoices = $this->getRepositorio(\App\Entity\Fatura::class)->findByEstabelecimento($estabelecimentoId);
+
         return $this->render('invoice/minhas.html.twig', [
             'invoices' => $invoices,
         ]);
     }
+
     /**
-     * @
+     * @Route("/detalhes/{id}", name="invoice_detalhes")
      */
-    #[Route('/invoice/detalhes/{id}', name: 'invoice_detalhes')]
-    public function detalhes(int $id): Response
+    public function detalhes(Request $request, int $id): Response
     {
         $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($id);
         
@@ -55,11 +59,11 @@ class InvoiceController extends DefaultController
             'invoice' => $invoice,
         ]);
     }
+
     /**
-     * @
+     * @Route("/pagar/{id}", name="invoice_pagar")
      */
-    #[Route('/invoice/pagar/{id}', name: 'invoice_pagar')]
-    public function pagar(int $id, PaymentGatewayFactory $paymentGatewayFactory): Response
+    public function pagar(Request $request, int $id, PaymentGatewayFactory $paymentGatewayFactory): Response
     {
         $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($id);
         
@@ -111,11 +115,11 @@ class InvoiceController extends DefaultController
             return $this->redirectToRoute('invoice_detalhes', ['id' => $id]);
         }
     }
+
     /**
-     * @
+     * @Route("/renovar-assinatura", name="invoice_renovar_assinatura")
      */
-    #[Route('/invoice/renovar-assinatura', name: 'invoice_renovar_assinatura')]
-    public function renovarAssinatura(InvoiceService $invoiceService): Response
+    public function renovarAssinatura(Request $request, InvoiceService $invoiceService): Response
     {
         $user = $this->getUser();
         if (!$user) {
@@ -143,14 +147,14 @@ class InvoiceController extends DefaultController
         // Redirecionar para página de pagamento
         return $this->redirectToRoute('invoice_pagar', ['id' => $invoice->getId()]);
     }
+
     /**
-     * @
+     * @Route("/criar", name="invoice_criar", methods={"POST"})
      */
-    #[Route('/invoice/criar', name: 'invoice_criar')]
     public function criar(Request $request, InvoiceService $invoiceService): JsonResponse
     {
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
-            return new JsonResponse(['success' => false, 'error' => 'Acesso negado'], \Symfony\Component\HttpFoundation\Response::HTTP_FORBIDDEN);
+            return new JsonResponse(['success' => false, 'error' => 'Acesso negado'], 403);
         }
 
         $estabelecimentoId = $request->request->get('estabelecimento_id');
@@ -162,7 +166,7 @@ class InvoiceController extends DefaultController
         $estabelecimento = $estabelecimentoRepository->find($estabelecimentoId);
         
         if (!$estabelecimento) {
-            return new JsonResponse(['success' => false, 'error' => 'Estabelecimento não encontrado'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['success' => false, 'error' => 'Estabelecimento não encontrado'], 404);
         }
 
         try {
@@ -178,14 +182,14 @@ class InvoiceController extends DefaultController
                 'numero_invoice' => $invoice->getNumeroInvoice(),
             ]);
         } catch (\Exception $e) {
-            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
+
     /**
-     * @
+     * @Route("/download/{id}", name="invoice_download")
      */
-    #[Route('/invoice/download/{id}', name: 'invoice_download')]
-    public function download(int $id): Response
+    public function download(Request $request, int $id): Response
     {
         $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($id);
         

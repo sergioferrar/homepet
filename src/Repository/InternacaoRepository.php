@@ -52,7 +52,7 @@ class InternacaoRepository extends ServiceEntityRepository
         $dataInicio = new \DateTime($internacao['data_inicio']);
         $interval = (new \DateTime())->diff($dataInicio);
         $internacao['duracao'] = $interval->format('%a dias, %h horas e %i minutos');
-        $internacao['pet_idade'] ??= 'idade não informada';
+        $internacao['pet_idade'] = $internacao['pet_idade'] ?? 'idade não informada';
 
         return $internacao;
     }

@@ -8,12 +8,16 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+/**
+ * @Route("dashboard/veterinarios")
+ */
 class VeterinarioController extends DefaultController
 {
     /**
      * Listagem de veterinários do estabelecimento logado.
+     *
+     * @Route("", name="veterinario_index", methods={"GET"})
      */
-    #[Route('dashboard/veterinarios', name: 'veterinario_index', methods: "{GET}")]
     public function index(): Response
     {
         $this->switchDB();
@@ -26,10 +30,12 @@ class VeterinarioController extends DefaultController
             'veterinarios' => $veterinarios,
         ]);
     }
+
     /**
      * Formulário e processamento de cadastro de novo veterinário.
+     *
+     * @Route("/novo", name="veterinario_novo", methods={"GET", "POST"})
      */
-    #[Route('dashboard/veterinarios/novo', name: 'veterinario_novo', methods: "{GET, POST}")]
     public function novo(Request $request): Response
     {
         $this->switchDB();
@@ -62,10 +68,12 @@ class VeterinarioController extends DefaultController
             'titulo'      => 'Cadastrar Veterinário',
         ]);
     }
+
     /**
      * Formulário e processamento de edição de veterinário existente.
+     *
+     * @Route("/{id}/editar", name="veterinario_editar", methods={"GET", "POST"}, requirements={"id"="\d+"})
      */
-    #[Route('dashboard/veterinarios/{id}/editar', name: 'veterinario_editar', methods: "{GET, POST}")]
     public function editar(int $id, Request $request): Response
     {
         $this->switchDB();
@@ -109,13 +117,15 @@ class VeterinarioController extends DefaultController
             'titulo'      => 'Editar Veterinário',
         ]);
     }
+
     /**
      * Alterna o status (ativo ↔ inativo) de um veterinário.
      * Os dados NUNCA são excluídos do banco, apenas desabilitados,
      * para garantir a integridade dos relatórios e auditorias.
+     *
+     * @Route("/{id}/status", name="veterinario_status", methods={"POST"}, requirements={"id"="\d+"})
      */
-    #[Route('dashboard/veterinarios/{id}/status', name: 'veterinario_status')]
-    public function alterarStatus(int $id): JsonResponse
+    public function alterarStatus(int $id, Request $request): JsonResponse
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -123,12 +133,12 @@ class VeterinarioController extends DefaultController
 
         $dados = $repo->findByIdCompleto($id, $baseId);
         if (!$dados) {
-            return new JsonResponse(['success' => false, 'message' => 'Veterinário não encontrado.'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['success' => false, 'message' => 'Veterinário não encontrado.'], 404);
         }
 
         $veterinario = $this->getRepositorio(Veterinario::class)->find($id);
         if (!$veterinario) {
-            return new JsonResponse(['success' => false, 'message' => 'Veterinário não encontrado.'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['success' => false, 'message' => 'Veterinário não encontrado.'], 404);
         }
 
         $novoStatus = ($dados['status'] === 'ativo') ? 'inativo' : 'ativo';
@@ -143,7 +153,7 @@ class VeterinarioController extends DefaultController
                 'message'    => "Veterinário {$label} com sucesso.",
             ]);
         } catch (\Throwable $e) {
-            return new JsonResponse(['success' => false, 'message' => 'Erro ao alterar status: ' . $e->getMessage()], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['success' => false, 'message' => 'Erro ao alterar status: ' . $e->getMessage()], 500);
         }
     }
 }

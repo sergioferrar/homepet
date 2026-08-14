@@ -5,40 +5,62 @@ namespace App\Entity;
 use App\Repository\VacinaRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Table(name: 'vacina')]
-#[ORM\Entity(repositoryClass: VacinaRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass=VacinaRepository::class)
+ * @ORM\Table(name="vacina")
+ */
 class Vacina
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'id', type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(name="id", type="integer")
+     */
     private $id;
 
-    #[ORM\Column(name: 'estabelecimento_id', type: 'integer')]
+    /**
+     * @ORM\Column(name="estabelecimento_id", type="integer")
+     */
     private $estabelecimentoId;
 
-    #[ORM\Column(name: 'pet_id', type: 'integer')]
+    /**
+     * @ORM\Column(name="pet_id", type="integer")
+     */
     private $petId;
 
-    #[ORM\Column(name: 'tipo', type: 'string', length: 100)]
+    /**
+     * @ORM\Column(name="tipo", type="string", length=100)
+     */
     private $tipo;
 
-    #[ORM\Column(name: 'data_aplicacao', type: 'date')]
+    /**
+     * @ORM\Column(name="data_aplicacao", type="date")
+     */
     private $dataAplicacao;
 
-    #[ORM\Column(name: 'data_validade', type: 'date', nullable: true)]
+    /**
+     * @ORM\Column(name="data_validade", type="date", nullable=true)
+     */
     private $dataValidade;
 
-    #[ORM\Column(name: 'lote', type: 'string', length: 100, nullable: true)]
+    /**
+     * @ORM\Column(name="lote", type="string", length=100, nullable=true)
+     */
     private $lote;
 
-    #[ORM\Column(name: 'fabricante', type: 'string', length: 150, nullable: true)]
+    /**
+     * @ORM\Column(name="fabricante", type="string", length=150, nullable=true)
+     */
     private $fabricante;
 
-    #[ORM\Column(name: 'observacoes', type: 'text', nullable: true)]
+    /**
+     * @ORM\Column(name="observacoes", type="text", nullable=true)
+     */
     private $observacoes;
 
-    #[ORM\Column(name: 'veterinario_id', type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(name="veterinario_id", type="integer", nullable=true)
+     */
     private $veterinarioId;
 
 

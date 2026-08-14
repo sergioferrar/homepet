@@ -16,7 +16,9 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class DefinirSenhaController extends AbstractController
 {
-    #[Route("/usuario/definir-senha/{token}", name: "usuario_definir_senha", methods: "{GET}")]
+    /**
+     * @Route("/usuario/definir-senha/{token}", name="usuario_definir_senha", methods={"GET"})
+     */
     public function form(string $token, EntityManagerInterface $em): Response
     {
         $usuario = $em->getRepository(Usuario::class)->findOneBy(['tokenSenha' => $token]);
@@ -30,7 +32,9 @@ class DefinirSenhaController extends AbstractController
         ]);
     }
 
-    #[Route("/usuario/definir-senha/{token}", name: "usuario_definir_senha_salvar")]
+    /**
+     * @Route("/usuario/definir-senha/{token}", name="usuario_definir_senha_salvar", methods={"POST"})
+     */
     public function salvar(string $token, Request $request, EntityManagerInterface $em): Response
     {
         $usuario = $em->getRepository(Usuario::class)->findOneBy(['tokenSenha' => $token]);

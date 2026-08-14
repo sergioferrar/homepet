@@ -5,38 +5,44 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\EstoqueMovimentoRepository;
 
-#[ORM\Table(name: 'estoque_movimento')]
-#[ORM\Entity(repositoryClass: EstoqueMovimentoRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass=EstoqueMovimentoRepository::class)
+ * @ORM\Table(name="estoque_movimento")
+ */
 class EstoqueMovimento
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /** 
+     * @ORM\Id 
+     * @ORM\GeneratedValue 
+     * @ORM\Column(type="integer") 
+     */
     private $id;
 
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
-    #[ORM\ManyToOne(targetEntity: Produto::class)]
+    /**
+     * @ORM\ManyToOne(targetEntity=Produto::class)
+     * @ORM\JoinColumn(nullable=false, onDelete="CASCADE")
+     */
     private $produto;
 
-    #[ORM\Column(type: 'integer', name: 'estabelecimento_id')]
+    /** @ORM\Column(type="integer", name="estabelecimento_id") */
     private $estabelecimentoId;
 
-    #[ORM\Column(type: 'integer')]
+    /** @ORM\Column(type="integer") */
     private $quantidade;
 
-    /**
+    /** 
+     * @ORM\Column(type="string", length=20)
      * tipo: 'ENTRADA' | 'SAIDA' | 'AJUSTE'
      */
-    #[ORM\Column(type: 'string', length: 20)]
     private $tipo;
 
-    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    /** @ORM\Column(type="string", length=100, nullable=true) */
     private $origem;
 
-    #[ORM\Column(type: 'datetime')]
+    /** @ORM\Column(type="datetime") */
     private $data;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    /** @ORM\Column(type="text", nullable=true) */
     private $observacao;
 
     // --- Getters e Setters ---

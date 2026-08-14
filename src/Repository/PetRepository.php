@@ -167,7 +167,7 @@ class PetRepository extends ServiceEntityRepository
         ";
 
         $stmt = $this->conn->prepare($sql);
-        $resultSet = $stmt->executeQuery();
+        $resultSet = $stmt->executeQuery(['idBase' => $baseId]);
 
         return $resultSet->fetchAllAssociative();
     }

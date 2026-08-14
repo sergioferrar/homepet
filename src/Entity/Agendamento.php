@@ -5,51 +5,81 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\AgendamentoRepository;
 
-#[ORM\Entity(repositoryClass: AgendamentoRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass=AgendamentoRepository::class)
+ */
 class Agendamento
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'id', type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(name="id", type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
     private $data;
 
-    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    /**
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
     private $concluido = false;
 
-    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    /**
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
     private $pronto = false;
 
-    #[ORM\Column(type: 'datetime', nullable: true, name: 'horaChegada')]
+    /**
+     * @ORM\Column(type="datetime", nullable=true, name="horaChegada")
+     */
     private $horaChegada;
 
-    #[ORM\Column(type: 'string', length: 30, nullable: false, options: ['default' => 'pendente'])]
+    /**
+     * @ORM\Column(type="string", length=30, nullable=false, options={"default": "pendente"})
+     */
     private $metodo_pagamento = 'pendente';
 
-    #[ORM\Column(type: 'datetime', nullable: true, name: 'horaSaida')]
+    /**
+     * @ORM\Column(type="datetime", nullable=true, name="horaSaida")
+     */
     private $horaSaida;
 
-    #[ORM\Column(type: 'boolean', name: 'taxi_dog', options: ['default' => false])]
+    /**
+     * @ORM\Column(type="boolean", name="taxi_dog", options={"default": false})
+     */
     private bool $taxi_dog = false;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true, name: 'taxa_taxi_dog')]
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true, name="taxa_taxi_dog")
+     */
     private ?string $taxa_taxi_dog = null;
 
-    #[ORM\Column(type: 'boolean', name: 'pacote_semanal', options: ['default' => false])]
+    /**
+     * @ORM\Column(type="boolean", name="pacote_semanal", options={"default": false})
+     */
     private bool $pacote_semanal = false;
 
-    #[ORM\Column(type: 'boolean', name: 'pacote_quinzenal', options: ['default' => false])]
+    /**
+     * @ORM\Column(type="boolean", name="pacote_quinzenal", options={"default": false})
+     */
     private bool $pacote_quinzenal = false;
 
-    #[ORM\Column(type: 'integer', nullable: true, name: 'donoId')]
+    /**
+     * @ORM\Column(type="integer", nullable=true, name="donoId")
+     */
     private $donoId;
 
-    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'aguardando'])]
+    /**
+     * @ORM\Column(type="string", length=20, options={"default": "aguardando"})
+     */
     private ?string $status = 'aguardando';
 
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Column(type="integer")
+     */
     private $estabelecimentoId;
 
 

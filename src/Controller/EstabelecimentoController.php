@@ -13,14 +13,13 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
- * @
- */
+ * @Route("dashboard")
+ * */
 class EstabelecimentoController extends DefaultController
 {
     /**
-     * @
+     * @Route("/estabelecimento", name="app_estabelecimento")
      */
-    #[Route('dashboard/estabelecimento', name: 'app_estabelecimento')]
     public function index(): Response
     {
         if ($this->security->getUser()->getAccessLevel() == 'Admin') {
@@ -39,10 +38,11 @@ class EstabelecimentoController extends DefaultController
 
         return $this->render('estabelecimento/index.html.twig', $data);
     }
+
+
     /**
-     * @
+     * @Route("/estabelecimento/renovacao/{eid}", name="petshop_renovacao")
      */
-    #[Route('dashboard/estabelecimento/renovacao/{eid}', name: 'petshop_renovacao')]
     public function renovaAssinatura(Request $request): Response
     {
         $dataAtual = new \DateTime();
@@ -58,10 +58,10 @@ class EstabelecimentoController extends DefaultController
 
         return $this->redirectToRoute('app_estabelecimento');
     }
+
     /**
-     * @
+     * @Route("/estabelecimento/editar/{eid}", name="petshop_edit")
      */
-    #[Route('dashboard/estabelecimento/editar/{eid}', name: 'petshop_edit')]
     public function editar(Request $request): Response
     {
         $loja = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($request->get('eid'));

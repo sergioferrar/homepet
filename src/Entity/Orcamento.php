@@ -4,48 +4,77 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Table(name: 'orcamento')]
-#[ORM\Entity]
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="orcamento")
+ */
 class Orcamento
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Column(type="integer")
+     */
     private $estabelecimentoId;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private $clienteId;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private $clienteNome;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private $petId;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
     private $petNome;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2)
+     */
     private $valorTotal;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
+     */
     private $desconto;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2)
+     */
     private $valorFinal;
 
-    #[ORM\Column(type: 'string', length: 50)]
+    /**
+     * @ORM\Column(type="string", length=50)
+     */
     private $status = 'pendente'; // pendente, aprovado, recusado, convertido
-    #[ORM\Column(type: 'datetime')]
+
+    /**
+     * @ORM\Column(type="datetime")
+     */
     private $dataCriacao;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
     private $dataValidade;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
     private $observacoes;
 
     // Getters e Setters

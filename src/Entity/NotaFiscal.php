@@ -7,9 +7,10 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Registro local de cada NFS-e emitida via Asaas.
+ *
+ * @ORM\Entity(repositoryClass=NotaFiscalRepository::class)
+ * @ORM\Table(name="nota_fiscal")
  */
-#[ORM\Table(name: 'nota_fiscal')]
-#[ORM\Entity(repositoryClass: NotaFiscalRepository::class)]
 class NotaFiscal
 {
     // ── Status espelhados do Asaas ──────────────────────────────────
@@ -19,147 +20,176 @@ class NotaFiscal
     public const STATUS_CANCELADA   = 'CANCELED';
     public const STATUS_ERRO        = 'ERROR';
     public const STATUS_PENDENTE    = 'PENDING'; // aguardando envio
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
     /**
      * ID do estabelecimento emissor
+     *
+     * @ORM\Column(type="integer", name="estabelecimento_id")
      */
-    #[ORM\Column(type: 'integer', name: 'estabelecimento_id')]
     private int $estabelecimentoId;
 
     /**
      * Tipo de origem: 'venda' | 'servico' | 'avulsa'
+     *
+     * @ORM\Column(type="string", length=20)
      */
-    #[ORM\Column(type: 'string', length: 20)]
     private string $origem = 'venda';
 
     /**
      * ID da venda que gerou esta nota (nullable para avulsas)
+     *
+     * @ORM\Column(type="integer", nullable=true, name="venda_id")
      */
-    #[ORM\Column(type: 'integer', nullable: true, name: 'venda_id')]
     private ?int $vendaId = null;
 
     /**
      * ID do cliente local (tabela cliente)
+     *
+     * @ORM\Column(type="integer", nullable=true, name="cliente_id")
      */
-    #[ORM\Column(type: 'integer', nullable: true, name: 'cliente_id')]
     private ?int $clienteId = null;
 
     /**
      * Nome do cliente no momento da emissão (snapshot)
+     *
+     * @ORM\Column(type="string", length=255, name="cliente_nome")
      */
-    #[ORM\Column(type: 'string', length: 255, name: 'cliente_nome')]
     private string $clienteNome;
 
     /**
      * CPF/CNPJ do tomador do serviço
+     *
+     * @ORM\Column(type="string", length=20, nullable=true, name="cliente_cpf_cnpj")
      */
-    #[ORM\Column(type: 'string', length: 20, nullable: true, name: 'cliente_cpf_cnpj')]
     private ?string $clienteCpfCnpj = null;
 
     /**
      * ID do cliente no Asaas (cus_XXXXX) — sincronizado automaticamente
+     *
+     * @ORM\Column(type="string", length=100, nullable=true, name="asaas_customer_id")
      */
-    #[ORM\Column(type: 'string', length: 100, nullable: true, name: 'asaas_customer_id')]
     private ?string $asaasCustomerId = null;
 
     /**
      * ID da nota fiscal no Asaas (inv_XXXXX)
+     *
+     * @ORM\Column(type="string", length=100, nullable=true, name="asaas_invoice_id")
      */
-    #[ORM\Column(type: 'string', length: 100, nullable: true, name: 'asaas_invoice_id')]
     private ?string $asaasInvoiceId = null;
 
     /**
      * Valor bruto da nota
+     *
+     * @ORM\Column(type="decimal", precision=10, scale=2)
      */
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     private string $valor;
 
     /**
      * Deduções (descontos, etc.)
+     *
+     * @ORM\Column(type="decimal", precision=10, scale=2, options={"default":"0.00"})
      */
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, options: ['default' => '0.00'])]
     private string $deducoes = '0.00';
 
     /**
      * Status da nota no Asaas
+     *
+     * @ORM\Column(type="string", length=30)
      */
-    #[ORM\Column(type: 'string', length: 30)]
     private string $status = self::STATUS_PENDENTE;
 
     /**
      * Descrição do serviço prestado
+     *
+     * @ORM\Column(type="text", name="descricao_servico")
      */
-    #[ORM\Column(type: 'text', name: 'descricao_servico')]
     private string $descricaoServico;
 
     /**
      * Data de emissão / emissão efetiva (effectiveDate no Asaas)
+     *
+     * @ORM\Column(type="date", name="data_emissao")
      */
-    #[ORM\Column(type: 'date', name: 'data_emissao')]
     private \DateTimeInterface $dataEmissao;
 
     /**
      * Número da nota emitida pela prefeitura
+     *
+     * @ORM\Column(type="string", length=50, nullable=true, name="numero_nota")
      */
-    #[ORM\Column(type: 'string', length: 50, nullable: true, name: 'numero_nota')]
     private ?string $numeroNota = null;
 
     /**
      * Código RPS
+     *
+     * @ORM\Column(type="string", length=50, nullable=true, name="rps_numero")
      */
-    #[ORM\Column(type: 'string', length: 50, nullable: true, name: 'rps_numero')]
     private ?string $rpsNumero = null;
 
     /**
      * URL do PDF gerado pelo Asaas
+     *
+     * @ORM\Column(type="string", length=500, nullable=true, name="pdf_url")
      */
-    #[ORM\Column(type: 'string', length: 500, nullable: true, name: 'pdf_url')]
     private ?string $pdfUrl = null;
 
     /**
      * URL do XML da nota
+     *
+     * @ORM\Column(type="string", length=500, nullable=true, name="xml_url")
      */
-    #[ORM\Column(type: 'string', length: 500, nullable: true, name: 'xml_url')]
     private ?string $xmlUrl = null;
 
     /**
      * ID do serviço municipal no Asaas
+     *
+     * @ORM\Column(type="string", length=100, nullable=true, name="municipal_service_id")
      */
-    #[ORM\Column(type: 'string', length: 100, nullable: true, name: 'municipal_service_id')]
     private ?string $municipalServiceId = null;
 
     /**
      * Código do serviço municipal (alternativo ao ID)
+     *
+     * @ORM\Column(type="string", length=50, nullable=true, name="municipal_service_code")
      */
-    #[ORM\Column(type: 'string', length: 50, nullable: true, name: 'municipal_service_code')]
     private ?string $municipalServiceCode = null;
 
     /**
      * Nome do serviço municipal
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, name="municipal_service_name")
      */
-    #[ORM\Column(type: 'string', length: 255, nullable: true, name: 'municipal_service_name')]
     private ?string $municipalServiceName = null;
 
     /**
      * JSON com alíquotas de impostos { iss, cofins, csll, inss, ir, pis, retainIss }
+     *
+     * @ORM\Column(type="text", nullable=true, name="impostos_json")
      */
-    #[ORM\Column(type: 'text', nullable: true, name: 'impostos_json')]
     private ?string $impostosJson = null;
 
     /**
      * Observações internas / mensagem de erro do Asaas
+     *
+     * @ORM\Column(type="text", nullable=true)
      */
-    #[ORM\Column(type: 'text', nullable: true)]
     private ?string $observacoes = null;
 
-    #[ORM\Column(type: 'datetime', name: 'criado_em')]
-    private readonly \DateTimeInterface $criadoEm;
+    /**
+     * @ORM\Column(type="datetime", name="criado_em")
+     */
+    private \DateTimeInterface $criadoEm;
 
-    #[ORM\Column(type: 'datetime', nullable: true, name: 'atualizado_em')]
+    /**
+     * @ORM\Column(type="datetime", nullable=true, name="atualizado_em")
+     */
     private ?\DateTimeInterface $atualizadoEm = null;
 
     public function __construct()

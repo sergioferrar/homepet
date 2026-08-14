@@ -13,14 +13,15 @@ use App\Service\TempDirManager;
 use App\Service\DatabaseBkp;
 
 /**
- * @
- */ 
+ * @Route("dashboard/ia/assistente")
+ */
 class IaAssistenteController extends DefaultController
 {
+   
+
     /**
-     * @
+     * @Route("/executar", name="ia_assistente_executar", methods={"POST"})
      */
-    #[Route('dashboard/ia/assistente/executar', name: 'ia_assistente_executar')]
     public function executar(Request $request): JsonResponse
     {
         try {
@@ -68,9 +69,10 @@ class IaAssistenteController extends DefaultController
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Erro: ' . $e->getMessage() . "\n\nArquivo: " . $e->getFile() . ":" . $e->getLine()
-            ], \Symfony\Component\HttpFoundation\Response::HTTP_OK); // Mudei para 200 para o frontend processar
+            ], 200); // Mudei para 200 para o frontend processar
         }
     }
+
     private function processarRespostaFluxo(string $resposta, array $contexto, int $baseId, $session): array
     {
         $aguardando = $contexto['aguardando'] ?? '';
@@ -78,6 +80,7 @@ class IaAssistenteController extends DefaultController
 
         return $this->processarResposta($resposta, $aguardando, $dados, $baseId, $session);
     }
+
     private function processarResposta(string $resposta, string $etapa, array $dados, int $baseId, $session): array
     {
 
@@ -242,6 +245,7 @@ class IaAssistenteController extends DefaultController
                 return ['message' => '❌ Erro no fluxo de conversa.'];
         }
     }
+
     private function perguntarTaxiDog(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -255,6 +259,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function perguntarTaxaTaxi(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -268,6 +273,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function perguntarPagamento(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -281,6 +287,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function perguntarObservacoes(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -294,18 +301,20 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function identificarPagamento(string $resposta): string
     {
         $resposta = strtolower($resposta);
 
-        if (str_contains($resposta, 'dinheiro')) return 'dinheiro';
-        if (str_contains($resposta, 'pix')) return 'pix';
-        if (str_contains($resposta, 'credito') || str_contains($resposta, 'crédito')) return 'credito';
-        if (str_contains($resposta, 'debito') || str_contains($resposta, 'débito')) return 'debito';
-        if (str_contains($resposta, 'pendente') || str_contains($resposta, 'fiado')) return 'pendente';
+        if (strpos($resposta, 'dinheiro') !== false) return 'dinheiro';
+        if (strpos($resposta, 'pix') !== false) return 'pix';
+        if (strpos($resposta, 'credito') !== false || strpos($resposta, 'crédito') !== false) return 'credito';
+        if (strpos($resposta, 'debito') !== false || strpos($resposta, 'débito') !== false) return 'debito';
+        if (strpos($resposta, 'pendente') !== false || strpos($resposta, 'fiado') !== false) return 'pendente';
 
         return 'pendente';
     }
+
     private function finalizarAgendamento(array $dados, int $baseId, $session): array
     {
         try {
@@ -378,6 +387,7 @@ class IaAssistenteController extends DefaultController
             return ['message' => "❌ Erro ao criar agendamento: " . $e->getMessage()];
         }
     }
+
     private function analisarComando(string $comando): array
     {
         $comandoOriginal = $comando;
@@ -416,20 +426,20 @@ class IaAssistenteController extends DefaultController
         // Verifica se é um agendamento de serviço (banho, tosa, hospedagem)
         $isAgendamentoServico = false;
         foreach ($servicosAgendamento as $servico) {
-            if (str_contains($comando, $servico)) {
+            if (strpos($comando, $servico) !== false) {
                 $isAgendamentoServico = true;
                 break;
             }
         }
 
         // Se tem palavra de agendamento + serviço, é agendamento
-        if ($isAgendamentoServico && (str_contains($comando, 'agendar') || str_contains($comando, 'marcar') || str_contains($comando, 'reservar'))) {
+        if ($isAgendamentoServico && (strpos($comando, 'agendar') !== false || strpos($comando, 'marcar') !== false || strpos($comando, 'reservar') !== false)) {
             $acaoDetectada = 'agendar';
         } else {
             // Caso contrário, detecta normalmente
             foreach ($acoes as $acao => $palavras) {
                 foreach ($palavras as $palavra) {
-                    if (str_contains($comando, $palavra)) {
+                    if (strpos($comando, $palavra) !== false) {
                         $acaoDetectada = $acao;
                         break 2;
                     }
@@ -446,6 +456,7 @@ class IaAssistenteController extends DefaultController
             'entidades' => $entidades
         ];
     }
+
     private function extrairEntidades(string $comando): array
     {
         $entidades = [];
@@ -524,27 +535,60 @@ class IaAssistenteController extends DefaultController
 
         return $entidades;
     }
+
     private function executarAcao(array $analise, int $baseId, $session): array
     {
-        return match ($analise['acao']) {
-            'cadastrar' => $this->cadastrarClientePet($analise, $baseId),
-            'agendar' => $this->iniciarAgendamento($analise, $baseId, $session),
-            'internar' => $this->internarPet($analise, $baseId, $session),
-            'alta' => $this->darAlta($analise, $baseId),
-            'prescrever' => $this->prescreverMedicamento($analise, $baseId, $session),
-            'consulta' => $this->registrarAtendimento($analise, $baseId, $session),
-            'vacinar' => $this->aplicarVacina($analise, $baseId),
-            'obito' => $this->registrarObito($analise, $baseId),
-            'orcamento' => $this->criarOrcamento($analise, $baseId),
-            'venda' => $this->registrarVenda($analise, $baseId),
-            'buscar' => $this->buscarInformacao($analise, $baseId),
-            'debito' => $this->consultarDebitos($analise, $baseId),
-            'historico' => $this->consultarHistorico($analise, $baseId),
-            'relatorio' => $this->gerarRelatorio($analise, $baseId),
-            'ajuda' => $this->mostrarAjuda(),
-            default => $this->mostrarAjuda(),
-        };
+        switch ($analise['acao']) {
+            case 'cadastrar':
+                return $this->cadastrarClientePet($analise, $baseId);
+
+            case 'agendar':
+                return $this->iniciarAgendamento($analise, $baseId, $session);
+
+            case 'internar':
+                return $this->internarPet($analise, $baseId, $session);
+
+            case 'alta':
+                return $this->darAlta($analise, $baseId);
+
+            case 'prescrever':
+                return $this->prescreverMedicamento($analise, $baseId, $session);
+
+            case 'consulta':
+                return $this->registrarAtendimento($analise, $baseId, $session);
+
+            case 'vacinar':
+                return $this->aplicarVacina($analise, $baseId);
+
+            case 'obito':
+                return $this->registrarObito($analise, $baseId);
+
+            case 'orcamento':
+                return $this->criarOrcamento($analise, $baseId);
+
+            case 'venda':
+                return $this->registrarVenda($analise, $baseId);
+
+            case 'buscar':
+                return $this->buscarInformacao($analise, $baseId);
+
+            case 'debito':
+                return $this->consultarDebitos($analise, $baseId);
+
+            case 'historico':
+                return $this->consultarHistorico($analise, $baseId);
+
+            case 'relatorio':
+                return $this->gerarRelatorio($analise, $baseId);
+
+            case 'ajuda':
+                return $this->mostrarAjuda();
+
+            default:
+                return $this->mostrarAjuda();
+        }
     }
+
     private function cadastrarClientePet(array $analise, int $baseId): array
     {
         $comando = $analise['comando_original'];
@@ -644,6 +688,7 @@ class IaAssistenteController extends DefaultController
             ];
         }
     }
+
     private function extrairInfoCadastro(string $comando): array
     {
         $info = [];
@@ -684,6 +729,7 @@ class IaAssistenteController extends DefaultController
 
         return $info;
     }
+
     private function iniciarAgendamento(array $analise, int $baseId, $session): array
     {
         $entidades = $analise['entidades'];
@@ -791,6 +837,7 @@ class IaAssistenteController extends DefaultController
             ];
         }
     }
+
     private function agendarServico(array $analise, int $baseId): array
     {
         $entidades = $analise['entidades'];
@@ -935,6 +982,7 @@ class IaAssistenteController extends DefaultController
             ];
         }
     }
+
     private function internarPet(array $analise, int $baseId, $session): array
     {
         $entidades = $analise['entidades'];
@@ -973,6 +1021,7 @@ class IaAssistenteController extends DefaultController
             return ['message' => "❌ Erro: " . $e->getMessage()];
         }
     }
+
     private function perguntarMotivoInternacao(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -986,6 +1035,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function perguntarRiscoInternacao(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -999,6 +1049,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function perguntarBoxInternacao(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -1012,6 +1063,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function perguntarPrognosticoInternacao(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -1025,6 +1077,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function perguntarAltaPrevistaInternacao(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -1038,6 +1091,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function perguntarAnotacoesInternacao(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -1051,6 +1105,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function finalizarInternacao(array $dados, int $baseId, $session): array
     {
         try {
@@ -1148,6 +1203,7 @@ class IaAssistenteController extends DefaultController
             return ['message' => "❌ Erro ao criar internação: " . $e->getMessage()];
         }
     }
+
     private function darAlta(array $analise, int $baseId): array
     {
         $entidades = $analise['entidades'];
@@ -1205,6 +1261,7 @@ class IaAssistenteController extends DefaultController
             return ['message' => "❌ Erro: " . $e->getMessage()];
         }
     }
+
     private function prescreverMedicamento(array $analise, int $baseId, $session): array
     {
         $entidades = $analise['entidades'];
@@ -1290,6 +1347,7 @@ class IaAssistenteController extends DefaultController
             return ['message' => "❌ Erro: " . $e->getMessage()];
         }
     }
+
     private function perguntarDoseMedicamento(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -1303,6 +1361,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function perguntarFrequenciaMedicamento(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -1316,6 +1375,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function perguntarDuracaoMedicamento(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -1329,6 +1389,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function perguntarViaMedicamento(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -1342,6 +1403,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function finalizarPrescricao(array $dados, int $baseId, $session): array
     {
         try {
@@ -1445,6 +1507,7 @@ class IaAssistenteController extends DefaultController
             return ['message' => "❌ Erro ao criar prescrição: " . $e->getMessage()];
         }
     }
+
     private function aplicarVacina(array $analise, int $baseId): array
     {
         $entidades = $analise['entidades'];
@@ -1500,6 +1563,7 @@ class IaAssistenteController extends DefaultController
             return ['message' => "❌ Erro: " . $e->getMessage()];
         }
     }
+
     private function registrarObito(array $analise, int $baseId): array
     {
         $entidades = $analise['entidades'];
@@ -1554,18 +1618,21 @@ class IaAssistenteController extends DefaultController
             return ['message' => "❌ Erro: " . $e->getMessage()];
         }
     }
+
     private function criarOrcamento(array $analise, int $baseId): array
     {
         return [
             'message' => '💰 Para criar orçamento, acesse:\nMenu → Orçamentos → Novo Orçamento'
         ];
     }
+
     private function registrarVenda(array $analise, int $baseId): array
     {
         return [
             'message' => '🛒 Para registrar venda, acesse:\nMenu → PDV (Ponto de Venda)'
         ];
     }
+
     private function buscarInformacao(array $analise, int $baseId): array
     {
         $entidades = $analise['entidades'];
@@ -1647,6 +1714,7 @@ class IaAssistenteController extends DefaultController
             ];
         }
     }
+
     private function consultarDebitos(array $analise, int $baseId): array
     {
         $entidades = $analise['entidades'];
@@ -1704,6 +1772,7 @@ class IaAssistenteController extends DefaultController
             return ['message' => "❌ Erro: " . $e->getMessage()];
         }
     }
+
     private function consultarHistorico(array $analise, int $baseId): array
     {
         $entidades = $analise['entidades'];
@@ -1789,6 +1858,7 @@ class IaAssistenteController extends DefaultController
             return ['message' => "❌ Erro: " . $e->getMessage()];
         }
     }
+
     private function gerarRelatorio(array $analise, int $baseId): array
     {
         $comando = $analise['comando_original'];
@@ -1888,7 +1958,9 @@ class IaAssistenteController extends DefaultController
             return ['message' => "❌ Erro ao gerar relatório: " . $e->getMessage()];
         }
     }
+
     // ========== ATENDIMENTO/CONSULTA ==========
+
     private function registrarAtendimento(array $analise, int $baseId, $session): array
     {
         try {
@@ -1967,6 +2039,7 @@ class IaAssistenteController extends DefaultController
             ];
         }
     }
+
     private function perguntarObservacoesAtendimento(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -1979,6 +2052,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function perguntarAnamneseAtendimento(array $dados, $session): array
     {
         $session->set('ia_contexto', [
@@ -1991,6 +2065,7 @@ class IaAssistenteController extends DefaultController
             'aguardando' => true
         ];
     }
+
     private function finalizarAtendimento(array $dados, int $baseId, $session): array
     {
         try {
@@ -2044,6 +2119,7 @@ class IaAssistenteController extends DefaultController
             return ['message' => "❌ Erro ao registrar atendimento: " . $e->getMessage()];
         }
     }
+
     private function mostrarAjuda(): array
     {
         $message = "🤖 **Dra. HomePet - Assistente IA**\n\n";
@@ -2081,7 +2157,9 @@ class IaAssistenteController extends DefaultController
 
         return ['message' => $message, 'acao' => 'ajuda'];
     }
+
     // ========== MÉTODOS AUXILIARES DE NORMALIZAÇÃO ==========
+
     private function normalizarTexto(string $texto): string
     {
         // Remove acentos
@@ -2092,6 +2170,7 @@ class IaAssistenteController extends DefaultController
         $texto = preg_replace('/\s+/', ' ', trim($texto));
         return $texto;
     }
+
     private function corrigirErrosDigitacao(string $comando): string
     {
         $palavrasCorretas = [
@@ -2121,6 +2200,7 @@ class IaAssistenteController extends DefaultController
 
         return implode(' ', $palavrasCorrigidas);
     }
+
     private function buscarPetFlexivel(string $petNome, int $baseId)
     {
         // 1. Busca exata (case-insensitive)
@@ -2171,6 +2251,7 @@ class IaAssistenteController extends DefaultController
 
         return $melhorMatch;
     }
+
     private function registrarLog(string $comando, array $analise, array $resultado, int $baseId): void
     {
         $log = sprintf(

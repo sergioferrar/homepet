@@ -5,21 +5,31 @@ namespace App\Entity;
 use App\Repository\MenuGrupoModuloRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: MenuGrupoModuloRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass=MenuGrupoModuloRepository::class)
+ */
 class MenuGrupoModulo
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Column(type="integer")
+     */
     private $idMenu;
 
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Column(type="integer")
+     */
     private $idGrupo;
 
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Column(type="integer")
+     */
     private $idModulo;
 
     public function getId(): ?int

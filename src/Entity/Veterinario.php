@@ -7,37 +7,57 @@ use App\Repository\VeterinarioRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
-#[ORM\Table(name: 'veterinario')]
-#[ORM\Entity(repositoryClass: VeterinarioRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass=VeterinarioRepository::class)
+ * @ORM\Table(name="veterinario")
+ */
 class Veterinario
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    /** 
+     * @ORM\Column(type="string", length=255) 
+     */
     private $nome;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    /** 
+     * @ORM\Column(type="string", length=255) 
+     */
     private $email;
 
-    #[ORM\Column(type: 'string', length: 20)]
+    /** 
+     * @ORM\Column(type="string", length=20) 
+     */
     private $telefone;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    /** 
+     * @ORM\Column(type="string", length=255, nullable=true) 
+     */
     private $especialidade;
 
-    #[ORM\Column(type: 'integer')]
+    /** 
+     * @ORM\Column(type="integer") 
+     */
     private $estabelecimentoId;
 
-    #[ORM\Column(type: 'string', length: 45, nullable: true)]
+    /** 
+     * @ORM\Column(type="string", length=45, nullable=true) 
+     */
     private $crmv;
 
-    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'ativo'])]
+    /**
+     * @ORM\Column(type="string", length=20, options={"default": "ativo"})
+     */
     private $status = 'ativo';
 
-    #[ORM\OneToMany(targetEntity: InternacaoExecucao::class, mappedBy: 'veterinario')]
+    /**
+     * @ORM\OneToMany(targetEntity=InternacaoExecucao::class, mappedBy="veterinario")
+     */
     private $execucoes;
 
     public function __construct()

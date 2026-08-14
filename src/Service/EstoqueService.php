@@ -12,8 +12,15 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class EstoqueService
 {
-    public function __construct(private readonly EntityManagerInterface $em, private readonly TenantContext $tenantContext)
-    {
+    private EntityManagerInterface $em;
+    private TenantContext $tenantContext;
+
+    public function __construct(
+        EntityManagerInterface $em,
+        TenantContext $tenantContext
+    ) {
+        $this->em = $em;
+        $this->tenantContext = $tenantContext;
     }
 
     /**

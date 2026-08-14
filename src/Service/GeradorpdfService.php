@@ -14,6 +14,9 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class GeradorpdfService
 {
 
+    /** @var TempDirManager*/
+    private $tempDirManager;
+
     /** @var RequestStack*/
     protected $request;
 
@@ -39,8 +42,9 @@ class GeradorpdfService
         //'tempDir' => 'FCPATH' . './arquivos/tmp',
     ];
 
-    public function __construct(private readonly TempDirManager $tempDirManager, RequestStack $request)
+    public function __construct(TempDirManager $tempDirManager, RequestStack $request)
     {
+        $this->tempDirManager = $tempDirManager;
         $this->request = $request->getCurrentRequest();
 
         $folderPath = dirname(__DIR__, 2) . '/public/';

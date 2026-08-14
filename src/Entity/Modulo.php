@@ -5,24 +5,36 @@ namespace App\Entity;
 use App\Repository\ModuloRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: ModuloRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass=ModuloRepository::class)
+ */
 class Modulo
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private $titulo;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private $trial;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
     private $status;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
     private $descricao;
 
     public function getId(): ?int

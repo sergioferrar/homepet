@@ -17,10 +17,13 @@ use Psr\Log\LoggerInterface;
  */
 class NotaFiscalService implements NotaFiscalServiceInterface
 {
+    private LoggerInterface $logger;
     private bool $habilitado = true;
 
-    public function __construct(private readonly LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger)
     {
+        $this->logger = $logger;
+        
         // TODO: Ler do .env se está habilitado
         // $this->habilitado = $_ENV['NOTA_FISCAL_ENABLED'] ?? false;
     }

@@ -26,10 +26,10 @@ use Psr\Log\NullLogger;
  * O formato preferido agora é indexado — itens[i][ref|quantidade|desconto] —
  * em que a quantidade está amarrada à linha, não à posição num array separado.
  */
-final readonly class VendaItemNormalizer
+final class VendaItemNormalizer
 {
     public function __construct(
-        private LoggerInterface $logger = new NullLogger(),
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {}
 
     /**

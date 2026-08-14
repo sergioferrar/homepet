@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @
+ * @Route("dashboard")
  
  * Esta versão da controller inclui suporte ao novo campo `tipo` (clinica ou pet_shop)
  * e permite filtrar a listagem de serviços de acordo com esse valor. Note que
@@ -19,9 +19,8 @@ use Symfony\Component\Routing\Annotation\Route;
 class ServicoController extends DefaultController
 {
     /**
-     * @
+     * @Route("/servico", name="servico_index", methods={"GET"})
      */
-    #[Route('dashboard/servico', name: 'servico_index', methods: "{GET}")]
     public function index(Request $request): Response
     {
         $this->switchDB();
@@ -43,10 +42,10 @@ class ServicoController extends DefaultController
             'tipo' => $tipoFiltro,
         ]);
     }
+
     /**
-     * @
+     * @Route("/servico/novo", name="servico_novo", methods={"GET", "POST"})
      */
-    #[Route('dashboard/servico/novo', name: 'servico_novo', methods: "{GET, POST}")]
     public function novo(Request $request): Response
     {
         $this->switchDB();
@@ -66,10 +65,10 @@ class ServicoController extends DefaultController
 
         return $this->render('servico/novo.html.twig');
     }
+
     /**
-     * @
+     * @Route("/servico/editar/{id}", name="servico_editar", methods={"GET", "POST"})
      */
-    #[Route('dashboard/servico/editar/{id}', name: 'servico_editar', methods: "{GET, POST}")]
     public function editar(Request $request, int $id): Response
     {
         $this->switchDB();
@@ -95,11 +94,11 @@ class ServicoController extends DefaultController
             'servico' => $servico
         ]);
     }
+
     /**
-     * @
+     * @Route("/servico/deletar/{id}", name="servico_deletar", methods={"POST"})
      */
-    #[Route('dashboard/servico/deletar/{id}', name: 'servico_deletar')]
-    public function deletar(int $id): Response
+    public function deletar(Request $request, int $id): Response
     {
         $this->switchDB();
         $servico = $this->getRepositorio(Servico::class)->findService($this->session->get('userId'), $id);

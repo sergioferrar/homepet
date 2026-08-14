@@ -18,8 +18,11 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class ExceptionNotificationSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly ExceptionNotifier $notifier)
+    private ExceptionNotifier $notifier;
+
+    public function __construct(ExceptionNotifier $notifier)
     {
+        $this->notifier = $notifier;
     }
 
     public static function getSubscribedEvents(): array

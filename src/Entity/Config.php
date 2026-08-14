@@ -5,27 +5,41 @@ namespace App\Entity;
 use App\Repository\ConfigRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: ConfigRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass=ConfigRepository::class)
+ */
 class Config
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Column(type="integer")
+     */
     private $estabelecimento_id;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private $chave;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
     private $valor;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private $tipo;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
     private $observacao;
 
     public function getId(): ?int

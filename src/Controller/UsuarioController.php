@@ -14,15 +14,14 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 
 /**
- * @
+ * @Route("dashboard")
  */
 class UsuarioController extends DefaultController
 {
     /**
-     * @
+     * @Route("/usuario/lista", name="app_usuario")
      */
-    #[Route('dashboard/usuario/lista', name: 'app_usuario')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $data = [];
         // dd($this->tenantContext);
@@ -38,14 +37,16 @@ class UsuarioController extends DefaultController
                 $usuarios = $repositorio->listaTodosPrivado($this->tenantContext->getEstabelecimentoId());
                 break;
         }
+
         $data['usuarios'] = $usuarios;
+
         return $this->render('usuario/index.html.twig', $data);
     }
+
     /**
-     * @
+     * @Route("/usuario/novo", name="app_usuario_create")
      */
-    #[Route('dashboard/usuario/novo', name: 'app_usuario_create')]
-    public function create(): Response
+    public function create(Request $request): Response
     {
         // Lista os veterinários do estabelecimento (tabela fica no banco do tenant)
         // para o select que aparece quando o nível de acesso é "Veterinário".
@@ -56,20 +57,21 @@ class UsuarioController extends DefaultController
                 ['estabelecimentoId' => $this->tenantContext->getEstabelecimentoId(), 'status' => 'ativo'],
                 ['nome' => 'ASC']
             );
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
             $veterinarios = [];
         } finally {
             $this->restauraLoginDB();
         }
+
         return $this->render('usuario/create.html.twig', [
             'controller_name' => 'UsuarioController',
             'veterinarios' => $veterinarios,
         ]);
     }
+
     /**
-     * @
+     * @Route("/usuario/edit/{id}", name="usuario_edit")
      */
-    #[Route('dashboard/usuario/edit/{id}', name: 'usuario_edit')]
     public function edit(Request $request): Response
     {
         $usuario = $this->getRepositorio(Usuario::class)->findOneBy(['id' => $request->get('id')]);
@@ -82,7 +84,7 @@ class UsuarioController extends DefaultController
                 ['estabelecimentoId' => $this->tenantContext->getEstabelecimentoId(), 'status' => 'ativo'],
                 ['nome' => 'ASC']
             );
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
             $veterinarios = [];
         } finally {
             $this->restauraLoginDB();
@@ -93,10 +95,10 @@ class UsuarioController extends DefaultController
             'veterinarios' => $veterinarios,
         ]);
     }
+
     /**
-     * @
+     * @Route("/usuario/create/salvar", name="usuario_create_save")
      */
-    #[Route('dashboard/usuario/create/salvar', name: 'usuario_create_save')]
     public function store(Request $request, MailerInterface $mailer): Response
     {
         $accessLevel = $request->get('access_level');
@@ -111,13 +113,26 @@ class UsuarioController extends DefaultController
             $usuario->setVeterinarioId((int) $request->get('veterinario_id'));
         }
 
-        $roles = match ($accessLevel) {
-            'Super Admin', 'Admin' => ['ROLE_ADMIN'],
-            'Veterinário' => ['ROLE_VETERINARIO', 'ROLE_ADMIN_USER'],
-            'Financeiro' => ['ROLE_FINANCEIRO', 'ROLE_ADMIN_USER'],
-            'Atendente', 'Tosador', 'Balconista' => ['ROLE_ADMIN_USER'],
-            default => ['ROLE_USER'],
-        };
+        switch ($accessLevel) {
+            case 'Super Admin':
+            case 'Admin':
+                $roles = ['ROLE_ADMIN'];
+                break;
+            case 'Veterinário':
+                $roles = ['ROLE_VETERINARIO', 'ROLE_ADMIN_USER'];
+                break;
+            case 'Financeiro':
+                $roles = ['ROLE_FINANCEIRO', 'ROLE_ADMIN_USER'];
+                break;
+            case 'Atendente':
+            case 'Tosador':
+            case 'Balconista':
+                $roles = ['ROLE_ADMIN_USER'];
+                break;
+            default:
+                $roles = ['ROLE_USER'];
+                break;
+        }
         $usuario->setRoles($roles);
         $usuario->setPetshopId($this->security->getUser()->getPetshopId());
 
@@ -141,7 +156,7 @@ class UsuarioController extends DefaultController
         try {
             $estab = $this->getRepositorio(Estabelecimento::class)->find($this->security->getUser()->getPetshopId());
             $nomeEstab = $estab ? $estab->getRazaoSocial() : '';
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
             $nomeEstab = '';
         }
 
@@ -158,7 +173,7 @@ class UsuarioController extends DefaultController
                 ]));
             $mailer->send($email);
             $enviado = true;
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
             $enviado = false;
         }
 
@@ -170,10 +185,10 @@ class UsuarioController extends DefaultController
 
         return $this->redirectToRoute('app_usuario');
     }
+
     /**
-     * @
+     * @Route("/usuario/edit/salvar", name="usuario_edit_save")
      */
-    #[Route('dashboard/usuario/edit/salvar', name: 'usuario_edit_save')]
     public function update(Request $request): Response
     {
         $usuario = $this->getRepositorio(Usuario::class)->findOneBy(['id' => $request->get('id')]);
@@ -197,13 +212,26 @@ class UsuarioController extends DefaultController
         }
 
         // Recalcula os papéis conforme o nível de acesso
-        $roles = match ($accessLevel) {
-            'Super Admin', 'Admin' => ['ROLE_ADMIN'],
-            'Veterinário' => ['ROLE_VETERINARIO', 'ROLE_ADMIN_USER'],
-            'Financeiro' => ['ROLE_FINANCEIRO', 'ROLE_ADMIN_USER'],
-            'Atendente', 'Tosador', 'Balconista' => ['ROLE_ADMIN_USER'],
-            default => ['ROLE_USER'],
-        };
+        switch ($accessLevel) {
+            case 'Super Admin':
+            case 'Admin':
+                $roles = ['ROLE_ADMIN'];
+                break;
+            case 'Veterinário':
+                $roles = ['ROLE_VETERINARIO', 'ROLE_ADMIN_USER'];
+                break;
+            case 'Financeiro':
+                $roles = ['ROLE_FINANCEIRO', 'ROLE_ADMIN_USER'];
+                break;
+            case 'Atendente':
+            case 'Tosador':
+            case 'Balconista':
+                $roles = ['ROLE_ADMIN_USER'];
+                break;
+            default:
+                $roles = ['ROLE_USER'];
+                break;
+        }
         $usuario->setRoles($roles);
 
         // A senha NÃO é alterada aqui — é responsabilidade do próprio usuário

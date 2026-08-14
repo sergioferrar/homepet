@@ -8,15 +8,14 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @
+ * @Route("dashboard/")
  */
 class MenuController extends DefaultController
 {
     /**
-     * @
+     * @Route("menu", name="menu_index")
      */
-    #[Route('dashboard/menu', name: 'menu_index')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->restauraLoginDB();
         $repo = $this->getRepositorio(\App\Entity\Menu::class)->findAll();
@@ -24,10 +23,10 @@ class MenuController extends DefaultController
         $data['menus'] = $repo;
         return $this->render('menu/index.html.twig', $data);
     }
+
     /**
-     * @
+     * @Route("menu/novo", name="menu_new")
      */
-    #[Route('dashboard/menu/novo', name: 'menu_new')]
     public function new(Request $request): Response
     {
         $this->restauraLoginDB();
@@ -55,10 +54,10 @@ class MenuController extends DefaultController
 
         return $this->render('menu/form.html.twig', $data);
     }
+
     /**
-     * @
+     * @Route("menu/editar/{id}", name="menu_edit")
      */
-    #[Route('dashboard/menu/editar/{id}', name: 'menu_edit')]
     public function edit(Request $request): Response
     {
 
@@ -95,10 +94,10 @@ class MenuController extends DefaultController
 
         return $this->render('menu/form.html.twig', $data);
     }
+
     /**
-     * @
+     * @Route("/listamenu", name="leftMenu")
      */
-    #[Route('dashboard//listamenu', name: 'leftMenu')]
     public function getMenu(Request $request): Response
     {
 

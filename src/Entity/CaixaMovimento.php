@@ -4,27 +4,42 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Table(name: 'caixa_movimento')]
-#[ORM\Entity]
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="caixa_movimento")
+ */
 class CaixaMovimento
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Column(type="integer")
+     */
     private $estabelecimentoId;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private $descricao;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2)
+     */
     private $valor;
 
-    #[ORM\Column(type: 'string', length: 10)]
+    /**
+     * @ORM\Column(type="string", length=10)
+     */
     private $tipo = 'SAIDA'; // ou 'ENTRADA'
-    #[ORM\Column(type: 'datetime')]
+
+    /**
+     * @ORM\Column(type="datetime")
+     */
     private $data;
 
     // ===== Getters e Setters =====

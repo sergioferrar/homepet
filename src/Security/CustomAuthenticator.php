@@ -19,11 +19,15 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 
 class CustomAuthenticator extends AbstractAuthenticator
 {
+    private UrlGeneratorInterface $urlGenerator;
     protected $security;
+    private $entityManager;
 
-    public function __construct(private readonly EntityManagerInterface $entityManager, ?Security $security, private readonly UrlGeneratorInterface $urlGenerator)
+    public function __construct(EntityManagerInterface $entityManager, ?Security $security, UrlGeneratorInterface $urlGenerator)
     {
+        $this->entityManager = $entityManager;
         $this->security = $security;
+        $this->urlGenerator = $urlGenerator;
     }
 
     private function getRepositorio($class)

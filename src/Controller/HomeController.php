@@ -11,7 +11,9 @@ use Symfony\Component\Routing\Annotation\Route;
 class HomeController extends DefaultController
 {
 
-    #[Route("/dashboard", name: "home")]
+    /**
+     * @Route("/dashboard", name="home")
+     */
     public function index(Request $request): Response
     {
         // Redireciona usuários não autenticados diretamente para a tela de login

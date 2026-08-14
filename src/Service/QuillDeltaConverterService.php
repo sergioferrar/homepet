@@ -82,12 +82,12 @@ class QuillDeltaConverterService
             }
 
             // Fechar parágrafo final
-            if (str_contains($html, '<p') && !str_contains($html, '</p>')) {
+            if (strpos($html, '<p') !== false && strpos($html, '</p>') === false) {
                 $html .= '</p>';
             }
 
             return $html;
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             return htmlspecialchars($deltaJson, ENT_QUOTES);
         }
     }
@@ -123,7 +123,7 @@ class QuillDeltaConverterService
         }
 
         // Espaçamento padrão
-        if (!str_contains($text, '<')) {
+        if (strpos($text, '<') === false) {
             // Se não tem tags, envolver em span padrão para manter coerência
             return '<span style="line-height:1.6;">' . $text . '</span>';
         }
@@ -183,7 +183,7 @@ class QuillDeltaConverterService
             }
 
             return trim($text);
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             return $deltaJson;
         }
     }

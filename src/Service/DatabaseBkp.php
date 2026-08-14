@@ -5,18 +5,18 @@ namespace App\Service;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Connection;
 
-
 class DatabaseBkp
 {
+    private $conn;
     private $dbName;
     private $dbHost;
     private $dbUser;
     private $dbPass;
 
 
-    public function __construct(
-        private Connection $connection  // ← ADICIONE ISSO
-    ) {
+    public function __construct(Connection $connection)
+    {
+        $this->conn = $connection;
     }
 
     public function setDbName($dbName){

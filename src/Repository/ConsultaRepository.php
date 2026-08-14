@@ -143,7 +143,7 @@ class ConsultaRepository extends ServiceEntityRepository
         ];
 
         $dados = [];
-        foreach ($meses as $nome) {
+        foreach ($meses as $num => $nome) {
             $dados[$nome] = 0;
         }
         foreach ($result as $row) {

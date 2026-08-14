@@ -9,35 +9,38 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * Uma venda pode ter uma ou mais formas (pagamento dividido). Ex.: uma venda de
  * R$ 300,00 paga com R$ 200,00 no cartão e R$ 100,00 no PIX gera dois registros.
+ *
+ * @ORM\Entity
+ * @ORM\Table(name="venda_pagamento")
  */
-#[ORM\Table(name: 'venda_pagamento')]
-#[ORM\Entity]
 class VendaPagamento
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'integer', name: 'estabelecimento_id')]
+    /** @ORM\Column(type="integer", name="estabelecimento_id") */
     private $estabelecimentoId;
 
-    #[ORM\Column(type: 'integer', name: 'venda_id')]
+    /** @ORM\Column(type="integer", name="venda_id") */
     private $vendaId;
 
-    #[ORM\Column(type: 'string', length: 20)]
+    /** @ORM\Column(type="string", length=20) */
     private $metodo;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    /** @ORM\Column(type="decimal", precision=10, scale=2) */
     private $valor;
 
-    #[ORM\Column(type: 'string', length: 50, nullable: true, name: 'bandeira_cartao')]
+    /** @ORM\Column(type="string", length=50, nullable=true, name="bandeira_cartao") */
     private $bandeiraCartao;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /** @ORM\Column(type="integer", nullable=true) */
     private $parcelas;
 
-    #[ORM\Column(type: 'datetime')]
+    /** @ORM\Column(type="datetime") */
     private $data;
 
     public function getId(): ?int

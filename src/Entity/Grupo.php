@@ -5,18 +5,26 @@ namespace App\Entity;
 use App\Repository\GrupoRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: GrupoRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass=GrupoRepository::class)
+ */
 class Grupo
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private $nome;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private $parent;
 
     public function getId(): ?int

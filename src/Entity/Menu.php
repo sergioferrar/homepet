@@ -5,36 +5,56 @@ namespace App\Entity;
 use App\Repository\MenuRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: MenuRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass=MenuRepository::class)
+ */
 class Menu
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private $titulo;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private $parent;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
     private $descricao;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private $rota;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private $status;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
     private $icone;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private $ordem;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
     private $modulo;
 
     public function getId(): ?int

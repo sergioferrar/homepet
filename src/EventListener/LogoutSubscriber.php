@@ -9,8 +9,11 @@ use Symfony\Component\Security\Http\Event\LogoutEvent;
 
 class LogoutSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly UrlGeneratorInterface $urlGenerator)
+    private $urlGenerator;
+
+    public function __construct(UrlGeneratorInterface $urlGenerator)
     {
+        $this->urlGenerator = $urlGenerator;
     }
 
     public static function getSubscribedEvents(): array

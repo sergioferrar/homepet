@@ -9,25 +9,27 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @
+ * @Route("/superadmin")
  */
 class SuperAdminController extends DefaultController
 {
     /**
-     * @
+     * @Route("/dashboard", name="superadmin_dashboard")
      */
-    #[Route('/superadmin/dashboard', name: 'superadmin_dashboard')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         // Verifica se o usuário é super admin
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
             throw $this->createAccessDeniedException('Acesso negado');
         }
+
         $hoje = new \DateTime();
         $inicioMes = new \DateTime('first day of this month');
         $fimMes = new \DateTime('last day of this month');
+
         // Buscar todos estabelecimentos usando método otimizado do repository
         $estabelecimentoRepo = $this->getRepositorio(Estabelecimento::class);
+
         // Usa método customizado se existir, senão usa QueryBuilder
         if (method_exists($estabelecimentoRepo, 'listaEstabelecimentosGestao')) {
             $estabelecimentos = $estabelecimentoRepo->listaEstabelecimentosGestao();
@@ -38,11 +40,13 @@ class SuperAdminController extends DefaultController
                 ->getQuery()
                 ->getArrayResult();
         }
+
         // Separar estabelecimentos por status
         $novos = [];
         $ativos = [];
         $expirados = [];
         $proximos_vencer = [];
+
         foreach ($estabelecimentos as $est) {
             // Agora $est é um array, não objeto
             $diasCadastro = $hoje->diff(new \DateTime($est['dataCadastro']))->days;
@@ -68,8 +72,10 @@ class SuperAdminController extends DefaultController
                 $ativos[] = $est;
             }
         }
+
         // Estatísticas de invoices (SIMPLIFICADO - sem InvoiceService)
         $invoiceRepository = $this->getRepositorio(\App\Entity\Fatura::class);
+
         try {
             // Buscar estatísticas direto do repository
             $invoicesPorStatus = $invoiceRepository->getInvoicesPorStatus();
@@ -99,12 +105,14 @@ class SuperAdminController extends DefaultController
                 'valor_recebido' => 0,
             ];
         }
+
         // Receita do mês
         try {
             $receitaMes = $invoiceRepository->getTotalReceitaMes($inicioMes, $fimMes);
         } catch (\Exception $e) {
             $receitaMes = 0;
         }
+
         // Últimos invoices
         try {
             $ultimosInvoices = $invoiceRepository->createQueryBuilder('i')
@@ -112,9 +120,10 @@ class SuperAdminController extends DefaultController
                 ->setMaxResults(10)
                 ->getQuery()
                 ->getResult();
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             $ultimosInvoices = [];
         }
+
         $data = [
             'total_estabelecimentos' => count($estabelecimentos),
             'novos_cadastros' => count($novos),
@@ -131,12 +140,13 @@ class SuperAdminController extends DefaultController
             'estabelecimentos_proximos_vencer' => $proximos_vencer,
             'ultimos_invoices' => $ultimosInvoices,
         ];
+
         return $this->render('superadmin/dashboard.html.twig', $data);
     }
+
     /**
-     * @
+     * @Route("/estabelecimentos", name="superadmin_estabelecimentos")
      */
-    #[Route('/superadmin/estabelecimentos', name: 'superadmin_estabelecimentos')]
     public function estabelecimentos(Request $request): Response
     {
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
@@ -178,11 +188,11 @@ class SuperAdminController extends DefaultController
             'filtro_atual' => $filtro,
         ]);
     }
+
     /**
-     * @
+     * @Route("/estabelecimento/{id}", name="superadmin_estabelecimento_detalhes")
      */
-    #[Route('/superadmin/estabelecimento/{id}', name: 'superadmin_estabelecimento_detalhes')]
-    public function detalhesEstabelecimento(int $id): Response
+    public function detalhesEstabelecimento(Request $request, int $id): Response
     {
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
             throw $this->createAccessDeniedException('Acesso negado');
@@ -219,10 +229,10 @@ class SuperAdminController extends DefaultController
             'usuario_email' => $usuarioAdmin ? $usuarioAdmin->getEmail() : null,
         ]);
     }
+
     /**
-     * @
+     * @Route("/invoices", name="superadmin_invoices")
      */
-    #[Route('/superadmin/invoices', name: 'superadmin_invoices')]
     public function invoices(Request $request): Response
     {
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
@@ -246,20 +256,20 @@ class SuperAdminController extends DefaultController
             'status_atual' => $status,
         ]);
     }
+
     /**
-     * @
+     * @Route("/invoice/{id}/marcar-pago", name="superadmin_invoice_marcar_pago", methods={"POST"})
      */
-    #[Route('/superadmin/invoice/{id}/marcar-pago', name: 'superadmin_invoice_marcar_pago')]
-    public function marcarInvoicePago(int $id): JsonResponse
+    public function marcarInvoicePago(Request $request, int $id): JsonResponse
     {
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
-            return new JsonResponse(['success' => false, 'error' => 'Acesso negado'], \Symfony\Component\HttpFoundation\Response::HTTP_FORBIDDEN);
+            return new JsonResponse(['success' => false, 'error' => 'Acesso negado'], 403);
         }
 
         $invoice = $this->getRepositorio(\App\Entity\Fatura::class)->find($id);
 
         if (!$invoice) {
-            return new JsonResponse(['success' => false, 'error' => 'Invoice não encontrado'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['success' => false, 'error' => 'Invoice não encontrado'], 404);
         }
 
         try {
@@ -273,13 +283,13 @@ class SuperAdminController extends DefaultController
 
             return new JsonResponse(['success' => true, 'message' => 'Invoice marcado como pago']);
         } catch (\Exception $e) {
-            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
+
     /**
-     * @
+     * @Route("/relatorios", name="superadmin_relatorios")
      */
-    #[Route('/superadmin/relatorios', name: 'superadmin_relatorios')]
     public function relatorios(Request $request): Response
     {
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
@@ -298,7 +308,7 @@ class SuperAdminController extends DefaultController
 
             try {
                 $receita = $invoiceRepository->getTotalReceitaMes($inicio, $fim);
-            } catch (\Exception) {
+            } catch (\Exception $e) {
                 $receita = 0;
             }
 
@@ -314,10 +324,10 @@ class SuperAdminController extends DefaultController
             'ano_selecionado' => $ano,
         ]);
     }
+
     /**
-     * @
+     * @Route("/acessar-estabelecimento/{id}", name="superadmin_acessar_estabelecimento")
      */
-    #[Route('/superadmin/acessar-estabelecimento/{id}', name: 'superadmin_acessar_estabelecimento')]
     public function acessarEstabelecimento(Request $request, int $id): Response
     {
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
@@ -378,15 +388,16 @@ class SuperAdminController extends DefaultController
 
         return $this->redirectToRoute('home');
     }
+
     /**
-    * @
-    *
-    #[Route("/estabelecimento/{id}/enviar-notificacao", name: "superadmin_enviar_notificacao")]
-    * Envia e-mail de renovação de assinatura para o usuário Admin do estabelecimento.
-    * O link do e-mail aponta para confirma_cadastro, que cria a invoice e redireciona
-    * ao checkout de assinatura recorrente no Mercado Pago.
-    */
+     * @Route("/estabelecimento/{id}/enviar-notificacao", name="superadmin_enviar_notificacao", methods={"POST"})
+     *
+     * Envia e-mail de renovação de assinatura para o usuário Admin do estabelecimento.
+     * O link do e-mail aponta para confirma_cadastro, que cria a invoice e redireciona
+     * ao checkout de assinatura recorrente no Mercado Pago.
+     */
     public function enviarNotificacaoRenovacao(
+        Request $request,
         int $id,
         \App\Service\EmailService $emailService,
         \Symfony\Component\Routing\Generator\UrlGeneratorInterface $urlGenerator
@@ -395,14 +406,14 @@ class SuperAdminController extends DefaultController
             return $this->json(['success' => false, 'message' => 'Acesso negado.'], 403);
         }
 
-        // -- 1. Carrega o estabelecimento -----------------------------------
+        // ── 1. Carrega o estabelecimento ───────────────────────────────────
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($id);
 
         if (!$estabelecimento) {
             return $this->json(['success' => false, 'message' => 'Estabelecimento não encontrado.'], 404);
         }
 
-        // -- 2. Busca o usuário Admin principal do estabelecimento ----------
+        // ── 2. Busca o usuário Admin principal do estabelecimento ──────────
         // Prioriza o Admin; se não existir, pega qualquer usuário vinculado
         $usuario = $this->getRepositorio(\App\Entity\Usuario::class)
             ->findOneBy(['petshop_id' => $id, 'accessLevel' => 'Admin']);
@@ -419,7 +430,7 @@ class SuperAdminController extends DefaultController
             ], 422);
         }
 
-        // -- 3. Gera o link de renovação (absoluto) -------------------------
+        // ── 3. Gera o link de renovação (absoluto) ─────────────────────────
         // confirma_cadastro já monta a invoice + assinatura recorrente no MP
         $paymentLink = $urlGenerator->generate(
             'confirma_cadastro',
@@ -427,14 +438,14 @@ class SuperAdminController extends DefaultController
             \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL
         );
 
-        // -- 4. Calcula dias restantes para personalizar o tom do e-mail ----
+        // ── 4. Calcula dias restantes para personalizar o tom do e-mail ────
         $hoje = new \DateTime();
         $dataFim = $estabelecimento->getDataPlanoFim();
         $diff = $hoje->diff($dataFim);
         $diasRestantes = (int) $diff->days;
         $expirado = $dataFim < $hoje;
 
-        // -- 5. Renderiza o template de e-mail -----------------------------
+        // ── 5. Renderiza o template de e-mail ─────────────────────────────
         $html = $this->renderView('emails/renovacao_assinatura.html.twig', [
             'estabelecimento' => $estabelecimento,
             'usuario' => $usuario,
@@ -444,7 +455,7 @@ class SuperAdminController extends DefaultController
             'data_expiracao' => $dataFim,
         ]);
 
-        // -- 6. Envia o e-mail ----------------------------------------------
+        // ── 6. Envia o e-mail ──────────────────────────────────────────────
         try {
             $assunto = $expirado
             ? 'Sua assinatura expirou — Renove agora | System Home Pet'
@@ -463,10 +474,10 @@ class SuperAdminController extends DefaultController
             ], 500);
         }
     }
+
     /**
-     * @
+     * @Route("/voltar-superadmin", name="superadmin_voltar")
      */
-    #[Route('/superadmin/voltar-superadmin', name: 'superadmin_voltar')]
     public function voltarSuperAdmin(Request $request): Response
     {
         if (!$request->getSession()->has('superadmin_original_context')) {
@@ -492,15 +503,17 @@ class SuperAdminController extends DefaultController
 
         return $this->redirectToRoute('superadmin_dashboard');
     }
+
     // ════════════════════════════════════════════════════════════════════════
     // Configurações Globais — LGPD e Tracking (exclusivas do Super Admin)
     // ════════════════════════════════════════════════════════════════════════
+
     /** ID reservado para configs globais do sistema no banco homepet_login. */
     private const GLOBAL_ESTAB_ID = 0;
+
     /**
-     * @
+     * @Route("/configuracoes-globais", name="superadmin_configuracoes_globais")
      */
-    #[Route('/superadmin/configuracoes-globais', name: 'superadmin_configuracoes_globais')]
     public function configuracoesGlobais(): Response
     {   
         if($this->isGranted('ROLE_ADMIN')){
@@ -516,14 +529,14 @@ class SuperAdminController extends DefaultController
             'tracking' => $this->lerConfigsDbal('tracking'),
         ]);
     }
+
     /**
-     * @
+     * @Route("/configuracoes-globais/lgpd", name="superadmin_lgpd_salvar", methods={"POST"})
      */
-    #[Route('/superadmin/configuracoes-globais/lgpd', name: 'superadmin_lgpd_salvar')]
     public function salvarLgpd(Request $request): JsonResponse
     {
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
-            return new JsonResponse(['success' => false, 'message' => 'Acesso negado.'], \Symfony\Component\HttpFoundation\Response::HTTP_FORBIDDEN);
+            return new JsonResponse(['success' => false, 'message' => 'Acesso negado.'], 403);
         }
 
         $this->restauraLoginDB();
@@ -540,17 +553,17 @@ class SuperAdminController extends DefaultController
             $this->upsertConfigs('lgpd', $campos, $request);
             return new JsonResponse(['success' => true, 'message' => 'Configurações LGPD salvas com sucesso.']);
         } catch (\Throwable $e) {
-            return new JsonResponse(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()], 500);
         }
     }
+
     /**
-     * @
+     * @Route("/configuracoes-globais/tracking", name="superadmin_tracking_salvar", methods={"POST"})
      */
-    #[Route('/superadmin/configuracoes-globais/tracking', name: 'superadmin_tracking_salvar')]
     public function salvarTracking(Request $request): JsonResponse
     {
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
-            return new JsonResponse(['success' => false, 'message' => 'Acesso negado.'], \Symfony\Component\HttpFoundation\Response::HTTP_FORBIDDEN);
+            return new JsonResponse(['success' => false, 'message' => 'Acesso negado.'], 403);
         }
 
         $this->restauraLoginDB();
@@ -566,13 +579,13 @@ class SuperAdminController extends DefaultController
             $this->upsertConfigs('tracking', $campos, $request);
             return new JsonResponse(['success' => true, 'message' => 'Configurações de rastreamento salvas com sucesso.']);
         } catch (\Throwable $e) {
-            return new JsonResponse(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()], \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['success' => false, 'message' => 'Erro ao salvar: ' . $e->getMessage()], 500);
         }
     }
+
     /**
-     * @
+     * @Route("/superadmin/estabelecimento/{id}/alterar-status", name="superadmin_estabelecimento_alterar_status")
      */
-    #[Route('/superadmin/superadmin/estabelecimento/{id}/alterar-status', name: 'superadmin_estabelecimento_alterar_status')]
     public function alterarStatusEstabelecimento(
         int $id,
         Request $request,
@@ -605,7 +618,8 @@ class SuperAdminController extends DefaultController
 
         return $this->redirectToRoute('superadmin_estabelecimento_detalhes', ['id' => $id]);
     }
-    // -- Helpers privados -----------------------------------------------------
+    // ── Helpers privados ─────────────────────────────────────────────────────
+
     private function upsertConfigs(string $tipo, array $campos, Request $request): void
     {
         $conn = $this->managerRegistry->getConnection();
@@ -642,6 +656,7 @@ class SuperAdminController extends DefaultController
             ]);
         }
     }
+
     private function lerConfigsDbal(string $tipo): array
     {
         try {

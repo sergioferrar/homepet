@@ -5,12 +5,25 @@ namespace App\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Core\Security;
 
 class MenuService
 {
-    public function __construct(private readonly Security $security, private readonly EntityManagerInterface $em, private readonly ManagerRegistry $managerRegistry, private readonly RequestStack $requestStack)
-    {
+    private EntityManagerInterface $em;
+    private Security $security;
+    private ManagerRegistry $managerRegistry;
+    private RequestStack $requestStack;
+
+    public function __construct(
+        Security $security,
+        EntityManagerInterface $em,
+        ManagerRegistry $managerRegistry,
+        RequestStack $requestStack
+    ) {
+        $this->security        = $security;
+        $this->em              = $em;
+        $this->managerRegistry = $managerRegistry;
+        $this->requestStack    = $requestStack;
     }
 
     public function getUser()

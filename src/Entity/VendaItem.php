@@ -5,48 +5,58 @@ namespace App\Entity;
 use App\Repository\VendaItemRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Table(name: 'venda_item')]
-#[ORM\Entity(repositoryClass: VendaItemRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass=VendaItemRepository::class)
+ * @ORM\Table(name="venda_item")
+ */
 class VendaItem
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
     /**
      * ID da venda à qual este item pertence.
+     *
+     * @ORM\Column(type="integer", name="venda_id")
      */
-    #[ORM\Column(type: 'integer', name: 'venda_id')]
     private $vendaId;
 
     /**
      * ID numérico do produto ou serviço.
      * Nulo para itens avulsos sem cadastro.
+     *
+     * @ORM\Column(type="integer", name="produto_id", nullable=true)
      */
-    #[ORM\Column(type: 'integer', name: 'produto_id', nullable: true)]
     private $produtoId;
 
     /**
      * Snapshot do nome do produto/serviço no momento da venda.
      * Preserva o histórico mesmo que o cadastro mude depois.
+     *
+     * @ORM\Column(type="string", length=255, name="produto")
      */
-    #[ORM\Column(type: 'string', length: 255, name: 'produto')]
     private $produtoNome;
 
-    #[ORM\Column(type: 'integer')]
+    /** @ORM\Column(type="integer") */
     private $quantidade;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, name: 'valor_unitario')]
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2, name="valor_unitario")
+     */
     private $precoUnitario;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    /** @ORM\Column(type="decimal", precision=10, scale=2) */
     private $subtotal;
 
     /**
      * 'produto' | 'servico'
+     *
+     * @ORM\Column(type="string", length=50)
      */
-    #[ORM\Column(type: 'string', length: 50)]
     private $tipo;
 
     // ── Getters & Setters ────────────────────────────────────────────────────

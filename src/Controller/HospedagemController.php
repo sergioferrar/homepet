@@ -14,14 +14,13 @@ use Symfony\Component\Routing\Annotation\Route;
 
 
 /**
- * @
+ * @Route("dashboard/hospedagem")
  */
 class HospedagemController extends DefaultController
 {
     /**
-     * @
+     * @Route("/agendar", name="hospedagem_agendar", methods={"GET", "POST"})
      */
-    #[Route('dashboard/hospedagem/agendar', name: 'hospedagem_agendar', methods: "{GET, POST}")]
     public function agendar(Request $request): Response
     {
         $this->switchDB();
@@ -56,10 +55,10 @@ class HospedagemController extends DefaultController
             'pets' => $this->getRepositorio(HospedagemCaes::class)->getPets($baseId),
         ]);
     }
+
     /**
-     * @
+     * @Route("/listar", name="hospedagem_listar", methods={"GET"})
      */
-    #[Route('dashboard/hospedagem/listar', name: 'hospedagem_listar', methods: "{GET}")]
     public function listar(Request $request): Response
     {
         $this->switchDB();
@@ -78,11 +77,11 @@ class HospedagemController extends DefaultController
             'dataFiltro' => $dataFiltro ? $dataFiltro->format('Y-m-d') : null
         ]);
     }
+
     /**
-     * @
+     * @Route("/deletar/{id}", name="hospedagem_deletar", methods={"POST"})
      */
-    #[Route('dashboard/hospedagem/deletar/{id}', name: 'hospedagem_deletar')]
-    public function deletar(int $id): Response
+    public function deletar(Request $request, int $id): Response
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
@@ -94,10 +93,10 @@ class HospedagemController extends DefaultController
         $this->getRepositorio(HospedagemCaes::class)->delete($baseId, $id);
         return $this->redirectToRoute('hospedagem_listar');
     }
+
     /**
-     * @
+     * @Route("/editar/{id}", name="hospedagem_editar", methods={"GET", "POST"})
      */
-    #[Route('dashboard/hospedagem/editar/{id}', name: 'hospedagem_editar', methods: "{GET, POST}")]
     public function editar(Request $request, int $id): Response
     {
         $this->switchDB();
@@ -139,10 +138,10 @@ class HospedagemController extends DefaultController
             'pets' => $this->getRepositorio(HospedagemCaes::class)->getPets($baseId),
         ]);
     }
+
     /**
-     * @
+     * @Route("/pagar/{id}", name="hospedagem_concluir_pagamento", methods={"POST"})
      */
-    #[Route('dashboard/hospedagem/pagar/{id}', name: 'hospedagem_concluir_pagamento')]
     public function concluirPagamento(Request $request, int $id): Response
     {
         $this->switchDB();

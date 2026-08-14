@@ -10,9 +10,15 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+/**
+ * @Route("dashboard/clinica")
+ */
 class HistoricoController extends DefaultController
 {
-    #[Route('dashboard/clinica/pet/{petId}/documentos', name: 'clinica_documentos')]
+
+    /**
+     * @Route("/pet/{petId}/documentos", name="clinica_documentos", methods={"GET","POST"})
+     */
     public function documentos(Request $request, int $petId): Response
     {
         $this->switchDB();
@@ -48,7 +54,10 @@ class HistoricoController extends DefaultController
             'pet' => $pet,
         ]);
     }
-    #[Route('dashboard/clinica/documento/{id}/editar', name: 'clinica_documento_editar')]
+
+    /**
+     * @Route("/documento/{id}/editar", name="clinica_documento_editar", methods={"GET", "POST"})
+     */
     public function editarDocumento(Request $request, int $id): Response
     {
         $this->switchDB();
@@ -77,7 +86,10 @@ class HistoricoController extends DefaultController
             'documento' => $documento,
         ]);
     }
-    #[Route('dashboard/clinica/clinica/pet/{petId}/documento/{id}/excluir', name: 'clinica_documento_excluir')]
+
+    /**
+     * @Route("/clinica/pet/{petId}/documento/{id}/excluir", name="clinica_documento_excluir", methods={"POST"})
+     */
     public function excluirDocumento(
         int $petId,
         int $id
@@ -97,7 +109,10 @@ class HistoricoController extends DefaultController
         $this->addFlash('success', 'Documento excluído com sucesso!');
         return $this->redirectToRoute('clinica_documentos', ['petId' => $petId]);
     }
-    #[Route('dashboard/clinica/clinica/pet/{petId}/documento/pdf', name: 'clinica_documento_pdf')]
+
+    /**
+     * @Route("/clinica/pet/{petId}/documento/pdf", name="clinica_documento_pdf", methods={"POST"})
+     */
     public function gerarDocumentoPdf(
         int $petId,
         Request $request,

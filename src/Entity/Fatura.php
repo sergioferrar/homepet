@@ -5,62 +5,102 @@ namespace App\Entity;
 use App\Repository\FaturaRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Table(name: 'invoice')]
-#[ORM\Entity(repositoryClass: FaturaRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass=FaturaRepository::class)
+ * @ORM\Table(name="invoice")
+ */
 class Fatura
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'integer', name: 'estabelecimento_id')]
+    /**
+     * @ORM\Column(type="integer", name="estabelecimento_id")
+     */
     private $estabelecimentoId;
 
-    #[ORM\Column(type: 'string', length: 50, name: 'numero_invoice')]
+    /**
+     * @ORM\Column(type="string", length=50, name="numero_invoice")
+     */
     private $numeroInvoice;
 
-    #[ORM\Column(type: 'string', length: 30)]
+    /**
+     * @ORM\Column(type="string", length=30)
+     */
     private $tipo; // 'assinatura', 'renovacao'
-    #[ORM\Column(type: 'string', length: 30)]
+
+    /**
+     * @ORM\Column(type="string", length=30)
+     */
     private $status; // 'pendente', 'pago', 'cancelado', 'vencido'
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, name: 'valor_total')]
+
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2, name="valor_total")
+     */
     private $valorTotal;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true, name: 'valor_desconto')]
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true, name="valor_desconto")
+     */
     private $valorDesconto;
 
-    #[ORM\Column(type: 'integer', name: 'plano_id')]
+    /**
+     * @ORM\Column(type="integer", name="plano_id")
+     */
     private $planoId;
 
-    #[ORM\Column(type: 'datetime', name: 'data_emissao')]
+    /**
+     * @ORM\Column(type="datetime", name="data_emissao")
+     */
     private $dataEmissao;
 
-    #[ORM\Column(type: 'datetime', name: 'data_vencimento')]
+    /**
+     * @ORM\Column(type="datetime", name="data_vencimento")
+     */
     private $dataVencimento;
 
-    #[ORM\Column(type: 'datetime', nullable: true, name: 'data_pagamento')]
+    /**
+     * @ORM\Column(type="datetime", nullable=true, name="data_pagamento")
+     */
     private $dataPagamento;
 
-    #[ORM\Column(type: 'string', length: 100, nullable: true, name: 'payment_gateway')]
+    /**
+     * @ORM\Column(type="string", length=100, nullable=true, name="payment_gateway")
+     */
     private $paymentGateway;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true, name: 'payment_id')]
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true, name="payment_id")
+     */
     private $paymentId;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true, name: 'subscription_id')]
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true, name="subscription_id")
+     */
     private $subscriptionId;
 
-    #[ORM\Column(type: 'text', nullable: true, name: 'payment_data')]
+    /**
+     * @ORM\Column(type="text", nullable=true, name="payment_data")
+     */
     private $paymentData;
 
-    #[ORM\Column(type: 'text', nullable: true, name: 'observacoes')]
+    /**
+     * @ORM\Column(type="text", nullable=true, name="observacoes")
+     */
     private $observacoes;
 
-    #[ORM\Column(type: 'datetime', name: 'created_at')]
+    /**
+     * @ORM\Column(type="datetime", name="created_at")
+     */
     private $createdAt;
 
-    #[ORM\Column(type: 'datetime', nullable: true, name: 'updated_at')]
+    /**
+     * @ORM\Column(type="datetime", nullable=true, name="updated_at")
+     */
     private $updatedAt;
 
     public function __construct()

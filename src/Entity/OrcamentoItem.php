@@ -4,31 +4,48 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Table(name: 'orcamento_item')]
-#[ORM\Entity]
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="orcamento_item")
+ */
 class OrcamentoItem
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
-    #[ORM\ManyToOne(targetEntity: Orcamento::class)]
+    /**
+     * @ORM\ManyToOne(targetEntity=Orcamento::class)
+     * @ORM\JoinColumn(nullable=false, onDelete="CASCADE")
+     */
     private $orcamento;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private $descricao;
 
-    #[ORM\Column(type: 'string', length: 100)]
+    /**
+     * @ORM\Column(type="string", length=100)
+     */
     private $tipo; // servico, produto, banho_tosa, clinica
-    #[ORM\Column(type: 'integer')]
+
+    /**
+     * @ORM\Column(type="integer")
+     */
     private $quantidade;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2)
+     */
     private $valorUnitario;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2)
+     */
     private $subtotal;
 
     // Getters e Setters

@@ -6,7 +6,6 @@ use App\Entity\Venda;
 use App\Entity\VendaItem;
 use App\Service\DynamicConnectionManager;
 use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -29,15 +28,17 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *   - Registros já marcados como migrado=1 são ignorados.
  *   - Flush em lotes de 100 para não estourar memória.
  */
-#[AsCommand(
-    name: 'app:migrar-financeiro-vendas',
-    description: 'Migração única: financeiro e financeiropendente → venda + venda_item',
-)]
 class MigrarFinanceiroVendasCommand extends Command
 {
-    public function __construct(private readonly ManagerRegistry $mr)
+    protected static $defaultName        = 'app:migrar-financeiro-vendas';
+    protected static $defaultDescription = 'Migração única: financeiro e financeiropendente → venda + venda_item';
+
+    private ManagerRegistry $mr;
+
+    public function __construct(ManagerRegistry $mr)
     {
         parent::__construct();
+        $this->mr = $mr;
     }
 
     protected function configure(): void
@@ -335,7 +336,7 @@ class MigrarFinanceiroVendasCommand extends Command
                     "ALTER TABLE {$tabela} ADD COLUMN migrado TINYINT(1) NOT NULL DEFAULT 0"
                 );
                 $io->text("  + Coluna `migrado` criada em {$tabela}");
-            } catch (\Throwable) {
+            } catch (\Throwable $ignored) {
                 // Coluna já existe — ignorar
             }
         }
@@ -408,8 +409,8 @@ class MigrarFinanceiroVendasCommand extends Command
         $descricaoLimpa = trim(trim($descricao), '+');
 
         $partes = array_values(array_filter(
-            array_map(trim(...), explode('+', $descricaoLimpa)),
-            fn($s) => $s !== ''
+            array_map('trim', explode('+', $descricaoLimpa)),
+            function ($s) { return $s !== ''; }
         ));
 
         if (empty($partes)) {

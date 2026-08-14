@@ -4,34 +4,38 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Table(name: 'receita')]
-#[ORM\Entity(repositoryClass: \App\Repository\ReceitaRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass="App\Repository\ReceitaRepository")
+ * @ORM\Table(name="receita")
+ */
 class Receita
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'integer')]
+    /** @ORM\Column(type="integer") */
     private $estabelecimento_id;
 
-    #[ORM\Column(type: 'integer')]
+    /** @ORM\Column(type="integer") */
     private $pet_id;
 
-    #[ORM\Column(type: 'date')]
+    /** @ORM\Column(type="date") */
     private $data;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    /** @ORM\Column(type="string", length=255, nullable=true) */
     private $resumo;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    /** @ORM\Column(type="text", nullable=true) */
     private $cabecalho;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    /** @ORM\Column(type="text", nullable=true) */
     private $conteudo;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    /** @ORM\Column(type="text", nullable=true) */
     private $rodape;
 
     public function getId(): ?int { return $this->id; }

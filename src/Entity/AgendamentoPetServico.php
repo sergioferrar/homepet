@@ -5,24 +5,36 @@ namespace App\Entity;
 use App\Repository\AgendamentoPetServicoRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: AgendamentoPetServicoRepository::class)]
+/**
+ * @ORM\Entity(repositoryClass=AgendamentoPetServicoRepository::class)
+ */
 class AgendamentoPetServico
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
     private $id;
 
-    #[ORM\Column(type: 'integer', name: 'agendamentoId')]
+    /**
+     * @ORM\Column(type="integer", name="agendamentoId")
+     */
     private $agendamentoId;
 
-    #[ORM\Column(type: 'integer', name: 'petId')]
+    /**
+     * @ORM\Column(type="integer", name="petId")
+     */
     private $petId;
 
-    #[ORM\Column(type: 'integer', name: 'servicoId')]
+    /**
+     * @ORM\Column(type="integer", name="servicoId")
+     */
     private $servicoId;
 
-    #[ORM\Column(type: 'integer')]
+    /**
+     * @ORM\Column(type="integer")
+     */
     private $estabelecimentoId;
 
     public function getId(): ?int

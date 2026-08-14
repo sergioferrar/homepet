@@ -13,12 +13,11 @@ class PagamentoController extends DefaultController
 {
 
     /**
-     * @
+     * @Route("/pagamento/retorno", name="pagamento_retorno")
      *
      * Retorno síncrono após pagamento (redirect do MP).
      * NÃO depende de sessão — usa external_reference (invoice_id) para ativar o estabelecimento.
      */
-    #[Route("/pagamento/retorno", name: "pagamento_retorno")]
     public function notificacao(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
         // O fluxo de cadastro usa assinatura recorrente (preapproval), portanto o MP
@@ -30,7 +29,7 @@ class PagamentoController extends DefaultController
         $externalReference = $request->get('external_reference');
 
         if (!$paymentId && !$preapprovalId) {
-            return new Response('ID de pagamento ausente', \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
+            return new Response('ID de pagamento ausente', 400);
         }
 
         $emEstabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class);
@@ -213,15 +212,14 @@ class PagamentoController extends DefaultController
     }
 
     /**
-     * @
+     * @Route("/pagamento/webhook/mercadopago", name="pagamento_webhook_mercadopago", methods={"POST"})
      */
-    #[Route("/pagamento/webhook/mercadopago", name: "pagamento_webhook_mercadopago")]
     public function webhookMercadoPago(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
 
         if (!$data) {
-            return new Response('Invalid payload', \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
+            return new Response('Invalid payload', 400);
         }
 
         try {
@@ -280,53 +278,49 @@ class PagamentoController extends DefaultController
                 }
             }
 
-            return new Response('OK', \Symfony\Component\HttpFoundation\Response::HTTP_OK);
+            return new Response('OK', 200);
         } catch (\Exception $e) {
             error_log('Erro no webhook: ' . $e->getMessage());
-            return new Response('Error', \Symfony\Component\HttpFoundation\Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new Response('Error', 500);
         }
     }
 
     /**
-     * @
+     * @Route("/pagamento/sucesso", name="pagamento_sucesso")
      */
-    #[Route("/pagamento/sucesso", name: "pagamento_sucesso")]
-    public function success(): Response
+    public function success(Request $request): Response
     {
         return $this->render('pagamento/sucesso.html.twig', []);
     }
 
     /**
-     * @
+     * @Route("/pagamento/falha", name="pagamento_falha")
      */
-    #[Route("/pagamento/falha", name: "pagamento_falha")]
-    public function fail(): Response
+    public function fail(Request $request): Response
     {
         return $this->render('pagamento/falha.html.twig', []);
     }
 
     /**
-     * @
+     * @Route("/pagamento/recusado", name="pagamento_recusado")
      */
-    #[Route("/pagamento/recusado", name: "pagamento_recusado")]
-    public function recusado(): Response
+    public function recusado(Request $request): Response
     {
         return $this->render('pagamento/recusado.html.twig', []);
     }
 
     /**
-     * @
+     * @Route("/pagamento/pendente", name="pagamento_pendente")
      */
-    #[Route("/pagamento/pendente", name: "pagamento_pendente")]
-    public function pendding(): Response
+    public function pendding(Request $request): Response
     {
+
         return $this->render('pagamento/pendente.html.twig', []);
     }
 
     /**
-     * @
+     * @Route("/pagamento/pix/executar/process_payment", name="pagar_com_pix")
      */
-    #[Route("/pagamento/pix/executar/process_payment", name: "pagar_com_pix")]
     public function pagarPix(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
         // dd($request);
@@ -354,9 +348,8 @@ class PagamentoController extends DefaultController
     }
 
     /**
-     * @
+     * @Route("/pagamento/verificar-status", name="pagamento_verificar_status", methods={"GET"})
      */
-    #[Route("/pagamento/verificar-status", name: "pagamento_verificar_status", methods: "{GET}")]
     public function verificarStatus(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
         $paymentId = $request->query->get('payment_id');
@@ -386,9 +379,8 @@ class PagamentoController extends DefaultController
     }
 
     /**
-     * @
+     * @Route("/pagamento/cartao/processar", name="pagar_com_cartao", methods={"POST"})
      */
-    #[Route("/pagamento/cartao/processar", name: "pagar_com_cartao")]
     public function pagarCartao(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
         $data = json_decode($request->getContent(), true);
