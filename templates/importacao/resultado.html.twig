@@ -1,0 +1,52 @@
+{% extends 'list/_list_base.html.twig' %}
+
+{% block title %}Resultado da Importação{% endblock %}
+{% block list_title %}Resultado da Importação{% endblock %}
+{% block breadcrumbsAction %}{% endblock %}
+{% block breadcrumbsGrupo %}Configurações{% endblock %}
+{% block breadcrumbsAtivo %}Resultado da Importação{% endblock %}
+{% block page_title %}Resultado da Importação{% endblock %}
+
+{% block list_content %}
+<div class="container-fluid py-4">
+
+    <a href="{{ path('importacao_index') }}" class="btn btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left"></i> Voltar para importação
+    </a>
+
+    {% set abas = {
+        'clientes': 'Clientes',
+        'pets': 'Pets',
+        'produtos': 'Produtos',
+        'servicos': 'Serviços'
+    } %}
+
+    <div class="row g-3">
+        {% for chave, titulo in abas %}
+            {% set dados = resultado[chave] %}
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-body p-4">
+                        <h5 class="card-title" style="color:#004080; font-weight:bold;">{{ titulo }}</h5>
+                        <p class="mb-1"><i class="bi bi-check-circle text-success"></i> <strong>{{ dados.sucesso }}</strong> importado(s) com sucesso</p>
+                        <p class="mb-1"><i class="bi bi-exclamation-circle text-warning"></i> <strong>{{ dados.duplicados }}</strong> ignorado(s) por já existir</p>
+                        <p class="mb-2"><i class="bi bi-x-circle text-danger"></i> <strong>{{ dados.erros|length }}</strong> com erro</p>
+
+                        {% if dados.erros|length > 0 %}
+                            <details>
+                                <summary class="text-danger" style="cursor:pointer;">Ver detalhes dos erros</summary>
+                                <ul class="mt-2 small">
+                                    {% for erro in dados.erros %}
+                                        <li>{{ erro }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </details>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

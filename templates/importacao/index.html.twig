@@ -1,0 +1,66 @@
+{% extends 'list/_list_base.html.twig' %}
+
+{% block title %}Importação de Dados{% endblock %}
+{% block list_title %}Importação de Dados{% endblock %}
+{% block breadcrumbsAction %}{% endblock %}
+{% block breadcrumbsGrupo %}Configurações{% endblock %}
+{% block breadcrumbsAtivo %}Importação de Dados{% endblock %}
+{% block page_title %}Importação de Dados{% endblock %}
+
+{% block list_content %}
+<div class="container-fluid py-4">
+
+    {% for type, messages in app.flashes %}
+        {% for msg in messages %}
+            <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert">
+                {{ msg }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="card-title" style="color:#004080; font-weight:bold;">
+                <i class="bi bi-info-circle"></i> Como funciona
+            </h5>
+            <p class="mb-2">
+                Está migrando de outro sistema? Baixe o modelo de planilha abaixo, preencha com os dados
+                de <strong>Clientes</strong>, <strong>Pets</strong>, <strong>Produtos</strong> e <strong>Serviços</strong>
+                do seu sistema anterior e envie o arquivo aqui. O Home Pet Shop System vai processar e cadastrar
+                automaticamente esses dados na sua base.
+            </p>
+            <ul class="mb-3">
+                <li>O arquivo pode ser <strong>.xlsx</strong>, <strong>.xls</strong> ou <strong>.csv</strong> (máx. 5MB).</li>
+                <li>Cada aba da planilha corresponde a um tipo de dado — preencha só as que precisar.</li>
+                <li>Registros já existentes (mesmo e-mail/CPF, código ou nome) são identificados como duplicados e ignorados.</li>
+                <li>A aba "Instruções" do próprio modelo explica cada coluna em detalhes.</li>
+            </ul>
+            <a href="{{ path('importacao_modelo') }}" class="btn btn-outline-primary">
+                <i class="bi bi-download"></i> Baixar modelo de importação (.xlsx)
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <h5 class="card-title" style="color:#004080; font-weight:bold;">
+                <i class="bi bi-upload"></i> Enviar arquivo preenchido
+            </h5>
+
+            <form action="{{ path('importacao_processar') }}" method="post" enctype="multipart/form-data" class="mt-3">
+                <div class="mb-3" style="max-width: 480px;">
+                    <label for="arquivo" class="form-label">Arquivo de importação</label>
+                    <input type="file" class="form-control" id="arquivo" name="arquivo"
+                           accept=".xlsx,.xls,.csv" required>
+                    <div class="form-text">Envie o modelo preenchido com os dados do seu sistema anterior.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-cloud-upload"></i> Processar importação
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
