@@ -755,14 +755,15 @@
                                                                             data-bs-toggle="modal" data-bs-target="#modalEditarVenda">
                                                                         <i class="fas fa-edit"></i>
                                                                     </button>
-                                                                    {% if v.status in ['Carrinho', 'carrinho', 'Aberta'] %}
+                                                                    
                                                                     <button type="button"
                                                                             class="btn btn-sm btn-success btn-lancar-pdv"
                                                                             data-id="{{ v.id }}"
+                                                                            data-bg-toogle="tooltip"
                                                                             title="Abrir esta venda no PDV para finalização">
                                                                         <i class="bi bi-cash-stack"></i>
                                                                     </button>
-                                                                    {% endif %}
+                                                                    
                                                                     <button type="button" class="btn btn-sm btn-danger btn-inativar-venda"
                                                                             data-id="{{ v.id }}" title="Inativar venda">
                                                                         <i class="bi bi-slash-circle"></i>
