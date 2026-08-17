@@ -318,7 +318,8 @@
         {% set impersonando = is_granted('ROLE_SUPER_ADMIN')
             and app.session.get('impersonating_establishment') %}
         {% set configEstabRoutes = ['app_settings', 'setting_payment_estabelecimento', 'setting_mailer_estabelecimento'] %}
-        {% set configRoutes = configEstabRoutes|merge(['superadmin_configuracoes_globais']) %}
+        {% set importacaoRoutes = ['importacao_index', 'importacao_processar'] %}
+        {% set configRoutes = configEstabRoutes|merge(['superadmin_configuracoes_globais'])|merge(importacaoRoutes) %}
         {% set configAberto = route in configRoutes %}
 
         {% if isSuperAdminPuro or is_granted('ROLE_ADMIN') or impersonando %}
@@ -344,6 +345,14 @@
                     <a href="{{ url('app_settings') }}"
                        class="{{ route in configEstabRoutes ? 'active' : '' }}">
                         <i class="bi bi-gear"></i><span>Configurações</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if is_granted('ROLE_ADMIN') and not isSuperAdminPuro %}
+                <li>
+                    <a href="{{ path('importacao_index') }}"
+                       class="{{ route in importacaoRoutes ? 'active' : '' }}">
+                        <i class="bi bi-file-earmark-arrow-up"></i><span>Importação de Dados</span>
                     </a>
                 </li>
                 {% endif %}
