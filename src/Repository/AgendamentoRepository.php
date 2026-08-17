@@ -220,12 +220,16 @@ class AgendamentoRepository extends ServiceEntityRepository
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
+    /**
+     * Alimenta o select de pets ao criar um novo agendamento.
+     * Pets em óbito ficam de fora da seleção (o registro em si não é removido).
+     */
     public function findAllPets($baseId): array
     {
         $sql = "SELECT p.id, CONCAT(p.nome, ' - ', c.nome) AS nome, p.especie, p.idade
                 FROM homepet_{$baseId}.pet p
                 LEFT JOIN homepet_{$baseId}.cliente c ON (p.dono_id = c.id AND c.estabelecimento_id = '{$baseId}')
-                WHERE p.estabelecimento_id = '{$baseId}'";
+                WHERE p.estabelecimento_id = '{$baseId}' AND p.status != 'obito'";
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
     }

@@ -169,6 +169,8 @@ class ClienteRepository extends ServiceEntityRepository
 
     public function findPetsByCliente($baseId, int $clienteId): array
         {
+            // Mantém TODOS os pets do cliente (inclusive em óbito) — esta é a ficha
+            // do cliente, onde o histórico completo deve continuar visível.
             $sql = "SELECT 
                         id,
                         nome,
@@ -177,7 +179,9 @@ class ClienteRepository extends ServiceEntityRepository
                         raca,
                         porte,
                         idade,
-                        observacoes
+                        observacoes,
+                        status,
+                        data_obito
                     FROM homepet_{$baseId}.pet 
                     WHERE dono_id = :id AND estabelecimento_id = '{$baseId}'";
             return $this->conn->fetchAllAssociative($sql, ['id' => $clienteId]);
@@ -240,10 +244,14 @@ class ClienteRepository extends ServiceEntityRepository
         return $clientes;
     }
 
+    /**
+     * Usado no PDV para selecionar o pet de uma nova venda.
+     * Pets em óbito ficam de fora da seleção (o registro em si não é removido).
+     */
     public function listarPetsDoCliente($baseId, $clienteId): array
     {
         $sql = "SELECT id, nome, raca FROM homepet_{$baseId}.pet
-                WHERE dono_id = :clienteId AND estabelecimento_id = :baseId";
+                WHERE dono_id = :clienteId AND estabelecimento_id = :baseId AND status != 'obito'";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('clienteId', $clienteId);

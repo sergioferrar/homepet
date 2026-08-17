@@ -54,6 +54,18 @@ class Pet
     /** @ORM\Column(type="boolean", options={"default": false}) */
     private $castrado = false;
 
+    /**
+     * ativo | obito — controla se o pet pode ser selecionado em novos
+     * lançamentos (agendamento, venda, atendimento). O registro nunca é
+     * excluído e continua disponível normalmente em listagens e relatórios.
+     *
+     * @ORM\Column(type="string", length=20, options={"default": "ativo"})
+     */
+    private $status = 'ativo';
+
+    /** @ORM\Column(type="datetime", nullable=true) */
+    private $dataObito;
+
     // ===================== Getters & Setters =====================
 
     public function getId(): ?int { return $this->id; }
@@ -126,4 +138,12 @@ class Pet
 
     public function getCastrado(): bool { return $this->castrado; }
     public function setCastrado(bool $castrado): self { $this->castrado = $castrado; return $this; }
+
+    public function getStatus(): string { return $this->status ?: 'ativo'; }
+    public function setStatus(string $status): self { $this->status = $status; return $this; }
+
+    public function isObito(): bool { return $this->getStatus() === 'obito'; }
+
+    public function getDataObito(): ?\DateTimeInterface { return $this->dataObito; }
+    public function setDataObito(?\DateTimeInterface $dataObito): self { $this->dataObito = $dataObito; return $this; }
 }

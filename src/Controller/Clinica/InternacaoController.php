@@ -353,6 +353,14 @@ class InternacaoController extends DefaultController
             }
         }
 
+        // ── Óbito: fecha a ficha e marca o pet como falecido ───────────
+        // O pet nunca é excluído — apenas fica indisponível para seleção em
+        // novos lançamentos (agendamento, venda, atendimento), continuando
+        // visível normalmente em listagens, fichas e relatórios.
+        if ($acaoInfo['status'] === 'obito') {
+            $this->getRepositorio(Pet::class)->marcarObito($baseId, (int) $internacao['pet_id'], new \DateTime());
+        }
+
         $internacaoRepo->inserirEvento(
             $baseId, $id, (int) $internacao['pet_id'],
             ucfirst($acao),

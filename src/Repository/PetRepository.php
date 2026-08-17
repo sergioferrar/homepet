@@ -58,7 +58,9 @@ class PetRepository extends ServiceEntityRepository
 
     public function findAllPets($baseId): array
     {
-        $sql = "SELECT p.id, CONCAT(p.nome, ' - ', c.nome) AS nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.data_nascimento, p.observacoes, c.nome as dono_nome
+        // Mantém TODOS os pets (inclusive em óbito) — esta listagem alimenta telas
+        // de consulta geral e relatórios, onde o pet falecido deve continuar aparecendo.
+        $sql = "SELECT p.id, CONCAT(p.nome, ' - ', c.nome) AS nome, p.especie, p.sexo, p.raca, p.porte, p.idade, p.data_nascimento, p.observacoes, p.status, c.nome as dono_nome
                 FROM homepet_{$baseId}.pet p
                 JOIN homepet_{$baseId}.cliente c ON (p.dono_id = c.id)
                 WHERE p.estabelecimento_id = '{$baseId}'";
@@ -67,19 +69,42 @@ class PetRepository extends ServiceEntityRepository
         return $stmt->fetchAllAssociative();
     }
 
-    public function pesquisarPetsOuTutor($baseId, string $termo): array
+    /**
+     * Usado na busca do dashboard da Clínica, que direciona o usuário para abrir um
+     * novo atendimento/internação. Pets em óbito ficam de fora por padrão.
+     */
+    public function pesquisarPetsOuTutor($baseId, string $termo, bool $apenasAtivos = true): array
     {
-        $sql = "SELECT p.id, p.nome, p.especie, p.raca, c.nome AS dono_nome
+        $sql = "SELECT p.id, p.nome, p.especie, p.raca, p.status, c.nome AS dono_nome
                 FROM homepet_{$baseId}.pet p
                 JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
                 WHERE p.estabelecimento_id = :baseId
-                  AND (p.nome LIKE :termo OR c.nome LIKE :termo)
+                  AND (p.nome LIKE :termo OR c.nome LIKE :termo)"
+                  . ($apenasAtivos ? " AND p.status != 'obito'" : "") . "
                 ORDER BY p.nome ASC";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('baseId', $baseId);
         $stmt->bindValue('termo', "%{$termo}%");
         return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Marca o pet como falecido. O registro nunca é excluído: ele continua
+     * aparecendo em listagens, fichas e relatórios, apenas fica de fora das
+     * telas de seleção usadas para novos lançamentos (agendamento, venda, atendimento).
+     */
+    public function marcarObito($baseId, int $petId, \DateTimeInterface $dataObito): void
+    {
+        $sql = "UPDATE homepet_{$baseId}.pet
+                SET status = 'obito', data_obito = :dataObito
+                WHERE estabelecimento_id = :baseId AND id = :id";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('dataObito', $dataObito->format('Y-m-d H:i:s'));
+        $stmt->bindValue('baseId', $baseId);
+        $stmt->bindValue('id', $petId);
+        $stmt->execute();
     }
 
 
@@ -191,11 +216,15 @@ class PetRepository extends ServiceEntityRepository
         return $dados;
     }
 
+    /**
+     * Alimenta o select de pets ao abrir um novo atendimento na Clínica
+     * (rota clinica_api_pets). Pets em óbito ficam de fora da seleção.
+     */
     public function buscarPetsPorCliente($baseId, $clienteId): array
     {
         $sql = "SELECT id, nome 
                 FROM homepet_{$baseId}.pet
-                WHERE estabelecimento_id = :baseId AND dono_id = :clienteId
+                WHERE estabelecimento_id = :baseId AND dono_id = :clienteId AND status != 'obito'
                 ORDER BY nome";
 
         $stmt = $this->conn->prepare($sql);

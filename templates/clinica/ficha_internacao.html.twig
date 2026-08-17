@@ -641,7 +641,7 @@ $(function () {
         const token = $btn.data('token');
         let msg = 'Confirmar esta ação na internação?';
         if (url.includes('alta'))    msg = 'Confirmar alta desta internação?';
-        if (url.includes('obito'))   msg = 'Confirmar óbito desta internação?';
+        if (url.includes('obito'))   msg = 'Confirmar óbito desta internação? O pet será marcado como falecido e ficará indisponível para novos agendamentos/atendimentos, mas continuará visível em relatórios e no histórico.';
         if (url.includes('cancelar'))msg = 'Confirmar cancelamento desta internação?';
 
         Utils.modal(msg, 'primary', function () {

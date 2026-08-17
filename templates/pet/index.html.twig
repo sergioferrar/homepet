@@ -51,6 +51,11 @@
                                                 {{ pet.nome }}
                                             </a>
                                             <span class="text-muted fs-6">— {{ pet.dono_nome }}</span>
+                                            {% if pet.status == 'obito' %}
+                                                <span class="badge bg-secondary ms-1">
+                                                    <i class="bx bx-info-circle"></i> Falecido
+                                                </span>
+                                            {% endif %}
                                         </h5>
 
                                         <div class="d-flex flex-wrap gap-3 text-muted small mt-1">
