@@ -49,6 +49,13 @@ class GeradorpdfService
 
         $folderPath = dirname(__DIR__, 2) . '/public/';
 
+        // O mPDF usa por padrão vendor/mpdf/mpdf/tmp como cache. Em produção o
+        // usuário do servidor web (ex.: www-data) normalmente não tem permissão
+        // de escrita dentro de vendor/, o que gera "mkdir(): Permission denied".
+        // Redirecionamos o cache para dentro de var/, que já precisa ser
+        // gravável pelo próprio Symfony (var/cache, var/log).
+        $this->config['tempDir'] = $this->resolverDiretorioTempMpdf();
+
         // //require("mpdf/mpdf.php");
         $this->pdf = new \Mpdf\Mpdf($this->config);
 //        //$this->ci = &get_instance();
@@ -60,6 +67,28 @@ class GeradorpdfService
         $this->pdf->list_indent_first_level = 1;
         $this->css = ''; //file_get_contents($folderPath . 'assets/css/style.css'); ## caminho para o css
         $this->nomeArquivo = date('d/m/Y') . 'pdf';
+    }
+
+    /**
+     * Garante um diretório gravável para o cache do mPDF (var/mpdf_tmp),
+     * criando-o se necessário. Se por algum motivo var/ também não estiver
+     * gravável, cai para o diretório temporário do sistema operacional, para
+     * não derrubar a geração do PDF por causa do cache.
+     */
+    private function resolverDiretorioTempMpdf(): string
+    {
+        $diretorioProjeto = rtrim($this->tempDirManager->diretorioProjeto, '/');
+        $tempDir = $diretorioProjeto . '/var/mpdf_tmp';
+
+        if (!is_dir($tempDir)) {
+            @mkdir($tempDir, 0775, true);
+        }
+
+        if (is_dir($tempDir) && is_writable($tempDir)) {
+            return $tempDir;
+        }
+
+        return sys_get_temp_dir() . '/mpdf_homepet';
     }
 
     public function getTempDirManager()
