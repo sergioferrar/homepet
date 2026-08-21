@@ -6,6 +6,7 @@ use App\Controller\DefaultController;
 use App\Entity\Cliente;
 use App\Entity\Consulta;
 use App\Entity\Pet;
+use App\Entity\PesoPet;
 use App\Entity\Veterinario;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -390,15 +391,106 @@ class FichaController extends DefaultController
     {
         $this->switchDB();
         $baseId = $this->getIdBase();
-        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
 
-        if ($request->isMethod('POST')) {
-            // Lógica para salvar o novo registro de peso
-            $this->addFlash('success', 'Peso registrado com sucesso!');
-            return $this->redirectToRoute('clinica_detalhes_pet', ['id' => $petId]);
+        // Busca o pet como entidade
+        $petRepo = $this->getRepositorio(Pet::class);
+        $pet = $petRepo->findOneBy([
+            'id' => $petId,
+            'estabelecimentoId' => $baseId
+        ]);
+        
+        if (!$pet) {
+            throw $this->createNotFoundException('Pet não encontrado.');
         }
 
-        return $this->render('clinica/novo_peso.html.twig', ['pet' => $pet]);
+        // Busca histórico de peso
+        $pesoPetRepo = $this->getRepositorio(PesoPet::class);
+        $historicoPeso = $pesoPetRepo->buscarHistoricoPeso($baseId, $petId);
+
+        // Busca veterinários ativos (uma única consulta)
+        $veterinarios = $this->getRepositorio(Veterinario::class)->findBy([
+            'estabelecimentoId' => $baseId,
+            'status' => 'ativo'
+        ]);
+        
+        // Debug: busca todos veterinários se não encontrar ativos
+        if (empty($veterinarios)) {
+            $veterinarios = $this->getRepositorio(Veterinario::class)->findBy(['estabelecimentoId' => $baseId]);
+        }
+        
+        // Cria mapa de veterinários para o histórico (reutiliza os já carregados)
+        $veterinariosMap = [];
+        foreach ($veterinarios as $vet) {
+            $veterinariosMap[$vet->getId()] = $vet->getNome();
+        }
+
+        if ($request->isMethod('POST')) {
+            $peso = $request->get('peso');
+            $data = $request->get('data');
+            $hora = $request->get('hora');
+            $observacoes = $request->get('observacoes');
+            $veterinarioId = $request->get('veterinario_id');
+            $atualizarFicha = $request->get('atualizar_ficha');
+
+            // Validações básicas
+            if (!$peso || !is_numeric($peso) || $peso <= 0) {
+                $this->addFlash('error', 'Peso inválido.');
+                return $this->redirectToRoute('clinica_novo_peso', ['petId' => $petId]);
+            }
+
+            // Cria novo registro de peso
+            $pesoPet = new PesoPet();
+            $pesoPet->setPetId($petId);
+            $pesoPet->setEstabelecimentoId($baseId);
+            $pesoPet->setPeso($peso);
+            $pesoPet->setData(new \DateTime($data ?: 'now'));
+            $pesoPet->setHora(new \DateTime($hora ?: 'now'));
+            $pesoPet->setObservacoes($observacoes);
+            $pesoPet->setVeterinarioId($veterinarioId ?: null);
+
+            // Salva no histórico
+            $pesoPetRepo->salvarPeso($pesoPet);
+
+            // Se marcado para atualizar a ficha, atualiza o peso atual do pet
+            if ($atualizarFicha) {
+                $pet->setPeso($peso);
+                $this->getDoctrine()->getManager()->flush();
+            }
+
+            $this->addFlash('success', 'Peso registrado com sucesso!');
+            return $this->redirectToRoute('clinica_novo_peso', ['petId' => $petId]);
+        }
+
+        return $this->render('clinica/novo_peso.html.twig', [
+            'pet' => $pet,
+            'historicoPeso' => $historicoPeso,
+            'veterinarios' => $veterinarios,
+            'veterinariosMap' => $veterinariosMap,
+        ]);
+    }
+
+    /**
+     * @Route("/pet/peso/{pesoId}/deletar", name="clinica_deletar_peso", methods={"POST"})
+     */
+    public function deletarPeso(Request $request, int $pesoId): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $pesoPetRepo = $this->getRepositorio(PesoPet::class);
+        $pesoPet = $pesoPetRepo->find($pesoId);
+
+        if (!$pesoPet || $pesoPet->getEstabelecimentoId() !== $baseId) {
+            throw $this->createNotFoundException('Registro de peso não encontrado.');
+        }
+
+        $petId = $pesoPet->getPetId();
+        
+        // Remove o registro
+        $pesoPetRepo->removerPeso($pesoPet);
+
+        $this->addFlash('success', 'Registro de peso removido com sucesso!');
+        return $this->redirectToRoute('clinica_novo_peso', ['petId' => $petId]);
     }
 
     /**

@@ -1,0 +1,218 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gerenciar Peso - {{ pet.nome }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .peso-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .peso-atual {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .peso-atual h2 {
+            margin: 0;
+            font-size: 3rem;
+            font-weight: bold;
+        }
+        .historico-item {
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+        }
+        .diferenca-peso {
+            font-weight: bold;
+        }
+        .ganhou { color: #28a745; }
+        .perdeu { color: #dc3545; }
+        .manteve { color: #6c757d; }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">🐾 Gerenciar Peso</h1>
+            <p class="text-muted">{{ pet.nome }} - {{ pet.especie }} {{ pet.raca }}</p>
+        </div>
+        <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar à Ficha
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Peso Atual -->
+        <div class="col-md-4">
+            <div class="peso-atual">
+                <div class="mb-2">Peso Atual</div>
+                <h2>{{ pet.peso ? pet.peso|number_format(1) : '0.0' }} <small>kg</small></h2>
+                <div class="mt-2">
+                    <i class="bi bi-rulers"></i> Registrado na ficha
+                </div>
+            </div>
+
+            <!-- Formulário Novo Peso -->
+            <div class="peso-card">
+                <h5 class="mb-3"><i class="bi bi-plus-circle"></i> Registrar Novo Peso</h5>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Peso (kg)</label>
+                        <input type="number" name="peso" class="form-control" step="0.1" min="0.1" max="200" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Data</label>
+                            <input type="date" name="data" class="form-control" value="{{ 'now'|date('Y-m-d') }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Hora</label>
+                            <input type="time" name="hora" class="form-control" value="{{ 'now'|date('H:i') }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Veterinário</label>
+                        <select name="veterinario_id" class="form-select">
+                            <option value="">Selecione um veterinário</option>
+                            {% for vet in veterinarios %}
+                                <option value="{{ vet.id }}">{{ vet.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea name="observacoes" class="form-control" rows="3" placeholder="Ex: Pesagem pós-cirúrgica, controle nutricional, etc."></textarea>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="atualizar_ficha" value="1" id="atualizar_ficha" checked>
+                        <label class="form-check-label" for="atualizar_ficha">
+                            Atualizar peso na ficha do pet
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-save"></i> Registrar Peso
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Histórico de Peso -->
+        <div class="col-md-8">
+            <div class="peso-card">
+                <h5 class="mb-3"><i class="bi bi-clock-history"></i> Histórico de Peso</h5>
+                
+                {% if historicoPeso|length > 0 %}
+                    {% for i, registro in historicoPeso %}
+                        <div class="historico-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <strong>{{ registro.peso|number_format(1) }} kg</strong>
+                                        {% if i < (historicoPeso|length - 1) %}
+                                            {% set pesoAnterior = historicoPeso[i + 1].peso %}
+                                            {% set diferenca = registro.peso - pesoAnterior %}
+                                            {% if diferenca > 0 %}
+                                                <span class="diferenca-peso ganhou">
+                                                    <i class="bi bi-arrow-up"></i> +{{ diferenca|number_format(1) }} kg
+                                                </span>
+                                            {% elseif diferenca < 0 %}
+                                                <span class="diferenca-peso perdeu">
+                                                    <i class="bi bi-arrow-down"></i> {{ diferenca|number_format(1) }} kg
+                                                </span>
+                                            {% else %}
+                                                <span class="diferenca-peso manteve">
+                                                    <i class="bi bi-dash"></i> manteve
+                                                </span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </h6>
+                                    <div class="text-muted small">
+                                        📅 {{ registro.data|date('d/m/Y') }}
+                                        {% if registro.hora %}
+                                            às {{ registro.hora|date('H:i') }}
+                                        {% endif %}
+                                    </div>
+                                    {% if registro.observacoes %}
+                                        <div class="mt-2">
+                                            <small class="text-dark">💬 {{ registro.observacoes }}</small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end text-muted small">
+                                    {% if registro.veterinarioId and veterinariosMap[registro.veterinarioId] is defined %}
+                                        <div>👨‍⚕️ Dr(a). {{ veterinariosMap[registro.veterinarioId] }}</div>
+                                    {% endif %}
+                                    <div class="mt-2">
+                                        <select class="form-select form-select-sm" onchange="acaoPeso(this, {{ registro.id }})" style="width: 120px;">
+                                            <option value="">Ações</option>
+                                            <option value="deletar">🗑️ Apagar</option>
+                                            <option value="editar">✏️ Editar</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="bi bi-info-circle"></i>
+                        Nenhum registro de peso encontrado. Registre o primeiro peso usando o formulário ao lado.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        // Foco no campo peso ao carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            const pesoInput = document.querySelector('input[name="peso"]');
+            if (pesoInput) {
+                pesoInput.focus();
+            }
+        });
+
+        // Função para lidar com ações do histórico de peso
+        function acaoPeso(selectElement, pesoId) {
+            const acao = selectElement.value;
+            
+            if (acao === 'deletar') {
+                if (confirm('Tem certeza que deseja apagar este registro de peso?')) {
+                    // Cria um form temporário para enviar POST
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{{ path('clinica_deletar_peso', {'pesoId': '__PESO_ID__'}) }}'.replace('__PESO_ID__', pesoId);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            } else if (acao === 'editar') {
+                alert('Funcionalidade de edição em desenvolvimento.');
+            }
+            
+            // Reset do select
+            selectElement.value = '';
+        }
+    </script>
+{% endblock %}
