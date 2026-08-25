@@ -78,6 +78,11 @@ class Cliente
      */
     private $estabelecimentoId; // Nome correto da propriedade
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $comoConheceu;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -224,6 +229,18 @@ class Cliente
     public function setEstabelecimentoId(int $estabelecimentoId): self
     {
         $this->estabelecimentoId = $estabelecimentoId;
+
+        return $this;
+    }
+
+    public function getComoConheceu(): ?string
+    {
+        return $this->comoConheceu;
+    }
+
+    public function setComoConheceu(?string $comoConheceu): self
+    {
+        $this->comoConheceu = $comoConheceu;
 
         return $this;
     }

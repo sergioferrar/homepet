@@ -54,6 +54,7 @@ class ClienteController extends DefaultController
                 'bairro' => $cliente->getBairro(),
                 'cidade' => $cliente->getCidade(),
                 'whatsapp' => $request->get('whatsapp'),
+                'como_conheceu' => $request->request->get('como_conheceu'),
             ]);
             $clienteId = $this->getRepositorio(Cliente::class)->getLastInsertedId();
             return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
@@ -95,6 +96,7 @@ class ClienteController extends DefaultController
                 'cidade' => $request->get('cidade'),
                 'whatsapp' => $request->get('whatsapp') ?? '',
                 'cep' => $request->get('cep'),
+                'como_conheceu' => $request->get('como_conheceu'),
             ];
 
             $clienteRepository->update($baseId, $clienteAtualizado);

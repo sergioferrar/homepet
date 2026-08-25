@@ -103,23 +103,33 @@ class ConsultaRepository extends ServiceEntityRepository
         return $result->fetchAllAssociative();
     }
 
-    public function listarConsultasDoDia($baseId, \DateTime $data): array
+    public function listarConsultasDoDia($baseId, \DateTime $data, ?string $petNome = null): array
     {
-        $sql = "SELECT c.id, c.data, c.hora, c.observacoes, c.status,
+        $sql = "SELECT c.id, c.data, c.hora, c.observacoes, c.status, c.tipo,
                        p.nome as pet_nome, cl.nome as cliente_nome,
+                       v.nome as veterinario_nome, v.crmv as veterinario_crmv,
                        (SELECT COUNT(*) FROM homepet_{$baseId}.consulta_pet cp
                          WHERE cp.consulta_id = c.id) AS pets_extra
                 FROM homepet_{$baseId}.consulta c
                 JOIN homepet_{$baseId}.pet p ON c.pet_id = p.id
                 JOIN homepet_{$baseId}.cliente cl ON c.cliente_id = cl.id
-                WHERE c.estabelecimento_id = :baseId AND c.data = :data
-                ORDER BY c.hora";
+                LEFT JOIN homepet_{$baseId}.veterinario v ON c.veterinario_id = v.id
+                WHERE c.estabelecimento_id = :baseId AND c.data = :data";
+
+        if ($petNome) {
+            $sql .= " AND p.nome LIKE :petNome";
+        }
+
+        $sql .= " ORDER BY c.hora";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('baseId', $baseId);
         $stmt->bindValue('data', $data->format('Y-m-d'));
-        $result = $stmt->executeQuery();
-        return $result->fetchAllAssociative();
+        if ($petNome) {
+            $stmt->bindValue('petNome', '%' . $petNome . '%');
+        }
+
+        return $stmt->executeQuery()->fetchAllAssociative();
     }
 
 

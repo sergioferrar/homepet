@@ -6,6 +6,7 @@ use App\Controller\DefaultController;
 use App\Entity\Consulta;
 use App\Entity\Venda;
 use App\Entity\Veterinario;
+use App\Entity\Cliente;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -204,5 +205,51 @@ class RelatorioController extends DefaultController
                 'mensagem' => 'Erro ao salvar o valor: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Relatório de "Como nos conheceu" - mostra de onde vêm os clientes.
+     *
+     * @Route("/relatorios/como-conheceu", name="clinica_relatorio_como_conheceu", methods={"GET"})
+     */
+    public function comoConheceu(Request $request): Response
+    {
+        if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        // --- Filtros (padrão: últimos 30 dias) ---
+        $hoje = new \DateTime();
+        $inicio = $request->query->get('inicio')
+            ? new \DateTime($request->query->get('inicio'))
+            : (clone $hoje)->modify('-30 days');
+        $fim = $request->query->get('fim')
+            ? new \DateTime($request->query->get('fim'))
+            : clone $hoje;
+
+        // --- Dados ---
+        $clienteRepo = $this->getRepositorio(Cliente::class);
+        $dadosRelatorio = $clienteRepo->relatorioComoConheceu($baseId, $inicio, $fim);
+
+        // Preparar dados para o gráfico
+        $labels = [];
+        $values = [];
+        $total = 0;
+
+        foreach ($dadosRelatorio as $item) {
+            $origem = $item['como_conheceu'] ?: 'Não informado';
+            $labels[] = $origem;
+            $values[] = (int) $item['quantidade'];
+            $total += (int) $item['quantidade'];
+        }
+
+        return $this->render('clinica/relatorio_como_conheceu.html.twig', [
+            'relatorio' => $dadosRelatorio,
+            'labels' => $labels,
+            'values' => $values,
+            'total' => $total,
+            'inicio' => $inicio,
+            'fim' => $fim,
+        ]);
     }
 }

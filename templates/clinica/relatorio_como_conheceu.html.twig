@@ -1,0 +1,131 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Relatório - Como Conheceram{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="pagetitle">
+            <h1>Relatório - Como Conheceram
+                <a class="me-md-5 mt-sm-3 btn btn-primary btn-sm mb-3 float-md-end" href="{{ url('home') }}">
+                    <i class="bi bi-arrow-left me-1"></i>Voltar
+                </a>
+            </h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url('home') }}">Home</a></li>
+                    <li class="breadcrumb-item">Gestão</li>
+                    <li class="breadcrumb-item active">Como Conheceram</li>
+                </ol>
+            </nav>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="inicio" class="form-label">Data Inicial</label>
+                        <input type="date" class="form-control" id="inicio" name="inicio" 
+                               value="{{ inicio.format('Y-m-d') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="fim" class="form-label">Data Final</label>
+                        <input type="date" class="form-control" id="fim" name="fim" 
+                               value="{{ fim.format('Y-m-d') }}">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                        <button type="button" class="btn btn-success" onclick="window.print()">
+                            <i class="bi bi-printer"></i> Imprimir
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Gráfico -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Distribuição por Canal</h5>
+                        <canvas id="graficoOrigem" width="400" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela de dados -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Detalhamento - Total: {{ total }} tutores</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Canal</th>
+                                        <th>Quantidade</th>
+                                        <th>%</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in relatorio %}
+                                        <tr>
+                                            <td>{{ item.como_conheceu ?: 'Não informado' }}</td>
+                                            <td>{{ item.quantidade }}</td>
+                                            <td>{{ ((item.quantidade / total) * 100)|number_format(1) }}%</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista detalhada (apenas para impressão) -->
+        <div class="d-none d-print-block mt-4">
+            <h3>Detalhamento por Canal</h3>
+            {% for item in relatorio %}
+                <div class="mb-3">
+                    <h5>{{ item.como_conheceu ?: 'Não informado' }} ({{ item.quantidade }} tutores)</h5>
+                    <p><small>{{ item.clientes }}</small></p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('graficoOrigem').getContext('2d');
+        
+        // Cores para o gráfico
+        const cores = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0'
+        ];
+        
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ labels|json_encode|raw }},
+                datasets: [{
+                    data: {{ values|json_encode|raw }},
+                    backgroundColor: cores.slice(0, {{ labels|length }}),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,24 +1,63 @@
-{% extends 'baseClinica.html.twig' %}
+{% extends 'base.html.twig' %}
 
 {% block title %}Nova Consulta{% endblock %}
+{% block page_title %}Nova Consulta Veterinária{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .consulta-card { border: 0; border-radius: 12px; }
+        .consulta-lista { max-height: 560px; overflow-y: auto; }
+        .status-box { transition: background-color .2s ease; }
+        .tutor-busca { position: relative; }
+        .tutor-resultados {
+            position: absolute;
+            z-index: 1050;
+            width: 100%;
+            max-height: 240px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, .15);
+        }
+        .tutor-opcao { cursor: pointer; }
+        .tutor-opcao:hover { background: #f0f6ff; }
+    </style>
+{% endblock %}
 
 {% block body %}
-    <div class="container mt-4">
-        <div class="row">
+    <div class="pagetitle">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h1>Nova Consulta Veterinária</h1>
+            <a href="{{ path('clinica_dashboard') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-1"></i>Voltar ao Dashboard
+            </a>
+        </div>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('home') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('clinica_dashboard') }}">Clínica Veterinária</a></li>
+                <li class="breadcrumb-item active">Nova Consulta</li>
+            </ol>
+        </nav>
+    </div>
+
+    <section class="section">
+        <div class="row g-4">
             <!-- COLUNA ESQUERDA - FORMULÁRIO -->
-            <div class="col-md-8">
-                <div class="card shadow-sm mb-4">
+            <div class="col-lg-8">
+                <div class="card consulta-card shadow-sm mb-4">
                     <div class="card-body">
                         <h4 class="mb-4">Marcar Nova Consulta</h4>
-                        <form method="post">
-                            <div class="form-group mb-3">
-                                <label for="cliente_id">Cliente</label>
-                                <select id="cliente_id" name="cliente_id" class="form-control" required>
-                                    <option value="">Selecione</option>
-                                    {% for cliente in clientes %}
-                                        <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
-                                    {% endfor %}
-                                </select>
+                        <form method="post" id="form_consulta">
+                            <div class="form-group mb-3 tutor-busca">
+                                <label for="tutor_nome" class="form-label">Tutor</label>
+                                <input type="text" id="tutor_nome" class="form-control"
+                                       placeholder="Digite parte do nome do tutor" autocomplete="off" required>
+                                <div id="tutor_resultados" class="tutor-resultados d-none"></div>
+                                <input type="hidden" id="cliente_id" name="cliente_id">
+                                <div id="tutor_feedback" class="form-text">Digite pelo menos 1 letra e clique no tutor.</div>
                             </div>
 
                             <div class="form-group mb-3">
@@ -55,10 +94,27 @@
                             </div>
 
                             <div class="form-group mb-3">
-                                <select class="form-select" aria-label="Default select example">
-                                    <option selected>tipo</option>
-                                    <option value="1">Atendimento Clínico</option>
-                                    <option value="2">Vacina</option>
+                                <label for="tipo">Tipo de Atendimento</label>
+                                <select class="form-select" id="tipo" name="tipo" required>
+                                    <option value="">Selecione o tipo</option>
+                                    <option value="Consulta">Atendimento Clínico</option>
+                                    <option value="Vacina">Vacina</option>
+                                    <option value="Retorno">Retorno</option>
+                                    <option value="Emergência">Emergência</option>
+                                    <option value="Cirurgia">Cirurgia</option>
+                                    <option value="Exame">Exame</option>
+                                    <option value="Ultrassom">Ultrassom</option>
+                                    <option value="Raio X">Raio X</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="veterinario_id">Veterinário</label>
+                                <select class="form-control" id="veterinario_id" name="veterinario_id">
+                                    <option value="">Selecione o veterinário</option>
+                                    {% for vet in veterinarios %}
+                                        <option value="{{ vet.id }}">{{ vet.nome }}{% if vet.crmv %} - CRMV: {{ vet.crmv }}{% endif %}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
 
@@ -105,6 +161,9 @@
                                             <strong>🕒 {{ c.hora|date('H:i') }}</strong><br>
                                             <strong>🐶 Pet:</strong> {{ c.pet_nome }}{% if c.pets_extra is defined and c.pets_extra > 0 %} <span class="badge bg-info text-dark">+{{ c.pets_extra }} pet{{ c.pets_extra > 1 ? 's' : '' }}</span>{% endif %}<br>
                                             <strong>👤 Dono:</strong> {{ c.cliente_nome }}<br>
+                                            {% if c.veterinario_nome %}
+                                                <strong>👨‍⚕️ Veterinário:</strong> {{ c.veterinario_nome }}<br>
+                                            {% endif %}
                                             {% if c.observacoes %}
                                                 <strong>📌 Obs:</strong> {{ c.observacoes }}
                                             {% endif %}
@@ -138,22 +197,97 @@
     </div>
 
     <script>
+        const tutorInput = document.getElementById('tutor_nome');
+        const clienteInput = document.getElementById('cliente_id');
+        const tutorFeedback = document.getElementById('tutor_feedback');
+        const tutorResultados = document.getElementById('tutor_resultados');
+        const tutores = {{ clientes|map(cliente => {nome: cliente.nome, id: cliente.id, telefone: cliente.telefone|default('')})|json_encode|raw }};
         let petsDoCliente = [];
 
-        document.getElementById('cliente_id').addEventListener('change', function () {
-            const clienteId = this.value;
+        tutorInput.addEventListener('input', function () {
+            clienteInput.value = '';
+            petsDoCliente = [];
+            document.getElementById('pet_id').innerHTML = '<option value="">Selecione o tutor primeiro</option>';
+            tutorFeedback.textContent = 'Clique em um tutor da lista.';
+            tutorFeedback.className = 'form-text';
+
+            const termo = normalizar(this.value);
+            if (!termo) {
+                tutorResultados.classList.add('d-none');
+                return;
+            }
+
+            const encontrados = tutores
+                .filter(tutor => normalizar(tutor.nome).includes(termo))
+                .slice(0, 20);
+
+            tutorResultados.innerHTML = encontrados.length
+                ? encontrados.map(tutor => `
+                    <button type="button" class="tutor-opcao list-group-item list-group-item-action"
+                            data-id="${tutor.id}" data-nome="${escaparHtml(tutor.nome)}">
+                        <strong>${escaparHtml(tutor.nome)}</strong>
+                        ${tutor.telefone ? `<small class="text-muted d-block">${escaparHtml(tutor.telefone)}</small>` : ''}
+                    </button>
+                `).join('')
+                : '<div class="p-3 text-muted">Nenhum tutor encontrado.</div>';
+            tutorResultados.classList.remove('d-none');
+        });
+
+        tutorResultados.addEventListener('click', function (event) {
+            const opcao = event.target.closest('.tutor-opcao');
+            if (!opcao) return;
+
+            clienteInput.value = opcao.dataset.id;
+            tutorInput.value = opcao.dataset.nome;
+            tutorResultados.classList.add('d-none');
+            tutorFeedback.textContent = `Tutor selecionado: ${opcao.dataset.nome}`;
+            tutorFeedback.className = 'form-text text-success';
+            carregarPets(opcao.dataset.id);
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest('.tutor-busca')) {
+                tutorResultados.classList.add('d-none');
+            }
+        });
+
+        document.getElementById('form_consulta').addEventListener('submit', function (event) {
+            if (!clienteInput.value) {
+                event.preventDefault();
+                tutorFeedback.textContent = 'Selecione um tutor na lista antes de salvar.';
+                tutorFeedback.className = 'form-text text-danger';
+                tutorInput.focus();
+            }
+        });
+
+        function normalizar(valor) {
+            return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+        }
+
+        function escaparHtml(valor) {
+            const div = document.createElement('div');
+            div.textContent = valor || '';
+            return div.innerHTML;
+        }
+
+        function carregarPets(clienteId) {
+            const select = document.getElementById('pet_id');
+            select.innerHTML = '<option value="">Selecione o pet</option>';
+            petsDoCliente = [];
+
+            if (!clienteId) {
+                renderPetsAdicionais();
+                return;
+            }
+
             const url = '{{ path("clinica_api_pets", {"clienteId": "CLIENTE_ID"}) }}'.replace('CLIENTE_ID', clienteId);
 
             fetch(url)
                 .then(resp => resp.json())
                 .then(data => {
                     petsDoCliente = data || [];
-                    const select = document.getElementById('pet_id');
-                    select.innerHTML = '';
                     if (petsDoCliente.length === 0) {
-                        const opt = document.createElement('option');
-                        opt.text = 'Nenhum pet encontrado';
-                        select.appendChild(opt);
+                        select.innerHTML = '<option value="">Nenhum pet encontrado</option>';
                     } else {
                         petsDoCliente.forEach(pet => {
                             const opt = document.createElement('option');
@@ -165,7 +299,7 @@
                     renderPetsAdicionais();
                 })
                 .catch(err => console.error(err));
-        });
+        }
 
         // Ao trocar o pet principal, remove-o da lista de adicionais
         document.getElementById('pet_id').addEventListener('change', renderPetsAdicionais);

@@ -86,8 +86,8 @@ class ClienteRepository extends ServiceEntityRepository
     public function save($baseId, array $clientData): void
     {
         $sql = "INSERT INTO homepet_{$baseId}.cliente
-        (estabelecimento_id, nome, cpf, email, telefone, rua, numero, complemento, bairro, cidade, whatsapp)
-        VALUES  (:estabelecimento_id, :nome, :cpf, :email, :telefone, :rua, :numero, :complemento, :bairro, :cidade, :whatsapp)";
+        (estabelecimento_id, nome, cpf, email, telefone, rua, numero, complemento, bairro, cidade, whatsapp, como_conheceu)
+        VALUES  (:estabelecimento_id, :nome, :cpf, :email, :telefone, :rua, :numero, :complemento, :bairro, :cidade, :whatsapp, :como_conheceu)";
 
         $this->conn->executeQuery($sql, [
             'estabelecimento_id' => $baseId,
@@ -101,6 +101,7 @@ class ClienteRepository extends ServiceEntityRepository
             'bairro' => $clientData['bairro'],
             'cidade' => $clientData['cidade'],
             'whatsapp' => $clientData['whatsapp'],
+            'como_conheceu' => $clientData['como_conheceu'] ?? null,
         ]);
     }
 
@@ -109,7 +110,7 @@ class ClienteRepository extends ServiceEntityRepository
         $sql = "UPDATE homepet_{$baseId}.cliente 
                 SET nome = :nome, cpf = :cpf, email = :email, telefone = :telefone, 
                     rua = :rua, numero = :numero, complemento = :complemento, 
-                    bairro = :bairro, cidade = :cidade, whatsapp = :whatsapp
+                    bairro = :bairro, cidade = :cidade, whatsapp = :whatsapp, como_conheceu = :como_conheceu
                 WHERE estabelecimento_id = :baseId AND id = :id";
 
         $this->conn->executeQuery($sql, [
@@ -123,6 +124,7 @@ class ClienteRepository extends ServiceEntityRepository
             'bairro' => $clienteData['bairro'],
             'cidade' => $clienteData['cidade'],
             'whatsapp' => $clienteData['whatsapp'],
+            'como_conheceu' => $clienteData['como_conheceu'] ?? null,
             'baseId' => $baseId,
             'id' => $clienteData['id']
         ]);
@@ -275,6 +277,32 @@ class ClienteRepository extends ServiceEntityRepository
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('query', '%' . $query . '%');
         $stmt->bindValue('baseId', $baseId);
+        $result = $stmt->executeQuery();
+        
+        return $result->fetchAllAssociative();
+    }
+
+    public function relatorioComoConheceu($baseId, ?\DateTime $inicio = null, ?\DateTime $fim = null): array
+    {
+        $where = "WHERE estabelecimento_id = :baseId";
+        $params = ['baseId' => $baseId];
+
+        // Como a tabela pode não ter campo created_at, vamos usar apenas o filtro se especificado
+        // e assumir que existe algum campo de data ou não filtrar por data
+        
+        $sql = "SELECT 
+                    como_conheceu,
+                    COUNT(*) as quantidade,
+                    GROUP_CONCAT(nome ORDER BY nome SEPARATOR ', ') as clientes
+                FROM homepet_{$baseId}.cliente
+                {$where}
+                GROUP BY como_conheceu
+                ORDER BY quantidade DESC, como_conheceu";
+
+        $stmt = $this->conn->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
         $result = $stmt->executeQuery();
         
         return $result->fetchAllAssociative();

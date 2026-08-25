@@ -27,7 +27,8 @@
             {% if rows.menu.status == 'ativo' and (podeFin or not rota_financeira(rows.menu.rota)) %}
                 <li class="nav-item">
                     <a class="nav-link {% if rotaAtual == rows.menu.rota %} active {% else %} collapsed {% endif %}"
-                       href="{% if rows.menu.rota != '#' %}{{ path(rows.menu.rota) }}{% endif %}">
+                       href="{% if rows.menu.rota != '#' %}{{ path(rows.menu.rota) }}{% endif %}"
+                       {% if rows.menu.rota == 'clinica_nova_consulta' %}target="_blank" rel="noopener"{% endif %}>
                         <i class="bi bi-{{ rows.menu.icone }}"></i>
                         <span>{{ rows.menu.titulo }}</span>
                     </a>
@@ -71,6 +72,7 @@
                             {% for sub in subsVisiveis %}
                                 <li>
                                     <a href="{{ path(sub.rota) }}"
+                                       {% if sub.rota == 'clinica_nova_consulta' %}target="_blank" rel="noopener"{% endif %}
                                        class="{% if rotaAtual == sub.rota %}active{% endif %}">
                                         <i class="bi bi-circle"></i>
                                         <span>{{ sub.titulo }}</span>

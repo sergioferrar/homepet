@@ -78,6 +78,23 @@
                     <input type="text" class="form-control" id="cidade" name="cidade" value="{{ cliente.cidade }}">
                 </div>
             </div>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <label for="como_conheceu">Como nos conheceu?</label>
+                    <select class="form-control" id="como_conheceu" name="como_conheceu">
+                        <option value="">Selecione uma opção</option>
+                        <option value="Google" {% if cliente.como_conheceu == 'Google' %}selected{% endif %}>Google</option>
+                        <option value="Instagram" {% if cliente.como_conheceu == 'Instagram' %}selected{% endif %}>Instagram</option>
+                        <option value="Facebook" {% if cliente.como_conheceu == 'Facebook' %}selected{% endif %}>Facebook</option>
+                        <option value="Indicação de amigos" {% if cliente.como_conheceu == 'Indicação de amigos' %}selected{% endif %}>Indicação de amigos</option>
+                        <option value="Placa/Fachada" {% if cliente.como_conheceu == 'Placa/Fachada' %}selected{% endif %}>Placa/Fachada</option>
+                        <option value="WhatsApp" {% if cliente.como_conheceu == 'WhatsApp' %}selected{% endif %}>WhatsApp</option>
+                        <option value="TikTok" {% if cliente.como_conheceu == 'TikTok' %}selected{% endif %}>TikTok</option>
+                        <option value="Panfleto/Folheto" {% if cliente.como_conheceu == 'Panfleto/Folheto' %}selected{% endif %}>Panfleto/Folheto</option>
+                        <option value="Outro" {% if cliente.como_conheceu == 'Outro' %}selected{% endif %}>Outro</option>
+                    </select>
+                </div>
+            </div>
             <button type="submit" class="btn btn-primary">Salvar Alterações</button>
             <button type="button" class="btn btn-danger"
                     onclick="confirmDelete('{{ path('cliente_deletar', {'id': cliente.id}) }}')">Deletar Cliente

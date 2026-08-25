@@ -525,6 +525,7 @@ class FichaController extends DefaultController
         $baseId = $this->getIdBase();
 
         $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($baseId);
+        $veterinarios = $this->getRepositorio(Veterinario::class)->findByEstabelecimento($baseId);
 
         $petNome = $request->query->get('pet_nome');
         $dataFiltro = $request->query->get('data') ?: (new \DateTime())->format('Y-m-d');
@@ -532,12 +533,16 @@ class FichaController extends DefaultController
         $consultas = $this->getRepositorio(Consulta::class)->listarConsultasDoDia($baseId, new \DateTime($dataFiltro), $petNome);
 
         if ($request->isMethod('POST')) {
+            $vetId = $request->get('veterinario_id');
+
             $consulta = new Consulta();
             $consulta->setEstabelecimentoId($baseId);
             $consulta->setClienteId((int) $request->get('cliente_id'));
             $consulta->setPetId((int) $request->get('pet_id'));
             $consulta->setData(new \DateTime($request->get('data')));
             $consulta->setHora(new \DateTime($request->get('hora')));
+            $consulta->setTipo($request->get('tipo') ?: 'Consulta');
+            $consulta->setVeterinarioId($vetId !== null && $vetId !== '' ? (int) $vetId : null);
             $consulta->setObservacoes($request->get('observacoes'));
             $consulta->setStatus('aguardando');
 
@@ -563,6 +568,7 @@ class FichaController extends DefaultController
 
         return $this->render('clinica/nova_consulta.html.twig', [
             'clientes' => $clientes,
+            'veterinarios' => $veterinarios,
             'consultas' => $consultas,
         ]);
     }

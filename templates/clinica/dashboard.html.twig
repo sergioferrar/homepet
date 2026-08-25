@@ -225,6 +225,12 @@
                             <i class="bi bi-receipt me-2"></i>
                             <span>Orçamentos</span>
                         </a>
+                        {% if pode_ver_financeiro() %}
+                        <a href="{{ path('clinica_relatorio_como_conheceu') }}" class="btn btn-outline-success d-flex align-items-center">
+                            <i class="bi bi-bar-chart-line me-2"></i>
+                            <span>Como Conheceram</span>
+                        </a>
+                        {% endif %}
                         <button class="btn btn-outline-primary d-flex align-items-center" type="button" 
                                 onclick="Utils.modal('Em desenvolvimento')">
                             <i class="bi bi-scissors me-2"></i>
