@@ -138,8 +138,10 @@ class InternacaoController extends DefaultController
         }
  
         // ── 2. Busca prescrições ativas da internação ──────────────────────
+        // IMPORTANTE: Usa método customizado que filtra EXPLICITAMENTE por internacaoId
+        // para evitar carregar prescrições de outras internações
         $prescricoes = $em->getRepository(InternacaoPrescricao::class)
-            ->findBy(['internacaoId' => $id], ['id' => 'ASC']);
+            ->findByInternacao($id);
  
         // ── 3. Horários-grade que aparecem na ficha física ─────────────────
         //      Ajuste aqui caso queira adicionar/remover colunas de horário.
@@ -232,8 +234,10 @@ class InternacaoController extends DefaultController
         usort($timeline, fn($a, $b) => $b['data_hora'] <=> $a['data_hora']);
 
         // --- PRESCRIÇÕES ---
+        // IMPORTANTE: Usa método customizado que filtra EXPLICITAMENTE por internacaoId
+        // para evitar carregar prescrições de outras internações
         $medicamentos = $em->getRepository(Medicamento::class)->findAll();
-        $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findBy(['internacaoId' => $id]);
+        $prescricoes = $em->getRepository(InternacaoPrescricao::class)->findByInternacao($id);
 
         // --- CALENDÁRIO ---
         // Busca TODOS os eventos de prescrição desta internação de uma vez
