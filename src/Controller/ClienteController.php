@@ -33,10 +33,19 @@ class ClienteController extends DefaultController
     {
         $this->switchDB();
         if ($request->isMethod('POST')) {
+            $nome = trim((string) $request->request->get('nome'));
+            $telefone = trim((string) $request->request->get('telefone'));
+            $comoConheceu = trim((string) $request->request->get('como_conheceu'));
+
+            if ($nome === '' || $telefone === '' || $comoConheceu === '') {
+                $this->addFlash('error', 'Nome, telefone e como nos conheceu são obrigatórios.');
+                return $this->redirectToRoute('cliente_novo');
+            }
+
             $cliente = new Cliente();
-            $cliente->setNome($request->request->get('nome'))
+            $cliente->setNome($nome)
                 ->setEmail($request->request->get('email'))
-                ->setTelefone($request->request->get('telefone'))
+                ->setTelefone($telefone)
                 ->setRua($request->request->get('rua'))
                 ->setNumero($request->request->get('numero'))
                 ->setComplemento($request->request->get('complemento'))
@@ -54,7 +63,7 @@ class ClienteController extends DefaultController
                 'bairro' => $cliente->getBairro(),
                 'cidade' => $cliente->getCidade(),
                 'whatsapp' => $request->get('whatsapp'),
-                'como_conheceu' => $request->request->get('como_conheceu'),
+                'como_conheceu' => $comoConheceu,
             ]);
             $clienteId = $this->getRepositorio(Cliente::class)->getLastInsertedId();
             return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
