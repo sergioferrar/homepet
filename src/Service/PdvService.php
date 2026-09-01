@@ -90,6 +90,16 @@ class PdvService
             // 6. Registra no financeiro
             $this->registrarFinanceiro($venda, $nomeCliente, count($dto->itens), $pagamentos);
 
+            // Baixa os fiados incluídos nesta venda somente após pagamento real.
+            if ($this->metodoEfetivo($dto) !== 'pendente') {
+                $pendenteIds = array_column(
+                    array_filter($dto->itens, fn(array $item) => !empty($item['pendente_id'])),
+                    'pendente_id'
+                );
+                $this->em->getRepository(FinanceiroPendente::class)
+                    ->marcarPagos($estabelecimentoId, $pendenteIds);
+            }
+
             $this->em->flush();
             $this->em->commit();
 

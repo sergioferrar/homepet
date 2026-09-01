@@ -227,7 +227,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
             LEFT JOIN homepet_{$baseId}.pet p ON f.pet_id = p.id
             LEFT JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
             WHERE f.estabelecimento_id = :baseId
-              AND (f.status IS NULL OR f.status != 'inativo')
+              AND (f.status IS NULL OR LOWER(f.status) NOT IN ('inativo', 'pago'))
             ORDER BY f.data DESC";
             
         return $this->conn->fetchAllAssociative($sql, [
@@ -240,7 +240,8 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
     {
         $sql = "SELECT SUM(valor) as total
                 FROM homepet_{$baseId}.financeiropendente
-                WHERE estabelecimento_id = :baseId";
+                WHERE estabelecimento_id = :baseId
+                  AND (status IS NULL OR LOWER(status) NOT IN ('inativo', 'pago'))";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('baseId', $baseId);

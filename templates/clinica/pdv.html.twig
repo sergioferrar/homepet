@@ -1161,11 +1161,12 @@ async function salvarVenda() {
 
     const dados = {
         itens: carrinhoItens.map(item => ({
-            id:         item.id,
-            nome:       item.nome,
-            quantidade: item.quantidade,
-            valor:      item.valor,
-            tipo:       item.tipo
+            id:          item.id,
+            nome:        item.nome,
+            quantidade:  item.quantidade,
+            valor:       item.valor,
+            tipo:        item.tipo,
+            pendente_id: item.pendenteId || null
         })),
         total:      total,
         desconto:   desconto,
