@@ -200,7 +200,7 @@ class PetController extends DefaultController
             throw $this->createNotFoundException('O pet não foi encontrado');
         }
 
-        $this->getRepositorio(Pet::class)->delete($id);
+        $this->getRepositorio(Pet::class)->delete($this->getIdBase(), $id);
         return $this->redirectToRoute('pet_index');
     }
 
