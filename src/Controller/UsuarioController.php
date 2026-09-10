@@ -101,6 +101,12 @@ class UsuarioController extends DefaultController
      */
     public function store(Request $request, MailerInterface $mailer): Response
     {
+
+        if(!in_array($this->security->getUser()->getRoles(), ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'])){
+            $this->addFlash('warning', 'Usuário não tem permissão para cadastro de novos usuários!');
+            return $this->redirectToRoute('app_usuario');
+        }
+
         $accessLevel = $request->get('access_level');
 
         $usuario = new Usuario();
@@ -191,6 +197,12 @@ class UsuarioController extends DefaultController
      */
     public function update(Request $request): Response
     {
+
+        if(!in_array($this->security->getUser()->getRoles(), ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'])){
+            $this->addFlash('warning', 'Usuário não tem permissão para cadastro de novos usuários!');
+            return $this->redirectToRoute('app_usuario');
+        }
+
         $usuario = $this->getRepositorio(Usuario::class)->findOneBy(['id' => $request->get('id')]);
 
         if (!$usuario) {
