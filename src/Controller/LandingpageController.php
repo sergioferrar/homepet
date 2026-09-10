@@ -208,7 +208,7 @@ class LandingpageController extends DefaultController
         $usuario = new Usuario();
         $usuario->setNomeUsuario($request->get('nome_usuario'));
         $usuario->setEmail($request->get('email'));
-        $usuario->setAccessLevel($request->get('access_level'));
+        $usuario->setAccessLevel('Admin');
         $usuario->setPetshopId($request->get('estabelecimento'));
 
         $usuario->setSenha(
