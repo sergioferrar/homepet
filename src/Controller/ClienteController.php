@@ -120,7 +120,7 @@ class ClienteController extends DefaultController
 
 
     /**
-     * @Route("/deletar/{id}", name="cliente_deletar", methods={"POST"})
+     * @Route("/deletar/{id}", name="cliente_deletar")
      */
     public function deletar(Request $request, int $id): Response
     {
@@ -131,7 +131,9 @@ class ClienteController extends DefaultController
             throw $this->createNotFoundException('O cliente não foi encontrado');
         }
 
-        if ($this->getRepositorio(Cliente::class)->hasPets($id)) {
+        // Localizar pets do cliente
+        $pets = $this->getRepositorio(\App\Entity\Pet::class)->buscarPetsPorCliente($this->getIdBase(), $id);
+        if ($pets) {
             $this->addFlash('error', 'Não é possível excluir este cliente, pois ele possui pets cadastrados.');
             return $this->redirectToRoute('cliente_index');
         }

@@ -89,6 +89,13 @@
 {% block list_content %}
 
     <div class="container">
+        {% for message in app.flashes %}
+            {% for row in message %}
+                <div class="alert alert-info text-center">
+                    {{ row|raw }}
+                </div>
+            {% endfor %}
+        {% endfor %}
         <div class="tabela-container container-fluid px-2">
             <div id="cardContainerClientes" class="row gy-3">
                 {% for cliente in clientes %}
