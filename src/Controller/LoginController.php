@@ -302,11 +302,11 @@ Caso não encontre o e-mail, verifique também sua pasta de spam ou lixo eletrô
         return $this->render('login/dorecover.html.twig', $data);
     }
 
-    /**
-     * @Route("/login/gerasenha/{senha}", name="app_gerasenha")
-     */
-    public function geraSenha(Request $request): Response
-    {
-        return $this->json(['senha' => password_hash($request->get('senha'), PASSWORD_DEFAULT, ["cost" => 10])]);
-    }
+    // /**
+    //  * @Route("/login/gerasenha/{senha}", name="app_gerasenha")
+    //  */
+    // public function geraSenha(Request $request): Response
+    // {
+    //     return $this->json(['senha' => password_hash($request->get('senha'), PASSWORD_DEFAULT, ["cost" => 10])]);
+    // }
 }
