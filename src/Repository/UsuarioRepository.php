@@ -79,8 +79,8 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
     {
         $sql = "SELECT id, nome_usuario, email, senha, access_level, petshop_id
             FROM homepet_login.usuario
-            WHERE email = '{$usernameOrEmail}'";
-        $query = $this->conn->query($sql);
+            WHERE email = :email";
+        $query = $this->conn->executeQuery($sql,['email' => $usernameOrEmail]);
         return $query->fetch();
     }
 

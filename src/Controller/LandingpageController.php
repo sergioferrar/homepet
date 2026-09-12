@@ -117,6 +117,13 @@ class LandingpageController extends DefaultController
             $this->getRepositorio(Estabelecimento::class)->add($estabelecimento, true);
             //dd($estabelecimento);
 
+            // Para validar se o estabelecimento que está sendo cadastrado
+            // quando for para a tela de cadastro do usuario
+            // seja validado se existe de fato a sessão de cadastro do estabelecimento 
+            // informado na url
+            $request->getSession()->set('cadastro', true);
+            $request->getSession()->set('estabelecimento_id', $estabelecimento->getId());
+
             // Criar database apartir do estabelecimento criado usando DatabaseBkp
 
             // --- Dentro do seu Controller / Service ---
@@ -186,6 +193,16 @@ class LandingpageController extends DefaultController
     public function cadastrarUsuario(EmailService $emailService, Request $request): Response
     {
         if (!$request->isMethod('POST')) {
+
+            // buscar estabelecimento informado na url e comparar no banco com a sessão
+            
+            $planos = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($request->get('estabelecimento'));
+            if(!$request->getSession()->get('cadastro') && !$request->getSession()->get('estabelecimento_id')){
+                
+                $this->addFlash('error', 'Desculpe, você não tem permissão para executar essa tarefa.');
+                return $this->redirectToRoute('app_login');
+            }
+
             return $this->render('usuario/cadastrar.html.twig', [
                 'estabelecimento' => $request->get('estabelecimento'),
             ]);

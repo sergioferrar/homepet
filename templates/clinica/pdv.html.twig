@@ -1,4 +1,7 @@
-{% extends 'base.html.twig' %}
+{% extends app.request.query.get('ficha')
+    ? 'baseClinica.html.twig'
+    : 'base.html.twig'
+%}
 {% block title %}PDV - Ponto de Venda{% endblock %}
 {% block page_title %}Ponto de Venda{% endblock %}
 

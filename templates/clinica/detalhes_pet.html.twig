@@ -1606,7 +1606,7 @@ $(document).ready(function() {
     $(document).on("click", ".btn-lancar-pdv", function() {
         var vendaId = $(this).data("id");
         var pdvUrl = "{{ path('clinica_pdv_index') }}";
-        var apiUrl = "{{ path('pdv_carregar', {id: '__ID__'}) }}".replace('__ID__', vendaId);
+        var apiUrl = "{{ path('pdv_carregar', {id: '__ID__'}) }}?ficha=true".replace('__ID__', vendaId);
         window.open(apiUrl, "PDVWINDOW", "popup")
         return;
         _pdvVendaCarregada = null;

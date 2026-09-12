@@ -5,13 +5,12 @@ namespace App\Controller;
 use App\Entity\Estabelecimento;
 use App\Entity\Usuario;
 use App\Entity\Veterinario;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * @Route("dashboard")
@@ -74,7 +73,7 @@ class UsuarioController extends DefaultController
      */
     public function edit(Request $request): Response
     {
-        $usuario = $this->getRepositorio(Usuario::class)->findOneBy(['id' => $request->get('id')]);
+        $usuario = $this->getRepositorio(Usuario::class)->findOneBy(['id' => $request->get('id'), 'petshop_id' => $this->tenantContext->getEstabelecimentoId()]);
 
         // Veterinários do estabelecimento para o select (quando nível = Veterinário)
         $veterinarios = [];
@@ -102,7 +101,7 @@ class UsuarioController extends DefaultController
     public function store(Request $request, MailerInterface $mailer): Response
     {
 
-        if(!in_array($this->security->getUser()->getRoles(), ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'])){
+        if (!in_array($this->security->getUser()->getRoles(), ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'])) {
             $this->addFlash('warning', 'Usuário não tem permissão para cadastro de novos usuários!');
             return $this->redirectToRoute('app_usuario');
         }
@@ -139,6 +138,7 @@ class UsuarioController extends DefaultController
                 $roles = ['ROLE_USER'];
                 break;
         }
+
         $usuario->setRoles($roles);
         $usuario->setPetshopId($this->security->getUser()->getPetshopId());
 
@@ -198,7 +198,7 @@ class UsuarioController extends DefaultController
     public function update(Request $request): Response
     {
 
-        if(!in_array($this->security->getUser()->getRoles(), ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'])){
+        if (!in_array($this->security->getUser()->getRoles(), ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'])) {
             $this->addFlash('warning', 'Usuário não tem permissão para cadastro de novos usuários!');
             return $this->redirectToRoute('app_usuario');
         }
@@ -214,7 +214,10 @@ class UsuarioController extends DefaultController
 
         $usuario->setNomeUsuario($request->get('nome_usuario'));
         $usuario->setEmail($request->get('email'));
-        $usuario->setAccessLevel($accessLevel);
+
+        if ($request->get('access_level')) {
+            $usuario->setAccessLevel($accessLevel);
+        }
 
         // Vínculo com veterinário (limpa se não for mais veterinário)
         if ($accessLevel === 'Veterinário') {
@@ -244,6 +247,7 @@ class UsuarioController extends DefaultController
                 $roles = ['ROLE_USER'];
                 break;
         }
+
         $usuario->setRoles($roles);
 
         // A senha NÃO é alterada aqui — é responsabilidade do próprio usuário

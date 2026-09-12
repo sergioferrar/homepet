@@ -152,9 +152,15 @@ class PdvController extends DefaultController
             'Venda #%d carregada no PDV. Revise os itens e finalize.',
             $venda->getId()
         ));
+        
+        $dataRequest = [];
+        $dataRequest['vendaId'] = $venda->getId();
 
+        if($request->get('ficha')){
+            $dataRequest['ficha'] = true;
+        }
         // 7. Redireciona para a tela principal do PDV
-        return $this->redirectToRoute('clinica_pdv_index', ['vendaId' => $venda->getId()]);
+        return $this->redirectToRoute('clinica_pdv_index', $dataRequest);
     }
 
     /**
