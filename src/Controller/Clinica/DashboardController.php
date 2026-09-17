@@ -332,9 +332,9 @@ class DashboardController extends DefaultController
             $totalDebitos += is_object($venda) ? $venda->getTotal() : ($venda['total'] ?? 0);
         }
 
-        // $this->switchDB();
-        // Busca o veterinário
-        $vet = $this->getRepositorio(Veterinario::class)->findAll();
+        // Busca somente os veterinários do estabelecimento atual (evita scan
+        // global e vazamento entre tenants).
+        $vet = $this->getRepositorio(Veterinario::class)->findByEstabelecimento($baseId);
         if (!$vet) {
             // Tratar caso em que o veterinário não é encontrado
             throw $this->createNotFoundException('Veterinário não encontrado.');

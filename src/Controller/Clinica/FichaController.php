@@ -629,7 +629,7 @@ class FichaController extends DefaultController
 
         return $this->render('clinica/editar_consulta.html.twig', [
             'consulta' => $consulta,
-            'veterinarios' => $this->getRepositorio(Veterinario::class)->findAll(),
+            'veterinarios' => $this->getRepositorio(Veterinario::class)->findByEstabelecimento($this->getIdBase()),
         ]);
     }
 
