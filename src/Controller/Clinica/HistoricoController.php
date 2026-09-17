@@ -211,7 +211,28 @@ class HistoricoController extends DefaultController
         $tutorTel = $esc($ou($telefoneRaw));
         $tutorWhats = $esc($ou($whatsRaw));
         $tutorEmail = $esc($ou($cliente ? $cliente->getEmail() : ($pet['dono_email'] ?? '')));
-        $tutorEndereco = $esc($ou(trim((string) ($pet['dono_endereco'] ?? ''), " ,-")));
+
+        $enderecoPartes = [];
+        if ($cliente) {
+            $logradouro = trim(implode(' ', array_filter([
+                $cliente->getRua(),
+                $cliente->getNumero(),
+                $cliente->getComplemento(),
+            ])));
+            if ($logradouro !== '') {
+                $enderecoPartes[] = $logradouro;
+            }
+            if ($cliente->getBairro()) {
+                $enderecoPartes[] = $cliente->getBairro();
+            }
+            if ($cliente->getCidade()) {
+                $enderecoPartes[] = $cliente->getCidade();
+            }
+            if ($cliente->getCep()) {
+                $enderecoPartes[] = 'CEP: ' . $cliente->getCep();
+            }
+        }
+        $tutorEndereco = $esc($ou($enderecoPartes ? implode(' - ', $enderecoPartes) : ($pet['dono_endereco'] ?? '')));
 
         $lblStyle = "font-size:8px; text-transform:uppercase; letter-spacing:0.5px; color:#94A3B8;";
         $valStyle = "font-size:10.5px; color:#0F172A;";
@@ -271,10 +292,12 @@ class HistoricoController extends DefaultController
 </table>
 ";
 
-        // Conteúdo do documento
+        // Conteúdo do documento. O bloco de clínica/tutor/paciente é inserido
+        // diretamente no início, portanto aparece somente na primeira página.
         $conteudoHtml = '
-        <div style="font-family: Arial, sans-serif; font-size:13px; line-height:1.6; color:#333; margin-top:15px;">
-        ' . $cabecalho . '
+        <div style="font-family: Arial, sans-serif; font-size:13px; line-height:1.6; color:#333;">
+        ' . $cabecalhoHtml . '
+        <div style="margin-top:15px;">' . $cabecalho . '</div>
         <div style="margin-top:15px;">' . $conteudo . '</div>
         <div style="margin-top:25px; font-size:12px; color:#555;">' . $rodape . '</div>
         </div>
@@ -308,10 +331,9 @@ class HistoricoController extends DefaultController
         // Configuração e geração do PDF (igual receita)
         $nomeArquivo = str_replace(' ', '_', $tipoDocumento) . '_' . preg_replace('/[^a-zA-Z0-9]/', '_', $petNome) . '_' . date('Ymd_His');
         
-        $pdf->configuracaoPagina('A4', 10, 10, 64, 26, 8, 8);
+        $pdf->configuracaoPagina('A4', 10, 10, 10, 26, 8, 8);
         $pdf->setNomeArquivo($nomeArquivo);
         $pdf->setRodape($rodapeHtml);
-        $pdf->montaCabecalhoPadrao($cabecalhoHtml);
         $pdf->addPagina('P');
         $pdf->conteudo($conteudoHtml);
 
