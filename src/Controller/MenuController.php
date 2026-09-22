@@ -2,10 +2,11 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 /**
  * @Route("dashboard/")
@@ -27,8 +28,7 @@ class MenuController extends DefaultController
     /**
      * @Route("menu/novo", name="menu_new")
      */
-    public function new(Request $request): Response
-    {
+    function new (Request $request): Response {
         $this->restauraLoginDB();
         if ($request->isMethod('POST')) {
             $menu = new \App\Entity\Menu();
@@ -98,56 +98,61 @@ class MenuController extends DefaultController
     /**
      * @Route("/listamenu", name="leftMenu")
      */
-    public function getMenu(Request $request): Response
+    public function getMenu(CacheInterface $cache, Request $request): Response
     {
 
-        $this->restauraLoginDB();
+        $data = $cache->get('getMenu', function (ItemInterface $item): string {
+            $item->expiresAfter(60 * 60 * 24 * 30);
 
-        $data = [];
+            $this->restauraLoginDB();
 
-        // Usuario logado
-        $usuarioLogado = $this->getRepositorio(\App\Entity\Usuario::class)->find($request->getSession()->get('userId'));
-        // dd($usuarioLogado, $request->getSession()->get('userId'));
-        $modulo = [];
-        $estabelecimento = [];
-        $getPlanoLogado = [];
-        $plano = [];
-        if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
-            
-            // Pegar o estabelecimento a qual pertence o usuario loado
-            $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($usuarioLogado->getPetshopId());
+            $data = [];
 
-            // Pegar o plano que o estabelecimento do usuario logado pertence
-            $getPlanoLogado = $this->getRepositorio(\App\Entity\Plano::class)->find($estabelecimento->getPlanoId());
+            // Usuario logado
+            $usuarioLogado = $this->getRepositorio(\App\Entity\Usuario::class)->find($request->getSession()->get('userId'));
+            // dd($usuarioLogado, $request->getSession()->get('userId'));
+            $modulo = [];
+            $estabelecimento = [];
+            $getPlanoLogado = [];
+            $plano = [];
+            if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
 
-            $plano = json_decode($getPlanoLogado->getDescricao(), true);
+                // Pegar o estabelecimento a qual pertence o usuario loado
+                // $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($usuarioLogado->getPetshopId());
+                $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->listaEstabelecimentoLogado($usuarioLogado->getPetshopId());
 
-            foreach ($plano as $row) {
-                $modulo[] = $this->getRepositorio(\App\Entity\Modulo::class)->findOneBy(['descricao' => $row])->getId();
-            }
-        }
+                // Pegar o plano que o estabelecimento do usuario logado pertence
+                $getPlanoLogado = $this->getRepositorio(\App\Entity\Plano::class)->find($estabelecimento->getPlanoId());
 
-        $listaMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => null], ['ordem' => 'ASC']);
-        
-        foreach ($listaMenu as $menu) {
-            $dataS = [];
+                $plano = json_decode($estabelecimento['modulos'], true);
 
-            if (in_array($menu->getModulo(), $modulo) && !$this->isGranted('ROLE_SUPER_ADMIN')) {
-                $listaSubMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => $menu->getId()], ['ordem' => 'ASC']);
-                if ($listaSubMenu) {
-                    foreach ($listaSubMenu as $submenu) {
-                        $dataS[] = $submenu;
-                    }
+                foreach ($plano as $row) {
+                    $modulo[] = $this->getRepositorio(\App\Entity\Modulo::class)->findOneBy(['descricao' => $row])->getId();
                 }
-
-                $data[] = [
-                    'menu' => $menu,
-                    'submenu' => (!empty($dataS) ? $dataS : false),
-                    'rota' => $request->get('activeRoute')
-                ];
-
             }
-        }
+
+            $listaMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => null], ['ordem' => 'ASC']);
+
+            foreach ($listaMenu as $menu) {
+                $dataS = [];
+
+                if (in_array($menu->getModulo(), $modulo) && !$this->isGranted('ROLE_SUPER_ADMIN')) {
+                    $listaSubMenu = $this->getRepositorio(\App\Entity\Menu::class)->findBy(['parent' => $menu->getId()], ['ordem' => 'ASC']);
+                    if ($listaSubMenu) {
+                        foreach ($listaSubMenu as $submenu) {
+                            $dataS[] = $submenu;
+                        }
+                    }
+
+                    $data[] = [
+                        'menu' => $menu,
+                        'submenu' => (!empty($dataS) ? $dataS : false),
+                        'rota' => $request->get('activeRoute'),
+                    ];
+
+                }
+            }
+        });
         return $this->render('left-menu.html.twig', ['menuLateral' => $data]);
     }
 }

@@ -40,6 +40,17 @@ class EstabelecimentoRepository extends ServiceEntityRepository
         }
     }
 
+    public function listaEstabelecimentoLogado($baseId)
+    {
+        $sql = "SELECT e.id AS estabelecimento_id, p.modulos
+            FROM homepet_login.estabelecimento e
+            JOIN homepet_login.planos p ON (p.id = e.planoId)
+            WHERE e.id = {$baseId}";
+
+        $query = $this->conn->executeQuery($sql);
+        return $query->fetchAssociative();
+    }
+
     public function listaEstabelecimentosExpirados()
     {
         $sql = "SELECT e.id, e.razaoSocial, e.dataPlanoFim
