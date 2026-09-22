@@ -200,6 +200,32 @@ return $financeiro; // Retorna um objeto válido
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
 
+    public function relatorioHome($baseId)
+    {
+        $sql = "SELECT 
+                    (SELECT COUNT(*) FROM homepet_{$baseId}.agendamento 
+                     WHERE estabelecimento_id = {$baseId} AND concluido = 1) AS totalAgendamento,
+                    
+                    (SELECT COUNT(*) FROM homepet_{$baseId}.agendamento 
+                     WHERE estabelecimento_id = {$baseId} AND concluido = 1 AND DATE(data) = DATE(NOW())) AS totalAgendamentoDia,
+                    
+                    (SELECT COUNT(*) FROM homepet_{$baseId}.pet 
+                     WHERE estabelecimento_id = {$baseId}) AS totalAnimal,
+                    
+                    (SELECT SUM(total) FROM homepet_{$baseId}.venda 
+                     WHERE estabelecimento_id = {$baseId} 
+                     AND MONTH(data) = MONTH(NOW()) 
+                     AND YEAR(data) = YEAR(NOW())
+                     AND status NOT IN ('Inativa', 'Pendente', 'Carrinho')) AS lucroTotal,
+                    
+                    (SELECT SUM(total) FROM homepet_{$baseId}.venda 
+                     WHERE estabelecimento_id = {$baseId}
+                     AND DATE(data) = DATE(NOW())) AS lucroDiario";
+        $query = $this->conn->executeQuery($sql);
+        return $query->fetchAssociative();
+
+    }
+
     public function totalAgendamento($baseId)
     {
         $sql = "SELECT COUNT(*) AS totalAgendamento

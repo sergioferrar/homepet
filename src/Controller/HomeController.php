@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\Financeiro;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -30,16 +29,15 @@ class HomeController extends DefaultController
 
         $this->switchDB();
         // dd($this);
-        $agendamento = $this->getRepositorio(Financeiro::class)->totalAgendamento($this->getIdBase());
-        $agendamentoDia = $this->getRepositorio(Financeiro::class)->totalAgendamentoDia($this->getIdBase());
-        $animais = $this->getRepositorio(Financeiro::class)->totalAnimais($this->getIdBase());
-        $lucrototal = $this->getRepositorio(Financeiro::class)->totalLucroPorMes($this->getIdBase());
+        $relatorioHome = $this->getRepositorio(Financeiro::class)->relatorioHome($this->getIdBase());
         $valores = $this->getRepositorio(Financeiro::class)->lucroDiario($this->getIdBase());
+
+
 
         // Verificar se a assinatura está próxima de expirar
         $this->restauraLoginDB();
         $estabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class)->find($this->getIdBase());
-        
+
         $this->switchDB();
         $diasParaExpirar = null;
         $assinaturaExpirada = false;
@@ -50,7 +48,7 @@ class HomeController extends DefaultController
             $dataFim = $estabelecimento->getDataPlanoFim();
             $diff = $hoje->diff($dataFim);
             $diasParaExpirar = $diff->days;
-            
+
             // Se já expirou
             if ($dataFim < $hoje) {
                 $assinaturaExpirada = true;
@@ -62,10 +60,10 @@ class HomeController extends DefaultController
         }
 
         $data = [];
-        $data['agendamento'] = $agendamento['totalAgendamento'];
-        $data['agendamentoHoje'] = $agendamentoDia['totalAgendamento'];
-        $data['lucrototal'] = number_format($lucrototal['lucroTotal'], 2, ',', '.');//;
-        $data['animais'] = $animais['totalAnimal'];
+        $data['agendamento'] = $relatorioHome['totalAgendamento'];
+        $data['agendamentoHoje'] = $relatorioHome['totalAgendamento'];
+        $data['lucrototal'] = number_format($relatorioHome['lucroTotal'], 2, ',', '.'); //;
+        $data['animais'] = $relatorioHome['totalAnimal'];
         $data['dias_para_expirar'] = $diasParaExpirar;
         $data['assinatura_expirada'] = $assinaturaExpirada;
         $data['aviso_expiracao'] = $avisoExpiracao;
