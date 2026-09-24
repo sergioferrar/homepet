@@ -65,7 +65,7 @@ class ClienteController extends DefaultController
                 'whatsapp' => $request->get('whatsapp'),
                 'como_conheceu' => $comoConheceu,
             ]);*/
-            $clienteId = 2;//$this->getRepositorio(Cliente::class)->getLastInsertedId();
+            $clienteId = $this->getRepositorio(Cliente::class)->getLastInsertedId();
 
             $json = $this->utils()
             ->success('Cliente cadastrado com sucesso, vamos agora para o cadastro do pet')
