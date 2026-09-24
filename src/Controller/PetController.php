@@ -58,7 +58,10 @@ class PetController extends DefaultController
 
             $this->getRepositorio(Pet::class)->save($this->getIdBase(), $pet);
 
-            return $this->redirectToRoute('pet_index');
+            $json = $this->utils()->success("O pet {$request->get('nome')} foi cadastrado com sucesso")
+            ->redirect($this->generateUrl('pet_index'))
+            ->message();
+            return $this->json($json);
         }
 
         $clientes = $this->getRepositorio(Cliente::class)->localizaTodosCliente($this->getIdBase());

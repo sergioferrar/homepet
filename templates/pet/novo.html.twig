@@ -177,6 +177,8 @@
             dataNascimentoInput.addEventListener("change", calcularIdade);
             calcularIdade();
 
+            Utils.formAjax($('form'), 'Aguarde, enviando dados...');
+
         });
     </script>
 {% endblock %}
