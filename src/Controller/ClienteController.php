@@ -52,7 +52,7 @@ class ClienteController extends DefaultController
                 ->setBairro($request->request->get('bairro'))
                 ->setCidade($request->request->get('cidade'));
 
-            /*$this->getRepositorio(Cliente::class)->save($this->getIdBase(), [
+            $this->getRepositorio(Cliente::class)->save($this->getIdBase(), [
                 'nome' => $cliente->getNome(),
                 'cpf' => $request->request->get('cpf'),
                 'email' => $cliente->getEmail(),
@@ -64,7 +64,7 @@ class ClienteController extends DefaultController
                 'cidade' => $cliente->getCidade(),
                 'whatsapp' => $request->get('whatsapp'),
                 'como_conheceu' => $comoConheceu,
-            ]);*/
+            ]);
             $clienteId = $this->getRepositorio(Cliente::class)->getLastInsertedId();
 
             $json = $this->utils()
