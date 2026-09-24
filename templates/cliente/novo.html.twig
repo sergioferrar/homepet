@@ -99,7 +99,7 @@
             </div>
         </div>
         <div class="text-center">
-            <button type="submit" class="btn btn-success w-50">Salvar</button>
+            <button type="submit" class="btn btn-success save-btn w-50">Salvar</button>
         </div>
     </form>
 {% endblock %}
@@ -133,6 +133,24 @@
                     }, 'json');
                 }
             });
+            
+            const botaoSalvar = $('.save-btn');
+            const textoOriginalBtn = 'Salvar';
+            const textoSubmitBtn = 'Enviando os dados...';
+                
+            function disableBtn(){
+                botaoSalvar.prop('disabled', true);
+                botaoSalvar.addClass('disabled');
+                botaoSalvar.html(textoSubmitBtn);
+            }
+                
+            function enableBtn(){
+                botaoSalvar.prop('disabled', false);
+                botaoSalvar.removeClass('disabled');
+                botaoSalvar.html(textoOriginalBtn);
+            }
+
+            Utils.formAjax($('form'), 'Aguarde, enviando dados...');
         });
     </script>
 {% endblock %}

@@ -52,7 +52,7 @@ class ClienteController extends DefaultController
                 ->setBairro($request->request->get('bairro'))
                 ->setCidade($request->request->get('cidade'));
 
-            $this->getRepositorio(Cliente::class)->save($this->getIdBase(), [
+            /*$this->getRepositorio(Cliente::class)->save($this->getIdBase(), [
                 'nome' => $cliente->getNome(),
                 'cpf' => $request->request->get('cpf'),
                 'email' => $cliente->getEmail(),
@@ -64,9 +64,15 @@ class ClienteController extends DefaultController
                 'cidade' => $cliente->getCidade(),
                 'whatsapp' => $request->get('whatsapp'),
                 'como_conheceu' => $comoConheceu,
-            ]);
-            $clienteId = $this->getRepositorio(Cliente::class)->getLastInsertedId();
-            return $this->redirectToRoute('pet_novo', ['cliente_id' => $clienteId]);
+            ]);*/
+            $clienteId = 2;//$this->getRepositorio(Cliente::class)->getLastInsertedId();
+
+            $json = $this->utils()
+            ->success('Cliente cadastrado com sucesso, vamos agora para o cadastro do pet')
+            ->redirect($this->generateUrl('pet_novo', ['cliente_id' => $clienteId]))
+            ->message();
+
+            return $this->json($json);
         }
 
         return $this->render('cliente/novo.html.twig');

@@ -10,6 +10,7 @@ class Utils
     private $message;
     private $error;
     private $data;
+    private $redirect = false;
 
     public function info($message)
     {
@@ -49,6 +50,12 @@ class Utils
         return $this;
     }
 
+    public function redirect($redirect)
+    {
+        $this->redirect = $redirect;
+        return $this;
+    }
+
     public function message()
     {
 
@@ -57,6 +64,7 @@ class Utils
             'status' => $this->status,
             'error' => $this->error,
             'data' => $this->data,
+            'redirect' => $this->redirect,
         ];
     }
 
