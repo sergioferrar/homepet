@@ -5,10 +5,11 @@ namespace App\Repository;
 use App\Entity\Internacao;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\DBAL\Connection;
 
 class InternacaoRepository extends ServiceEntityRepository
 {
-    private $conn;
+    private Connection $conn;
 
     public function __construct(ManagerRegistry $registry)
     {
@@ -353,5 +354,280 @@ class InternacaoRepository extends ServiceEntityRepository
         ]);
     }
 
+/**
+     * ✅ NOVO MÉTODO: Registra a conclusão da internação
+     * 
+     * Quando internação é finalizada (alta, óbito, cancelada):
+     * - Grava quando foi finalizada (data_conclusao)
+     * - Grava por que foi finalizada (motivo_conclusao)
+     * 
+     * @param int $baseId Estabelecimento
+     * @param int $internacaoId ID da internação
+     * @param \DateTime $dataConclusao Quando foi finalizada
+     * @param string $motivoConclusao Por que foi finalizada (alta, obito, cancelada)
+     * @return bool
+     */
+    public function atualizarConclusao(
+        int $baseId,
+        int $internacaoId,
+        \DateTime $dataConclusao,
+        string $motivoConclusao
+    ): bool {
+        try {
+            $sql = "
+                UPDATE homepet_" . $baseId . ".internacao
+                SET 
+                    data_conclusao = :data_conclusao,
+                    motivo_conclusao = :motivo_conclusao
+                WHERE id = :id
+                  AND estabelecimento_id = :baseId
+            ";
+ 
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindValue('id', $internacaoId, \PDO::PARAM_INT);
+            $stmt->bindValue('baseId', $baseId, \PDO::PARAM_INT);
+            $stmt->bindValue('data_conclusao', $dataConclusao->format('Y-m-d H:i:s'));
+            $stmt->bindValue('motivo_conclusao', $motivoConclusao);
+ 
+            return $stmt->executeStatement() > 0;
+        } catch (\Exception $e) {
+            throw new \RuntimeException(
+                "Erro ao registrar conclusão da internação: " . $e->getMessage()
+            );
+        }
+    }
+ 
+    /**
+     * ✅ NOVO MÉTODO: Busca internações ativas (melhorado)
+     * 
+     * Agora filtra por status = 'ativa' APENAS
+     * Não mostra internações finalizadas (status = 'finalizada')
+     * 
+     * @param int $baseId Estabelecimento
+     * @return array
+     */
+    public function listarAtivas(int $baseId): array
+    {
+        $sql = "
+            SELECT
+                i.id,
+                i.pet_id,
+                i.dono_id,
+                i.status,
+                i.motivo_conclusao,
+                i.data_inicio,
+                i.data_conclusao,
+                i.box,
+                i.diagnostico,
+                i.prognostico,
+                i.risco,
+                p.nome AS pet_nome,
+                p.especie,
+                p.raca,
+                c.nome AS dono_nome
+            FROM homepet_" . $baseId . ".internacao i
+            LEFT JOIN homepet_" . $baseId . ".pet p ON p.id = i.pet_id
+            LEFT JOIN homepet_" . $baseId . ".cliente c ON c.id = i.dono_id
+            WHERE i.estabelecimento_id = :baseId
+              AND i.status = 'ativa'
+              AND i.pet_id IS NOT NULL
+              AND i.pet_id > 0
+            ORDER BY i.data_inicio DESC
+        ";
+ 
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $result = $stmt->executeQuery();
+ 
+        return $result->fetchAllAssociative();
+    }
+ 
+    /**
+     * ✅ NOVO MÉTODO: Busca internações finalizadas (para relatórios)
+     * 
+     * Mostra internações concluídas com motivo
+     * Útil para relatórios de altas, óbitos e cancelamentos
+     * 
+     * @param int $baseId Estabelecimento
+     * @param string|null $motivo Filtro opcional: 'alta', 'obito', 'cancelada'
+     * @param \DateTime|null $dataInicio Para filtrar por período
+     * @param \DateTime|null $dataFim Para filtrar por período
+     * @return array
+     */
+    public function listarFinalizadas(
+        int $baseId,
+        ?string $motivo = null,
+        ?\DateTime $dataInicio = null,
+        ?\DateTime $dataFim = null
+    ): array {
+        $sql = "
+            SELECT
+                i.id,
+                i.pet_id,
+                i.dono_id,
+                i.status,
+                i.motivo_conclusao,
+                i.data_inicio,
+                i.data_conclusao,
+                i.box,
+                i.diagnostico,
+                i.prognostico,
+                i.risco,
+                p.nome AS pet_nome,
+                p.especie,
+                p.raca,
+                c.nome AS dono_nome,
+                DATEDIFF(i.data_conclusao, i.data_inicio) AS dias_internacao
+            FROM homepet_" . $baseId . ".internacao i
+            LEFT JOIN homepet_" . $baseId . ".pet p ON p.id = i.pet_id
+            LEFT JOIN homepet_" . $baseId . ".cliente c ON c.id = i.dono_id
+            WHERE i.estabelecimento_id = :baseId
+              AND i.status = 'finalizada'
+              AND i.pet_id IS NOT NULL
+        ";
+ 
+        if ($motivo) {
+            $sql .= " AND i.motivo_conclusao = :motivo";
+        }
+ 
+        if ($dataInicio) {
+            $sql .= " AND i.data_conclusao >= :dataInicio";
+        }
+ 
+        if ($dataFim) {
+            $sql .= " AND i.data_conclusao <= :dataFim";
+        }
+ 
+        $sql .= " ORDER BY i.data_conclusao DESC";
+ 
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+ 
+        if ($motivo) {
+            $stmt->bindValue('motivo', $motivo);
+        }
+ 
+        if ($dataInicio) {
+            $stmt->bindValue('dataInicio', $dataInicio->format('Y-m-d H:i:s'));
+        }
+ 
+        if ($dataFim) {
+            $stmt->bindValue('dataFim', $dataFim->format('Y-m-d 23:59:59'));
+        }
+ 
+        $result = $stmt->executeQuery();
+        return $result->fetchAllAssociative();
+    }
+ 
+    /**
+     * ✅ NOVO MÉTODO: Conta internações por tipo de conclusão
+     * 
+     * Retorna estatísticas de finalizações
+     * Ex: [
+     *    'alta' => 45,
+     *    'obito' => 3,
+     *    'cancelada' => 2
+     * ]
+     * 
+     * @param int $baseId Estabelecimento
+     * @param \DateTime|null $dataInicio Período (opcional)
+     * @param \DateTime|null $dataFim Período (opcional)
+     * @return array Contagem por tipo
+     */
+    public function estatisticasFinalizacao(
+        int $baseId,
+        ?\DateTime $dataInicio = null,
+        ?\DateTime $dataFim = null
+    ): array {
+        $sql = "
+            SELECT
+                motivo_conclusao,
+                COUNT(*) as quantidade
+            FROM homepet_" . $baseId . ".internacao
+            WHERE estabelecimento_id = :baseId
+              AND status = 'finalizada'
+        ";
+ 
+        if ($dataInicio) {
+            $sql .= " AND data_conclusao >= :dataInicio";
+        }
+ 
+        if ($dataFim) {
+            $sql .= " AND data_conclusao <= :dataFim";
+        }
+ 
+        $sql .= " GROUP BY motivo_conclusao";
+ 
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+ 
+        if ($dataInicio) {
+            $stmt->bindValue('dataInicio', $dataInicio->format('Y-m-d H:i:s'));
+        }
+ 
+        if ($dataFim) {
+            $stmt->bindValue('dataFim', $dataFim->format('Y-m-d 23:59:59'));
+        }
+ 
+        $result = $stmt->executeQuery();
+        $rows = $result->fetchAllAssociative();
+ 
+        // Formata resultado como array associativo
+        $stats = ['alta' => 0, 'obito' => 0, 'cancelada' => 0];
+        foreach ($rows as $row) {
+            $motivo = $row['motivo_conclusao'] ?? 'desconhecido';
+            $stats[$motivo] = (int) $row['quantidade'];
+        }
+ 
+        return $stats;
+    }
+ 
+    /**
+     * ✅ NOVO MÉTODO: Calcula tempo médio de internação
+     * 
+     * @param int $baseId Estabelecimento
+     * @param \DateTime|null $dataInicio Período (opcional)
+     * @param \DateTime|null $dataFim Período (opcional)
+     * @return float|null Dias de internação médios
+     */
+    public function tempoMedioInternacao(
+        int $baseId,
+        ?\DateTime $dataInicio = null,
+        ?\DateTime $dataFim = null
+    ): ?float {
+        $sql = "
+            SELECT
+                AVG(DATEDIFF(data_conclusao, data_inicio)) as dias_medio
+            FROM homepet_" . $baseId . ".internacao
+            WHERE estabelecimento_id = :baseId
+              AND status = 'finalizada'
+              AND data_conclusao IS NOT NULL
+              AND data_inicio IS NOT NULL
+        ";
+ 
+        if ($dataInicio) {
+            $sql .= " AND data_conclusao >= :dataInicio";
+        }
+ 
+        if ($dataFim) {
+            $sql .= " AND data_conclusao <= :dataFim";
+        }
+ 
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+ 
+        if ($dataInicio) {
+            $stmt->bindValue('dataInicio', $dataInicio->format('Y-m-d H:i:s'));
+        }
+ 
+        if ($dataFim) {
+            $stmt->bindValue('dataFim', $dataFim->format('Y-m-d 23:59:59'));
+        }
+ 
+        $result = $stmt->executeQuery();
+        $row = $result->fetchAssociative();
+ 
+        return $row['dias_medio'] ? (float) $row['dias_medio'] : null;
+    }
 
 }

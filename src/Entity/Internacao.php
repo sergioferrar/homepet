@@ -88,6 +88,22 @@ class Internacao
      */
     private $estabelecimento_id;
 
+    /**
+     * 🆕 Data de conclusão da internação
+     * Preenchido quando: alta, óbito ou cancelamento
+     * 
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $data_conclusao;
+
+    /**
+     * 🆕 Motivo da conclusão: 'alta', 'obito', 'cancelada'
+     * Permite saber POR QUÊ a internação foi finalizada
+     * 
+     * @ORM\Column(type="string", length=50, nullable=true)
+     */
+    private $motivo_conclusao;
+
     // =======================
     // GETTERS & SETTERS
     // =======================
@@ -249,5 +265,47 @@ class Internacao
     {
         $this->estabelecimento_id = $estabelecimento_id;
         return $this;
+    }
+
+    // 🆕 NOVOS GETTERS & SETTERS
+
+    public function getDataConclusao(): ?\DateTimeInterface
+    {
+        return $this->data_conclusao;
+    }
+
+    public function setDataConclusao(?\DateTimeInterface $data_conclusao): self
+    {
+        $this->data_conclusao = $data_conclusao;
+        return $this;
+    }
+
+    public function getMotivoConclusao(): ?string
+    {
+        return $this->motivo_conclusao;
+    }
+
+    public function setMotivoConclusao(?string $motivo_conclusao): self
+    {
+        $this->motivo_conclusao = $motivo_conclusao;
+        return $this;
+    }
+
+    /**
+     * Helper: Verifica se internação está finalizada
+     */
+    public function isEncerrada(): bool
+    {
+        return $this->status === 'finalizada';
+    }
+
+    /**
+     * Helper: Verifica tempo de internação
+     */
+    public function getDiasInternacao(): ?int
+    {
+        $fim = $this->data_conclusao ?? new \DateTime();
+        $dias = $fim->diff($this->data_inicio)->days;
+        return $dias >= 0 ? $dias : null;
     }
 }

@@ -57,7 +57,7 @@ class FichaPdfService
 
         $html = $this->montarHtml($pet, $cliente, $clinica, $consultas, $internacoes, $receitas, $referencia, $emitidoEm);
 
-        $this->gerador->configuracaoPagina('A4', 10, 10, 50, 15, 10, 12);
+        $this->gerador->configuracaoPagina('A4', 10, 10, 20, 15, 10, 12);
         $this->gerador->setNomeArquivo(
             'Ficha_' . preg_replace('/[^a-zA-Z0-9]/', '_', $pet['nome'] ?? 'Pet') . '_' . date('YmdHis')
         );
@@ -553,7 +553,7 @@ class FichaPdfService
 
         $html .= '<td style="width:50%; text-align:center; padding:0 14px; vertical-align:bottom;">';
         $html .= '<div style="border-top:1px solid #333; padding-top:5px; font-size:10.5px;">';
-        $html .= '<strong>Médico-veterinário responsável</strong><br>';
+        $html .= '<strong style="font-size:9px">Médico-veterinário responsável</strong><br>';
         $html .= $nomeVet . '<br>CRMV: ' . $crmvVet;
         $html .= '</div>';
         $html .= '</td>';

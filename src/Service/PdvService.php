@@ -87,8 +87,9 @@ class PdvService
             // 5.1 Registra as formas de pagamento (pagamento dividido)
             $this->registrarPagamentos($venda, $pagamentos, $estabelecimentoId);
 
-            // 6. Registra no financeiro
-            $this->registrarFinanceiro($venda, $nomeCliente, count($dto->itens), $pagamentos);
+            // 6. CORREÇÃO: NÃO registra no financeiro aqui — apenas quando finalizar
+            // O financeiro será registrado em finalizarCarrinho() do Controller
+            // Isso evita duplicação quando a venda é carregada e finalizada no caixa
 
             // Baixa os fiados incluídos nesta venda somente após pagamento real.
             if ($this->metodoEfetivo($dto) !== 'pendente') {
@@ -314,6 +315,7 @@ class PdvService
 
     /**
      * Registra venda no financeiro
+     * CORREÇÃO: Agora apenas registra quando a venda é finalizada (status != Carrinho)
      */
     private function registrarFinanceiro(Venda $venda, string $nomeCliente, int $qtdItens, array $pagamentos = []): void
     {

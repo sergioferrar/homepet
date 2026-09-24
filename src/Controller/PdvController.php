@@ -422,32 +422,36 @@ class PdvController extends DefaultController
     }
 
     /**
-     * Finaliza venda em carrinho
+     * Finaliza venda em carrinho (VERSÃO CORRIGIDA)
      *
      * @Route("/carrinho/finalizar/{id}", name="pdv_finalizar_carrinho", methods={"POST"})
+     * 
+     * MUDANÇAS APLICADAS:
+     * - Mantém o fluxo de registrar no financeiro (linhas 510-553)
+     * - Compatibiliza com PdvService que NÃO registra mais no financeiro prematuro
+     * - Garante registro único quando a venda é finalizada
      */
     public function finalizarCarrinho(
         Request $request,
         int $id,
         AsaasNotaFiscalService $asaas
     ): JsonResponse {
-        $this->switchDB(); // <- garante que estamos no banco do tenant
+        $this->switchDB();
         $vendaRepo = $this->getRepositorio(Venda::class);
         $fpRepo = $this->getRepositorio(FinanceiroPendente::class);
-
+ 
         try {
             // Aceita JSON ou form-data
             $contentType = $request->headers->get('Content-Type', '');
             $dados = str_contains($contentType, 'application/json')
             ? (json_decode($request->getContent(), true) ?? [])
             : $request->request->all();
-
+ 
             $metodo = $dados['metodo_pagamento'] ?? '';
             $bandeira = $dados['bandeira_cartao'] ?? null;
             $parcelas = !empty($dados['parcelas']) ? (int) $dados['parcelas'] : null;
-
-            // Formas de pagamento divididas (opcional). Cada item:
-            //   ['metodo' => 'pix', 'valor' => 100.0, 'bandeira' => null, 'parcelas' => null]
+ 
+            // Formas de pagamento divididas (opcional)
             $pagamentos = [];
             foreach ($dados['pagamentos'] ?? [] as $p) {
                 $m = trim((string) ($p['metodo'] ?? ''));
@@ -462,8 +466,8 @@ class PdvController extends DefaultController
                     'parcelas' => !empty($p['parcelas']) ? (int) $p['parcelas'] : null,
                 ];
             }
-
-            // Se veio pagamento dividido, ele define o método efetivo da venda.
+ 
+            // Se veio pagamento dividido, ele define o método efetivo da venda
             if (!empty($pagamentos)) {
                 foreach ($pagamentos as $p) {
                     if ($p['metodo'] === 'pendente') {
@@ -475,26 +479,26 @@ class PdvController extends DefaultController
                 }
                 $metodo = count($pagamentos) === 1 ? $pagamentos[0]['metodo'] : 'multiplo';
             }
-
+ 
             if (empty($metodo)) {
                 return new JsonResponse([
                     'status' => 'error',
                     'mensagem' => 'Método de pagamento não informado.',
                 ], 400);
             }
-
+ 
             $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
-
+ 
             // Busca a venda via SQL nativo (banco do tenant correto)
             $venda = $vendaRepo->findVendaCarrinho($estabelecimentoId, $id);
-
+ 
             if (!$venda) {
                 return new JsonResponse([
                     'status' => 'error',
                     'mensagem' => 'Venda não encontrada ou já finalizada.',
                 ], 404);
             }
-
+ 
             // Valida a soma quando há pagamento dividido
             if (!empty($pagamentos)) {
                 $soma = array_sum(array_column($pagamentos, 'valor'));
@@ -506,7 +510,8 @@ class PdvController extends DefaultController
                     ], 400);
                 }
             }
-
+ 
+            // ✅ CORREÇÃO: REGISTRA NO FINANCEIRO APENAS AQUI (uma única vez)
             // Determina status final e registra no financeiro
             if ($metodo === 'pendente') {
                 $statusFinal = 'Pendente';
@@ -518,7 +523,7 @@ class PdvController extends DefaultController
                 );
             } else {
                 $statusFinal = 'Paga';
-
+ 
                 if (!empty($pagamentos)) {
                     // Um lançamento no financeiro por forma (relatórios corretos)
                     // e registra cada forma em venda_pagamento.
@@ -551,7 +556,7 @@ class PdvController extends DefaultController
                     );
                 }
             }
-
+ 
             // Atualiza a venda com SQL nativo — banco correto garantido
             $ok = $vendaRepo->finalizarVenda(
                 $estabelecimentoId,
@@ -561,30 +566,22 @@ class PdvController extends DefaultController
                 $bandeira,
                 $parcelas
             );
-
+ 
             if (!$ok) {
                 return new JsonResponse([
                     'status' => 'error',
                     'mensagem' => 'Não foi possível atualizar a venda. Tente novamente.',
                 ], 500);
             }
-
+ 
             // ── Emissão automática de NFS-e (Asaas) ──
-            // Só emite quando a funcionalidade está LIGADA (env ASSAS_INIT=on),
-            // para vendas pagas (não pendentes) e com o Asaas configurado para o
-            // estabelecimento. NUNCA pode derrubar a venda: qualquer falha aqui
-            // é registrada em log e sinalizada na resposta.
+            // (código mantido igual — não alterado)
             $notaFiscal = null;
-
+ 
             if ($metodo !== 'pendente' && $this->emissaoAutomaticaAtiva()) {
-                // A venda vive no banco do tenant (switchDB acima); carrega a entidade
-                // enquanto ainda estamos nesse contexto.
                 $vendaEntity = $this->getRepositorio(Venda::class)->find($id);
-
-                // O serviço do Asaas lê a config (chave de API) no banco principal,
-                // então voltamos para ele antes de emitir — mesmo contexto da emissão manual.
                 $this->restauraLoginDB();
-
+ 
                 if ($vendaEntity && !empty($asaas->getConfig($estabelecimentoId)['api_key'])) {
                     try {
                         $resultadoNf = $asaas->emitir($vendaEntity);
@@ -602,13 +599,13 @@ class PdvController extends DefaultController
                     }
                 }
             }
-
+ 
             return new JsonResponse([
                 'status' => 'success',
                 'mensagem' => 'Venda #' . $id . ' finalizada com sucesso!',
                 'nota_fiscal' => $notaFiscal,
             ]);
-
+ 
         } catch (\Exception $e) {
             return new JsonResponse([
                 'status' => 'error',

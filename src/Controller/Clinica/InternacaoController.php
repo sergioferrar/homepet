@@ -307,75 +307,118 @@ class InternacaoController extends DefaultController
     /**
      * @Route("/internacao/{id}/acao/{acao}", name="clinica_internacao_acao", methods={"POST"})
      */
-    public function acaoInternacao(
+    public function finalizarInternacao(
         int $id,
         string $acao,
-        Request $request
+        Request $request,
+        InternacaoRepository $internacaoRepo,
+        BoxRepository $boxRepo
     ): JsonResponse {
         $this->switchDB();
         $baseId = $this->getIdBase();
-        $internacaoRepo = $this->getRepositorio(Internacao::class);
-        $boxRepo = $this->getRepositorio(\App\Entity\Box::class);
-
+ 
         if (!$this->isCsrfTokenValid('internacao_acao_' . $id, $request->get('_token'))) {
             return $this->json(['ok' => false, 'msg' => 'Token inválido.'], 400);
         }
-
+ 
         $internacao = $internacaoRepo->buscarPorId($baseId, $id);
         if (!$internacao) {
             return $this->json(['ok' => false, 'msg' => 'Internação não encontrada.'], 404);
         }
-
+ 
+        // ✅ CORREÇÃO: Todos os finais têm status 'finalizada'
         $acoesValidas = [
-            'alta'     => ['status' => 'finalizada', 'titulo' => 'Alta concedida',      'descricao' => 'Internação finalizada pelo sistema'],
-            'obito'    => ['status' => 'obito',       'titulo' => 'Óbito registrado',    'descricao' => 'Internação encerrada por óbito'],
-            'cancelar' => ['status' => 'cancelada',   'titulo' => 'Internação cancelada','descricao' => 'Internação cancelada pelo sistema'],
-            'box'      => ['status' => 'ativa',       'titulo' => 'Box alterado',        'descricao' => 'Box de internação atualizado'],
-            'editar'   => ['status' => 'ativa',       'titulo' => 'Internação editada',  'descricao' => 'Dados da internação foram atualizados'],
+            'alta'     => [
+                'status'          => 'finalizada',  // ✅ Status final
+                'motivo_conclusao'=> 'alta',        // 🆕 Motivo
+                'titulo'          => 'Alta concedida',
+                'descricao'       => 'Internação finalizada por alta'
+            ],
+            'obito'    => [
+                'status'          => 'finalizada',  // ✅ MUDADO de 'obito' para 'finalizada'
+                'motivo_conclusao'=> 'obito',       // 🆕 Motivo
+                'titulo'          => 'Óbito registrado',
+                'descricao'       => 'Internação finalizada por óbito'
+            ],
+            'cancelar' => [
+                'status'          => 'finalizada',  // ✅ MUDADO de 'cancelada' para 'finalizada'
+                'motivo_conclusao'=> 'cancelada',   // 🆕 Motivo
+                'titulo'          => 'Internação cancelada',
+                'descricao'       => 'Internação cancelada pelo sistema'
+            ],
+            'box'      => [
+                'status'          => 'ativa',       // Muda apenas box, não finaliza
+                'motivo_conclusao'=> null,
+                'titulo'          => 'Box alterado',
+                'descricao'       => 'Box de internação atualizado'
+            ],
+            'editar'   => [
+                'status'          => 'ativa',       // Apenas edição, não finaliza
+                'motivo_conclusao'=> null,
+                'titulo'          => 'Internação editada',
+                'descricao'       => 'Dados da internação foram atualizados'
+            ],
         ];
-
+ 
         if (!isset($acoesValidas[$acao])) {
             return $this->json(['ok' => false, 'msg' => 'Ação inválida.'], 400);
         }
-
-        if (in_array($internacao['status'], ['alta', 'obito'])) {
+ 
+        // ✅ CORREÇÃO: Valida se já foi finalizada (usando 'finalizada' como status final)
+        if ($internacao['status'] === 'finalizada') {
+            $motivo = $internacao['motivo_conclusao'] ?? 'desconhecido';
             return $this->json([
                 'ok'  => false,
-                'msg' => 'Esta internação já foi encerrada por ' . $internacao['status'] . '.',
+                'msg' => 'Esta internação já foi finalizada (' . $motivo . ').',
             ]);
         }
-
+ 
         $acaoInfo = $acoesValidas[$acao];
+ 
+        // ✅ CORREÇÃO: Atualiza status E adiciona data/motivo de conclusão
         $internacaoRepo->atualizarStatus($baseId, $id, $acaoInfo['status']);
-
+        
+        // 🆕 Registra quando e por que foi finalizado
+        if ($acaoInfo['status'] === 'finalizada') {
+            $internacaoRepo->atualizarConclusao(
+                $baseId,
+                $id,
+                new \DateTime(),
+                $acaoInfo['motivo_conclusao']
+            );
+        }
+ 
         // ── Libera o box automaticamente ao encerrar a internação ─────
-        $statusFinais = ['finalizada', 'obito', 'cancelada'];
-        if (in_array($acaoInfo['status'], $statusFinais)) {
+        // ✅ CORREÇÃO: Agora verifica status === 'finalizada' (não lista de vários status)
+        if ($acaoInfo['status'] === 'finalizada') {
             $boxNumero = $internacao['box'] ?? '';
             if ($boxNumero !== '') {
                 $boxRepo->liberar($baseId, $boxNumero);
             }
         }
-
-        // ── Óbito: fecha a ficha e marca o pet como falecido ───────────
-        // O pet nunca é excluído — apenas fica indisponível para seleção em
-        // novos lançamentos (agendamento, venda, atendimento), continuando
-        // visível normalmente em listagens, fichas e relatórios.
-        if ($acaoInfo['status'] === 'obito') {
-            $this->getRepositorio(Pet::class)->marcarObito($baseId, (int) $internacao['pet_id'], new \DateTime());
+ 
+        // ── Óbito: marca o pet como falecido ────────────────────────
+        if ($acaoInfo['motivo_conclusao'] === 'obito') {
+            $this->getRepositorio(Pet::class)->marcarObito(
+                $baseId,
+                (int) $internacao['pet_id'],
+                new \DateTime()
+            );
         }
-
+ 
+        // ── Registra evento no histórico ───────────────────────────
         $internacaoRepo->inserirEvento(
-            $baseId, $id, (int) $internacao['pet_id'],
+            $baseId,
+            $id,
+            (int) $internacao['pet_id'],
             ucfirst($acao),
             $acaoInfo['titulo'],
             $acaoInfo['descricao'],
             new \DateTime()
         );
-
+ 
         return $this->json(['ok' => true]);
     }
-
 
 
     /**
