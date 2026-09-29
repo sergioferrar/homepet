@@ -39,31 +39,57 @@ class PdvController extends DefaultController
     {
         $this->switchDB();
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+        $conn = $em->getConnection();
 
-        // Busca produtos e serviços
-        $produtos = $em->getRepository(Produto::class)
-            ->findBy(['estabelecimentoId' => $estabelecimentoId]);
+        // ── Produtos + serviços numa consulta cada, só com as colunas usadas
+        // pelo front. Evita hidratar milhares de entidades. ───────────────
+        $produtosRows = $conn->fetchAllAssociative(
+            "SELECT id, nome, preco_venda AS valor, estoque_atual AS estoque
+             FROM homepet_{$estabelecimentoId}.produto
+             WHERE estabelecimento_id = :estab",
+            ['estab' => $estabelecimentoId]
+        );
 
-        $servicos = $em->getRepository(Servico::class)
-            ->findBy(['estabelecimentoId' => $estabelecimentoId]);
+        $servicosRows = $conn->fetchAllAssociative(
+            "SELECT id, nome, valor, descricao
+             FROM homepet_{$estabelecimentoId}.servico
+             WHERE estabelecimento_id = :estab",
+            ['estab' => $estabelecimentoId]
+        );
 
-        // Normaliza itens para o frontend
-        $itensNormalizados = $this->normalizarItens($produtos, $servicos);
-
-        // Busca e normaliza clientes
-        $clientesEntities = $em->getRepository(Cliente::class)
-            ->findBy(['estabelecimentoId' => $estabelecimentoId]);
-
-        $clientesNormalizados = array_map(function ($cliente) {
-            return [
-                'id' => $cliente->getId(),
-                'nome' => $cliente->getNome(),
-                'email' => $cliente->getEmail(),
-                'telefone' => $cliente->getTelefone(),
+        $itensNormalizados = [];
+        foreach ($produtosRows as $p) {
+            $itensNormalizados[] = [
+                'id' => 'prod_' . $p['id'],
+                'nome' => $p['nome'],
+                'valor' => (float) ($p['valor'] ?? 0),
+                'estoque' => $p['estoque'] !== null ? (int) $p['estoque'] : 0,
+                'tipo' => 'Produto',
+                'descricao' => $p['nome'] ?? '',
             ];
-        }, $clientesEntities);
+        }
+        foreach ($servicosRows as $s) {
+            $itensNormalizados[] = [
+                'id' => 'serv_' . $s['id'],
+                'nome' => $s['nome'],
+                'valor' => (float) ($s['valor'] ?? 0),
+                'estoque' => null,
+                'tipo' => 'Serviço',
+                'descricao' => $s['descricao'] ?? '',
+            ];
+        }
+        usort($itensNormalizados, fn($a, $b) => strcmp((string) $a['nome'], (string) $b['nome']));
 
-        // Busca vendas em carrinho
+        // Clientes: apenas colunas realmente exibidas no autocomplete.
+        $clientesNormalizados = $conn->fetchAllAssociative(
+            "SELECT id, nome, email, telefone
+             FROM homepet_{$estabelecimentoId}.cliente
+             WHERE estabelecimento_id = :estab
+             ORDER BY nome",
+            ['estab' => $estabelecimentoId]
+        );
+
+        // Vendas em carrinho
         $vendasCarrinho = $em->getRepository(Venda::class)
             ->findCarrinho($estabelecimentoId);
 
@@ -272,12 +298,23 @@ class PdvController extends DefaultController
     {
         $this->switchDB();
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+        $conn = $em->getConnection();
 
-        $vendas = $em->getRepository(Venda::class)
-            ->findBy(
-                ['estabelecimentoId' => $estabelecimentoId],
-                ['data' => 'DESC']
-            );
+        // SQL nativo para trazer o nome do pet na mesma consulta e evitar N+1.
+        $sql = "SELECT v.id,
+                       v.data,
+                       v.cliente,
+                       v.total,
+                       v.metodo_pagamento AS metodoPagamento,
+                       v.status,
+                       v.pet_id AS petId,
+                       p.nome AS petNome
+                FROM homepet_{$estabelecimentoId}.venda v
+                LEFT JOIN homepet_{$estabelecimentoId}.pet p ON p.id = v.pet_id
+                WHERE v.estabelecimento_id = :estab
+                ORDER BY v.data DESC";
+
+        $vendas = $conn->fetchAllAssociative($sql, ['estab' => $estabelecimentoId]);
 
         return $this->render('clinica/pdv_listar.html.twig', [
             'vendas' => $vendas,

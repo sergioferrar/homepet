@@ -50,6 +50,7 @@
                 <th>#ID</th>
                 <th>Data</th>
                 <th>Cliente</th>
+                <th>Pet</th>
                 <th>Valor</th>
                 <th>Forma de Pagamento</th>
                 <th>Status</th>
@@ -62,6 +63,7 @@
                     <td>{{ v.id }}</td>
                     <td>{{ v.data|date('d/m/Y H:i') }}</td>
                     <td>{{ v.cliente }}</td>
+                    <td>{{ v.petNome ?: '—' }}</td>
                     <td>R$ {{ v.total|number_format(2, ',', '.') }}</td>
                     <td>{{ v.metodoPagamento|upper }}</td>
                     <td>
@@ -91,7 +93,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">
+                    <td colspan="8" class="text-center text-muted py-4">
                         <i class="bi bi-inbox fs-4 d-block mb-2"></i>
                         Nenhuma venda encontrada.
                     </td>
