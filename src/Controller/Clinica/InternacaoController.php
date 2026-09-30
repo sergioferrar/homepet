@@ -2,6 +2,7 @@
 
 namespace App\Controller\Clinica;
 
+use App\Entity\Box;
 use App\Entity\Cliente;
 use App\Entity\Consulta;
 use App\Entity\DocumentoModelo;
@@ -310,13 +311,13 @@ class InternacaoController extends DefaultController
     public function finalizarInternacao(
         int $id,
         string $acao,
-        Request $request,
-        InternacaoRepository $internacaoRepo,
-        BoxRepository $boxRepo
+        Request $request
     ): JsonResponse {
         $this->switchDB();
         $baseId = $this->getIdBase();
- 
+        $internacaoRepo = $this->getRepositorio(Internacao::class);
+        $boxRepo = $this->getRepositorio(Box::class);
+
         if (!$this->isCsrfTokenValid('internacao_acao_' . $id, $request->get('_token'))) {
             return $this->json(['ok' => false, 'msg' => 'Token inválido.'], 400);
         }
