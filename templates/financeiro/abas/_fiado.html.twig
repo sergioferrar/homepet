@@ -1,0 +1,70 @@
+{% set total_fiado = 0 %}
+{% for item in pendentes %}{% set total_fiado = total_fiado + item.total %}{% endfor %}
+
+<header class="fin-cabecalho">
+    <div>
+        <h2 class="fin-titulo">Fiado</h2>
+        <p class="fin-sub">Lançamentos pendentes de pagamento</p>
+    </div>
+    <div class="fin-total">
+        <span>Total a receber</span>
+        <strong class="fin-pend">R$ {{ total_fiado|number_format(2, ',', '.') }}</strong>
+    </div>
+</header>
+
+{% if pendentes|length > 0 %}
+    <div class="fin-barra">
+        <input type="search" id="fin-busca" class="form-control form-control-sm fin-busca"
+               placeholder="Buscar tutor, pet ou descrição" aria-label="Buscar tutor, pet ou descrição">
+    </div>
+
+    <div class="table-responsive">
+        <table class="table fin-tabela" data-fin-tabela>
+            <thead>
+                <tr>
+                    <th scope="col">Tutor</th>
+                    <th scope="col">Pet</th>
+                    <th scope="col" class="d-none d-lg-table-cell">Descrição</th>
+                    <th scope="col" class="d-none d-md-table-cell">Data</th>
+                    <th scope="col" class="fin-num">Valor</th>
+                    <th scope="col"><span class="visually-hidden">Ações</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in pendentes %}
+                    <tr data-busca="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.descricao }}">
+                        <td class="fw-semibold">{{ item.dono_nome|default('—') }}</td>
+                        <td>{{ item.pet_nome|default('—') }}</td>
+                        <td class="fin-sec d-none d-lg-table-cell">{{ item.descricao }}</td>
+                        <td class="d-none d-md-table-cell">{{ item.data|date('d/m/Y') }}</td>
+                        <td class="fin-num fin-pend fw-semibold">R$ {{ item.total|number_format(2, ',', '.') }}</td>
+                        <td class="fin-acoes">
+                            <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': item.id}) }}" class="d-inline"
+                                  onsubmit="return confirm('Confirmar o pagamento de R$ {{ item.total|number_format(2, ',', '.') }}?')">
+                                <button type="submit" class="btn btn-outline-success btn-sm" aria-label="Confirmar pagamento" title="Confirmar pagamento">
+                                    <i class="bi bi-check2-circle" aria-hidden="true"></i><span class="d-none d-md-inline ms-1">Confirmar pagamento</span>
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-outline-danger btn-sm fin-excluir"
+                                    aria-label="Excluir lançamento" title="Excluir"
+                                    data-acao="{{ path('financeiro_deletar_pendente', {'id': item.id}) }}"
+                                    data-descricao="{{ item.descricao }}"
+                                    data-valor="{{ item.total|number_format(2, ',', '.') }}">
+                                <i class="bi bi-trash" aria-hidden="true"></i>
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                <tr id="fin-sem-resultado" hidden>
+                    <td colspan="6" class="fin-vazio">Nenhum resultado para essa busca.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% include 'financeiro/abas/_paginacao.html.twig' %}
+{% else %}
+    <div class="fin-vazio">
+        <i class="bi bi-check-circle" aria-hidden="true"></i>
+        Nenhum pagamento pendente. Tudo em dia.
+    </div>
+{% endif %}

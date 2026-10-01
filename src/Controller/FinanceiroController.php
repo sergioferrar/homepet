@@ -20,6 +20,11 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 class FinanceiroController extends DefaultController
 {
     /**
+     * Abas da tela. Cada uma é um link (?aba=...) e carrega só o próprio conteúdo.
+     */
+    private const ABAS = ['diario', 'clinica', 'banho_tosa', 'hospedagem', 'fiado', 'fluxo', 'relatorio', 'inativos'];
+
+    /**
      * @Route("/", name="financeiro_index")
      */
     public function index(Request $request): Response
@@ -32,64 +37,78 @@ class FinanceiroController extends DefaultController
         $financeiroPendenteRepo = $this->getRepositorio(FinanceiroPendente::class);
         $financeiroRepo->regulaBase();
 
-        // --- Aba Diário ---
+        $aba = (string) $request->query->get('aba', 'diario');
+        if ($aba === 'pendente') {
+            $aba = 'fiado'; // links antigos
+        }
+        if (!in_array($aba, self::ABAS, true)) {
+            $aba = 'diario';
+        }
+
         $dataDiario = $request->query->get('data') ? date('Y-m-d', strtotime($request->query->get('data'))) : date('Y-m-d');
-        
-        // findTotalByDate agora retorna array com LEFT JOINs
+
+        // --- Resumo do topo (aparece em todas as abas; uma consulta barata cada) ---
         $financeirosDiarios = $financeiroRepo->findTotalByDate($baseId, $dataDiario);
+        $totalMes = array_sum(array_column($financeiroRepo->getRelatorioPorPeriodo(
+            $baseId,
+            new \DateTime('first day of this month'),
+            new \DateTime('last day of this month')
+        ), 'total'));
 
-        // --- Aba Caixa da Clínica ---
-        $financeirosClinica = $financeiroRepo->findTotalByDateAndOrigem($baseId, $dataDiario, 'clinica');
-
-        // --- Aba Caixa do Banho e Tosa ---
-        $financeirosBanhoTosa = $financeiroRepo->findTotalByDateAndOrigem($baseId, $dataDiario, 'banho_tosa');
-
-        // --- Aba Caixa da Hospedagem ---
-        $financeirosHospedagem = $financeiroRepo->findTotalByDateAndOrigem($baseId, $dataDiario, 'hospedagem');
-
-        // --- Aba Pendente (mantém para compatibilidade) ---
-        $financeirosPendentes = $financeiroPendenteRepo->findAllClinica($baseId);
-
-        // --- Aba Relatório ---
-        $mesInicio = $request->query->get('mes_inicio', (new \DateTime('first day of this month'))->format('Y-m'));
-        $mesFim = $request->query->get('mes_fim', (new \DateTime('last day of this month'))->format('Y-m'));
-        $dataInicio = new \DateTime($mesInicio . '-01');
-        $dataFim = (new \DateTime($mesFim . '-01'))->modify('last day of this month');
-        $relatorioData = $financeiroRepo->getRelatorioPorPeriodo($baseId, $dataInicio, $dataFim);
-
-        // --- Aba Inativos ---
-        // findInativos agora retorna arrays com LEFT JOINs
-        $vendasInativas = $financeiroRepo->findInativos($baseId);
-
-        // Busca registros inativos do financeiro_pendente
-        $pendentesInativos = $financeiroPendenteRepo->buscaInativosPendentes($baseId);
-        
-        // Mescla vendas inativas e pendentes inativos
-        $financeirosInativos = array_merge($vendasInativas, $pendentesInativos);
-
-        // Ordena por data decrescente
-        usort($financeirosInativos, function ($a, $b) {
-            return strtotime($b['data']) - strtotime($a['data']);
-        });
-
-        // --- Aba Fluxo de Caixa ---
-        $dataFluxo = $request->query->get('data_fluxo') ? new \DateTime($request->query->get('data_fluxo')) : new \DateTime();
-        $fluxoCaixa = $this->getFluxoCaixa($baseId, $dataFluxo);
+        $resumo = [
+            'caixa_dia'   => array_sum(array_column($financeirosDiarios, 'total_valor')),
+            'fiado_total' => $financeiroPendenteRepo->somarDebitosPendentes($baseId),
+            'fiado_qtd'   => $financeiroPendenteRepo->contarDebitosPendentes($baseId),
+            'mes'         => $totalMes,
+        ];
 
         $data = [
-            'financeiros'              => $financeirosDiarios,
-            'financeiros_clinica'      => $financeirosClinica,
-            'financeiros_banho_tosa'   => $financeirosBanhoTosa,
-            'financeiros_hospedagem'   => $financeirosHospedagem,
-            'data'                     => $dataDiario,
-            'pendentes'                => $financeirosPendentes,
-            'mes_inicio'               => $mesInicio,
-            'mes_fim'                  => $mesFim,
-            'relatorio'                => $relatorioData,
-            'inativos'                 => $financeirosInativos,
-            'fluxo_caixa'              => $fluxoCaixa,
-            'data_fluxo'               => $dataFluxo,
+            'aba'        => $aba,
+            'resumo'     => $resumo,
+            'data'       => $dataDiario,
+            'mes_inicio' => $request->query->get('mes_inicio', (new \DateTime('first day of this month'))->format('Y-m')),
+            'mes_fim'    => $request->query->get('mes_fim', (new \DateTime('last day of this month'))->format('Y-m')),
         ];
+
+        // --- Conteúdo da aba aberta ---
+        switch ($aba) {
+            case 'diario':
+                $data['financeiros'] = $financeirosDiarios;
+                break;
+
+            case 'clinica':
+            case 'banho_tosa':
+            case 'hospedagem':
+                $data['financeiros'] = $financeiroRepo->findTotalByDateAndOrigem($baseId, $dataDiario, $aba);
+                break;
+
+            case 'fiado':
+                $data['pendentes'] = $financeiroPendenteRepo->findAllClinica($baseId);
+                break;
+
+            case 'relatorio':
+                $dataInicio = new \DateTime($data['mes_inicio'] . '-01');
+                $dataFim = (new \DateTime($data['mes_fim'] . '-01'))->modify('last day of this month');
+                $data['relatorio'] = $financeiroRepo->getRelatorioPorPeriodo($baseId, $dataInicio, $dataFim);
+                break;
+
+            case 'inativos':
+                $inativos = array_merge(
+                    $financeiroRepo->findInativos($baseId),
+                    $financeiroPendenteRepo->buscaInativosPendentes($baseId)
+                );
+                usort($inativos, function ($a, $b) {
+                    return strtotime($b['data']) - strtotime($a['data']);
+                });
+                $data['inativos'] = $inativos;
+                break;
+
+            case 'fluxo':
+                $dataFluxo = $request->query->get('data_fluxo') ? new \DateTime($request->query->get('data_fluxo')) : new \DateTime();
+                $data['data_fluxo'] = $dataFluxo;
+                $data['fluxo_caixa'] = $this->getFluxoCaixa($baseId, $dataFluxo);
+                break;
+        }
 
         return $this->render('financeiro/index.html.twig', $data);
     }
@@ -230,7 +249,7 @@ class FinanceiroController extends DefaultController
 
         $this->addFlash('success', 'Registro pendente excluído com sucesso.');
 
-        return $this->redirectToRoute('financeiro_index', ['aba' => 'pendente']);
+        return $this->redirectToRoute('financeiro_index', ['aba' => 'fiado']);
     }
 
     /**

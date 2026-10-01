@@ -1,1378 +1,360 @@
 {% extends 'list/_list_base.html.twig' %}
 
 {% block page_title %}Gestão Financeira{% endblock %}
-
-
-{% block list_stylesheets %}
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
-
-
-    <style>
-
-        .blinking-text {
-            /* Apply the animation */
-            animation: blinker 1s linear infinite;
-        }
-
-        /* Define the animation stages */
-        @keyframes blinker {
-            0% {
-                opacity: 1; /* Fully visible */
-            }
-            50% {
-                opacity: 0; /* Invisible */
-            }
-            100% {
-                opacity: 1; /* Fully visible */
-            }
-        }
-
-        /* Cabeçalho */
-        .icon-wrapper {
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .icon-wrapper i {
-            color: white !important;
-        }
-
-        /* Resumo Geral */
-        .icon-box {
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Abas */
-        .nav-tabs {
-            border-bottom: 2px solid #e9ecef;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            overflow-y: hidden;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .nav-tabs::-webkit-scrollbar {
-            height: 3px;
-        }
-
-        .nav-tabs::-webkit-scrollbar-thumb {
-            background: #667eea;
-            border-radius: 3px;
-        }
-
-        .nav-tabs .nav-link {
-            font-weight: 600;
-            color: #6c757d;
-            transition: all 0.3s ease;
-            border: none;
-            padding: 0.75rem 1.25rem;
-            position: relative;
-            white-space: nowrap;
-            border-radius: 8px 8px 0 0;
-        }
-
-        .nav-tabs .nav-link i {
-            opacity: 0.7;
-        }
-
-        .nav-tabs .nav-link:hover {
-            color: #007bff;
-            background-color: rgba(102, 126, 234, 0.05);
-        }
-
-        .nav-tabs .nav-link:hover i {
-            opacity: 1;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: #667eea;
-            background-color: rgba(102, 126, 234, 0.1);
-        }
-
-        .nav-tabs .nav-link.active i {
-            opacity: 1;
-        }
-
-        .nav-tabs .nav-link.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 3px 3px 0 0;
-        }
-
-        /* Cards */
-        .card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-        }
-
-        /* Bordas coloridas */
-        .border-3 {
-            border-width: 3px !important;
-        }
-
-        /* Badges */
-        .badge {
-            font-size: 0.75rem;
-            padding: 0.35em 0.65em;
-        }
-
-        /* Inputs */
-        .form-control:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
-        }
-
-        /* Botões */
-        .btn {
-            transition: all 0.3s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Paginação */
-        .pagination .page-link {
-            color: #007bff;
-            border-radius: 8px;
-            margin: 0 2px;
-        }
-
-        .pagination .page-item.active .page-link {
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-
-        /* Alertas */
-        .alert {
-            border-radius: 10px;
-            border: none;
-        }
-
-        /* Ícones */
-        .fas, .far {
-            width: 1.2em;
-            text-align: center;
-        }
-
-        /* Animações */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .card {
-            animation: fadeInUp 0.5s ease;
-        }
-
-        /* Gradientes */
-        .bg-gradient-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        /* Cor roxa personalizada */
-        .text-purple {
-            color: #764ba2 !important;
-        }
-        
-        .bg-purple {
-            background-color: #764ba2 !important;
-        }
-
-        /* Sombras suaves */
-        .shadow-soft {
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        }
-
-        /* Responsividade */
-        @media (max-width: 992px) {
-            .nav-tabs .nav-link {
-                padding: 0.65rem 1rem;
-                font-size: 0.9rem;
-            }
-
-            .nav-tabs .nav-link i {
-                display: none;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .card-body {
-                padding: 1rem !important;
-            }
-
-            .fs-5 {
-                font-size: 1rem !important;
-            }
-
-            .icon-wrapper {
-                width: 50px;
-                height: 50px;
-            }
-
-            .icon-wrapper i {
-                font-size: 1.5rem !important;
-            }
-
-            .icon-box {
-                width: 50px;
-                height: 50px;
-            }
-
-            .icon-box i {
-                font-size: 1.5rem !important;
-            }
-
-            .nav-tabs .nav-link {
-                padding: 0.6rem 0.8rem;
-                font-size: 0.85rem;
-            }
-
-            .btn {
-                padding: 0.5rem 1rem;
-                font-size: 0.9rem;
-            }
-        }
-
-        /* Melhorias visuais */
-        h2 {
-            font-weight: 700;
-            color: #2d3748;
-        }
-
-        .text-white-50 {
-            opacity: 0.8;
-        }
-
-        /* Efeito de pulso nos ícones */
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-
-        .icon-box:hover {
-            animation: pulse 1s infinite;
-        }
-
-    </style>
-{% endblock %}
-
-
-
-{% block list_title %}
-    Gestão Financeira
-{% endblock %}
-
+{% block list_title %}Gestão Financeira{% endblock %}
 {% block breadcrumbsGrupo %}Financeiro{% endblock %}
 {% block breadcrumbsAtivo %}Gestão Financeira{% endblock %}
 {% block list_actions %}
-    {# Deixa vazio - botões serão movidos para as abas #}
+    <a href="{{ path('clinica_pdv_index') }}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-cash-coin me-1"></i>Abrir PDV
+    </a>
 {% endblock %}
-{% block list_content %}
-<!-- LAYOUT MODERNIZADO - Sistema Financeiro -->
-<div class="container-fluid p-0">
+
+{% block stylesheets %}
     
-    <!-- Header com Resumo Compacto -->
-    <div class="bg-dark p-4 mb-4 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 text-white">
-            <div>
-                <h4 class="mb-1 fw-bold"><i class="bi bi-cash-stack me-2"></i>Dashboard Financeiro</h4>
-                <small class="opacity-75">Acompanhe entradas, saídas e fluxo de caixa em tempo real</small>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="{{ path('clinica_pdv_index') }}" class="btn btn-light btn-sm">
-                    <i class="bi bi-cash-coin me-1"></i>PDV
+{% endblock %}
+
+{% block list_content %}
+    <style>
+        .fin {
+            --fin-ink: #1f2933;
+            --fin-muted: #667085;
+            --fin-line: #e4e7ec;
+            --fin-soft: #f7f8fa;
+            --fin-brand: #004080;
+            --fin-in: #18794e;
+            --fin-out: #b42318;
+            --fin-pend: #a15c07;
+            color: var(--fin-ink);
+        }
+        .fin a:focus-visible, .fin button:focus-visible, .fin input:focus-visible {
+            outline: 2px solid var(--fin-brand);
+            outline-offset: 2px;
+        }
+
+        /* Resumo: três números que também são links para a aba correspondente */
+        .fin-resumo {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: #fff;
+            border: 1px solid var(--fin-line);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        .fin-kpi {
+            display: flex;
+            flex-direction: column;
+            gap: .15rem;
+            padding: 1rem 1.25rem;
+            color: inherit;
+            text-decoration: none;
+            border-right: 1px solid var(--fin-line);
+        }
+        .fin-kpi:last-child { border-right: 0; }
+        .fin-kpi:hover { background: var(--fin-soft); color: inherit; }
+        .fin-kpi-label { font-size: .8125rem; color: var(--fin-muted); }
+        .fin-kpi-valor {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            font-variant-numeric: tabular-nums;
+        }
+        .fin-kpi-nota { font-size: .75rem; color: var(--fin-muted); }
+
+        /* Abas = links */
+        .fin-cartao {
+            background: #fff;
+            border: 1px solid var(--fin-line);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .fin-tabs {
+            display: flex;
+            align-items: stretch;
+            gap: .25rem;
+            padding: 0 .5rem;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--fin-line);
+            background: var(--fin-soft);
+        }
+        .fin-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .8rem .9rem;
+            margin-bottom: -1px;
+            font-size: .9rem;
+            font-weight: 600;
+            color: var(--fin-muted);
+            white-space: nowrap;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+        }
+        .fin-tab:hover { color: var(--fin-brand); }
+        .fin-tab[aria-current="page"] {
+            color: var(--fin-brand);
+            border-bottom-color: var(--fin-brand);
+            background: #fff;
+        }
+        .fin-tab-sep { width: 1px; margin: .7rem .4rem; background: var(--fin-line); flex: none; }
+        .fin-badge {
+            min-width: 1.4rem;
+            padding: .05rem .45rem;
+            font-size: .75rem;
+            font-weight: 700;
+            text-align: center;
+            color: #fff;
+            background: var(--fin-pend);
+            border-radius: 999px;
+        }
+
+        /* Painel */
+        .fin-painel { padding: 1.25rem; }
+        .fin-cabecalho {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .fin-titulo { margin: 0; font-size: 1.125rem; font-weight: 700; }
+        .fin-sub { margin: .15rem 0 0; font-size: .8125rem; color: var(--fin-muted); }
+        .fin-total { text-align: right; }
+        .fin-total span { display: block; font-size: .75rem; color: var(--fin-muted); }
+        .fin-total strong { font-size: 1.375rem; font-variant-numeric: tabular-nums; }
+
+        .fin-barra {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+        .fin-dia, .fin-periodo { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+        .fin-dia input[type="date"] { width: auto; }
+        .fin-periodo input[type="month"] { width: auto; }
+        .fin-busca { max-width: 280px; }
+
+        /* Razão do fluxo de caixa */
+        .fin-razao {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            margin-bottom: 1rem;
+            border: 1px solid var(--fin-line);
+            border-radius: 8px;
+        }
+        .fin-razao > div { padding: .85rem 1.1rem; border-right: 1px solid var(--fin-line); }
+        .fin-razao > div:last-child { border-right: 0; }
+        .fin-razao span { display: block; font-size: .8125rem; color: var(--fin-muted); }
+        .fin-razao strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+
+        /* Tabela */
+        .fin-tabela { width: 100%; margin: 0; font-size: .9rem; }
+        .fin-tabela th {
+            padding: .6rem .75rem;
+            font-size: .8125rem;
+            font-weight: 600;
+            color: var(--fin-muted);
+            white-space: nowrap;
+            border-bottom: 1px solid var(--fin-line);
+        }
+        .fin-tabela td { padding: .7rem .75rem; vertical-align: middle; border-color: var(--fin-line); }
+        .fin-tabela tbody tr:hover > * { background: var(--fin-soft); }
+        .fin-tabela tfoot td { font-weight: 700; border-top: 2px solid var(--fin-line); border-bottom: 0; }
+        .fin-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .fin-acoes { text-align: right; white-space: nowrap; }
+        .fin-sec { color: var(--fin-muted); font-size: .8125rem; }
+        .fin .fin-in { color: var(--fin-in); }
+        .fin .fin-out { color: var(--fin-out); }
+        .fin .fin-pend { color: var(--fin-pend); }
+
+        .fin-vazio { padding: 2.5rem 1rem; text-align: center; color: var(--fin-muted); }
+        .fin-vazio i { display: block; margin-bottom: .5rem; font-size: 1.75rem; }
+
+        .fin-pag {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            margin-top: 1rem;
+            font-size: .8125rem;
+            color: var(--fin-muted);
+        }
+        .fin-pag-botoes { display: flex; align-items: center; gap: .5rem; }
+
+        @media (max-width: 767.98px) {
+            .fin-resumo, .fin-razao { grid-template-columns: 1fr; }
+            .fin-kpi, .fin-razao > div { border-right: 0; border-bottom: 1px solid var(--fin-line); }
+            .fin-kpi:last-child, .fin-razao > div:last-child { border-bottom: 0; }
+            .fin-painel { padding: 1rem; }
+            .fin-tabela th, .fin-tabela td { padding: .6rem .5rem; }
+            .fin-acoes { white-space: normal; }
+            .fin-acoes .btn { padding: .2rem .4rem; margin-bottom: .25rem; }
+            .fin-total { text-align: left; }
+            .fin-busca { max-width: none; width: 100%; }
+        }
+    </style>
+{% set abas = [
+    {'id': 'diario',     'rotulo': 'Diário',          'icone': 'bi-calendar-event', 'dia': true,  'sep': false},
+    {'id': 'clinica',    'rotulo': 'Clínica',         'icone': 'bi-bandaid',        'dia': true,  'sep': false},
+    {'id': 'banho_tosa', 'rotulo': 'Banho e tosa',    'icone': 'bi-droplet',        'dia': true,  'sep': false},
+    {'id': 'hospedagem', 'rotulo': 'Hospedagem',      'icone': 'bi-house-heart',    'dia': true,  'sep': false},
+    {'id': 'fiado',      'rotulo': 'Fiado',           'icone': 'bi-clock-history',  'dia': false, 'sep': true},
+    {'id': 'fluxo',      'rotulo': 'Fluxo de caixa',  'icone': 'bi-arrow-left-right', 'dia': false, 'sep': false},
+    {'id': 'relatorio',  'rotulo': 'Relatório',       'icone': 'bi-graph-up',       'dia': false, 'sep': false},
+    {'id': 'inativos',   'rotulo': 'Inativos',        'icone': 'bi-slash-circle',   'dia': false, 'sep': false}
+] %}
+{% if aba in ['diario', 'clinica', 'banho_tosa', 'hospedagem'] %}
+    {% set parcial = 'caixa' %}
+{% else %}
+    {% set parcial = aba %}
+{% endif %}
+
+<div class="col-12 fin">
+
+    <section class="fin-resumo" aria-label="Resumo financeiro">
+        <a class="fin-kpi" href="{{ path('financeiro_index', {'aba': 'diario', 'data': data}) }}">
+            <span class="fin-kpi-label">Caixa de {{ data|date('d/m/Y') }}</span>
+            <strong class="fin-kpi-valor">R$ {{ resumo.caixa_dia|number_format(2, ',', '.') }}</strong>
+            <span class="fin-kpi-nota">Vendas pagas no dia</span>
+        </a>
+        <a class="fin-kpi" href="{{ path('financeiro_index', {'aba': 'fiado'}) }}">
+            <span class="fin-kpi-label">Fiado em aberto</span>
+            {% if resumo.fiado_total > 0 %}
+                <strong class="fin-kpi-valor fin-pend">R$ {{ resumo.fiado_total|number_format(2, ',', '.') }}</strong>
+            {% else %}
+                <strong class="fin-kpi-valor">R$ 0,00</strong>
+            {% endif %}
+            <span class="fin-kpi-nota">{{ resumo.fiado_qtd }} lançamento(s) a receber</span>
+        </a>
+        <a class="fin-kpi" href="{{ path('financeiro_index', {'aba': 'relatorio'}) }}">
+            <span class="fin-kpi-label">Mês atual</span>
+            <strong class="fin-kpi-valor">R$ {{ resumo.mes|number_format(2, ',', '.') }}</strong>
+            <span class="fin-kpi-nota">Total de vendas no mês</span>
+        </a>
+    </section>
+
+    <div class="fin-cartao">
+        <nav class="fin-tabs" aria-label="Seções do financeiro">
+            {% for t in abas %}
+                {% if t.sep %}<span class="fin-tab-sep" aria-hidden="true"></span>{% endif %}
+                {% if t.dia %}
+                    {% set rota = path('financeiro_index', {'aba': t.id, 'data': data}) %}
+                {% else %}
+                    {% set rota = path('financeiro_index', {'aba': t.id}) %}
+                {% endif %}
+                <a class="fin-tab" href="{{ rota }}"{% if aba == t.id %} aria-current="page"{% endif %}>
+                    <i class="bi {{ t.icone }}" aria-hidden="true"></i>{{ t.rotulo }}
+                    {% if t.id == 'fiado' and resumo.fiado_qtd > 0 %}
+                        <span class="fin-badge">{{ resumo.fiado_qtd }}</span>
+                    {% endif %}
                 </a>
-            </div>
-        </div>
-    </div>
+            {% endfor %}
+        </nav>
 
-    <!-- Layout Principal: Sidebar + Conteúdo -->
-    <div class="row g-0">
-        
-        <!-- SIDEBAR ESQUERDA - Cards de Resumo e Navegação -->
-        <div class="col-lg-3 col-md-4 pe-md-3 mb-4 mb-md-0">
-            
-            <!-- Cards de Métricas Principais -->
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-body p-3">
-                    <h6 class="text-muted text-uppercase small fw-bold mb-3">
-                        <i class="bi bi-speedometer2 me-1"></i>Resumo Rápido
-                    </h6>
-                    
-                    <!-- Hoje -->
-                    <div class="d-flex align-items-center justify-content-between p-3 mb-2 rounded" style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);">
-                        <div>
-                            <small class="text-muted d-block mb-1">Hoje</small>
-                            {% set total_diario = 0 %}
-                            {% for item in financeiros %}{% set total_diario = total_diario + item.total_valor %}{% endfor %}
-                            <h5 class="mb-0 fw-bold text-primary">R$ {{ total_diario|number_format(2, ',', '.') }}</h5>
-                        </div>
-                        <div class="text-primary">
-                            <i class="bi bi-calendar-event fs-3"></i>
-                        </div>
-                    </div>
-                    
-                    <!-- Pendentes -->
-                    <div class="d-flex align-items-center justify-content-between p-3 mb-2 bg-warning bg-opacity-10 rounded">
-                        <div>
-                            <small class="text-muted d-block mb-1">Pendentes</small>
-                            {% set total_pendente = 0 %}
-                            {% for item in pendentes %}{% set total_pendente = total_pendente + item.total %}{% endfor %}
-                            <h5 class="mb-0 fw-bold text-warning">R$ {{ total_pendente|number_format(2, ',', '.') }}</h5>
-                        </div>
-                        <div class="text-warning">
-                            <i class="bi bi-clock fs-3"></i>
-                        </div>
-                    </div>
-                    
-                    <!-- Mês Atual -->
-                    <div class="d-flex align-items-center justify-content-between p-3 mb-2 bg-success bg-opacity-10 rounded">
-                        <div>
-                            <small class="text-muted d-block mb-1">Mês Atual</small>
-                            {% set somaTotal = 0 %}
-                            {% for item in relatorio %}{% set somaTotal = somaTotal + item.total %}{% endfor %}
-                            <h5 class="mb-0 fw-bold text-success">R$ {{ somaTotal|number_format(2, ',', '.') }}</h5>
-                        </div>
-                        <div class="text-success">
-                            <i class="bi bi-graph-up fs-3"></i>
-                        </div>
-                    </div>
-                    
-                    <!-- Fluxo Hoje -->
-                    <div class="d-flex align-items-center justify-content-between p-3 bg-info bg-opacity-10 rounded">
-                        <div>
-                            <small class="text-muted d-block mb-1">Fluxo Hoje</small>
-                            <h5 class="mb-0 fw-bold text-info">R$ {{ fluxo_caixa.saldo|number_format(2, ',', '.') }}</h5>
-                        </div>
-                        <div class="text-info">
-                            <i class="bi bi-arrow-left-right fs-3"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Menu de Navegação Vertical -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-2">
-                    <h6 class="text-muted text-uppercase small fw-bold mb-2 px-2">
-                        <i class="bi bi-list-ul me-1"></i>Navegação
-                    </h6>
-                    <div class="nav flex-column nav-pills" id="financeiroTabs" role="tablist">
-                        <button class="nav-link {% if not app.request.query.get('aba') or app.request.query.get('aba') == 'diario' %}active{% endif %} text-start mb-1"
-                                id="diario-tab" data-bs-toggle="tab" data-bs-target="#diario" type="button" role="tab"
-                                aria-controls="diario" aria-selected="true">
-                            <i class="bi bi-calendar-event me-2"></i>Caixa Diário
-                        </button>
-                        <button class="nav-link {% if app.request.query.get('aba') == 'clinica' %}active{% endif %} text-start mb-1"
-                                id="clinica-tab" data-bs-toggle="tab" data-bs-target="#clinica" type="button" role="tab"
-                                aria-controls="clinica" aria-selected="false">
-                            <i class="bi bi-bandaid me-2"></i>Caixa da Clínica
-                        </button>
-                        <button class="nav-link {% if app.request.query.get('aba') == 'banho_tosa' %}active{% endif %} text-start mb-1"
-                                id="banho_tosa-tab" data-bs-toggle="tab" data-bs-target="#banho_tosa" type="button" role="tab"
-                                aria-controls="banho_tosa" aria-selected="false">
-                            <i class="bi bi-droplet me-2"></i>Caixa do Banho e Tosa
-                        </button>
-                        <button class="nav-link {% if app.request.query.get('aba') == 'hospedagem' %}active{% endif %} text-start mb-1"
-                                id="hospedagem-tab" data-bs-toggle="tab" data-bs-target="#hospedagem" type="button" role="tab"
-                                aria-controls="hospedagem" aria-selected="false">
-                            <i class="bi bi-house-heart me-2"></i>Caixa da Hospedagem
-                        </button>
-                        <button class="nav-link {% if app.request.query.get('aba') == 'fiado' %}active{% endif %} text-start mb-1"
-                                id="fiado-tab" data-bs-toggle="tab" data-bs-target="#fiado" type="button" role="tab"
-                                aria-controls="fiado" aria-selected="false">
-                            <i class="bi bi-clock-history me-2"></i>Caixa Fiado
-                        </button>
-                        <button class="nav-link {% if app.request.query.get('aba') == 'inativos' %}active{% endif %} text-start mb-1"
-                                id="inativos-tab" data-bs-toggle="tab" data-bs-target="#inativos" type="button" role="tab"
-                                aria-controls="inativos" aria-selected="false">
-                            <i class="bi bi-ban me-2"></i>Inativos
-                        </button>
-                        <button class="nav-link {% if app.request.query.get('aba') == 'fluxo' %}active{% endif %} text-start"
-                                id="fluxo-tab" data-bs-toggle="tab" data-bs-target="#fluxo" type="button" role="tab"
-                                aria-controls="fluxo" aria-selected="false">
-                            <i class="bi bi-arrow-left-right me-2"></i>Fluxo de Caixa
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- ÁREA PRINCIPAL DE CONTEÚDO -->
-        <div class="col-lg-9 col-md-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    
-                    <div class="tab-content">
-
-                        {# === ABA DIÁRIO === #}
-                        <div class="tab-pane fade {% if not app.request.query.get('aba') or app.request.query.get('aba') == 'diario' %}show active{% endif %}"
-                             id="diario" role="tabpanel">
-                            
-                            <!-- Header da Aba -->
-                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                                <div>
-                                    <h5 class="mb-1 fw-bold"><i class="bi bi-calendar-event text-primary me-2"></i>Caixa Diário</h5>
-                                    <small class="text-muted">Movimentações do dia selecionado</small>
-                                </div>
-                                <div class="text-end">
-                                    {% set total_diario = 0 %}
-                                    {% for item in financeiros %}{% set total_diario = total_diario + item.total_valor %}{% endfor %}
-                                    <small class="text-muted d-block">Total</small>
-                                    <h4 class="mb-0 text-primary fw-bold">R$ {{ total_diario|number_format(2, ',', '.') }}</h4>
-                                </div>
-                            </div>
-
-                            <!-- Filtro -->
-                            <div class="row mb-4">
-                                <div class="col-md-4">
-                                    <label for="data_filtro" class="form-label fw-semibold small">
-                                        <i class="bi bi-funnel me-1"></i>Filtrar por Data
-                                    </label>
-                                    <input type="date" id="data_filtro" class="form-control" value="{{ data|date('Y-m-d') }}">
-                                </div>
-                            </div>
-
-                            <!-- Lista de Movimentações -->
-                            <div id="cardContainerDiario" class="row g-3">
-                                {% for item in financeiros %}
-                                    <div class="col-12 card-item"
-                                         data-search="{{ item.dono_nome }} {{ item.pets|join(' ') }} {{ item.total_valor }}">
-                                        <div class="card border-0 shadow-sm hover-shadow transition-all">
-                                            <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                                                <div class="d-flex align-items-center flex-grow-1">
-                                                    <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
-                                                        <i class="bi bi-person-check text-primary fs-5"></i>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="mb-1 fw-semibold">{{ item.dono_nome }}</h6>
-                                                        <small class="text-muted">
-                                                            <i class="bi bi-heart-fill text-danger me-1"></i>{{ item.pets|join(', ') }}
-                                                            <span class="mx-2">•</span>
-                                                            <i class="bi bi-calendar3 me-1"></i>{{ item.data|date('d/m/Y') }}
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                                <div class="text-end ms-3">
-                                                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 fs-6 fw-semibold">
-                                                        R$ {{ item.total_valor|number_format(2, ',', '.') }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="col-12">
-                                        <div class="alert alert-light border text-center py-5 mb-0">
-                                            <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
-                                            <p class="text-muted mb-0">Nenhum lançamento encontrado nesta data.</p>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <ul id="paginationDiario" class="pagination justify-content-center mt-4"></ul>
-                        </div>
-
-                        {# === ABA CAIXA DA CLÍNICA === #}
-                        <div class="tab-pane fade {% if app.request.query.get('aba') == 'clinica' %}show active{% endif %}"
-                             id="clinica" role="tabpanel">
-                            
-                            <!-- Header da Aba -->
-                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                                <div>
-                                    <h5 class="mb-1 fw-bold"><i class="bi bi-bandaid text-success me-2"></i>Caixa da Clínica</h5>
-                                    <small class="text-muted">Vendas e serviços da clínica veterinária</small>
-                                </div>
-                                <div class="text-end">
-                                    {% set total_clinica = 0 %}
-                                    {% for item in financeiros_clinica %}{% set total_clinica = total_clinica + item.total_valor %}{% endfor %}
-                                    <small class="text-muted d-block">Total</small>
-                                    <h4 class="mb-0 text-success fw-bold">R$ {{ total_clinica|number_format(2, ',', '.') }}</h4>
-                                </div>
-                            </div>
-
-                            <!-- Filtro -->
-                            <div class="row mb-4">
-                                <div class="col-md-4">
-                                    <label for="data_filtro_clinica" class="form-label fw-semibold small">
-                                        <i class="bi bi-funnel me-1"></i>Filtrar por Data
-                                    </label>
-                                    <input type="date" id="data_filtro_clinica" class="form-control" value="{{ data|date('Y-m-d') }}">
-                                </div>
-                            </div>
-
-                            <!-- Lista de Movimentações -->
-                            <div id="cardContainerClinica" class="row g-3">
-                                {% for item in financeiros_clinica %}
-                                    <div class="col-12 card-item"
-                                         data-search="{{ item.dono_nome }} {{ item.pets|join(' ') }} {{ item.total_valor }}">
-                                        <div class="card border-0 shadow-sm hover-shadow transition-all">
-                                            <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                                                <div class="d-flex align-items-center flex-grow-1">
-                                                    <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
-                                                        <i class="bi bi-bandaid text-success fs-5"></i>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="mb-1 fw-semibold">{{ item.dono_nome }}</h6>
-                                                        <small class="text-muted">
-                                                            <i class="bi bi-heart-fill text-danger me-1"></i>{{ item.pets|join(', ') }}
-                                                            <span class="mx-2">•</span>
-                                                            <i class="bi bi-calendar3 me-1"></i>{{ item.data|date('d/m/Y') }}
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                                <div class="text-end ms-3">
-                                                    <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 fs-6 fw-semibold">
-                                                        R$ {{ item.total_valor|number_format(2, ',', '.') }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="col-12">
-                                        <div class="alert alert-light border text-center py-5 mb-0">
-                                            <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
-                                            <p class="text-muted mb-0">Nenhum lançamento encontrado nesta data.</p>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <ul id="paginationClinica" class="pagination justify-content-center mt-4"></ul>
-                        </div>
-
-                        {# === ABA CAIXA DO BANHO E TOSA === #}
-                        <div class="tab-pane fade {% if app.request.query.get('aba') == 'banho_tosa' %}show active{% endif %}"
-                             id="banho_tosa" role="tabpanel">
-                            
-                            <!-- Header da Aba -->
-                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                                <div>
-                                    <h5 class="mb-1 fw-bold"><i class="bi bi-droplet text-info me-2"></i>Caixa do Banho e Tosa</h5>
-                                    <small class="text-muted">Vendas e serviços de banho e tosa</small>
-                                </div>
-                                <div class="text-end">
-                                    {% set total_banho_tosa = 0 %}
-                                    {% for item in financeiros_banho_tosa %}{% set total_banho_tosa = total_banho_tosa + item.total_valor %}{% endfor %}
-                                    <small class="text-muted d-block">Total</small>
-                                    <h4 class="mb-0 text-info fw-bold">R$ {{ total_banho_tosa|number_format(2, ',', '.') }}</h4>
-                                </div>
-                            </div>
-
-                            <!-- Filtro -->
-                            <div class="row mb-4">
-                                <div class="col-md-4">
-                                    <label for="data_filtro_banho_tosa" class="form-label fw-semibold small">
-                                        <i class="bi bi-funnel me-1"></i>Filtrar por Data
-                                    </label>
-                                    <input type="date" id="data_filtro_banho_tosa" class="form-control" value="{{ data|date('Y-m-d') }}">
-                                </div>
-                            </div>
-
-                            <!-- Lista de Movimentações -->
-                            <div id="cardContainerBanhoTosa" class="row g-3">
-                                {% for item in financeiros_banho_tosa %}
-                                    <div class="col-12 card-item"
-                                         data-search="{{ item.dono_nome }} {{ item.pets|join(' ') }} {{ item.total_valor }}">
-                                        <div class="card border-0 shadow-sm hover-shadow transition-all">
-                                            <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                                                <div class="d-flex align-items-center flex-grow-1">
-                                                    <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
-                                                        <i class="bi bi-droplet text-info fs-5"></i>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="mb-1 fw-semibold">{{ item.dono_nome }}</h6>
-                                                        <small class="text-muted">
-                                                            <i class="bi bi-heart-fill text-danger me-1"></i>{{ item.pets|join(', ') }}
-                                                            <span class="mx-2">•</span>
-                                                            <i class="bi bi-calendar3 me-1"></i>{{ item.data|date('d/m/Y') }}
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                                <div class="text-end ms-3">
-                                                    <span class="badge bg-info bg-opacity-10 text-info px-3 py-2 fs-6 fw-semibold">
-                                                        R$ {{ item.total_valor|number_format(2, ',', '.') }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="col-12">
-                                        <div class="alert alert-light border text-center py-5 mb-0">
-                                            <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
-                                            <p class="text-muted mb-0">Nenhum lançamento encontrado nesta data.</p>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <ul id="paginationBanhoTosa" class="pagination justify-content-center mt-4"></ul>
-                        </div>
-
-                        {# === ABA CAIXA DA HOSPEDAGEM === #}
-                        <div class="tab-pane fade {% if app.request.query.get('aba') == 'hospedagem' %}show active{% endif %}"
-                             id="hospedagem" role="tabpanel">
-                            
-                            <!-- Header da Aba -->
-                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                                <div>
-                                    <h5 class="mb-1 fw-bold"><i class="bi bi-house-heart text-purple me-2"></i>Caixa da Hospedagem</h5>
-                                    <small class="text-muted">Vendas e serviços de hospedagem</small>
-                                </div>
-                                <div class="text-end">
-                                    {% set total_hospedagem = 0 %}
-                                    {% for item in financeiros_hospedagem %}{% set total_hospedagem = total_hospedagem + item.total_valor %}{% endfor %}
-                                    <small class="text-muted d-block">Total</small>
-                                    <h4 class="mb-0 text-purple fw-bold">R$ {{ total_hospedagem|number_format(2, ',', '.') }}</h4>
-                                </div>
-                            </div>
-
-                            <!-- Filtro -->
-                            <div class="row mb-4">
-                                <div class="col-md-4">
-                                    <label for="data_filtro_hospedagem" class="form-label fw-semibold small">
-                                        <i class="bi bi-funnel me-1"></i>Filtrar por Data
-                                    </label>
-                                    <input type="date" id="data_filtro_hospedagem" class="form-control" value="{{ data|date('Y-m-d') }}">
-                                </div>
-                            </div>
-
-                            <!-- Lista de Movimentações -->
-                            <div id="cardContainerHospedagem" class="row g-3">
-                                {% for item in financeiros_hospedagem %}
-                                    <div class="col-12 card-item"
-                                         data-search="{{ item.dono_nome }} {{ item.pets|join(' ') }} {{ item.total_valor }}">
-                                        <div class="card border-0 shadow-sm hover-shadow transition-all">
-                                            <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                                                <div class="d-flex align-items-center flex-grow-1">
-                                                    <div class="bg-purple bg-opacity-10 rounded-circle p-3 me-3">
-                                                        <i class="bi bi-house-heart text-purple fs-5"></i>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="mb-1 fw-semibold">{{ item.dono_nome }}</h6>
-                                                        <small class="text-muted">
-                                                            <i class="bi bi-heart-fill text-danger me-1"></i>{{ item.pets|join(', ') }}
-                                                            <span class="mx-2">•</span>
-                                                            <i class="bi bi-calendar3 me-1"></i>{{ item.data|date('d/m/Y') }}
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                                <div class="text-end ms-3">
-                                                    <span class="badge bg-purple bg-opacity-10 text-purple px-3 py-2 fs-6 fw-semibold">
-                                                        R$ {{ item.total_valor|number_format(2, ',', '.') }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="col-12">
-                                        <div class="alert alert-light border text-center py-5 mb-0">
-                                            <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
-                                            <p class="text-muted mb-0">Nenhum lançamento encontrado nesta data.</p>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <ul id="paginationHospedagem" class="pagination justify-content-center mt-4"></ul>
-                        </div>
-
-                        {# === ABA CAIXA FIADO (PENDENTES) === #}
-                        <div class="tab-pane fade {% if app.request.query.get('aba') == 'fiado' %}show active{% endif %}"
-                             id="fiado" role="tabpanel">
-                            
-                            <!-- Header da Aba -->
-                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                                <div>
-                                    <h5 class="mb-1 fw-bold"><i class="bi bi-clock-history text-warning me-2"></i>Caixa Fiado</h5>
-                                    <small class="text-muted">Pagamentos pendentes / fiado</small>
-                                </div>
-                                <div class="text-end">
-                                    {% set total_pendente = 0 %}
-                                    {% for item in pendentes %}{% set total_pendente = total_pendente + item.total %}{% endfor %}
-                                    <small class="text-muted d-block">Total Pendente</small>
-                                    <h4 class="mb-0 text-warning fw-bold">R$ {{ total_pendente|number_format(2, ',', '.') }}</h4>
-                                </div>
-                            </div>
-
-                            <!-- Lista de Pendentes -->
-                            <div id="cardContainerFiado" class="row g-3">
-                                {% for item in pendentes %}
-                                    <div class="col-12 card-item"
-                                         data-search="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.total }}">
-                                        <div class="card border-0 shadow-sm hover-shadow transition-all">
-                                            <div class="card-body p-3">
-                                                <div class="d-flex justify-content-between align-items-start">
-                                                    <div class="d-flex align-items-start flex-grow-1">
-                                                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
-                                                            <i class="bi bi-hourglass-split text-warning fs-5"></i>
-                                                        </div>
-                                                        <div>
-                                                            <div class="d-flex align-items-center gap-2 mb-2">
-                                                                <span class="badge bg-warning text-dark">
-                                                                    <i class="bi bi-clock-history me-1"></i>Fiado
-                                                                </span>
-                                                                <h6 class="mb-0 fw-semibold">{{ item.dono_nome }}</h6>
-                                                            </div>
-                                                            <p class="text-muted mb-2 small">
-                                                                <i class="bi bi-heart-fill text-danger me-1"></i>{{ item.pet_nome }}
-                                                                <span class="mx-2">•</span>
-                                                                <i class="bi bi-calendar3 me-1"></i>{{ item.data|date('d/m/Y') }}
-                                                            </p>
-                                                            <h5 class="text-warning mb-0 fw-bold">
-                                                                R$ {{ item.total|number_format(2, ',', '.') }}
-                                                            </h5>
-                                                        </div>
-                                                    </div>
-                                                    <div class="dropdown ms-3">
-                                                        <button class="btn btn-outline-secondary btn-sm rounded-pill" type="button" data-bs-toggle="dropdown">
-                                                            <i class="bi bi-three-dots-vertical"></i>
-                                                        </button>
-                                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                                            <li>
-                                                                <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': item.id}) }}">
-                                                                    <button type="submit" class="dropdown-item">
-                                                                        <i class="bi bi-check-circle text-success me-2"></i> Confirmar Pagamento
-                                                                    </button>
-                                                                </form>
-                                                            </li>
-                                                            <li><hr class="dropdown-divider"></li>
-                                                            <li>
-                                                                <a href="javascript:void(0);" class="dropdown-item text-danger btn-excluir-pendente"
-                                                                   data-id="{{ item.id }}"
-                                                                   data-descricao="{{ item.descricao }}"
-                                                                   data-valor="{{ item.total|number_format(2, ',', '.') }}">
-                                                                    <i class="bi bi-trash me-2"></i> Excluir
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="col-12">
-                                        <div class="alert alert-success border-0 text-center py-5 mb-0">
-                                            <i class="bi bi-check-circle fs-1 d-block mb-3"></i>
-                                            <p class="mb-0">Nenhum pagamento pendente. Tudo em dia!</p>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <ul id="paginationFiado" class="pagination justify-content-center mt-4"></ul>
-                        </div>
-
-                        {# === ABA PENDENTE (mantida para compatibilidade) === #}
-                        <div class="tab-pane fade {% if app.request.query.get('aba') == 'pendente' %}show active{% endif %}"
-                             id="pendente" role="tabpanel">
-                            
-                            <!-- Header da Aba -->
-                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                                <div>
-                                    <h5 class="mb-1 fw-bold"><i class="bi bi-bandaid text-warning me-2"></i>Caixa da Clínica</h5>
-                                    <small class="text-muted">Pagamentos aguardando confirmação</small>
-                                </div>
-                                <div class="text-end">
-                                    {% set total_pendente = 0 %}
-                                    {% for item in pendentes %}{% set total_pendente = total_pendente + item.total %}{% endfor %}
-                                    <small class="text-muted d-block">Total Pendente</small>
-                                    <h4 class="mb-0 text-warning fw-bold">R$ {{ total_pendente|number_format(2, ',', '.') }}</h4>
-                                </div>
-                            </div>
-
-                            <!-- Lista de Pendentes -->
-                            <div id="cardContainerPendente" class="row g-3">
-                                {% for item in pendentes %}
-                                    <div class="col-12 card-item"
-                                         data-search="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.total }}">
-                                        <div class="card border-0 shadow-sm hover-shadow transition-all">
-                                            <div class="card-body p-3">
-                                                <div class="d-flex justify-content-between align-items-start">
-                                                    <div class="d-flex align-items-start flex-grow-1">
-                                                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
-                                                            <i class="bi bi-hourglass-split text-warning fs-5"></i>
-                                                        </div>
-                                                        <div>
-                                                            <div class="d-flex align-items-center gap-2 mb-2">
-                                                                <span class="badge bg-warning text-dark">
-                                                                    <i class="bi bi-bandaid me-1"></i>Clínica
-                                                                </span>
-                                                                <h6 class="mb-0 fw-semibold">{{ item.dono_nome }}</h6>
-                                                            </div>
-                                                            <p class="text-muted mb-2 small">
-                                                                <i class="bi bi-heart-fill text-danger me-1"></i>{{ item.pet_nome }}
-                                                                <span class="mx-2">•</span>
-                                                                <i class="bi bi-calendar3 me-1"></i>{{ item.data|date('d/m/Y') }}
-                                                            </p>
-                                                            <h5 class="text-warning mb-0 fw-bold">
-                                                                R$ {{ item.total|number_format(2, ',', '.') }}
-                                                            </h5>
-                                                        </div>
-                                                    </div>
-                                                    <div class="dropdown ms-3">
-                                                        <button class="btn btn-outline-secondary btn-sm rounded-pill" type="button" data-bs-toggle="dropdown">
-                                                            <i class="bi bi-three-dots-vertical"></i>
-                                                        </button>
-                                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                                            <li>
-                                                                <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': item.id}) }}">
-                                                                    <button type="submit" class="dropdown-item">
-                                                                        <i class="bi bi-check-circle text-success me-2"></i> Confirmar Pagamento
-                                                                    </button>
-                                                                </form>
-                                                            </li>
-                                                            <li><hr class="dropdown-divider"></li>
-                                                            <li>
-                                                                <a href="javascript:void(0);" class="dropdown-item text-danger btn-excluir-pendente"
-                                                                   data-id="{{ item.id }}"
-                                                                   data-descricao="{{ item.descricao }}"
-                                                                   data-valor="{{ item.total|number_format(2, ',', '.') }}">
-                                                                    <i class="bi bi-trash me-2"></i> Excluir
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="col-12">
-                                        <div class="alert alert-success border-0 text-center py-5 mb-0">
-                                            <i class="bi bi-check-circle fs-1 d-block mb-3"></i>
-                                            <p class="mb-0">Nenhum pagamento pendente. Tudo em dia!</p>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <ul id="paginationPendente" class="pagination justify-content-center mt-4"></ul>
-                        </div>
-
-                        {# === ABA RELATÓRIO === #}
-                        <div class="tab-pane fade {% if app.request.query.get('aba') == 'relatorio' %}show active{% endif %}"
-                             id="relatorio" role="tabpanel">
-                            
-                            <!-- Header da Aba -->
-                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                                <div>
-                                    <h5 class="mb-1 fw-bold"><i class="bi bi-graph-up text-success me-2"></i>Caixa do Banho e Tosa</h5>
-                                    <small class="text-muted">Análise por período</small>
-                                </div>
-                            </div>
-
-                            <!-- Formulário de Filtro -->
-                            <form method="GET" action="{{ path('financeiro_index') }}" class="mb-4">
-                                <div class="row g-3 align-items-end">
-                                    <div class="col-md-4">
-                                        <label for="mes_inicio" class="form-label fw-semibold small">
-                                            <i class="bi bi-calendar-range me-1"></i>Mês Inicial
-                                        </label>
-                                        <input type="month" id="mes_inicio" name="mes_inicio" class="form-control" value="{{ mes_inicio }}">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="mes_fim" class="form-label fw-semibold small">
-                                            <i class="bi bi-calendar-range me-1"></i>Mês Final
-                                        </label>
-                                        <input type="month" id="mes_fim" name="mes_fim" class="form-control" value="{{ mes_fim }}">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <input type="hidden" name="aba" value="relatorio">
-                                        <div class="d-flex gap-2">
-                                            <button type="submit" class="btn btn-primary flex-grow-1">
-                                                <i class="bi bi-funnel me-1"></i>Filtrar
-                                            </button>
-                                            <a href="{{ path('financeiro_relatorio_export', {'mes_inicio': mes_inicio, 'mes_fim': mes_fim}) }}"
-                                               class="btn btn-success">
-                                                <i class="bi bi-file-earmark-excel me-1"></i>Excel
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-
-                            {% set somaTotal = 0 %}
-                            {% for item in relatorio %}
-                                {% set somaTotal = somaTotal + item.total %}
-                            {% endfor %}
-
-                            {% if relatorio is not empty %}
-                                <!-- Card Total do Período -->
-                                <div class="alert alert-success bg-success bg-opacity-10 border-0 mb-4">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="text-success text-uppercase fw-bold mb-1">
-                                                <i class="bi bi-graph-up me-1"></i> Total do Período
-                                            </h6>
-                                            <small class="text-muted">{{ relatorio|length }} dia(s) com movimentação</small>
-                                        </div>
-                                        <h3 class="fw-bold text-success mb-0">
-                                            R$ {{ somaTotal|number_format(2, ',', '.') }}
-                                        </h3>
-                                    </div>
-                                </div>
-
-                                <!-- Grid de Dias -->
-                                <div id="cardContainerRelatorio" class="row g-3">
-                                    {% for item in relatorio %}
-                                        <div class="col-xl-3 col-lg-4 col-md-6 card-item"
-                                             data-search="{{ item.data|date('d/m/Y') }} {{ item.total }}">
-                                            <div class="card border-0 shadow-sm hover-shadow transition-all h-100">
-                                                <div class="card-body text-center p-4">
-                                                    <div class="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
-                                                        <i class="bi bi-calendar-check text-success fs-4"></i>
-                                                    </div>
-                                                    <h6 class="text-muted mb-2 small">
-                                                        {{ item.data|date('d/m/Y') }}
-                                                    </h6>
-                                                    <h5 class="text-success fw-bold mb-0">
-                                                        R$ {{ item.total|number_format(2, ',', '.') }}
-                                                    </h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="alert alert-light border text-center py-5 mb-0">
-                                    <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
-                                    <p class="text-muted mb-0">Nenhum registro encontrado no período selecionado.</p>
-                                </div>
-                            {% endif %}
-
-                            <ul id="paginationRelatorio" class="pagination justify-content-center mt-4"></ul>
-                        </div>
-
-                        {# === ABA INATIVOS === #}
-                        <div class="tab-pane fade {% if app.request.query.get('aba') == 'inativos' %}show active{% endif %}"
-                             id="inativos" role="tabpanel">
-                            
-                            <!-- Header da Aba -->
-                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                                <div>
-                                    <h5 class="mb-1 fw-bold"><i class="bi bi-slash-circle text-danger me-2"></i>Lançamentos Inativos</h5>
-                                    <small class="text-muted">Registros desativados do sistema</small>
-                                </div>
-                                <div class="text-end">
-                                    {% set total_inativos = 0 %}
-                                    {% for item in inativos %}{% set total_inativos = total_inativos + item.total %}{% endfor %}
-                                    <small class="text-muted d-block">Total Inativo</small>
-                                    <h4 class="mb-0 text-danger fw-bold">R$ {{ total_inativos|number_format(2, ',', '.') }}</h4>
-                                </div>
-                            </div>
-
-                            <!-- Lista de Inativos -->
-                            <div id="cardContainerInativos" class="row g-3">
-                                {% for item in inativos %}
-                                    <div class="col-12 card-item"
-                                         data-search="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.total }}">
-                                        <div class="card border-0 shadow-sm hover-shadow transition-all">
-                                            <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                                                <div class="d-flex align-items-center flex-grow-1">
-                                                    <div class="bg-danger bg-opacity-10 rounded-circle p-3 me-3">
-                                                        <i class="bi bi-x-circle text-danger fs-5"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                                            <span class="badge bg-danger">
-                                                                <i class="bi bi-slash-circle me-1"></i>INATIVO
-                                                            </span>
-                                                            <h6 class="mb-0 fw-semibold">{{ item.dono_nome }}</h6>
-                                                        </div>
-                                                        <small class="text-muted">
-                                                            <i class="bi bi-heart-fill text-danger me-1"></i>{{ item.pet_nome }}
-                                                            <span class="mx-2">•</span>
-                                                            <i class="bi bi-calendar3 me-1"></i>{{ item.data|date('d/m/Y') }}
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                                <div class="text-end ms-3">
-                                                    <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 fs-6 fw-semibold">
-                                                        R$ {{ item.total|number_format(2, ',', '.') }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="col-12">
-                                        <div class="alert alert-success border-0 text-center py-5 mb-0">
-                                            <i class="bi bi-check-circle fs-1 d-block mb-3"></i>
-                                            <p class="mb-0">Nenhum lançamento inativo. Tudo ativo!</p>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <ul id="paginationInativos" class="pagination justify-content-center mt-4"></ul>
-                        </div>
-
-                        {# === ABA FLUXO DE CAIXA === #}
-                        <div class="tab-pane fade {% if app.request.query.get('aba') == 'fluxo' %}show active{% endif %}" 
-                             id="fluxo" role="tabpanel">
-                            
-                            <!-- Header da Aba -->
-                            <div class="mb-4 pb-3 border-bottom">
-                                <h5 class="mb-1 fw-bold"><i class="bi bi-arrow-left-right text-info me-2"></i>Fluxo de Caixa</h5>
-                                <small class="text-muted">Controle de entradas e saídas do dia</small>
-                            </div>
-
-                            <!-- Cards de Resumo do Fluxo -->
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-4">
-                                    <div class="card border-0 bg-success bg-opacity-10 h-100">
-                                        <div class="card-body text-center p-4">
-                                            <i class="bi bi-arrow-up-circle text-success fs-2 d-block mb-2"></i>
-                                            <small class="text-muted d-block mb-1">Total Entradas</small>
-                                            <h4 class="fw-bold text-success mb-0">
-                                                R$ {{ fluxo_caixa.total_entradas|number_format(2, ',', '.') }}
-                                            </h4>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="card border-0 bg-danger bg-opacity-10 h-100">
-                                        <div class="card-body text-center p-4">
-                                            <i class="bi bi-arrow-down-circle text-danger fs-2 d-block mb-2"></i>
-                                            <small class="text-muted d-block mb-1">Total Saídas</small>
-                                            <h4 class="fw-bold text-danger mb-0">
-                                                - R$ {{ fluxo_caixa.total_saidas|number_format(2, ',', '.') }}
-                                            </h4>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="card border-0 bg-dark bg-opacity-10 h-100">
-                                        <div class="card-body text-center p-4">
-                                            <i class="bi bi-wallet2 {% if fluxo_caixa.saldo < 0 %}text-danger{% else %}text-success{% endif %} fs-2 d-block mb-2"></i>
-                                            <small class="text-muted d-block mb-1">Saldo do Dia</small>
-                                            <h4 class="fw-bold {% if fluxo_caixa.saldo < 0 %}text-danger{% else %}text-success{% endif %} mb-0">
-                                                R$ {{ fluxo_caixa.saldo|number_format(2, ',', '.') }}
-                                            </h4>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Filtro -->
-                            <div class="row mb-4">
-                                <div class="col-md-4">
-                                    <label for="data_filtro_fluxo" class="form-label fw-semibold small">
-                                        <i class="bi bi-funnel me-1"></i>Filtrar por Data
-                                    </label>
-                                    <input type="date" id="data_filtro_fluxo" class="form-control" value="{{ data_fluxo|date('Y-m-d') }}">
-                                </div>
-                            </div>
-
-                            <!-- Lista de Movimentos -->
-                            <div id="cardContainerFluxo" class="row g-3">
-                                {% for mov in fluxo_caixa.movimentos %}
-                                    <div class="col-12 card-item"
-                                         data-search="{{ mov.descricao }} {{ mov.origem }} {{ mov.metodo }} {{ mov.valor }}">
-                                        <div class="card border-0 shadow-sm hover-shadow transition-all">
-                                            <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                                                <div class="d-flex align-items-center flex-grow-1">
-                                                    <div class="{% if mov.tipo == 'SAIDA' %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10 rounded-circle p-3 me-3">
-                                                        <i class="bi {% if mov.tipo == 'SAIDA' %}bi-arrow-down-circle text-danger{% else %}bi-arrow-up-circle text-success{% endif %} fs-5"></i>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="mb-1 fw-semibold">{{ mov.descricao }}</h6>
-                                                        <small class="text-muted">
-                                                            <i class="bi bi-clock me-1"></i>{{ mov.data|date('H:i') }}
-                                                            <span class="mx-2">•</span>
-                                                            <i class="bi bi-tag me-1"></i>{{ mov.origem }}
-                                                            <span class="mx-2">•</span>
-                                                            <i class="bi bi-credit-card me-1"></i>{{ mov.metodo }}
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                                <div class="text-end ms-3">
-                                                    {% if mov.tipo == 'SAIDA' %}
-                                                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 fs-6 fw-semibold">
-                                                            - R$ {{ mov.valor|number_format(2, ',', '.') }}
-                                                        </span>
-                                                    {% else %}
-                                                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 fs-6 fw-semibold">
-                                                            + R$ {{ mov.valor|number_format(2, ',', '.') }}
-                                                        </span>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="col-12">
-                                        <div class="alert alert-light border text-center py-5 mb-0">
-                                            <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
-                                            <p class="text-muted mb-0">Nenhum movimento encontrado nesta data.</p>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <ul id="paginationFluxo" class="pagination justify-content-center mt-4"></ul>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <section class="fin-painel">
+            {% include 'financeiro/abas/_' ~ parcial ~ '.html.twig' %}
+        </section>
     </div>
 </div>
 
-<!-- Modal Confirmar Exclusão Pendente -->
-<div class="modal fade" id="modalExcluirPendente" tabindex="-1" aria-hidden="true">
+{% if aba == 'fiado' %}
+<div class="modal fade" id="modalExcluirPendente" tabindex="-1" aria-labelledby="modalExcluirTitulo" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-danger text-white border-0">
-                <h5 class="modal-title fw-bold">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirmar Exclusão
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalExcluirTitulo">Excluir lançamento?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="modal-body text-center py-5">
-                <div class="bg-danger bg-opacity-10 rounded-circle p-4 d-inline-flex mb-3">
-                    <i class="bi bi-trash text-danger" style="font-size: 3rem;"></i>
-                </div>
-                <p class="mt-3 mb-2 fw-semibold">Tem certeza que deseja excluir este registro pendente?</p>
-                <p class="text-muted small mb-3" id="pendente-info"></p>
-                <div class="alert alert-danger bg-danger bg-opacity-10 border-0 small">
-                    <i class="bi bi-exclamation-circle me-1"></i>
-                    <strong>Atenção:</strong> Esta ação não pode ser desfeita.
-                </div>
+            <div class="modal-body">
+                <p class="mb-1 fw-semibold" id="pendente-descricao"></p>
+                <p class="mb-3 text-muted" id="pendente-valor"></p>
+                <p class="mb-0 small">O lançamento será removido do fiado e não poderá ser recuperado.</p>
             </div>
-            <div class="modal-footer border-0 justify-content-center gap-2">
-                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">
-                    <i class="bi bi-x-lg me-1"></i>Cancelar
-                </button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
                 <form method="post" id="formExcluirPendente" class="d-inline">
-                    <button type="submit" class="btn btn-danger px-4">
-                        <i class="bi bi-trash me-1"></i> Sim, Excluir
-                    </button>
+                    <button type="submit" class="btn btn-danger">Excluir lançamento</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
+{% endif %}
 {% endblock %}
 
 {% block list_javascripts %}
     {{ parent() }}
-    <script src="{{ asset('js/TabelaDefault.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Instâncias de TabelaDefault para cada aba (sem busca)
-            const tabelaDiario = new TabelaDefault({
-                cardContainerId: 'cardContainerDiario',
-                paginationId: 'paginationDiario',
-                searchInputId: 'searchInput',
-                itemsPerPage: 10
-            });
+            // Busca e paginação da tabela da aba aberta (tudo no navegador, sem recarregar)
+            var tabela = document.querySelector('[data-fin-tabela]');
+            if (tabela) {
+                var linhas = Array.prototype.slice.call(tabela.querySelectorAll('tbody tr[data-busca]'));
+                var campo = document.getElementById('fin-busca');
+                var contagem = document.getElementById('fin-contagem');
+                var rotuloPagina = document.getElementById('fin-pagina');
+                var anterior = document.getElementById('fin-ant');
+                var proxima = document.getElementById('fin-prox');
+                var semResultado = document.getElementById('fin-sem-resultado');
+                var porPagina = 15, pagina = 1, visiveis = linhas;
 
-            const dataFiltroInput = document.getElementById('data_filtro');
-            if (dataFiltroInput) {
-                dataFiltroInput.addEventListener('change', function () {
-                    const dataSelecionada = this.value;
-                    if (dataSelecionada) {
-                        window.location.href = '{{ path('financeiro_index', {'data': 'DATA_PLACEHOLDER'}) }}'.replace('DATA_PLACEHOLDER', dataSelecionada);
+                var normalizar = function (t) {
+                    return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                };
+
+                var desenhar = function () {
+                    var total = visiveis.length;
+                    var paginas = Math.max(1, Math.ceil(total / porPagina));
+                    if (pagina > paginas) { pagina = paginas; }
+                    var ini = (pagina - 1) * porPagina;
+
+                    linhas.forEach(function (tr) { tr.hidden = true; });
+                    visiveis.slice(ini, ini + porPagina).forEach(function (tr) { tr.hidden = false; });
+
+                    if (semResultado) { semResultado.hidden = total > 0 || linhas.length === 0; }
+                    if (contagem) {
+                        contagem.textContent = total === 0
+                            ? ''
+                            : 'Mostrando ' + (ini + 1) + '–' + Math.min(ini + porPagina, total) + ' de ' + total;
                     }
-                });
-            }
+                    if (rotuloPagina) { rotuloPagina.textContent = 'Página ' + pagina + ' de ' + paginas; }
+                    if (anterior) { anterior.disabled = pagina <= 1; }
+                    if (proxima) { proxima.disabled = pagina >= paginas; }
+                };
 
-            let tabelaClinica, tabelaBanhoTosa, tabelaHospedagem, tabelaInativos, tabelaFluxo;
-
-            // Aba Clínica
-            const clinicaTabEl = document.getElementById('clinica-tab');
-            if (clinicaTabEl) {
-                clinicaTabEl.addEventListener('shown.bs.tab', event => {
-                    if (!tabelaClinica) {
-                        tabelaClinica = new TabelaDefault({
-                            cardContainerId: 'cardContainerClinica',
-                            paginationId: 'paginationClinica',
-                            itemsPerPage: 10
+                if (campo) {
+                    campo.addEventListener('input', function () {
+                        var termo = normalizar(campo.value.trim());
+                        visiveis = linhas.filter(function (tr) {
+                            return normalizar(tr.getAttribute('data-busca')).indexOf(termo) !== -1;
                         });
-                    }
-                });
-            }
-
-            // Filtro de data para clínica
-            const dataFiltroClinica = document.getElementById('data_filtro_clinica');
-            if (dataFiltroClinica) {
-                dataFiltroClinica.addEventListener('change', function () {
-                    const dataSelecionada = this.value;
-                    if (dataSelecionada) {
-                        window.location.href = '{{ path('financeiro_index') }}?aba=clinica&data=' + dataSelecionada;
-                    }
-                });
-            }
-
-            // Aba Banho e Tosa
-            const banhoTosaTabEl = document.getElementById('banho_tosa-tab');
-            if (banhoTosaTabEl) {
-                banhoTosaTabEl.addEventListener('shown.bs.tab', event => {
-                    if (!tabelaBanhoTosa) {
-                        tabelaBanhoTosa = new TabelaDefault({
-                            cardContainerId: 'cardContainerBanhoTosa',
-                            paginationId: 'paginationBanhoTosa',
-                            itemsPerPage: 10
-                        });
-                    }
-                });
-            }
-
-            // Filtro de data para banho e tosa
-            const dataFiltroBanhoTosa = document.getElementById('data_filtro_banho_tosa');
-            if (dataFiltroBanhoTosa) {
-                dataFiltroBanhoTosa.addEventListener('change', function () {
-                    const dataSelecionada = this.value;
-                    if (dataSelecionada) {
-                        window.location.href = '{{ path('financeiro_index') }}?aba=banho_tosa&data=' + dataSelecionada;
-                    }
-                });
-            }
-
-            // Aba Hospedagem
-            const hospedagemTabEl = document.getElementById('hospedagem-tab');
-            if (hospedagemTabEl) {
-                hospedagemTabEl.addEventListener('shown.bs.tab', event => {
-                    if (!tabelaHospedagem) {
-                        tabelaHospedagem = new TabelaDefault({
-                            cardContainerId: 'cardContainerHospedagem',
-                            paginationId: 'paginationHospedagem',
-                            itemsPerPage: 10
-                        });
-                    }
-                });
-            }
-
-            // Filtro de data para hospedagem
-            const dataFiltroHospedagem = document.getElementById('data_filtro_hospedagem');
-            if (dataFiltroHospedagem) {
-                dataFiltroHospedagem.addEventListener('change', function () {
-                    const dataSelecionada = this.value;
-                    if (dataSelecionada) {
-                        window.location.href = '{{ path('financeiro_index') }}?aba=hospedagem&data=' + dataSelecionada;
-                    }
-                });
-            }
-
-            // Aba Fiado
-            let tabelaFiado;
-            const fiadoTabEl = document.getElementById('fiado-tab');
-            if (fiadoTabEl) {
-                fiadoTabEl.addEventListener('shown.bs.tab', event => {
-                    if (!tabelaFiado) {
-                        tabelaFiado = new TabelaDefault({
-                            cardContainerId: 'cardContainerFiado',
-                            paginationId: 'paginationFiado',
-                            itemsPerPage: 10
-                        });
-                    }
-                });
-            }
-
-            const inativosTabEl = document.getElementById('inativos-tab');
-            if (inativosTabEl) {
-                inativosTabEl.addEventListener('shown.bs.tab', event => {
-                    if (!tabelaInativos) {
-                        tabelaInativos = new TabelaDefault({
-                            cardContainerId: 'cardContainerInativos',
-                            paginationId: 'paginationInativos',
-                            itemsPerPage: 10
-                        });
-                    }
-                });
-            }
-
-            const fluxoTabEl = document.getElementById('fluxo-tab');
-            if (fluxoTabEl) {
-                fluxoTabEl.addEventListener('shown.bs.tab', event => {
-                    if (!tabelaFluxo) {
-                        tabelaFluxo = new TabelaDefault({
-                            cardContainerId: 'cardContainerFluxo',
-                            paginationId: 'paginationFluxo',
-                            itemsPerPage: 10
-                        });
-                    }
-                });
-            }
-
-            // Filtro de data para fluxo de caixa
-            const dataFiltroFluxo = document.getElementById('data_filtro_fluxo');
-            if (dataFiltroFluxo) {
-                dataFiltroFluxo.addEventListener('change', function () {
-                    const dataSelecionada = this.value;
-                    if (dataSelecionada) {
-                        window.location.href = '{{ path('financeiro_index') }}?aba=fluxo&data_fluxo=' + dataSelecionada;
-                    }
-                });
-            }
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const abaAtiva = urlParams.get('aba');
-            if (abaAtiva) {
-                const tabElement = document.getElementById(abaAtiva + '-tab');
-                if (tabElement) {
-                    const tab = new bootstrap.Tab(tabElement);
-                    tab.show();
+                        pagina = 1;
+                        desenhar();
+                    });
                 }
-            } else {
-                const primeiraAba = document.getElementById('diario-tab');
-                if (primeiraAba) {
-                    const tab = new bootstrap.Tab(primeiraAba);
-                    tab.show();
-                }
+                if (anterior) { anterior.addEventListener('click', function () { pagina--; desenhar(); }); }
+                if (proxima) { proxima.addEventListener('click', function () { pagina++; desenhar(); }); }
+                desenhar();
             }
 
-            // Modal de exclusão de pendente
-            const modalExcluirPendente = new bootstrap.Modal(document.getElementById('modalExcluirPendente'));
-            const formExcluirPendente = document.getElementById('formExcluirPendente');
-            const pendenteInfo = document.getElementById('pendente-info');
-
-            document.querySelectorAll('.btn-excluir-pendente').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const id = this.dataset.id;
-                    const descricao = this.dataset.descricao;
-                    const valor = this.dataset.valor;
-                    
-                    pendenteInfo.innerHTML = `<strong>${descricao}</strong><br>Valor: R$ ${valor}`;
-                    formExcluirPendente.action = '{{ path('financeiro_deletar_pendente', {'id': 'ID_PLACEHOLDER'}) }}'.replace('ID_PLACEHOLDER', id);
-                    
-                    modalExcluirPendente.show();
+            // Modal de exclusão (aba Fiado)
+            var modalEl = document.getElementById('modalExcluirPendente');
+            if (modalEl) {
+                var modal = new bootstrap.Modal(modalEl);
+                document.querySelectorAll('.fin-excluir').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        document.getElementById('pendente-descricao').textContent = btn.dataset.descricao || '';
+                        document.getElementById('pendente-valor').textContent = 'Valor: R$ ' + btn.dataset.valor;
+                        document.getElementById('formExcluirPendente').action = btn.dataset.acao;
+                        modal.show();
+                    });
                 });
-            });
+            }
         });
     </script>
 {% endblock %}

@@ -1,0 +1,78 @@
+{# Diário, Clínica, Banho e tosa e Hospedagem: mesma tela, muda só a origem (já filtrada no controller) #}
+{% set titulos = {
+    'diario': 'Caixa diário',
+    'clinica': 'Caixa da clínica',
+    'banho_tosa': 'Caixa do banho e tosa',
+    'hospedagem': 'Caixa da hospedagem'
+} %}
+{% set total_caixa = 0 %}
+{% for item in financeiros %}{% set total_caixa = total_caixa + item.total_valor %}{% endfor %}
+{% set hoje = 'now'|date('Y-m-d') %}
+
+<header class="fin-cabecalho">
+    <div>
+        <h2 class="fin-titulo">{{ titulos[aba] }}</h2>
+        <p class="fin-sub">Vendas pagas em {{ data|date('d/m/Y') }}</p>
+    </div>
+    <div class="fin-total">
+        <span>Total do dia</span>
+        <strong>R$ {{ total_caixa|number_format(2, ',', '.') }}</strong>
+    </div>
+</header>
+
+<div class="fin-barra">
+    <form method="get" action="{{ path('financeiro_index') }}" class="fin-dia">
+        <input type="hidden" name="aba" value="{{ aba }}">
+        <a class="btn btn-outline-secondary btn-sm" aria-label="Dia anterior"
+           href="{{ path('financeiro_index', {'aba': aba, 'data': data|date_modify('-1 day')|date('Y-m-d')}) }}"><i class="bi bi-chevron-left"></i></a>
+        <input type="date" name="data" value="{{ data|date('Y-m-d') }}" class="form-control form-control-sm"
+               aria-label="Data do caixa" onchange="this.form.submit()">
+        <a class="btn btn-outline-secondary btn-sm" aria-label="Próximo dia"
+           href="{{ path('financeiro_index', {'aba': aba, 'data': data|date_modify('+1 day')|date('Y-m-d')}) }}"><i class="bi bi-chevron-right"></i></a>
+        {% if data|date('Y-m-d') != hoje %}
+            <a class="btn btn-link btn-sm text-nowrap" href="{{ path('financeiro_index', {'aba': aba}) }}">Ir para hoje</a>
+        {% endif %}
+    </form>
+    {% if financeiros|length > 0 %}
+        <input type="search" id="fin-busca" class="form-control form-control-sm fin-busca"
+               placeholder="Buscar tutor ou pet" aria-label="Buscar tutor ou pet">
+    {% endif %}
+</div>
+
+{% if financeiros|length > 0 %}
+    <div class="table-responsive">
+        <table class="table fin-tabela" data-fin-tabela>
+            <thead>
+                <tr>
+                    <th scope="col">Tutor</th>
+                    <th scope="col">Pets</th>
+                    <th scope="col" class="fin-num">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in financeiros %}
+                    <tr data-busca="{{ item.dono_nome }} {{ item.pets }}">
+                        <td class="fw-semibold">{{ item.dono_nome|default('Consumidor final') }}</td>
+                        <td>{{ item.pets|default('—') }}</td>
+                        <td class="fin-num fw-semibold">R$ {{ item.total_valor|number_format(2, ',', '.') }}</td>
+                    </tr>
+                {% endfor %}
+                <tr id="fin-sem-resultado" hidden>
+                    <td colspan="3" class="fin-vazio">Nenhum resultado para essa busca.</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2">Total</td>
+                    <td class="fin-num">R$ {{ total_caixa|number_format(2, ',', '.') }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% include 'financeiro/abas/_paginacao.html.twig' %}
+{% else %}
+    <div class="fin-vazio">
+        <i class="bi bi-inbox" aria-hidden="true"></i>
+        Nenhuma venda paga em {{ data|date('d/m/Y') }}. Use as setas para ver outro dia.
+    </div>
+{% endif %}

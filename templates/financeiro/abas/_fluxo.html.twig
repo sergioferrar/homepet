@@ -1,0 +1,86 @@
+{% set hoje = 'now'|date('Y-m-d') %}
+
+<header class="fin-cabecalho">
+    <div>
+        <h2 class="fin-titulo">Fluxo de caixa</h2>
+        <p class="fin-sub">Entradas e saídas de {{ data_fluxo|date('d/m/Y') }}</p>
+    </div>
+</header>
+
+<div class="fin-razao">
+    <div>
+        <span>Entradas</span>
+        <strong class="fin-in">R$ {{ fluxo_caixa.total_entradas|number_format(2, ',', '.') }}</strong>
+    </div>
+    <div>
+        <span>Saídas</span>
+        <strong class="fin-out">R$ {{ fluxo_caixa.total_saidas|number_format(2, ',', '.') }}</strong>
+    </div>
+    <div>
+        <span>Saldo do dia</span>
+        {% if fluxo_caixa.saldo < 0 %}
+            <strong class="fin-out">R$ {{ fluxo_caixa.saldo|number_format(2, ',', '.') }}</strong>
+        {% else %}
+            <strong class="fin-in">R$ {{ fluxo_caixa.saldo|number_format(2, ',', '.') }}</strong>
+        {% endif %}
+    </div>
+</div>
+
+<div class="fin-barra">
+    <form method="get" action="{{ path('financeiro_index') }}" class="fin-dia">
+        <input type="hidden" name="aba" value="fluxo">
+        <a class="btn btn-outline-secondary btn-sm" aria-label="Dia anterior"
+           href="{{ path('financeiro_index', {'aba': 'fluxo', 'data_fluxo': data_fluxo|date_modify('-1 day')|date('Y-m-d')}) }}"><i class="bi bi-chevron-left"></i></a>
+        <input type="date" name="data_fluxo" value="{{ data_fluxo|date('Y-m-d') }}" class="form-control form-control-sm"
+               aria-label="Data do fluxo" onchange="this.form.submit()">
+        <a class="btn btn-outline-secondary btn-sm" aria-label="Próximo dia"
+           href="{{ path('financeiro_index', {'aba': 'fluxo', 'data_fluxo': data_fluxo|date_modify('+1 day')|date('Y-m-d')}) }}"><i class="bi bi-chevron-right"></i></a>
+        {% if data_fluxo|date('Y-m-d') != hoje %}
+            <a class="btn btn-link btn-sm text-nowrap" href="{{ path('financeiro_index', {'aba': 'fluxo'}) }}">Ir para hoje</a>
+        {% endif %}
+    </form>
+    {% if fluxo_caixa.movimentos|length > 0 %}
+        <input type="search" id="fin-busca" class="form-control form-control-sm fin-busca"
+               placeholder="Buscar descrição, origem ou forma" aria-label="Buscar movimento">
+    {% endif %}
+</div>
+
+{% if fluxo_caixa.movimentos|length > 0 %}
+    <div class="table-responsive">
+        <table class="table fin-tabela" data-fin-tabela>
+            <thead>
+                <tr>
+                    <th scope="col">Hora</th>
+                    <th scope="col">Descrição</th>
+                    <th scope="col" class="d-none d-md-table-cell">Origem</th>
+                    <th scope="col" class="d-none d-md-table-cell">Forma</th>
+                    <th scope="col" class="fin-num">Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mov in fluxo_caixa.movimentos %}
+                    <tr data-busca="{{ mov.descricao }} {{ mov.origem }} {{ mov.metodo }}">
+                        <td>{{ mov.data|date('H:i') }}</td>
+                        <td class="fw-semibold">{{ mov.descricao }}</td>
+                        <td class="fin-sec d-none d-md-table-cell">{{ mov.origem }}</td>
+                        <td class="fin-sec d-none d-md-table-cell">{{ mov.metodo }}</td>
+                        {% if mov.tipo == 'SAIDA' %}
+                            <td class="fin-num fin-out fw-semibold">− R$ {{ mov.valor|number_format(2, ',', '.') }}</td>
+                        {% else %}
+                            <td class="fin-num fin-in fw-semibold">+ R$ {{ mov.valor|number_format(2, ',', '.') }}</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                <tr id="fin-sem-resultado" hidden>
+                    <td colspan="5" class="fin-vazio">Nenhum resultado para essa busca.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% include 'financeiro/abas/_paginacao.html.twig' %}
+{% else %}
+    <div class="fin-vazio">
+        <i class="bi bi-inbox" aria-hidden="true"></i>
+        Nenhum movimento em {{ data_fluxo|date('d/m/Y') }}. Use as setas para ver outro dia.
+    </div>
+{% endif %}

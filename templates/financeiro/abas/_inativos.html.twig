@@ -1,0 +1,54 @@
+{% set total_inativos = 0 %}
+{% for item in inativos %}{% set total_inativos = total_inativos + item.total %}{% endfor %}
+
+<header class="fin-cabecalho">
+    <div>
+        <h2 class="fin-titulo">Lançamentos inativos</h2>
+        <p class="fin-sub">Registros desativados, fora dos totais do caixa</p>
+    </div>
+    <div class="fin-total">
+        <span>Total inativo</span>
+        <strong>R$ {{ total_inativos|number_format(2, ',', '.') }}</strong>
+    </div>
+</header>
+
+{% if inativos|length > 0 %}
+    <div class="fin-barra">
+        <input type="search" id="fin-busca" class="form-control form-control-sm fin-busca"
+               placeholder="Buscar tutor, pet ou descrição" aria-label="Buscar tutor, pet ou descrição">
+    </div>
+
+    <div class="table-responsive">
+        <table class="table fin-tabela" data-fin-tabela>
+            <thead>
+                <tr>
+                    <th scope="col">Tutor</th>
+                    <th scope="col">Pet</th>
+                    <th scope="col" class="d-none d-lg-table-cell">Descrição</th>
+                    <th scope="col" class="d-none d-md-table-cell">Data</th>
+                    <th scope="col" class="fin-num">Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inativos %}
+                    <tr data-busca="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.descricao }}">
+                        <td class="fw-semibold">{{ item.dono_nome|default('—') }}</td>
+                        <td>{{ item.pet_nome|default('—') }}</td>
+                        <td class="fin-sec d-none d-lg-table-cell">{{ item.descricao|default('—') }}</td>
+                        <td class="d-none d-md-table-cell">{{ item.data|date('d/m/Y') }}</td>
+                        <td class="fin-num fw-semibold">R$ {{ item.total|number_format(2, ',', '.') }}</td>
+                    </tr>
+                {% endfor %}
+                <tr id="fin-sem-resultado" hidden>
+                    <td colspan="5" class="fin-vazio">Nenhum resultado para essa busca.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% include 'financeiro/abas/_paginacao.html.twig' %}
+{% else %}
+    <div class="fin-vazio">
+        <i class="bi bi-check-circle" aria-hidden="true"></i>
+        Nenhum lançamento inativo.
+    </div>
+{% endif %}

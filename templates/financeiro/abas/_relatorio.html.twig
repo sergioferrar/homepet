@@ -1,0 +1,62 @@
+{% set total_periodo = 0 %}
+{% for item in relatorio %}{% set total_periodo = total_periodo + item.total %}{% endfor %}
+
+<header class="fin-cabecalho">
+    <div>
+        <h2 class="fin-titulo">Relatório por período</h2>
+        <p class="fin-sub">Total de vendas por dia, de {{ mes_inicio }} a {{ mes_fim }}</p>
+    </div>
+    {% if relatorio|length > 0 %}
+        <div class="fin-total">
+            <span>Total do período</span>
+            <strong>R$ {{ total_periodo|number_format(2, ',', '.') }}</strong>
+        </div>
+    {% endif %}
+</header>
+
+<div class="fin-barra">
+    <form method="get" action="{{ path('financeiro_index') }}" class="fin-periodo flex-wrap">
+        <input type="hidden" name="aba" value="relatorio">
+        <label for="mes_inicio" class="small text-muted">De</label>
+        <input type="month" id="mes_inicio" name="mes_inicio" value="{{ mes_inicio }}" class="form-control form-control-sm">
+        <label for="mes_fim" class="small text-muted">até</label>
+        <input type="month" id="mes_fim" name="mes_fim" value="{{ mes_fim }}" class="form-control form-control-sm">
+        <button type="submit" class="btn btn-primary btn-sm">Aplicar período</button>
+    </form>
+    <a href="{{ path('financeiro_relatorio_export', {'mes_inicio': mes_inicio, 'mes_fim': mes_fim}) }}" class="btn btn-outline-success btn-sm">
+        <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>Baixar Excel
+    </a>
+</div>
+
+{% if relatorio|length > 0 %}
+    <div class="table-responsive">
+        <table class="table fin-tabela" data-fin-tabela>
+            <thead>
+                <tr>
+                    <th scope="col">Data</th>
+                    <th scope="col" class="fin-num">Total do dia</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in relatorio %}
+                    <tr data-busca="{{ item.data|date('d/m/Y') }}">
+                        <td>{{ item.data|date('d/m/Y') }}</td>
+                        <td class="fin-num fw-semibold">R$ {{ item.total|number_format(2, ',', '.') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td>{{ relatorio|length }} dia(s) com movimento</td>
+                    <td class="fin-num">R$ {{ total_periodo|number_format(2, ',', '.') }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% include 'financeiro/abas/_paginacao.html.twig' %}
+{% else %}
+    <div class="fin-vazio">
+        <i class="bi bi-inbox" aria-hidden="true"></i>
+        Nenhuma venda no período. Ajuste os meses e aplique de novo.
+    </div>
+{% endif %}

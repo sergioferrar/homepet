@@ -250,6 +250,16 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         return (float) ($result['total'] ?? 0);
     }
 
+    public function contarDebitosPendentes($baseId): int
+    {
+        $sql = "SELECT COUNT(*)
+                FROM homepet_{$baseId}.financeiropendente
+                WHERE estabelecimento_id = :baseId
+                  AND (status IS NULL OR LOWER(status) NOT IN ('inativo', 'pago'))";
+
+        return (int) $this->conn->fetchOne($sql, ['baseId' => $baseId]);
+    }
+
     public function inativar($baseId, int $id): void
     {
         $sql = "UPDATE homepet_{$baseId}.financeiropendente 
