@@ -249,7 +249,7 @@ class VendaController extends DefaultController
 
             if ($metodoPagamento === 'pendente') {
                 // FinanceiroPendente via repository (SQL nativo)
-                $financeiroPendenteRepo->inserirVendaClinica($baseId, $descricaoFinanceiro, $valorTotal);
+                $financeiroPendenteRepo->inserirVendaClinica($baseId, $descricaoFinanceiro, $valorTotal, (int) $vendaId);
             } else {
                 // Financeiro (pago) via repository (SQL nativo) — substitui persist()/flush()
                 $financeiroRepo->inserirEntrada($baseId, [

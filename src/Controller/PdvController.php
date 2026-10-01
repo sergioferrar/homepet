@@ -552,12 +552,17 @@ class PdvController extends DefaultController
             // Determina status final e registra no financeiro
             if ($metodo === 'pendente') {
                 $statusFinal = 'Pendente';
-                $fpRepo->inserirPdv(
-                    $estabelecimentoId,
-                    $venda['cliente'] ?? 'Consumidor Final',
-                    (float) $venda['total'],
-                    $venda['pet_id'] ?? null
-                );
+                // Venda que já estava Pendente já tem o lançamento em financeiropendente:
+                // não cria um segundo.
+                if (($venda['status'] ?? null) !== 'Pendente') {
+                    $fpRepo->inserirPdv(
+                        $estabelecimentoId,
+                        $venda['cliente'] ?? 'Consumidor Final',
+                        (float) $venda['total'],
+                        isset($venda['pet_id']) ? (int) $venda['pet_id'] : null,
+                        $id
+                    );
+                }
             } else {
                 $statusFinal = 'Paga';
  
@@ -611,6 +616,18 @@ class PdvController extends DefaultController
                 ], 500);
             }
  
+            // Venda que estava PENDENTE e agora foi paga: o lançamento em
+            // financeiropendente sai da lista de pendentes (o valor já entrou em
+            // financeiro como 'Pago' acima).
+            if ($metodo !== 'pendente' && ($venda['status'] ?? null) === 'Pendente') {
+                $fpRepo->baixarPorVenda(
+                    $estabelecimentoId,
+                    $id,
+                    (float) $venda['total'],
+                    isset($venda['pet_id']) ? (int) $venda['pet_id'] : null
+                );
+            }
+
             // ── Emissão automática de NFS-e (Asaas) ──
             // (código mantido igual — não alterado)
             $notaFiscal = null;

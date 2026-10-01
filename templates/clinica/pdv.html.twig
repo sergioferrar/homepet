@@ -145,7 +145,7 @@
                 <a href="{{ path('clinica_estoque_index') }}" class="btn btn-outline-secondary d-flex align-items-center">
                     <i class="bi bi-box-seam me-2"></i> Estoque
                 </a>
-                <button type="button" class="btn btn-outline-info d-flex align-items-center"
+                <button type="button" class="btn btn-outline-info d-flex align-items-center btn-listar-vendas"
                         data-bs-toggle="offcanvas" data-bs-target="#offcanvasListagem">
                     <i class="bi bi-card-checklist me-2"></i> Listagem
                 </button>
@@ -380,7 +380,7 @@
 </div>
 
 <!-- Offcanvas: Listagem de Vendas -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasListagem" style="width: 90vw; max-width: 1200px;">
+<div class="offcanvas offcanvas-end" data-id="listar-vendas" tabindex="-1" id="offcanvasListagem" style="width: 90vw; max-width: 1200px;">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title"><i class="bi bi-card-checklist me-2"></i>Listagem de Vendas</h5>
         <div class="d-flex gap-2 align-items-center">
@@ -391,8 +391,9 @@
         </div>
     </div>
     <div class="offcanvas-body p-0">
-        <iframe id="iframeListagem" src="about:blank" title="Listagem de Vendas"
-                style="width:100%; height:100%; border:0; min-height:82vh;"></iframe>
+        <span class="text-center">
+            <i class="fa fa-spin fa-spinner"></i>
+        </span>
     </div>
 </div>
 {% endblock %}
@@ -400,21 +401,7 @@
 {% block javascripts %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Carrega/limpa o iframe da listagem apenas quando o offcanvas abre/fecha.
-    (function () {
-        const off = document.getElementById('offcanvasListagem');
-        const iframe = document.getElementById('iframeListagem');
-        if (!off || !iframe) return;
 
-        const url = "{{ path('clinica_pdv_listar') }}";
-
-        off.addEventListener('show.bs.offcanvas', () => {
-            if (iframe.getAttribute('src') === 'about:blank') iframe.src = url;
-        });
-        off.addEventListener('hidden.bs.offcanvas', () => { iframe.src = 'about:blank'; });
-    })();
-</script>
 
 <script>
 // ==================== DADOS INICIAIS ====================
@@ -444,6 +431,29 @@ let carrinhoItens = [];
 $(document).ready(function() {
     inicializarEventos();
     atualizarResumo();
+    
+    
+    // offcanvas listar vendas
+    $('.btn-listar-vendas').on('click', function(e){
+        e.preventDefault();
+        var loading = '';
+        $.ajax({
+            type:'get',
+            url: "{{ path('clinica_pdv_listar', {'ficha':true}) }}",
+            beforeSend: function(){
+                // loading = Utils.loadingMessage('Aguarde, carregando listagem de vendas');
+            },
+            success: function(_result){
+                // Utils.hideModal(loading);
+                $('.offcanvas .offcanvas-body').html(_result);
+
+               
+                
+            },
+        })
+
+        return false;
+    });
 
     // Pré-carrega itens da clínica no carrinho (se houver)
     if (vendaPreCarregadaJS && vendaPreCarregadaJS.itens && vendaPreCarregadaJS.itens.length > 0) {

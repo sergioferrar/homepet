@@ -1,7 +1,11 @@
-{% extends 'base.html.twig' %}
+{% extends app.request.query.get('ficha')
+    ? 'baseClinica.html.twig'
+    : 'base.html.twig'
+%}
 {% block title %}Relatório de Vendas{% endblock %}
 
 {% block body %}
+    {% if app.request.query.get('ficha') is not defined %}
     <div class="pagetitle">
         <h1>Relatório de Vendas
             <a class="me-md-5 mt-sm-3 btn btn-primary btm-sm mb-3 float-md-end"
@@ -18,6 +22,7 @@
             </ol>
         </nav>
     </div>
+{% endif %}
 
     {# Flash messages #}
     {% for label, messages in app.flashes %}

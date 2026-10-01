@@ -30,6 +30,7 @@ class FinanceiroController extends DefaultController
         $baseId = $this->getIdBase();
         $financeiroRepo = $this->getRepositorio(Financeiro::class);
         $financeiroPendenteRepo = $this->getRepositorio(FinanceiroPendente::class);
+        $financeiroRepo->regulaBase();
 
         // --- Aba Diário ---
         $dataDiario = $request->query->get('data') ? date('Y-m-d', strtotime($request->query->get('data'))) : date('Y-m-d');

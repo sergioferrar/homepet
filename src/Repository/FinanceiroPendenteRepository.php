@@ -315,19 +315,20 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
      * Insere lançamento pendente originado de venda da clínica.
      * Substitui o INSERT inline que existia no VendaController::concluirVenda.
      */
-    public function inserirVendaClinica(int $baseId, string $descricao, float $valor): void
+    public function inserirVendaClinica(int $baseId, string $descricao, float $valor, ?int $vendaId = null): void
     {
         $sql = "INSERT INTO homepet_{$baseId}.financeiropendente
                     (descricao, valor, data, metodo_pagamento, origem, status,
-                     estabelecimento_id, inativar)
+                     estabelecimento_id, inativar, venda_id)
                 VALUES
                     (:descricao, :valor, NOW(), 'pendente', 'clinica', 'Pendente',
-                     :estabelecimento_id, 0)";
+                     :estabelecimento_id, 0, :venda_id)";
 
         $this->conn->executeStatement($sql, [
             'descricao'          => $descricao,
             'valor'              => $valor,
             'estabelecimento_id' => $baseId,
+            'venda_id'           => $vendaId,
         ]);
     }
 
@@ -338,19 +339,71 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
         int $estabelecimentoId,
         string $nomeCliente,
         float $total,
-        ?int $petId
+        ?int $petId,
+        ?int $vendaId = null
     ): void {
-        $sql = "INSERT INTO homepet_{$baseId}.financeiropendente
-                    (estabelecimento_id, descricao, valor, data, metodo_pagamento, origem, pet_id)
+        // Antes usava {$baseId}, variável inexistente neste método (o parâmetro é $estabelecimentoId)
+        $sql = "INSERT INTO homepet_{$estabelecimentoId}.financeiropendente
+                    (estabelecimento_id, descricao, valor, data, metodo_pagamento, origem, pet_id, venda_id)
                 VALUES
-                    (:estab, :descricao, :valor, NOW(), 'pendente', 'PDV', :pet_id)";
+                    (:estab, :descricao, :valor, NOW(), 'pendente', 'PDV', :pet_id, :venda_id)";
 
         $this->conn->executeStatement($sql, [
             'estab'     => $estabelecimentoId,
             'descricao' => "Venda PDV — {$nomeCliente}",
             'valor'     => $total,
             'pet_id'    => $petId,
+            'venda_id'  => $vendaId,
         ]);
+    }
+
+    /**
+     * Tira do financeiro pendente o lançamento de uma venda que acabou de ser
+     * finalizada no PDV (status 'pago' — mesmo critério de marcarPagos(), então
+     * some das listagens de pendentes mas o histórico fica preservado).
+     *
+     * 1) Caminho normal: lançamentos ligados à venda por venda_id.
+     * 2) Legado: lançamentos criados antes da coluna venda_id existir. Casa por
+     *    valor + pet (pet_id ou "(#petId)" na descrição, que é como a clínica grava)
+     *    e baixa no máximo UM, o mais recente, para não levar outro lançamento junto.
+     *
+     * @return int quantidade de lançamentos baixados
+     */
+    public function baixarPorVenda(int $baseId, int $vendaId, float $total, ?int $petId = null): int
+    {
+        $aberto = "(status IS NULL OR LOWER(status) NOT IN ('inativo', 'pago'))";
+
+        $afetadas = (int) $this->conn->executeStatement(
+            "UPDATE homepet_{$baseId}.financeiropendente
+                SET status = 'pago'
+              WHERE estabelecimento_id = :baseId
+                AND venda_id = :vendaId
+                AND {$aberto}",
+            ['baseId' => $baseId, 'vendaId' => $vendaId]
+        );
+
+        if ($afetadas > 0 || $petId === null) {
+            return $afetadas;
+        }
+
+        return (int) $this->conn->executeStatement(
+            "UPDATE homepet_{$baseId}.financeiropendente
+                SET status = 'pago'
+              WHERE estabelecimento_id = :baseId
+                AND venda_id IS NULL
+                AND metodo_pagamento = 'pendente'
+                AND ABS(valor - :total) < 0.01
+                AND {$aberto}
+                AND (pet_id = :petId OR descricao LIKE :descLike)
+              ORDER BY id DESC
+              LIMIT 1",
+            [
+                'baseId'   => $baseId,
+                'total'    => $total,
+                'petId'    => $petId,
+                'descLike' => '%(#' . $petId . ')',
+            ]
+        );
     }
 
     public function buscaInativosPendentes($baseId)

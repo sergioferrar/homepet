@@ -345,6 +345,13 @@ return $financeiro; // Retorna um objeto válido
         return $stmt->executeQuery()->fetchAllAssociative();
     }
 
+    public function regulaBase()
+    {
+        $sql = "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))";
+
+        $this->conn->executeQuery($sql);
+    }
+
     public function findTotalByDate(int $baseId, $data): array
     {
         $sql = "SELECT f.id, DATE(f.data) AS data, SUM(f.total) AS total_valor, c.nome AS dono_nome, GROUP_CONCAT(DISTINCT p.nome SEPARATOR ', ') AS pets
