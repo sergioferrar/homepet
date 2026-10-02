@@ -11,7 +11,26 @@
 {% endblock %}
 
 {% block list_stylesheets %}
-    <style>
+    
+{% endblock %}
+
+{% block list_content %}
+{% set abas = [
+    {'id': 'diario',     'rotulo': 'Diário',          'icone': 'bi-calendar-event', 'dia': true,  'sep': false},
+    {'id': 'clinica',    'rotulo': 'Clínica',         'icone': 'bi-bandaid',        'dia': true,  'sep': false},
+    {'id': 'banho_tosa', 'rotulo': 'Banho e tosa',    'icone': 'bi-droplet',        'dia': true,  'sep': false},
+    {'id': 'hospedagem', 'rotulo': 'Hospedagem',      'icone': 'bi-house-heart',    'dia': true,  'sep': false},
+    {'id': 'fiado',      'rotulo': 'Fiado',           'icone': 'bi-clock-history',  'dia': false, 'sep': true},
+    {'id': 'fluxo',      'rotulo': 'Fluxo de caixa',  'icone': 'bi-arrow-left-right', 'dia': false, 'sep': false},
+    {'id': 'relatorio',  'rotulo': 'Relatório',       'icone': 'bi-graph-up',       'dia': false, 'sep': false},
+    {'id': 'inativos',   'rotulo': 'Inativos',        'icone': 'bi-slash-circle',   'dia': false, 'sep': false}
+] %}
+{% if aba in ['diario', 'clinica', 'banho_tosa', 'hospedagem'] %}
+    {% set parcial = 'caixa' %}
+{% else %}
+    {% set parcial = aba %}
+{% endif %}
+<style>
         .fin {
             --fin-ink: #1f2933;
             --fin-muted: #667085;
@@ -194,25 +213,6 @@
             .fin-busca { max-width: none; width: 100%; }
         }
     </style>
-{% endblock %}
-
-{% block list_content %}
-{% set abas = [
-    {'id': 'diario',     'rotulo': 'Diário',          'icone': 'bi-calendar-event', 'dia': true,  'sep': false},
-    {'id': 'clinica',    'rotulo': 'Clínica',         'icone': 'bi-bandaid',        'dia': true,  'sep': false},
-    {'id': 'banho_tosa', 'rotulo': 'Banho e tosa',    'icone': 'bi-droplet',        'dia': true,  'sep': false},
-    {'id': 'hospedagem', 'rotulo': 'Hospedagem',      'icone': 'bi-house-heart',    'dia': true,  'sep': false},
-    {'id': 'fiado',      'rotulo': 'Fiado',           'icone': 'bi-clock-history',  'dia': false, 'sep': true},
-    {'id': 'fluxo',      'rotulo': 'Fluxo de caixa',  'icone': 'bi-arrow-left-right', 'dia': false, 'sep': false},
-    {'id': 'relatorio',  'rotulo': 'Relatório',       'icone': 'bi-graph-up',       'dia': false, 'sep': false},
-    {'id': 'inativos',   'rotulo': 'Inativos',        'icone': 'bi-slash-circle',   'dia': false, 'sep': false}
-] %}
-{% if aba in ['diario', 'clinica', 'banho_tosa', 'hospedagem'] %}
-    {% set parcial = 'caixa' %}
-{% else %}
-    {% set parcial = aba %}
-{% endif %}
-
 <div class="col-12 fin">
 
     <section class="fin-resumo" aria-label="Resumo financeiro">
