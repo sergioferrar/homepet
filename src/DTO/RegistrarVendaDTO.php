@@ -2,6 +2,8 @@
 
 namespace App\DTO;
 
+use App\Service\DataVendaRetroativa;
+
 /**
  * DTO para validação de registro de venda
  */
@@ -18,6 +20,9 @@ class RegistrarVendaDTO
     public ?string $observacao = null;
     public ?int $petId = null;
     public string $origem;
+
+    /** Data opcional (Y-m-d) para venda esquecida: só ontem ou hoje. */
+    public ?string $dataVenda = null;
 
     /**
      * Formas de pagamento (pagamento dividido). Cada item:
@@ -43,6 +48,9 @@ class RegistrarVendaDTO
         $dto->observacao = $dados['observacao'] ?? null;
         $dto->petId = !empty($dados['pet_id']) ? (int)$dados['pet_id'] : null;
         $dto->origem = $dados['origem'] ?? 'PDV';
+        $dto->dataVenda = (isset($dados['data_venda']) && is_string($dados['data_venda']) && $dados['data_venda'] !== '')
+            ? $dados['data_venda']
+            : null;
 
         // Normaliza as formas de pagamento divididas (se houver)
         $dto->pagamentos = [];
@@ -108,6 +116,15 @@ class RegistrarVendaDTO
             if (!isset($item['valor']) || $item['valor'] < 0) {
                 $errors[] = "Valor inválido para o item '{$item['nome']}'.";
                 break;
+            }
+        }
+
+        // Data da venda (opcional): só ontem ou hoje
+        if ($this->dataVenda !== null) {
+            try {
+                DataVendaRetroativa::resolver($this->dataVenda);
+            } catch (\InvalidArgumentException $e) {
+                $errors[] = $e->getMessage();
             }
         }
 

@@ -229,7 +229,7 @@ class AgendamentoRepository extends ServiceEntityRepository
         $sql = "SELECT p.id, CONCAT(p.nome, ' - ', c.nome) AS nome, p.especie, p.idade
                 FROM homepet_{$baseId}.pet p
                 LEFT JOIN homepet_{$baseId}.cliente c ON (p.dono_id = c.id AND c.estabelecimento_id = '{$baseId}')
-                WHERE p.estabelecimento_id = '{$baseId}' AND p.status != 'obito'";
+                WHERE p.estabelecimento_id = '{$baseId}'";
         $stmt = $this->conn->executeQuery($sql);
         return $stmt->fetchAllAssociative();
     }

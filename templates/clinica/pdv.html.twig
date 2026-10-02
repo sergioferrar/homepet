@@ -353,6 +353,24 @@
                                   placeholder="Informações adicionais..."></textarea>
                     </div>
 
+                    <!-- Data da venda (venda esquecida): só ontem ou hoje -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="toggleDataVenda">
+                            <label class="form-check-label" for="toggleDataVenda">
+                                Alterar data da venda (venda esquecida)
+                            </label>
+                        </div>
+                        <div id="blocoDataVenda" class="mt-2" style="display: none;">
+                            <label class="form-label" for="dataVenda">Data da venda:</label>
+                            <input type="date" id="dataVenda" class="form-control"
+                                   min="{{ 'yesterday'|date('Y-m-d') }}"
+                                   max="{{ 'now'|date('Y-m-d') }}"
+                                   value="{{ 'now'|date('Y-m-d') }}">
+                            <div class="form-text">Somente ontem ou hoje.</div>
+                        </div>
+                    </div>
+
                     <!-- Botão Finalizar / Salvar -->
                     {% if vendaPreCarregada is not null and vendaPreCarregada.venda_id is defined %}
                         <div class="alert alert-info py-2 mb-2 text-center small">
@@ -1149,6 +1167,20 @@ async function salvarVenda() {
         return;
     }
 
+    // Data da venda (opcional): só vale com o checkbox marcado; só ontem ou hoje
+    let dataVenda = null;
+    if ($('#toggleDataVenda').is(':checked')) {
+        dataVenda = $('#dataVenda').val() || null;
+        if (!dataVenda) {
+            showToast('Informe a data da venda.', 'warning');
+            return;
+        }
+        if (dataVenda < $('#dataVenda').attr('min') || dataVenda > $('#dataVenda').attr('max')) {
+            showToast('A data da venda só pode ser a de ontem ou a de hoje.', 'warning');
+            return;
+        }
+    }
+
     const $btn = $('#btnSalvarVenda');
     $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Salvando...');
 
@@ -1163,7 +1195,8 @@ async function salvarVenda() {
             metodo_pagamento: metodo,
             bandeira_cartao:  $('#bandeiraCartao').val() || null,
             parcelas:         parseInt($('#parcelas').val()) || null,
-            pagamentos:       dividir ? pagamentos : []
+            pagamentos:       dividir ? pagamentos : [],
+            data_venda:       dataVenda
         };
 
         try {
@@ -1224,7 +1257,8 @@ async function salvarVenda() {
         parcelas:   parseInt($('#parcelas').val()) || null,
         troco:      metodo === 'dinheiro' ? (parseFloat($('#valorRecebido').val()) - total) : null,
         observacao: $('#observacao').val().trim() || null,
-        pagamentos: dividir ? pagamentos : []
+        pagamentos: dividir ? pagamentos : [],
+        data_venda: dataVenda
     };
 
     try {
@@ -1264,6 +1298,14 @@ async function salvarVenda() {
     }
 }
 
+// Checkbox da data da venda: exibe/oculta o campo (ao desmarcar, volta para hoje)
+$(document).on('change', '#toggleDataVenda', function () {
+    $('#blocoDataVenda').toggle(this.checked);
+    if (!this.checked) {
+        $('#dataVenda').val($('#dataVenda').attr('max'));
+    }
+});
+
 function limparFormulario() {
     carrinhoItens = [];
     clienteSelecionado = null;
@@ -1282,6 +1324,9 @@ function limparFormulario() {
     $('#listaPagamentos').empty();
     $('#pagamentoDividido').hide();
     $('#blocoMetodoSimples').show();
+
+    // Reseta a data da venda
+    $('#toggleDataVenda').prop('checked', false).trigger('change');
     
     renderizarCarrinho();
     atualizarResumo();

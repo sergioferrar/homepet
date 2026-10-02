@@ -12,6 +12,7 @@ use App\Entity\Servico;
 use App\Entity\Venda;
 use App\Entity\VendaItem;
 use App\Service\CaixaService;
+use App\Service\DataVendaRetroativa;
 use App\Service\NotaFiscal\AsaasNotaFiscalService;
 use App\Service\NotaFiscal\NotaFiscalException;
 use App\Service\PdvService;
@@ -524,6 +525,18 @@ class PdvController extends DefaultController
                 ], 400);
             }
  
+            // Data opcional (venda esquecida): só ontem ou hoje. Nula = fluxo normal (NOW()).
+            try {
+                $dataVenda = DataVendaRetroativa::resolver(
+                    is_string($dados['data_venda'] ?? null) ? $dados['data_venda'] : null
+                );
+            } catch (\InvalidArgumentException $e) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'mensagem' => $e->getMessage(),
+                ], 400);
+            }
+ 
             $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
  
             // Busca a venda via SQL nativo (banco do tenant correto)
@@ -576,7 +589,8 @@ class PdvController extends DefaultController
                             (float) $p['valor'],
                             $venda['cliente'] ?? 'Consumidor Final',
                             $venda['pet_id'] ?? null,
-                            $id
+                            $id,
+                            $dataVenda
                         );
                         $vendaRepo->inserirPagamento(
                             $estabelecimentoId,
@@ -584,7 +598,8 @@ class PdvController extends DefaultController
                             $p['metodo'],
                             (float) $p['valor'],
                             $p['bandeira'],
-                            $p['parcelas']
+                            $p['parcelas'],
+                            $dataVenda
                         );
                     }
                 } else {
@@ -594,7 +609,8 @@ class PdvController extends DefaultController
                         (float) $venda['total'],
                         $venda['cliente'] ?? 'Consumidor Final',
                         $venda['pet_id'] ?? null,
-                        $id
+                        $id,
+                        $dataVenda
                     );
                 }
             }
@@ -606,7 +622,8 @@ class PdvController extends DefaultController
                 $metodo,
                 $statusFinal,
                 $bandeira,
-                $parcelas
+                $parcelas,
+                $dataVenda
             );
  
             if (!$ok) {

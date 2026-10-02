@@ -320,14 +320,17 @@ class VendaRepository extends ServiceEntityRepository
         string $metodoPagamento,
         string $statusFinal,
         ?string $bandeiraCartao = null,
-        ?int $parcelas = null
+        ?int $parcelas = null,
+        ?\DateTimeInterface $dataVenda = null
     ): bool {
-        $set    = "status = :status, metodo_pagamento = :metodo, data = NOW()";
+        // :data nulo => COALESCE cai em NOW() (comportamento de sempre)
+        $set    = "status = :status, metodo_pagamento = :metodo, data = COALESCE(:data, NOW())";
         $params = [
             'status' => $statusFinal,
             'metodo' => $metodoPagamento,
             'id'     => $vendaId,
             'estab'  => $baseId,
+            'data'   => $dataVenda ? $dataVenda->format('Y-m-d H:i:s') : null,
         ];
 
         if ($bandeiraCartao !== null) {
@@ -363,13 +366,14 @@ class VendaRepository extends ServiceEntityRepository
         float $total,
         string $nomeCliente,
         ?int $petId,
-        int $vendaId
+        int $vendaId,
+        ?\DateTimeInterface $dataVenda = null
     ): void {
         $sql = "INSERT INTO financeiro
                     (estabelecimento_id, descricao, valor, data, metodo_pagamento,
                      tipo, status, origem, pet_id)
                 VALUES
-                    (:estab, :descricao, :valor, NOW(), :metodo,
+                    (:estab, :descricao, :valor, COALESCE(:data, NOW()), :metodo,
                      'ENTRADA', 'Pago', 'PDV', :pet_id)";
 
         $this->conn->executeStatement($sql, [
@@ -378,6 +382,7 @@ class VendaRepository extends ServiceEntityRepository
             'valor'     => $total,
             'metodo'    => $metodo,
             'pet_id'    => $petId,
+            'data'      => $dataVenda ? $dataVenda->format('Y-m-d H:i:s') : null,
         ]);
     }
 
@@ -391,12 +396,13 @@ class VendaRepository extends ServiceEntityRepository
         string $metodo,
         float $valor,
         ?string $bandeiraCartao = null,
-        ?int $parcelas = null
+        ?int $parcelas = null,
+        ?\DateTimeInterface $dataVenda = null
     ): void {
         $sql = "INSERT INTO venda_pagamento
                     (estabelecimento_id, venda_id, metodo, valor, bandeira_cartao, parcelas, data)
                 VALUES
-                    (:estab, :venda, :metodo, :valor, :bandeira, :parcelas, NOW())";
+                    (:estab, :venda, :metodo, :valor, :bandeira, :parcelas, COALESCE(:data, NOW()))";
 
         $this->conn->executeStatement($sql, [
             'estab'    => $estabelecimentoId,
@@ -405,6 +411,7 @@ class VendaRepository extends ServiceEntityRepository
             'valor'    => $valor,
             'bandeira' => $bandeiraCartao,
             'parcelas' => $parcelas,
+            'data'     => $dataVenda ? $dataVenda->format('Y-m-d H:i:s') : null,
         ]);
     }
 

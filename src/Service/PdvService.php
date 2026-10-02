@@ -85,7 +85,7 @@ class PdvService
             );
 
             // 5.1 Registra as formas de pagamento (pagamento dividido)
-            $this->registrarPagamentos($venda, $pagamentos, $estabelecimentoId);
+            $this->registrarPagamentos($venda, $pagamentos, $estabelecimentoId, DataVendaRetroativa::resolver($dto->dataVenda ?? null));
 
             // 6. CORREÇÃO: NÃO registra no financeiro aqui — apenas quando finalizar
             // O financeiro será registrado em finalizarCarrinho() do Controller
@@ -232,7 +232,7 @@ class PdvService
         $venda->setCliente($nomeCliente);
         $venda->setTotal($dto->total);
         $venda->setMetodoPagamento($this->metodoEfetivo($dto));
-        $venda->setData(new \DateTime());
+        $venda->setData(DataVendaRetroativa::resolver($dto->dataVenda ?? null) ?? new \DateTime());
         $venda->setOrigem($dto->origem);
         $venda->setStatus('Carrinho');
 
@@ -392,7 +392,7 @@ class PdvService
      * Persiste as formas de pagamento (pagamento dividido) da venda.
      * Não faz nada quando a venda tem forma única.
      */
-    private function registrarPagamentos(Venda $venda, array $pagamentos, int $estabelecimentoId): void
+    private function registrarPagamentos(Venda $venda, array $pagamentos, int $estabelecimentoId, ?\DateTime $data = null): void
     {
         if (empty($pagamentos)) {
             return;
@@ -406,7 +406,7 @@ class PdvService
             $pagamento->setValor((float) $p['valor']);
             $pagamento->setBandeiraCartao($p['bandeira'] ?? null);
             $pagamento->setParcelas($p['parcelas'] ?? null);
-            $pagamento->setData(new \DateTime());
+            $pagamento->setData($data ?? new \DateTime());
             $this->em->persist($pagamento);
         }
     }

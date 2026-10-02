@@ -10,11 +10,7 @@
     </a>
 {% endblock %}
 
-{% block stylesheets %}
-    
-{% endblock %}
-
-{% block list_content %}
+{% block list_stylesheets %}
     <style>
         .fin {
             --fin-ink: #1f2933;
@@ -198,6 +194,9 @@
             .fin-busca { max-width: none; width: 100%; }
         }
     </style>
+{% endblock %}
+
+{% block list_content %}
 {% set abas = [
     {'id': 'diario',     'rotulo': 'Diário',          'icone': 'bi-calendar-event', 'dia': true,  'sep': false},
     {'id': 'clinica',    'rotulo': 'Clínica',         'icone': 'bi-bandaid',        'dia': true,  'sep': false},
