@@ -27,8 +27,9 @@ class PetRepository extends ServiceEntityRepository
 
     public function findPetById($baseId, $petId): ?array
     {
-        $sql = "SELECT p.id, p.nome, p.especie, p.sexo, p.raca, p.porte, p.idade, 
+        $sql = "SELECT p.id, p.nome, p.especie, p.sexo, p.raca, p.porte, p.idade,
                     p.observacoes, p.peso, p.castrado, p.data_nascimento as dataNascimento,
+                    p.status, p.data_obito,
                     c.id AS dono_id,
                     c.nome AS dono_nome,
                     c.telefone AS dono_telefone,

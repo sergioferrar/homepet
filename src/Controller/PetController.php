@@ -192,18 +192,32 @@ class PetController extends DefaultController
 
 
     /**
+     * Marca o pet como óbito.
+     *
+     * O registro NUNCA é removido: apenas o status muda para "obito" e a
+     * data_obito é gravada. Assim a ficha, o histórico e os relatórios
+     * continuam acessíveis — o pet apenas fica indisponível para novos
+     * agendamentos, vendas e atendimentos.
+     *
+     * A rota mantém o nome "pet_deletar" por compatibilidade com os
+     * formulários existentes no front.
+     *
      * @Route("/deletar/{id}", name="pet_deletar", methods={"POST"})
      */
     public function deletar(Request $request, int $id): Response
     {
         $this->switchDB();
-        $pet = $this->getRepositorio(Pet::class)->find($id);
+        $baseId = $this->getIdBase();
+        $petRepo = $this->getRepositorio(Pet::class);
+        $pet = $petRepo->find($id);
 
         if (!$pet) {
             throw $this->createNotFoundException('O pet não foi encontrado');
         }
 
-        $this->getRepositorio(Pet::class)->delete($this->getIdBase(), $id);
+        $petRepo->marcarObito($baseId, $id, new \DateTime());
+        $this->addFlash('success', 'Pet marcado como óbito. A ficha continua disponível no histórico.');
+
         return $this->redirectToRoute('pet_index');
     }
 

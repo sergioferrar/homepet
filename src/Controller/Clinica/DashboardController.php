@@ -53,7 +53,10 @@ class DashboardController extends DefaultController
         $pets = [];
 
         if ($termo) {
-            $pets = $repoPet->pesquisarPetsOuTutor($baseId, $termo);
+            // Mostra também pets em óbito: a ficha e o histórico continuam
+            // disponíveis mesmo após o óbito. Novas ações permanecem bloqueadas
+            // pelos filtros das telas de agendamento/venda/atendimento.
+            $pets = $repoPet->pesquisarPetsOuTutor($baseId, $termo, false);
         }
 
         // 🔹 BUSCA TODAS AS PRESCRIÇÕES DE TODAS AS INTERNAÇÕES ATIVAS (OTIMIZADO)

@@ -101,15 +101,17 @@
                                                         Editar
                                                     </a>
                                                 </li>
-                                                <li>
-                                                    <form method="post"
-                                                          action="{{ path('pet_deletar', {'id': pet.id}) }}">
-                                                        <button type="submit" class="dropdown-item text-danger"
-                                                                onclick="return confirm('Tem certeza que deseja deletar este pet?')">
-                                                            Deletar
-                                                        </button>
-                                                    </form>
-                                                </li>
+                                                {% if pet.status != 'obito' %}
+                                                    <li>
+                                                        <form method="post"
+                                                              action="{{ path('pet_deletar', {'id': pet.id}) }}">
+                                                            <button type="submit" class="dropdown-item text-danger"
+                                                                    onclick="return confirm('Marcar este pet como óbito? A ficha e o histórico continuarão acessíveis, o pet apenas ficará indisponível para novos agendamentos e atendimentos.')">
+                                                                <i class="bx bx-heart-circle me-1"></i>Marcar óbito
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                {% endif %}
                                             </ul>
                                         </div>
                                     </div>

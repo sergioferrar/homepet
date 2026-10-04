@@ -177,7 +177,15 @@
                     <img src="{{ asset('images/pet.jpeg') }}" alt="Foto do pet"
                          class="dp-pet-img pet-avatar img-responsive border" onerror="this.style.display='none'">
                     <div class="flex-grow-1">
-                        <p class="dp-pet-name">{{ pet.nome }}</p>
+                        <p class="dp-pet-name d-flex align-items-center flex-wrap gap-2">
+                            {{ pet.nome }}
+                            {% if pet.status == 'obito' %}
+                                <span class="badge bg-danger text-white"
+                                      title="Pet marcado como óbito{% if pet.data_obito %} em {{ pet.data_obito|date('d/m/Y') }}{% endif %}">
+                                    <i class="bi bi-heart-pulse-fill me-1"></i>Óbito
+                                </span>
+                            {% endif %}
+                        </p>
                         <span class="dp-pet-id">#{{ pet.id }} &bull; {{ pet.raca }}</span>
                         <div class="mt-1">
                             <span class="dp-castrado-badge {% if pet.castrado == 1 %}bg-success text-white{% else %}bg-danger text-white{% endif %}">
@@ -533,6 +541,29 @@
                      style="max-height: 440px; overflow-y: auto;">
                     <div class="dp-tab-body">
                         <ul class="timeline">
+                            {% if pet.status == 'obito' %}
+                                {% set dataObitoFmt = pet.data_obito ? pet.data_obito|date('d/m/Y \\às H:i') : '—' %}
+                                <li>
+                                    <div class="timeline-badge" style="background:#b71c1c;">
+                                        <i class="fas fa-heart-broken"></i>
+                                    </div>
+                                    <div class="timeline-panel border border-start border-5"
+                                         style="border-left-color:#b71c1c !important;">
+                                        <div class="timeline-heading">
+                                            <h4 class="timeline-title d-flex justify-content-between align-items-center">
+                                                <span class="text-danger fw-bold">
+                                                    <i class="bi bi-heart-pulse-fill me-1"></i>Óbito registrado
+                                                </span>
+                                                <small class="text-muted">{{ dataObitoFmt }}</small>
+                                            </h4>
+                                        </div>
+                                        <div class="timeline-body text-muted">
+                                            O pet foi marcado como óbito. A ficha e o histórico continuam
+                                            disponíveis para consulta e relatórios.
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endif %}
                             {% for item in timeline_items %}
                                 {% set borderClass =
                                     'Encaminhamento' in item.tipo ? 'border-start border-5 border-info ps-3' :
