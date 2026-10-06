@@ -58,14 +58,14 @@
 
     {# ── FILTROS ── #}
     <div class="comissao-card no-print">
-        <form method="GET" action="{{ path('clinica_relatorio_comissoes') }}" class="row g-3 align-items-end">
+        <form method="GET" action="{{ path('clinica_relatorio_comissoes') }}" class="row g-3 align-items-end" id="form-filtro-comissoes">
             <div class="col-md-3">
                 <label class="form-label">Data Início</label>
-                <input type="date" name="inicio" class="form-control" value="{{ inicio|date('Y-m-d') }}">
+                <input type="date" name="inicio" id="filtro-inicio" class="form-control" value="{{ inicio|date('Y-m-d') }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Data Fim</label>
-                <input type="date" name="fim" class="form-control" value="{{ fim|date('Y-m-d') }}">
+                <input type="date" name="fim" id="filtro-fim" class="form-control" value="{{ fim|date('Y-m-d') }}">
             </div>
             <div class="col-md-4">
                 <label class="form-label">Veterinário</label>
@@ -79,11 +79,64 @@
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Filtrar</button>
             </div>
+
+            <div class="col-12 d-flex flex-wrap gap-2 mt-1">
+                <span class="text-muted small align-self-center me-1">Período rápido:</span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-periodo="hoje">Hoje</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-periodo="ontem">Ontem</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-periodo="semana">Semana</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-periodo="semana_anterior">Semana anterior</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-periodo="mes">Mês</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-periodo="mes_anterior">Mês anterior</button>
+            </div>
         </form>
         <small class="text-muted d-block mt-2">
             <i class="bi bi-info-circle me-1"></i>São consideradas apenas as fichas <strong>concluídas</strong> (status "atendido") no período e as vendas feitas na clínica dentro das fichas dos pets.
         </small>
     </div>
+
+    {# ── RESUMO DE PAGAMENTO POR VETERINÁRIO ── #}
+    {% if relatorio is not empty %}
+    <div class="comissao-card">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+            <h5 class="mb-0"><i class="bi bi-wallet2 me-2"></i>Resumo de Pagamento</h5>
+            <div class="text-end small text-muted">
+                Período: <strong>{{ inicio|date('d/m/Y') }}</strong> a <strong>{{ fim|date('d/m/Y') }}</strong>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0" id="tabela-pagamento">
+                <thead class="table-light">
+                    <tr>
+                        <th>Veterinário</th>
+                        <th class="text-center">Atendimentos</th>
+                        <th class="text-center">Vendas</th>
+                        <th class="text-end">Total (R$)</th>
+                        <th class="text-end">Repasse (R$)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vet in relatorio %}
+                        <tr data-pagto-vet="{{ vet.veterinario_id }}">
+                            <td>{{ vet.nome }}</td>
+                            <td class="text-center">{{ vet.quantidade }}</td>
+                            <td class="text-center">{{ vet.vendas|length }}</td>
+                            <td class="text-end" data-pagto-total>{{ (vet.total + vet.total_vendas)|number_format(2, ',', '.') }}</td>
+                            <td class="text-end text-success fw-bold" data-pagto-repasse>0,00</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr class="fw-bold">
+                        <td colspan="3" class="text-end">TOTAL A PAGAR</td>
+                        <td class="text-end" id="pagto-total-geral">0,00</td>
+                        <td class="text-end text-success" id="pagto-repasse-geral">0,00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    {% endif %}
 
     {% if consultas_sem_vet > 0 %}
         <div class="alert alert-warning no-print">
@@ -232,11 +285,13 @@
                             <th>Tutor</th>
                             <th>Pagamento</th>
                             <th class="text-end">Valor (R$)</th>
+                            <th class="text-end">% Comissão</th>
+                            <th class="text-end">Repasse (R$)</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for venda in vet.vendas %}
-                        <tr>
+                        <tr data-venda-row="{{ venda.id }}">
                             <td>{{ venda.data|date('d/m/Y H:i') }}</td>
                             <td>#{{ venda.id }}</td>
                             <td>{{ venda.pet }}</td>
@@ -246,9 +301,19 @@
                                 <input type="number" step="0.01" min="0"
                                        class="form-control form-control-sm comissao-venda-input comissao-valor-input ms-auto"
                                        data-vet-venda="{{ vet.veterinario_id }}"
+                                       data-venda-valor="{{ venda.id }}"
                                        value="{{ venda.valor|number_format(2, '.', '') }}"
                                        title="Ajuste apenas para o cálculo da comissão — não altera a venda no financeiro">
                             </td>
+                            <td class="text-end">
+                                <input type="number" step="0.01" min="0" max="100"
+                                       class="form-control form-control-sm comissao-pct-input ms-auto"
+                                       data-venda-pct="{{ venda.id }}"
+                                       value="{{ venda.comissao_percentual is not null ? (venda.comissao_percentual|number_format(2, '.', '')) : '' }}"
+                                       placeholder="0">
+                                <small class="valor-status d-block text-end no-print" data-status-venda="{{ venda.id }}"></small>
+                            </td>
+                            <td class="text-end comissao-repasse text-success" data-venda-repasse="{{ venda.id }}">0,00</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -326,6 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const formatBR = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const urlSalvarValor = (id) => "{{ path('clinica_relatorio_comissoes_valor', {'id': '__ID__'}) }}".replace('__ID__', id);
+    const urlSalvarPctVenda = (id) => "{{ path('clinica_relatorio_comissoes_venda_pct', {'id': '__ID__'}) }}".replace('__ID__', id);
 
     // Recalcula os totais do veterinário (fichas + vendas), aplica o % de
     // comissão informado e atualiza os totais gerais.
@@ -340,12 +406,37 @@ document.addEventListener('DOMContentLoaded', function() {
             inputsConsulta.forEach(inp => { totalConsultas += parseFloat(inp.value) || 0; });
 
             const inputsVenda = document.querySelectorAll(`[data-vet-venda="${vetId}"]`);
+            const pct = parseFloat(document.querySelector(`[data-vet-pct="${vetId}"]`).value) || 0;
+
             let totalVendas = 0;
-            inputsVenda.forEach(inp => { totalVendas += parseFloat(inp.value) || 0; });
+            let repasseVendasTotal = 0;
+            let totalVendasSemPctIndividual = 0;
+
+            inputsVenda.forEach(inp => {
+                const valor = parseFloat(inp.value) || 0;
+                totalVendas += valor;
+
+                const vendaId = inp.dataset.vendaValor;
+                if (!vendaId) return;
+
+                const pctInput  = document.querySelector(`[data-venda-pct="${vendaId}"]`);
+                const repasseEl = document.querySelector(`[data-venda-repasse="${vendaId}"]`);
+                const temPctIndividual = pctInput && pctInput.value !== '';
+                const pctAplicavel = temPctIndividual ? parseFloat(pctInput.value) || 0 : pct;
+
+                const repasseVenda = valor * (pctAplicavel / 100);
+                if (repasseEl) repasseEl.textContent = formatBR(repasseVenda);
+                repasseVendasTotal += repasseVenda;
+
+                if (!temPctIndividual) {
+                    totalVendasSemPctIndividual += valor;
+                }
+            });
 
             const total = totalConsultas + totalVendas;
-            const pct = parseFloat(document.querySelector(`[data-vet-pct="${vetId}"]`).value) || 0;
-            const repasse = total * (pct / 100);
+            // Repasse geral: aplica o % geral sobre os atendimentos; vendas
+            // sem % individual usam o % geral; vendas com % individual usam o próprio.
+            const repasse = totalConsultas * (pct / 100) + repasseVendasTotal;
 
             linha.querySelector('.vet-total-consultas').textContent = formatBR(totalConsultas);
             linha.querySelector('.vet-total-vendas').textContent = formatBR(totalVendas);
@@ -366,7 +457,84 @@ document.addEventListener('DOMContentLoaded', function() {
         set('total-geral-vendas', formatBR(geralVendas));
         set('total-geral-valor', formatBR(geralConsultas + geralVendas));
         set('total-geral-repasse', formatBR(geralRepasse));
+
+        // Sincroniza o Resumo de Pagamento usando os valores já calculados
+        // por veterinário na tabela de resumo detalhado.
+        let totalGeralPagto = 0;
+        let repasseGeralPagto = 0;
+
+        document.querySelectorAll('[data-pagto-vet]').forEach(linha => {
+            const vetId = linha.dataset.pagtoVet;
+            const resumoLinha = document.querySelector(`[data-vet-resumo="${vetId}"]`);
+            if (!resumoLinha) return;
+
+            const totalTxt = resumoLinha.querySelector('.vet-total')?.textContent ?? '0,00';
+            const repasseTxt = document.querySelector(`[data-vet-repasse="${vetId}"]`)?.textContent ?? '0,00';
+            const totalNum = parseFloat(totalTxt.replace(/\./g, '').replace(',', '.')) || 0;
+            const repasseNum = parseFloat(repasseTxt.replace(/\./g, '').replace(',', '.')) || 0;
+
+            linha.querySelector('[data-pagto-total]').textContent = formatBR(totalNum);
+            linha.querySelector('[data-pagto-repasse]').textContent = formatBR(repasseNum);
+
+            totalGeralPagto += totalNum;
+            repasseGeralPagto += repasseNum;
+        });
+
+        set('pagto-total-geral', formatBR(totalGeralPagto));
+        set('pagto-repasse-geral', formatBR(repasseGeralPagto));
     }
+
+    // ── Atalhos de período (hoje / semana / mês) ──
+    (function () {
+        const inicioEl = document.getElementById('filtro-inicio');
+        const fimEl    = document.getElementById('filtro-fim');
+        const form     = document.getElementById('form-filtro-comissoes');
+        if (!inicioEl || !fimEl || !form) return;
+
+        const fmt = (d) => d.toISOString().slice(0, 10);
+        const hoje = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+        const ontemD = () => { const d = hoje(); d.setDate(d.getDate() - 1); return d; };
+        const inicioSemana = (base) => {
+            const d = new Date(base);
+            const diasParaSegunda = (d.getDay() + 6) % 7; // 0 = segunda
+            d.setDate(d.getDate() - diasParaSegunda);
+            return d;
+        };
+        const fimSemana = (base) => {
+            const d = inicioSemana(base);
+            d.setDate(d.getDate() + 6);
+            return d;
+        };
+
+        const presets = {
+            hoje:            () => [hoje(), hoje()],
+            ontem:           () => [ontemD(), ontemD()],
+            semana:          () => [inicioSemana(hoje()), fimSemana(hoje())],
+            semana_anterior: () => {
+                const base = new Date(hoje()); base.setDate(base.getDate() - 7);
+                return [inicioSemana(base), fimSemana(base)];
+            },
+            mes:             () => {
+                const h = hoje();
+                return [new Date(h.getFullYear(), h.getMonth(), 1), new Date(h.getFullYear(), h.getMonth() + 1, 0)];
+            },
+            mes_anterior:    () => {
+                const h = hoje();
+                return [new Date(h.getFullYear(), h.getMonth() - 1, 1), new Date(h.getFullYear(), h.getMonth(), 0)];
+            },
+        };
+
+        document.querySelectorAll('[data-periodo]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const fn = presets[btn.dataset.periodo];
+                if (!fn) return;
+                const [ini, fim] = fn();
+                inicioEl.value = fmt(ini);
+                fimEl.value    = fmt(fim);
+                form.submit();
+            });
+        });
+    })();
 
     // ── Persistência do valor do atendimento (com debounce por input) ──
     const timers = {};
@@ -399,14 +567,49 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(() => setStatus('erro', '<i class="bi bi-x-circle me-1"></i>erro ao salvar'));
     }
 
+    function salvarPctVenda(input) {
+        const vendaId = input.dataset.vendaPct;
+        if (!vendaId) return;
+
+        const statusEl = document.querySelector(`[data-status-venda="${vendaId}"]`);
+        const setStatus = (cls, html) => {
+            if (!statusEl) return;
+            statusEl.className = 'valor-status d-block text-end no-print ' + cls;
+            statusEl.innerHTML = html;
+        };
+
+        setStatus('salvando', '<i class="bi bi-arrow-repeat me-1"></i>salvando...');
+
+        fetch(urlSalvarPctVenda(vendaId), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ percentual: input.value === '' ? null : input.value })
+        })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+            if (ok && data.status === 'success') {
+                setStatus('salvo', '<i class="bi bi-check-circle me-1"></i>salvo');
+            } else {
+                setStatus('erro', '<i class="bi bi-x-circle me-1"></i>' + (data.mensagem || 'erro ao salvar'));
+            }
+        })
+        .catch(() => setStatus('erro', '<i class="bi bi-x-circle me-1"></i>erro ao salvar'));
+    }
+
     document.querySelectorAll('.comissao-pct-input, .comissao-valor-input').forEach(inp => {
         inp.addEventListener('input', function() {
             recalcular();
 
-            // Salva no banco apenas os valores de atendimento (fichas)
+            // Persistência do valor de atendimento (fichas)
             if (this.dataset.consultaId) {
-                clearTimeout(timers[this.dataset.consultaId]);
-                timers[this.dataset.consultaId] = setTimeout(() => salvarValorConsulta(this), 600);
+                clearTimeout(timers['c' + this.dataset.consultaId]);
+                timers['c' + this.dataset.consultaId] = setTimeout(() => salvarValorConsulta(this), 600);
+            }
+
+            // Persistência do % de comissão por venda
+            if (this.dataset.vendaPct) {
+                clearTimeout(timers['v' + this.dataset.vendaPct]);
+                timers['v' + this.dataset.vendaPct] = setTimeout(() => salvarPctVenda(this), 600);
             }
         });
     });

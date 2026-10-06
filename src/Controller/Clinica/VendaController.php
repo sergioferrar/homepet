@@ -59,6 +59,23 @@ class VendaController extends DefaultController
                 ? (int) $consultaIdRaw
                 : null;
 
+            // Veterinário selecionado no formulário da venda. Se vier vazio e
+            // existir consulta vinculada, aproveita o vet dela.
+            $vetIdRaw = $request->get('veterinario_id');
+            $vetId = ($vetIdRaw !== null && $vetIdRaw !== '')
+                ? (int) $vetIdRaw
+                : null;
+
+            if ($vetId === null && $consultaId !== null) {
+                $vetFromConsulta = $conn->fetchOne(
+                    'SELECT veterinario_id FROM consulta WHERE id = :id AND estabelecimento_id = :estab',
+                    ['id' => $consultaId, 'estab' => $baseId]
+                );
+                if ($vetFromConsulta) {
+                    $vetId = (int) $vetFromConsulta;
+                }
+            }
+
             // Valida que a consulta pertence a este pet/estabelecimento antes de vincular
             if ($consultaId !== null) {
                 $consultaValida = $conn->fetchOne(
@@ -94,15 +111,17 @@ class VendaController extends DefaultController
 
             // 1️⃣ Insere a venda via repository (SQL nativo) para obter o ID
             $vendaId = $vendaRepo->inserirVenda($baseId, [
-                'estabelecimento_id' => $baseId,
-                'cliente'            => $pet['dono_nome'] ?? 'Consumidor Final',
-                'pet_id'             => $petIdFromRequest,
-                'consulta_id'        => $consultaId,
-                'parcelas'           => $request->get('parcelas', 1),
-                'origem'             => $origem,
-                'metodo_pagamento'   => $metodoPagamento,
-                'status'             => $status,
-                'observacao'         => $request->get('observacao'),
+                'estabelecimento_id'  => $baseId,
+                'cliente'             => $pet['dono_nome'] ?? 'Consumidor Final',
+                'pet_id'              => $petIdFromRequest,
+                'consulta_id'         => $consultaId,
+                'parcelas'            => $request->get('parcelas', 1),
+                'origem'              => $origem,
+                'metodo_pagamento'    => $metodoPagamento,
+                'status'              => $status,
+                'observacao'          => $request->get('observacao'),
+                'veterinario_id'      => $vetId,
+                'comissao_percentual' => null,
             ]);
 
             // 2️⃣ Processa itens via DBAL
@@ -129,17 +148,26 @@ class VendaController extends DefaultController
                 $valorUnitario = 0.0;
                 $produto = null;
 
+                $comissaoItem = null;
+
                 if ($tipo === 'servico') {
-                    $servico = $servicoRepo->listaServicoPorId($baseId, $realId);
+                    $servico = $conn->fetchAssociative(
+                        'SELECT id, nome, valor, comissao_percentual
+                         FROM servico WHERE id = :id AND estabelecimento_id = :estab',
+                        ['id' => (int) $realId, 'estab' => $baseId]
+                    );
                     if (!$servico) {
                         continue;
                     }
 
                     $nome = $servico['nome'] ?? 'Serviço';
                     $valorUnitario = (float) $servico['valor'];
+                    $comissaoItem = isset($servico['comissao_percentual'])
+                        ? ($servico['comissao_percentual'] !== null ? (float) $servico['comissao_percentual'] : null)
+                        : null;
                 } else {
                     $produto = $conn->fetchAssociative(
-                        'SELECT id, nome, preco_venda, estoque_atual
+                        'SELECT id, nome, preco_venda, estoque_atual, comissao_percentual
                          FROM produto WHERE id = :id AND estabelecimento_id = :estab',
                         ['id' => (int) $realId, 'estab' => $baseId]
                     );
@@ -149,6 +177,9 @@ class VendaController extends DefaultController
 
                     $nome = $produto['nome'];
                     $valorUnitario = (float) $produto['preco_venda'];
+                    $comissaoItem = isset($produto['comissao_percentual'])
+                        ? ($produto['comissao_percentual'] !== null ? (float) $produto['comissao_percentual'] : null)
+                        : null;
                 }
 
                 // Quantidade e desconto SÃO DESTA LINHA — nunca herdados de outra
@@ -180,13 +211,14 @@ class VendaController extends DefaultController
                 $valorItem = $calculo['subtotal'];
 
                 $vendaItemRepo->inserirItem($baseId, [
-                    'venda_id'       => $vendaId,
-                    'tipo'           => $tipo,
-                    'produto_id'     => (int) $realId,
-                    'produto'        => $nome,
-                    'quantidade'     => $quantidade,
-                    'valor_unitario' => $valorUnitario,
-                    'subtotal'       => $valorItem,
+                    'venda_id'            => $vendaId,
+                    'tipo'                => $tipo,
+                    'produto_id'          => (int) $realId,
+                    'produto'             => $nome,
+                    'quantidade'          => $quantidade,
+                    'valor_unitario'      => $valorUnitario,
+                    'subtotal'            => $valorItem,
+                    'comissao_percentual' => $comissaoItem,
                 ]);
 
                 $valorTotal += $valorItem;

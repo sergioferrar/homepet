@@ -66,6 +66,19 @@ class Venda
      */
     private $status;
 
+    /**
+     * Veterinário responsável pela venda (atende e recebe comissão).
+     * @ORM\Column(type="integer", nullable=true, name="veterinario_id")
+     */
+    private $veterinarioId;
+
+    /**
+     * % de comissão aplicado nesta venda. Pode ser ajustado item a item,
+     * mas este campo guarda o valor global exibido no relatório.
+     * @ORM\Column(type="decimal", precision=5, scale=2, nullable=true, name="comissao_percentual")
+     */
+    private $comissaoPercentual;
+
     // --- Getters e Setters ---
 
     public function getId(): ?int
@@ -215,6 +228,28 @@ class Venda
     {
         $this->status = $status;
 
+        return $this;
+    }
+
+    public function getVeterinarioId(): ?int
+    {
+        return $this->veterinarioId;
+    }
+
+    public function setVeterinarioId(?int $vetId): self
+    {
+        $this->veterinarioId = $vetId;
+        return $this;
+    }
+
+    public function getComissaoPercentual(): ?float
+    {
+        return $this->comissaoPercentual !== null ? (float) $this->comissaoPercentual : null;
+    }
+
+    public function setComissaoPercentual(?float $percentual): self
+    {
+        $this->comissaoPercentual = $percentual;
         return $this;
     }
 }

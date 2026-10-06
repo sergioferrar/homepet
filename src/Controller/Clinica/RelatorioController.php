@@ -122,6 +122,9 @@ class RelatorioController extends DefaultController
                 'valor' => (float) $venda['total'],
                 'metodo_pagamento' => $venda['metodo_pagamento'],
                 'status' => $venda['status'],
+                'comissao_percentual' => $venda['comissao_percentual'] !== null
+                    ? (float) $venda['comissao_percentual']
+                    : null,
             ];
 
             if ($vetId === null) {
@@ -204,6 +207,36 @@ class RelatorioController extends DefaultController
                 'status' => 'error',
                 'mensagem' => 'Erro ao salvar o valor: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Grava o % de comissão de uma venda específica no relatório.
+     *
+     * @Route("/relatorios/comissoes/venda/{id}/percentual", name="clinica_relatorio_comissoes_venda_pct", methods={"POST"})
+     */
+    public function salvarPercentualVenda(Request $request, int $id): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $dados = json_decode($request->getContent(), true) ?? [];
+        $pct = $dados['percentual'] ?? null;
+
+        if ($pct === '' || $pct === null) {
+            $pct = null;
+        } else {
+            $pct = (float) str_replace(',', '.', (string) $pct);
+            if ($pct < 0 || $pct > 100) {
+                return $this->json(['status' => 'error', 'mensagem' => 'Percentual deve estar entre 0 e 100.'], 400);
+            }
+        }
+
+        try {
+            $this->getRepositorio(Venda::class)->atualizarComissao($baseId, $id, $pct);
+            return $this->json(['status' => 'success', 'percentual' => $pct]);
+        } catch (\Exception $e) {
+            return $this->json(['status' => 'error', 'mensagem' => $e->getMessage()], 500);
         }
     }
 

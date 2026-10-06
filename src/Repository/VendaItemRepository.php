@@ -180,18 +180,19 @@ class VendaItemRepository extends ServiceEntityRepository
     public function inserirItem(int $baseId, array $dados): void
     {
         $sql = "INSERT INTO homepet_{$baseId}.venda_item
-                    (venda_id, tipo, produto_id, produto, quantidade, valor_unitario, subtotal)
+                    (venda_id, tipo, produto_id, produto, quantidade, valor_unitario, subtotal, comissao_percentual)
                 VALUES
-                    (:venda_id, :tipo, :produto_id, :produto, :quantidade, :valor_unitario, :subtotal)";
+                    (:venda_id, :tipo, :produto_id, :produto, :quantidade, :valor_unitario, :subtotal, :comissao_percentual)";
 
         $this->conn->executeStatement($sql, [
-            'venda_id'       => $dados['venda_id'],
-            'tipo'           => $dados['tipo'],
-            'produto_id'     => $dados['produto_id'],
-            'produto'        => $dados['produto'],
-            'quantidade'     => $dados['quantidade'],
-            'valor_unitario' => $dados['valor_unitario'],
-            'subtotal'       => $dados['subtotal'],
+            'venda_id'            => $dados['venda_id'],
+            'tipo'                => $dados['tipo'],
+            'produto_id'          => $dados['produto_id'],
+            'produto'             => $dados['produto'],
+            'quantidade'          => $dados['quantidade'],
+            'valor_unitario'      => $dados['valor_unitario'],
+            'subtotal'            => $dados['subtotal'],
+            'comissao_percentual' => $dados['comissao_percentual'] ?? null,
         ]);
     }
 }

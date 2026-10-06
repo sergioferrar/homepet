@@ -198,17 +198,21 @@ class VendaRepository extends ServiceEntityRepository
     public function listarVendasClinicaComissao(int $baseId, \DateTime $inicio, \DateTime $fim): array
     {
         $sql = "SELECT v.id, v.data, v.total, v.pet_id, v.metodo_pagamento, v.status,
+                       v.comissao_percentual,
                        p.nome AS pet_nome,
                        COALESCE(cl.nome, v.cliente) AS cliente_nome,
-                       (SELECT c.veterinario_id
-                          FROM homepet_{$baseId}.consulta c
-                         WHERE c.estabelecimento_id = :estab
-                           AND c.pet_id = v.pet_id
-                           AND c.data = DATE(v.data)
-                           AND c.status <> 'cancelado'
-                           AND c.veterinario_id IS NOT NULL
-                         ORDER BY c.hora DESC, c.id DESC
-                         LIMIT 1) AS veterinario_id
+                       COALESCE(
+                           v.veterinario_id,
+                           (SELECT c.veterinario_id
+                              FROM homepet_{$baseId}.consulta c
+                             WHERE c.estabelecimento_id = :estab
+                               AND c.pet_id = v.pet_id
+                               AND c.data = DATE(v.data)
+                               AND c.status <> 'cancelado'
+                               AND c.veterinario_id IS NOT NULL
+                             ORDER BY c.hora DESC, c.id DESC
+                             LIMIT 1)
+                       ) AS veterinario_id
                 FROM homepet_{$baseId}.venda v
                 LEFT JOIN homepet_{$baseId}.pet p ON p.id = v.pet_id
                 LEFT JOIN homepet_{$baseId}.cliente cl ON cl.id = p.dono_id
@@ -232,24 +236,48 @@ class VendaRepository extends ServiceEntityRepository
     {
         $sql = "INSERT INTO homepet_{$baseId}.venda
                     (estabelecimento_id, cliente, pet_id, consulta_id, parcelas, origem,
-                     metodo_pagamento, status, data, observacao, total)
+                     metodo_pagamento, status, data, observacao, total,
+                     veterinario_id, comissao_percentual)
                 VALUES
                     (:estabelecimento_id, :cliente, :pet_id, :consulta_id, :parcelas, :origem,
-                     :metodo_pagamento, :status, NOW(), :observacao, 0)";
+                     :metodo_pagamento, :status, NOW(), :observacao, 0,
+                     :veterinario_id, :comissao_percentual)";
 
         $this->conn->executeStatement($sql, [
-            'estabelecimento_id' => $dados['estabelecimento_id'],
-            'cliente'            => $dados['cliente'],
-            'pet_id'             => $dados['pet_id'],
-            'consulta_id'        => $dados['consulta_id'] ?? null,
-            'parcelas'           => $dados['parcelas'],
-            'origem'             => $dados['origem'],
-            'metodo_pagamento'   => $dados['metodo_pagamento'],
-            'status'             => $dados['status'],
-            'observacao'         => $dados['observacao'],
+            'estabelecimento_id'  => $dados['estabelecimento_id'],
+            'cliente'             => $dados['cliente'],
+            'pet_id'              => $dados['pet_id'],
+            'consulta_id'         => $dados['consulta_id'] ?? null,
+            'parcelas'            => $dados['parcelas'],
+            'origem'              => $dados['origem'],
+            'metodo_pagamento'    => $dados['metodo_pagamento'],
+            'status'              => $dados['status'],
+            'observacao'          => $dados['observacao'],
+            'veterinario_id'      => $dados['veterinario_id'] ?? null,
+            'comissao_percentual' => $dados['comissao_percentual'] ?? null,
         ]);
 
         return (int) $this->conn->lastInsertId();
+    }
+
+    /**
+     * Atualiza o % de comissão de uma venda (usado no relatório).
+     */
+    public function atualizarComissao(int $baseId, int $vendaId, ?float $percentual): bool
+    {
+        if ($percentual !== null && ($percentual < 0 || $percentual > 100)) {
+            return false;
+        }
+
+        $sql = "UPDATE homepet_{$baseId}.venda
+                SET comissao_percentual = :pct
+                WHERE id = :id AND estabelecimento_id = :estab";
+
+        return $this->conn->executeStatement($sql, [
+            'pct'   => $percentual,
+            'id'    => $vendaId,
+            'estab' => $baseId,
+        ]) >= 0;
     }
 
     /**

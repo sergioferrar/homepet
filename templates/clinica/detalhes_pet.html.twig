@@ -949,12 +949,24 @@
             <select class="form-select" id="venda-consulta" name="consulta_id">
                 <option value="">Sem atendimento (lançamento avulso)</option>
                 {% for c in consultas|default([]) %}
-                    <option value="{{ c.id }}" {% if loop.first %}selected{% endif %}>
+                    <option value="{{ c.id }}" data-vet-id="{{ c.veterinario_id|default('') }}" {% if loop.first %}selected{% endif %}>
                         {{ c.tipo|default('Consulta') }} — {{ c.data ? c.data|date('d/m/Y') : '' }}{% if c.hora %} {{ c.hora|date('H:i') }}{% endif %}{% if c.veterinario_nome %} · Dr(a). {{ c.veterinario_nome }}{% endif %}
                     </option>
                 {% endfor %}
             </select>
             <small class="text-muted">As vendas ficam agrupadas por atendimento na aba Venda.</small>
+        </div>
+
+        {# ── Veterinário responsável pela venda (para comissão) ───────────── #}
+        <div class="mb-3">
+            <label for="venda-veterinario" class="form-label">Veterinário responsável</label>
+            <select class="form-select" id="venda-veterinario" name="veterinario_id">
+                <option value="">Selecione (padrão: do atendimento)</option>
+                {% for vet in veterinario|default([]) %}
+                    <option value="{{ vet.id }}">{{ vet.nome }}{% if vet.crmv %} · CRMV {{ vet.crmv }}{% endif %}</option>
+                {% endfor %}
+            </select>
+            <small class="text-muted">Usado para calcular comissão. Se ficar em branco, usamos o veterinário do atendimento vinculado.</small>
         </div>
 
         {# ── Itens da venda ────────────────────────────────────────────────

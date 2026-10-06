@@ -1,0 +1,156 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Comissão por Serviço e Produto{% endblock %}
+{% block page_title %}Comissões — Cadastro de %{% endblock %}
+
+{% block body %}
+<div class="pagetitle">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h1>Comissão por Serviço e Produto</h1>
+        <a href="{{ path('clinica_relatorio_comissoes') }}" class="btn btn-outline-primary">
+            <i class="bi bi-graph-up me-1"></i>Ir para o relatório
+        </a>
+    </div>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('home') }}">Home</a></li>
+            <li class="breadcrumb-item">Clínica</li>
+            <li class="breadcrumb-item active">Comissões</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <ul class="nav nav-tabs mb-3" id="tabsComissao">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabServicos">Serviços</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabProdutos">Produtos</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="tabServicos">
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-muted mb-3">Defina o % de comissão padrão aplicado em cada serviço. Esse valor é salvo em cada item vendido e pode ser ajustado venda a venda no relatório.</p>
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Serviço</th>
+                                    <th>Tipo</th>
+                                    <th class="text-end">Valor (R$)</th>
+                                    <th class="text-end" style="width: 160px;">% Comissão</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in servicos %}
+                                    <tr>
+                                        <td>{{ s.nome }}</td>
+                                        <td>{{ s.tipo|default('—') }}</td>
+                                        <td class="text-end">{{ s.valor is not null ? (s.valor|number_format(2, ',', '.')) : '—' }}</td>
+                                        <td class="text-end">
+                                            <input type="number" step="0.01" min="0" max="100"
+                                                   class="form-control form-control-sm pct-input text-end"
+                                                   data-salvar-url="{{ path('clinica_comissao_servico_salvar', {'id': s.id}) }}"
+                                                   value="{{ s.comissao_percentual is not null ? (s.comissao_percentual|number_format(2, '.', '')) : '' }}"
+                                                   placeholder="0">
+                                            <small class="pct-status text-muted d-block"></small>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr><td colspan="4" class="text-center text-muted">Nenhum serviço cadastrado.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tabProdutos">
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-muted mb-3">Defina o % de comissão padrão aplicado em cada produto.</p>
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Categoria</th>
+                                    <th class="text-end">Preço (R$)</th>
+                                    <th class="text-end" style="width: 160px;">% Comissão</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in produtos %}
+                                    <tr>
+                                        <td>{{ p.nome }}</td>
+                                        <td>{{ p.categoria|default('—') }}</td>
+                                        <td class="text-end">{{ p.preco_venda is not null ? (p.preco_venda|number_format(2, ',', '.')) : '—' }}</td>
+                                        <td class="text-end">
+                                            <input type="number" step="0.01" min="0" max="100"
+                                                   class="form-control form-control-sm pct-input text-end"
+                                                   data-salvar-url="{{ path('clinica_comissao_produto_salvar', {'id': p.id}) }}"
+                                                   value="{{ p.comissao_percentual is not null ? (p.comissao_percentual|number_format(2, '.', '')) : '' }}"
+                                                   placeholder="0">
+                                            <small class="pct-status text-muted d-block"></small>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr><td colspan="4" class="text-center text-muted">Nenhum produto cadastrado.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const timers = {};
+
+    document.querySelectorAll('.pct-input').forEach(inp => {
+        inp.addEventListener('input', function () {
+            const url = this.dataset.salvarUrl;
+            const key = url;
+            const status = this.parentElement.querySelector('.pct-status');
+
+            clearTimeout(timers[key]);
+            timers[key] = setTimeout(() => {
+                if (status) { status.textContent = 'salvando...'; status.className = 'pct-status text-muted d-block'; }
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ percentual: inp.value === '' ? null : inp.value })
+                })
+                .then(r => r.json().then(data => ({ ok: r.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!status) return;
+                    if (ok && data.status === 'success') {
+                        status.textContent = 'salvo';
+                        status.className = 'pct-status text-success d-block';
+                    } else {
+                        status.textContent = data.mensagem || 'erro ao salvar';
+                        status.className = 'pct-status text-danger d-block';
+                    }
+                })
+                .catch(() => {
+                    if (!status) return;
+                    status.textContent = 'erro ao salvar';
+                    status.className = 'pct-status text-danger d-block';
+                });
+            }, 500);
+        });
+    });
+});
+</script>
+{% endblock %}
