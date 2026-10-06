@@ -69,5 +69,8 @@ CALL add_column_if_missing('venda_item', 'comissao_percentual', 'DECIMAL(5,2) NU
 CALL add_column_if_missing('servico', 'comissao_percentual', 'DECIMAL(5,2) NULL');
 CALL add_column_if_missing('produto', 'comissao_percentual', 'DECIMAL(5,2) NULL');
 
+-- % padrão do veterinário (usado como default no relatório)
+CALL add_column_if_missing('veterinario', 'comissao_padrao', 'DECIMAL(5,2) NULL');
+
 DROP PROCEDURE IF EXISTS add_column_if_missing;
 DROP PROCEDURE IF EXISTS add_index_if_missing;

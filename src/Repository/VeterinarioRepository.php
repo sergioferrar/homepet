@@ -28,14 +28,35 @@ class VeterinarioRepository extends ServiceEntityRepository
     public function findByEstabelecimento(int $estabelecimentoId): array
     {
         $sql = "SELECT v.id, v.nome, v.especialidade, v.crmv, v.telefone, v.email, v.status,
+                       v.comissao_padrao,
                        COUNT(DISTINCT ie.id) AS total_consultas
                 FROM veterinario v
                 LEFT JOIN internacao_execucao ie ON ie.veterinario_id = v.id
                 WHERE v.estabelecimento_id = :estabelecimentoId
-                GROUP BY v.id, v.nome, v.especialidade, v.crmv, v.telefone, v.email, v.status
+                GROUP BY v.id, v.nome, v.especialidade, v.crmv, v.telefone, v.email, v.status, v.comissao_padrao
                 ORDER BY v.nome ASC";
 
         return $this->conn->fetchAllAssociative($sql, ['estabelecimentoId' => $estabelecimentoId]);
+    }
+
+    /**
+     * Atualiza o % padrão de comissão de um veterinário.
+     */
+    public function atualizarComissaoPadrao(int $estabelecimentoId, int $vetId, ?float $percentual): bool
+    {
+        if ($percentual !== null && ($percentual < 0 || $percentual > 100)) {
+            return false;
+        }
+
+        $sql = "UPDATE veterinario
+                SET comissao_padrao = :pct
+                WHERE id = :id AND estabelecimento_id = :estab";
+
+        return $this->conn->executeStatement($sql, [
+            'pct'   => $percentual,
+            'id'    => $vetId,
+            'estab' => $estabelecimentoId,
+        ]) >= 0;
     }
 
     /**

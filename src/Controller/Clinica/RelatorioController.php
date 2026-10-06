@@ -73,10 +73,14 @@ class RelatorioController extends DefaultController
         foreach ($consultas as $c) {
             $vetId = (int) $c['veterinario_id'];
             if (!isset($relatorio[$vetId])) {
+                $vetInfo = $vetsPorId[$vetId] ?? [];
                 $relatorio[$vetId] = [
                     'veterinario_id' => $vetId,
                     'nome' => $c['veterinario_nome'],
                     'crmv' => $c['veterinario_crmv'],
+                    'comissao_padrao' => isset($vetInfo['comissao_padrao']) && $vetInfo['comissao_padrao'] !== null
+                        ? (float) $vetInfo['comissao_padrao']
+                        : null,
                     'quantidade' => 0,
                     'total' => 0.0,
                     'total_vendas' => 0.0,
@@ -139,6 +143,9 @@ class RelatorioController extends DefaultController
                     'veterinario_id' => $vetId,
                     'nome' => $vet['nome'] ?? 'Veterinário #' . $vetId,
                     'crmv' => $vet['crmv'] ?? null,
+                    'comissao_padrao' => isset($vet['comissao_padrao']) && $vet['comissao_padrao'] !== null
+                        ? (float) $vet['comissao_padrao']
+                        : null,
                     'quantidade' => 0,
                     'total' => 0.0,
                     'total_vendas' => 0.0,
@@ -207,6 +214,36 @@ class RelatorioController extends DefaultController
                 'status' => 'error',
                 'mensagem' => 'Erro ao salvar o valor: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Grava o % padrão de comissão de um veterinário.
+     *
+     * @Route("/relatorios/comissoes/veterinario/{id}/percentual", name="clinica_relatorio_comissoes_vet_pct", methods={"POST"})
+     */
+    public function salvarPercentualVeterinario(Request $request, int $id): JsonResponse
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $dados = json_decode($request->getContent(), true) ?? [];
+        $pct = $dados['percentual'] ?? null;
+
+        if ($pct === '' || $pct === null) {
+            $pct = null;
+        } else {
+            $pct = (float) str_replace(',', '.', (string) $pct);
+            if ($pct < 0 || $pct > 100) {
+                return $this->json(['status' => 'error', 'mensagem' => 'Percentual deve estar entre 0 e 100.'], 400);
+            }
+        }
+
+        try {
+            $this->getRepositorio(Veterinario::class)->atualizarComissaoPadrao($baseId, $id, $pct);
+            return $this->json(['status' => 'success', 'percentual' => $pct]);
+        } catch (\Exception $e) {
+            return $this->json(['status' => 'error', 'mensagem' => $e->getMessage()], 500);
         }
     }
 

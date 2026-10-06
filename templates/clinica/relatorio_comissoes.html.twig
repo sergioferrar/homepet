@@ -192,7 +192,10 @@
                         <td class="text-end">
                             <input type="number" step="0.01" min="0" max="100"
                                    class="form-control form-control-sm comissao-pct-input ms-auto"
-                                   data-vet-pct="{{ vet.veterinario_id }}" value="0" title="Percentual de comissão">
+                                   data-vet-pct="{{ vet.veterinario_id }}"
+                                   value="{{ vet.comissao_padrao is not null ? (vet.comissao_padrao|number_format(2, '.', '')) : '' }}"
+                                   title="Percentual padrão de comissão do veterinário">
+                            <small class="valor-status d-block text-end no-print" data-status-vet="{{ vet.veterinario_id }}"></small>
                         </td>
                         <td class="text-end comissao-repasse text-success" data-vet-repasse="{{ vet.veterinario_id }}">0,00</td>
                     </tr>
@@ -390,8 +393,9 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     const formatBR = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const urlSalvarValor = (id) => "{{ path('clinica_relatorio_comissoes_valor', {'id': '__ID__'}) }}".replace('__ID__', id);
+    const urlSalvarValor    = (id) => "{{ path('clinica_relatorio_comissoes_valor',    {'id': '__ID__'}) }}".replace('__ID__', id);
     const urlSalvarPctVenda = (id) => "{{ path('clinica_relatorio_comissoes_venda_pct', {'id': '__ID__'}) }}".replace('__ID__', id);
+    const urlSalvarPctVet   = (id) => "{{ path('clinica_relatorio_comissoes_vet_pct',   {'id': '__ID__'}) }}".replace('__ID__', id);
 
     // Recalcula os totais do veterinário (fichas + vendas), aplica o % de
     // comissão informado e atualiza os totais gerais.
@@ -567,6 +571,35 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(() => setStatus('erro', '<i class="bi bi-x-circle me-1"></i>erro ao salvar'));
     }
 
+    function salvarPctVet(input) {
+        const vetId = input.dataset.vetPct;
+        if (!vetId) return;
+
+        const statusEl = document.querySelector(`[data-status-vet="${vetId}"]`);
+        const setStatus = (cls, html) => {
+            if (!statusEl) return;
+            statusEl.className = 'valor-status d-block text-end no-print ' + cls;
+            statusEl.innerHTML = html;
+        };
+
+        setStatus('salvando', '<i class="bi bi-arrow-repeat me-1"></i>salvando...');
+
+        fetch(urlSalvarPctVet(vetId), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ percentual: input.value === '' ? null : input.value })
+        })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+            if (ok && data.status === 'success') {
+                setStatus('salvo', '<i class="bi bi-check-circle me-1"></i>salvo');
+            } else {
+                setStatus('erro', '<i class="bi bi-x-circle me-1"></i>' + (data.mensagem || 'erro ao salvar'));
+            }
+        })
+        .catch(() => setStatus('erro', '<i class="bi bi-x-circle me-1"></i>erro ao salvar'));
+    }
+
     function salvarPctVenda(input) {
         const vendaId = input.dataset.vendaPct;
         if (!vendaId) return;
@@ -610,6 +643,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.dataset.vendaPct) {
                 clearTimeout(timers['v' + this.dataset.vendaPct]);
                 timers['v' + this.dataset.vendaPct] = setTimeout(() => salvarPctVenda(this), 600);
+            }
+
+            // Persistência do % padrão do veterinário
+            if (this.dataset.vetPct) {
+                clearTimeout(timers['x' + this.dataset.vetPct]);
+                timers['x' + this.dataset.vetPct] = setTimeout(() => salvarPctVet(this), 600);
             }
         });
     });
