@@ -193,11 +193,11 @@
 
         .tabela-medicacao td {
             border: 1px solid #aaa;
-            padding: 1.5mm 1mm;
+            padding: 0.6mm 1mm;
             font-size: 8pt;
             text-align: center;
             vertical-align: middle;
-            height: 8mm;
+            height: 5mm;
         }
 
         .tabela-medicacao td.col-medicacao {
@@ -237,7 +237,17 @@
 
         /* Linhas extras em branco */
         .linha-vazia td {
-            height: 7mm;
+            height: 5mm;
+        }
+
+        /* Mantém a ficha inteira em uma única folha ao imprimir. */
+        @media print {
+            html, body { height: auto; }
+            .ficha-wrapper { page-break-inside: avoid; break-inside: avoid; }
+            .tabela-medicacao,
+            .tabela-medicacao thead,
+            .tabela-medicacao tr,
+            .ficha-footer { page-break-inside: avoid; break-inside: avoid; }
         }
 
         /*  Controle de Parâmetros  */
@@ -311,12 +321,12 @@
 
         /*  Rodapé  */
         .ficha-footer {
-            margin-top: 3mm;
+            margin-top: 2mm;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
             border-top: 1px solid #aaa;
-            padding-top: 2mm;
+            padding-top: 1mm;
             font-size: 7pt;
             color: #666;
         }
@@ -456,8 +466,9 @@
 
             {# Linhas extras em branco para anotações manuais —
                serve para o veterinário escrever à mão medicações que o pet
-               já utiliza e ainda não estão cadastradas no sistema. #}
-            {% set linhas_extras = prescricoes|length < 15 ? 15 - prescricoes|length : 6 %}
+               já utiliza e ainda não estão cadastradas no sistema. Limite
+               calibrado para a ficha caber em uma folha A4 paisagem. #}
+            {% set linhas_extras = prescricoes|length < 10 ? 10 - prescricoes|length : 4 %}
             {% for i in 1..linhas_extras %}
                 <tr class="linha-vazia">
                     <td class="col-medicacao"></td>
