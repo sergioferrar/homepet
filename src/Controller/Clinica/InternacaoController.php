@@ -145,8 +145,15 @@ class InternacaoController extends DefaultController
             ->findByInternacao($id);
  
         // ── 3. Horários-grade que aparecem na ficha física ─────────────────
-        //      Ajuste aqui caso queira adicionar/remover colunas de horário.
-        $horasGrade = ['07h','08h','10h','11h','13h','14h','15h','16h','17h','18h','19h','20h','22h','23h','02h'];
+        // Grade completa de 24h: cobre todos os horários do dia e as madrugadas,
+        // começando às 07h (hora de abertura da clínica) e dando a volta até 06h.
+        $horasGrade = [];
+        for ($i = 7; $i <= 23; $i++) {
+            $horasGrade[] = str_pad((string) $i, 2, '0', STR_PAD_LEFT) . 'h';
+        }
+        for ($i = 0; $i <= 6; $i++) {
+            $horasGrade[] = str_pad((string) $i, 2, '0', STR_PAD_LEFT) . 'h';
+        }
  
         // ── 4. Mapeia execuções confirmadas por prescrição e hora ──────────
         //      Estrutura: execucoesPorPrescricao[prescricaoId] = ['07h', '13h', ...]
@@ -515,6 +522,79 @@ class InternacaoController extends DefaultController
             return $this->json([
                 'ok' => false,
                 'msg' => 'Erro interno: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Apaga uma prescrição por completo: a prescrição em si, todos os eventos
+     * (horários agendados) e todas as execuções (confirmações) que já foram
+     * registradas para ela. Útil quando o veterinário prescreveu errado e
+     * precisa refazer, mesmo depois de já ter administrado alguma dose.
+     *
+     * @Route("/internacao/{id}/prescricao/{prescricaoId}/apagar", name="clinica_internacao_prescricao_apagar", methods={"POST"})
+     */
+    public function apagarPrescricao(
+        int                    $id,
+        int                    $prescricaoId,
+        Request                $request,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        if (!$this->isCsrfTokenValid('prescricao_apagar_' . $prescricaoId, $request->get('_token'))) {
+            return $this->json(['ok' => false, 'msg' => 'Token inválido.'], 400);
+        }
+
+        $prescricao = $em->getRepository(InternacaoPrescricao::class)
+            ->findByIdAndInternacao($prescricaoId, $id);
+
+        if (!$prescricao) {
+            return $this->json(['ok' => false, 'msg' => 'Prescrição não encontrada.'], 404);
+        }
+
+        try {
+            // 1. Eventos (ou seja, horários agendados) desta prescrição.
+            $eventos = $em->getRepository(\App\Entity\InternacaoEvento::class)
+                ->createQueryBuilder('e')
+                ->where('e.internacaoId = :internacaoId')
+                ->andWhere('e.tipo = :tipo')
+                ->andWhere('e.titulo = :titulo')
+                ->setParameter('internacaoId', $id)
+                ->setParameter('tipo', 'prescricao')
+                ->setParameter('titulo', $prescricao->getMedicamento()->getNome())
+                ->getQuery()
+                ->getResult();
+
+            $eventoIds = array_map(fn($e) => $e->getId(), $eventos);
+
+            // 2. Execuções confirmadas associadas aos eventos.
+            if (!empty($eventoIds)) {
+                $em->getRepository(\App\Entity\InternacaoExecucao::class)
+                    ->createQueryBuilder('ex')
+                    ->delete()
+                    ->where('ex.prescricaoId IN (:ids)')
+                    ->setParameter('ids', $eventoIds)
+                    ->getQuery()
+                    ->execute();
+            }
+
+            // 3. Remove os eventos.
+            foreach ($eventos as $evento) {
+                $em->remove($evento);
+            }
+
+            // 4. Remove a própria prescrição.
+            $em->remove($prescricao);
+
+            $em->flush();
+
+            return $this->json(['ok' => true, 'msg' => 'Prescrição apagada.']);
+        } catch (\Throwable $e) {
+            return $this->json([
+                'ok'  => false,
+                'msg' => 'Erro ao apagar prescrição: ' . $e->getMessage(),
             ], 500);
         }
     }

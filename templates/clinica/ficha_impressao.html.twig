@@ -390,8 +390,14 @@
     {#  Tabela de Medicações  #}
     <div class="secao-data-dia">DATA DO DIA: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
 
-    {# Monta mapa de horários executados por prescrição #}
-    {% set horas_grade = ['07h','08h','10h','11h','13h','14h','15h','16h','17h','18h','19h','20h','22h','23h','02h'] %}
+    {# Grade de horários agora vem do controller com todas as 24 horas,
+       começando às 07h e virando a madrugada até 06h. Mantém fallback caso
+       o controller não a envie, por compatibilidade. #}
+    {% if horas_grade is not defined or horas_grade is empty %}
+        {% set horas_grade = [] %}
+        {% for i in 7..23 %}{% set horas_grade = horas_grade|merge(['%02dh'|format(i)]) %}{% endfor %}
+        {% for i in 0..6 %}{% set horas_grade = horas_grade|merge(['%02dh'|format(i)]) %}{% endfor %}
+    {% endif %}
 
     <table class="tabela-medicacao">
         <thead>
@@ -448,8 +454,10 @@
                 </tr>
             {% endfor %}
 
-            {# Linhas extras em branco para anotações manuais #}
-            {% set linhas_extras = prescricoes|length < 6 ? 6 - prescricoes|length : 2 %}
+            {# Linhas extras em branco para anotações manuais —
+               serve para o veterinário escrever à mão medicações que o pet
+               já utiliza e ainda não estão cadastradas no sistema. #}
+            {% set linhas_extras = prescricoes|length < 15 ? 15 - prescricoes|length : 6 %}
             {% for i in 1..linhas_extras %}
                 <tr class="linha-vazia">
                     <td class="col-medicacao"></td>
@@ -464,53 +472,6 @@
             {% endfor %}
         </tbody>
     </table>
-
-    {#  Controle de Parâmetros  #}
-    <div class="secao-titulo-parametros">Controle de Parâmetros</div>
-    <table class="tabela-parametros">
-        <thead>
-            <tr>
-                <th style="min-width:14mm">Horário</th>
-                <th style="min-width:18mm">Temp.</th>
-                <th style="min-width:14mm">PA</th>
-                <th style="min-width:20mm">Glicemia</th>
-                <th style="min-width:28mm">Alimentação</th>
-                <th style="min-width:22mm">Água</th>
-                <th style="min-width:22mm">Urina</th>
-                <th style="min-width:20mm">Fezes</th>
-                <th style="min-width:20mm">Limpeza</th>
-                <th>Obs</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for horario in ['07h', '13h', '19h', '23h'] %}
-                <tr>
-                    <td class="horario">{{ horario }}</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td class="obs-wide"></td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    {#  Observações  #}
-    <div class="secao-observacoes-label">OBSERVAÇÕES</div>
-    <div class="caixa-observacoes">
-        {% if internacao.anotacoes is not empty %}
-            <div class="obs-linha">{{ internacao.anotacoes|striptags }}</div>
-        {% else %}
-            <div class="obs-linha"></div>
-        {% endif %}
-        <div class="obs-linha"></div>
-        <div class="obs-linha"></div>
-    </div>
 
     {#  Rodapé  #}
     <div class="ficha-footer">

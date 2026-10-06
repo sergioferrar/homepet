@@ -509,6 +509,7 @@ body { background: var(--dp-bg); }
                                     <th>Medicamento</th>
                                     <th>Dose</th>
                                     <th>Frequência</th>
+                                    <th class="text-end" style="width:1%;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -522,10 +523,19 @@ body { background: var(--dp-bg); }
                                         </td>
                                         <td>{{ p.dose }}</td>
                                         <td>A cada {{ p.frequenciaHoras }}h por {{ p.duracaoDias }} dias</td>
+                                        <td class="text-end">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger btn-apagar-prescricao"
+                                                    title="Apagar prescrição (remove todos os horários e execuções)"
+                                                    data-url="{{ path('clinica_internacao_prescricao_apagar', {id: internacao.id, prescricaoId: p.id}) }}"
+                                                    data-token="{{ csrf_token('prescricao_apagar_' ~ p.id) }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 {% else %}
                                     <tr>
-                                        <td colspan="3" class="text-center text-muted py-3">
+                                        <td colspan="4" class="text-center text-muted py-3">
                                             <i class="bi bi-inbox me-1"></i>Nenhuma prescrição registrada.
                                         </td>
                                     </tr>
@@ -751,6 +761,22 @@ $(function () {
     }
 
     $('#prescricao-tab').on('click', function () { window.calendar && window.calendar.render(); });
+
+    // ── Apagar prescrição (mesmo com execuções lançadas) ──────────
+    $(document).on('click', '.btn-apagar-prescricao', function () {
+        const url = $(this).data('url');
+        const token = $(this).data('token');
+        if (!confirm('Apagar esta prescrição? Isso remove todos os horários agendados e as doses já administradas.')) return;
+
+        Utils.globalPostAjax(url, { _token: token }, function (r) {
+            if (r.ok) {
+                Notify.toast(r.msg || 'Prescrição apagada.', 'success');
+                window.location.reload();
+            } else {
+                Notify.toast(r.msg || 'Erro ao apagar.', 'danger');
+            }
+        });
+    });
 
 });
 </script>
