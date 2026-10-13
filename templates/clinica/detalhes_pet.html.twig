@@ -440,7 +440,14 @@
                                                 <option value="Consulta" selected>Consulta</option>
                                                 <option value="Retorno">Retorno</option>
                                                 <option value="Encaminhamento">Encaminhamento</option>
+                                                <option value="Solicitação de Raio X">Solicitação de Raio X</option>
+                                                <option value="Solicitação de Ultrassom">Solicitação de Ultrassom</option>
+                                                <option value="Solicitação de Cirurgia">Solicitação de Cirurgia</option>
+                                                <option value="Outro">Outro (digitar)</option>
                                             </select>
+                                            <input type="text" class="form-control mt-2 d-none" name="tipo_custom"
+                                                   id="atendimento-tipo-custom"
+                                                   placeholder="Digite o tipo de atendimento">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Veterinário</label>
@@ -672,6 +679,15 @@
                                                    target="_blank" rel="noopener"
                                                    title="Abrir a receita em PDF para imprimir ou salvar">
                                                     <i class="bi bi-file-earmark-pdf"></i> PDF
+                                                </a>
+                                            {% endif %}
+                                            {# PDF da solicitação (Raio X / Ultrassom / Cirurgia / Solicitação ...) #}
+                                            {% if item.id is defined and item.id and item.tipo is defined and item.tipo starts with 'Solicitação' %}
+                                                <a href="{{ path('clinica_solicitacao_pdf', {'id': item.id}) }}"
+                                                   class="btn btn-sm btn-outline-primary ms-1"
+                                                   target="_blank" rel="noopener"
+                                                   title="Abrir a solicitação em PDF para imprimir ou salvar">
+                                                    <i class="bi bi-printer"></i> Imprimir Solicitação
                                                 </a>
                                             {% endif %}
                                             <p class="text-muted d-none">{{ item.resumo|raw }}</p>
@@ -1468,7 +1484,15 @@ $(document).ready(function() {
     // ── ATENDIMENTO: toggle do campo de upload (Encaminhamento) ──
     const $tipoAtendimento = $('#atendimento-tipo');
     const $uploadWrapper = $('#encaminhamento-upload-wrapper');
+    const $tipoCustom = $('#atendimento-tipo-custom');
+
     $tipoAtendimento.on('change', function() {
+        const val = $(this).val();
+        if (val === 'Outro') {
+            $tipoCustom.removeClass('d-none').trigger('focus');
+        } else {
+            $tipoCustom.addClass('d-none').val('');
+        }
         if ($(this).val() === 'Encaminhamento') {
             $uploadWrapper.slideDown(150);
         } else {
@@ -1486,6 +1510,21 @@ $(document).ready(function() {
         // Sincroniza o conteúdo do editor Quill no input hidden antes de montar o FormData
         if (quillAtendimento) {
             $('#anamnese-input').val(JSON.stringify(quillAtendimento.getContents()));
+        }
+
+        // "Outro": substitui o valor enviado em tipo pelo texto digitado.
+        const $selTipo = $('#atendimento-tipo');
+        const $txtTipo = $('#atendimento-tipo-custom');
+        if ($selTipo.val() === 'Outro') {
+            const custom = ($txtTipo.val() || '').trim();
+            if (!custom) {
+                _atendimentoEmAndamento = false;
+                $txtTipo.focus();
+                Notify && Notify.toast ? Notify.toast('Informe o tipo de atendimento.', 'warning') : alert('Informe o tipo de atendimento.');
+                return;
+            }
+            // Substitui o option temporariamente para o FormData capturar o valor digitado.
+            $selTipo.find('option[value="Outro"]').attr('value', custom);
         }
 
         _atendimentoEmAndamento = true;
@@ -1520,6 +1559,11 @@ $(document).ready(function() {
             if (data.status === 'success') {
                 if (window.Notify && Notify.toast) {
                     Notify.toast(data.mensagem, 'success');
+                }
+                // Se o backend indicar um PDF para imprimir (solicitação), abre
+                // em outra aba e, em paralelo, atualiza a ficha.
+                if (data.print_url) {
+                    window.open(data.print_url, '_blank');
                 }
                 setTimeout(() => { window.location.href = data.redirect || window.location.href; }, 600);
             } else {

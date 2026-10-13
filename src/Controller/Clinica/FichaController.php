@@ -5,6 +5,7 @@ namespace App\Controller\Clinica;
 use App\Controller\DefaultController;
 use App\Entity\Cliente;
 use App\Entity\Consulta;
+use App\Entity\Estabelecimento;
 use App\Entity\Pet;
 use App\Entity\PesoPet;
 use App\Entity\Veterinario;
@@ -113,11 +114,21 @@ class FichaController extends DefaultController
                     ->salvarPetsAdicionais($baseId, $consultaId, (int) $baseId, $petsAdicionais);
             }
 
+            // Quando o atendimento é uma solicitação (Raio X, Ultrassom,
+            // Cirurgia ou outro tipo que comece com "Solicitação"), o front
+            // abre automaticamente o PDF em outra aba após salvar.
+            $tipoAtual = (string) $consulta->getTipo();
+            $printUrl = null;
+            if (stripos($tipoAtual, 'solicitação') === 0 || stripos($tipoAtual, 'solicitacao') === 0) {
+                $printUrl = $this->generateUrl('clinica_solicitacao_pdf', ['id' => $consultaId]);
+            }
+
             if ($isAjax) {
                 return $this->json([
                     'status' => 'success',
                     'mensagem' => 'Atendimento salvo com sucesso!',
                     'redirect' => $this->generateUrl('clinica_detalhes_pet', ['id' => $petId]),
+                    'print_url' => $printUrl,
                 ]);
             }
 
@@ -776,6 +787,170 @@ class FichaController extends DefaultController
         $gerarPDF->conteudo($conteudoHtml);
 
         return $gerarPDF->gerarInline();
+    }
+
+    /**
+     * Gera o PDF de "Solicitação" (Raio X, Ultrassom, Cirurgia ou outro
+     * tipo que comece com "Solicitação") a partir de um atendimento salvo.
+     *
+     * @Route("/consulta/{id}/solicitacao/pdf", name="clinica_solicitacao_pdf", methods={"GET"})
+     */
+    public function gerarSolicitacaoPdf(int $id): Response
+    {
+        $this->switchDB();
+        $baseId = $this->getIdBase();
+
+        $consulta = $this->getRepositorio(Consulta::class)->findConsultaCompletaById($baseId, $id);
+        if (!$consulta) {
+            throw $this->createNotFoundException('Atendimento não encontrado.');
+        }
+
+        $petId = (int) $consulta['pet_id'];
+        $pet = $this->getRepositorio(Pet::class)->findPetById($baseId, $petId);
+        if (!$pet) {
+            throw $this->createNotFoundException('Pet não encontrado.');
+        }
+
+        $donoId = $pet['dono_id'] ?? null;
+        $cliente = $donoId ? $this->getRepositorio(Cliente::class)->find((int) $donoId) : null;
+        $clienteNome = $cliente ? $cliente->getNome() : ($pet['dono_nome'] ?? 'Não informado');
+
+        // Dados da clínica ficam no banco principal.
+        $this->restauraLoginDB();
+        $clinica = $this->getRepositorio(Estabelecimento::class)->find($baseId);
+        $this->switchDB();
+
+        $vetId = $consulta['veterinario_id'] ?? null;
+        $vet = $vetId ? $this->getRepositorio(Veterinario::class)->find((int) $vetId) : null;
+
+        $esc = fn ($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES);
+        $ou  = function ($v) { $v = trim((string) ($v ?? '')); return $v !== '' ? $v : '—'; };
+
+        // Dados do tutor
+        $tutorNome  = $esc($ou($clienteNome));
+        $tutorCpf   = $esc($ou($cliente ? $cliente->getCpf() : ''));
+        $tutorTel   = $esc($ou($cliente ? $cliente->getTelefone() : ($pet['dono_telefone'] ?? '')));
+        $tutorEmail = $esc($ou($cliente ? $cliente->getEmail() : ($pet['dono_email'] ?? '')));
+
+        $enderecoPartes = [];
+        if ($cliente) {
+            $logradouro = trim(implode(' ', array_filter([
+                $cliente->getRua(), $cliente->getNumero(), $cliente->getComplemento(),
+            ])));
+            if ($logradouro !== '')      { $enderecoPartes[] = $logradouro; }
+            if ($cliente->getBairro())   { $enderecoPartes[] = $cliente->getBairro(); }
+            if ($cliente->getCidade())   { $enderecoPartes[] = $cliente->getCidade(); }
+            if ($cliente->getCep())      { $enderecoPartes[] = 'CEP: ' . $cliente->getCep(); }
+        }
+        $tutorEndereco = $esc($ou($enderecoPartes ? implode(' - ', $enderecoPartes) : ($pet['dono_endereco'] ?? '')));
+
+        // Dados do pet
+        $petNome    = $esc($ou($pet['nome'] ?? ''));
+        $petEspecie = $esc($ou($pet['especie'] ?? ''));
+        $petRaca    = $esc($ou($pet['raca'] ?? ''));
+        $petSexo    = $esc($ou($pet['sexo'] ?? ''));
+        $petPorte   = $esc($ou($pet['porte'] ?? ''));
+        $pesoRaw    = trim((string) ($pet['peso'] ?? ''));
+        $petPeso    = $esc($pesoRaw !== '' ? ($pesoRaw . ' kg') : '—');
+        $idadeRaw   = trim((string) ($pet['idade'] ?? ''));
+        $petIdade   = $esc($idadeRaw !== '' ? ($idadeRaw . (is_numeric($idadeRaw) ? ' ano(s)' : '')) : '—');
+
+        $tipoSolic = $esc($ou($consulta['tipo'] ?? 'Solicitação'));
+        $dataFmt   = !empty($consulta['data']) ? date('d/m/Y', strtotime($consulta['data'])) : date('d/m/Y');
+
+        // Corpo da solicitação: usa a anamnese (Delta → HTML) + observações.
+        $corpoHtml = $this->quillDeltaToHtml($consulta['anamnese'] ?? null);
+        if (!empty($consulta['observacoes'])) {
+            $corpoHtml .= '<p><strong>Observações:</strong> ' . nl2br($esc($consulta['observacoes'])) . '</p>';
+        }
+        if (trim(strip_tags($corpoHtml)) === '') {
+            $corpoHtml = '<p style="color:#666;"><em>Solicitação sem descrição registrada. Preencha a anamnese do atendimento.</em></p>';
+        }
+
+        $lblStyle = 'font-size:8px; text-transform:uppercase; letter-spacing:0.5px; color:#94A3B8;';
+        $valStyle = 'font-size:10.5px; color:#0F172A;';
+
+        $cabecalhoHtml = "
+<table width='100%' style='border-collapse:collapse;'>
+  <tr><td style='padding:0 0 7px 0; border-bottom:2px solid #0d6efd;'>
+    <table width='100%' style='border-collapse:collapse;'>
+      <tr>
+        <td style='width:48px; vertical-align:middle; padding-right:8px;'>
+          <table style='border-collapse:collapse;'><tr>
+            <td style='width:38px; height:38px; border:2px solid #0d6efd; border-radius:50%; text-align:center; vertical-align:middle; font-size:16px; font-weight:bold; color:#0d6efd;'>+</td>
+          </tr></table>
+        </td>
+        <td style='vertical-align:middle; text-align:left;'>
+          <span style='font-size:16px; font-weight:bold; color:#0F172A;'>" . $esc($clinica ? ($clinica->getRazaoSocial() ?? 'Clínica Veterinária') : 'Clínica Veterinária') . "</span><br>
+          <span style='font-size:10px; color:#475569;'>CNPJ: " . $esc($clinica ? ($clinica->getCnpj() ?? '') : '') . "</span>
+        </td>
+        <td style='vertical-align:middle; text-align:right; font-size:10px; color:#475569; line-height:1.6;'>
+          " . ($clinica && $clinica->getRua() ? $esc($clinica->getRua() . ', ' . $clinica->getNumero() . ' - ' . $clinica->getBairro()) : 'Endereço não informado') . "<br>
+          " . ($clinica && $clinica->getCidade() ? $esc($clinica->getCidade() . ' - CEP: ' . $clinica->getCep()) : '') . "
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+
+<p style='text-align:center; font-size:14px; font-weight:bold; letter-spacing:2px; color:#0d6efd; margin:8px 0 6px 0; text-transform:uppercase;'>{$tipoSolic}</p>
+
+<table width='100%' style='border-collapse:collapse; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px;'>
+  <tr>
+    <td style='width:50%; vertical-align:top; padding:7px 11px; border-right:1px solid #E2E8F0;'>
+      <div style='font-size:9px; font-weight:bold; letter-spacing:1px; color:#0d6efd; padding-bottom:3px;'>TUTOR</div>
+      <div><span style='{$lblStyle}'>Nome</span> <span style='{$valStyle}'>{$tutorNome}</span> &nbsp; <span style='{$lblStyle}'>CPF</span> <span style='{$valStyle}'>{$tutorCpf}</span></div>
+      <div><span style='{$lblStyle}'>Telefone</span> <span style='{$valStyle}'>{$tutorTel}</span></div>
+      <div><span style='{$lblStyle}'>E-mail</span> <span style='{$valStyle}'>{$tutorEmail}</span></div>
+      <div><span style='{$lblStyle}'>Endereço</span> <span style='{$valStyle}'>{$tutorEndereco}</span></div>
+    </td>
+    <td style='width:50%; vertical-align:top; padding:7px 11px;'>
+      <div style='font-size:9px; font-weight:bold; letter-spacing:1px; color:#0d6efd; padding-bottom:3px;'>PACIENTE</div>
+      <div><span style='{$lblStyle}'>Nome</span> <span style='{$valStyle}'>{$petNome}</span> &nbsp; <span style='{$lblStyle}'>Espécie</span> <span style='{$valStyle}'>{$petEspecie}</span></div>
+      <div><span style='{$lblStyle}'>Raça</span> <span style='{$valStyle}'>{$petRaca}</span> &nbsp; <span style='{$lblStyle}'>Sexo</span> <span style='{$valStyle}'>{$petSexo}</span> &nbsp; <span style='{$lblStyle}'>Porte</span> <span style='{$valStyle}'>{$petPorte}</span></div>
+      <div><span style='{$lblStyle}'>Idade</span> <span style='{$valStyle}'>{$petIdade}</span> &nbsp; <span style='{$lblStyle}'>Peso</span> <span style='{$valStyle}'>{$petPeso}</span></div>
+    </td>
+  </tr>
+</table>
+";
+
+        $vetNome = $vet ? $esc($vet->getNome()) : '—';
+        $vetCrmv = $vet ? $esc($vet->getCrmv() ?? '') : '';
+
+        $rodapeHtml = "
+<table width='100%' style='border-collapse:collapse; margin-top:4px;'>
+  <tr>
+    <td style='border-top:1px solid #E2E8F0; padding-top:8px; text-align:center;'>
+      <table style='margin:0 auto; border-collapse:collapse;'><tr>
+        <td style='border-top:1px solid #0F172A; padding-top:3px; text-align:center; min-width:220px;'>
+          <span style='font-size:8px; text-transform:uppercase; letter-spacing:1px; color:#94A3B8;'>Médico(a)-Veterinário(a)</span><br>
+          <span style='font-size:11px; font-weight:bold; color:#0F172A;'>{$vetNome}</span>
+          <span style='font-size:9.5px; color:#475569;'> &nbsp;CRMV: {$vetCrmv}</span>
+        </td>
+      </tr></table>
+    </td>
+  </tr>
+  <tr><td style='text-align:center; padding-top:4px; font-size:8px; color:#94A3B8;'>Solicitação emitida em {$dataFmt}</td></tr>
+</table>";
+
+        $conteudoHtml = '
+            <div style="font-family: Arial, sans-serif; font-size:13px; line-height:1.6; color:#333;">
+                ' . $cabecalhoHtml . '
+                <div style="margin-top:12px;">' . $corpoHtml . '</div>
+            </div>
+        ';
+
+        $nomePet = preg_replace('/[^a-zA-Z0-9]/', '_', (string) $pet['nome']);
+        $sufixo  = date('Ymd_His');
+
+        $pdf = new \App\Service\GeradorpdfService($this->tempDirManager, $this->requestStack);
+        $pdf->configuracaoPagina('A4', 10, 10, 10, 26, 8, 8);
+        $pdf->setNomeArquivo('Solicitacao_' . $nomePet . '_' . $sufixo . '.pdf');
+        $pdf->setRodape($rodapeHtml);
+        $pdf->addPagina('P');
+        $pdf->conteudo($conteudoHtml);
+
+        return $pdf->gerarInline();
     }
 
     /**
