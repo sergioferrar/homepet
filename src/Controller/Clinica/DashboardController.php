@@ -352,6 +352,10 @@ class DashboardController extends DefaultController
         $data['documentos'] = $documentos;
         $data['consultas'] = $consultas;
         $data['total_debitos'] = $totalDebitos;
+        $data['credito_cliente'] = $pet['dono_id']
+            ? $this->getRepositorio(\App\Entity\ClienteCreditoMovimento::class)
+                ->saldoDoCliente($baseId, (int) $pet['dono_id'])
+            : 0.0;
         $data['servicos_clinica'] = $servicosClinica;
         $data['internacao_ativa_id'] = $internacaoAtivaId;
         $data['ultima_internacao_id'] = $ultimaInternacaoId;

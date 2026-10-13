@@ -2,6 +2,7 @@
 namespace App\Controller\Clinica;
 
 use App\Controller\DefaultController;
+use App\Entity\ClienteCreditoMovimento;
 use App\Entity\Financeiro;
 use App\Entity\FinanceiroPendente;
 use App\Entity\Pet;
@@ -272,6 +273,47 @@ class VendaController extends DefaultController
             // 3️⃣ Atualiza total da venda
             $vendaRepo->atualizarTotal($baseId, $vendaId, $valorTotal);
 
+            // ── Crédito: consumir e gerar quando aplicável ───────────────
+            $creditoRepo = $this->getRepositorio(ClienteCreditoMovimento::class);
+            $clienteIdNum = isset($pet['dono_id']) && $pet['dono_id'] ? (int) $pet['dono_id'] : null;
+
+            $usarCredito      = (float) str_replace(',', '.', (string) $request->get('usar_credito', 0));
+            $deixarCredito    = (float) str_replace(',', '.', (string) $request->get('deixar_credito', 0));
+            $valorAbatido     = 0.0;
+
+            if ($clienteIdNum && $usarCredito > 0 && $metodoPagamento !== 'pendente') {
+                $saldo = $creditoRepo->saldoDoCliente($baseId, $clienteIdNum);
+                $valorAbatido = min(round($usarCredito, 2), round($saldo, 2), $valorTotal);
+
+                if ($valorAbatido > 0) {
+                    $creditoRepo->inserir(
+                        $baseId,
+                        $clienteIdNum,
+                        $petIdFromRequest,
+                        'saida',
+                        $valorAbatido,
+                        'Abatido na venda #' . $vendaId,
+                        'venda',
+                        (int) $vendaId,
+                        null
+                    );
+                }
+            }
+
+            $valorFinanceiro = round($valorTotal - $valorAbatido, 2);
+
+            // 3.1 Se usou crédito, ajusta o total da venda para o valor efetivo,
+            //     para quando ela for carregada no PDV aparecer já descontada.
+            //     Guarda também o abate na observação para rastreabilidade.
+            if ($valorAbatido > 0) {
+                $vendaRepo->atualizarTotal($baseId, $vendaId, $valorFinanceiro);
+                $vendaRepo->atualizarObservacao($baseId, $vendaId, sprintf(
+                    'Crédito aplicado: R$ %s (original R$ %s)',
+                    number_format($valorAbatido, 2, ',', '.'),
+                    number_format($valorTotal, 2, ',', '.')
+                ));
+            }
+
             // 4️⃣ Registra no financeiro — dentro da mesma transação DBAL
             $descricaoFinanceiro = sprintf(
                 'Venda Clínica - Pet: %s (#%d)',
@@ -280,18 +322,33 @@ class VendaController extends DefaultController
             );
 
             if ($metodoPagamento === 'pendente') {
-                // FinanceiroPendente via repository (SQL nativo)
-                $financeiroPendenteRepo->inserirVendaClinica($baseId, $descricaoFinanceiro, $valorTotal, (int) $vendaId);
-            } else {
-                // Financeiro (pago) via repository (SQL nativo) — substitui persist()/flush()
+                if ($valorFinanceiro > 0) {
+                    $financeiroPendenteRepo->inserirVendaClinica($baseId, $descricaoFinanceiro, $valorFinanceiro, (int) $vendaId);
+                }
+            } elseif ($valorFinanceiro > 0) {
                 $financeiroRepo->inserirEntrada($baseId, [
                     'descricao'        => $descricaoFinanceiro,
-                    'valor'            => $valorTotal,
+                    'valor'            => $valorFinanceiro,
                     'metodo_pagamento' => $metodoPagamento,
                     'origem'           => 'clinica',
                     'status'           => 'Pago',
                     'tipo'             => 'ENTRADA',
                 ]);
+            }
+
+            // Deixar troco como crédito do cliente, quando solicitado.
+            if ($clienteIdNum && $deixarCredito > 0 && $metodoPagamento !== 'pendente') {
+                $creditoRepo->inserir(
+                    $baseId,
+                    $clienteIdNum,
+                    $petIdFromRequest,
+                    'entrada',
+                    round($deixarCredito, 2),
+                    'Crédito gerado na venda #' . $vendaId,
+                    'venda',
+                    (int) $vendaId,
+                    null
+                );
             }
 
             // ── Commit único da transação (todas as escritas usam a mesma conexão)

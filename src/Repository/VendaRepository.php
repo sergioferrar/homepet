@@ -297,6 +297,23 @@ class VendaRepository extends ServiceEntityRepository
     }
 
     /**
+     * Adiciona uma anotação ao final da observação atual da venda.
+     * Preserva o que o usuário já havia escrito.
+     */
+    public function atualizarObservacao(int $baseId, int $vendaId, string $texto): void
+    {
+        $sql = "UPDATE homepet_{$baseId}.venda
+                SET observacao = TRIM(CONCAT(COALESCE(observacao, ''), CASE WHEN COALESCE(observacao, '') = '' THEN '' ELSE '\n' END, :texto))
+                WHERE id = :id AND estabelecimento_id = :estab";
+
+        $this->conn->executeStatement($sql, [
+            'texto' => $texto,
+            'id'    => $vendaId,
+            'estab' => $baseId,
+        ]);
+    }
+
+    /**
      * Busca uma venda pelo ID dentro do estabelecimento.
      */
     public function buscarPorId(int $baseId, int $vendaId): ?array

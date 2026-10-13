@@ -152,27 +152,44 @@ class PdvController extends DefaultController
         // 4. Monta payload de itens para a sessão
         $itensNormalizados = $this->normalizarItensDaVenda($em, $itensEntities);
 
-        // 5. Resolve nome do cliente e pet
+        // Se o total gravado for menor que a soma dos subtotais, significa que
+        // um crédito foi aplicado antes. Mantém a diferença como desconto para
+        // o PDV não cobrar o valor cheio.
+        $somaSubtotais = array_sum(array_column($itensNormalizados, 'subtotal'));
+        $descontoCredito = max(0.0, round($somaSubtotais - (float) $venda->getTotal(), 2));
+
+        // 5. Resolve nome do cliente e pet (e localiza o cliente_id para crédito)
         $nomeCliente = $venda->getCliente() ?? 'Consumidor Final';
         $petId = $venda->getPetId();
         $nomePet = null;
+        $clienteId = null;
+        $creditoDisponivel = 0.0;
 
         if ($petId) {
             $pet = $em->getRepository(Pet::class)->find($petId);
             if ($pet) {
                 $nomePet = $pet->getNome();
+                $clienteId = method_exists($pet, 'getDono_Id') ? $pet->getDono_Id() : null;
             }
+        }
+
+        if ($clienteId) {
+            $creditoDisponivel = $this->getRepositorio(\App\Entity\ClienteCreditoMovimento::class)
+                ->saldoDoCliente($estabelecimentoId, (int) $clienteId);
         }
 
         // 6. Grava tudo na sessão — o PDV lê via Twig/JS
         $session->set('pdv_venda_pre_carregada', [
             'venda_id' => $venda->getId(),
             'cliente_nome' => $nomeCliente,
+            'cliente_id' => $clienteId,
             'pet_id' => $petId,
             'pet_nome' => $nomePet,
             'itens' => $itensNormalizados,
             'total' => $venda->getTotal(),
             'observacao' => $venda->getObservacao(),
+            'credito_disponivel' => round($creditoDisponivel, 2),
+            'desconto_credito' => $descontoCredito,
         ]);
 
         $this->addFlash('success', sprintf(
@@ -488,6 +505,12 @@ class PdvController extends DefaultController
             $metodo = $dados['metodo_pagamento'] ?? '';
             $bandeira = $dados['bandeira_cartao'] ?? null;
             $parcelas = !empty($dados['parcelas']) ? (int) $dados['parcelas'] : null;
+            $usarCreditoReq = isset($dados['usar_credito'])
+                ? (float) str_replace(',', '.', (string) $dados['usar_credito'])
+                : 0.0;
+            $deixarCreditoReq = isset($dados['deixar_credito'])
+                ? (float) str_replace(',', '.', (string) $dados['deixar_credito'])
+                : 0.0;
  
             // Formas de pagamento divididas (opcional)
             $pagamentos = [];
@@ -561,37 +584,76 @@ class PdvController extends DefaultController
                 }
             }
  
-            // ✅ CORREÇÃO: REGISTRA NO FINANCEIRO APENAS AQUI (uma única vez)
+            // ── Aplica crédito do cliente, quando solicitado e disponível ─
+            $totalVenda = (float) $venda['total'];
+            $valorCreditoAbatido = 0.0;
+            $clienteIdVenda = null;
+
+            if ($usarCreditoReq > 0 && $metodo !== 'pendente' && !empty($venda['pet_id'])) {
+                $pet = $this->getRepositorio(Pet::class)->find((int) $venda['pet_id']);
+                $clienteIdVenda = $pet && method_exists($pet, 'getDono_Id') ? $pet->getDono_Id() : null;
+
+                if ($clienteIdVenda) {
+                    $creditoRepo = $this->getRepositorio(\App\Entity\ClienteCreditoMovimento::class);
+                    $saldo = $creditoRepo->saldoDoCliente($estabelecimentoId, (int) $clienteIdVenda);
+                    $valorCreditoAbatido = min(round($usarCreditoReq, 2), round($saldo, 2), round($totalVenda, 2));
+
+                    if ($valorCreditoAbatido > 0) {
+                        $creditoRepo->inserir(
+                            $estabelecimentoId,
+                            (int) $clienteIdVenda,
+                            isset($venda['pet_id']) ? (int) $venda['pet_id'] : null,
+                            'saida',
+                            $valorCreditoAbatido,
+                            'Abatido na venda #' . $id . ' (PDV)',
+                            'venda',
+                            (int) $id,
+                            null
+                        );
+                    }
+                }
+            }
+
+            $totalEfetivo = round($totalVenda - $valorCreditoAbatido, 2);
+
+            // Se o crédito cobriu tudo, não precisa gerar lançamento no financeiro.
             // Determina status final e registra no financeiro
             if ($metodo === 'pendente') {
                 $statusFinal = 'Pendente';
                 // Venda que já estava Pendente já tem o lançamento em financeiropendente:
                 // não cria um segundo.
-                if (($venda['status'] ?? null) !== 'Pendente') {
+                if (($venda['status'] ?? null) !== 'Pendente' && $totalEfetivo > 0) {
                     $fpRepo->inserirPdv(
                         $estabelecimentoId,
                         $venda['cliente'] ?? 'Consumidor Final',
-                        (float) $venda['total'],
+                        $totalEfetivo,
                         isset($venda['pet_id']) ? (int) $venda['pet_id'] : null,
                         $id
                     );
                 }
             } else {
                 $statusFinal = 'Paga';
- 
+
                 if (!empty($pagamentos)) {
-                    // Um lançamento no financeiro por forma (relatórios corretos)
-                    // e registra cada forma em venda_pagamento.
+                    // Pagamento dividido: a soma pode ser maior que o totalEfetivo
+                    // (quando o crédito foi usado). Lança as formas pelo valor
+                    // efetivo, proporcionalmente, para o financeiro não inflar.
+                    $somaPagamentos = max(array_sum(array_column($pagamentos, 'valor')), 0.01);
                     foreach ($pagamentos as $p) {
-                        $vendaRepo->inserirFinanceiro(
-                            $estabelecimentoId,
-                            $p['metodo'],
-                            (float) $p['valor'],
-                            $venda['cliente'] ?? 'Consumidor Final',
-                            $venda['pet_id'] ?? null,
-                            $id,
-                            $dataVenda
-                        );
+                        $valorProporcional = $totalEfetivo > 0
+                            ? round(((float) $p['valor'] / $somaPagamentos) * $totalEfetivo, 2)
+                            : 0.0;
+                        if ($valorProporcional > 0) {
+                            $vendaRepo->inserirFinanceiro(
+                                $estabelecimentoId,
+                                $p['metodo'],
+                                $valorProporcional,
+                                $venda['cliente'] ?? 'Consumidor Final',
+                                $venda['pet_id'] ?? null,
+                                $id,
+                                $dataVenda
+                            );
+                        }
                         $vendaRepo->inserirPagamento(
                             $estabelecimentoId,
                             $id,
@@ -602,11 +664,11 @@ class PdvController extends DefaultController
                             $dataVenda
                         );
                     }
-                } else {
+                } elseif ($totalEfetivo > 0) {
                     $vendaRepo->inserirFinanceiro(
                         $estabelecimentoId,
                         $metodo,
-                        (float) $venda['total'],
+                        $totalEfetivo,
                         $venda['cliente'] ?? 'Consumidor Final',
                         $venda['pet_id'] ?? null,
                         $id,
@@ -633,6 +695,28 @@ class PdvController extends DefaultController
                 ], 500);
             }
  
+            // Troco como crédito: registra entrada quando o caixa escolhe
+            // reservar o excedente ao invés de devolver em dinheiro.
+            if ($deixarCreditoReq > 0 && $metodo === 'dinheiro' && !empty($venda['pet_id'])) {
+                $pet = $pet ?? $this->getRepositorio(Pet::class)->find((int) $venda['pet_id']);
+                $clienteIdVenda = $clienteIdVenda ?? ($pet && method_exists($pet, 'getDono_Id') ? $pet->getDono_Id() : null);
+
+                if ($clienteIdVenda) {
+                    $creditoRepo = $this->getRepositorio(\App\Entity\ClienteCreditoMovimento::class);
+                    $creditoRepo->inserir(
+                        $estabelecimentoId,
+                        (int) $clienteIdVenda,
+                        (int) $venda['pet_id'],
+                        'entrada',
+                        round($deixarCreditoReq, 2),
+                        'Troco guardado como crédito na venda #' . $id,
+                        'venda',
+                        (int) $id,
+                        null
+                    );
+                }
+            }
+
             // Venda que estava PENDENTE e agora foi paga: o lançamento em
             // financeiropendente sai da lista de pendentes (o valor já entrou em
             // financeiro como 'Pago' acima).

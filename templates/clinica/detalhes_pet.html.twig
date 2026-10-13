@@ -150,15 +150,32 @@
                             {% if pet.dono_nome %}<span class="dp-owner-id">#{{ pet.dono_id }}</span>{% endif %}
                         </div>
                     </div>
-                    {% if pet.dono_id %}
-                        <a href="{{ path('cliente_editar', {'id': pet.dono_id}) }}"
-                           target="_blank" rel="noopener"
-                           class="btn btn-sm btn-outline-secondary"
-                           title="Editar dados do tutor">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                    {% endif %}
+                    <div class="d-flex align-items-center gap-2">
+                        {% if pet.dono_id %}
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-success"
+                                    id="btn-adicionar-credito"
+                                    data-cliente-id="{{ pet.dono_id }}"
+                                    data-pet-id="{{ pet.id }}"
+                                    title="Adicionar crédito ao cliente">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                            <a href="{{ path('cliente_editar', {'id': pet.dono_id}) }}"
+                               target="_blank" rel="noopener"
+                               class="btn btn-sm btn-outline-secondary"
+                               title="Editar dados do tutor">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
+                {% if credito_cliente|default(0) > 0 %}
+                    <div class="mt-2">
+                        <span class="badge bg-success">
+                            <i class="bi bi-piggy-bank me-1"></i>Crédito disponível: R$ {{ credito_cliente|number_format(2, ',', '.') }}
+                        </span>
+                    </div>
+                {% endif %}
                 <div class="dp-owner-body">
                     <div class="dp-info-row">
                         <span class="dp-info-label"><i class="bi bi-telephone me-1"></i>Tel.</span>
@@ -774,6 +791,11 @@
                                                                         {% if v.metodo_pagamento %}{{ v.metodo_pagamento|metodoPagamento|raw }}{% else %}<span class="badge bg-warning text-dark">Pendente</span>{% endif %}
                                                                     </small>
                                                                 </p>
+                                                                {% if v.observacao and 'Crédito aplicado' in v.observacao %}
+                                                                    <div class="small text-success mb-2">
+                                                                        <i class="bi bi-piggy-bank me-1"></i>{{ v.observacao|nl2br }}
+                                                                    </div>
+                                                                {% endif %}
                                                                 <div class="border rounded-3 p-2 bg-light">
                                                                     {% for vitem in v.itens|default([]) %}
                                                                         <div class="d-flex justify-content-between align-items-center mb-1">
@@ -1032,6 +1054,24 @@
         </div>
         <div class="mb-3"><label for="servico-data" class="form-label">Data</label><input type="date" class="form-control" id="servico-data" name="data" value="{{ "now"|date("Y-m-d") }}"></div>
         <div class="mb-3"><label for="servico-observacao" class="form-label">Observação</label><textarea class="form-control" id="servico-observacao" name="observacao" rows="2"></textarea></div>
+
+        {% if pet.dono_id %}
+            <div class="mb-3 border rounded p-2 bg-light" id="bloco-credito-venda" data-cliente-id="{{ pet.dono_id }}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong><i class="bi bi-piggy-bank me-1"></i>Crédito do cliente</strong>
+                        <span class="text-muted small">Saldo: R$ <span id="credito-saldo">{{ credito_cliente|default(0)|number_format(2, ',', '.') }}</span></span>
+                    </div>
+                    <div class="form-check form-check-inline m-0">
+                        <input type="checkbox" class="form-check-input" id="chk-usar-credito">
+                        <label for="chk-usar-credito" class="form-check-label small">Usar crédito nesta venda</label>
+                    </div>
+                </div>
+                <input type="hidden" name="usar_credito" id="input-usar-credito" value="0">
+                <small class="text-muted d-block mt-1" id="credito-info">Marque para abater automaticamente o crédito disponível do total.</small>
+            </div>
+        {% endif %}
+
         <input type="hidden" name="origem" value="clinica">
         <input type="hidden" name="pet_id" value="{{ pet.id }}">
     </div>
@@ -1045,6 +1085,35 @@
 </form>
 </div>
 </div>
+
+{# ══ MODAL ADICIONAR CRÉDITO ══ #}
+{% if pet.dono_id %}
+<div class="modal fade" id="modalAdicionarCredito" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-piggy-bank me-2"></i>Adicionar crédito</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Valor (R$)</label>
+                    <input type="number" min="0.01" step="0.01" class="form-control" id="credito-valor" placeholder="0,00">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descrição</label>
+                    <input type="text" class="form-control" id="credito-descricao" placeholder="Ex.: Pagamento adiantado">
+                </div>
+                <div class="small text-muted">O crédito ficará disponível para abater em pagamentos futuros deste cliente.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btn-salvar-credito"><i class="bi bi-check-lg me-1"></i>Adicionar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 {# ══ MODAL CONFIRMAÇÃO ══ #}
 <div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-hidden="true">
@@ -2162,6 +2231,66 @@ document.getElementById('pdvIframe').addEventListener('load', function () {
     const loading = document.getElementById('pdvLoadingOverlay');
     if (loading) {
         loading.style.display = 'none';
+    }
+});
+
+// ===== Crédito do cliente =====
+$(document).ready(function () {
+    const $btnAdd       = $('#btn-adicionar-credito');
+    const $modalCredito = $('#modalAdicionarCredito');
+    const $saldoBadge   = $('#credito-saldo');
+    const $inputUsar    = $('#input-usar-credito');
+    const $chkUsar      = $('#chk-usar-credito');
+    const $info         = $('#credito-info');
+
+    const saldoAtual = () => parseFloat(($saldoBadge.text() || '0').replace(/\./g, '').replace(',', '.')) || 0;
+
+    // ── Marcar/desmarcar "usar crédito" aplica no hidden ─────────────
+    $chkUsar.on('change', function () {
+        const saldo = saldoAtual();
+        $inputUsar.val(this.checked ? saldo : 0);
+        if (!this.checked) {
+            $info.text('Marque para abater automaticamente o crédito disponível do total.');
+            return;
+        }
+        $info.html('<i class="bi bi-check2 me-1 text-success"></i>Será abatido até R$ ' + saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' do total.');
+    });
+
+    // ── Abrir modal de adicionar crédito ─────────────────────────────
+    if ($btnAdd.length && $modalCredito.length) {
+        const bsModal = new bootstrap.Modal($modalCredito[0]);
+        $btnAdd.on('click', () => bsModal.show());
+
+        $('#btn-salvar-credito').on('click', function () {
+            const clienteId = $btnAdd.data('cliente-id');
+            const petId     = $btnAdd.data('pet-id');
+            const valor     = parseFloat(($('#credito-valor').val() || '0').toString().replace(',', '.'));
+            const descricao = $('#credito-descricao').val() || 'Crédito avulso';
+
+            if (!(valor > 0)) {
+                Notify && Notify.toast ? Notify.toast('Informe um valor válido.', 'warning') : alert('Informe um valor válido.');
+                return;
+            }
+
+            fetch("{{ path('clinica_credito_adicionar', {'clienteId': '__ID__'}) }}".replace('__ID__', clienteId), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ valor: valor, descricao: descricao, pet_id: petId })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const saldoFmt = Number(data.saldo).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                    $saldoBadge.text(saldoFmt);
+                    bsModal.hide();
+                    if (Notify && Notify.toast) Notify.toast('Crédito adicionado.', 'success');
+                    setTimeout(() => location.reload(), 400);
+                } else {
+                    alert(data.mensagem || 'Erro ao adicionar crédito.');
+                }
+            })
+            .catch(() => alert('Erro ao adicionar crédito.'));
+        });
     }
 });
 
