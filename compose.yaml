@@ -1,21 +1,54 @@
-version: '3'
-
 services:
-###> doctrine/doctrine-bundle ###
-  database:
-    image: postgres:${POSTGRES_VERSION:-16}-alpine
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      # You should definitely change the password in production
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
+  php:
+    image: php:8.3-apache
+    container_name: symfony_php
+    ports:
+      - "8081:80"
+    working_dir: /var/www/html
     volumes:
-      - database_data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
+      - ./:/var/www/html
+    environment:
+      APP_ENV: prod
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM php:8.3-apache
 
-volumes:
-###> doctrine/doctrine-bundle ###
-  database_data:
-###< doctrine/doctrine-bundle ###
+        RUN apt-get update && apt-get install -y \
+            git \
+            unzip \
+            curl \
+            libicu-dev \
+            libzip-dev \
+            libpng-dev \
+            libjpeg62-turbo-dev \
+            libfreetype6-dev \
+            && docker-php-ext-configure gd \
+                --with-freetype \
+                --with-jpeg \
+            && docker-php-ext-install -j$(nproc) \
+                pdo_mysql \
+                intl \
+                zip \
+                opcache \
+                gd \
+            && a2enmod rewrite headers \
+            && apt-get clean \
+            && rm -rf /var/lib/apt/lists/*
+
+        COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+        RUN printf '%s\n' \
+            '<VirtualHost *:80>' \
+            '    DocumentRoot /var/www/html/public' \
+            '    <Directory /var/www/html/public>' \
+            '        AllowOverride All' \
+            '        Require all granted' \
+            '        Options FollowSymLinks' \
+            '        DirectoryIndex index.php' \
+            '    </Directory>' \
+            '    ErrorLog ${APACHE_LOG_DIR}/error.log' \
+            '    CustomLog ${APACHE_LOG_DIR}/access.log combined' \
+            '</VirtualHost>' \
+            > /etc/apache2/sites-available/000-default.conf
