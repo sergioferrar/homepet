@@ -2,15 +2,14 @@
 
 namespace App\Entity;
 
-use App\Repository\ClienteCreditoMovimentoRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\ClienteCreditoMovimentoRepository;
 
 /**
  * Movimento de crédito do cliente (entrada ou consumo).
  * O saldo é sempre calculado via SOMA no repositório.
  *
  * @ORM\Entity(repositoryClass=ClienteCreditoMovimentoRepository::class)
- * @ORM\Table(name="cliente_credito_movimento")
  */
 class ClienteCreditoMovimento
 {

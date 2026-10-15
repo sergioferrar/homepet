@@ -8,12 +8,6 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
-    App\Repository\ClienteCreditoMovimentoRepository:
-        autowire: true
-        autoconfigure: true
-        public: true # <--- ISSO VAI IMPEDIR QUE ELE SEJA INLINED/REMOVIDO
-        tags: ['doctrine.repository_service']
-
     App\:
         resource: '../src/'
         exclude:

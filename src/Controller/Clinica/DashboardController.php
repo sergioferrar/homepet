@@ -354,8 +354,7 @@ class DashboardController extends DefaultController
         $data['total_debitos'] = $totalDebitos;
         if($pet['dono_id']){
             $data['credito_cliente'] = $this->getRepositorio(\App\Entity\ClienteCreditoMovimento::class)
-                ->saldoDoCliente($baseId, (int) $pet['dono_id'])['saldo'];
-            dd($data['credito_cliente']);
+                ->saldoDoCliente($baseId, (int) $pet['dono_id']);
         } else {
             $data['credito_cliente'] = 0.0;
         }

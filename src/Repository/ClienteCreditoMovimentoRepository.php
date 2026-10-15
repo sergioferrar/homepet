@@ -27,25 +27,17 @@ class ClienteCreditoMovimentoRepository extends ServiceEntityRepository
                 ), 0) AS saldo
                 FROM homepet_{$baseId}.cliente_credito_movimento
                 WHERE estabelecimento_id = :estab AND cliente_id = :cliente";
-        
-        $query = $this->conn->executeQuery($sql, [
-            'estab'   => $baseId,
+
+        $saldo = $this->conn->executeQuery($sql, [
+            'estab' => $baseId,
             'cliente' => $clienteId,
-        ]);
-        return $query->fetchAssociative();
+        ])->fetchOne();
+
+        return (float) $saldo;
     }
 
-    public function inserir(
-        int $baseId,
-        int $clienteId,
-        ?int $petId,
-        string $tipo,
-        float $valor,
-        ?string $descricao,
-        ?string $origem,
-        ?int $origemId,
-        ?int $usuarioId
-    ): void {
+    public function inserir(int $baseId, int $clienteId, ?int $petId, string $tipo, float $valor, ?string $descricao, ?string $origem, ?int $origemId, ?int $usuarioId): void
+    {
         if ($valor <= 0 || !in_array($tipo, ['entrada', 'saida'], true)) {
             return;
         }
@@ -58,14 +50,14 @@ class ClienteCreditoMovimentoRepository extends ServiceEntityRepository
                      :descricao, :origem, :origem_id, NOW(), :criado_por)";
 
         $this->conn->executeStatement($sql, [
-            'estab'      => $baseId,
-            'cliente'    => $clienteId,
-            'pet'        => $petId,
-            'tipo'       => $tipo,
-            'valor'      => $valor,
-            'descricao'  => $descricao,
-            'origem'     => $origem,
-            'origem_id'  => $origemId,
+            'estab' => $baseId,
+            'cliente' => $clienteId,
+            'pet' => $petId,
+            'tipo' => $tipo,
+            'valor' => $valor,
+            'descricao' => $descricao,
+            'origem' => $origem,
+            'origem_id' => $origemId,
             'criado_por' => $usuarioId,
         ]);
     }
