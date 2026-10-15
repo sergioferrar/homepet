@@ -27,11 +27,11 @@ class ClienteCreditoMovimentoRepository extends ServiceEntityRepository
                 ), 0) AS saldo
                 FROM homepet_{$baseId}.cliente_credito_movimento
                 WHERE estabelecimento_id = :estab AND cliente_id = :cliente";
-
-        return (float) $this->conn->fetchOne($sql, [
+        $query = $this->conn->executeQuery($sql, [
             'estab'   => $baseId,
             'cliente' => $clienteId,
         ]);
+        return $query->fetchAssociative();
     }
 
     public function inserir(

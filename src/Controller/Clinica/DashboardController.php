@@ -352,6 +352,12 @@ class DashboardController extends DefaultController
         $data['documentos'] = $documentos;
         $data['consultas'] = $consultas;
         $data['total_debitos'] = $totalDebitos;
+        if($pet['dono_id']){
+            $data['credito_cliente'] = $this->getRepositorio(\App\Entity\ClienteCreditoMovimento::class)
+                ->saldoDoCliente($baseId, (int) $pet['dono_id'])['saldo'];
+        } else {
+
+        }
         $data['credito_cliente'] = $pet['dono_id']
             ? $this->getRepositorio(\App\Entity\ClienteCreditoMovimento::class)
                 ->saldoDoCliente($baseId, (int) $pet['dono_id'])['saldo']
