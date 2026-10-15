@@ -27,6 +27,7 @@ class ClienteCreditoMovimentoRepository extends ServiceEntityRepository
                 ), 0) AS saldo
                 FROM homepet_{$baseId}.cliente_credito_movimento
                 WHERE estabelecimento_id = :estab AND cliente_id = :cliente";
+        
         $query = $this->conn->executeQuery($sql, [
             'estab'   => $baseId,
             'cliente' => $clienteId,
