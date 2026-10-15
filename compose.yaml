@@ -1,7 +1,7 @@
 services:
   php:
     image: php:8.3-apache
-    container_name: symfony_php
+    container_name: symfony_php_homepet
     ports:
       - "8081:80"
     working_dir: /var/www/html
