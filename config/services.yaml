@@ -8,9 +8,6 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
-    App\Repository\ClienteCreditoMovimentoRepository:
-        autowire: true
-        tags: ['doctrine.repository_service']
 
     App\:
         resource: '../src/'
