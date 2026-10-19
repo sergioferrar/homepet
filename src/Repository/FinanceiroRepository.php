@@ -288,15 +288,27 @@ return $financeiro; // Retorna um objeto válido
         return $result->fetchAssociative();
     }
 
-    public function lucroDiario($baseId)
+    /**
+     * Receita diária para o gráfico da home.
+     * Considera apenas os últimos $dias dias (incluindo hoje), agrupa por DIA
+     * (e não por datetime) e ignora vendas que não geraram receita.
+     */
+    public function lucroDiario($baseId, int $dias = 30): array
     {
-        $sql = "SELECT SUM(total) as valor, data
-        FROM homepet_{$baseId}.venda
-        WHERE estabelecimento_id = '{$baseId}'
-        GROUP BY data";
+        $inicio = (new \DateTime('today'))->modify('-' . ($dias - 1) . ' days')->format('Y-m-d 00:00:00');
 
-        $query = $this->conn->query($sql);
-        return $query->fetchAll();
+        $sql = "SELECT DATE(data) AS data, SUM(total) AS valor
+                FROM homepet_{$baseId}.venda
+                WHERE estabelecimento_id = :baseId
+                  AND data >= :inicio
+                  AND status NOT IN ('Inativa', 'Pendente', 'Carrinho', 'Cancelada')
+                GROUP BY DATE(data)
+                ORDER BY DATE(data) ASC";
+
+        return $this->conn->executeQuery($sql, [
+            'baseId' => $baseId,
+            'inicio' => $inicio,
+        ])->fetchAllAssociative();
     }
 
     public function verificaPagamentoExistente($baseId, $petId, $valor, $dataReferencia): bool

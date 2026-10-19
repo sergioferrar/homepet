@@ -68,11 +68,21 @@ class HomeController extends DefaultController
         $data['assinatura_expirada'] = $assinaturaExpirada;
         $data['aviso_expiracao'] = $avisoExpiracao;
 
+        // Últimos 30 dias, preenchendo com 0 os dias sem venda
+        $porDia = [];
+        foreach ($valores as $valor) {
+            $porDia[$valor['data']] = round((float) $valor['valor'], 2);
+        }
+
         $values = [];
         $dates = [];
-        foreach ($valores as $valor) {
-            $values[] = $valor['valor'];
-            $dates[] = $valor['data'];
+        $inicio = new \DateTime('today');
+        $inicio->modify('-29 days');
+        for ($i = 0; $i < 30; $i++) {
+            $dia = $inicio->format('Y-m-d');
+            $dates[] = $dia;
+            $values[] = $porDia[$dia] ?? 0;
+            $inicio->modify('+1 day');
         }
 
         $data['valores'] = json_encode($values);
