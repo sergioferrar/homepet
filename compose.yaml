@@ -1,19 +1,52 @@
 services:
-  php:
-    image: php:8.3-apache
-    container_name: symfony_php_homepet
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: always
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # Redirecionamento automático de HTTP (80) para HTTPS (443) global no Traefik
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      # Configuração do ACME (Certbot integrado do Traefik)
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=seu-email@exemplo.com" # <- Mude para seu e-mail
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
       - "443:443"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - web
+
+  php:
+    image: php:8.3-apache
+    container_name: symfony_php_homepet
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
-      # Volumes compartilhados para o Certbot injetar os certificados no Apache
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/www/certbot
     environment:
       APP_ENV: prod
     restart: unless-stopped
+    # Roteamento do Traefik para este contêiner
+    labels:
+      - "traefik.enable=true"
+      # Mude para o seu domínio real abaixo:
+      - "traefik.http.routers.symfony.rule=Host(`seu-dominio.com`) || Host(`://seu-dominio.com`)"
+      - "traefik.http.routers.symfony.entrypoints=websecure"
+      - "traefik.http.routers.symfony.tls=true"
+      - "traefik.http.routers.symfony.tls.certresolver=myresolver"
+      # Indica ao Traefik que o Apache interno escuta na porta 80
+      - "traefik.http.services.symfony.loadbalancer.server.port=80"
+    networks:
+      - web
     build:
       context: .
       dockerfile_inline: |
@@ -31,69 +64,33 @@ services:
             && docker-php-ext-configure gd \
                 --with-freetype \
                 --with-jpeg \
-            && docker-php-ext-install -j$(nproc) \
+            && docker-php-ext-install -j\$(nproc) \
                 pdo_mysql \
                 intl \
                 zip \
                 opcache \
                 gd \
-            # Ativa os módulos rewrite, headers, ssl e o cache necessário para o SSL funcionar
-            && a2enmod rewrite headers ssl socache_shmcb \
+            && a2enmod rewrite headers \
             && apt-get clean \
-            && rm -rf /var/lib/apt/lists/*
+            rm -rf /var/lib/apt/lists/*
 
         COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-        # Configuração do Apache incluindo a rota HTTP (com desafio do Certbot) e a rota HTTPS do Symfony
+        # O Apache volta a ser simples: apenas escuta na porta 80 interna do container
         RUN printf '%s\n' \
             '<VirtualHost *:80>' \
             '    DocumentRoot /var/www/html/public' \
-            '    ' \
-            '    # Rota para validação do Certbot' \
-            '    Alias /.well-known/acme-challenge/ "/var/www/certbot/.well-known/acme-challenge/"' \
-            '    <Directory "/var/www/certbot/.well-known/acme-challenge/">' \
-            '        Options None' \
-            '        AllowOverride None' \
-            '        Require all granted' \
-            '    </Directory>' \
-            '    ' \
             '    <Directory /var/www/html/public>' \
             '        AllowOverride All' \
             '        Require all granted' \
             '        Options FollowSymLinks' \
             '        DirectoryIndex index.php' \
             '    </Directory>' \
-            '    ErrorLog $${APACHE_LOG_DIR}/error.log' \
-            '    CustomLog $${APACHE_LOG_DIR}/access.log combined' \
-            '</VirtualHost>' \
-            ' ' \
-            '<VirtualHost *:443>' \
-            '    DocumentRoot /var/www/html/public' \
-            '    ' \
-            '    SSLEngine on' \
-            '    # Mude "seu-dominio.com" para o seu domínio real quando for rodar o comando do Certbot' \
-            '    SSLCertificateFile "/etc/letsencrypt/live/://seu-dominio.com"' \
-            '    SSLCertificateKeyFile "/etc/letsencrypt/live/://seu-dominio.com"' \
-            '    ' \
-            '    <Directory /var/www/html/public>' \
-            '        AllowOverride All' \
-            '        Require all granted' \
-            '        Options FollowSymLinks' \
-            '        DirectoryIndex index.php' \
-            '    </Directory>' \
-            '    ErrorLog $${APACHE_LOG_DIR}/error.log' \
-            '    CustomLog $${APACHE_LOG_DIR}/access.log combined' \
+            '    ErrorLog \${APACHE_LOG_DIR}/error.log' \
+            '    CustomLog \${APACHE_LOG_DIR}/access.log combined' \
             '</VirtualHost>' \
             > /etc/apache2/sites-available/000-default.conf
 
-  certbot:
-    image: certbot/certbot:latest
-    volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/www/certbot
-    # Loop para tentar renovar o certificado automaticamente de 12 em 12 horas
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
-
-volumes:
-  certbot-etc:
-  certbot-var:
+networks:
+  web:
+    name: web
