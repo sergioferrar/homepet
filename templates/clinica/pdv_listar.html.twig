@@ -49,9 +49,29 @@
         </div>
         <hr>
 
+        {# Barra de seleção: aparece quando há vendas marcadas #}
+        <div id="barraSelecao" class="alert alert-primary d-none align-items-center justify-content-between flex-wrap gap-2 shadow-sm"
+             style="position: sticky; top: 0; z-index: 10;" role="status">
+            <div>
+                <i class="bi bi-check2-square me-1"></i>
+                <strong id="selQtd">0</strong> venda(s) selecionada(s) —
+                <span id="selCliente" class="fw-semibold"></span>
+                <span class="mx-1">•</span>
+                Total: <strong id="selTotal">R$ 0,00</strong>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" id="btnLimparSelecao" class="btn btn-outline-secondary btn-sm">Limpar</button>
+                <button type="button" id="btnLancarSelecionadas" class="btn btn-success btn-sm">
+                    <i class="bi bi-cash-stack me-1"></i>Lançar selecionadas no Caixa
+                </button>
+            </div>
+        </div>
+        <div id="avisoSelecao" class="alert alert-warning py-2 d-none" role="alert"></div>
+
         <table id="tabelaVendas" class="table table-striped table-hover align-middle">
             <thead class="table-light">
             <tr>
+                <th class="text-center" style="width:40px" title="Selecionar para lançar várias vendas juntas no caixa"><i class="bi bi-check2-square"></i></th>
                 <th>#ID</th>
                 <th>Data</th>
                 <th>Cliente</th>
@@ -65,6 +85,17 @@
             <tbody>
             {% for v in vendas %}
                 <tr>
+                    <td class="text-center">
+                        {% if v.status in ['Aberta', 'Pendente'] %}
+                            <input type="checkbox" class="form-check-input chk-venda"
+                                   value="{{ v.id }}"
+                                   data-total="{{ v.total }}"
+                                   data-grupo="{{ (v.petId ?: '0') ~ '|' ~ (v.cliente|lower|trim) }}"
+                                   data-cliente="{{ v.cliente }}"
+                                   data-pet="{{ v.petNome ?: '—' }}"
+                                   aria-label="Selecionar venda {{ v.id }}">
+                        {% endif %}
+                    </td>
                     <td>{{ v.id }}</td>
                     <td>{{ v.data|date('d/m/Y H:i') }}</td>
                     <td>{{ v.cliente }}</td>
@@ -98,7 +129,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">
+                    <td colspan="9" class="text-center text-muted py-4">
                         <i class="bi bi-inbox fs-4 d-block mb-2"></i>
                         Nenhuma venda encontrada.
                     </td>
@@ -126,10 +157,102 @@
                     responsive: true,
                     // Coluna "Ações" não entra na ordenação nem na busca
                     columnDefs: [
-                        { orderable: false, searchable: false, targets: -1 }
+                        { orderable: false, searchable: false, targets: [0, -1] }
                     ]
                 });
             }
+
+            // ==================== SELEÇÃO DE VÁRIAS VENDAS ====================
+            // A seleção fica guardada aqui (e não no DOM) para sobreviver à
+            // paginação e à busca do DataTables.
+            var selecionadas = {};   // id => { centavos, grupo, cliente, pet }
+            var urlLote = '{{ path("pdv_carregar_lote") }}';
+            var ficha = {{ app.request.query.get('ficha') ? 'true' : 'false' }};
+
+            function formatarReais(centavos) {
+                return 'R$ ' + (centavos / 100).toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2, maximumFractionDigits: 2
+                });
+            }
+
+            function grupoAtual() {
+                var ids = Object.keys(selecionadas);
+                return ids.length ? selecionadas[ids[0]].grupo : null;
+            }
+
+            function avisar(msg) {
+                var $a = $('#avisoSelecao');
+                if (!msg) { $a.addClass('d-none').text(''); return; }
+                $a.removeClass('d-none').text(msg);
+                clearTimeout(avisar._t);
+                avisar._t = setTimeout(function () { $a.addClass('d-none'); }, 6000);
+            }
+
+            function atualizarBarra() {
+                var ids = Object.keys(selecionadas);
+                var total = 0;
+                ids.forEach(function (id) { total += selecionadas[id].centavos; });
+
+                $('#selQtd').text(ids.length);
+                $('#selTotal').text(formatarReais(total));
+
+                if (ids.length) {
+                    var ref = selecionadas[ids[0]];
+                    $('#selCliente').text(ref.cliente + (ref.pet !== '—' ? ' / ' + ref.pet : ''));
+                    $('#barraSelecao').removeClass('d-none').addClass('d-flex');
+                } else {
+                    $('#barraSelecao').addClass('d-none').removeClass('d-flex');
+                }
+            }
+
+            // Ao trocar de página/filtrar, remarca os checkboxes que estavam selecionados
+            function remarcarVisiveis() {
+                $('#tabelaVendas .chk-venda').each(function () {
+                    $(this).prop('checked', !!selecionadas[this.value]);
+                });
+            }
+            $('#tabelaVendas').on('draw.dt', remarcarVisiveis);
+
+            $('#tabelaVendas').on('change', '.chk-venda', function () {
+                var $chk = $(this);
+                var id = this.value;
+
+                if (!this.checked) {
+                    delete selecionadas[id];
+                    atualizarBarra();
+                    return;
+                }
+
+                // Só agrupa vendas do mesmo cliente e do mesmo pet
+                var grupo = grupoAtual();
+                if (grupo !== null && grupo !== $chk.data('grupo')) {
+                    this.checked = false;
+                    avisar('Só é possível selecionar vendas do mesmo cliente e do mesmo pet. Limpe a seleção para escolher outro.');
+                    return;
+                }
+
+                selecionadas[id] = {
+                    centavos: Math.round(parseFloat($chk.data('total')) * 100) || 0,
+                    grupo: $chk.data('grupo'),
+                    cliente: String($chk.data('cliente')),
+                    pet: String($chk.data('pet'))
+                };
+                avisar('');
+                atualizarBarra();
+            });
+
+            $('#btnLimparSelecao').on('click', function () {
+                selecionadas = {};
+                remarcarVisiveis();
+                atualizarBarra();
+            });
+
+            $('#btnLancarSelecionadas').on('click', function () {
+                var ids = Object.keys(selecionadas);
+                if (!ids.length) { return; }
+                var url = urlLote + '?ids=' + ids.join(',') + (ficha ? '&ficha=1' : '');
+                window.location.href = url;
+            });
         });
     </script>
     {% endif %}

@@ -208,6 +208,458 @@ class PdvController extends DefaultController
     }
 
     /**
+     * Carrega VÁRIAS vendas da clínica no PDV de uma só vez (agrupadas).
+     *
+     * Usado pela listagem de vendas: o usuário marca as vendas do mesmo
+     * cliente/pet, os itens são agrupados num único carrinho e o total é a
+     * soma das vendas. Ao finalizar, todas são baixadas por pdv_finalizar_lote.
+     *
+     * @Route("/carregar-lote", name="pdv_carregar_lote", methods={"GET"})
+     */
+    public function carregarVendasEmLote(
+        EntityManagerInterface $em,
+        Request $request
+    ): Response {
+        $this->switchDB();
+        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+        $session = $request->getSession();
+
+        // Aceita ids=1,2,3 ou ids[]=1&ids[]=2
+        $bruto = $request->query->all()['ids'] ?? [];
+        if (is_string($bruto)) {
+            $bruto = explode(',', $bruto);
+        }
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', (array) $bruto),
+            static fn (int $i): bool => $i > 0
+        )));
+
+        $paramsListar = $request->get('ficha') ? ['ficha' => true] : [];
+
+        if (count($ids) === 0) {
+            $this->addFlash('warning', 'Selecione ao menos uma venda para lançar no caixa.');
+            return $this->redirectToRoute('clinica_pdv_listar', $paramsListar);
+        }
+
+        if (count($ids) > 50) {
+            $this->addFlash('warning', 'Selecione no máximo 50 vendas por vez.');
+            return $this->redirectToRoute('clinica_pdv_listar', $paramsListar);
+        }
+
+        // Uma venda só: segue o fluxo de sempre
+        if (count($ids) === 1) {
+            return $this->redirectToRoute('pdv_carregar', ['id' => $ids[0]] + $paramsListar);
+        }
+
+        // Mesmos status que pdv_finalizar_carrinho aceita
+        $statusPermitidos = ['Aberta', 'Pendente'];
+
+        $vendas = [];
+        foreach ($ids as $id) {
+            $venda = $em->getRepository(Venda::class)->findOneBy([
+                'id' => $id,
+                'estabelecimentoId' => $estabelecimentoId,
+            ]);
+
+            if (!$venda) {
+                $this->addFlash('danger', sprintf('Venda #%d não encontrada. Nada foi carregado.', $id));
+                return $this->redirectToRoute('clinica_pdv_listar', $paramsListar);
+            }
+
+            if (!in_array($venda->getStatus(), $statusPermitidos, true)) {
+                $this->addFlash('warning', sprintf(
+                    'A venda #%d não pode ser lançada no caixa (status: %s). Nada foi carregado.',
+                    $venda->getId(),
+                    $venda->getStatus()
+                ));
+                return $this->redirectToRoute('clinica_pdv_listar', $paramsListar);
+            }
+
+            $vendas[] = $venda;
+        }
+
+        // Todas precisam ser do mesmo cliente e do mesmo pet
+        $petId = $vendas[0]->getPetId() ? (int) $vendas[0]->getPetId() : null;
+        $nomeCliente = $vendas[0]->getCliente() ?? 'Consumidor Final';
+        $chaveCliente = mb_strtolower(trim((string) $nomeCliente));
+
+        foreach ($vendas as $venda) {
+            $petDaVenda = $venda->getPetId() ? (int) $venda->getPetId() : null;
+            $clienteDaVenda = mb_strtolower(trim((string) ($venda->getCliente() ?? 'Consumidor Final')));
+
+            if ($petDaVenda !== $petId || $clienteDaVenda !== $chaveCliente) {
+                $this->addFlash('warning', 'Só é possível agrupar vendas do mesmo cliente e do mesmo pet. Nada foi carregado.');
+                return $this->redirectToRoute('clinica_pdv_listar', $paramsListar);
+            }
+        }
+
+        // Junta os itens de todas as vendas
+        $todosItens = [];
+        $totalGeral = 0.0;
+        $descontoCredito = 0.0;
+        $observacoes = [];
+
+        foreach ($vendas as $venda) {
+            $itensEntities = $em->getRepository(VendaItem::class)->findBy(['vendaId' => $venda->getId()]);
+            $itensVenda = $this->normalizarItensDaVenda($em, $itensEntities);
+
+            // Crédito abatido antes (mesma regra do carregamento individual)
+            $somaSubtotais = array_sum(array_column($itensVenda, 'subtotal'));
+            $descontoCredito += max(0.0, round($somaSubtotais - (float) $venda->getTotal(), 2));
+
+            $totalGeral += (float) $venda->getTotal();
+            array_push($todosItens, ...$itensVenda);
+
+            $obs = trim((string) $venda->getObservacao());
+            if ($obs !== '' && !in_array($obs, $observacoes, true)) {
+                $observacoes[] = $obs;
+            }
+        }
+
+        // Agrupa linhas idênticas (mesmo tipo, nome e valor unitário) somando as quantidades
+        $agrupados = [];
+        foreach ($todosItens as $item) {
+            $chave = $item['tipo'] . '|' . $item['nome'] . '|' . number_format((float) $item['valor_unitario'], 2, '.', '');
+
+            if (!isset($agrupados[$chave])) {
+                $agrupados[$chave] = $item;
+                continue;
+            }
+
+            $agrupados[$chave]['quantidade'] += $item['quantidade'];
+            $agrupados[$chave]['subtotal'] = round($agrupados[$chave]['subtotal'] + $item['subtotal'], 2);
+            $agrupados[$chave]['desconto'] = round($agrupados[$chave]['desconto'] + $item['desconto'], 2);
+        }
+        $itensAgrupados = array_values($agrupados);
+
+        // Pet e crédito do cliente (mesma lógica do carregamento individual)
+        $nomePet = null;
+        $clienteId = null;
+        $creditoDisponivel = 0.0;
+
+        if ($petId) {
+            $pet = $em->getRepository(Pet::class)->find($petId);
+            if ($pet) {
+                $nomePet = $pet->getNome();
+                $clienteId = method_exists($pet, 'getDono_Id') ? $pet->getDono_Id() : null;
+            }
+        }
+
+        if ($clienteId) {
+            $creditoDisponivel = $this->getRepositorio(\App\Entity\ClienteCreditoMovimento::class)
+                ->saldoDoCliente($estabelecimentoId, (int) $clienteId);
+        }
+
+        $idsVendas = array_map(static fn (Venda $v): int => (int) $v->getId(), $vendas);
+
+        $session->set('pdv_venda_pre_carregada', [
+            // venda_id (a primeira) mantém compatível tudo que já lê esse campo no PDV
+            'venda_id' => $idsVendas[0],
+            'venda_ids' => $idsVendas,
+            'cliente_nome' => $nomeCliente,
+            'cliente_id' => $clienteId,
+            'pet_id' => $petId,
+            'pet_nome' => $nomePet,
+            'itens' => $itensAgrupados,
+            'total' => round($totalGeral, 2),
+            'observacao' => $observacoes ? implode(' | ', $observacoes) : null,
+            'credito_disponivel' => round($creditoDisponivel, 2),
+            'desconto_credito' => round($descontoCredito, 2),
+        ]);
+
+        $this->addFlash('success', sprintf(
+            '%d vendas agrupadas no PDV (%s). Revise os itens e finalize.',
+            count($idsVendas),
+            '#' . implode(', #', $idsVendas)
+        ));
+
+        $dataRequest = ['vendaId' => $idsVendas[0]];
+        if ($request->get('ficha')) {
+            $dataRequest['ficha'] = true;
+        }
+
+        return $this->redirectToRoute('clinica_pdv_index', $dataRequest);
+    }
+
+    /**
+     * Finaliza várias vendas de uma vez, com um único pagamento (PDV agrupado).
+     *
+     * Reaproveita finalizarCarrinho() para cada venda, então financeiro,
+     * pagamentos, crédito, baixa de pendentes e NFS-e seguem exatamente as
+     * mesmas regras da finalização individual. Antes de começar, tudo é
+     * validado: se algo estiver errado, nenhuma venda é alterada.
+     *
+     * @Route("/carrinho/finalizar-lote", name="pdv_finalizar_lote", methods={"POST"})
+     */
+    public function finalizarLote(
+        Request $request,
+        AsaasNotaFiscalService $asaas
+    ): JsonResponse {
+        $this->switchDB();
+        $vendaRepo = $this->getRepositorio(Venda::class);
+
+        try {
+            $contentType = $request->headers->get('Content-Type', '');
+            $dados = str_contains($contentType, 'application/json')
+                ? (json_decode($request->getContent(), true) ?? [])
+                : $request->request->all();
+
+            $ids = array_values(array_unique(array_filter(
+                array_map('intval', (array) ($dados['ids'] ?? [])),
+                static fn (int $i): bool => $i > 0
+            )));
+
+            if (count($ids) === 0 || count($ids) > 50) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'mensagem' => 'Informe de 1 a 50 vendas para finalizar.',
+                ], 400);
+            }
+
+            $metodo = $dados['metodo_pagamento'] ?? '';
+            $bandeira = $dados['bandeira_cartao'] ?? null;
+            $parcelas = !empty($dados['parcelas']) ? (int) $dados['parcelas'] : null;
+            $usarCredito = isset($dados['usar_credito'])
+                ? (float) str_replace(',', '.', (string) $dados['usar_credito'])
+                : 0.0;
+            $deixarCredito = isset($dados['deixar_credito'])
+                ? (float) str_replace(',', '.', (string) $dados['deixar_credito'])
+                : 0.0;
+
+            // Pagamento dividido (opcional) — mesma normalização de finalizarCarrinho()
+            $pagamentos = [];
+            foreach ($dados['pagamentos'] ?? [] as $p) {
+                $m = trim((string) ($p['metodo'] ?? ''));
+                $v = (float) ($p['valor'] ?? 0);
+                if ($m === '' || $v <= 0) {
+                    continue;
+                }
+                $pagamentos[] = [
+                    'metodo'   => $m,
+                    'valor'    => round($v, 2),
+                    'bandeira' => !empty($p['bandeira']) ? (string) $p['bandeira'] : null,
+                    'parcelas' => !empty($p['parcelas']) ? (int) $p['parcelas'] : null,
+                ];
+            }
+
+            foreach ($pagamentos as $p) {
+                if ($p['metodo'] === 'pendente') {
+                    return new JsonResponse([
+                        'status' => 'error',
+                        'mensagem' => 'Pagamento dividido não pode incluir a forma "Pendente".',
+                    ], 400);
+                }
+            }
+
+            if (empty($pagamentos) && empty($metodo)) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'mensagem' => 'Método de pagamento não informado.',
+                ], 400);
+            }
+
+            // Valida a data antes de mexer em qualquer venda
+            $dataVendaStr = is_string($dados['data_venda'] ?? null) ? $dados['data_venda'] : null;
+            try {
+                DataVendaRetroativa::resolver($dataVendaStr);
+            } catch (\InvalidArgumentException $e) {
+                return new JsonResponse(['status' => 'error', 'mensagem' => $e->getMessage()], 400);
+            }
+
+            $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+
+            // Todas as vendas precisam existir e estar abertas/pendentes
+            $vendas = [];
+            foreach ($ids as $id) {
+                $venda = $vendaRepo->findVendaCarrinho($estabelecimentoId, $id);
+                if (!$venda) {
+                    return new JsonResponse([
+                        'status' => 'error',
+                        'mensagem' => 'Venda #' . $id . ' não encontrada ou já finalizada. Nenhuma venda foi alterada.',
+                    ], 404);
+                }
+                $vendas[$id] = $venda;
+            }
+
+            // Mesmo cliente e mesmo pet
+            $primeira = reset($vendas);
+            $petRef = !empty($primeira['pet_id']) ? (int) $primeira['pet_id'] : null;
+            $clienteRef = mb_strtolower(trim((string) ($primeira['cliente'] ?? '')));
+            foreach ($vendas as $venda) {
+                $petVenda = !empty($venda['pet_id']) ? (int) $venda['pet_id'] : null;
+                $clienteVenda = mb_strtolower(trim((string) ($venda['cliente'] ?? '')));
+                if ($petVenda !== $petRef || $clienteVenda !== $clienteRef) {
+                    return new JsonResponse([
+                        'status' => 'error',
+                        'mensagem' => 'As vendas precisam ser do mesmo cliente e do mesmo pet. Nenhuma venda foi alterada.',
+                    ], 400);
+                }
+            }
+
+            $totais = [];
+            foreach ($vendas as $id => $venda) {
+                $totais[$id] = (float) $venda['total'];
+            }
+            $totalGrupo = array_sum($totais);
+
+            if (!empty($pagamentos)) {
+                $soma = array_sum(array_column($pagamentos, 'valor'));
+                // Compara em centavos para não depender de arredondamento de float
+                if ((int) round($soma * 100) < (int) round($totalGrupo * 100)) {
+                    return new JsonResponse([
+                        'status' => 'error',
+                        'mensagem' => 'A soma das formas (R$ ' . number_format($soma, 2, ',', '.')
+                            . ') é menor que o total das vendas (R$ ' . number_format($totalGrupo, 2, ',', '.') . ').',
+                    ], 400);
+                }
+            }
+
+            $pagamentosPorVenda = !empty($pagamentos)
+                ? $this->ratearPagamentosEntreVendas($pagamentos, $totais)
+                : [];
+
+            // Finaliza uma a uma, reaproveitando a lógica existente
+            $finalizadas = [];
+            $falhas = [];
+            $avisos = [];
+            $restanteCredito = max(0.0, round($usarCredito, 2));
+            $ultimoId = array_key_last($totais);
+
+            foreach ($totais as $id => $totalVenda) {
+                $creditoDestaVenda = min($restanteCredito, $totalVenda);
+                $restanteCredito = round($restanteCredito - $creditoDestaVenda, 2);
+
+                $payload = [
+                    'metodo_pagamento' => $metodo,
+                    'bandeira_cartao'  => $bandeira,
+                    'parcelas'         => $parcelas,
+                    'pagamentos'       => $pagamentosPorVenda[$id] ?? [],
+                    'data_venda'       => $dataVendaStr,
+                    'usar_credito'     => $creditoDestaVenda,
+                    // o troco guardado como crédito entra uma única vez, na última venda
+                    'deixar_credito'   => $id === $ultimoId ? $deixarCredito : 0,
+                ];
+
+                $subRequest = new Request([], [], [], [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($payload));
+                $resposta = $this->finalizarCarrinho($subRequest, (int) $id, $asaas);
+                $corpo = json_decode($resposta->getContent(), true) ?: [];
+
+                if (($corpo['status'] ?? null) === 'success') {
+                    $finalizadas[] = (int) $id;
+
+                    if (isset($corpo['nota_fiscal']['emitida']) && $corpo['nota_fiscal']['emitida'] === false) {
+                        $avisos[] = 'NFS-e da venda #' . $id . ' não foi emitida: ' . ($corpo['nota_fiscal']['erro'] ?? 'erro desconhecido');
+                    }
+                    continue;
+                }
+
+                $falhas[] = [
+                    'id' => (int) $id,
+                    'mensagem' => $corpo['mensagem'] ?? 'Erro ao finalizar a venda.',
+                ];
+                $this->logger->error('Falha ao finalizar venda em lote no PDV.', [
+                    'venda_id' => $id,
+                    'lote' => array_keys($totais),
+                    'erro' => $corpo['mensagem'] ?? null,
+                ]);
+                break; // para na primeira falha; as demais continuam abertas
+            }
+
+            if (empty($falhas)) {
+                return new JsonResponse([
+                    'status' => 'success',
+                    'mensagem' => count($finalizadas) . ' vendas finalizadas com sucesso!',
+                    'finalizadas' => $finalizadas,
+                    'avisos' => $avisos,
+                ]);
+            }
+
+            $pendentesDeFinalizar = array_values(array_diff(array_keys($totais), $finalizadas));
+
+            return new JsonResponse([
+                'status' => empty($finalizadas) ? 'error' : 'partial',
+                'mensagem' => empty($finalizadas)
+                    ? 'Não foi possível finalizar as vendas: ' . $falhas[0]['mensagem']
+                    : 'Foram finalizadas as vendas #' . implode(', #', $finalizadas)
+                        . '. A venda #' . $falhas[0]['id'] . ' falhou (' . $falhas[0]['mensagem'] . ')'
+                        . ' e as vendas #' . implode(', #', array_diff($pendentesDeFinalizar, [$falhas[0]['id']]) ?: ['—'])
+                        . ' continuam abertas. Selecione-as novamente na listagem.',
+                'finalizadas' => $finalizadas,
+                'falhas' => $falhas,
+                'avisos' => $avisos,
+            ], empty($finalizadas) ? 500 : 200);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'mensagem' => 'Erro ao finalizar vendas: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Distribui as formas de pagamento informadas entre as vendas do lote,
+     * preenchendo uma venda por vez (em centavos, sem perder nem criar valor).
+     * Qualquer excedente (ex.: dinheiro acima do total) vai para a última venda.
+     *
+     * @param array<int, array{metodo:string, valor:float, bandeira:?string, parcelas:?int}> $pagamentos
+     * @param array<int, float> $totais id da venda => total
+     * @return array<int, array<int, array{metodo:string, valor:float, bandeira:?string, parcelas:?int}>>
+     */
+    private function ratearPagamentosEntreVendas(array $pagamentos, array $totais): array
+    {
+        $restante = [];
+        foreach ($pagamentos as $i => $p) {
+            $restante[$i] = (int) round($p['valor'] * 100);
+        }
+
+        $resultado = [];
+        $indice = 0;
+        $totalFormas = count($pagamentos);
+
+        foreach ($totais as $vendaId => $total) {
+            $falta = (int) round($total * 100);
+            $resultado[$vendaId] = [];
+
+            while ($falta > 0 && $indice < $totalFormas) {
+                if ($restante[$indice] <= 0) {
+                    $indice++;
+                    continue;
+                }
+
+                $usa = min($falta, $restante[$indice]);
+                $resultado[$vendaId][] = [
+                    'metodo'   => $pagamentos[$indice]['metodo'],
+                    'valor'    => $usa / 100,
+                    'bandeira' => $pagamentos[$indice]['bandeira'],
+                    'parcelas' => $pagamentos[$indice]['parcelas'],
+                ];
+                $restante[$indice] -= $usa;
+                $falta -= $usa;
+
+                if ($restante[$indice] <= 0) {
+                    $indice++;
+                }
+            }
+        }
+
+        // Sobra de pagamento (excedente) acompanha a última venda
+        $ultimoId = array_key_last($totais);
+        for ($i = $indice; $i < $totalFormas; $i++) {
+            if ($restante[$i] > 0) {
+                $resultado[$ultimoId][] = [
+                    'metodo'   => $pagamentos[$i]['metodo'],
+                    'valor'    => $restante[$i] / 100,
+                    'bandeira' => $pagamentos[$i]['bandeira'],
+                    'parcelas' => $pagamentos[$i]['parcelas'],
+                ];
+            }
+        }
+
+        return $resultado;
+    }
+
+    /**
      * Registra nova venda
      *
      * @Route("/registrar", name="clinica_pdv_registrar", methods={"POST"})

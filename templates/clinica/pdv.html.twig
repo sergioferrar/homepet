@@ -384,8 +384,14 @@
                     {% if vendaPreCarregada is not null and vendaPreCarregada.venda_id is defined %}
                         <div class="alert alert-info py-2 mb-2 text-center small">
                             <i class="bi bi-info-circle me-1"></i>
-                            Finalizando Venda <strong>#{{ vendaPreCarregada.venda_id }}</strong>
-                            — apenas o método de pagamento será atualizado.
+                            {% if vendaPreCarregada.venda_ids is defined and vendaPreCarregada.venda_ids|length > 1 %}
+                                Finalizando <strong>{{ vendaPreCarregada.venda_ids|length }} vendas agrupadas</strong>
+                                (#{{ vendaPreCarregada.venda_ids|join(', #') }})
+                                — todas serão baixadas com este pagamento.
+                            {% else %}
+                                Finalizando Venda <strong>#{{ vendaPreCarregada.venda_id }}</strong>
+                                — apenas o método de pagamento será atualizado.
+                            {% endif %}
                         </div>
                         {% if vendaPreCarregada.credito_disponivel is defined and vendaPreCarregada.credito_disponivel > 0 %}
                             <div class="alert alert-success py-2 mb-2 small" id="banner-credito-pdv"
@@ -401,7 +407,11 @@
                             </div>
                         {% endif %}
                         <button id="btnSalvarVenda" class="btn btn-success w-100">
-                            <i class="bi bi-check-circle"></i> Finalizar Venda #{{ vendaPreCarregada.venda_id }}
+                            {% if vendaPreCarregada.venda_ids is defined and vendaPreCarregada.venda_ids|length > 1 %}
+                                <i class="bi bi-check-circle"></i> Finalizar {{ vendaPreCarregada.venda_ids|length }} Vendas
+                            {% else %}
+                                <i class="bi bi-check-circle"></i> Finalizar Venda #{{ vendaPreCarregada.venda_id }}
+                            {% endif %}
                         </button>
                     {% else %}
                         <button id="btnSalvarVenda" class="btn btn-success w-100 btn-sm">
@@ -520,7 +530,11 @@ $(document).ready(function() {
 
         renderizarCarrinho();
         atualizarResumo();
-        showToast('Venda #' + vendaPreCarregadaJS.venda_id + ' carregada da clínica!', 'success');
+        if (vendaPreCarregadaJS.venda_ids && vendaPreCarregadaJS.venda_ids.length > 1) {
+            showToast(vendaPreCarregadaJS.venda_ids.length + ' vendas agrupadas da clínica!', 'success');
+        } else {
+            showToast('Venda #' + vendaPreCarregadaJS.venda_id + ' carregada da clínica!', 'success');
+        }
 
         // Preenche o campo visual do tutor
         if (vendaPreCarregadaJS.cliente_nome) {
@@ -1252,7 +1266,14 @@ async function salvarVenda() {
     // NÃO cria nova venda.
     if (vendaPreCarregadaJS && vendaPreCarregadaJS.venda_id) {
         const vendaId = vendaPreCarregadaJS.venda_id;
-        const urlFinalizar = '{{ path("pdv_finalizar_carrinho", {id: "__ID__"}) }}'.replace('__ID__', vendaId);
+        // Várias vendas agrupadas na listagem: finaliza todas de uma vez
+        const emLote = Array.isArray(vendaPreCarregadaJS.venda_ids) && vendaPreCarregadaJS.venda_ids.length > 1;
+        const urlFinalizar = emLote
+            ? '{{ path("pdv_finalizar_lote") }}'
+            : '{{ path("pdv_finalizar_carrinho", {id: "__ID__"}) }}'.replace('__ID__', vendaId);
+        const rotuloBtn = emLote
+            ? '<i class="bi bi-check-circle"></i> Finalizar ' + vendaPreCarregadaJS.venda_ids.length + ' Vendas'
+            : '<i class="bi bi-check-circle"></i> Finalizar Venda';
 
         const chkCredito = document.getElementById('chk-usar-credito-pdv');
         const banner     = document.getElementById('banner-credito-pdv');
@@ -1276,6 +1297,9 @@ async function salvarVenda() {
             usar_credito:     usarCred,
             deixar_credito:   deixarCred
         };
+        if (emLote) {
+            payload.ids = vendaPreCarregadaJS.venda_ids;
+        }
 
         try {
             const response = await $.ajax({
@@ -1286,19 +1310,31 @@ async function salvarVenda() {
             });
 
             if (response.status === 'success') {
-                showToast('Venda #' + vendaId + ' finalizada com sucesso!', 'success');
+                showToast(
+                    emLote
+                        ? response.mensagem
+                        : 'Venda #' + vendaId + ' finalizada com sucesso!',
+                    'success'
+                );
+                (response.avisos || []).forEach(a => showToast(a, 'warning'));
                 setTimeout(() => {
                     window.location.href = '{{ path("clinica_pdv_listar") }}';
                 }, 1500);
+            } else if (response.status === 'partial') {
+                // Algumas foram finalizadas e outras não: volta para a listagem para reselecionar
+                showToast(response.mensagem, 'warning');
+                setTimeout(() => {
+                    window.location.href = '{{ path("clinica_pdv_listar") }}';
+                }, 6000);
             } else {
                 showToast(response.mensagem || 'Erro ao finalizar venda.', 'danger');
-                $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Finalizar Venda');
+                $btn.prop('disabled', false).html(rotuloBtn);
             }
         } catch (error) {
             console.error('Erro ao finalizar:', error);
             const msg = error.responseJSON?.mensagem || 'Erro ao comunicar com o servidor.';
             showToast(msg, 'danger');
-            $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Finalizar Venda');
+            $btn.prop('disabled', false).html(rotuloBtn);
         }
         return; // Encerra aqui — não cai no fluxo de nova venda
     }
