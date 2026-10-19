@@ -54,6 +54,7 @@ services:
       - proxy
     expose:
       - "80"
+      - "443"
 
 networks:
   proxy:
