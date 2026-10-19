@@ -7,16 +7,9 @@ services:
     container_name: symfony_php_homepet
     volumes:
       - ./:/var/www/html
-      # Mapeamento seguro dos certificados para dentro do container
-      - ./ssl/certificado.crt:/etc/apache2/ssl/certificado.crt:ro
-      - ./ssl/chave.key:/etc/apache2/ssl/chave.key:ro
     ports:
       - '80:80'
       - '443:443'
-    expose:
-
-      - '80'
-      - '443'
     environment:
       APP_ENV: prod
     restart: unless-stopped
