@@ -1,0 +1,289 @@
+{# templates/cliente/_form.html.twig
+   Formulário compartilhado de cadastro/edição de cliente.
+   Variáveis: modo ('novo'|'editar'), action (URL), cliente (array, opcional), voltar_url #}
+{% set c = cliente|default({}) %}
+{% set opcoes_origem = ['Google', 'Instagram', 'Facebook', 'Indicação de amigos', 'Placa/Fachada', 'WhatsApp', 'TikTok', 'Panfleto/Folheto', 'Outro'] %}
+{% set whatsapp_atual = c.whatsapp ?? (modo == 'novo' ? 'Sim' : '') %}
+{# Cadastros antigos gravavam 'on' quando o botão Sim estava marcado #}
+{% if whatsapp_atual == 'on' %}{% set whatsapp_atual = 'Sim' %}{% endif %}
+
+<style>
+    .cli {
+        --cli-ink: #1f2933;
+        --cli-muted: #667085;
+        --cli-line: #e4e7ec;
+        --cli-soft: #f7f8fa;
+        --cli-brand: #004080;
+        --cli-brand-soft: #e8f0f9;
+        color: var(--cli-ink);
+        max-width: 1040px;
+    }
+
+    /* Cabeçalho da página */
+    .cli-topo {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
+    .cli-titulo { display: flex; align-items: center; gap: .875rem; }
+    .cli-avatar {
+        width: 48px; height: 48px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 50%;
+        background: var(--cli-brand-soft);
+        color: var(--cli-brand);
+        font-size: 1.25rem; font-weight: 700;
+        flex-shrink: 0;
+    }
+    .cli-titulo h1 { font-size: 1.375rem; font-weight: 700; margin: 0; color: var(--cli-ink); }
+    .cli-titulo p { margin: 0; font-size: .875rem; color: var(--cli-muted); }
+
+    /* Seções */
+    .cli-secao {
+        background: #fff;
+        border: 1px solid var(--cli-line);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+    .cli-secao-cab {
+        display: flex; align-items: center; gap: .625rem;
+        padding: .875rem 1.25rem;
+        border-bottom: 1px solid var(--cli-line);
+        background: var(--cli-soft);
+    }
+    .cli-secao-cab i { color: var(--cli-brand); font-size: 1.125rem; }
+    .cli-secao-cab h2 { font-size: .9375rem; font-weight: 600; margin: 0; }
+    .cli-secao-cab span { margin-left: auto; font-size: .75rem; color: var(--cli-muted); }
+    .cli-secao-corpo { padding: 1.25rem; }
+
+    /* Campos */
+    .cli .form-label { font-size: .8125rem; font-weight: 600; color: var(--cli-ink); margin-bottom: .3rem; }
+    .cli .form-label .obr { color: #b42318; margin-left: 2px; }
+    .cli .form-control, .cli .form-select {
+        border: 1px solid #d0d5dd;
+        border-radius: 8px;
+        padding: .55rem .75rem;
+        box-shadow: none;
+        font-size: .9375rem;
+    }
+    .cli .form-control::placeholder { color: #98a2b3; }
+    .cli .form-control:focus, .cli .form-select:focus {
+        border-color: var(--cli-brand);
+        box-shadow: 0 0 0 3px rgba(0, 64, 128, .15);
+    }
+    .cli .input-group-text {
+        background: var(--cli-soft);
+        border: 1px solid #d0d5dd;
+        border-right: 0;
+        border-radius: 8px 0 0 8px;
+        color: var(--cli-muted);
+    }
+    .cli .input-group .form-control { border-radius: 0 8px 8px 0; }
+
+    /* Whatsapp: controle segmentado */
+    .cli-seg { display: flex; gap: 0; }
+    .cli-seg .btn {
+        flex: 1;
+        border: 1px solid #d0d5dd;
+        color: var(--cli-ink);
+        background: #fff;
+        padding: .55rem .75rem;
+        font-size: .9375rem;
+    }
+    .cli-seg label:first-of-type { border-radius: 8px 0 0 8px; }
+    .cli-seg label:last-of-type { border-radius: 0 8px 8px 0; margin-left: -1px; }
+    .cli-seg .btn-check:checked + .btn {
+        background: var(--cli-brand);
+        border-color: var(--cli-brand);
+        color: #fff;
+    }
+    .cli-seg .btn-check:focus-visible + .btn { outline: 2px solid var(--cli-brand); outline-offset: 2px; }
+
+    /* Barra de ações fixa no rodapé do formulário */
+    .cli-acoes {
+        position: sticky; bottom: 0; z-index: 5;
+        display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap;
+        padding: .875rem 1.25rem;
+        background: rgba(255, 255, 255, .96);
+        border: 1px solid var(--cli-line);
+        border-radius: 8px;
+        box-shadow: 0 -4px 12px rgba(16, 24, 40, .06);
+    }
+    .cli-acoes .grupo { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .cli .btn-principal { background: var(--cli-brand); border-color: var(--cli-brand); color: #fff; font-weight: 600; padding: .55rem 1.25rem; border-radius: 8px; }
+    .cli .btn-principal:hover { background: #003266; border-color: #003266; color: #fff; }
+    .cli .btn-sec { background: #fff; border: 1px solid #d0d5dd; color: var(--cli-ink); border-radius: 8px; padding: .55rem 1.1rem; font-weight: 500; }
+    .cli .btn-sec:hover { background: var(--cli-soft); color: var(--cli-ink); }
+    .cli .btn-perigo { background: #fff; border: 1px solid #fda29b; color: #b42318; border-radius: 8px; padding: .55rem 1.1rem; font-weight: 500; }
+    .cli .btn-perigo:hover { background: #fef3f2; color: #b42318; }
+    .cli a:focus-visible, .cli button:focus-visible { outline: 2px solid var(--cli-brand); outline-offset: 2px; }
+
+    @media (max-width: 575.98px) {
+        .cli-acoes { flex-direction: column-reverse; align-items: stretch; }
+        .cli-acoes .grupo { flex-direction: column-reverse; }
+        .cli-acoes .btn { width: 100%; }
+    }
+</style>
+
+<div class="cli">
+    <div class="cli-topo">
+        <div class="cli-titulo">
+            {% if modo == 'editar' %}
+                <div class="cli-avatar" aria-hidden="true">{{ (c.nome ?? '?')|slice(0, 1)|upper }}</div>
+                <div>
+                    <h1>{{ c.nome ?? 'Editar cliente' }}</h1>
+                    <p>Editar cadastro do cliente</p>
+                </div>
+            {% else %}
+                <div class="cli-avatar" aria-hidden="true"><i class="bi bi-person-plus"></i></div>
+                <div>
+                    <h1>Novo cliente</h1>
+                    <p>Depois de salvar, você segue para o cadastro do pet.</p>
+                </div>
+            {% endif %}
+        </div>
+        <a class="btn btn-sec" href="{{ voltar_url }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+    </div>
+
+    <form method="post" action="{{ action }}" id="formCliente">
+
+        <section class="cli-secao">
+            <div class="cli-secao-cab">
+                <i class="bi bi-person"></i>
+                <h2>Dados do cliente</h2>
+                <span><span class="text-danger">*</span> obrigatório</span>
+            </div>
+            <div class="cli-secao-corpo">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label for="nome" class="form-label">Nome<span class="obr">*</span></label>
+                        <input type="text" class="form-control" id="nome" name="nome" required
+                               value="{{ c.nome ?? '' }}" placeholder="Nome completo" autocomplete="off">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="cpf" class="form-label">CPF</label>
+                        <input type="text" class="form-control" id="cpf" name="cpf" inputmode="numeric"
+                               value="{{ c.cpf ?? '' }}" placeholder="000.000.000-00" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cli-secao">
+            <div class="cli-secao-cab">
+                <i class="bi bi-telephone"></i>
+                <h2>Contato</h2>
+            </div>
+            <div class="cli-secao-corpo">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">E-mail</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control" id="email" name="email"
+                                   value="{{ c.email ?? '' }}" placeholder="nome@exemplo.com">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="telefone" class="form-label">Telefone{% if modo == 'novo' %}<span class="obr">*</span>{% endif %}</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                            <input type="text" class="form-control" id="telefone" name="telefone" inputmode="tel"
+                                   value="{{ c.telefone ?? '' }}" placeholder="(00) 00000-0000"
+                                   {% if modo == 'novo' %}required{% endif %}>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" id="lblWhats">É WhatsApp?</label>
+                        <div class="cli-seg" role="radiogroup" aria-labelledby="lblWhats">
+                            <input type="radio" class="btn-check" name="whatsapp" id="whatsapp1" value="Sim"
+                                   autocomplete="off" {% if whatsapp_atual == 'Sim' %}checked{% endif %}>
+                            <label class="btn" for="whatsapp1">Sim</label>
+                            <input type="radio" class="btn-check" name="whatsapp" id="whatsapp2" value="Não"
+                                   autocomplete="off" {% if whatsapp_atual == 'Não' %}checked{% endif %}>
+                            <label class="btn" for="whatsapp2">Não</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cli-secao">
+            <div class="cli-secao-cab">
+                <i class="bi bi-geo-alt"></i>
+                <h2>Endereço</h2>
+                <span>Digite o CEP para preencher automaticamente</span>
+            </div>
+            <div class="cli-secao-corpo">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="cep" class="form-label">CEP</label>
+                        <input type="text" class="form-control" id="cep" name="cep" inputmode="numeric"
+                               value="{{ c.cep ?? '' }}" placeholder="00000-000" autocomplete="off">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="rua" class="form-label">Rua</label>
+                        <input type="text" class="form-control" id="rua" name="rua" value="{{ c.rua ?? '' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="numero" class="form-label">Número</label>
+                        <input type="text" class="form-control" id="numero" name="numero" value="{{ c.numero ?? '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="complemento" class="form-label">Complemento</label>
+                        <input type="text" class="form-control" id="complemento" name="complemento"
+                               value="{{ c.complemento ?? '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="bairro" class="form-label">Bairro</label>
+                        <input type="text" class="form-control" id="bairro" name="bairro" value="{{ c.bairro ?? '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="cidade" class="form-label">Cidade</label>
+                        <input type="text" class="form-control" id="cidade" name="cidade" value="{{ c.cidade ?? '' }}">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cli-secao">
+            <div class="cli-secao-cab">
+                <i class="bi bi-megaphone"></i>
+                <h2>Origem do cadastro</h2>
+            </div>
+            <div class="cli-secao-corpo">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="como_conheceu" class="form-label">Como nos conheceu?{% if modo == 'novo' %}<span class="obr">*</span>{% endif %}</label>
+                        <select class="form-select" id="como_conheceu" name="como_conheceu" {% if modo == 'novo' %}required{% endif %}>
+                            <option value="">Selecione uma opção</option>
+                            {% for opcao in opcoes_origem %}
+                                <option value="{{ opcao }}" {% if (c.como_conheceu ?? '') == opcao %}selected{% endif %}>{{ opcao }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="cli-acoes">
+            <div class="grupo">
+                {% if modo == 'editar' %}
+                    <button type="button" class="btn btn-perigo" data-bs-toggle="modal" data-bs-target="#modalDeletarCliente">
+                        <i class="bi bi-trash me-1"></i>Deletar cliente
+                    </button>
+                {% endif %}
+            </div>
+            <div class="grupo">
+                <a href="{{ voltar_url }}" class="btn btn-sec">Cancelar</a>
+                <button type="submit" class="btn btn-principal save-btn">
+                    <i class="bi bi-check2-circle me-1"></i>{{ modo == 'novo' ? 'Salvar e cadastrar pet' : 'Salvar alterações' }}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

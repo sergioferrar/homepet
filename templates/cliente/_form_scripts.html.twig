@@ -1,0 +1,56 @@
+{# templates/cliente/_form_scripts.html.twig — máscaras e busca de CEP (requer jQuery) #}
+<script>
+    $(function () {
+        // Máscara de CPF
+        $('#cpf').on('input', function () {
+            let v = $(this).val().replace(/\D/g, '').slice(0, 11);
+            v = v.replace(/(\d{3})(\d)/, '$1.$2');
+            v = v.replace(/(\d{3})(\d)/, '$1.$2');
+            v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            $(this).val(v);
+        });
+
+        // Máscara de telefone: (00) 0000-0000 ou (00) 00000-0000
+        $('#telefone').on('input', function () {
+            let v = $(this).val().replace(/\D/g, '').slice(0, 11);
+            if (v.length > 10) {
+                v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+            } else if (v.length > 6) {
+                v = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+            } else if (v.length > 2) {
+                v = v.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+            } else if (v.length > 0) {
+                v = v.replace(/^(\d*)/, '($1');
+            }
+            $(this).val(v);
+        });
+
+        // Máscara de CEP + preenchimento automático do endereço (ViaCEP)
+        $('#cep').on('input', function () {
+            let v = $(this).val().replace(/\D/g, '').slice(0, 8);
+            if (v.length > 5) {
+                v = v.replace(/^(\d{5})(\d{1,3})/, '$1-$2');
+            }
+            $(this).val(v);
+        });
+
+        $('#cep').on('change', function () {
+            const cep = $(this).val().replace(/\D/g, '');
+            if (cep.length !== 8) {
+                return;
+            }
+            $.get('https://viacep.com.br/ws/' + cep + '/json', function (data) {
+                if (data.erro) {
+                    return;
+                }
+                $('#rua').val(data.logradouro);
+                $('#bairro').val(data.bairro);
+                $('#cidade').val(data.localidade);
+                if (data.complemento) {
+                    $('#complemento').val(data.complemento);
+                }
+                $('#numero').trigger('focus');
+            }, 'json');
+        });
+    });
+</script>
