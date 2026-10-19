@@ -5,7 +5,6 @@ services:
       dockerfile: Dockerfile
 
     container_name: symfony_php_homepet
-    working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
       # Mapeamento seguro dos certificados para dentro do container
@@ -14,6 +13,10 @@ services:
     ports:
       - '80:80'
       - '443:443'
+    expose:
+
+      - '80'
+      - '443'
     environment:
       APP_ENV: prod
     restart: unless-stopped
