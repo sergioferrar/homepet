@@ -9,13 +9,11 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      # Redirecionamento automático de HTTP (80) para HTTPS (443) global no Traefik
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
-      # Configuração do ACME (Certbot integrado do Traefik)
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.myresolver.acme.email=seu-email@exemplo.com" # <- Mude para seu e-mail
+      - "--certificatesresolvers.myresolver.acme.email=seu-email@exemplo.com" # <- Seu e-mail real
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
@@ -27,7 +25,6 @@ services:
       - web
 
   php:
-    image: php:8.3-apache
     container_name: symfony_php_homepet1
     working_dir: /var/www/html
     volumes:
@@ -37,7 +34,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.symfony.rule=Host(`seu-dominio.com`) || Host(`://seu-dominio.com`)"
+      - "traefik.http.routers.symfony.rule=Host(`seu-dominio.com`) || Host(`://seu-dominio.com`)" # <- Seu domínio real
       - "traefik.http.routers.symfony.entrypoints=websecure"
       - "traefik.http.routers.symfony.tls=true"
       - "traefik.http.routers.symfony.tls.certresolver=myresolver"
@@ -46,45 +43,7 @@ services:
       - web
     build:
       context: .
-      dockerfile_inline: |
-        FROM php:8.3-apache
-
-        RUN apt-get update && apt-get install -y \
-            git \
-            unzip \
-            curl \
-            libicu-dev \
-            libzip-dev \
-            libpng-dev \
-            libjpeg62-turbo-dev \
-            libfreetype6-dev \
-            && docker-php-ext-configure gd \
-                --with-freetype \
-                --with-jpeg \
-            && docker-php-ext-install -j\$\$(nproc) \
-                pdo_mysql \
-                intl \
-                zip \
-                opcache \
-                gd \
-            && a2enmod rewrite headers \
-            && apt-get clean \
-            && rm -rf /var/lib/apt/lists/*
-
-        COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-        RUN printf '%s\n' \
-            '<VirtualHost *:80>' \
-            '    DocumentRoot /var/www/html/public' \
-            '    <Directory /var/www/html/public>' \
-            '        AllowOverride All' \
-            '        Require all granted' \
-            '        Options FollowSymLinks' \
-            '        DirectoryIndex index.php' \
-            '    </Directory>' \
-            '    ErrorLog \[{APACHE_LOG_DIR}/error.log' \ '    CustomLog \]{APACHE_LOG_DIR}/access.log combined' \
-            '</VirtualHost>' \
-            > /etc/apache2/sites-available/000-default.conf
+      dockerfile: Dockerfile
 
 networks:
   web:
