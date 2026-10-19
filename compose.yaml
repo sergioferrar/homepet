@@ -18,10 +18,12 @@ services:
       APP_ENV: prod
 
     restart: unless-stopped
+    command:
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
     labels:
-      - "traefik.enable=true"
       - "traefik.http.routers.systemhomepet.rule=Host(`systemhomepet.com`,`www.systemhomepet.com`)"
       - "traefik.http.routers.systemhomepet.entrypoints=websecure"
       - "traefik.http.routers.systemhomepet.tls=true"
       - "traefik.http.routers.systemhomepet.tls.certresolver=letsencrypt"
-      - "traefik.http.services.systemhomepet.loadbalancer.server.port=8080"
+      - "traefik.http.services.systemhomepet.loadbalancer.server.port=80"
