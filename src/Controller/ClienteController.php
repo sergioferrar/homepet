@@ -119,7 +119,7 @@ class ClienteController extends DefaultController
             return $this->redirectToRoute('cliente_index');
         }
 
-        return $this->render('cliente/_form.html.twig', [
+        return $this->render('cliente/editar.html.twig', [
             'cliente' => $cliente
         ]);
     }
