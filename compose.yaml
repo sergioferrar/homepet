@@ -9,23 +9,15 @@ services:
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
+      # Mapeamento seguro dos certificados para dentro do container
+      - ./ssl/certificado.crt:/etc/apache2/ssl/certificado.crt:ro
+      - ./ssl/chave.key:/etc/apache2/ssl/chave.key:ro
+    ports:
+      - '80:80'
+      - '443:443'
     environment:
       APP_ENV: prod
     restart: unless-stopped
-    networks:
-      - proxy_network
-
-  nginx-proxy-manager:
-    image: 'jc21/nginx-proxy-manager:latest'
-    container_name: nginx-proxy-manager
-    restart: unless-stopped
-    ports:
-      - '80:80'
-      - '81:81' # Porta da interface administrativa
-      - '443:443'
-    volumes:
-      - ./data:/data
-      - ./letsencrypt:/etc/letsencrypt
     networks:
       - proxy_network
 
