@@ -28,22 +28,19 @@ services:
 
   php:
     image: php:8.3-apache
-    container_name: symfony_php_homepet
+    container_name: symfony_php_homepet1
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
     environment:
       APP_ENV: prod
     restart: unless-stopped
-    # Roteamento do Traefik para este contêiner
     labels:
       - "traefik.enable=true"
-      # Mude para o seu domínio real abaixo:
       - "traefik.http.routers.symfony.rule=Host(`seu-dominio.com`) || Host(`://seu-dominio.com`)"
       - "traefik.http.routers.symfony.entrypoints=websecure"
       - "traefik.http.routers.symfony.tls=true"
       - "traefik.http.routers.symfony.tls.certresolver=myresolver"
-      # Indica ao Traefik que o Apache interno escuta na porta 80
       - "traefik.http.services.symfony.loadbalancer.server.port=80"
     networks:
       - web
@@ -64,7 +61,7 @@ services:
             && docker-php-ext-configure gd \
                 --with-freetype \
                 --with-jpeg \
-            && docker-php-ext-install -j\$(nproc) \
+            && docker-php-ext-install -j\$\$(nproc) \
                 pdo_mysql \
                 intl \
                 zip \
@@ -72,11 +69,10 @@ services:
                 gd \
             && a2enmod rewrite headers \
             && apt-get clean \
-            rm -rf /var/lib/apt/lists/*
+            && rm -rf /var/lib/apt/lists/*
 
         COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-        # O Apache volta a ser simples: apenas escuta na porta 80 interna do container
         RUN printf '%s\n' \
             '<VirtualHost *:80>' \
             '    DocumentRoot /var/www/html/public' \
@@ -86,8 +82,7 @@ services:
             '        Options FollowSymLinks' \
             '        DirectoryIndex index.php' \
             '    </Directory>' \
-            '    ErrorLog \${APACHE_LOG_DIR}/error.log' \
-            '    CustomLog \${APACHE_LOG_DIR}/access.log combined' \
+            '    ErrorLog \[{APACHE_LOG_DIR}/error.log' \ '    CustomLog \]{APACHE_LOG_DIR}/access.log combined' \
             '</VirtualHost>' \
             > /etc/apache2/sites-available/000-default.conf
 
