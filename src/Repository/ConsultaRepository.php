@@ -207,7 +207,8 @@ class ConsultaRepository extends ServiceEntityRepository
                 JOIN homepet_{$baseId}.pet p ON p.id = c.pet_id
                 WHERE c.estabelecimento_id = :baseId
                 ORDER BY c.data DESC, c.hora DESC
-                LIMIT :limite";
+                LIMIT :limite
+                GROUP BY c.pet_id";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue('baseId', $baseId);
