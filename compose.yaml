@@ -1,13 +1,16 @@
 services:
   php:
     image: php:8.3-apache
-    container_name: symfony_php_homepet1
+    container_name: symfony_php_homepet
     ports:
       - "80:80"
       - "443:443"
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
+      # Volumes compartilhados para o Certbot injetar os certificados no Apache
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/www/certbot
     environment:
       APP_ENV: prod
     restart: unless-stopped
@@ -34,22 +37,63 @@ services:
                 zip \
                 opcache \
                 gd \
-            && a2enmod rewrite headers \
+            # Ativa os módulos rewrite, headers, ssl e o cache necessário para o SSL funcionar
+            && a2enmod rewrite headers ssl socache_shmcb \
             && apt-get clean \
             && rm -rf /var/lib/apt/lists/*
 
         COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+        # Configuração do Apache incluindo a rota HTTP (com desafio do Certbot) e a rota HTTPS do Symfony
         RUN printf '%s\n' \
             '<VirtualHost *:80>' \
             '    DocumentRoot /var/www/html/public' \
+            '    ' \
+            '    # Rota para validação do Certbot' \
+            '    Alias /.well-known/acme-challenge/ "/var/www/certbot/.well-known/acme-challenge/"' \
+            '    <Directory "/var/www/certbot/.well-known/acme-challenge/">' \
+            '        Options None' \
+            '        AllowOverride None' \
+            '        Require all granted' \
+            '    </Directory>' \
+            '    ' \
             '    <Directory /var/www/html/public>' \
             '        AllowOverride All' \
             '        Require all granted' \
             '        Options FollowSymLinks' \
             '        DirectoryIndex index.php' \
             '    </Directory>' \
-            '    ErrorLog ${APACHE_LOG_DIR}/error.log' \
-            '    CustomLog ${APACHE_LOG_DIR}/access.log combined' \
+            '    ErrorLog $${APACHE_LOG_DIR}/error.log' \
+            '    CustomLog $${APACHE_LOG_DIR}/access.log combined' \
+            '</VirtualHost>' \
+            ' ' \
+            '<VirtualHost *:443>' \
+            '    DocumentRoot /var/www/html/public' \
+            '    ' \
+            '    SSLEngine on' \
+            '    # Mude "seu-dominio.com" para o seu domínio real quando for rodar o comando do Certbot' \
+            '    SSLCertificateFile "/etc/letsencrypt/live/://seu-dominio.com"' \
+            '    SSLCertificateKeyFile "/etc/letsencrypt/live/://seu-dominio.com"' \
+            '    ' \
+            '    <Directory /var/www/html/public>' \
+            '        AllowOverride All' \
+            '        Require all granted' \
+            '        Options FollowSymLinks' \
+            '        DirectoryIndex index.php' \
+            '    </Directory>' \
+            '    ErrorLog $${APACHE_LOG_DIR}/error.log' \
+            '    CustomLog $${APACHE_LOG_DIR}/access.log combined' \
             '</VirtualHost>' \
             > /etc/apache2/sites-available/000-default.conf
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/www/certbot
+    # Loop para tentar renovar o certificado automaticamente de 12 em 12 horas
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
+
+volumes:
+  certbot-etc:
+  certbot-var:
