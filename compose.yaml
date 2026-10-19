@@ -48,6 +48,7 @@ services:
       - "traefik.http.routers.systemhomepet.entrypoints=websecure"
       - "traefik.http.routers.systemhomepet.tls=true"
       - "traefik.http.routers.systemhomepet.tls.certresolver=letsencrypt"
+      - "traefik.http.services.systemhomepet.loadbalancer.server.port=8080"
       - "traefik.http.services.systemhomepet.loadbalancer.server.port=80"
 
     networks:
