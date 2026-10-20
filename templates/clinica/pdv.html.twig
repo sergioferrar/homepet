@@ -543,10 +543,9 @@
 {% endblock %}
 
 {% block javascripts %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-
-
+{# jQuery e Bootstrap já são carregados por base.html.twig / baseClinica.html.twig.
+   Carregar de novo aqui duplicava o Bootstrap: cada cópia criava seu próprio
+   offcanvas/backdrop e, ao fechar, um backdrop ficava preso na tela. #}
 <script>
 // ==================== DADOS INICIAIS ====================
 const produtos = {{ produtos|json_encode|raw }};
@@ -972,8 +971,7 @@ $('#vlLancar').on('click', function () {
             aplicarVendaPreCarregada(resp.payload);
             vl.sel.clear();
             const el = document.getElementById('offcanvasListagem');
-            const inst = bootstrap.Offcanvas.getInstance(el);
-            if (inst) inst.hide();
+            bootstrap.Offcanvas.getOrCreateInstance(el).hide();
         })
         .fail(function (xhr) {
             showToast((xhr.responseJSON && xhr.responseJSON.mensagem) || 'Erro ao comunicar com o servidor.', 'danger');
