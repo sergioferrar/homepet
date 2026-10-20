@@ -208,47 +208,45 @@ class PdvController extends DefaultController
     }
 
     /**
-     * Carrega VÁRIAS vendas da clínica no PDV de uma só vez (agrupadas).
+     * Lê os ids de vendas da querystring (ids=1,2,3 ou ids[]=1&ids[]=2).
      *
-     * Usado pela listagem de vendas: o usuário marca as vendas do mesmo
-     * cliente/pet, os itens são agrupados num único carrinho e o total é a
-     * soma das vendas. Ao finalizar, todas são baixadas por pdv_finalizar_lote.
-     *
-     * @Route("/carregar-lote", name="pdv_carregar_lote", methods={"GET"})
+     * @return int[]
      */
-    public function carregarVendasEmLote(
-        EntityManagerInterface $em,
-        Request $request
-    ): Response {
-        $this->switchDB();
-        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
-        $session = $request->getSession();
-
-        // Aceita ids=1,2,3 ou ids[]=1&ids[]=2
+    private function extrairIdsDaRequisicao(Request $request): array
+    {
         $bruto = $request->query->all()['ids'] ?? [];
         if (is_string($bruto)) {
             $bruto = explode(',', $bruto);
         }
-        $ids = array_values(array_unique(array_filter(
+
+        return array_values(array_unique(array_filter(
             array_map('intval', (array) $bruto),
             static fn (int $i): bool => $i > 0
         )));
+    }
 
-        $paramsListar = $request->get('ficha') ? ['ficha' => true] : [];
+    /**
+     * Monta o payload do PDV para uma ou várias vendas da clínica (itens
+     * agrupados, total somado, crédito do cliente etc.).
+     *
+     * Usado tanto pelo carregamento com redirect (sessão) quanto pelo JSON
+     * consumido pelo offcanvas do PDV.
+     *
+     * @param int[] $ids
+     * @return array{ok:bool, http:int, mensagem:string, payload:?array}
+     */
+    private function montarPayloadVendasEmLote(EntityManagerInterface $em, int $estabelecimentoId, array $ids): array
+    {
+        $falha = static fn (string $mensagem, int $http = 400): array => [
+            'ok' => false, 'http' => $http, 'mensagem' => $mensagem, 'payload' => null,
+        ];
 
         if (count($ids) === 0) {
-            $this->addFlash('warning', 'Selecione ao menos uma venda para lançar no caixa.');
-            return $this->redirectToRoute('clinica_pdv_listar', $paramsListar);
+            return $falha('Selecione ao menos uma venda para lançar no caixa.');
         }
 
         if (count($ids) > 50) {
-            $this->addFlash('warning', 'Selecione no máximo 50 vendas por vez.');
-            return $this->redirectToRoute('clinica_pdv_listar', $paramsListar);
-        }
-
-        // Uma venda só: segue o fluxo de sempre
-        if (count($ids) === 1) {
-            return $this->redirectToRoute('pdv_carregar', ['id' => $ids[0]] + $paramsListar);
+            return $falha('Selecione no máximo 50 vendas por vez.');
         }
 
         // Mesmos status que pdv_finalizar_carrinho aceita
@@ -262,17 +260,15 @@ class PdvController extends DefaultController
             ]);
 
             if (!$venda) {
-                $this->addFlash('danger', sprintf('Venda #%d não encontrada. Nada foi carregado.', $id));
-                return $this->redirectToRoute('clinica_pdv_listar', $paramsListar);
+                return $falha(sprintf('Venda #%d não encontrada. Nada foi carregado.', $id), 404);
             }
 
             if (!in_array($venda->getStatus(), $statusPermitidos, true)) {
-                $this->addFlash('warning', sprintf(
+                return $falha(sprintf(
                     'A venda #%d não pode ser lançada no caixa (status: %s). Nada foi carregado.',
                     $venda->getId(),
                     $venda->getStatus()
-                ));
-                return $this->redirectToRoute('clinica_pdv_listar', $paramsListar);
+                ), 409);
             }
 
             $vendas[] = $venda;
@@ -288,8 +284,7 @@ class PdvController extends DefaultController
             $clienteDaVenda = mb_strtolower(trim((string) ($venda->getCliente() ?? 'Consumidor Final')));
 
             if ($petDaVenda !== $petId || $clienteDaVenda !== $chaveCliente) {
-                $this->addFlash('warning', 'Só é possível agrupar vendas do mesmo cliente e do mesmo pet. Nada foi carregado.');
-                return $this->redirectToRoute('clinica_pdv_listar', $paramsListar);
+                return $falha('Só é possível agrupar vendas do mesmo cliente e do mesmo pet. Nada foi carregado.');
             }
         }
 
@@ -352,33 +347,200 @@ class PdvController extends DefaultController
 
         $idsVendas = array_map(static fn (Venda $v): int => (int) $v->getId(), $vendas);
 
-        $session->set('pdv_venda_pre_carregada', [
-            // venda_id (a primeira) mantém compatível tudo que já lê esse campo no PDV
-            'venda_id' => $idsVendas[0],
-            'venda_ids' => $idsVendas,
-            'cliente_nome' => $nomeCliente,
-            'cliente_id' => $clienteId,
-            'pet_id' => $petId,
-            'pet_nome' => $nomePet,
-            'itens' => $itensAgrupados,
-            'total' => round($totalGeral, 2),
-            'observacao' => $observacoes ? implode(' | ', $observacoes) : null,
-            'credito_disponivel' => round($creditoDisponivel, 2),
-            'desconto_credito' => round($descontoCredito, 2),
-        ]);
+        return [
+            'ok' => true,
+            'http' => 200,
+            'mensagem' => '',
+            'payload' => [
+                // venda_id (a primeira) mantém compatível tudo que já lê esse campo no PDV
+                'venda_id' => $idsVendas[0],
+                'venda_ids' => $idsVendas,
+                'cliente_nome' => $nomeCliente,
+                'cliente_id' => $clienteId,
+                'pet_id' => $petId,
+                'pet_nome' => $nomePet,
+                'itens' => $itensAgrupados,
+                'total' => round($totalGeral, 2),
+                'observacao' => $observacoes ? implode(' | ', $observacoes) : null,
+                'credito_disponivel' => round($creditoDisponivel, 2),
+                'desconto_credito' => round($descontoCredito, 2),
+            ],
+        ];
+    }
+
+    /**
+     * Carrega VÁRIAS vendas da clínica no PDV de uma só vez (agrupadas),
+     * gravando na sessão e redirecionando para o PDV.
+     *
+     * @Route("/carregar-lote", name="pdv_carregar_lote", methods={"GET"})
+     */
+    public function carregarVendasEmLote(
+        EntityManagerInterface $em,
+        Request $request
+    ): Response {
+        $this->switchDB();
+        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+
+        $ids = $this->extrairIdsDaRequisicao($request);
+        $paramsListar = $request->get('ficha') ? ['ficha' => true] : [];
+
+        // Uma venda só: segue o fluxo de sempre
+        if (count($ids) === 1) {
+            return $this->redirectToRoute('pdv_carregar', ['id' => $ids[0]] + $paramsListar);
+        }
+
+        $resultado = $this->montarPayloadVendasEmLote($em, $estabelecimentoId, $ids);
+
+        if (!$resultado['ok']) {
+            $this->addFlash('warning', $resultado['mensagem']);
+            return $this->redirectToRoute('clinica_pdv_listar', $paramsListar);
+        }
+
+        $payload = $resultado['payload'];
+        $request->getSession()->set('pdv_venda_pre_carregada', $payload);
 
         $this->addFlash('success', sprintf(
             '%d vendas agrupadas no PDV (%s). Revise os itens e finalize.',
-            count($idsVendas),
-            '#' . implode(', #', $idsVendas)
+            count($payload['venda_ids']),
+            '#' . implode(', #', $payload['venda_ids'])
         ));
 
-        $dataRequest = ['vendaId' => $idsVendas[0]];
+        $dataRequest = ['vendaId' => $payload['venda_id']];
         if ($request->get('ficha')) {
             $dataRequest['ficha'] = true;
         }
 
         return $this->redirectToRoute('clinica_pdv_index', $dataRequest);
+    }
+
+    /**
+     * Mesmo carregamento agrupado, mas em JSON — usado pelo offcanvas do PDV
+     * para trazer as vendas ao carrinho sem recarregar a página.
+     *
+     * @Route("/carregar-lote-json", name="pdv_carregar_lote_json", methods={"GET"})
+     */
+    public function carregarVendasEmLoteJson(
+        EntityManagerInterface $em,
+        Request $request
+    ): JsonResponse {
+        $this->switchDB();
+        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+
+        $resultado = $this->montarPayloadVendasEmLote(
+            $em,
+            $estabelecimentoId,
+            $this->extrairIdsDaRequisicao($request)
+        );
+
+        if (!$resultado['ok']) {
+            return new JsonResponse(['ok' => false, 'mensagem' => $resultado['mensagem']], $resultado['http']);
+        }
+
+        return new JsonResponse(['ok' => true, 'payload' => $resultado['payload']]);
+    }
+
+    /**
+     * Listagem de vendas em JSON para o offcanvas do PDV.
+     *
+     * modo=abertas (padrão): só vendas que podem ser lançadas (Aberta/Pendente), sem limite de data.
+     * modo=todas: todas as vendas dos últimos `dias` dias (1 a 365, padrão 30).
+     * Devolve no máximo 500 vendas (campo `truncado` avisa quando passou disso).
+     *
+     * @Route("/listar-json", name="clinica_pdv_listar_json", methods={"GET"})
+     */
+    public function listarVendasJson(EntityManagerInterface $em, Request $request): JsonResponse
+    {
+        $this->switchDB();
+        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+        $conn = $em->getConnection();
+
+        $modo = $request->query->get('modo') === 'todas' ? 'todas' : 'abertas';
+        $dias = max(1, min(365, (int) $request->query->get('dias', 30)));
+        $limite = 500;
+
+        $params = ['estab' => $estabelecimentoId];
+        if ($modo === 'abertas') {
+            $filtro = "AND v.status IN ('Aberta', 'Pendente')";
+        } else {
+            $filtro = 'AND v.data >= :desde';
+            $params['desde'] = (new \DateTime('today'))->modify('-' . ($dias - 1) . ' days')->format('Y-m-d 00:00:00');
+        }
+
+        $sql = "SELECT v.id,
+                       v.data,
+                       v.cliente,
+                       v.total,
+                       v.metodo_pagamento AS metodo,
+                       v.status,
+                       v.pet_id AS petId,
+                       p.nome AS petNome
+                FROM homepet_{$estabelecimentoId}.venda v
+                LEFT JOIN homepet_{$estabelecimentoId}.pet p ON p.id = v.pet_id
+                WHERE v.estabelecimento_id = :estab
+                  {$filtro}
+                ORDER BY v.data DESC, v.id DESC
+                LIMIT " . ($limite + 1);
+
+        $linhas = $conn->fetchAllAssociative($sql, $params);
+
+        $truncado = count($linhas) > $limite;
+        if ($truncado) {
+            $linhas = array_slice($linhas, 0, $limite);
+        }
+
+        // Itens de todas as vendas numa única consulta (sem N+1)
+        $itensPorVenda = [];
+        if ($linhas) {
+            $ids = array_map(static fn (array $l): int => (int) $l['id'], $linhas);
+            $marcadores = implode(',', array_fill(0, count($ids), '?'));
+            $itens = $conn->fetchAllAssociative(
+                "SELECT venda_id, produto, quantidade
+                 FROM homepet_{$estabelecimentoId}.venda_item
+                 WHERE venda_id IN ({$marcadores})
+                 ORDER BY id",
+                $ids
+            );
+
+            foreach ($itens as $item) {
+                $nome = trim((string) $item['produto']);
+                // Dado legado: o snapshot era só o id do cadastro
+                if ($nome === '' || is_numeric($nome)) {
+                    $nome = 'Item';
+                }
+                $qtd = max(1, (int) $item['quantidade']);
+                $itensPorVenda[(int) $item['venda_id']][] = ($qtd > 1 ? $qtd . '× ' : '') . $nome;
+            }
+        }
+
+        $statusSelecionaveis = ['Aberta', 'Pendente'];
+        $vendas = [];
+        foreach ($linhas as $l) {
+            $id = (int) $l['id'];
+            $itensDaVenda = $itensPorVenda[$id] ?? [];
+
+            $vendas[] = [
+                'id' => $id,
+                'data' => $l['data'] ? (new \DateTime($l['data']))->format(\DateTime::ATOM) : null,
+                'cliente' => $l['cliente'] ?: 'Consumidor Final',
+                'pet_id' => $l['petId'] ? (int) $l['petId'] : null,
+                'pet_nome' => $l['petNome'],
+                'total' => (float) $l['total'],
+                'status' => $l['status'],
+                'metodo' => $l['metodo'],
+                'selecionavel' => in_array($l['status'], $statusSelecionaveis, true),
+                'itens_qtd' => count($itensDaVenda),
+                'itens' => array_slice($itensDaVenda, 0, 3),
+            ];
+        }
+
+        return new JsonResponse([
+            'ok' => true,
+            'modo' => $modo,
+            'dias' => $dias,
+            'limite' => $limite,
+            'truncado' => $truncado,
+            'vendas' => $vendas,
+        ]);
     }
 
     /**
