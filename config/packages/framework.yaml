@@ -13,8 +13,8 @@ framework:
         cookie_secure: 'auto'
         cookie_samesite: 'lax'
         storage_factory_id: session.storage.factory.native
-        cookie_lifetime: 35
-        gc_maxlifetime: 35
+        cookie_lifetime: 43200
+        gc_maxlifetime: 43200
         gc_probability: null ## solução do erro de sessão quando não tem permissão de diretorio [/var/...]
 
     #esi: true
