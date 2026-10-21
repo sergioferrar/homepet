@@ -124,6 +124,7 @@ class FichaController extends DefaultController
             }
 
             if ($isAjax) {
+                // CONFIGURAR_AQUI_O_USO_DO_ENVIO_VIA_WHATSAPP
                 return $this->json([
                     'status' => 'success',
                     'mensagem' => 'Atendimento salvo com sucesso!',
