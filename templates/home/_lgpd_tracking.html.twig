@@ -17,17 +17,6 @@
     })(window,document,'script','dataLayer','{{ tracking.google_tag_manager_id }}');</script>
     {% endif %}
 
-    {# Google Analytics 4 — só quando GTM não estiver gerenciando #}
-    {% if tracking.google_analytics_id is defined and tracking.google_analytics_id and not tracking.google_tag_manager_id %}
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ tracking.google_analytics_id }}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', '{{ tracking.google_analytics_id }}');
-    </script>
-    {% endif %}
-
     {# Google Ads #}
     {% if tracking.google_ads_id is defined and tracking.google_ads_id %}
     <script async src="https://www.googletagmanager.com/gtag/js?id={{ tracking.google_ads_id }}"></script>

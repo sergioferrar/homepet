@@ -886,14 +886,21 @@
 
     {# Scripts de rastreamento — injetados condicionalmente conforme consentimento LGPD #}
     {% include 'home/_lgpd_tracking.html.twig' %}
+    {# Google Analytics 4 — só quando GTM não estiver gerenciando #}
+    
+        <script async src="https://www.googletagmanager.com/gtag/js?id=GTM-WBX6BN3B"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'GTM-WBX6BN3B');
+        </script>
 </head>
 <body>
-    {% if tracking.google_analytics_id is defined and tracking.google_analytics_id and not tracking.google_tag_manager_id %}
-    <!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ tracking.google_analytics_id }}"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-{% endif %}
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WBX6BN3B"
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
 <nav class="navbar-custom navbar navbar-expand-lg" id="navbar">
     <div class="container">
         <a class="navbar-brand navbar-brand-text" href="{{ url('landing_home') }}" aria-label="System Home Pet — Início">
