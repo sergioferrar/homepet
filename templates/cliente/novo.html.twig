@@ -15,12 +15,14 @@
         </nav>
     </div>
 
-    <section class="section">
-        {% include 'cliente/_form.html.twig' with {
-            'modo': 'novo',
-            'action': path('cliente_novo'),
-            'voltar_url': url('cliente_index')
-        } only %}
+    <section class="container-fluid">
+        <div class="row">
+            {% include 'cliente/_form.html.twig' with {
+                'modo': 'novo',
+                'action': path('cliente_novo'),
+                'voltar_url': url('cliente_index')
+            } only %}
+        </div>
     </section>
 {% endblock %}
 
