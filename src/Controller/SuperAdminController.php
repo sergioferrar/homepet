@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Estabelecimento;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -514,20 +515,34 @@ class SuperAdminController extends DefaultController
     /**
      * @Route("/configuracoes-globais", name="superadmin_configuracoes_globais")
      */
-    public function configuracoesGlobais(): Response
-    {   
-        if($this->isGranted('ROLE_ADMIN')){
-            return $this->redirectToRoute('app_settings');
-        }
-        
+    public function configuracoesGlobais(Request $request): Response
+    {
+        // Esta tela é exclusiva do Super Admin. A checagem é feita por ROLE_SUPER_ADMIN
+        // (e NÃO por ROLE_ADMIN: o Super Admin também carrega ROLE_ADMIN, o que antes
+        // causava o redirecionamento para app_settings -> superadmin_dashboard).
         if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
-            throw $this->createAccessDeniedException();
+            // Admin de estabelecimento continua usando a sua própria tela de configurações.
+            if ($this->isGranted('ROLE_ADMIN')) {
+                return $this->redirectToRoute('app_settings');
+            }
+            throw $this->createAccessDeniedException('Acesso negado');
         }
 
-        return $this->render('superadmin/configuracoes_globais.html.twig', [
-            'lgpd' => $this->lerConfigsDbal('lgpd'),
-            'tracking' => $this->lerConfigsDbal('tracking'),
-        ]);
+        // Super Admin impersonando um estabelecimento vê as configurações DO estabelecimento
+        // (tela do admin), sem alterar as configurações globais.
+        if ($request->getSession()->get('impersonating_establishment', false)) {
+            return $this->redirectToRoute('app_settings');
+        }
+
+        // Garante a conexão principal (homepet_login), onde ficam as configs globais.
+        $this->restauraLoginDB();
+
+        $data = [];
+        $data['lgpd'] = $this->lerConfigsDbal('lgpd');
+        $data['tracking'] = $this->lerConfigsDbal('tracking');
+        // dd($data);
+
+        return $this->render('superadmin/configuracoes_globais.html.twig', $data);
     }
 
     /**

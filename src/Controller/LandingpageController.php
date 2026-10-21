@@ -28,10 +28,28 @@ class LandingpageController extends DefaultController
         $data = [];
 
         $data['cookie_banner_ativo'] = true;
-        $data['tracking'] = '';
+        $data['tracking'] = $this->lerConfigsDbal('tracking');
         $data['modulos'] = $this->modulosSistema;
 
         return $this->render('home/landing.html.twig', $data);
+    }
+
+    private function lerConfigsDbal(string $tipo): array
+    {
+        try {
+            $conn = $this->managerRegistry->getConnection();
+            $rows = $conn->fetchAllAssociative(
+                "SELECT chave, valor FROM config WHERE estabelecimento_id = :estab AND tipo = :tipo",
+                ['estab' => 0, 'tipo' => $tipo]
+            );
+            $mapa = [];
+            foreach ($rows as $row) {
+                $mapa[$row['chave']] = $row['valor'];
+            }
+            return $mapa;
+        } catch (\Throwable ) {
+            return [];
+        }
     }
 
     /**
