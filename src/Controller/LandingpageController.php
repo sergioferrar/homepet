@@ -101,9 +101,27 @@ class LandingpageController extends DefaultController
     public function cadastro(Request $request): Response
     {
         $data = [];
-
-        $planos = $this->getRepositorio(\App\Entity\Plano::class)->listaPlanosHome($this->session->get('userId'));
         $data['planoId'] = $request->get('planoId');
+
+        $plano = $this->getRepositorio(\App\Entity\Plano::class)->verPlano($data['planoId']);
+
+        $data['error'] = null;
+        $data['ativo'] = true;
+
+        if(!$plano){
+            $data['error'] = true;
+            return $this->render('home/cadastro-estabelecimento.html.twig', $data);
+        }
+
+        if($plano->getStatus() == 'Inativo'){
+            $data['ativo'] = false;
+            return $this->render('home/cadastro-estabelecimento.html.twig', $data);
+        }
+
+        $planIds = [];
+        $planIdsAtivos = [];
+
+
 
         return $this->render('home/cadastro-estabelecimento.html.twig', $data);
     }
