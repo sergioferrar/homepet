@@ -87,6 +87,8 @@ class DefaultController extends AbstractController
         $this->caixaService  = $caixaService;
         $this->tenantContext = $tenantContext;
         $this->em            = $em;
+
+        $this->getRepositorio(\App\Entity\Financeiro::class)->regulaBase();
     }
 
     public function switchDB(): void

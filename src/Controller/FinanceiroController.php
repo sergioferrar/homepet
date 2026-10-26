@@ -35,7 +35,7 @@ class FinanceiroController extends DefaultController
         $baseId = $this->getIdBase();
         $financeiroRepo = $this->getRepositorio(Financeiro::class);
         $financeiroPendenteRepo = $this->getRepositorio(FinanceiroPendente::class);
-        $financeiroRepo->regulaBase();
+
 
         $aba = (string) $request->query->get('aba', 'diario');
         if ($aba === 'pendente') {
