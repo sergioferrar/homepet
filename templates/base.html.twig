@@ -38,6 +38,9 @@
     <!-- Custom Theme Colors -->
     <link href="{{ asset('assets/css/layouts/base.css') }}" rel="stylesheet">
 
+    <!-- Layout horizontal + modo claro/escuro (carregar por último) -->
+    <link href="{{ asset('assets/css/layouts/horizontal-theme.css') }}" rel="stylesheet">
+
 </head>
 
 {% if app.request.attributes.get('_route') == 'home' %}
@@ -215,7 +218,8 @@
 
 
 <!-- ======= Sidebar ======= -->
-<aside id="sidebar" class="sidebar">
+<nav id="sidebar" class="sidebar modbar" aria-label="Módulos">
+    <button type="button" class="modbar-toggle" id="modbarToggle" aria-controls="sidebar-nav" aria-expanded="false"><i class="bi bi-list"></i><span>Menu</span></button>
 
     <ul class="sidebar-nav" id="sidebar-nav">
         {% if app.request.attributes.get('_route') is null %}
@@ -249,14 +253,14 @@
             {% set superMenuAberto = route in superRoutes %}
 
             <li class="nav-item">
-                <a class="nav-link {{ not superMenuAberto ? 'collapsed' : '' }}"
+                <a class="nav-link collapsed {{ superMenuAberto ? 'active' : '' }}"
                    data-bs-target="#menu-superadmin" data-bs-toggle="collapse" href="#">
                     <i class="bi bi-shield-lock"></i>
                     <span>Super Admin</span>
                     <i class="bi bi-chevron-down ms-auto"></i>
                 </a>
                 <ul id="menu-superadmin"
-                    class="nav-content collapse {{ superMenuAberto ? 'show' : '' }}"
+                    class="nav-content collapse"
                     data-bs-parent="#sidebar-nav">
                     <li>
                         <a href="{{ path('superadmin_dashboard') }}"
@@ -360,13 +364,13 @@
         </li>
         {% endif %}
 
-        <li class="nav-item">
+        {# <li class="nav-item">
             <a class="nav-link collapsed" href="#">
                 <i class="bi bi-arrow-up-right"></i><span>Ver site</span>
             </a>
-        </li>
+        </li> #}
     </ul>
-</aside><!-- End Sidebar-->
+</nav><!-- End Módulos -->
 
 
 <main id="main" class="main">
@@ -457,6 +461,8 @@
 <script src="{{ asset('assets/js/main.js') }}"></script>
 <script src="{{ asset('js/utils.js') }}"></script>
 <script src="{{ asset('js/Notify.js') }}"></script>
+
+<script src="{{ asset('assets/js/horizontal-theme.js') }}"></script>
 
 <!-- Custom JS for Sidebar Toggle -->
 <script>

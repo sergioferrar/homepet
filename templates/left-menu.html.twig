@@ -1,5 +1,10 @@
 {% set rotaAtual = app.request.attributes.get('_route') %}
 
+{# Este partial é renderizado dentro da BARRA HORIZONTAL de módulos (base.html.twig → #sidebar-nav).
+   - Itens simples viram botões da barra; grupos com submenu viram painéis flutuantes (collapse).
+   - O painel NUNCA nasce aberto: o grupo da rota atual só ganha a classe "active" no botão.
+   - Estilo em public/assets/css/layouts/horizontal-theme.css. #}
+
 {#
     Regra de exibição do menu dinâmico:
 
@@ -28,6 +33,7 @@
                 <li class="nav-item">
                     <a class="nav-link {% if rotaAtual == rows.menu.rota %} active {% else %} collapsed {% endif %}"
                        href="{% if rows.menu.rota != '#' %}{{ path(rows.menu.rota) }}{% endif %}"
+                       {% if rotaAtual == rows.menu.rota %}aria-current="page"{% endif %}
                        {% if rows.menu.rota == 'clinica_nova_consulta' %}target="_blank" rel="noopener"{% endif %}>
                         <i class="bi bi-{{ rows.menu.icone }}"></i>
                         <span>{{ rows.menu.titulo }}</span>
@@ -56,8 +62,8 @@
                     {% endfor %}
 
                     <li class="nav-item">
-                        <a class="nav-link {% if not menuAberto %}collapsed{% else %}active{% endif %}"
-                           href="#"
+                        <a class="nav-link collapsed {% if menuAberto %}active{% endif %}"
+                           href="#" role="button" aria-haspopup="true" aria-expanded="false"
                            data-bs-toggle="collapse"
                            data-bs-target="#menu-{{ rows.menu.id }}">
                             <i class="bi bi-{{ rows.menu.icone }}"></i>
@@ -66,7 +72,7 @@
                         </a>
 
                         <ul id="menu-{{ rows.menu.id }}"
-                            class="nav-content collapse {% if menuAberto %}show{% endif %}"
+                            class="nav-content collapse"
                             data-bs-parent="#sidebar-nav">
 
                             {% for sub in subsVisiveis %}
