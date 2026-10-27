@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Estabelecimento;
+use App\Installer\TenantDatabaseInstaller;
+use App\Service\DatabaseBkp;
 use App\Service\Payment\MercadoPagoService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,9 +24,9 @@ class PagamentoController extends DefaultController
     {
         // O fluxo de cadastro usa assinatura recorrente (preapproval), portanto o MP
         // retorna preapproval_id. Pagamentos avulsos retornam payment_id/collection_id.
-        $paymentId     = $request->get('payment_id') ?: $request->get('collection_id');
+        $paymentId = $request->get('payment_id') ?: $request->get('collection_id');
         $preapprovalId = $request->get('preapproval_id');
-        $status        = $request->get('status') ?? $request->get('collection_status');
+        $status = $request->get('status') ?? $request->get('collection_status');
         // O MP já envia o external_reference na própria URL de retorno; usamos como base.
         $externalReference = $request->get('external_reference');
 
@@ -41,37 +43,71 @@ class PagamentoController extends DefaultController
             // Confia no status que o MP envia no redirect e apenas *reforça* com a
             // consulta à API. A consulta nunca pode derrubar o fluxo nem reverter um
             // pagamento já aprovado; se ela falhar, mantemos a decisão do redirect.
-            $aprovado      = in_array($status, ['approved', 'authorized'], true);
+            $aprovado = in_array($status, ['approved', 'authorized'], true);
             $paymentMethod = null;
 
             try {
                 if ($preapprovalId) {
                     $subscription = $mercadoPagoService->getSubscriptionStatus($preapprovalId);
-                    
+
                     if (!empty($subscription['success'])) {
-                        $statusConsultado  = $subscription['status'] ?? $status;
-                        $aprovado          = $aprovado || in_array($statusConsultado, ['authorized', 'approved'], true);
+                        $statusConsultado = $subscription['status'] ?? $status;
+                        $aprovado = $aprovado || in_array($statusConsultado, ['authorized', 'approved'], true);
                         $externalReference = $externalReference ?: ($subscription['raw_data']['external_reference'] ?? null);
+
+                        // 1. Cria o banco de dados do novo tenant
+                        $dbName = "homepet_{$estabelecimento->getId()}";
+                        $this->databaseBkp
+                            ->setDbName($dbName)
+                            ->createDatabase();
+
+                        // 2. Monta a Connection Doctrine apontando para o banco recém-criado
+                        $tenantConnectiold = $this->pegarConexaoAtiva();
+                        $this->prepareTenantidConnection($estabelecimento->getId());
+
+                        $tenantConnection = $this->entityManager->getConnection();
+                        // dd($tenantConnectiold, $tenantConnection->execute("SHOW databases")->fetchAssociative());
+
+                        // 3. Executa o instalador (cria todas as 33 tabelas em ordem)
+                        $installer = new TenantDatabaseInstaller($this->logger);
+                        $result = $installer->install($tenantConnection);
+
+                        // 4. Avalia o resultado
+                        if (!$result['success']) {
+                            throw new \RuntimeException(
+                                sprintf(
+                                    'Falha ao criar tabela "%s" no banco "%s": %s',
+                                    $result['failed_table'],
+                                    $dbName,
+                                    $result['message'],
+                                )
+                            );
+                        }
+
+                        $this->logger->info('Schema do tenant instalado com sucesso.', [
+                            'db' => $dbName,
+                            'created_tables' => $result['created_tables'],
+                        ]);
                     } else {
                         // Ex.: 401 (token de teste consultando assinatura de produção) ou 404 (id inválido).
                         $this->logger->error('Não foi possível validar a assinatura no Mercado Pago.', [
                             'preapproval_id' => $preapprovalId,
-                            'http_code'      => $subscription['http_code'] ?? null,
-                            'error'          => $subscription['error'] ?? null,
+                            'http_code' => $subscription['http_code'] ?? null,
+                            'error' => $subscription['error'] ?? null,
                         ]);
                     }
                 } elseif ($paymentId) {
                     $payment = $mercadoPagoService->getPaymentStatus($paymentId);
                     if (!empty($payment['success'])) {
-                        $statusConsultado  = $payment['status'] ?? $status;
-                        $aprovado          = $aprovado || $statusConsultado === 'approved';
+                        $statusConsultado = $payment['status'] ?? $status;
+                        $aprovado = $aprovado || $statusConsultado === 'approved';
                         $externalReference = $externalReference ?: ($payment['external_reference'] ?? null);
-                        $paymentMethod     = $payment['payment_method_id'] ?? null;
+                        $paymentMethod = $payment['payment_method_id'] ?? null;
                     } else {
                         $this->logger->error('Não foi possível validar o pagamento no Mercado Pago.', [
                             'payment_id' => $paymentId,
-                            'http_code'  => $payment['http_code'] ?? null,
-                            'error'      => $payment['error'] ?? null,
+                            'http_code' => $payment['http_code'] ?? null,
+                            'error' => $payment['error'] ?? null,
                         ]);
                     }
                 }
@@ -142,8 +178,8 @@ class PagamentoController extends DefaultController
                 // O webhook (assíncrono) ainda poderá ativá-lo; registramos para diagnóstico.
                 $this->logger->error('Pagamento aprovado, mas estabelecimento não identificado no retorno.', [
                     'external_reference' => $externalReference,
-                    'payment_id'         => $paymentId,
-                    'preapproval_id'     => $preapprovalId,
+                    'payment_id' => $paymentId,
+                    'preapproval_id' => $preapprovalId,
                 ]);
             }
 
@@ -157,8 +193,8 @@ class PagamentoController extends DefaultController
                         $usuario->getEmail(),
                         'Assinatura Confirmada - Sistema HomePet',
                         $this->renderView('emails/assinatura_confirmada.html.twig', [
-                            'invoice'   => $invoice,
-                            'usuario'   => $usuario,
+                            'invoice' => $invoice,
+                            'usuario' => $usuario,
                             'login_url' => $loginUrl,
                         ])
                     );
@@ -214,7 +250,7 @@ class PagamentoController extends DefaultController
     /**
      * @Route("/pagamento/webhook/mercadopago", name="pagamento_webhook_mercadopago", methods={"POST"})
      */
-    public function webhookMercadoPago(Request $request): Response
+    public function webhookMercadoPago(Request $request) : Response
     {
         $data = json_decode($request->getContent(), true);
 
@@ -256,21 +292,21 @@ class PagamentoController extends DefaultController
                             $emailService = $this->container->get(\App\Service\EmailService::class);
                             $ehAssinatura = $invoice->getTipo() === 'assinatura';
                             $template = $ehAssinatura
-                                ? 'emails/assinatura_confirmada.html.twig'
-                                : 'emails/assinatura_renovada.html.twig';
+                            ? 'emails/assinatura_confirmada.html.twig'
+                            : 'emails/assinatura_renovada.html.twig';
 
                             $loginUrl = $this->generateUrl('app_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
                             $emailService->sendEmail(
                                 $usuario->getEmail(),
                                 $ehAssinatura
-                                    ? 'Assinatura Confirmada - Sistema HomePet'
-                                    : 'Assinatura Renovada - Sistema HomePet',
+                                ? 'Assinatura Confirmada - Sistema HomePet'
+                                : 'Assinatura Renovada - Sistema HomePet',
                                 $this->renderView($template, [
-                                    'invoice'         => $invoice,
+                                    'invoice' => $invoice,
                                     'estabelecimento' => $estabelecimento,
-                                    'usuario'         => $usuario,
-                                    'login_url'       => $loginUrl,
+                                    'usuario' => $usuario,
+                                    'login_url' => $loginUrl,
                                 ])
                             );
                         }

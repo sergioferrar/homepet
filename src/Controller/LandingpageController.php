@@ -162,41 +162,7 @@ class LandingpageController extends DefaultController
 
             // Criar database apartir do estabelecimento criado usando DatabaseBkp
 
-            // --- Dentro do seu Controller / Service ---
-
-            // 1. Cria o banco de dados do novo tenant
-            $dbName = "homepet_{$estabelecimento->getId()}";
-            $this->databaseBkp
-                ->setDbName($dbName)
-                ->createDatabase();
-
-            // 2. Monta a Connection Doctrine apontando para o banco recém-criado
-            $tenantConnectiold = $this->pegarConexaoAtiva();
-            $this->prepareTenantidConnection($estabelecimento->getId());
-
-            $tenantConnection = $this->entityManager->getConnection();
-            // dd($tenantConnectiold, $tenantConnection->execute("SHOW databases")->fetchAssociative());
-
-            // 3. Executa o instalador (cria todas as 33 tabelas em ordem)
-            $installer = new TenantDatabaseInstaller($this->logger);
-            $result = $installer->install($tenantConnection);
-
-            // 4. Avalia o resultado
-            if (!$result['success']) {
-                throw new \RuntimeException(
-                    sprintf(
-                        'Falha ao criar tabela "%s" no banco "%s": %s',
-                        $result['failed_table'],
-                        $dbName,
-                        $result['message'],
-                    )
-                );
-            }
-
-            $this->logger->info('Schema do tenant instalado com sucesso.', [
-                'db' => $dbName,
-                'created_tables' => $result['created_tables'],
-            ]);
+            /////////////////////////////////////////////////////////////////////
 
             // 5. Flash message de sucesso (opcional)
             // $this->addFlash('success', "Banco de dados do estabelecimento criado com sucesso ({$dbName}).");

@@ -61,6 +61,7 @@ security:
     access_control:
         #PUBLICAS
         - { path: ^/$, roles: PUBLIC_ACCESS }
+        - { path: ^/checkout, roles: PUBLIC_ACCESS }
         - { path: ^/index.php$, roles: PUBLIC_ACCESS }
         - { path: ^/politicas-de-privacidade, roles: PUBLIC_ACCESS }
         - { path: ^/termos-de-uso, roles: PUBLIC_ACCESS }

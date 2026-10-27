@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Checkout seguro</title>
+		<script src="https://code.jquery.com/jquery-3.7.1.min.js">
+		</script>
+		<script src="https://sdk.mercadopago.com/js/v2">
+		</script>
+		<style>
+			* { box-sizing: border-box }
+			body { margin: 0; background: #f3f6fb; color: #182230; font: 16px/1.5 system-ui, -apple-system, sans-serif }
+			.wrap { max-width: 760px; margin: 40px auto; padding: 16px }
+			.checkout { background: #fff; border: 1px solid #e3e8ef; border-radius: 18px; padding: 28px; box-shadow: 0 12px 36px #172b4d0c }
+			h1 { margin: 0 0 8px; font-size: 28px }
+			.muted { color: #667085 }
+			.total { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #e6eaf0; margin-bottom: 22px }
+			.price { font-size: 28px; font-weight: 750 }
+			.methods { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 20px }
+			.method { border: 1px solid #d0d5dd; border-radius: 12px; padding: 14px; cursor: pointer; display: flex; gap: 10px; align-items: center }
+			.method:has(input:checked) { border-color: #1677ff; background: #f0f7ff }
+			.field { margin: 14px 0 }
+			.field label { display: block; font-weight: 650; margin-bottom: 6px }
+			input, select { width: 100%; border: 1px solid #cfd6e1; border-radius: 9px; padding: 12px; font: inherit; background: white }
+			.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+			.btn { width: 100%; border: 0; border-radius: 10px; background: #1677ff; color: white; padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 12px }
+			.btn:disabled { opacity: .55; cursor: wait }
+			.notice { padding: 12px; border-radius: 9px; margin: 14px 0; display: none }
+			.error { background: #fff0f0; color: #a31313 }
+			.success { background: #eafaf0; color: #126b36 }
+			#pix-result { text-align: center; padding: 18px; border: 1px solid #e3e8ef; border-radius: 12px; margin-top: 20px; display: none; overflow-wrap: anywhere }
+			#pix-qr { max-width: 240px; width: 100%; height: auto }
+			.small { font-size: 13px }
+			.card-fields { display: none }
+			.secure-note { font-size: 13px; color: #667085; margin-top: 8px }
+			@media(max-width:560px) {
+				.checkout { padding: 20px }
+				.methods, .grid { grid-template-columns: 1fr }
+				.wrap { margin: 12px auto }
+			}
+
+		</style>
+	</head>
+	<body>
+		<div class="wrap">
+			<main class="checkout">
+				<p class="muted">PAGAMENTO SEGURO</p>
+				<h1>Finalizar compra</h1>
+				<p class="muted">Escolha como deseja pagar.</p>
+				<div class="total">
+					<div>
+						<strong>{{ description }}</strong>
+						<div class="muted small">Pedido demonstrativo</div>
+					</div>
+					<div class="price">R$ {{ amount|number_format(2, ',', '.') }}</div>
+				</div>
+				<div class="field">
+					<label>Forma de pagamento</label>
+					<div class="methods">
+						<label class="method">
+							<input type="radio" name="method" value="pix" checked> <span>
+								<strong>PIX</strong>
+								<br>
+								<span class="muted small">QR Code instantâneo</span>
+							</span>
+						</label>
+						<label class="method">
+							<input type="radio" name="method" value="card"> <span>
+							<strong>Cartão</strong>
+							<br>
+							<span class="muted small">Crédito ou débito disponível</span>
+						</span>
+					</label>
+				</div>
+			</div>
+			<form id="checkout-form">
+				<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+				<div class="field">
+					<label for="email">E-mail do pagador</label>
+					<input id="email" type="email" autocomplete="email" required placeholder="voce@exemplo.com">
+				</div>
+				<div class="field">
+					<label for="cpf">CPF do pagador</label>
+					<input id="cpf" inputmode="numeric" maxlength="14" required placeholder="000.000.000-00">
+				</div>
+				<section id="card-fields" class="card-fields">
+					<div class="field">
+						<label for="card-kind">Tipo de cartão</label>
+						<select id="card-kind">
+							<option value="credit">Crédito</option>
+							<option value="debit">Débito (se disponível)</option>
+						</select>
+					</div>
+					<div class="field">
+						<label for="cardholderName">Nome impresso no cartão</label>
+						<input id="cardholderName" data-checkout="cardholderName" autocomplete="cc-name" placeholder="NOME COMO ESTÁ NO CARTÃO">
+					</div>
+					<div class="field">
+						<label for="cardNumber">Número do cartão</label>
+						<input id="cardNumber" data-checkout="cardNumber" autocomplete="cc-number" inputmode="numeric" placeholder="Número do cartão">
+					</div>
+					<div class="grid">
+						<div class="field">
+							<label for="expirationDate">Validade (MM/AA)</label>
+							<input id="expirationDate" data-checkout="cardExpirationDate" autocomplete="cc-exp" placeholder="MM/AA">
+						</div>
+						<div class="field">
+							<label for="securityCode">CVV</label>
+							<input id="securityCode" data-checkout="securityCode" autocomplete="cc-csc" inputmode="numeric" placeholder="CVV">
+						</div>
+					</div>
+					<div class="field">
+						<label for="issuer">Banco emissor</label>
+						<select id="issuer">
+						</select>
+					</div>
+					<div class="field" id="installments-wrap">
+						<label for="installments">Parcelas</label>
+						<select id="installments">
+							<option value="1">1x</option>
+						</select>
+					</div>
+					<p class="secure-note">A tokenização é feita pelo SDK do Mercado Pago. Nunca armazene número do cartão ou CVV no seu servidor.</p>
+				</section>
+				<div id="message" class="notice" role="status">
+				</div>
+				<button class="btn" id="pay-button" type="submit">Gerar PIX</button>
+			</form>
+			<section id="pix-result">
+				<h2>PIX gerado</h2>
+				<p id="pix-status" class="muted">Aguardando pagamento.</p>
+				<img id="pix-qr" alt="QR Code PIX">
+				<div class="field">
+					<label for="pix-copy">PIX copia e cola</label>
+					<input id="pix-copy" readonly>
+				</div>
+				<button type="button" class="btn" id="copy-pix">Copiar código PIX</button>
+				<p class="small muted" id="payment-id">
+				</p>
+			</section>
+		</main>
+	</div>
+	<script>
+	$(function() {
+		const mp = new MercadoPago('{{ public_key|e('js') }}', {locale: 'pt-BR'});
+		let cardFormData = null;
+
+		function showMessage(text, type) {
+			$('#message').removeClass('error success').addClass(type).text(text).show();
+		}
+
+		function clearMessage() {
+			$('#message').hide().text('');
+		}
+
+		function updateMethod() {
+			const method = $('input[name="method"]:checked').val();
+			$('#card-fields').toggle(method === 'card');
+			$('#pay-button').text(method === 'pix' ? 'Gerar PIX' : 'Pagar com cartão');
+			$('#pix-result').hide();
+			clearMessage();
+		}
+
+		$('input[name="method"]').on('change', updateMethod);
+		$('#cpf').on('input', function() {
+			let v = this.value.replace(/\D/g, '').slice(0, 11);
+			v = v.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+			this.value = v;
+		});
+
+		// MercadoPago.js gera o token e consulta métodos/parcelas no próprio navegador.
+		// Não envie PAN/CVV diretamente ao backend.
+		$('#cardNumber').on('blur', async function() {
+			const number = this.value.replace(/\D/g, '');
+			if (number.length < 6) return;
+			try {
+				const methods = await mp.getPaymentMethods({
+					bin: number.substring(0, 8)
+				});
+				const cardMethod = (methods.results || []).find(m => ['credit_card', 'debit_card'].includes(m.payment_type_id));
+				if (!cardMethod) {
+					showMessage('Não identificamos um método de cartão disponível para este BIN.', 'error');
+					return;
+				}
+				$('#issuer').empty();
+				(cardMethod.issuer || []).forEach(i => $('#issuer').append(new Option(i.name, i.id)));
+				$('#installments').empty().append(new Option('1x', '1'));
+			} catch (e) {
+				console.warn(e);
+			}
+		});
+
+		$('#checkout-form').on('submit', async function(e) {
+			e.preventDefault();
+			clearMessage();
+			const method = $('input[name="method"]:checked').val();
+			const email = $('#email').val().trim();
+			const cpf = $('#cpf').val().replace(/\D/g, '');
+			if (!email || cpf.length !== 11) {
+				showMessage('Informe um e-mail válido e CPF com 11 dígitos.', 'error');
+				return;
+			}
+			const data = {
+				method,
+				email,
+				cpf,
+				_token: $('#csrf-token').val()
+			};
+			if (method === 'card') {
+				try {
+					// SDK oficial cria token. O formulário real de produção deve usar CardForm/Brick
+					// conforme a documentação atual para obter também payment_method_id, issuer e parcelas.
+					const tokenResponse = await mp.createCardToken({
+						cardNumber: $('#cardNumber').val().replace(/\s/g, ''),
+						cardholderName: $('#cardholderName').val().trim(),
+						cardExpirationMonth: $('#expirationDate').val().split('/')[0],
+						cardExpirationYear: '20' + ($('#expirationDate').val().split('/')[1] || ''),
+						securityCode: $('#securityCode').val(),
+						identificationType: 'CPF',
+						identificationNumber: cpf
+					});
+					data.token = tokenResponse.id;
+					const bin = $('#cardNumber').val().replace(/\D/g, '').substring(0, 8);
+					const methods = await mp.getPaymentMethods({
+						bin
+					});
+					const kind = $('#card-kind').val();
+					const found = (methods.results || []).find(m => m.payment_type_id === (kind === 'debit' ? 'debit_card' : 'credit_card'));
+					if (!found) {
+						showMessage('Este cartão não foi identificado como ' + (kind === 'debit' ? 'débito' : 'crédito') + ' disponível. Tente outro cartão ou selecione crédito.', 'error');
+						return;
+					}
+					data.payment_method_id = found.id;
+					data.installments = kind === 'debit' ? 1 : Number($('#installments').val() || 1);
+					data.card_kind = kind;
+				} catch (err) {
+					console.error(err);
+					showMessage('Não foi possível validar/tokenizar o cartão. Confira os campos e tente novamente.', 'error');
+					return;
+				}
+			}
+
+			$('#pay-button').prop('disabled', true).text('Processando...');
+			
+			try {
+				const response = await fetch('{{ path('app_checkout_pay') }}', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest'
+						},
+						body: JSON.stringify(data)
+					});
+				const result = await response.json();
+				if (!response.ok || result.error) throw new Error(result.error || 'Não foi possível processar o pagamento.');
+				if (method === 'pix') {
+					if (!result.qr_code_base64 || !result.qr_code) throw new Error('O Mercado Pago não retornou o QR Code. Status: ' + result.status);
+					$('#pix-qr').attr('src', 'data:image/png;base64,' + result.qr_code_base64);
+					$('#pix-copy').val(result.qr_code);
+					$('#pix-status').text('Status: ' + result.status);
+					$('#payment-id').text('Pagamento #' + result.id);
+					$('#pix-result').show();
+					showMessage('PIX criado. Escaneie o QR Code ou copie o código.', 'success');
+				} else {
+					showMessage('Retorno do pagamento: ' + result.status + (result.status_detail ? ' (' + result.status_detail + ')' : ''), result.status === 'approved' ? 'success' : 'error');
+				}
+			} catch (err) {
+				showMessage(err.message || 'Erro inesperado ao processar pagamento.', 'error');
+			} finally {
+				$('#pay-button').prop('disabled', false);
+				updateMethod();
+			}
+		});
+		$('#copy-pix').on('click', async function() {
+			try {
+				await navigator.clipboard.writeText($('#pix-copy').val());
+				showMessage('Código PIX copiado.', 'success');
+			} catch (e) {
+				$('#pix-copy').trigger('select');
+				document.execCommand('copy');
+				showMessage('Código PIX copiado.', 'success');
+			}
+		});
+		updateMethod();
+	});
+	</script>
+</body>
+</html>
