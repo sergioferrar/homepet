@@ -473,7 +473,7 @@
                                     <small class="text-muted">{{ clienteNome }}</small>
                                 </div>
                             </div>
-                            <span class="badge bg-primary">{{ dataAt|date('d/m H:i') }}</span>
+                            <span class="badge bg-primary">{{ dataAt|date('d/m') }} {{ item.hora|date('H:i') }}</span>
                         </div>
                     {% else %}
                         <div class="text-center py-5">
