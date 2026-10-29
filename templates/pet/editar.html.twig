@@ -1,188 +1,29 @@
 {# templates/pet/editar.html.twig #}
-{% extends 'forms/_form_base.html.twig' %}
+{% extends 'base.html.twig' %}
 
-{% block form_page_title %}
-    {% if pet is defined %}Editar Pet{% else %}Novo Pet{% endif %}
+{% block title %}Editar Pet{% endblock %}
+{% block page_title %}Editar Pet{% endblock %}
+
+{% block body %}
+    <div class="pagetitle">
+        <nav><ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('home') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('pet_index') }}">Pets</a></li>
+            <li class="breadcrumb-item active">Editar pet</li>
+        </ol></nav>
+    </div>
+    <section class="row">
+        {% include 'pet/_form.html.twig' with {
+            'modo': 'editar',
+            'action': path('pet_editar', {'id': pet.id}),
+            'pet': pet,
+            'racas': racas,
+            'clientes': clientes,
+            'voltar_url': url('pet_index')
+        } only %}
+    </section>
 {% endblock %}
 
-{% block breadcrumb_items %}
-    <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-primary">Pets</a></li>
-    <li class="breadcrumb-item active">{% if pet is defined %}Editar{% else %}Novo{% endif %}</li>
-{% endblock %}
-
-{% block form_card_title %}
-    {% if pet is defined %}Editar Pet{% else %}Cadastro de Pet{% endif %}
-{% endblock %}
-
-{% block form_content %}
-    <form method="post"
-          action="{% if pet is defined %}{{ path('pet_editar', {'id': pet.id}) }}{% else %}{{ path('pet_novo') }}{% endif %}">
-        <div class="mb-3">
-            <label for="nome" class="form-label">Nome</label>
-            <input type="text" class="form-control" id="nome" name="nome" value="{{ pet.nome|default('') }}" required>
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="especie" class="form-label">Espécie</label>
-                <input type="text" class="form-control" id="especie" name="especie"
-                       value="{{ pet.especie|default('') }}" required>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label for="sexo" class="form-label">Sexo</label>
-                <select class="form-select select2" id="sexo" name="sexo" required>
-                    <option value="">Selecionar</option>
-                    <option value="M" {% if pet.sexo is defined and pet.sexo == 'M' %}selected{% endif %}>Macho</option>
-                    <option value="F" {% if pet.sexo is defined and pet.sexo == 'F' %}selected{% endif %}>Fêmea</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label for="raca" class="form-label">Raça</label>
-            <select class="form-select select2-raca" id="raca" name="raca" required>
-                <option value="">Selecionar ou digitar raça...</option>
-                {% for raca in racas %}
-                    <option value="{{ raca }}" {% if pet.raca is defined and pet.raca == raca %}selected{% endif %}>{{ raca }}</option>
-                {% endfor %}
-                {# Se a raça atual do pet não estiver na lista, adiciona como opção avulsa #}
-                {% if pet.raca is defined and pet.raca is not empty and pet.raca not in racas %}
-                    <option value="{{ pet.raca }}" selected>{{ pet.raca }}</option>
-                {% endif %}
-            </select>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="porte" class="form-label">Porte</label>
-                <select class="form-select select2" id="porte" name="porte" required>
-                    <option value="">Selecionar</option>
-                    <option value="Pequeno" {% if pet.porte is defined and pet.porte == 'Pequeno' %}selected{% endif %}>Pequeno</option>
-                    <option value="Médio" {% if pet.porte is defined and pet.porte == 'Médio' %}selected{% endif %}>Médio</option>
-                    <option value="Grande" {% if pet.porte is defined and pet.porte == 'Grande' %}selected{% endif %}>Grande</option>
-                </select>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label for="data_nascimento" class="form-label">Data de Nascimento</label>
-                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento"
-                       value="{{ pet.dataNascimento is defined and pet.dataNascimento ? pet.dataNascimento|date('Y-m-d') : '' }}">
-                <small class="text-muted" id="idade_calculada"></small>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="peso" class="form-label">Peso (KG)</label>
-                <input type="number" step="0.01" class="form-control" id="peso" name="peso"
-                       value="{{ pet.peso|default('') }}" required>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label for="castrado" class="form-label">Castrado</label>
-                <select class="form-select select2" id="castrado" name="castrado" required>
-                    <option value="1" {% if pet.castrado is defined and pet.castrado == 1 %}selected{% endif %}>Sim</option>
-                    <option value="0" {% if pet.castrado is not defined or pet.castrado == 0 %}selected{% endif %}>Não</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label for="observacoes" class="form-label">Observações</label>
-            <textarea class="form-control" id="observacoes" name="observacoes"
-                      rows="3">{{ pet.observacoes|default('') }}</textarea>
-        </div>
-
-        <div class="mb-3">
-            <label for="dono_id" class="form-label">Dono</label>
-            <select class="form-select select2" id="dono_id" name="dono_id" required>
-                <option value="">Selecione um dono...</option>
-                {% for cliente in clientes %}
-                    <option value="{{ cliente.id }}"
-                            {% if pet.dono_id is defined and cliente.id == pet.dono_id %}selected{% endif %}>{{ cliente.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="text-center">
-            <button type="submit" class="btn btn-success w-50">Salvar</button>
-        </div>
-    </form>
-{% endblock %}
-
-{% block form_javascripts %}
-    {# Select2 CSS #}
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-
-    {# Select2 JS #}
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-
-            // ── Select2 padrão (sem tags) ──────────────────────────────────
-            $('.select2').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                language: 'pt-BR',
-                placeholder: function () {
-                    return $(this).data('placeholder') || 'Selecionar';
-                },
-                allowClear: true
-            });
-
-            // ── Select2 para Raça (com tags – permite digitar valor livre) ─
-            $('.select2-raca').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                language: 'pt-BR',
-                placeholder: 'Selecionar ou digitar raça...',
-                allowClear: true,
-                tags: true,
-                createTag: function (params) {
-                    var term = $.trim(params.term);
-                    if (term === '') return null;
-                    return { id: term, text: term, newTag: true };
-                }
-            });
-
-            // ── Cálculo automático da idade ────────────────────────────────
-            var dataNascimentoInput = document.getElementById("data_nascimento");
-            var idadeCalculada = document.getElementById("idade_calculada");
-
-            function calcularIdade() {
-                var dataNascimento = dataNascimentoInput.value;
-                if (!dataNascimento) { idadeCalculada.textContent = ""; return; }
-
-                var nascimento = new Date(dataNascimento);
-                var hoje = new Date();
-
-                var anos = hoje.getFullYear() - nascimento.getFullYear();
-                var meses = hoje.getMonth() - nascimento.getMonth();
-
-                if (meses < 0 || (meses === 0 && hoje.getDate() < nascimento.getDate())) {
-                    anos--; meses += 12;
-                }
-                if (hoje.getDate() < nascimento.getDate()) {
-                    meses--;
-                    if (meses < 0) meses += 12;
-                }
-
-                var texto = "";
-                if (anos === 0 && meses === 0) {
-                    var dias = Math.floor((hoje - nascimento) / (1000 * 60 * 60 * 24));
-                    texto = dias + " dia(s)";
-                } else if (anos === 0) {
-                    texto = meses + " mês(es)";
-                } else if (meses === 0) {
-                    texto = anos + " ano(s)";
-                } else {
-                    texto = anos + " ano(s) e " + meses + " mês(es)";
-                }
-
-                idadeCalculada.textContent = "Idade: " + texto;
-            }
-
-            dataNascimentoInput.addEventListener("change", calcularIdade);
-            calcularIdade();
-        });
-    </script>
+{% block javascripts %}
+    {{ include('pet/_form_scripts.html.twig') }}
 {% endblock %}

@@ -1,0 +1,151 @@
+{# templates/pet/_form.html.twig — formulário compartilhado de cadastro/edição de pet.
+   Variáveis: modo ('novo'|'editar'), action, pet (opcional), racas, clientes, cliente_id (opcional), voltar_url #}
+{% set p = pet|default({}) %}
+{% set exige = modo == 'editar' %}
+{% set sexo_atual = p.sexo|default('') %}
+{% set porte_atual = p.porte|default('') %}
+{% set castrado_atual = (p.castrado|default(0)) ? '1' : '0' %}
+{% set tutor_fixo = cliente_id|default(false) %}
+{% set nome_tutor = '' %}
+{% if tutor_fixo %}{% for c in clientes %}{% if c.id == tutor_fixo %}{% set nome_tutor = c.nome %}{% endif %}{% endfor %}{% endif %}
+
+<style>
+.pet-f{--f-ink:#1f2933;--f-muted:#667085;--f-line:#e4e7ec;--f-soft:#f7f8fa;--f-brand:#004080;color:var(--bs-body-color);}
+[data-bs-theme=dark] .pet-f{--f-line:#25363f;--f-soft:#1b2c36;--f-brand:#3aa7c8}
+.pet-f .topo{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.pet-f .titulo{display:flex;align-items:center;gap:.875rem}
+.pet-f .titulo h1{font-size:1.375rem;font-weight:700;margin:0}
+.pet-f .titulo p{margin:0;font-size:.875rem;color:var(--f-muted)}
+.pet-f .avatar{width:48px;height:48px;border-radius:50%;background:var(--f-soft);color:var(--f-brand);font-size:1.25rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pet-f .secao{background:var(--bs-body-bg);border:1px solid var(--f-line);border-radius:8px;margin-bottom:1rem;overflow:hidden}
+.pet-f .secao-cab{display:flex;align-items:center;gap:.625rem;padding:.875rem 1.25rem;border-bottom:1px solid var(--f-line);background:var(--f-soft)}
+.pet-f .secao-cab i{color:var(--f-brand);font-size:1.125rem}
+.pet-f .secao-cab h2{font-size:.9375rem;font-weight:600;margin:0}
+.pet-f .secao-cab small{margin-left:auto;color:var(--f-muted)}
+.pet-f .secao-corpo{padding:1.25rem}
+.pet-f .form-label{font-size:.8125rem;font-weight:600;margin-bottom:.3rem}
+.pet-f .obr{color:#b42318;margin-left:2px}
+.pet-f .form-control,.pet-f .form-select{border:1px solid #d0d5dd;border-radius:8px;padding:.55rem .75rem;box-shadow:none;font-size:.9375rem}
+.pet-f .form-control:focus,.pet-f .form-select:focus{border-color:var(--f-brand);box-shadow:0 0 0 3px rgba(0,64,128,.15)}
+.pet-f .input-group-text{background:var(--f-soft);border:1px solid #d0d5dd;color:var(--f-muted)}
+.pet-f .input-group .form-control{border-radius:8px 0 0 8px}.pet-f .input-group .input-group-text{border-radius:0 8px 8px 0}
+.pet-f .seg{display:flex}
+.pet-f .seg .btn{flex:1;border:1px solid #d0d5dd;color:inherit;background:transparent;padding:.55rem .6rem;font-size:.9375rem}
+.pet-f .seg label:first-of-type{border-radius:8px 0 0 8px}.pet-f .seg label:last-of-type{border-radius:0 8px 8px 0}
+.pet-f .seg label+input+label,.pet-f .seg label~label{margin-left:-1px}
+.pet-f .seg .btn-check:checked+.btn{background:var(--f-brand);border-color:var(--f-brand);color:#fff}
+.pet-f .seg .btn-check:focus-visible+.btn{outline:2px solid var(--f-brand);outline-offset:2px}
+.pet-f .idade{display:inline-block;margin-top:.35rem;padding:.1rem .6rem;border-radius:999px;background:var(--f-soft);color:var(--f-brand);font-size:.8125rem;font-weight:600}
+.pet-f .idade:empty{display:none}
+.pet-f .tutor-fixo{display:flex;align-items:center;gap:.75rem;padding:.7rem .9rem;border:1px solid var(--f-line);border-radius:8px;background:var(--f-soft)}
+.pet-f .acoes{position:sticky;bottom:0;z-index:5;display:flex;align-items:center;justify-content:flex-end;gap:.75rem;flex-wrap:wrap;padding:.875rem 1.25rem;background:var(--bs-body-bg);border:1px solid var(--f-line);border-radius:8px;box-shadow:0 -4px 12px rgba(16,24,40,.06)}
+.pet-f .btn-principal{background:var(--f-brand);border-color:var(--f-brand);color:#fff;font-weight:600;padding:.55rem 1.25rem;border-radius:8px}
+.pet-f .btn-principal:hover{filter:brightness(.9);color:#fff}
+.pet-f .btn-sec{background:transparent;border:1px solid #d0d5dd;color:inherit;border-radius:8px;padding:.55rem 1.1rem}
+.pet-f .select2-container--bootstrap-5 .select2-selection{border-radius:8px;border-color:#d0d5dd;min-height:calc(1.5em + 1.1rem + 2px)}
+@media(max-width:575.98px){.pet-f .acoes{flex-direction:column-reverse;align-items:stretch}.pet-f .acoes .btn{width:100%}}
+</style>
+
+<div class="pet-f">
+    <div class="topo">
+        <div class="titulo">
+            {% if exige %}
+                <div class="avatar" aria-hidden="true">{{ (p.nome|default('?'))|slice(0, 1)|upper }}</div>
+                <div><h1>{{ p.nome|default('Editar pet') }}</h1><p>Editar cadastro do pet</p></div>
+            {% else %}
+                <div class="avatar" aria-hidden="true"><i class="bi bi-balloon-heart"></i></div>
+                <div><h1>Novo pet</h1><p>Cadastre o animal e vincule ao tutor.</p></div>
+            {% endif %}
+        </div>
+        <a class="btn btn-sec" href="{{ voltar_url }}"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+    </div>
+
+    <form method="post" action="{{ action }}" id="formPet">
+
+        <section class="secao">
+            <div class="secao-cab"><i class="bi bi-tag"></i><h2>Identificação</h2><small><span class="text-danger">*</span> obrigatório</small></div>
+            <div class="secao-corpo"><div class="row g-3">
+                <div class="col-md-6">
+                    <label for="nome" class="form-label">Nome<span class="obr">*</span></label>
+                    <input type="text" class="form-control" id="nome" name="nome" value="{{ p.nome|default('') }}" required placeholder="Nome do pet" autocomplete="off">
+                </div>
+                <div class="col-md-6">
+                    <label for="especie" class="form-label">Espécie{% if exige %}<span class="obr">*</span>{% endif %}</label>
+                    <input type="text" class="form-control" id="especie" name="especie" list="lista-especies" value="{{ p.especie|default('') }}" placeholder="Ex.: Canino, Felino..." autocomplete="off" {{ exige ? 'required' : '' }}>
+                    <datalist id="lista-especies"><option value="Canino"><option value="Felino"><option value="Ave"><option value="Roedor"><option value="Réptil"><option value="Coelho"></datalist>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" id="lblSexo">Sexo{% if exige %}<span class="obr">*</span>{% endif %}</label>
+                    <div class="seg" role="radiogroup" aria-labelledby="lblSexo">
+                        <input type="radio" class="btn-check" name="sexo" id="sexoM" value="M" autocomplete="off" {{ sexo_atual == 'M' ? 'checked' : '' }} {{ exige ? 'required' : '' }}><label class="btn" for="sexoM">Macho</label>
+                        <input type="radio" class="btn-check" name="sexo" id="sexoF" value="F" autocomplete="off" {{ sexo_atual == 'F' ? 'checked' : '' }} {{ exige ? 'required' : '' }}><label class="btn" for="sexoF">Fêmea</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" id="lblCast">Castrado</label>
+                    <div class="seg" role="radiogroup" aria-labelledby="lblCast">
+                        <input type="radio" class="btn-check" name="castrado" id="cast1" value="1" autocomplete="off" {{ castrado_atual == '1' ? 'checked' : '' }}><label class="btn" for="cast1">Sim</label>
+                        <input type="radio" class="btn-check" name="castrado" id="cast0" value="0" autocomplete="off" {{ castrado_atual == '0' ? 'checked' : '' }}><label class="btn" for="cast0">Não</label>
+                    </div>
+                </div>
+            </div></div>
+        </section>
+
+        <section class="secao">
+            <div class="secao-cab"><i class="bi bi-clipboard2-heart"></i><h2>Características</h2></div>
+            <div class="secao-corpo"><div class="row g-3">
+                <div class="col-md-6">
+                    <label for="raca" class="form-label">Raça{% if exige %}<span class="obr">*</span>{% endif %}</label>
+                    <select class="form-select select2-raca" id="raca" name="raca" {{ exige ? 'required' : '' }}>
+                        <option value="">Selecionar ou digitar raça...</option>
+                        {% for r in racas %}<option value="{{ r }}" {{ p.raca|default('') == r ? 'selected' : '' }}>{{ r }}</option>{% endfor %}
+                        {% if p.raca|default('') is not empty and p.raca not in racas %}<option value="{{ p.raca }}" selected>{{ p.raca }}</option>{% endif %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" id="lblPorte">Porte{% if exige %}<span class="obr">*</span>{% endif %}</label>
+                    <div class="seg" role="radiogroup" aria-labelledby="lblPorte">
+                        {% for o in ['Pequeno', 'Médio', 'Grande'] %}
+                            <input type="radio" class="btn-check" name="porte" id="porte{{ loop.index }}" value="{{ o }}" autocomplete="off" {{ porte_atual == o ? 'checked' : '' }} {{ exige ? 'required' : '' }}><label class="btn" for="porte{{ loop.index }}">{{ o }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="data_nascimento" class="form-label">Data de nascimento</label>
+                    <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" value="{{ p.dataNascimento is defined and p.dataNascimento ? p.dataNascimento|date('Y-m-d') : '' }}">
+                    <span class="idade" id="idade_calculada"></span>
+                </div>
+                <div class="col-md-6">
+                    <label for="peso" class="form-label">Peso{% if exige %}<span class="obr">*</span>{% endif %}</label>
+                    <div class="input-group"><input type="number" step="0.01" min="0" class="form-control" id="peso" name="peso" value="{{ p.peso|default('') }}" placeholder="0,00" inputmode="decimal" {{ exige ? 'required' : '' }}><span class="input-group-text">kg</span></div>
+                </div>
+            </div></div>
+        </section>
+
+        <section class="secao">
+            <div class="secao-cab"><i class="bi bi-person-heart"></i><h2>Tutor</h2></div>
+            <div class="secao-corpo">
+                {% if tutor_fixo %}
+                    <input type="hidden" name="dono_id" value="{{ tutor_fixo }}">
+                    <div class="tutor-fixo"><span class="avatar" aria-hidden="true">{{ (nome_tutor ?: '?')|slice(0, 1)|upper }}</span><div><div class="fw-semibold">{{ nome_tutor ?: 'Cliente #' ~ tutor_fixo }}</div><small class="text-secondary">Tutor selecionado no cadastro</small></div></div>
+                {% else %}
+                    <label for="dono_id" class="form-label">Dono{% if exige %}<span class="obr">*</span>{% endif %}</label>
+                    <select class="form-select select2" id="dono_id" name="dono_id" {{ exige ? 'required' : '' }}>
+                        <option value="">{{ exige ? 'Selecione um dono...' : 'Selecionar cliente' }}</option>
+                        {% for c in clientes %}<option value="{{ c.id }}" {{ p.dono_id is defined and c.id == p.dono_id ? 'selected' : '' }}>{{ c.nome }}</option>{% endfor %}
+                    </select>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="secao">
+            <div class="secao-cab"><i class="bi bi-journal-text"></i><h2>Observações</h2></div>
+            <div class="secao-corpo"><textarea class="form-control" id="observacoes" name="observacoes" rows="3" placeholder="Alergias, comportamento, histórico relevante...">{{ p.observacoes|default('') }}</textarea></div>
+        </section>
+
+        <div class="acoes">
+            <a href="{{ voltar_url }}" class="btn btn-sec">Cancelar</a>
+            <button type="submit" class="btn btn-principal save-btn"><i class="bi bi-check2-circle me-1"></i>{{ exige ? 'Salvar alterações' : 'Salvar pet' }}</button>
+        </div>
+    </form>
+</div>
