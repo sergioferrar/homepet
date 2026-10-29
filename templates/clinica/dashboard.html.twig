@@ -69,7 +69,7 @@
                         <div class="col-md-6 col-xl-4">
                             <div class="row-item h-100">
                                 <span class="ico">
-                                    <i class="bi bi-paw"></i>
+                                    <i class="bi bi-postcard-heart"></i>
                                 </span>
                                 <div class="min-w-0">
                                     <a class="nome consulta stretched-link" href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}">{{ pet.nome }}</a>
@@ -90,7 +90,7 @@
             <div class="col">
                 <div class="panel kpi p-3 d-flex gap-3 align-items-center">
                     <span class="ico">
-                        <i class="bi bi-paw"></i>
+                        <i class="bi bi-postcard-heart"></i>
                     </span>
                     <div>
                         <div class="n">{{ total_pets }}</div>
@@ -245,14 +245,14 @@
                     </section>
                     <section class="panel" aria-label="Últimos animais cadastrados">
                         <div class="panel-h">
-                            <i class="bi bi-paw text-primary"></i>
+                            <i class="bi bi-postcard-heart text-primary"></i>
                             <h2>Últimos animais cadastrados</h2>
                         </div>
                         <div class="scroll">
                             {% for animal in animais_cadastrados %}
                                 <div class="row-item">
                                     <span class="ico">
-                                        <i class="bi bi-paw"></i>
+                                        <i class="bi bi-postcard-heart"></i>
                                     </span>
                                     <div class="min-w-0">
                                         <a class="nome consulta" href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}">{{ animal.nome }}</a>
