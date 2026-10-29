@@ -1,911 +1,508 @@
 {% extends 'base.html.twig' %}
 {% block title %}Painel de Controle{% endblock %}
 {% block page_title %}Dashboard - Clínica Veterinária{% endblock %}
-
-{% block stylesheets %}
-    <style>
-        .card-listagem-scroll {
-            max-height: 416px;
-            overflow-y: auto;
-        }
-
-        .card-body-fixo {
-            height: 500px;
-            overflow-y: auto;
-        }
-
-        /* Melhorias visuais */
-        .card {
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: none;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn {
-            transition: all 0.2s;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-        }
-
-        .icon-circle {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: absolute;
-            right: 15px;
-            top: 15px;
-        }
-
-        .icon-circle i {
-            font-size: 24px;
-        }
-
-        /* Cards modernos */
-        .card {
-            border-radius: 12px;
-        }
-
-        .card-header {
-            border-radius: 12px 12px 0 0 !important;
-        }
-
-        /* Animações suaves */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .row > div {
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        .card-header {
-            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
-            background: linear-gradient(to right, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.5));
-        }
-
-        /* Estilo das abas de vacinas */
-        .vaccine-tabs .nav-link {
-            background-color: #e9ecef;
-            color: #6c757d;
-            border: none;
-            transition: all 0.3s;
-            border-radius: 0.375rem;
-        }
-
-        .vaccine-tabs .nav-link:hover {
-            background-color: #0d6efd;
-            color: white;
-        }
-
-        .vaccine-tabs .nav-link.active {
-            background-color: var(--bs-primary, #0d6efd) !important;
-            color: white !important;
-            box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
-        }
-
-        /* Efeitos de Hover */
-    .hover-lift {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    .hover-lift:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
-    }
-
-    .hover-shadow {
-        transition: box-shadow 0.2s ease;
-    }
-
-    .hover-shadow:hover {
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-
-    /* Scrollbars Customizados */
-    .card-body::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .card-body::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-
-    .card-body::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 10px;
-    }
-
-    .card-body::-webkit-scrollbar-thumb:hover {
-        background: #555;
-    }
-
-    /* Badges Modernos */
-    .badge {
-        padding: 0.5em 0.75em;
-        font-weight: 500;
-    }
-
-    /* Cards com Bordas Suaves */
-    .card {
-        border-radius: 12px !important;
-    }
-
-    /* Botões com Sombra */
-    .btn {
-        border-radius: 8px;
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-
-    .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    /* Ícones com Animação */
-    .bi {
-        transition: transform 0.2s ease;
-    }
-
-    a:hover .bi {
-        transform: scale(1.1);
-    }
-    </style>
-{% endblock %}
-
 {% block body %}
-    <!-- ========================================
-     DASHBOARD MODERNIZADO - SYSTEM PET
-     Bootstrap 5 | Layout em Blocos Otimizado
-========================================= -->
-
-<!-- 🔝 CABEÇALHO DA PÁGINA -->
-<div class="pagetitle bg-white shadow-sm rounded-3 p-4 mb-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-        <div>
-            <h1 class="mb-2 fs-3 fw-bold text-primary">
-                <i class="bi bi-speedometer2 me-2"></i>Dashboard
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item">
-                        <a href="{{ url('home') }}" class="text-decoration-none">
-                            <i class="bi bi-house-door me-1"></i>Home
-                        </a>
-                    </li>
-                    <li class="breadcrumb-item">Clinica Veterinária</li>
-                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
-                </ol>
-            </nav>
-        </div>
-        <div>
-            <a class="btn btn-primary btn-lg shadow-sm" href="{{ url('orcamento_novo') }}">
-                <i class="bi bi-file-earmark-plus me-2"></i>Novo Orçamento
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- 🎯 SEÇÃO DE AÇÕES E BUSCA -->
-<section class="action-section mb-4">
-    <div class="card border-0 shadow-sm rounded-3">
-        <div class="card-body p-4">
-            <div class="row align-items-center g-3">
-                
-                <!-- Botões de Ação Rápida -->
-                <div class="col-lg-8 col-12">
-                    <h6 class="text-muted mb-3 fw-semibold">
-                        <i class="bi bi-lightning-charge me-2"></i>Ações Rápidas
-                    </h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button class="btn btn-outline-primary d-flex align-items-center" type="button" 
-                                data-bs-toggle="offcanvas" data-bs-target="#offcanvasPrescricoes">
-                            <i class="bi bi-capsule-pill me-2"></i>
-                            <span>Prescrições</span>
-                        </button>
-                        <a href="{{ path('orcamento_index') }}" class="btn btn-outline-primary d-flex align-items-center">
-                            <i class="bi bi-receipt me-2"></i>
-                            <span>Orçamentos</span>
-                        </a>
-                        {% if pode_ver_financeiro() %}
-                        <a href="{{ path('clinica_relatorio_como_conheceu') }}" class="btn btn-outline-success d-flex align-items-center">
-                            <i class="bi bi-bar-chart-line me-2"></i>
-                            <span>Como Conheceram</span>
-                        </a>
-                        {% endif %}
-                        <button class="btn btn-outline-primary d-flex align-items-center" type="button" 
-                                onclick="Utils.modal('Em desenvolvimento')">
-                            <i class="bi bi-scissors me-2"></i>
-                            <span>Serviços</span>
-                        </button>
-                        <button class="btn btn-outline-primary d-flex align-items-center" type="button" 
-                                onclick="Utils.modal('Em desenvolvimento')">
-                            <i class="bi bi-clock-history me-2"></i>
-                            <span>Histórico</span>
-                        </button>
-                    </div>
+    <style>
+    .dash{--d-surface:var(--hp-surface,#fff);--d-soft:var(--hp-soft,#eef3f6);--d-line:var(--hp-line,#e4e9ed);--d-brand:var(--hp-brand,#0e6e8c)}
+    .dash .hero{background:linear-gradient(135deg,#0e6e8c,#14b8a6);color:#fff;border-radius:16px}
+    .dash .hero .form-control{border:0;border-radius:10px 0 0 10px}
+    .dash .hero .btn-search{border-radius:0 10px 10px 0;background:#fff;color:#0e6e8c;border:0}
+    .dash .hero .btn-act{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:10px}
+    .dash .hero .btn-act:hover{background:rgba(255,255,255,.28);color:#fff}
+    .dash .panel{background:var(--d-surface);border:1px solid var(--d-line);border-radius:14px;overflow:hidden}
+    .dash .panel-h{display:flex;align-items:center;gap:.6rem;padding:.8rem 1rem;border-bottom:1px solid var(--d-line)}
+    .dash .panel-h h2{font-size:.95rem;font-weight:600;margin:0}
+    .dash .panel-h .ms-auto{font-size:.75rem}
+    .dash .scroll{max-height:330px;overflow-y:auto}
+    .dash .row-item{display:flex;align-items:center;gap:.75rem;padding:.65rem 1rem;border-bottom:1px solid var(--d-line)}
+    .dash .row-item:last-child{border-bottom:0}
+    .dash .row-item:hover{background:var(--d-soft)}
+    .dash .ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--d-soft);color:var(--d-brand);flex-shrink:0}
+    .dash .nome{font-weight:600;color:inherit;text-decoration:none;display:block;line-height:1.2}
+    .dash .nome:hover{color:var(--d-brand)}
+    .dash .kpi .n{font-size:1.65rem;font-weight:700;line-height:1.1}
+    .dash .empty{padding:2rem 1rem;text-align:center;color:var(--bs-secondary-color,#6c757d)}
+    .dash .empty i{font-size:1.8rem;display:block;margin-bottom:.35rem;opacity:.6}
+    .dash .nav-pills .nav-link{padding:.3rem .75rem;font-size:.85rem}
+    @media(max-width:575.98px){.dash .scroll{max-height:none}}
+    </style>
+    <div class="dash">
+        {% set hora = "now"|date("G") %}
+        {# ===== 1. Cabeçalho: saudação, busca e ações — o essencial fica sempre no topo ===== #}
+        <section class="hero p-3 p-md-4 mb-3">
+            <div class="row g-3 align-items-center">
+                <div class="col-lg-5">
+                    <h1 class="h4 fw-bold mb-1">{{ hora < 12 ? 'Bom dia' : (hora < 18 ? 'Boa tarde' : 'Boa noite') }}!</h1>
+                    <p class="mb-0 opacity-75 small">
+                        <i class="bi bi-calendar3 me-1"></i>{{ "now"|date("d/m/Y") }} · {{ "now"|date("H:i") }} · Clínica veterinária</p>
                 </div>
-
-                <!-- Busca Inteligente -->
-                <div class="col-lg-4 col-12">
-                    <h6 class="text-muted mb-3 fw-semibold">
-                        <i class="bi bi-search me-2"></i>Busca Rápida
-                    </h6>
-                    <form method="get" action="{{ path('clinica_dashboard') }}" class="input-group shadow-sm">
-                        <input type="text" name="q" value="{{ termo }}" class="form-control form-control-lg"
-                               placeholder="Buscar pet ou tutor..."/>
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="bi bi-search"></i>
+                <div class="col-lg-7">
+                    <form method="get" action="{{ path('clinica_dashboard') }}" class="input-group mb-2" role="search">
+                        <input type="search" name="q" value="{{ termo }}" class="form-control form-control-lg" placeholder="Buscar pet ou tutor..." aria-label="Buscar pet ou tutor">
+                        <button type="submit" class="btn btn-search px-4" aria-label="Buscar">
+                        <i class="bi bi-search"></i>
                         </button>
                     </form>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-act btn-sm" href="{{ url('orcamento_novo') }}">
+                            <i class="bi bi-file-earmark-plus me-1"></i>Novo orçamento</a>
+                        <a class="btn btn-act btn-sm" href="{{ path('orcamento_index') }}">
+                            <i class="bi bi-receipt me-1"></i>Orçamentos</a>
+                        <button class="btn btn-act btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasPrescricoes">
+                        <i class="bi bi-capsule-pill me-1"></i>Prescrições</button>
+                        {% if pode_ver_financeiro() %}<a class="btn btn-act btn-sm" href="{{ path('clinica_relatorio_como_conheceu') }}">
+                            <i class="bi bi-bar-chart-line me-1"></i>Como conheceram</a>{% endif %}
+                    </div>
                 </div>
             </div>
-
-            <!-- Resultados da Busca -->
-            {% if termo %}
-                <div class="mt-4 pt-3 border-top">
-                    <h6 class="text-muted mb-3 fw-semibold">
-                        <i class="bi bi-funnel me-2"></i>Resultados para "{{ termo }}"
-                    </h6>
-                    <div class="row g-3">
-                        {% for pet in pets %}
-                            <div class="col-lg-4 col-md-6 col-12">
-                                <div class="card h-100 border-0 shadow-sm hover-lift">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-start gap-3">
-                                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                                                <i class="bi bi-paw text-primary fs-4"></i>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-2 fw-bold">
-                                                    <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}"
-                                                       class="text-decoration-none text-consulta dark stretched-link">
-                                                        {{ pet.nome }}
-                                                    </a>
-                                                </h6>
-                                                <p class="mb-1 small text-muted">
-                                                    <i class="bi bi-person me-1"></i>{{ pet.dono_nome }}
-                                                </p>
-                                                <p class="mb-0 small">
-                                                    <span class="badge bg-light text-dark">{{ pet.especie }}</span>
-                                                    <span class="badge bg-light text-dark">{{ pet.raca }}</span>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
+        </section>
+        {# ===== Resultado da busca (só aparece quando há termo) ===== #}
+        {% if termo %}
+            <section class="panel mb-3" aria-label="Resultados da busca">
+                <div class="panel-h">
+                    <i class="bi bi-funnel text-primary"></i>
+                    <h2>Resultados para "{{ termo }}"</h2>
+                    <span class="ms-auto badge text-bg-secondary">{{ pets|length }}</span>
+                </div>
+                <div class="row g-0">
+                    {% for pet in pets %}
+                        <div class="col-md-6 col-xl-4">
+                            <div class="row-item h-100">
+                                <span class="ico">
+                                    <i class="bi bi-paw"></i>
+                                </span>
+                                <div class="min-w-0">
+                                    <a class="nome consulta stretched-link" href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}">{{ pet.nome }}</a>
+                                    <small class="text-secondary">
+                                    <i class="bi bi-person me-1"></i>{{ pet.dono_nome }} · {{ pet.especie }}{{ pet.raca ? ' · ' ~ pet.raca : '' }}</small>
                                 </div>
                             </div>
-                        {% else %}
-                            <div class="col-12">
-                                <div class="alert alert-info border-0 shadow-sm mb-0">
-                                    <i class="bi bi-info-circle me-2"></i>Nenhum resultado encontrado para "{{ termo }}".
-                                </div>
-                            </div>
-                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="col-12 empty">
+                            <i class="bi bi-search"></i>Nenhum resultado para "{{ termo }}".</div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+        {# ===== 2. Números do dia (4 indicadores) ===== #}
+        <section class="row row-cols-2 row-cols-xl-4 g-3 mb-3" aria-label="Indicadores">
+            <div class="col">
+                <div class="panel kpi p-3 d-flex gap-3 align-items-center">
+                    <span class="ico">
+                        <i class="bi bi-paw"></i>
+                    </span>
+                    <div>
+                        <div class="n">{{ total_pets }}</div>
+                        <small class="text-secondary">Animais registrados</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="panel kpi p-3 d-flex gap-3 align-items-center">
+                    <span class="ico">
+                        <i class="bi bi-people"></i>
+                    </span>
+                    <div>
+                        <div class="n">{{ totaldono }}</div>
+                        <small class="text-secondary">Clientes cadastrados</small>
+                    </div>
+                </div>
+            </div>
+            {% if pode_ver_financeiro() %}
+                <div class="col">
+                    <div class="panel kpi p-3 d-flex gap-3 align-items-center">
+                        <span class="ico text-danger">
+                            <i class="bi bi-cash-stack"></i>
+                        </span>
+                        <div>
+                            <div class="n text-danger">R$ {{ debitos_cliente|number_format(2, ',', '.') }}</div>
+                            <small class="text-secondary">Débitos em aberto</small>
+                        </div>
                     </div>
                 </div>
             {% endif %}
-        </div>
-    </div>
-</section>
-
-<!-- 🔹 OFFCANVAS - PRESCRIÇÕES MÉDICAS -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasPrescricoes" style="width: 90%; max-width: 1400px;">
-    <div class="offcanvas-header text-white" style="background: linear-gradient(135deg, #14B8A6 0%, #14B8A6 100%);">
-        <h5 class="offcanvas-title">
-            <i class="bi bi-calendar-event me-2"></i>Calendário de Prescrições Médicas
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
-    </div>
-    <div class="offcanvas-body">
-        <p class="text-muted mb-4">
-            <i class="bi bi-info-circle me-2"></i>
-            Visualize e gerencie todas as prescrições de todos os pets internados
-        </p>
-        <div id="calendar-prescricoes-geral"
-             style="width: 100%; min-height: 700px; background: white; border-radius: 8px; padding: 10px;"></div>
-    </div>
-</div>
-
-<!-- 🎨 BANNER DE BOAS-VINDAS -->
-<section class="welcome-banner mb-4">
-    <div class="card border-0 shadow-sm overflow-hidden">
-        <div class="card-body p-0">
-            <div class="row g-0">
-                <div class="col-12">
-                    <div class="p-4 text-white position-relative" 
-                         style="background: linear-gradient(135deg, #14B8A6 0%, #14B8A6 100%);">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <div class="d-flex align-items-center gap-3 mb-2">
-                                    <i class="bi bi-heart-pulse-fill fs-1"></i>
-                                    <div>
-                                        <h3 class="mb-1 fw-bold">Bem-vindo ao System Pet</h3>
-                                        <p class="mb-0 opacity-75">
-                                            Sistema completo de gerenciamento veterinário
-                                        </p>
+            <div class="col">
+                <div class="panel kpi p-3 d-flex gap-3 align-items-center">
+                    <span class="ico text-warning">
+                        <i class="bi bi-stopwatch"></i>
+                    </span>
+                    <div>
+                        <div class="n">{{ media_atendimento }}</div>
+                        <small class="text-secondary">Média de atendimento</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+        {# ===== 3. Operação: o que exige atenção (esquerda) e o que acompanhar (direita) ===== #}
+        <div class="row g-3">
+            <div class="col-xl-7">
+                <div class="d-flex flex-column gap-3">
+                    <section class="panel" aria-label="Animais internados">
+                        <div class="panel-h">
+                            <i class="bi bi-hospital text-danger"></i>
+                            <h2>Animais internados</h2>
+                            <span class="ms-auto badge text-bg-danger">{{ internados|length }}</span>
+                        </div>
+                        <div class="scroll">
+                            {% for internacao in internados %}
+                                {% set petId   = attribute(internacao, 'pet_id')|default(attribute(internacao, 'id')) %}
+                                {% set petNome = attribute(internacao, 'pet_nome')|default(attribute(internacao, 'nome_pet')|default('Pet')) %}
+                                {% set dono    = attribute(internacao, 'dono_nome')|default('') %}
+                                {% set motivo  = attribute(internacao, 'motivo')|default('') %}
+                                <div class="row-item">
+                                    <span class="ico text-danger">
+                                        <i class="bi bi-heart-pulse-fill"></i>
+                                    </span>
+                                    <div class="me-auto min-w-0">
+                                        {% if petId is defined and petId is not null and petId > 0 %}<a class="nome consulta" href="{{ path('clinica_detalhes_pet', {'id': petId}) }}">{{ petNome }}</a>{% else %}<span class="nome">{{ petNome }}</span>{% endif %}
+                                        <small class="text-secondary">{{ dono }}</small>
                                     </div>
+                                    <span class="badge {{ 'Emergencia' in motivo ? 'text-bg-danger' : 'text-bg-warning' }}">{{ 'Emergencia' in motivo ? 'Emergência' : 'Pouco urgente' }}</span>
                                 </div>
-                            </div>
-                            <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                                <div class="bg-white bg-opacity-10 rounded-3 p-3 d-inline-block">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="bi bi-calendar3 fs-5 me-2"></i>
-                                        <div class="text-start">
-                                            <div class="fw-bold fs-5">{{ "now"|date("d/m/Y") }}</div>
-                                            <small class="opacity-75 text-end">{{ "now"|date("H:i") }}</small>
-                                        </div>
+                            {% else %}
+                                <div class="empty">
+                                    <i class="bi bi-check-circle text-success"></i>Nenhuma internação ativa.</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                    <section class="panel" aria-label="Últimos atendimentos">
+                        <div class="panel-h">
+                            <i class="bi bi-clipboard2-pulse text-success"></i>
+                            <h2>Últimos atendimentos (24h)</h2>
+                            <span class="ms-auto badge text-bg-secondary">{{ atendimentos|length }}</span>
+                        </div>
+                        <div class="scroll">
+                            {% for item in atendimentos %}
+                                {% set petId       = attribute(item, 'pet_id')|default(attribute(item, 'id')) %}
+                                {% set petNome     = attribute(item, 'nome_pet')|default(attribute(item, 'pet')|default('Pet')) %}
+                                {% set clienteNome = attribute(item, 'nome_cliente')|default(attribute(item, 'cliente')|default('')) %}
+                                {% set dataAt      = attribute(item, 'data_inicio')|default(attribute(item, 'data')) %}
+                                <div class="row-item">
+                                    <span class="ico text-success">
+                                        <i class="bi bi-clipboard2-pulse"></i>
+                                    </span>
+                                    <div class="me-auto min-w-0">
+                                        <a class="nome consulta" href="{{ path('clinica_detalhes_pet', {'id': petId}) }}">{{ petNome }}</a>
+                                        <small class="text-secondary">{{ clienteNome }}</small>
                                     </div>
+                                    <span class="badge text-bg-primary">{{ dataAt|date('d/m') }} {{ item.hora|date('H:i') }}</span>
                                 </div>
-                            </div>
+                            {% else %}
+                                <div class="empty">
+                                    <i class="bi bi-inbox"></i>Nenhum atendimento recente.</div>
+                            {% endfor %}
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- 📊 CARDS DE ESTATÍSTICAS -->
-<section class="statistics-section mb-4">
-    <div class="row g-3">
-        
-        <!-- Card: Animais Registrados -->
-        <div class="col-xl-3 col-lg-6 col-md-6 col-12">
-            <div class="card border-0 shadow-sm h-100 hover-lift">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-primary text-white" style="width: 45px; height: 45px;">
-                            <i class="bi bi-heart-pulse text-primary"></i>
+            <div class="col-xl-5">
+                <div class="d-flex flex-column gap-3">
+                    <section class="panel" aria-label="Controle de vacinas">
+                        <div class="panel-h">
+                            <i class="bi bi-droplet text-warning"></i>
+                            <h2>Controle de vacinas</h2>
                         </div>
-                        <span class="badge bg-primary bg-opacity-10 text-white">Total</span>
-                    </div>
-                    <h2 class="mb-1 fw-bold text-primary">{{ total_pets }}</h2>
-                    <p class="mb-0 text-muted small">Animais Registrados</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card: Clientes Cadastrados -->
-        <div class="col-xl-3 col-lg-6 col-md-6 col-12">
-            <div class="card border-0 shadow-sm h-100 hover-lift">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-success" style="width: 45px; height: 45px;">
-                            <i class="bi bi-person text-success"></i>
-                        </div>
-                        <span class="badge bg-success bg-opacity-10 text-success">Ativos</span>
-                    </div>
-                    <h2 class="mb-1 fw-bold text-success">{{ totaldono }}</h2>
-                    <p class="mb-0 text-muted small">Clientes Cadastrados</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card: Débitos em Aberto (somente financeiro/admin) -->
-        {% if pode_ver_financeiro() %}
-        <div class="col-xl-3 col-lg-6 col-md-6 col-12">
-            <div class="card border-0 shadow-sm h-100 hover-lift">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-danger" style="width: 45px; height: 45px;">
-                            <i class="bi bi-cash-stack text-danger"></i>
-                        </div>
-                        <span class="badge bg-danger bg-opacity-10 text-danger">Pendente</span>
-                    </div>
-                    <h2 class="mb-1 fw-bold text-danger">R$ {{ debitos_cliente|number_format(2, ',', '.') }}</h2>
-                    <p class="mb-0 text-muted small">Débitos em Aberto</p>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Card: Média de Atendimento -->
-        <div class="col-xl-3 col-lg-6 col-md-6 col-12">
-            <div class="card border-0 shadow-sm h-100 hover-lift">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-warning" style="width: 45px; height: 45px;">
-                            <i class="bi bi-stopwatch text-warning"></i>
-                        </div>
-                        <span class="badge bg-warning bg-opacity-10 text-warning">Média</span>
-                    </div>
-                    <h2 class="mb-1 fw-bold text-warning">{{ media_atendimento }}</h2>
-                    <p class="mb-0 text-muted small">Média de Atendimento</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- 📋 SEÇÃO DE INFORMAÇÕES DETALHADAS -->
-<section class="details-section">
-    <div class="row g-4">
-        
-        <!-- COLUNA ESQUERDA -->
-        <div class="col-xl-6 col-12">
-            
-            <!-- Últimos Atendimentos (24h) -->
-            <div class="card border-0 shadow-sm rounded-3 mb-4 h-auto">
-                <div class="card-header bg-white border-0 p-4">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-primary" style="width: 45px; height: 45px;">
-                            <i class="bi bi-heart-pulse text-primary fs-5"></i>
-                        </div>
-                        <h5 class="mb-0 fw-bold">Últimos atendimentos (24h)</h5>
-                    </div>
-                </div>
-                <div class="card-body p-4 pt-0" style="max-height: 400px; overflow-y: auto;">
-                    {% for item in atendimentos %}
-                        {% set petId       = attribute(item, 'pet_id')|default(attribute(item, 'id')) %}
-                        {% set petNome     = attribute(item, 'nome_pet')|default(attribute(item, 'pet')|default('Pet')) %}
-                        {% set clienteNome = attribute(item, 'nome_cliente')|default(attribute(item, 'cliente')|default('')) %}
-                        {% set dataAt      = attribute(item, 'data_inicio')|default(attribute(item, 'data')) %}
-                        
-                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-2 hover-shadow">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-info" style="width: 45px; height: 45px;">
-                                    <i class="bi bi-clipboard2-pulse text-success"></i>
-                                </div>
-                                <div>
-                                    <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}"
-                                       class="fw-bold text-decoration-none consulta text-dark d-block">
-                                        {{ petNome }}
+                        <div class="p-2 pb-0">
+                            <ul class="nav nav-pills" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <a href="#tab-vencidas" class="nav-link active" data-bs-toggle="tab" role="tab">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>Vencidas <span class="badge text-bg-danger">{{ vacinas_vencidas|length }}</span>
                                     </a>
-                                    <small class="text-muted">{{ clienteNome }}</small>
-                                </div>
-                            </div>
-                            <span class="badge bg-primary">{{ dataAt|date('d/m') }} {{ item.hora|date('H:i') }}</span>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <a href="#tab-programadas" class="nav-link" data-bs-toggle="tab" role="tab">
+                                        <i class="bi bi-calendar-check me-1"></i>Programadas <span class="badge text-bg-info">{{ vacinas_programadas|length }}</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="bi bi-inbox text-muted fs-1 mb-3 d-block"></i>
-                            <p class="text-muted mb-0">Nenhum atendimento recente.</p>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Animais Internados -->
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-white border-0 p-4">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-danger" style="width: 45px; height: 45px;">
-                            <i class="bi bi-hospital text-danger fs-5"></i>
-                        </div>
-                        <h5 class="mb-0 fw-bold">Animais internados</h5>
-                    </div>
-                </div>
-                <div class="card-body p-4 pt-0" style="max-height: 400px; overflow-y: auto;">
-                    {% for internacao in internados %}
-                        {% set petId   = attribute(internacao, 'pet_id')|default(attribute(internacao, 'id')) %}
-                        {% set petNome = attribute(internacao, 'pet_nome')|default(attribute(internacao, 'nome_pet')|default('Pet')) %}
-                        {% set dono    = attribute(internacao, 'dono_nome')|default('') %}
-                        {% set motivo  = attribute(internacao, 'motivo')|default('') %}
-                        
-                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-2 hover-shadow">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-danger" style="width: 45px; height: 45px;">
-                                    <i class="bi bi-heart-pulse-fill text-danger"></i>
-                                </div>
-                                <div>
-                                    {% if petId is defined and petId is not null and petId > 0 %}
-                                        <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}"
-                                           class="fw-bold text-decoration-none consulta text-dark d-block">
-                                            {{ petNome }}
-                                        </a>
+                        <div class="tab-content scroll">
+                            {% for aba, lista in {'vencidas': vacinas_vencidas, 'programadas': vacinas_programadas} %}
+                                <div class="tab-pane fade {{ aba == 'vencidas' ? 'show active' : '' }}" id="tab-{{ aba }}" role="tabpanel">
+                                    {% for vacina in lista %}
+                                        {% set petId   = attribute(vacina, 'pet_id')|default(attribute(vacina, 'id')) %}
+                                        {% set petNome = attribute(vacina, 'pet_nome')|default(attribute(vacina, 'nome_pet')|default('Pet')) %}
+                                        {% set tipo    = attribute(vacina, 'tipo')|default('') %}
+                                        {% set dtVal   = attribute(vacina, 'data_validade')|default(null) %}
+                                        <div class="row-item">
+                                            <span class="ico {{ aba == 'vencidas' ? 'text-danger' : 'text-info' }}">
+                                                <i class="bi {{ aba == 'vencidas' ? 'bi-exclamation-triangle' : 'bi-calendar-check' }}"></i>
+                                            </span>
+                                            <div class="me-auto min-w-0">
+                                                {% if petId is not null %}<a class="nome consulta" href="{{ path('clinica_detalhes_pet', {'id': petId}) }}">{{ petNome }}</a>{% else %}<span class="nome">{{ petNome }}</span>{% endif %}
+                                                <small class="text-secondary">{{ tipo }}</small>
+                                            </div>
+                                            <span class="badge {{ aba == 'vencidas' ? 'text-bg-danger' : 'text-bg-info' }}">{{ dtVal ? dtVal|date('d/m/Y') : '' }}</span>
+                                        </div>
                                     {% else %}
-                                        <span class="fw-bold text-dark d-block">{{ petNome }}</span>
-                                    {% endif %}
-                                    <small class="text-muted">{{ dono }}</small>
-                                </div>
-                            </div>
-                            <span class="badge {{ 'Emergencia' in motivo ? 'bg-danger' : 'bg-warning' }}">
-                                {{ 'Emergencia' in motivo ? 'Emergência' : 'Pouco urgente' }}
-                            </span>
-                        </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="bi bi-check-circle text-success fs-1 mb-3 d-block"></i>
-                            <p class="text-muted mb-0">Nenhuma internação ativa.</p>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-
-        <!-- COLUNA DIREITA -->
-        <div class="col-xl-6 col-12">
-            
-            <!-- Últimos Animais Cadastrados -->
-            <div class="card border-0 shadow-sm rounded-3 mb-4">
-                <div class="card-header bg-white border-0 p-4">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-success" style="width: 45px; height: 45px;">
-                            <i class="bi bi-heart-pulse text-success fs-5"></i>
-                        </div>
-                        <h5 class="mb-0 fw-bold">Últimos animais cadastrados</h5>
-                    </div>
-                </div>
-                <div class="card-body p-4 pt-0" style="max-height: 400px; overflow-y: auto;">
-                    {% for animal in animais_cadastrados %}
-                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-2 hover-shadow">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-success" style="width: 25px; height: 25px;">
-                                    <i class="bi bi-heart-pulse-fill text-success"></i>
-                                </div>
-                                <div>
-                                    <a href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}"
-                                       class="fw-bold text-decoration-none consulta text-dark d-block">
-                                        {{ animal.nome }}
-                                    </a>
-                                    <small class="text-muted">{{ animal.tutor }}</small>
-                                </div>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="bi bi-inbox text-muted fs-1 mb-3 d-block"></i>
-                            <p class="text-muted mb-0">Nenhum animal cadastrado.</p>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Vacinas -->
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-white border-0 p-4">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-warning" style="width: 45px; height: 45px;">
-                            <i class="bi bi-droplet text-warning fs-5"></i>
-                        </div>
-                        <h5 class="mb-0 fw-bold">Controle de Vacinas</h5>
-                    </div>
-                </div>
-                <div class="card-body p-4 pt-0">
-                    <!-- Tabs de Navegação -->
-                    <ul class="nav nav-pills mb-3" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <a href="#tab-vencidas" class="nav-link active" data-bs-toggle="tab" role="tab">
-                                <i class="bi bi-exclamation-triangle me-2"></i>Vencidas
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a href="#tab-programadas" class="nav-link" data-bs-toggle="tab" role="tab">
-                                <i class="bi bi-calendar-check me-2"></i>Programadas
-                            </a>
-                        </li>
-                    </ul>
-
-                    <!-- Conteúdo das Tabs -->
-                    <div class="tab-content" style="max-height: 400px; overflow-y: auto;">
-                        
-                        <!-- Tab: Vencidas -->
-                        <div class="tab-pane fade show active" id="tab-vencidas" role="tabpanel">
-                            {% for vacina in vacinas_vencidas %}
-                                {% set petId   = attribute(vacina, 'pet_id')|default(attribute(vacina, 'id')) %}
-                                {% set petNome = attribute(vacina, 'pet_nome')|default(attribute(vacina, 'nome_pet')|default('Pet')) %}
-                                {% set tipo    = attribute(vacina, 'tipo')|default('') %}
-                                {% set dtVal   = attribute(vacina, 'data_validade')|default(null) %}
-                                
-                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-2 hover-shadow">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-opacity-10 bg-danger" style="width: 25px; height: 25px;">
-                                            <i class="bi bi-exclamation-triangle text-danger"></i>
-                                        </div>
-                                        <div>
-                                            {% if petId is not null %}
-                                                <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}"
-                                                   class="fw-bold text-decoration-none consulta text-dark d-block">
-                                                    {{ petNome }}
-                                                </a>
-                                            {% else %}
-                                                <span class="fw-bold text-dark d-block">{{ petNome }}</span>
-                                            {% endif %}
-                                            <small class="text-muted">{{ tipo }}</small>
-                                        </div>
-                                    </div>
-                                    <span class="badge bg-danger">{{ dtVal ? dtVal|date('d/m/Y') : '' }}</span>
-                                </div>
-                            {% else %}
-                                <div class="text-center py-5">
-                                    <i class="bi bi-check-circle text-success fs-1 mb-3 d-block"></i>
-                                    <p class="text-muted mb-0">Nenhuma vacina vencida.</p>
+                                        <div class="empty">
+                                            <i class="bi {{ aba == 'vencidas' ? 'bi-check-circle text-success' : 'bi-inbox' }}"></i>{{ aba == 'vencidas' ? 'Nenhuma vacina vencida.' : 'Nenhuma vacina programada.' }}</div>
+                                    {% endfor %}
                                 </div>
                             {% endfor %}
                         </div>
-
-                        <!-- Tab: Programadas -->
-                        <div class="tab-pane fade" id="tab-programadas" role="tabpanel">
-                            {% for vacina in vacinas_programadas %}
-                                {% set petId   = attribute(vacina, 'pet_id')|default(attribute(vacina, 'id')) %}
-                                {% set petNome = attribute(vacina, 'pet_nome')|default(attribute(vacina, 'nome_pet')|default('Pet')) %}
-                                {% set tipo    = attribute(vacina, 'tipo')|default('') %}
-                                {% set dtVal   = attribute(vacina, 'data_validade')|default(null) %}
-                                
-                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-2 hover-shadow">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="bg-info bg-opacity-10 rounded-circle p-2">
-                                            <i class="bi bi-calendar-check text-info"></i>
-                                        </div>
-                                        <div>
-                                            {% if petId is not null %}
-                                                <a href="{{ path('clinica_detalhes_pet', {'id': petId}) }}"
-                                                   class="fw-bold text-decoration-none consulta text-dark d-block">
-                                                    {{ petNome }}
-                                                </a>
-                                            {% else %}
-                                                <span class="fw-bold text-dark d-block">{{ petNome }}</span>
-                                            {% endif %}
-                                            <small class="text-muted">{{ tipo }}</small>
-                                        </div>
+                    </section>
+                    <section class="panel" aria-label="Últimos animais cadastrados">
+                        <div class="panel-h">
+                            <i class="bi bi-paw text-primary"></i>
+                            <h2>Últimos animais cadastrados</h2>
+                        </div>
+                        <div class="scroll">
+                            {% for animal in animais_cadastrados %}
+                                <div class="row-item">
+                                    <span class="ico">
+                                        <i class="bi bi-paw"></i>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <a class="nome consulta" href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}">{{ animal.nome }}</a>
+                                        <small class="text-secondary">{{ animal.tutor }}</small>
                                     </div>
-                                    <span class="badge bg-info">{{ dtVal ? dtVal|date('d/m/Y') : '' }}</span>
                                 </div>
                             {% else %}
-                                <div class="text-center py-5">
-                                    <i class="bi bi-inbox text-muted fs-1 mb-3 d-block"></i>
-                                    <p class="text-muted mb-0">Nenhuma vacina programada.</p>
-                                </div>
+                                <div class="empty">
+                                    <i class="bi bi-inbox"></i>Nenhum animal cadastrado.</div>
                             {% endfor %}
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
         </div>
     </div>
-</section>
-
+    <!-- 🔹 OFFCANVAS - PRESCRIÇÕES MÉDICAS -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasPrescricoes" style="width: 90%; max-width: 1400px;">
+        <div class="offcanvas-header text-white" style="background: linear-gradient(135deg, #14B8A6 0%, #14B8A6 100%);">
+            <h5 class="offcanvas-title">
+            <i class="bi bi-calendar-event me-2"></i>Calendário de Prescrições Médicas
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas">
+            </button>
+        </div>
+        <div class="offcanvas-body">
+            <p class="text-muted mb-4">
+                <i class="bi bi-info-circle me-2"></i>
+                Visualize e gerencie todas as prescrições de todos os pets internados
+            </p>
+            <div id="calendar-prescricoes-geral"
+                style="width: 100%; min-height: 700px; background: white; border-radius: 8px; padding: 10px;">
+            </div>
+        </div>
+    </div>
 {% endblock %}
-
 {% block javascripts %}
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.19/locales-all.global.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js'>
+    </script>
+    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.19/locales-all.global.min.js'>
+    </script>
     <script>
-        $(function () {
-            $('#searchForm').attr('action', "{{ path('clinica_dashboard') }}");
-
-            var largura = screen.width;
-            var altura = screen.height;
-            $('.consulta').on('click', function () {
-                var pagina = $(this).attr('href');
-                window.open(pagina, "", "location=center,toolbar=no,scrollbars=yes,status=no,dialog=yes,resizable=no,minimaze=no,fullscreen=no,width=" + largura + ",height=" + altura + ",top=100,left=200");
-                return false;
-            });
-
-            // 🔹 CALENDÁRIO DE PRESCRIÇÕES GERAL - Carrega quando abrir o offcanvas
-            let calendarLoaded = false;
-            let calendar = null;
-
-            console.log('🔍 Iniciando script do calendário...');
-
-            const offcanvasPrescricoes = document.getElementById('offcanvasPrescricoes');
-            console.log('🔍 Offcanvas encontrado:', offcanvasPrescricoes ? 'SIM' : 'NÃO');
-
-            if (offcanvasPrescricoes) {
-                offcanvasPrescricoes.addEventListener('shown.bs.offcanvas', function () {
-                    console.log('✅ Offcanvas aberto!');
-
-                    if (!calendarLoaded) {
-                        const calendarEl = document.getElementById('calendar-prescricoes-geral');
-                        console.log('🔍 Elemento calendário encontrado:', calendarEl ? 'SIM' : 'NÃO');
-
-                        if (calendarEl) {
-                            const eventos = {{ calendario_prescricoes_geral|json_encode|raw }};
-                            console.log('📊 Total de eventos:', eventos.length);
-                            console.log('📋 Eventos:', eventos);
-
-                            if (typeof FullCalendar === 'undefined') {
-                                console.error('❌ FullCalendar não está carregado!');
-                                calendarEl.innerHTML = '<div class="alert alert-danger">Erro: FullCalendar não carregado. Recarregue a página.</div>';
-                                return;
+        $(function() {
+        $('#searchForm').attr('action', "{{ path('clinica_dashboard') }}");
+        var largura = screen.width;
+        var altura = screen.height;
+        $('.consulta').on('click', function() {
+            var pagina = $(this).attr('href');
+            window.open(pagina, "", "location=center,toolbar=no,scrollbars=yes,status=no,dialog=yes,resizable=no,minimaze=no,fullscreen=no,width=" + largura + ",height=" + altura + ",top=100,left=200");
+            return false;
+        });
+        // 🔹 CALENDÁRIO DE PRESCRIÇÕES GERAL - Carrega quando abrir o offcanvas
+        let calendarLoaded = false;
+        let calendar = null;
+        console.log('🔍 Iniciando script do calendário...');
+        const offcanvasPrescricoes = document.getElementById('offcanvasPrescricoes');
+        console.log('🔍 Offcanvas encontrado:', offcanvasPrescricoes ? 'SIM' : 'NÃO');
+        if (offcanvasPrescricoes) {
+            offcanvasPrescricoes.addEventListener('shown.bs.offcanvas', function() {
+                console.log('✅ Offcanvas aberto!');
+                if (!calendarLoaded) {
+                    const calendarEl = document.getElementById('calendar-prescricoes-geral');
+                    console.log('🔍 Elemento calendário encontrado:', calendarEl ? 'SIM' : 'NÃO');
+                    if (calendarEl) {
+                        const eventos = {
+                            {
+                                calendario_prescricoes_geral | json_encode | raw
                             }
-
-                            console.log('✅ FullCalendar está disponível!');
-
-                            try {
-                                calendar = new FullCalendar.Calendar(calendarEl, {
-                                    initialView: 'timeGridWeek',
-                                    locale: 'pt-br',
-                                    height: 700,
-                                    slotMinTime: "00:00:00",
-                                    slotMaxTime: "24:00:00",
-                                    allDaySlot: false,
-                                    headerToolbar: {
-                                        left: 'prev,next today',
-                                        center: 'title',
-                                        right: 'timeGridDay,timeGridWeek,dayGridMonth'
-                                    },
-                                    events: eventos,
-                                    eventClick: function (info) {
-                                        const event = info.event;
-                                        const petNome = event.extendedProps.pet_nome || 'Pet';
-                                        const donoNome = event.extendedProps.dono_nome || '';
-                                        const internacaoId = event.extendedProps.internacao_id;
-                                        const eventoId = event.extendedProps.evento_id;
-                                        const status = event.extendedProps.status || 'pendente';
-                                        const descricao = event.extendedProps.descricao || '';
-
-                                        let statusBadge = status === 'confirmado'
-                                            ? '<span class="badge bg-success">Administrado</span>'
-                                            : '<span class="badge bg-warning">Pendente</span>';
-
-                                        let botaoConfirmar = '';
-                                        if (status !== 'confirmado') {
-                                            botaoConfirmar = `
-                                    <button class="btn btn-success w-100 mb-2" onclick="confirmarMedicamentoGeral(${eventoId}, ${internacaoId}, '${event.title.replace(/'/g, "\\'")}')">
-                                        <i class="bi bi-check-lg me-1"></i>Confirmar Administração
-                                    </button>
-                                `;
-                                        }
-
-                                        const modalHtml = `
-                                <div class="modal fade" id="modalDetalhePrescricao" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header bg-primary text-white">
-                                                <h5 class="modal-title">Detalhes da Prescrição</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <h5 class="mb-3">${event.title}</h5>
-                                                <p class="mb-2"><strong>Pet:</strong> ${petNome}</p>
-                                                <p class="mb-2"><strong>Tutor:</strong> ${donoNome}</p>
-                                                <p class="mb-2"><strong>Horário:</strong> ${event.start.toLocaleString('pt-BR')}</p>
-                                                ${descricao ? `<p class="mb-2"><strong>Detalhes:</strong> ${descricao}</p>` : ''}
-                                                <p class="mb-3"><strong>Status:</strong> ${statusBadge}</p>
-                                                ${botaoConfirmar}
-                                                <a href="/dashboard/clinica/internacao/${internacaoId}/ficha" 
-                                                   class="btn btn-primary w-100" target="_blank">
-                                                    <i class="fas fa-external-link-alt me-1"></i>Abrir Ficha de Internação
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-
-                                        // Remove modal anterior se existir
-                                        const oldModal = document.getElementById('modalDetalhePrescricao');
-                                        if (oldModal) oldModal.remove();
-
-                                        // Adiciona novo modal
-                                        document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-                                        // Abre o modal
-                                        const modal = new bootstrap.Modal(document.getElementById('modalDetalhePrescricao'));
-                                        modal.show();
-
-                                        // Remove modal do DOM quando fechar
-                                        document.getElementById('modalDetalhePrescricao').addEventListener('hidden.bs.modal', function () {
-                                            this.remove();
-                                        });
+                        };
+                        console.log('📊 Total de eventos:', eventos.length);
+                        console.log('📋 Eventos:', eventos);
+                        if (typeof FullCalendar === 'undefined') {
+                            console.error('❌ FullCalendar não está carregado!');
+                            calendarEl.innerHTML = '<div class="alert alert-danger">Erro: FullCalendar não carregado. Recarregue a página.</div>';
+                            return;
+                        }
+                        console.log('✅ FullCalendar está disponível!');
+                        try {
+                            calendar = new FullCalendar.Calendar(calendarEl, {
+                                initialView: 'timeGridWeek',
+                                locale: 'pt-br',
+                                height: 700,
+                                slotMinTime: "00:00:00",
+                                slotMaxTime: "24:00:00",
+                                allDaySlot: false,
+                                headerToolbar: {
+                                    left: 'prev,next today',
+                                    center: 'title',
+                                    right: 'timeGridDay,timeGridWeek,dayGridMonth'
+                                },
+                                events: eventos,
+                                eventClick: function(info) {
+                                    const event = info.event;
+                                    const petNome = event.extendedProps.pet_nome || 'Pet';
+                                    const donoNome = event.extendedProps.dono_nome || '';
+                                    const internacaoId = event.extendedProps.internacao_id;
+                                    const eventoId = event.extendedProps.evento_id;
+                                    const status = event.extendedProps.status || 'pendente';
+                                    const descricao = event.extendedProps.descricao || '';
+                                    let statusBadge = status === 'confirmado' ?
+                                        '<span class="badge bg-success">Administrado</span>' :
+                                        '<span class="badge bg-warning">Pendente</span>';
+                                    let botaoConfirmar = '';
+                                    if (status !== 'confirmado') {
+                                        botaoConfirmar = `
+        <button class="btn btn-success w-100 mb-2" onclick="confirmarMedicamentoGeral(${eventoId}, ${internacaoId}, '${event.title.replace(/'/g, "\\'")}')">
+        <i class="bi bi-check-lg me-1"></i>Confirmar Administração
+        </button>
+        `;
                                     }
-                                });
-
-                                console.log('Renderizando calendário...');
-                                calendar.render();
-                                calendarLoaded = true;
-                                console.log('Calendário renderizado com sucesso!');
-
-                            } catch (error) {
-                                console.error('Erro ao criar calendário:', error);
-                                calendarEl.innerHTML = '<div class="alert alert-danger">Erro ao carregar calendário: ' + error.message + '</div>';
-                            }
-                        } else {
-                            console.error('Elemento calendar-prescricoes-geral não encontrado!');
+                                    const modalHtml = `
+        <div class="modal fade" id="modalDetalhePrescricao" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Detalhes da Prescrição</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal">
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <h5 class="mb-3">${event.title}</h5>
+                        <p class="mb-2">
+                        <strong>Pet:</strong> ${petNome}</p>
+                        <p class="mb-2">
+                        <strong>Tutor:</strong> ${donoNome}</p>
+                        <p class="mb-2">
+                        <strong>Horário:</strong> ${event.start.toLocaleString('pt-BR')}</p>
+                        ${descricao ? `<p class="mb-2">
+                        <strong>Detalhes:</strong> ${descricao}</p>` : ''}
+                        <p class="mb-3">
+                        <strong>Status:</strong> ${statusBadge}</p>
+                        ${botaoConfirmar}
+                        <a href="internacao/${internacaoId}/ficha"
+                            class="btn btn-primary w-100" target="_blank">
+                            <i class="fas fa-external-link-alt me-1"></i>Abrir Ficha de Internação
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+                                    // Remove modal anterior se existir
+                                    const oldModal = document.getElementById('modalDetalhePrescricao');
+                                    if (oldModal) oldModal.remove();
+                                    // Adiciona novo modal
+                                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                                    // Abre o modal
+                                    const modal = new bootstrap.Modal(document.getElementById('modalDetalhePrescricao'));
+                                    modal.show();
+                                    // Remove modal do DOM quando fechar
+                                    document.getElementById('modalDetalhePrescricao').addEventListener('hidden.bs.modal', function() {
+                                        this.remove();
+                                    });
+                                }
+                            });
+                            console.log('Renderizando calendário...');
+                            calendar.render();
+                            calendarLoaded = true;
+                            console.log('Calendário renderizado com sucesso!');
+                        } catch (error) {
+                            console.error('Erro ao criar calendário:', error);
+                            calendarEl.innerHTML = '<div class="alert alert-danger">Erro ao carregar calendário: ' + error.message + '</div>';
                         }
                     } else {
-                        console.log('Calendário já foi carregado');
+                        console.error('Elemento calendar-prescricoes-geral não encontrado!');
                     }
-                });
-            } else {
-                console.error('Elemento offcanvasPrescricoes não encontrado!');
-            }
+                } else {
+                    console.log('Calendário já foi carregado');
+                }
+            });
+        } else {
+            console.error('Elemento offcanvasPrescricoes não encontrado!');
+        }
+    });
+    // 🔹 Função para confirmar administração de medicamento no calendário geral
+    function confirmarMedicamentoGeral(eventoId, internacaoId, titulo) {
+        if (!confirm(`Confirmar administração de:\n${titulo}?`)) {
+            return;
+        }
+        // Fecha o modal antes de processar
+        const modalElement = document.getElementById('modalDetalhePrescricao');
+        if (modalElement) {
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+        }
+        const horaAplicacao = new Date().toISOString().slice(0, 16);
+        // Cria FormData para enviar
+        const formData = new FormData();
+        formData.append('hora_aplicacao', horaAplicacao);
+        formData.append('veterinario_id', 1); // ID padrão
+        formData.append('anotacoes', 'Confirmado via calendário geral');
+        console.log('🔄 Confirmando medicamento...', {
+            eventoId,
+            internacaoId
         });
-
-        // 🔹 Função para confirmar administração de medicamento no calendário geral
-        function confirmarMedicamentoGeral(eventoId, internacaoId, titulo) {
-            if (!confirm(`Confirmar administração de:\n${titulo}?`)) {
-                return;
-            }
-
-            // Fecha o modal antes de processar
-            const modalElement = document.getElementById('modalDetalhePrescricao');
-            if (modalElement) {
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) modal.hide();
-            }
-
-            const horaAplicacao = new Date().toISOString().slice(0, 16);
-
-            // Cria FormData para enviar
-            const formData = new FormData();
-            formData.append('hora_aplicacao', horaAplicacao);
-            formData.append('veterinario_id', 1); // ID padrão
-            formData.append('anotacoes', 'Confirmado via calendário geral');
-
-            console.log('🔄 Confirmando medicamento...', {eventoId, internacaoId});
-
-            fetch(`/homepet/public/clinica/internacao/${internacaoId}/evento/${eventoId}/executar`, {
+        fetch(`/homepet/public/clinica/internacao/${internacaoId}/evento/${eventoId}/executar`, {
                 method: 'POST',
                 body: formData
             })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('✅ Resposta do servidor:', data);
-                    if (data.ok || data.success) {
-                        alert('✅ Medicamento confirmado com sucesso!');
-                        // Recarrega a página para atualizar as cores
-                        window.location.reload();
-                    } else {
-                        alert('❌ Erro ao confirmar: ' + (data.msg || data.message || 'Erro desconhecido'));
-                    }
-                })
-                .catch(error => {
-                    console.error('❌ Erro:', error);
-                    alert('❌ Erro ao confirmar medicamento: ' + error.message);
-                });
-        }
-
-        // 🔍 SISTEMA DE BUSCA
-        const searchInput = document.getElementById('searchInput');
-        const searchResults = document.getElementById('searchResults');
-        const searchForm = document.getElementById('searchForm');
-
-        let searchTimeout;
-
-        searchInput.addEventListener('input', function () {
-            clearTimeout(searchTimeout);
-            const query = this.value.trim();
-
-            if (query.length < 2) {
-                searchResults.style.display = 'none';
-                return;
-            }
-
-            searchTimeout = setTimeout(async () => {
-                try {
-                    const response = await fetch(`/homepet/public/clinica/buscar?q=${encodeURIComponent(query)}`);
-                    const data = await response.json();
-
-                    if (data.resultados && data.resultados.length > 0) {
-                        searchResults.innerHTML = data.resultados.map(r => `
-                        <a href="${r.url}" class="search-result-item">
-                            <i class="bi ${r.icon} me-2"></i>
-                            <div>
-                                <strong>${r.nome}</strong>
-                                <small class="text-muted d-block">${r.tipo}</small>
-                            </div>
-                        </a>
-                    `).join('');
-                        searchResults.style.display = 'block';
-                    } else {
-                        searchResults.innerHTML = '<div class="search-result-item text-muted">Nenhum resultado encontrado</div>';
-                        searchResults.style.display = 'block';
-                    }
-                } catch (error) {
-                    console.error('Erro na busca:', error);
+            .then(response => response.json())
+            .then(data => {
+                console.log('✅ Resposta do servidor:', data);
+                if (data.ok || data.success) {
+                    alert('✅ Medicamento confirmado com sucesso!');
+                    // Recarrega a página para atualizar as cores
+                    window.location.reload();
+                } else {
+                    alert('❌ Erro ao confirmar: ' + (data.msg || data.message || 'Erro desconhecido'));
                 }
-            }, 300);
-        });
+            })
+            .catch(error => {
+                console.error('❌ Erro:', error);
+                alert('❌ Erro ao confirmar medicamento: ' + error.message);
+            });
+    }
+    // 🔍 SISTEMA DE BUSCA
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    const searchForm = document.getElementById('searchForm');
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        if (query.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
+        searchTimeout = setTimeout(async () => {
+            try {
+                const response = await fetch(`/homepet/public/clinica/buscar?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                if (data.resultados && data.resultados.length > 0) {
+                    searchResults.innerHTML = data.resultados.map(r => `
+        <a href="${r.url}" class="search-result-item">
+            <i class="bi ${r.icon} me-2"></i>
+            <div>
+                <strong>${r.nome}</strong>
+                <small class="text-muted d-block">${r.tipo}</small>
+            </div>
+        </a>
+        `).join('');
+                    searchResults.style.display = 'block';
+                } else {
+                    searchResults.innerHTML = '<div class="search-result-item text-muted">Nenhum resultado encontrado</div>';
+                    searchResults.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro na busca:', error);
+            }
+        }, 300);
+    });
     </script>
 {% endblock %}
