@@ -35,7 +35,7 @@ class FinanceiroController extends DefaultController
         $baseId = $this->getIdBase();
         $financeiroRepo = $this->getRepositorio(Financeiro::class);
         $financeiroPendenteRepo = $this->getRepositorio(FinanceiroPendente::class);
-
+        $financeiroRepo->regulaBase();
 
         $aba = (string) $request->query->get('aba', 'diario');
         if ($aba === 'pendente') {
@@ -206,7 +206,7 @@ class FinanceiroController extends DefaultController
     /**
      * @Route("/pendente/confirmar/{id}", name="financeiro_confirmar_pagamento", methods={"POST"})
      */
-    public function confirmarPagamento(int $id): Response
+    public function confirmarPagamento(int $id, Request $request): Response
     {
         if ($resp = $this->negarSeNaoFinanceiro()) { return $resp; }
 
@@ -218,6 +218,24 @@ class FinanceiroController extends DefaultController
 
         if (!$financeiroPendente) {
             throw $this->createNotFoundException('Registro financeiro pendente não encontrado.');
+        }
+
+        // Débito de pagamento parcial (fiado do PDV): recebe o que falta SEM criar outra venda
+        // (a venda de origem já foi contada), registra a entrada e tira o débito do pendente.
+        if (($financeiroPendente['origem'] ?? null) === \App\Repository\FinanceiroPendenteRepository::ORIGEM_SALDO) {
+            try {
+                $r = $financeiroPendenteRepository->receberSaldo(
+                    $baseId,
+                    $id,
+                    (float) $financeiroPendente['valor'],
+                    (string) $request->request->get('metodo_pagamento', 'dinheiro')
+                );
+                $this->addFlash('success', 'Débito de ' . $r['cliente'] . ' quitado (R$ ' . number_format($r['pago'], 2, ',', '.') . '). Ele saiu do pendente e ficou no histórico.');
+            } catch (\Throwable $e) {
+                $this->addFlash('danger', 'Não foi possível quitar o débito: ' . $e->getMessage());
+            }
+
+            return $this->redirectToRoute('financeiro_index', ['aba' => 'fiado']);
         }
 
         // Usa o método do repository que já cria a venda com origem correta

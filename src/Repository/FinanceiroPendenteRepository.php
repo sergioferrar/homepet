@@ -222,7 +222,7 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
     public function findAllClinica(int $baseId): array
     {
-        $sql = "SELECT f.id, f.descricao, f.valor, f.valor AS total, f.data, p.nome AS pet_nome, c.nome AS dono_nome 
+        $sql = "SELECT f.id, f.descricao, f.valor, f.valor AS total, f.data, f.origem, p.nome AS pet_nome, c.nome AS dono_nome 
             FROM homepet_{$baseId}.financeiropendente f
             LEFT JOIN homepet_{$baseId}.pet p ON f.pet_id = p.id
             LEFT JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
@@ -447,6 +447,9 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
                 WHERE f.estabelecimento_id = :baseId
                   AND p.dono_id = :clienteId
                   AND (f.status IS NULL OR f.status NOT IN ('inativo','pago'))
+                  -- Saldo de pagamento parcial NÃO entra como item de uma nova venda
+                  -- (seria cobrado duas vezes); ele é recebido por receberSaldo().
+                  AND (f.origem IS NULL OR f.origem <> 'SALDO_PDV')
                 ORDER BY p.nome ASC, f.id ASC";
 
         return $this->conn->fetchAllAssociative($sql, [
@@ -470,5 +473,163 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
                 WHERE estabelecimento_id = ? AND id IN ($in)";
         $params = array_merge([$baseId], $ids);
         $this->conn->executeStatement($sql, $params);
+    }
+
+    // =====================================================================
+    // PAGAMENTO PARCIAL (FIADO): o que sobra de uma venda vira débito do cliente
+    // =====================================================================
+
+    /** Marca o lançamento de financeiropendente que representa o saldo de um pagamento parcial. */
+    public const ORIGEM_SALDO = 'SALDO_PDV';
+
+    /**
+     * Lança o saldo devedor de uma venda paga parcialmente. A venda em si NÃO é
+     * alterada: continua finalizada pelo valor cheio; só o que faltou receber
+     * fica em aberto aqui, no financeiro pendente do cliente (via pet).
+     *
+     * Idempotente: se a venda já tem saldo em aberto, devolve o id existente.
+     */
+    public function inserirSaldoPdv(int $baseId, string $nomeCliente, float $valor, int $petId, int $vendaId): int
+    {
+        $valor = round($valor, 2);
+
+        $existente = $this->conn->fetchOne(
+            "SELECT id FROM homepet_{$baseId}.financeiropendente
+             WHERE estabelecimento_id = :b AND venda_id = :v AND origem = :o
+               AND (status IS NULL OR LOWER(status) NOT IN ('pago','inativo'))
+             LIMIT 1",
+            ['b' => $baseId, 'v' => $vendaId, 'o' => self::ORIGEM_SALDO]
+        );
+        if ($existente) {
+            return (int) $existente;
+        }
+
+        $descricao = mb_substr(sprintf(
+            'Saldo devedor de R$ %s — Venda #%d — %s',
+            number_format($valor, 2, ',', '.'),
+            $vendaId,
+            $nomeCliente
+        ), 0, 255);
+
+        $this->conn->executeStatement(
+            "INSERT INTO homepet_{$baseId}.financeiropendente
+                (estabelecimento_id, descricao, valor, data, pet_id, metodo_pagamento, origem, status, venda_id)
+             VALUES (:b, :d, :v, NOW(), :pet, 'pendente', :o, 'Pendente', :venda)",
+            ['b' => $baseId, 'd' => $descricao, 'v' => $valor, 'pet' => $petId, 'o' => self::ORIGEM_SALDO, 'venda' => $vendaId]
+        );
+
+        return (int) $this->conn->lastInsertId();
+    }
+
+    /** Débitos (saldo de pagamento parcial) em aberto de um cliente, somando todos os pets dele. */
+    public function findSaldosAbertosPorCliente(int $baseId, int $clienteId): array
+    {
+        return $this->conn->fetchAllAssociative(
+            "SELECT f.id, f.descricao, f.valor, f.data, f.venda_id, f.pet_id, p.nome AS pet_nome
+             FROM homepet_{$baseId}.financeiropendente f
+             JOIN homepet_{$baseId}.pet p ON p.id = f.pet_id
+             WHERE f.estabelecimento_id = :b AND p.dono_id = :c AND f.origem = :o
+               AND (f.status IS NULL OR LOWER(f.status) NOT IN ('pago','inativo'))
+             ORDER BY f.data ASC, f.id ASC",
+            ['b' => $baseId, 'c' => $clienteId, 'o' => self::ORIGEM_SALDO]
+        );
+    }
+
+    /**
+     * Recebe um valor (parcial ou total) de um débito. Em uma única transação:
+     *  1. registra a entrada no financeiro (dinheiro que entrou agora);
+     *  2. registra a forma de pagamento na venda de origem;
+     *  3. abate o débito — se zerou, ele sai do pendente (status 'pago': fica no
+     *     histórico, como as demais baixas); se não, continua em aberto com o novo saldo.
+     * Não cria uma nova venda: o faturamento da venda de origem já foi contado.
+     *
+     * @return array{quitado:bool, restante:float, cliente:string, pago:float}
+     */
+    public function receberSaldo(int $baseId, int $id, float $valor, string $metodo, ?string $bandeira = null): array
+    {
+        if (!in_array($metodo, ['dinheiro', 'pix', 'credito', 'debito'], true)) {
+            throw new \InvalidArgumentException('Forma de pagamento inválida.');
+        }
+
+        $valor = round($valor, 2);
+        if ($valor <= 0) {
+            throw new \InvalidArgumentException('Informe um valor maior que zero.');
+        }
+
+        $this->conn->beginTransaction();
+        try {
+            $row = $this->conn->fetchAssociative(
+                "SELECT id, valor, venda_id, pet_id, descricao
+                 FROM homepet_{$baseId}.financeiropendente
+                 WHERE estabelecimento_id = :b AND id = :id AND origem = :o
+                   AND (status IS NULL OR LOWER(status) NOT IN ('pago','inativo'))
+                 FOR UPDATE",
+                ['b' => $baseId, 'id' => $id, 'o' => self::ORIGEM_SALDO]
+            );
+            if (!$row) {
+                throw new \RuntimeException('Débito não encontrado ou já quitado.');
+            }
+
+            $restante = round((float) $row['valor'], 2);
+            if ($valor - $restante > 0.009) {
+                throw new \InvalidArgumentException(sprintf(
+                    'O valor informado (R$ %s) é maior que o débito (R$ %s).',
+                    number_format($valor, 2, ',', '.'),
+                    number_format($restante, 2, ',', '.')
+                ));
+            }
+
+            $nomeCliente = (string) ($this->conn->fetchOne(
+                "SELECT c.nome FROM homepet_{$baseId}.pet p
+                 LEFT JOIN homepet_{$baseId}.cliente c ON c.id = p.dono_id WHERE p.id = :pet",
+                ['pet' => $row['pet_id']]
+            ) ?: 'Cliente');
+
+            $vendaRef = !empty($row['venda_id']) ? ' — Venda #' . (int) $row['venda_id'] : '';
+
+            // 1) entrada no financeiro
+            $this->conn->executeStatement(
+                "INSERT INTO homepet_{$baseId}.financeiro
+                    (estabelecimento_id, descricao, valor, data, metodo_pagamento, tipo, status, origem, pet_id)
+                 VALUES (:b, :d, :v, NOW(), :m, 'ENTRADA', 'Pago', 'PDV', :pet)",
+                ['b' => $baseId, 'd' => mb_substr('Recebimento de saldo devedor' . $vendaRef . ' — ' . $nomeCliente, 0, 255),
+                 'v' => $valor, 'm' => $metodo, 'pet' => $row['pet_id']]
+            );
+
+            // 2) forma de pagamento na venda de origem
+            if (!empty($row['venda_id'])) {
+                $this->conn->executeStatement(
+                    "INSERT INTO homepet_{$baseId}.venda_pagamento
+                        (estabelecimento_id, venda_id, metodo, valor, bandeira_cartao, parcelas, data)
+                     VALUES (:b, :venda, :m, :v, :band, NULL, NOW())",
+                    ['b' => $baseId, 'venda' => (int) $row['venda_id'], 'm' => $metodo, 'v' => $valor, 'band' => $bandeira]
+                );
+            }
+
+            // 3) abate / quita
+            $novoRestante = round($restante - $valor, 2);
+            $quitado = $novoRestante <= 0.009;
+            if ($quitado) {
+                $this->conn->executeStatement(
+                    "UPDATE homepet_{$baseId}.financeiropendente
+                     SET status = 'pago', descricao = LEFT(CONCAT(descricao, ' — quitado em ', DATE_FORMAT(NOW(), '%d/%m/%Y')), 255)
+                     WHERE id = :id AND estabelecimento_id = :b",
+                    ['id' => $id, 'b' => $baseId]
+                );
+                $novoRestante = 0.0;
+            } else {
+                $this->conn->executeStatement(
+                    "UPDATE homepet_{$baseId}.financeiropendente SET valor = :v WHERE id = :id AND estabelecimento_id = :b",
+                    ['v' => $novoRestante, 'id' => $id, 'b' => $baseId]
+                );
+            }
+
+            $this->conn->commit();
+
+            return ['quitado' => $quitado, 'restante' => $novoRestante, 'cliente' => $nomeCliente, 'pago' => $valor];
+        } catch (\Throwable $e) {
+            $this->conn->rollBack();
+            throw $e;
+        }
     }
 }

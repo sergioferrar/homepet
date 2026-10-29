@@ -283,6 +283,15 @@
                         </label>
                     </div>
 
+                    <!-- Pagamento parcial: o restante fica como débito do cliente (financeiro pendente) -->
+                    <div class="form-check mb-3" id="blocoFiado">
+                        <input class="form-check-input" type="checkbox" id="chkFiado">
+                        <label class="form-check-label fw-bold" for="chkFiado">
+                            <i class="bi bi-hourglass-split me-1"></i>Pagamento parcial — deixar o restante como débito do cliente
+                        </label>
+                        <div class="form-text">Informe só o que o cliente está pagando agora. O restante vai para o financeiro pendente dele e pode ser recebido depois.</div>
+                    </div>
+
                     <!-- Opções de Cartão (oculto por padrão) -->
                     <div id="opcoesCartao" class="mb-3" style="display: none;">
                         <label class="form-label">Bandeira do Cartão:</label>
@@ -382,6 +391,9 @@
 
                     <!-- Botão Finalizar / Salvar -->
                     {# Aviso + crédito da venda carregada: o JS do offcanvas reescreve este bloco #}
+                    <!-- Débitos em aberto do cliente (saldos de pagamentos parciais) -->
+                    <div id="blocoDebitosCliente"></div>
+
                     <div id="blocoVendaCarregada">
                     {% if vendaPreCarregada is not null and vendaPreCarregada.venda_id is defined %}
                         <div class="alert alert-info py-2 mb-2 text-center small">
@@ -432,6 +444,28 @@
 <!-- Container para Toast Notifications -->
 <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
     <div id="toastContainer"></div>
+</div>
+
+<!-- Modal: receber débito (saldo de pagamento parcial) -->
+<div class="modal fade" id="modalReceberDebito" tabindex="-1" aria-labelledby="tituloReceberDebito" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h2 class="modal-title h5" id="tituloReceberDebito">Receber débito do cliente</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+        <div class="modal-body">
+            <p class="small text-muted mb-3" id="rdInfo"></p>
+            <div class="mb-3"><label class="form-label" for="rdValor">Valor recebido agora (R$)</label>
+                <input type="number" step="0.01" min="0.01" class="form-control" id="rdValor">
+                <div class="form-text">Pode receber só uma parte: o que sobrar continua como débito.</div></div>
+            <div class="mb-3"><label class="form-label" for="rdMetodo">Forma de pagamento</label>
+                <select id="rdMetodo" class="form-select"><option value="dinheiro">Dinheiro</option><option value="pix">Pix</option>
+                    <option value="credito">Cartão crédito</option><option value="debito">Cartão débito</option></select></div>
+            <div class="mb-1 d-none" id="rdBandeiraBox"><label class="form-label" for="rdBandeira">Bandeira do cartão</label>
+                <select id="rdBandeira" class="form-select"><option value="">Selecione...</option><option value="visa">Visa</option>
+                    <option value="mastercard">Mastercard</option><option value="elo">Elo</option><option value="amex">American Express</option></select></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-success" id="rdConfirmar"><i class="bi bi-check-circle me-1"></i>Registrar recebimento</button></div>
+    </div></div>
 </div>
 
 <!-- Offcanvas: Vendas para lançar (lista em JSON, montada no próprio PDV) -->
@@ -611,6 +645,9 @@ $(document).ready(function() {
         } else {
             showToast('Venda #' + vendaPreCarregadaJS.venda_id + ' carregada da clínica!', 'success');
         }
+
+        // Avisa se o cliente tem débito em aberto (depois que cliente/pet foram definidos acima)
+        setTimeout(carregarDebitosCliente, 0);
 
         // Preenche o campo visual do tutor
         if (vendaPreCarregadaJS.cliente_nome) {
@@ -1055,6 +1092,7 @@ function aplicarVendaPreCarregada(payload) {
     renderizarBlocoVendaCarregada();
     renderizarCarrinho();
     atualizarResumo();
+    carregarDebitosCliente();
 
     const n = (payload.venda_ids || []).length;
     showToast(n > 1 ? n + ' vendas agrupadas no PDV!' : 'Venda #' + payload.venda_id + ' carregada no PDV!', 'success');
@@ -1168,6 +1206,7 @@ function selecionarCliente(cliente) {
 
     // Buscar atendimentos em aberto (contas por pet) do tutor
     carregarPendentesDoTutor(cliente.id);
+    carregarDebitosCliente();
 }
 
 // ==================== ATENDIMENTOS EM ABERTO (por pet) ====================
@@ -1663,14 +1702,15 @@ function recalcularDivididos() {
 
     const diff = +(total - soma).toFixed(2);
     if (diff > 0.001) {
-        $('#rotuloRestante').text('Falta:');
+        const fiado = $('#chkFiado').is(':checked');
+        $('#rotuloRestante').text(fiado ? 'Ficará como débito:' : 'Falta:');
         $('#restantePagamentos').text('R$ ' + formatarMoeda(diff))
-            .removeClass('text-success').addClass('text-danger');
+            .removeClass('text-success text-danger text-warning').addClass(fiado ? 'text-warning' : 'text-danger');
     } else {
         // Excedente = troco (relevante quando há dinheiro)
         $('#rotuloRestante').text('Troco:');
         $('#restantePagamentos').text('R$ ' + formatarMoeda(Math.abs(diff)))
-            .removeClass('text-danger').addClass('text-success');
+            .removeClass('text-danger text-warning').addClass('text-success');
     }
 }
 
@@ -1701,6 +1741,94 @@ function coletarPagamentos() {
     return pagamentos;
 }
 
+// ==================== PAGAMENTO PARCIAL (FIADO) E DÉBITOS DO CLIENTE ====================
+// "Fiado": o cliente paga uma parte agora e o restante fica como débito dele no financeiro
+// pendente (a venda é finalizada normalmente). Aqui o débito pode ser recebido depois.
+const urlDebitosCliente = '{{ path("clinica_pdv_debitos_cliente", {clienteId: 0}) }}';
+const urlReceberDebito  = '{{ path("clinica_pdv_debito_receber", {id: 0}) }}';
+let debitoEmRecebimento = null;
+
+function petDoPagamento() {
+    return petSelecionado || (vendaPreCarregadaJS && vendaPreCarregadaJS.pet_id) || null;
+}
+function clienteIdAtual() {
+    return (clienteSelecionado && clienteSelecionado.id) || (vendaPreCarregadaJS && vendaPreCarregadaJS.cliente_id) || null;
+}
+
+$('#chkFiado').on('change', function () {
+    if (this.checked) {
+        if (!petDoPagamento()) {
+            showToast('Selecione o cliente e o pet para deixar o restante como débito.', 'warning');
+            this.checked = false;
+            return;
+        }
+        if (!$('#toggleDividir').is(':checked')) {
+            $('#toggleDividir').prop('checked', true).trigger('change');
+        }
+        showToast('Informe abaixo só o valor que o cliente está pagando agora.', 'info');
+    }
+    recalcularDivididos();
+});
+$('#toggleDividir').on('change', function () {
+    if (!this.checked) { $('#chkFiado').prop('checked', false); }
+});
+
+function renderDebitosCliente(r) {
+    const $b = $('#blocoDebitosCliente');
+    if (!r || !r.debitos || !r.debitos.length) { $b.empty(); return; }
+    let html = '<div class="alert alert-warning py-2 mb-2 small" role="alert">' +
+        '<div class="fw-bold mb-1"><i class="bi bi-hourglass-split me-1"></i>Este cliente tem R$ ' + formatarMoeda(r.total) + ' em débito</div>';
+    r.debitos.forEach(function (d) {
+        html += '<div class="d-flex align-items-center justify-content-between gap-2 border-top pt-1 mt-1">' +
+            '<div class="text-truncate">' + vlEsc(d.pet_nome || '') + (d.venda_id ? ' · Venda #' + d.venda_id : '') +
+            ' · ' + vlEsc(d.data) + '<br><b>R$ ' + formatarMoeda(d.valor) + '</b></div>' +
+            '<button type="button" class="btn btn-sm btn-warning js-receber-debito" data-id="' + d.id + '" data-valor="' + d.valor + '">Receber</button></div>';
+    });
+    $b.html(html + '</div>');
+}
+
+function carregarDebitosCliente() {
+    const cid = clienteIdAtual();
+    if (!cid) { $('#blocoDebitosCliente').empty(); return; }
+    $.getJSON(urlDebitosCliente.replace(/\/0$/, '/' + cid))
+        .done(renderDebitosCliente)
+        .fail(function () { $('#blocoDebitosCliente').empty(); });
+}
+
+$(document).on('click', '.js-receber-debito', function () {
+    debitoEmRecebimento = { id: $(this).data('id'), valor: parseFloat($(this).data('valor')) };
+    $('#rdInfo').text('Débito em aberto: R$ ' + formatarMoeda(debitoEmRecebimento.valor));
+    $('#rdValor').val(debitoEmRecebimento.valor.toFixed(2)).attr('max', debitoEmRecebimento.valor.toFixed(2));
+    $('#rdMetodo').val('dinheiro').trigger('change');
+    $('#rdBandeira').val('');
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalReceberDebito')).show();
+});
+$('#rdMetodo').on('change', function () {
+    $('#rdBandeiraBox').toggleClass('d-none', this.value !== 'credito' && this.value !== 'debito');
+});
+$('#rdConfirmar').on('click', function () {
+    if (!debitoEmRecebimento) { return; }
+    const metodo = $('#rdMetodo').val();
+    const valor = parseFloat($('#rdValor').val());
+    if (!(valor > 0)) { showToast('Informe um valor maior que zero.', 'warning'); return; }
+    if ((metodo === 'credito' || metodo === 'debito') && !$('#rdBandeira').val()) {
+        showToast('Selecione a bandeira do cartão.', 'warning'); return;
+    }
+    const $btn = $(this).prop('disabled', true);
+    $.ajax({
+        url: urlReceberDebito.replace(/\/0\/receber$/, '/' + debitoEmRecebimento.id + '/receber'),
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ valor: valor, metodo: metodo, bandeira: $('#rdBandeira').val() || null })
+    }).done(function (r) {
+        showToast(r.mensagem || 'Recebimento registrado.', 'success');
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalReceberDebito')).hide();
+        carregarDebitosCliente();
+    }).fail(function (xhr) {
+        showToast((xhr.responseJSON && xhr.responseJSON.mensagem) || 'Não foi possível registrar o recebimento.', 'danger');
+    }).always(function () { $btn.prop('disabled', false); });
+});
+
 // ==================== SALVAR VENDA ====================
 async function salvarVenda() {
     // ── Validações comuns ─────────────────────────────────────────────────────
@@ -1712,6 +1840,7 @@ async function salvarVenda() {
     // Pagamento dividido (opcional)
     const dividir = $('#toggleDividir').is(':checked');
     let pagamentos = null;
+    let fiadoEfetivo = false; // true quando parte fica como débito do cliente
     if (dividir) {
         pagamentos = coletarPagamentos();
         if (pagamentos === null) {
@@ -1719,8 +1848,19 @@ async function salvarVenda() {
         }
         const soma = pagamentos.reduce((s, p) => s + p.valor, 0);
         if (soma + 0.01 < total) {
-            showToast('A soma das formas é menor que o total da venda.', 'warning');
-            return;
+            if (!$('#chkFiado').is(':checked')) {
+                showToast('A soma das formas é menor que o total da venda. Para deixar o restante como débito, marque "Pagamento parcial".', 'warning');
+                return;
+            }
+            if (!petDoPagamento()) {
+                showToast('Para deixar o restante como débito, selecione o cliente e o pet.', 'warning');
+                return;
+            }
+            const restante = total - soma;
+            if (!confirm('Receber R$ ' + formatarMoeda(soma) + ' agora e deixar R$ ' + formatarMoeda(restante) + ' como débito do cliente?')) {
+                return;
+            }
+            fiadoEfetivo = true;
         }
     } else if ((metodo === 'credito' || metodo === 'debito') && !$('#bandeiraCartao').val()) {
         showToast('Selecione a bandeira do cartão!', 'warning');
@@ -1778,7 +1918,8 @@ async function salvarVenda() {
             pagamentos:       dividir ? pagamentos : [],
             data_venda:       dataVenda,
             usar_credito:     usarCred,
-            deixar_credito:   deixarCred
+            deixar_credito:   deixarCred,
+            fiado:            fiadoEfetivo
         };
         if (emLote) {
             payload.ids = vendaPreCarregadaJS.venda_ids;
@@ -1800,6 +1941,9 @@ async function salvarVenda() {
                     'success'
                 );
                 (response.avisos || []).forEach(a => showToast(a, 'warning'));
+                if (!emLote && response.saldo_devedor > 0) {
+                    showToast('Débito de R$ ' + formatarMoeda(response.saldo_devedor) + ' lançado no financeiro pendente do cliente.', 'info');
+                }
                 setTimeout(() => {
                     window.location.href = urlPosFinalizacao();
                 }, 1500);
@@ -1855,7 +1999,8 @@ async function salvarVenda() {
         troco:      metodo === 'dinheiro' ? (parseFloat($('#valorRecebido').val()) - total) : null,
         observacao: $('#observacao').val().trim() || null,
         pagamentos: dividir ? pagamentos : [],
-        data_venda: dataVenda
+        data_venda: dataVenda,
+        fiado:      fiadoEfetivo
     };
 
     try {
@@ -1868,6 +2013,9 @@ async function salvarVenda() {
 
         if (response.ok) {
             showToast('Venda registrada com sucesso!', 'success');
+            if (response.saldo_devedor > 0) {
+                showToast('Débito de R$ ' + formatarMoeda(response.saldo_devedor) + ' lançado no financeiro pendente do cliente.', 'info');
+            }
             // Baixa as pendências (atendimentos em aberto) incluídas nesta venda
             const pendenteIds = carrinhoItens
                 .filter(i => i.tipo === 'Atendimento' && i.pendenteId)
@@ -1916,7 +2064,9 @@ function limparFormulario() {
     $('#observacao').val('');
     $('#metodo').val('dinheiro').trigger('change');
 
-    // Reseta pagamento dividido
+    // Reseta pagamento dividido (e o pagamento parcial)
+    $('#chkFiado').prop('checked', false);
+    $('#blocoDebitosCliente').empty();
     $('#toggleDividir').prop('checked', false);
     $('#listaPagamentos').empty();
     $('#pagamentoDividido').hide();

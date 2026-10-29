@@ -41,6 +41,15 @@
                         <td class="fin-acoes">
                             <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': item.id}) }}" class="d-inline"
                                   onsubmit="return confirm('Confirmar o pagamento de R$ {{ item.total|number_format(2, ',', '.') }}?')">
+                                {% if item.origem == 'SALDO_PDV' %}
+                                    {# Saldo de pagamento parcial (PDV): escolhe como o cliente pagou o que faltava #}
+                                    <select name="metodo_pagamento" class="form-select form-select-sm d-inline-block w-auto me-1" aria-label="Forma de pagamento do recebimento">
+                                        <option value="dinheiro">Dinheiro</option>
+                                        <option value="pix">Pix</option>
+                                        <option value="credito">Cartão crédito</option>
+                                        <option value="debito">Cartão débito</option>
+                                    </select>
+                                {% endif %}
                                 <button type="submit" class="btn btn-outline-success btn-sm" aria-label="Confirmar pagamento" title="Confirmar pagamento">
                                     <i class="bi bi-check2-circle" aria-hidden="true"></i><span class="d-none d-md-inline ms-1">Confirmar pagamento</span>
                                 </button>

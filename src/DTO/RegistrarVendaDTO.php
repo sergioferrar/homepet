@@ -33,6 +33,9 @@ class RegistrarVendaDTO
      */
     public array $pagamentos = [];
 
+    /** Pagamento parcial: o que faltar para o total fica como débito do cliente (financeiro pendente). */
+    public bool $fiado = false;
+
     public static function fromArray(array $dados): self
     {
         $dto = new self();
@@ -51,6 +54,8 @@ class RegistrarVendaDTO
         $dto->dataVenda = (isset($dados['data_venda']) && is_string($dados['data_venda']) && $dados['data_venda'] !== '')
             ? $dados['data_venda']
             : null;
+
+        $dto->fiado = !empty($dados['fiado']);
 
         // Normaliza as formas de pagamento divididas (se houver)
         $dto->pagamentos = [];
@@ -98,7 +103,10 @@ class RegistrarVendaDTO
                 $soma += (float) $p['valor'];
             }
             // A soma das formas deve cobrir o total (o excedente é troco, p/ dinheiro).
-            if ($this->total > 0 && $soma + 0.01 < $this->total) {
+            // Exceção: pagamento parcial (fiado) — o que faltar vira débito do cliente.
+            if ($this->fiado && $this->total > 0 && $soma + 0.01 < $this->total && !$this->petId) {
+                $errors[] = 'Para deixar o restante como débito, selecione o cliente e o pet.';
+            } elseif ($this->total > 0 && $soma + 0.01 < $this->total && !$this->fiado) {
                 $errors[] = 'A soma das formas de pagamento (R$ ' . number_format($soma, 2, ',', '.')
                     . ') é menor que o total (R$ ' . number_format($this->total, 2, ',', '.') . ').';
             }

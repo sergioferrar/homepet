@@ -587,6 +587,8 @@ class PdvController extends DefaultController
             $deixarCredito = isset($dados['deixar_credito'])
                 ? (float) str_replace(',', '.', (string) $dados['deixar_credito'])
                 : 0.0;
+            // Pagamento parcial: o que faltar vira débito do cliente
+            $fiado = !empty($dados['fiado']);
 
             // Pagamento dividido (opcional) — mesma normalização de finalizarCarrinho()
             $pagamentos = [];
@@ -617,6 +619,17 @@ class PdvController extends DefaultController
                 return new JsonResponse([
                     'status' => 'error',
                     'mensagem' => 'Método de pagamento não informado.',
+                ], 400);
+            }
+
+            if (empty($pagamentos)) {
+                $fiado = false; // sem formas informadas o pagamento é integral
+            }
+
+            if ($fiado && $usarCredito > 0) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'mensagem' => 'Não dá para combinar o crédito do cliente com débito (pagamento parcial) na mesma baixa. Desmarque uma das opções.',
                 ], 400);
             }
 
@@ -658,13 +671,20 @@ class PdvController extends DefaultController
                 }
             }
 
+            if ($fiado && !$petRef) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'mensagem' => 'Para deixar o restante como débito, as vendas precisam ter um pet/cliente vinculado. Nenhuma venda foi alterada.',
+                ], 400);
+            }
+
             $totais = [];
             foreach ($vendas as $id => $venda) {
                 $totais[$id] = (float) $venda['total'];
             }
             $totalGrupo = array_sum($totais);
 
-            if (!empty($pagamentos)) {
+            if (!empty($pagamentos) && !$fiado) {
                 $soma = array_sum(array_column($pagamentos, 'valor'));
                 // Compara em centavos para não depender de arredondamento de float
                 if ((int) round($soma * 100) < (int) round($totalGrupo * 100)) {
@@ -684,6 +704,7 @@ class PdvController extends DefaultController
             $finalizadas = [];
             $falhas = [];
             $avisos = [];
+            $saldoDevedorTotal = 0.0;
             $restanteCredito = max(0.0, round($usarCredito, 2));
             $ultimoId = array_key_last($totais);
 
@@ -691,16 +712,31 @@ class PdvController extends DefaultController
                 $creditoDestaVenda = min($restanteCredito, $totalVenda);
                 $restanteCredito = round($restanteCredito - $creditoDestaVenda, 2);
 
+                $alocados = $pagamentosPorVenda[$id] ?? [];
+                $somaAlocada = array_sum(array_column($alocados, 'valor'));
+
                 $payload = [
                     'metodo_pagamento' => $metodo,
                     'bandeira_cartao'  => $bandeira,
                     'parcelas'         => $parcelas,
-                    'pagamentos'       => $pagamentosPorVenda[$id] ?? [],
+                    'pagamentos'       => $alocados,
                     'data_venda'       => $dataVendaStr,
                     'usar_credito'     => $creditoDestaVenda,
                     // o troco guardado como crédito entra uma única vez, na última venda
                     'deixar_credito'   => $id === $ultimoId ? $deixarCredito : 0,
+                    // a venda que ficou só parcialmente coberta guarda o saldo como débito
+                    'fiado'            => $fiado && $somaAlocada > 0 && ($somaAlocada + 0.005) < $totalVenda,
                 ];
+
+                // Pagamento parcial: venda que não recebeu nada do que foi pago agora segue o
+                // fluxo normal de "Pendente" (o total inteiro fica no financeiro pendente).
+                if ($fiado && $somaAlocada <= 0) {
+                    $payload['metodo_pagamento'] = 'pendente';
+                    $payload['pagamentos'] = [];
+                    $payload['usar_credito'] = 0;
+                    $payload['deixar_credito'] = 0;
+                    $saldoDevedorTotal += $totalVenda;
+                }
 
                 $subRequest = new Request([], [], [], [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($payload));
                 $resposta = $this->finalizarCarrinho($subRequest, (int) $id, $asaas);
@@ -708,6 +744,7 @@ class PdvController extends DefaultController
 
                 if (($corpo['status'] ?? null) === 'success') {
                     $finalizadas[] = (int) $id;
+                    $saldoDevedorTotal += (float) ($corpo['saldo_devedor'] ?? 0);
 
                     if (isset($corpo['nota_fiscal']['emitida']) && $corpo['nota_fiscal']['emitida'] === false) {
                         $avisos[] = 'NFS-e da venda #' . $id . ' não foi emitida: ' . ($corpo['nota_fiscal']['erro'] ?? 'erro desconhecido');
@@ -730,8 +767,10 @@ class PdvController extends DefaultController
             if (empty($falhas)) {
                 return new JsonResponse([
                     'status' => 'success',
-                    'mensagem' => count($finalizadas) . ' vendas finalizadas com sucesso!',
+                    'mensagem' => count($finalizadas) . ' vendas finalizadas com sucesso!'
+                        . ($saldoDevedorTotal > 0.01 ? ' Débito de R$ ' . number_format($saldoDevedorTotal, 2, ',', '.') . ' lançado para o cliente.' : ''),
                     'finalizadas' => $finalizadas,
+                    'saldo_devedor' => round($saldoDevedorTotal, 2),
                     'avisos' => $avisos,
                 ]);
             }
@@ -819,6 +858,77 @@ class PdvController extends DefaultController
         }
 
         return $resultado;
+    }
+
+    /**
+     * Débitos (saldo de pagamentos parciais) em aberto de um cliente — soma todos os pets dele.
+     *
+     * @Route("/debitos/cliente/{clienteId}", name="clinica_pdv_debitos_cliente", methods={"GET"}, requirements={"clienteId"="\d+"})
+     */
+    public function debitosCliente(int $clienteId): JsonResponse
+    {
+        $this->switchDB();
+        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+
+        $linhas = $this->getRepositorio(FinanceiroPendente::class)
+            ->findSaldosAbertosPorCliente($estabelecimentoId, $clienteId);
+
+        $total = 0.0;
+        $debitos = [];
+        foreach ($linhas as $l) {
+            $valor = round((float) $l['valor'], 2);
+            $total += $valor;
+            $debitos[] = [
+                'id' => (int) $l['id'],
+                'valor' => $valor,
+                'descricao' => $l['descricao'],
+                'data' => $l['data'] ? (new \DateTime($l['data']))->format('d/m/Y') : '',
+                'venda_id' => $l['venda_id'] ? (int) $l['venda_id'] : null,
+                'pet_nome' => $l['pet_nome'],
+            ];
+        }
+
+        return new JsonResponse(['ok' => true, 'total' => round($total, 2), 'debitos' => $debitos]);
+    }
+
+    /**
+     * Recebe um débito (total ou uma parte). Quitado, ele sai do financeiro pendente.
+     *
+     * @Route("/debitos/{id}/receber", name="clinica_pdv_debito_receber", methods={"POST"}, requirements={"id"="\d+"})
+     */
+    public function receberDebito(int $id, Request $request): JsonResponse
+    {
+        $this->switchDB();
+        $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
+
+        $contentType = $request->headers->get('Content-Type', '');
+        $dados = str_contains($contentType, 'application/json')
+            ? (json_decode($request->getContent(), true) ?? [])
+            : $request->request->all();
+
+        try {
+            $resultado = $this->getRepositorio(FinanceiroPendente::class)->receberSaldo(
+                $estabelecimentoId,
+                $id,
+                (float) str_replace(',', '.', (string) ($dados['valor'] ?? 0)),
+                (string) ($dados['metodo'] ?? ''),
+                !empty($dados['bandeira']) ? (string) $dados['bandeira'] : null
+            );
+        } catch (\InvalidArgumentException | \RuntimeException $e) {
+            return new JsonResponse(['ok' => false, 'mensagem' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            $this->logger->error('Falha ao receber débito no PDV.', ['debito' => $id, 'erro' => $e->getMessage()]);
+            return new JsonResponse(['ok' => false, 'mensagem' => 'Não foi possível registrar o recebimento. Tente novamente.'], 500);
+        }
+
+        return new JsonResponse([
+            'ok' => true,
+            'quitado' => $resultado['quitado'],
+            'restante' => $resultado['restante'],
+            'mensagem' => $resultado['quitado']
+                ? 'Débito quitado! Ele saiu do financeiro pendente.'
+                : 'Recebimento registrado. Resta R$ ' . number_format($resultado['restante'], 2, ',', '.') . ' em aberto.',
+        ]);
     }
 
     /**
@@ -1125,6 +1235,8 @@ class PdvController extends DefaultController
             $deixarCreditoReq = isset($dados['deixar_credito'])
                 ? (float) str_replace(',', '.', (string) $dados['deixar_credito'])
                 : 0.0;
+            // Pagamento parcial: o que faltar vira débito do cliente (financeiro pendente)
+            $fiadoReq = !empty($dados['fiado']);
  
             // Formas de pagamento divididas (opcional)
             $pagamentos = [];
@@ -1153,6 +1265,9 @@ class PdvController extends DefaultController
                     }
                 }
                 $metodo = count($pagamentos) === 1 ? $pagamentos[0]['metodo'] : 'multiplo';
+            } else {
+                // Sem formas informadas não há o que parcelar: o pagamento é integral.
+                $fiadoReq = false;
             }
  
             if (empty($metodo)) {
@@ -1186,8 +1301,16 @@ class PdvController extends DefaultController
                 ], 404);
             }
  
-            // Valida a soma quando há pagamento dividido
-            if (!empty($pagamentos)) {
+            // Pagamento parcial só faz sentido com cliente/pet vinculado: é neles que o débito fica.
+            if ($fiadoReq && empty($venda['pet_id'])) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'mensagem' => 'Para deixar o restante como débito, a venda precisa ter um pet/cliente vinculado.',
+                ], 400);
+            }
+ 
+            // Valida a soma quando há pagamento dividido (com pagamento parcial a soma pode ser menor)
+            if (!empty($pagamentos) && !$fiadoReq) {
                 $soma = array_sum(array_column($pagamentos, 'valor'));
                 if ($soma + 0.01 < (float) $venda['total']) {
                     return new JsonResponse([
@@ -1230,6 +1353,12 @@ class PdvController extends DefaultController
 
             $totalEfetivo = round($totalVenda - $valorCreditoAbatido, 2);
 
+            // Pagamento parcial (fiado): o que faltar entre o total efetivo e o recebido vira
+            // débito do cliente. A venda continua finalizada pelo valor cheio.
+            $recebidoAgora = !empty($pagamentos) ? array_sum(array_column($pagamentos, 'valor')) : 0.0;
+            $saldoDevedor = ($fiadoReq && $metodo !== 'pendente') ? round($totalEfetivo - $recebidoAgora, 2) : 0.0;
+            $temSaldo = $saldoDevedor > 0.01;
+
             // Se o crédito cobriu tudo, não precisa gerar lançamento no financeiro.
             // Determina status final e registra no financeiro
             if ($metodo === 'pendente') {
@@ -1254,9 +1383,12 @@ class PdvController extends DefaultController
                     // efetivo, proporcionalmente, para o financeiro não inflar.
                     $somaPagamentos = max(array_sum(array_column($pagamentos, 'valor')), 0.01);
                     foreach ($pagamentos as $p) {
-                        $valorProporcional = $totalEfetivo > 0
-                            ? round(((float) $p['valor'] / $somaPagamentos) * $totalEfetivo, 2)
-                            : 0.0;
+                        // Com saldo devedor lança exatamente o que foi recebido (sem proporção).
+                        $valorProporcional = $temSaldo
+                            ? (float) $p['valor']
+                            : ($totalEfetivo > 0
+                                ? round(((float) $p['valor'] / $somaPagamentos) * $totalEfetivo, 2)
+                                : 0.0);
                         if ($valorProporcional > 0) {
                             $vendaRepo->inserirFinanceiro(
                                 $estabelecimentoId,
@@ -1343,6 +1475,19 @@ class PdvController extends DefaultController
                 );
             }
 
+            // Saldo do pagamento parcial vai para o financeiro pendente do cliente.
+            // (Depois da baixa acima: uma venda que estava Pendente tem o lançamento antigo
+            // encerrado e este novo guarda só o que ainda falta receber.)
+            if ($temSaldo) {
+                $fpRepo->inserirSaldoPdv(
+                    $estabelecimentoId,
+                    $venda['cliente'] ?? 'Consumidor Final',
+                    $saldoDevedor,
+                    (int) $venda['pet_id'],
+                    $id
+                );
+            }
+
             // ── Emissão automática de NFS-e (Asaas) ──
             // (código mantido igual — não alterado)
             $notaFiscal = null;
@@ -1371,7 +1516,9 @@ class PdvController extends DefaultController
  
             return new JsonResponse([
                 'status' => 'success',
-                'mensagem' => 'Venda #' . $id . ' finalizada com sucesso!',
+                'mensagem' => 'Venda #' . $id . ' finalizada com sucesso!'
+                    . ($temSaldo ? ' Débito de R$ ' . number_format($saldoDevedor, 2, ',', '.') . ' lançado para o cliente.' : ''),
+                'saldo_devedor' => $temSaldo ? $saldoDevedor : 0.0,
                 'nota_fiscal' => $notaFiscal,
             ]);
  

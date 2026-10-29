@@ -87,6 +87,24 @@ class PdvService
             // 5.1 Registra as formas de pagamento (pagamento dividido)
             $this->registrarPagamentos($venda, $pagamentos, $estabelecimentoId, DataVendaRetroativa::resolver($dto->dataVenda ?? null));
 
+            // 5.2 Pagamento parcial (fiado): o que faltar vira débito do cliente no financeiro
+            // pendente. A venda em si não é alterada.
+            $saldoDevedor = 0.0;
+            if (($dto->fiado ?? false) && !empty($pagamentos) && $venda->getPetId()) {
+                $saldoDevedor = round($dto->total - array_sum(array_column($pagamentos, 'valor')), 2);
+                if ($saldoDevedor > 0.01) {
+                    $this->em->getRepository(FinanceiroPendente::class)->inserirSaldoPdv(
+                        $estabelecimentoId,
+                        $nomeCliente,
+                        $saldoDevedor,
+                        (int) $venda->getPetId(),
+                        (int) $venda->getId()
+                    );
+                } else {
+                    $saldoDevedor = 0.0;
+                }
+            }
+
             // 6. CORREÇÃO: NÃO registra no financeiro aqui — apenas quando finalizar
             // O financeiro será registrado em finalizarCarrinho() do Controller
             // Isso evita duplicação quando a venda é carregada e finalizada no caixa
@@ -114,7 +132,8 @@ class PdvService
                 'ok' => true,
                 'msg' => 'Venda registrada com sucesso!',
                 'venda_id' => $venda->getId(),
-                'total' => number_format($dto->total, 2, ',', '.')
+                'total' => number_format($dto->total, 2, ',', '.'),
+                'saldo_devedor' => $saldoDevedor,
             ];
 
         } catch (\Exception $e) {
