@@ -163,14 +163,14 @@ class PagamentoController extends DefaultController
                 $sessionData = $request->getSession()->get('finaliza');
                 if (!empty($sessionData['eid'])) {
                     $eid = $sessionData['eid'];
-                    $usuario = $usuario ?: $emUsuario->findOneBy(['petshop_id' => $eid]);
+                    $usuario = $usuario ?: $emUsuario->findPeloEstabelecimento(['petshop_id' => $eid]);
                 }
             }
 
             // ── 3) Ativa o estabelecimento ──
             if ($eid) {
                 try {
-                    $uid = $usuario ? $usuario->getId() : 0;
+                    $uid = $usuario ? $usuario['id'] : 0;
                     $emEstabelecimento->aprovacao($uid, $eid);
                 } catch (\Exception $e) {
                     $this->logger->error('Falha ao ativar estabelecimento.', ['eid' => $eid, 'message' => $e->getMessage()]);
@@ -192,7 +192,7 @@ class PagamentoController extends DefaultController
                     $loginUrl = $this->generateUrl('app_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
                     $emailService = $this->container->get(\App\Service\EmailService::class);
                     $emailService->sendEmail(
-                        $usuario->getEmail(),
+                        $usuario['email'],
                         'Assinatura Confirmada - Sistema HomePet',
                         $this->renderView('emails/assinatura_confirmada.html.twig', [
                             'invoice' => $invoice,
@@ -211,6 +211,7 @@ class PagamentoController extends DefaultController
             return $this->redirectToRoute('app_login', ['confirmation' => $mensagem]);
 
         } catch (\Exception $e) {
+            dd($e);
             $this->logger->error('Erro no retorno de pagamento.', ['message' => $e->getMessage()]);
             return $this->render('pagamento/falha.html.twig', [
                 'erro' => 'Erro ao processar pagamento: ' . $e->getMessage(),
