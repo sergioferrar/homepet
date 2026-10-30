@@ -112,6 +112,7 @@ class PagamentoController extends DefaultController
                     }
                 }
             } catch (\Exception $e) {
+                dd($e);
                 // A consulta falhou — segue com o status recebido no redirect.
                 $this->logger->error('Falha ao consultar status no Mercado Pago.', ['message' => $e->getMessage()]);
             }
