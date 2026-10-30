@@ -121,7 +121,7 @@ class EstabelecimentoRepository extends ServiceEntityRepository
     {
         $dataPlanoInicio = date('Y-m-d H:i:s');
         $dataPlanoFim    = date('Y-m-d H:i:s', strtotime('+1month'));
-        $sql             = "UPDATE estabelecimento
+        $sql             = "UPDATE homepet_login.estabelecimento
             SET status = 'Ativo', dataPlanoInicio = '$dataPlanoInicio', dataPlanoFim = '$dataPlanoFim'
             WHERE id='$eid'";
 

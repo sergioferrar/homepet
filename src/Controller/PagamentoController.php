@@ -173,6 +173,7 @@ class PagamentoController extends DefaultController
                     $uid = $usuario ? $usuario['id'] : 0;
                     $emEstabelecimento->aprovacao($uid, $eid);
                 } catch (\Exception $e) {
+                    dd($e);
                     $this->logger->error('Falha ao ativar estabelecimento.', ['eid' => $eid, 'message' => $e->getMessage()]);
                 }
             } else {
