@@ -225,7 +225,7 @@ class PagamentoController extends DefaultController
      * hash — por isso só chamamos find() quando o valor é numérico, caindo para o número
      * da invoice e, por fim, para o invoice_id guardado na sessão.
      */
-    private function localizarInvoice($emFatura, ?string $externalReference, Request $request): ?\App\Entity\Fatura
+    private function localizarInvoice($emFatura, ?string $externalReference, Request $request)
     {
         $invoice = null;
 
