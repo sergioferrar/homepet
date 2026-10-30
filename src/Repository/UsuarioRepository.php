@@ -47,6 +47,15 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
         return $query->fetchAll();
     }
 
+    public function findPeloEstabelecimento($estabelecimentoId){
+        $sql = "SELECT *
+            FROM homepet_login.usuario
+            WHERE petshop_id = '{$estabelecimentoId}'
+            ";
+        $query = $this->conn->executeQuery($sql);
+        return $query->fetchAssociative();
+    }
+
     public function listaTodosPrivado($petshop_id){
         $sql = "SELECT id, nome_usuario, senha, email, roles, access_level, petshop_id, data_trial
             FROM homepet_login.usuario

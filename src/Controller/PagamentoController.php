@@ -143,7 +143,7 @@ class PagamentoController extends DefaultController
 
             if ($invoice) {
                 $eid = $invoice['estabelecimento_id'];
-                $usuario = $emUsuario->findOneBy(['petshop_id' => $eid]);
+                $usuario = $emUsuario->findPeloEstabelecimento(['petshop_id' => $eid]);
 
                 // Marca a invoice como paga (não pode derrubar a ativação)
                 try {
