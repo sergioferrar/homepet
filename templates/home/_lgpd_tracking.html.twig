@@ -49,7 +49,7 @@
    BANNER DE CONSENTIMENTO DE COOKIES (LGPD)
    Exibido somente quando: banner_ativo=true E cookie não definido
 ══════════════════════════════════════════════════════════ #}
-{% if cookie_banner_ativo and app.request.cookies.get('hp_lgpd_consent') is null %}
+{% if cookie_banner_ativo is not defined and app.request.cookies.get('hp_lgpd_consent') is null %}
 <div id="hp-cookie-banner"
      style="position:fixed;bottom:0;left:0;right:0;z-index:9999;
             background:rgba(15,23,42,.97);color:#f8fafc;
