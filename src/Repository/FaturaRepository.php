@@ -29,6 +29,13 @@ class FaturaRepository extends ServiceEntityRepository
         if ($flush) { $this->getEntityManager()->flush(); }
     }
 
+    public function findPeloId($id)
+    {
+        $sql = "SELECT * FROM homepet_login.invoice WHERE id = '{$id}'";
+        $query = $this->conn->executeQuery($sql);
+        return $query->fetchAssociative();
+    }
+
     /**
      * Busca invoices de um estabelecimento com dados do plano via LEFT JOIN
      */

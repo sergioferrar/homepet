@@ -54,22 +54,20 @@ class InvoiceService
     /**
      * Marca um invoice como pago
      */
-    public function markAsPaid(Fatura $invoice, array $paymentData = []): void
+    public function markAsPaid($emFatura, $invoice, array $paymentData = []): void
     {
-        $invoice->setStatus('pago');
-        $invoice->setDataPagamento(new \DateTime());
-        $invoice->setUpdatedAt(new \DateTime());
+        $emFatura->marcarPago($invoice['id']);
 
-        if (isset($paymentData['payment_id'])) {
-            $invoice->setPaymentId($paymentData['payment_id']);
-        }
+        // if (isset($paymentData['payment_id'])) {
+        //     $invoice->setPaymentId($paymentData['payment_id']);
+        // }
 
-        if (!empty($paymentData)) {
-            $invoice->setPaymentData(json_encode($paymentData));
-        }
+        // if (!empty($paymentData)) {
+        //     $invoice->setPaymentData(json_encode($paymentData));
+        // }
 
-        $this->em->persist($invoice);
-        $this->em->flush();
+        // $this->em->persist($invoice);
+        // $this->em->flush();
     }
 
     /**

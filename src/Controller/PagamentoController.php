@@ -28,7 +28,7 @@ class PagamentoController extends DefaultController
         $paymentId = $request->get('payment_id') ?: $request->get('collection_id');
         $preapprovalId = $request->get('preapproval_id');
         $status = $request->get('status') ?? $request->get('collection_status');
-        $estabelecimentoId = $request->getSession()->get('finaliza')['eid'];
+        $estabelecimentoId = '73';//$request->getSession()->get('finaliza')['eid'];
         // O MP já envia o external_reference na própria URL de retorno; usamos como base.
         $externalReference = $request->get('external_reference');
 
@@ -142,7 +142,7 @@ class PagamentoController extends DefaultController
             $usuario = null;
 
             if ($invoice) {
-                $eid = $invoice->getEstabelecimentoId();
+                $eid = $invoice['estabelecimento_id'];
                 $usuario = $emUsuario->findOneBy(['petshop_id' => $eid]);
 
                 // Marca a invoice como paga (não pode derrubar a ativação)
@@ -231,7 +231,7 @@ class PagamentoController extends DefaultController
 
         if ($externalReference !== null && $externalReference !== '') {
             if (ctype_digit((string) $externalReference)) {
-                $invoice = $emFatura->find((int) $externalReference);
+                $invoice = $emFatura->findPeloId((int) $externalReference);
             }
             if (!$invoice) {
                 $invoice = $emFatura->findOneBy(['numeroInvoice' => $externalReference]);
