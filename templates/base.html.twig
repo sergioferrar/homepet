@@ -326,7 +326,7 @@
         {% set configRoutes = configEstabRoutes|merge(['superadmin_configuracoes_globais'])|merge(importacaoRoutes) %}
         {% set configAberto = route in configRoutes %}
 
-        {% if isSuperAdminPuro or is_granted('ROLE_ADMIN') or impersonando %}
+        {# {% if isSuperAdminPuro or is_granted('ROLE_ADMIN') or impersonando %} #}
         <li class="nav-item">
             <a class="nav-link {{ not configAberto ? 'collapsed' : '' }}"
                data-bs-target="#administracao" data-bs-toggle="collapse" href="#">
@@ -362,7 +362,7 @@
                 {% endif %}
             </ul>
         </li>
-        {% endif %}
+        {# {% endif %} #}
 
         {# <li class="nav-item">
             <a class="nav-link collapsed" href="#">
