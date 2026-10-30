@@ -28,7 +28,7 @@ class PagamentoController extends DefaultController
         $paymentId = $request->get('payment_id') ?: $request->get('collection_id');
         $preapprovalId = $request->get('preapproval_id');
         $status = $request->get('status') ?? $request->get('collection_status');
-        $estabelecimentoId = '73';//$request->getSession()->get('finaliza')['eid'];
+        $estabelecimentoId = $request->getSession()->get('finaliza')['eid'];
         // O MP já envia o external_reference na própria URL de retorno; usamos como base.
         $externalReference = $request->get('external_reference');
 
@@ -113,7 +113,6 @@ class PagamentoController extends DefaultController
                     }
                 }
             } catch (\Exception $e) {
-                dd($e);
                 // A consulta falhou — segue com o status recebido no redirect.
                 $this->logger->error('Falha ao consultar status no Mercado Pago.', ['message' => $e->getMessage()]);
             }
@@ -173,7 +172,6 @@ class PagamentoController extends DefaultController
                     $uid = $usuario ? $usuario['id'] : 0;
                     $emEstabelecimento->aprovacao($uid, $eid);
                 } catch (\Exception $e) {
-                    dd($e);
                     $this->logger->error('Falha ao ativar estabelecimento.', ['eid' => $eid, 'message' => $e->getMessage()]);
                 }
             } else {
