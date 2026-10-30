@@ -18,7 +18,7 @@
     .dash .row-item:last-child{border-bottom:0}
     .dash .row-item:hover{background:var(--d-soft)}
     .dash .ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--d-soft);color:var(--d-brand);flex-shrink:0}
-    .dash .nome{font-weight:600;color:inherit;text-decoration:none;display:block;line-height:1.2}
+    .dash .nome{font-weight:600;color:inherit;text-decoration:none;display:block;line-height:1.2;cursor:pointer;}
     .dash .nome:hover{color:var(--d-brand)}
     .dash .kpi .n{font-size:1.65rem;font-weight:700;line-height:1.1}
     .dash .empty{padding:2rem 1rem;text-align:center;color:var(--bs-secondary-color,#6c757d)}
@@ -155,7 +155,7 @@
                                         <i class="bi bi-heart-pulse-fill"></i>
                                     </span>
                                     <div class="me-auto min-w-0">
-                                        {% if petId is defined and petId is not null and petId > 0 %}<a class="nome consulta" href="{{ path('clinica_detalhes_pet', {'id': petId}) }}">{{ petNome }}</a>{% else %}<span class="nome">{{ petNome }}</span>{% endif %}
+                                        {% if petId is defined and petId is not null and petId > 0 %}<a class="link btn-link nome consulta openJanela" tipoJanela="window" config="xl" urlCompleta="{{ path('clinica_detalhes_pet', {'id': petId}) }}">{{ petNome }}</a>{% else %}<span class="nome">{{ petNome }}</span>{% endif %}
                                         <small class="text-secondary">{{ dono }}</small>
                                     </div>
                                     <span class="badge {{ 'Emergencia' in motivo ? 'text-bg-danger' : 'text-bg-warning' }}">{{ 'Emergencia' in motivo ? 'Emergência' : 'Pouco urgente' }}</span>
@@ -183,7 +183,7 @@
                                         <i class="bi bi-clipboard2-pulse"></i>
                                     </span>
                                     <div class="me-auto min-w-0">
-                                        <a class="nome consulta" href="{{ path('clinica_detalhes_pet', {'id': petId}) }}">{{ petNome }}</a>
+                                        <a class="link btn-link nome consulta openJanela" tipoJanela="window" config="xl" urlCompleta="{{ path('clinica_detalhes_pet', {'id': petId}) }}">{{ petNome }}</a>
                                         <small class="text-secondary">{{ clienteNome }}</small>
                                     </div>
                                     <span class="badge text-bg-primary">{{ dataAt|date('d/m') }} {{ item.hora|date('H:i') }}</span>
@@ -230,7 +230,7 @@
                                                 <i class="bi {{ aba == 'vencidas' ? 'bi-exclamation-triangle' : 'bi-calendar-check' }}"></i>
                                             </span>
                                             <div class="me-auto min-w-0">
-                                                {% if petId is not null %}<a class="nome consulta" href="{{ path('clinica_detalhes_pet', {'id': petId}) }}">{{ petNome }}</a>{% else %}<span class="nome">{{ petNome }}</span>{% endif %}
+                                                {% if petId is not null %}<a class="link btn-link nome consulta openJanela" tipoJanela="window" config="xl" urlCompleta="{{ path('clinica_detalhes_pet', {'id': petId}) }}">{{ petNome }}</a>{% else %}<span class="nome">{{ petNome }}</span>{% endif %}
                                                 <small class="text-secondary">{{ tipo }}</small>
                                             </div>
                                             <span class="badge {{ aba == 'vencidas' ? 'text-bg-danger' : 'text-bg-info' }}">{{ dtVal ? dtVal|date('d/m/Y') : '' }}</span>
@@ -255,7 +255,7 @@
                                         <i class="bi bi-postcard-heart"></i>
                                     </span>
                                     <div class="min-w-0">
-                                        <a class="nome consulta" href="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}">{{ animal.nome }}</a>
+                                        <a class="link btn-link nome consulta openJanela" tipoJanela="window" config="xl" urlCompleta="{{ path('clinica_detalhes_pet', {'id': animal.id}) }}">{{ animal.nome }}</a>
                                         <small class="text-secondary">{{ animal.tutor }}</small>
                                     </div>
                                 </div>
