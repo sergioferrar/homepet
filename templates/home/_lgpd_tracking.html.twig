@@ -6,7 +6,7 @@
    SCRIPTS DE RASTREAMENTO (injetados somente após consentimento)
    Condição: cookie hp_lgpd_consent=aceito  OU  banner desabilitado
 ══════════════════════════════════════════════════════════ #}
-{% if not cookie_banner_ativo or app.request.cookies.get('hp_lgpd_consent') == 'aceito' %}
+{% if cookie_banner_ativo is not defined or app.request.cookies.get('hp_lgpd_consent') == 'aceito' %}
 
     {# Google Tag Manager — deve vir primeiro quando configurado #}
     {% if tracking.google_tag_manager_id is defined and tracking.google_tag_manager_id %}
