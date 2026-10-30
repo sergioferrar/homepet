@@ -252,6 +252,23 @@ class PetRepository extends ServiceEntityRepository
         return $result->fetchAllAssociative();
     }
 
+    public function listarVacinasProgramadas($baseId): array
+    {
+        $sql = "SELECT v.id, v.pet_id, v.tipo, v.data_aplicacao, v.data_validade,
+                       p.nome as pet_nome, c.nome as tutor
+                FROM homepet_{$baseId}.vacina v
+                JOIN homepet_{$baseId}.pet p ON v.pet_id = p.id
+                JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
+                WHERE v.data_validade > CURDATE()
+                  AND p.estabelecimento_id = :baseId
+                ORDER BY v.data_validade ASC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue('baseId', $baseId);
+        $result = $stmt->executeQuery();
+        return $result->fetchAllAssociative();
+    }
+
 
     public function listarPetsInternados($baseId): array
     {

@@ -211,20 +211,20 @@
                         <div class="p-2 pb-0">
                             <ul class="nav nav-pills" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <a href="#tab-vencidas" class="nav-link active" data-bs-toggle="tab" role="tab">
-                                        <i class="bi bi-exclamation-triangle me-1"></i>Vencidas <span class="badge text-bg-danger">{{ vacinas_vencidas|length }}</span>
+                                    <a href="#tab-programadas" class="nav-link active" data-bs-toggle="tab" role="tab">
+                                        <i class="bi bi-calendar-check me-1"></i>Programadas <span class="badge text-bg-info">{{ vacinas_programadas|length }}</span>
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a href="#tab-programadas" class="nav-link" data-bs-toggle="tab" role="tab">
-                                        <i class="bi bi-calendar-check me-1"></i>Programadas <span class="badge text-bg-info">{{ vacinas_programadas|length }}</span>
+                                    <a href="#tab-vencidas" class="nav-link" data-bs-toggle="tab" role="tab">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>Vencidas <span class="badge text-bg-danger">{{ vacinas_vencidas|length }}</span>
                                     </a>
                                 </li>
                             </ul>
                         </div>
                         <div class="tab-content scroll">
                             {% for aba, lista in {'vencidas': vacinas_vencidas, 'programadas': vacinas_programadas} %}
-                                <div class="tab-pane fade {{ aba == 'vencidas' ? 'show active' : '' }}" id="tab-{{ aba }}" role="tabpanel">
+                                <div class="tab-pane fade {{ aba == 'programadas' ? 'show active' : '' }}" id="tab-{{ aba }}" role="tabpanel">
                                     {% for vacina in lista %}
                                         {% set petId   = attribute(vacina, 'pet_id')|default(attribute(vacina, 'id')) %}
                                         {% set petNome = attribute(vacina, 'pet_nome')|default(attribute(vacina, 'nome_pet')|default('Pet')) %}
@@ -295,8 +295,6 @@
     </div>
 {% endblock %}
 {% block javascripts %}
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.19/locales-all.global.min.js'></script>
     <script>
         $(function() {
         $('#searchForm').attr('action', "{{ path('clinica_dashboard') }}");
