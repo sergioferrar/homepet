@@ -143,7 +143,7 @@ class PagamentoController extends DefaultController
 
             if ($invoice) {
                 $eid = $invoice['estabelecimento_id'];
-                $usuario = $emUsuario->findPeloEstabelecimento(['petshop_id' => $eid]);
+                $usuario = $emUsuario->findPeloEstabelecimento($eid);
 
                 // Marca a invoice como paga (não pode derrubar a ativação)
                 try {
@@ -163,7 +163,7 @@ class PagamentoController extends DefaultController
                 $sessionData = $request->getSession()->get('finaliza');
                 if (!empty($sessionData['eid'])) {
                     $eid = $sessionData['eid'];
-                    $usuario = $usuario ?: $emUsuario->findPeloEstabelecimento(['petshop_id' => $eid]);
+                    $usuario = $usuario ?: $emUsuario->findPeloEstabelecimento($eid);
                 }
             }
 
