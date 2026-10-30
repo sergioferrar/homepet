@@ -382,8 +382,8 @@
                         <div id="blocoDataVenda" class="mt-2" style="display: none;">
                             <label class="form-label" for="dataVenda">Data da venda:</label>
                             <input type="date" id="dataVenda" class="form-control"
-                                   min="{{ 'yesterday'|date('Y-m-d') }}"
-                                   max="{{ 'now'|date('Y-m-d') }}"
+                                   {# min="{{ 'yesterday'|date('Y-m-d') }}" #}
+                                   {# max="{{ 'now'|date('Y-m-d') }}" #}
                                    value="{{ 'now'|date('Y-m-d') }}">
                             <div class="form-text">Somente ontem ou hoje.</div>
                         </div>
