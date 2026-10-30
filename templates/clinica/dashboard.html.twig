@@ -70,7 +70,7 @@
                 <div class="row g-0">
                     {% for pet in pets %}
                         <div class="col-md-6 col-xl-4">
-                            <a href="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}">
+                            <a  class="openJanela" tipoJanela="window" config="xl" urlCompleta="{{ path('clinica_detalhes_pet', {'id': pet.id}) }}">
                             <div class="row-item">
                                 <span class="ico">
                                     <i class="bi bi-postcard-heart"></i>
