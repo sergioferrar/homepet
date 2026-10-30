@@ -22,6 +22,7 @@ class PagamentoController extends DefaultController
      */
     public function notificacao(Request $request, MercadoPagoService $mercadoPagoService): Response
     {
+        $this->restauraLoginDB();
         // O fluxo de cadastro usa assinatura recorrente (preapproval), portanto o MP
         // retorna preapproval_id. Pagamentos avulsos retornam payment_id/collection_id.
         $paymentId = $request->get('payment_id') ?: $request->get('collection_id');
@@ -34,7 +35,6 @@ class PagamentoController extends DefaultController
         if (!$paymentId && !$preapprovalId) {
             return new Response('ID de pagamento ausente', 400);
         }
-        $this->restauraLoginDB();
         $emEstabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class);
         $emUsuario = $this->getRepositorio(\App\Entity\Usuario::class);
         $emFatura = $this->getRepositorio(\App\Entity\Fatura::class);

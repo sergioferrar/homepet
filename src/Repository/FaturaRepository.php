@@ -38,9 +38,9 @@ class FaturaRepository extends ServiceEntityRepository
                        i.data_emissao, i.data_vencimento, i.data_pagamento,
                        e.razaoSocial AS estabelecimento_nome, e.cnpj,
                        p.titulo AS plano_nome, p.valor AS plano_valor
-                FROM invoice i
-                LEFT JOIN estabelecimento e ON e.id = i.estabelecimento_id
-                LEFT JOIN planos p ON p.id = e.planoId
+                FROM homepet_login.invoice i
+                LEFT JOIN homepet_login.estabelecimento e ON e.id = i.estabelecimento_id
+                LEFT JOIN homepet_login.planos p ON p.id = e.planoId
                 WHERE i.estabelecimento_id = :estabelecimentoId
                 ORDER BY i.data_emissao DESC";
 
@@ -56,8 +56,8 @@ class FaturaRepository extends ServiceEntityRepository
                        i.data_emissao, i.data_vencimento,
                        e.razaoSocial AS estabelecimento_nome, e.cnpj,
                        DATEDIFF(NOW(), i.data_vencimento) AS dias_atraso
-                FROM invoice i
-                LEFT JOIN estabelecimento e ON e.id = i.estabelecimento_id
+                FROM homepet_login.invoice i
+                LEFT JOIN homepet_login.estabelecimento e ON e.id = i.estabelecimento_id
                 WHERE i.status = 'pendente'
                   AND i.data_vencimento < NOW()
                 ORDER BY i.data_vencimento ASC";
@@ -71,7 +71,7 @@ class FaturaRepository extends ServiceEntityRepository
     public function getTotalReceitaMes(\DateTime $inicio, \DateTime $fim): float
     {
         $sql = "SELECT COALESCE(SUM(i.valor_total - COALESCE(i.valor_desconto, 0)), 0) AS total
-                FROM invoice i
+                FROM homepet_login.invoice i
                 WHERE i.status = 'pago'
                   AND i.data_pagamento BETWEEN :inicio AND :fim";
 
@@ -89,7 +89,7 @@ class FaturaRepository extends ServiceEntityRepository
         $sql = "SELECT i.status,
                        COUNT(i.id) AS quantidade,
                        COALESCE(SUM(i.valor_total - COALESCE(i.valor_desconto, 0)), 0) AS total
-                FROM invoice i
+                FROM homepet_login.invoice i
                 GROUP BY i.status
                 ORDER BY i.status";
 
@@ -103,8 +103,8 @@ class FaturaRepository extends ServiceEntityRepository
     {
         $sql = "SELECT i.id, i.status, i.valor_total, i.data_emissao, i.data_vencimento, i.data_pagamento,
                        e.razaoSocial AS estabelecimento_nome
-                FROM invoice i
-                LEFT JOIN estabelecimento e ON e.id = i.estabelecimento_id
+                FROM homepet_login.invoice i
+                LEFT JOIN homepet_login.estabelecimento e ON e.id = i.estabelecimento_id
                 ORDER BY i.data_emissao DESC
                 LIMIT :limite";
 
@@ -121,7 +121,7 @@ class FaturaRepository extends ServiceEntityRepository
         $sql = "SELECT MONTH(i.data_pagamento) AS mes,
                        COUNT(i.id) AS quantidade,
                        COALESCE(SUM(i.valor_total - COALESCE(i.valor_desconto, 0)), 0) AS total
-                FROM invoice i
+                FROM homepet_login.invoice i
                 WHERE i.status = 'pago'
                   AND YEAR(i.data_pagamento) = :ano
                 GROUP BY MONTH(i.data_pagamento)
@@ -135,7 +135,7 @@ class FaturaRepository extends ServiceEntityRepository
      */
     public function marcarPago(int $id): void
     {
-        $sql = "UPDATE invoice
+        $sql = "UPDATE homepet_login.invoice
                 SET status = 'pago', data_pagamento = NOW()
                 WHERE id = :id";
 
