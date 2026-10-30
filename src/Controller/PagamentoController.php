@@ -27,6 +27,7 @@ class PagamentoController extends DefaultController
         $paymentId = $request->get('payment_id') ?: $request->get('collection_id');
         $preapprovalId = $request->get('preapproval_id');
         $status = $request->get('status') ?? $request->get('collection_status');
+        $estabelecimentoId = $request->getSession()->get('finaliza')['eid'];
         // O MP já envia o external_reference na própria URL de retorno; usamos como base.
         $externalReference = $request->get('external_reference');
 
@@ -56,14 +57,14 @@ class PagamentoController extends DefaultController
                         $externalReference = $externalReference ?: ($subscription['raw_data']['external_reference'] ?? null);
 
                         // 1. Cria o banco de dados do novo tenant
-                        $dbName = "homepet_{$estabelecimento->getId()}";
+                        $dbName = "homepet_{$estabelecimentoId}";
                         $this->databaseBkp
                             ->setDbName($dbName)
                             ->createDatabase();
 
                         // 2. Monta a Connection Doctrine apontando para o banco recém-criado
                         $tenantConnectiold = $this->pegarConexaoAtiva();
-                        $this->prepareTenantidConnection($estabelecimento->getId());
+                        $this->prepareTenantidConnection($estabelecimentoId);
 
                         $tenantConnection = $this->entityManager->getConnection();
                         // dd($tenantConnectiold, $tenantConnection->execute("SHOW databases")->fetchAssociative());
