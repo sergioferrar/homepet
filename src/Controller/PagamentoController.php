@@ -34,7 +34,7 @@ class PagamentoController extends DefaultController
         if (!$paymentId && !$preapprovalId) {
             return new Response('ID de pagamento ausente', 400);
         }
-
+        $this->restauraLoginDB();
         $emEstabelecimento = $this->getRepositorio(\App\Entity\Estabelecimento::class);
         $emUsuario = $this->getRepositorio(\App\Entity\Usuario::class);
         $emFatura = $this->getRepositorio(\App\Entity\Fatura::class);
