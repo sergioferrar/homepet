@@ -148,7 +148,7 @@ class PagamentoController extends DefaultController
                 // Marca a invoice como paga (não pode derrubar a ativação)
                 try {
                     $invoiceService = $this->container->get(\App\Service\InvoiceService::class);
-                    $invoiceService->markAsPaid($invoice, [
+                    $invoiceService->markAsPaid($emFatura, $invoice, [
                         'payment_id' => $paymentId ?: $preapprovalId,
                         'payment_status' => 'approved',
                         'payment_method' => $paymentMethod,
