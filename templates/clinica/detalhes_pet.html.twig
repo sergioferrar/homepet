@@ -987,7 +987,7 @@
 
 {# ══ MODAL ADICIONAR SERVIÇO ══ #}
 <div class="modal fade" id="modalAdicionarServico" tabindex="-1" aria-labelledby="modalAdicionarServicoLabel" aria-hidden="false">
-<div class="modal-dialog modal-lg modal-dialog-centered">
+<div class="modal-dialog modal-xl modal-dialog-centered">
 <form class="modal-content" id="form-novo-servico" method="post" action="{{ path('clinica_concluir_venda', {'petId': pet.id}) }}">
     <div class="modal-header bg-primary text-white">
         <div class="d-flex flex-column w-100">
@@ -999,97 +999,107 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
     </div>
     <div class="modal-body">
-        {# ── Atendimento ao qual a venda pertence ─────────────────────────── #}
-        <div class="mb-3">
-            <label for="venda-consulta" class="form-label">Atendimento vinculado</label>
-            <select class="form-select" id="venda-consulta" name="consulta_id">
-                <option value="">Sem atendimento (lançamento avulso)</option>
-                {% for c in consultas|default([]) %}
-                    <option value="{{ c.id }}" data-vet-id="{{ c.veterinario_id|default('') }}" {% if loop.first %}selected{% endif %}>
-                        {{ c.tipo|default('Consulta') }} — {{ c.data ? c.data|date('d/m/Y') : '' }}{% if c.hora %} {{ c.hora|date('H:i') }}{% endif %}{% if c.veterinario_nome %} · Dr(a). {{ c.veterinario_nome }}{% endif %}
-                    </option>
-                {% endfor %}
-            </select>
-            <small class="text-muted">As vendas ficam agrupadas por atendimento na aba Venda.</small>
-        </div>
+        <div class="row">
+            <div class="col-md-4 border-end">
+                
+                {# ── Atendimento ao qual a venda pertence ─────────────────────────── #}
+                <div class="mb-3">
+                    <label for="venda-consulta" class="form-label">Atendimento vinculado</label>
+                    <select class="form-select" id="venda-consulta" name="consulta_id">
+                        <option value="">Sem atendimento (lançamento avulso)</option>
+                        {% for c in consultas|default([]) %}
+                            <option value="{{ c.id }}" data-vet-id="{{ c.veterinario_id|default('') }}" {% if loop.first %}selected{% endif %}>
+                                {{ c.tipo|default('Consulta') }} — {{ c.data ? c.data|date('d/m/Y') : '' }}{% if c.hora %} {{ c.hora|date('H:i') }}{% endif %}{% if c.veterinario_nome %} · Dr(a). {{ c.veterinario_nome }}{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">As vendas ficam agrupadas por atendimento na aba Venda.</small>
+                </div>
 
-        {# ── Veterinário responsável pela venda (para comissão) ───────────── #}
-        <div class="mb-3">
-            <label for="venda-veterinario" class="form-label">Veterinário responsável</label>
-            <select class="form-select" id="venda-veterinario" name="veterinario_id">
-                <option value="">Selecione (padrão: do atendimento)</option>
-                {% for vet in veterinario|default([]) %}
-                    <option value="{{ vet.id }}">{{ vet.nome }}{% if vet.crmv %} · CRMV {{ vet.crmv }}{% endif %}</option>
-                {% endfor %}
-            </select>
-            <small class="text-muted">Usado para calcular comissão. Se ficar em branco, usamos o veterinário do atendimento vinculado.</small>
-        </div>
+                {# ── Veterinário responsável pela venda (para comissão) ───────────── #}
+                <div class="mb-3">
+                    <label for="venda-veterinario" class="form-label">
+                        Veterinário responsável
+                        <small class="text-muted" data-bs-toggle="tooltip" title="Usado para calcular comissão. Se ficar em branco, usamos o veterinário do atendimento vinculado."><span class="badge bg-dark text-white"><i class="bi bi-info"></i></span> </small>
+                    </label>
+                    <select class="form-select" id="venda-veterinario" name="veterinario_id">
+                        <option value="">Selecione (padrão: do atendimento)</option>
+                        {% for vet in veterinario|default([]) %}
+                            <option value="{{ vet.id }}">{{ vet.nome }}{% if vet.crmv %} · CRMV {{ vet.crmv }}{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                    
+                </div>
 
-        {# ── Itens da venda ────────────────────────────────────────────────
-           IMPORTANTE: cada linha usa nomes INDEXADOS
-           itens[i][ref] / itens[i][quantidade] / itens[i][desconto] / itens[i][pets][].
-           Antes eram três arrays paralelos (descricao[], desconto[],
-           quantidade_diarias[]) casados por índice no PHP — e como o campo de
-           quantidade só existia para internação, o array chegava compactado e
-           a quantidade era aplicada ao item errado.
+                {# ── Itens da venda ────────────────────────────────────────────────
+                   IMPORTANTE: cada linha usa nomes INDEXADOS
+                   itens[i][ref] / itens[i][quantidade] / itens[i][desconto] / itens[i][pets][].
+                   Antes eram três arrays paralelos (descricao[], desconto[],
+                   quantidade_diarias[]) casados por índice no PHP — e como o campo de
+                   quantidade só existia para internação, o array chegava compactado e
+                   a quantidade era aplicada ao item errado.
 
-           itens[i][pets][] aceita VÁRIOS pets do tutor no mesmo item: o
-           backend gera um lançamento por pet marcado. Antes cada linha
-           aceitava um pet só, então um procedimento feito em 2 animais era
-           cobrado uma vez e o total no PDV saía menor que o executado. #}
-        {# ── Pets deste atendimento (vincular itens a mais de um pet do tutor) ── #}
-        <div class="mb-3" id="pets-venda-bloco"
-             data-pet-id="{{ pet.id }}" data-pet-nome="{{ pet.nome }}" data-dono-id="{{ pet.dono_id }}">
-            <label class="form-label">Pets neste atendimento</label>
-            <div id="pets-incluidos-chips" class="d-flex flex-wrap gap-2 mb-2"></div>
-            <div class="input-group input-group-sm" style="max-width:420px;">
-                <select id="pet-adicionar-select" class="form-select">
-                    <option value="">Adicionar outro pet do tutor...</option>
-                </select>
-                <button type="button" class="btn btn-outline-primary" id="btn-adicionar-pet-venda">
-                    <i class="bi bi-plus-lg"></i> Incluir pet
-                </button>
-            </div>
-            <small class="text-muted">Inclua outros pets do mesmo tutor e marque, em cada item abaixo, <strong>todos os pets que receberam aquele item</strong>. O valor é multiplicado pelo número de pets marcados e tudo fica numa venda só.</small>
-        </div>
-
-        <div id="servicos-container"></div>
-        <div class="mb-3">
-            <label for="servico-metodo" class="form-label">Método de Pagamento*</label>
-            <select name="metodo_pagamento" id="servico-metodo" class="form-select" required>
-                <option value="dinheiro">Dinheiro</option>
-                <option value="pix">Pix</option>
-                <option value="credito">Cartão de Crédito</option>
-                <option value="debito">Cartão de Débito</option>
-                <option value="pendente">Pagamento Pendente</option>
-            </select>
-        </div>
-        <div id="cartao-opcoes" class="row d-none">
-            <div class="col-md-6 mb-3"><label class="form-label">Bandeira do Cartão</label><select name="bandeira_cartao" class="form-select"><option value="">Selecione...</option><option value="Visa">Visa</option><option value="Mastercard">Mastercard</option><option value="Elo">Elo</option><option value="American Express">American Express</option><option value="Hipercard">Hipercard</option></select></div>
-            <div class="col-md-6 mb-3"><label class="form-label">Quantidade de Parcelas</label><input type="number" name="parcelas" class="form-control" min="1" max="12" value="1"></div>
-        </div>
-        <div class="mb-3"><label for="servico-data" class="form-label">Data</label><input type="date" class="form-control" id="servico-data" name="data" value="{{ "now"|date("Y-m-d") }}"></div>
-        <div class="mb-3"><label for="servico-observacao" class="form-label">Observação</label><textarea class="form-control" id="servico-observacao" name="observacao" rows="2"></textarea></div>
-
-        {% if pet.dono_id %}
-            <div class="mb-3 border rounded p-2 bg-light" id="bloco-credito-venda" data-cliente-id="{{ pet.dono_id }}">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong><i class="bi bi-piggy-bank me-1"></i>Crédito do cliente</strong>
-                        <span class="text-muted small">Saldo: R$ <span id="credito-saldo">{{ credito_cliente|default(0)|number_format(2, ',', '.') }}</span></span>
-                    </div>
-                    <div class="form-check form-check-inline m-0">
-                        <input type="checkbox" class="form-check-input" id="chk-usar-credito">
-                        <label for="chk-usar-credito" class="form-check-label small">Usar crédito nesta venda</label>
+                   itens[i][pets][] aceita VÁRIOS pets do tutor no mesmo item: o
+                   backend gera um lançamento por pet marcado. Antes cada linha
+                   aceitava um pet só, então um procedimento feito em 2 animais era
+                   cobrado uma vez e o total no PDV saía menor que o executado. #}
+                {# ── Pets deste atendimento (vincular itens a mais de um pet do tutor) ── #}
+                <div class="mb-3" id="pets-venda-bloco"
+                     data-pet-id="{{ pet.id }}" data-pet-nome="{{ pet.nome }}" data-dono-id="{{ pet.dono_id }}">
+                    <label class="form-label">
+                        Pets neste atendimento
+                        <small class="text-muted" data-bs-toggle="tooltip" title="Inclua outros pets do mesmo tutor e marque, em cada item abaixo, todos os pets que receberam aquele item. O valor é multiplicado pelo número de pets marcados e tudo fica numa venda só."><span class="badge bg-dark text-white"><i class="bi bi-info"></i></span> </small>
+                    </label>
+                    <div id="pets-incluidos-chips" class="d-flex flex-wrap gap-2 mb-2"></div>
+                    <div class="input-group input-group-sm" style="max-width:420px;">
+                        <select id="pet-adicionar-select" class="form-select">
+                            <option value="">Adicionar outro pet do tutor...</option>
+                        </select>
+                        <button type="button" class="btn btn-outline-primary" id="btn-adicionar-pet-venda">
+                            <i class="bi bi-plus-lg"></i> Incluir pet
+                        </button>
                     </div>
                 </div>
-                <input type="hidden" name="usar_credito" id="input-usar-credito" value="0">
-                <small class="text-muted d-block mt-1" id="credito-info">Marque para abater automaticamente o crédito disponível do total.</small>
-            </div>
-        {% endif %}
 
-        <input type="hidden" name="origem" value="clinica">
-        <input type="hidden" name="pet_id" value="{{ pet.id }}">
+                <div class="mb-3">
+                    <label for="servico-metodo" class="form-label">Método de Pagamento*</label>
+                    <select name="metodo_pagamento" id="servico-metodo" class="form-select" required>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="pix">Pix</option>
+                        <option value="credito">Cartão de Crédito</option>
+                        <option value="debito">Cartão de Débito</option>
+                        <option value="pendente">Pagamento Pendente</option>
+                    </select>
+                </div>
+                <div id="cartao-opcoes" class="row d-none">
+                    <div class="col-md-6 mb-3"><label class="form-label">Bandeira do Cartão</label><select name="bandeira_cartao" class="form-select"><option value="">Selecione...</option><option value="Visa">Visa</option><option value="Mastercard">Mastercard</option><option value="Elo">Elo</option><option value="American Express">American Express</option><option value="Hipercard">Hipercard</option></select></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Quantidade de Parcelas</label><input type="number" name="parcelas" class="form-control" min="1" max="12" value="1"></div>
+                </div>
+                <div class="mb-3"><label for="servico-data" class="form-label">Data</label><input type="date" class="form-control" id="servico-data" name="data" value="{{ "now"|date("Y-m-d") }}"></div>
+                <div class="mb-3"><label for="servico-observacao" class="form-label">Observação</label><textarea class="form-control" id="servico-observacao" name="observacao" rows="2"></textarea></div>
+
+                {% if pet.dono_id %}
+                    <div class="mb-3 border rounded p-2 bg-light" id="bloco-credito-venda" data-cliente-id="{{ pet.dono_id }}">
+                        <div class="d-block">
+                            <div class="row">
+                                <strong class="col-12"><i class="bi bi-piggy-bank me-1 d-line"></i>Crédito do cliente</strong>
+                                <span class="col-12 text-muted small">Saldo: R$ <span id="credito-saldo">{{ credito_cliente|default(0)|number_format(2, ',', '.') }}</span></span>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="chk-usar-credito">
+                                <label class="form-check-label" for="chk-usar-credito">Usar crédito nesta venda</label>
+                            </div>
+                        </div>
+                        <input type="hidden" name="usar_credito" id="input-usar-credito" value="0">
+                        <small class="text-muted d-block mt-1" id="credito-info">Marque para abater automaticamente o crédito disponível do total.</small>
+                    </div>
+                {% endif %}
+
+                <input type="hidden" name="origem" value="clinica">
+                <input type="hidden" name="pet_id" value="{{ pet.id }}">
+            </div>
+            <div class="col-md-8" id="servicos-container"></div>
+        </div>
     </div>
     <div class="modal-footer d-flex justify-content-between align-items-center flex-wrap">
         <button type="button" class="btn btn-secondary" id="btn-cancelar-servico">Cancelar</button>
