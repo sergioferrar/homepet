@@ -195,4 +195,35 @@ class VendaItemRepository extends ServiceEntityRepository
             'comissao_percentual' => $dados['comissao_percentual'] ?? null,
         ]);
     }
+
+/** Lista os itens de um conjunto de vendas, indexados por venda_id. */
+    public function listarDescricoesPorVendas(int $estabelecimentoId, array $vendaIds): array
+    {
+        $vendaIds = array_values(array_filter(array_map('intval', $vendaIds)));
+        if ($vendaIds === []) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($vendaIds), '?'));
+        $rows = $this->conn->fetchAllAssociative(
+            "SELECT venda_id, produto, quantidade
+             FROM homepet_{$estabelecimentoId}.venda_item
+             WHERE venda_id IN ({$placeholders})
+             ORDER BY id",
+            $vendaIds
+        );
+
+        $porVenda = [];
+        foreach ($rows as $item) {
+            $nome = trim((string) $item['produto']);
+            if ($nome === '' || is_numeric($nome)) {
+                $nome = 'Item';
+            }
+            $quantidade = max(1, (int) $item['quantidade']);
+            $porVenda[(int) $item['venda_id']][] =
+                ($quantidade > 1 ? $quantidade . '× ' : '') . $nome;
+        }
+
+        return $porVenda;
+    }
 }

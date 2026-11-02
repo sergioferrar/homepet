@@ -155,4 +155,106 @@ class ProdutoRepository extends ServiceEntityRepository
 
         return $this->conn->fetchAllAssociative($sql, ['estab' => $estabelecimentoId]);
     }
+
+/** Lista enxuta de produtos para o catálogo do PDV. */
+    public function listarParaPdv(int $estabelecimentoId): array
+    {
+        return $this->conn->fetchAllAssociative(
+            "SELECT id, nome, preco_venda AS valor, estoque_atual AS estoque
+             FROM homepet_{$estabelecimentoId}.produto
+             WHERE estabelecimento_id = :estab",
+            ['estab' => $estabelecimentoId]
+        );
+    }
+
+    /** Lista produtos comissionáveis para a tela de configuração de comissões. */
+    public function listarParaComissao(int $estabelecimentoId): array
+    {
+        return $this->conn->fetchAllAssociative(
+            "SELECT id, nome, categoria, preco_venda, comissao_percentual
+             FROM homepet_{$estabelecimentoId}.produto
+             WHERE estabelecimento_id = :estab
+             ORDER BY categoria, nome",
+            ['estab' => $estabelecimentoId]
+        );
+    }
+
+    /** Busca dados atuais do produto antes de registrar uma venda. */
+    public function buscarDadosVenda(int $estabelecimentoId, int $produtoId): ?array
+    {
+        $row = $this->conn->fetchAssociative(
+            'SELECT id, nome, preco_venda, estoque_atual, comissao_percentual
+             FROM produto WHERE id = :id AND estabelecimento_id = :estab',
+            ['id' => $produtoId, 'estab' => $estabelecimentoId]
+        );
+
+        return $row ?: null;
+    }
+
+    /** Atualiza estoque e registra a saída no mesmo repositório de produto. */
+    public function registrarBaixaPorVenda(
+        int $estabelecimentoId,
+        int $produtoId,
+        int $quantidade,
+        int $vendaId,
+        string $responsavel
+    ): void {
+        $produto = $this->buscarDadosVenda($estabelecimentoId, $produtoId);
+        if (!$produto) {
+            return;
+        }
+
+        $estoqueAnterior = (int) ($produto['estoque_atual'] ?? 0);
+        $novoEstoque = max(0, $estoqueAnterior - $quantidade);
+
+        $this->conn->executeStatement(
+            'UPDATE produto SET estoque_atual = :novo
+             WHERE id = :id AND estabelecimento_id = :estab',
+            ['novo' => $novoEstoque, 'id' => $produtoId, 'estab' => $estabelecimentoId]
+        );
+
+        $this->conn->executeStatement(
+            'INSERT INTO estoque_movimento
+                (produto_id, estabelecimento_id, quantidade, tipo, origem, data, observacao)
+             VALUES (:pid, :estab, :qtd, :tipo, :origem, :data, :obs)',
+            [
+                'pid' => $produtoId,
+                'estab' => $estabelecimentoId,
+                'qtd' => $quantidade,
+                'tipo' => 'SAIDA',
+                'origem' => 'Venda Clínica #' . $vendaId,
+                'data' => (new \DateTime())->format('Y-m-d H:i:s'),
+                'obs' => sprintf(
+                    'Venda para: %s | Estoque anterior: %d | Novo estoque: %d',
+                    $responsavel,
+                    $estoqueAnterior,
+                    $novoEstoque
+                ),
+            ]
+        );
+    }
+
+    /** Salva o percentual de comissão de um produto. */
+    public function atualizarComissao(int $estabelecimentoId, int $produtoId, ?float $percentual): int
+    {
+        return $this->conn->executeStatement(
+            "UPDATE homepet_{$estabelecimentoId}.produto
+             SET comissao_percentual = :pct
+             WHERE id = :id AND estabelecimento_id = :estab",
+            ['pct' => $percentual, 'id' => $produtoId, 'estab' => $estabelecimentoId]
+        );
+    }
+
+/** Produtos ativos no catálogo de venda da ficha clínica. */
+    public function listarDisponiveisParaVenda(int $estabelecimentoId): array
+    {
+        return $this->conn->fetchAllAssociative(
+            'SELECT id, nome, preco_venda, COALESCE(estoque_atual, 0) AS estoque_atual
+             FROM produto
+             WHERE estabelecimento_id = :estabelecimento
+               AND preco_venda IS NOT NULL
+             ORDER BY nome ASC',
+            ['estabelecimento' => $estabelecimentoId]
+        );
+    }
 }

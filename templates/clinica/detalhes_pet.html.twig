@@ -1689,7 +1689,7 @@ $(document).ready(function() {
     $(document).on('focus', '.item-venda-linha select', function() {
         if (!$(this).data('select2')) {
             $(this).select2({
-                placeholder: "Selecione ou pesquise um serviço...",
+                placeholder: "Pesquise produto ou serviço...",
                 allowClear: true,
                 width: '100%',
                 dropdownParent: $('#modalAdicionarServico')
@@ -2021,14 +2021,23 @@ function montarLinhaItem(index) {
     </div>
     <div class="row g-2">
         <div class="col-12 mb-2">
-            <label class="form-label">Serviço / Produto*</label>
+            <label class="form-label">Produto ou serviço*</label>
             <select class="form-select select-servico" name="itens[${index}][ref]" required>
-                <option value="">Selecione...</option>
-                {% for servico in servicos_clinica %}
-                    <option value="S-{{ servico.id }}" data-valor="{{ servico.valor|number_format(2, '.', '') }}">
-                        {{ servico.nome }} - R$ {{ servico.valor|number_format(2, ',', '.') }}
-                    </option>
-                {% endfor %}
+                <option value="">Pesquise um produto ou serviço...</option>
+                <optgroup label="Produtos">
+                    {% for produto in produtos_clinica|default([]) %}
+                        <option value="P-{{ produto.id }}" data-valor="{{ produto.preco_venda|default(0)|number_format(2, '.', '') }}" data-tipo="produto">
+                            {{ produto.nome }} — R$ {{ produto.preco_venda|default(0)|number_format(2, ',', '.') }} (Estoque: {{ produto.estoque_atual|default(0) }})
+                        </option>
+                    {% endfor %}
+                </optgroup>
+                <optgroup label="Serviços">
+                    {% for servico in servicos_clinica|default([]) %}
+                        <option value="S-{{ servico.id }}" data-valor="{{ servico.valor|default(0)|number_format(2, '.', '') }}" data-tipo="servico">
+                            {{ servico.nome }} — R$ {{ servico.valor|default(0)|number_format(2, ',', '.') }}
+                        </option>
+                    {% endfor %}
+                </optgroup>
             </select>
         </div>
         <div class="col-12 mb-2 col-pet-item">

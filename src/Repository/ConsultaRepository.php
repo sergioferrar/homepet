@@ -480,4 +480,24 @@ class ConsultaRepository extends ServiceEntityRepository
         return $this->conn->executeStatement($sql, $params) >= 0;
     }
 
+
+public function buscarVeterinarioId(int $estabelecimentoId, int $consultaId): ?int
+    {
+        $valor = $this->conn->fetchOne(
+            'SELECT veterinario_id FROM consulta WHERE id = :id AND estabelecimento_id = :estab',
+            ['id' => $consultaId, 'estab' => $estabelecimentoId]
+        );
+
+        return $valor !== false && $valor !== null ? (int) $valor : null;
+    }
+
+    public function pertenceAoPet(int $estabelecimentoId, int $consultaId, int $petId): bool
+    {
+        return (bool) $this->conn->fetchOne(
+            'SELECT id FROM consulta
+             WHERE id = :id AND pet_id = :pet AND estabelecimento_id = :estab
+             LIMIT 1',
+            ['id' => $consultaId, 'pet' => $petId, 'estab' => $estabelecimentoId]
+        );
+    }
 }

@@ -113,4 +113,50 @@ class ServicoRepository extends ServiceEntityRepository
             WHERE estabelecimento_id = '{$baseId}' AND id = :id"; 
         $this->conn->executeQuery($sql, ['id' => $id]);
     }
+
+/** Lista enxuta de serviços para o catálogo do PDV. */
+    public function listarParaPdv(int $estabelecimentoId): array
+    {
+        return $this->conn->fetchAllAssociative(
+            "SELECT id, nome, valor, descricao
+             FROM homepet_{$estabelecimentoId}.servico
+             WHERE estabelecimento_id = :estab",
+            ['estab' => $estabelecimentoId]
+        );
+    }
+
+    /** Busca dados atuais do serviço antes de registrar uma venda. */
+    public function buscarDadosVenda(int $estabelecimentoId, int $servicoId): ?array
+    {
+        $row = $this->conn->fetchAssociative(
+            'SELECT id, nome, valor, comissao_percentual
+             FROM servico WHERE id = :id AND estabelecimento_id = :estab',
+            ['id' => $servicoId, 'estab' => $estabelecimentoId]
+        );
+
+        return $row ?: null;
+    }
+
+    /** Lista serviços comissionáveis para a tela de configuração. */
+    public function listarParaComissao(int $estabelecimentoId): array
+    {
+        return $this->conn->fetchAllAssociative(
+            "SELECT id, nome, tipo, valor, comissao_percentual
+             FROM homepet_{$estabelecimentoId}.servico
+             WHERE estabelecimento_id = :estab
+             ORDER BY tipo, nome",
+            ['estab' => $estabelecimentoId]
+        );
+    }
+
+    /** Salva o percentual de comissão de um serviço. */
+    public function atualizarComissao(int $estabelecimentoId, int $servicoId, ?float $percentual): int
+    {
+        return $this->conn->executeStatement(
+            "UPDATE homepet_{$estabelecimentoId}.servico
+             SET comissao_percentual = :pct
+             WHERE id = :id AND estabelecimento_id = :estab",
+            ['pct' => $percentual, 'id' => $servicoId, 'estab' => $estabelecimentoId]
+        );
+    }
 }

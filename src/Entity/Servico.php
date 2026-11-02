@@ -28,7 +28,7 @@ class Servico
     private $descricao;
 
     /**
-     * @ORM\Column(type="decimal", nullable=true)
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
      */
     private $valor;
 

@@ -282,4 +282,25 @@ class Produto
         $this->dataValidade = $dataValidade;
         return $this;
     }
+
+    public function getNcm(): ?int { return $this->ncm; }
+    public function setNcm(?int $ncm): self { $this->ncm = $ncm; return $this; }
+    public function getCfop(): ?int { return $this->cfop; }
+    public function setCfop(?int $cfop): self { $this->cfop = $cfop; return $this; }
+    public function getCest(): ?int { return $this->cest; }
+    public function setCest(?int $cest): self { $this->cest = $cest; return $this; }
+    public function getAliquotaIcms(): ?float { return $this->aliquotaIcms; }
+    public function setAliquotaIcms(?float $valor): self { $this->aliquotaIcms = $valor; return $this; }
+    public function getAliquotaPis(): ?float { return $this->aliquotaPis; }
+    public function setAliquotaPis(?float $valor): self { $this->aliquotaPis = $valor; return $this; }
+    public function getAliquotaCofins(): ?float { return $this->aliquotaCofins; }
+    public function setAliquotaCofins(?float $valor): self { $this->aliquotaCofins = $valor; return $this; }
+    public function getAliquotaIpi(): ?float { return $this->aliquotaIpi; }
+    public function setAliquotaIpi(?float $valor): self { $this->aliquotaIpi = $valor; return $this; }
+    public function getAliquotaIss(): ?float { return $this->aliquotaIss; }
+    public function setAliquotaIss(?float $valor): self { $this->aliquotaIss = $valor; return $this; }
+    public function getAliquotaIbs(): ?float { return $this->aliquotaIbs; }
+    public function setAliquotaIbs(?float $valor): self { $this->aliquotaIbs = $valor; return $this; }
+    public function getAliquotaCbs(): ?float { return $this->aliquotaCbs; }
+    public function setAliquotaCbs(?float $valor): self { $this->aliquotaCbs = $valor; return $this; }
 }

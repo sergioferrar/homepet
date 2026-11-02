@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Entity\Estabelecimento;
+use App\Entity\Config;
 use App\Entity\Usuario;
 use App\Installer\TenantDatabaseInstaller;
 use App\Service\DatabaseBkp;
@@ -37,17 +38,8 @@ class LandingpageController extends DefaultController
     private function lerConfigsDbal(string $tipo): array
     {
         try {
-            $conn = $this->managerRegistry->getConnection();
-            $rows = $conn->fetchAllAssociative(
-                "SELECT chave, valor FROM config WHERE estabelecimento_id = :estab AND tipo = :tipo",
-                ['estab' => 0, 'tipo' => $tipo]
-            );
-            $mapa = [];
-            foreach ($rows as $row) {
-                $mapa[$row['chave']] = $row['valor'];
-            }
-            return $mapa;
-        } catch (\Throwable ) {
+            return $this->getRepositorio(Config::class)->listarMapaGlobalPorTipo($tipo, 0);
+        } catch (\Throwable) {
             return [];
         }
     }

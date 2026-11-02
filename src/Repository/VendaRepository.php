@@ -595,4 +595,48 @@ class VendaRepository extends ServiceEntityRepository
             'ticket_medio'      => $quantidade > 0 ? $total / $quantidade : 0,
         ];
     }
+
+/** Vendas exibidas no offcanvas do PDV, com limite e filtros de período. */
+    public function listarParaPdvJson(int $estabelecimentoId, bool $somenteAbertas, int $dias, int $limite = 500): array
+    {
+        $params = ['estab' => $estabelecimentoId];
+        $filtro = '';
+        if ($somenteAbertas) {
+            $filtro = "AND v.status IN ('Aberta', 'Pendente')";
+        } else {
+            $filtro = 'AND v.data >= :desde';
+            $params['desde'] = (new \DateTime('today'))
+                ->modify('-' . (max(1, min(365, $dias)) - 1) . ' days')
+                ->format('Y-m-d 00:00:00');
+        }
+
+        $limiteConsulta = max(1, min(5000, $limite)) + 1;
+        return $this->conn->fetchAllAssociative(
+            "SELECT v.id, v.data, v.cliente, v.total,
+                    v.metodo_pagamento AS metodo, v.status,
+                    v.pet_id AS petId, p.nome AS petNome
+             FROM homepet_{$estabelecimentoId}.venda v
+             LEFT JOIN homepet_{$estabelecimentoId}.pet p ON p.id = v.pet_id
+             WHERE v.estabelecimento_id = :estab
+               {$filtro}
+             ORDER BY v.data DESC, v.id DESC
+             LIMIT {$limiteConsulta}",
+            $params
+        );
+    }
+
+    /** Listagem completa de vendas do PDV, incluindo o nome do pet. */
+    public function listarParaPdv(int $estabelecimentoId): array
+    {
+        return $this->conn->fetchAllAssociative(
+            "SELECT v.id, v.data, v.cliente, v.total,
+                    v.metodo_pagamento AS metodoPagamento, v.status,
+                    v.pet_id AS petId, p.nome AS petNome
+             FROM homepet_{$estabelecimentoId}.venda v
+             LEFT JOIN homepet_{$estabelecimentoId}.pet p ON p.id = v.pet_id
+             WHERE v.estabelecimento_id = :estab
+             ORDER BY v.data DESC",
+            ['estab' => $estabelecimentoId]
+        );
+    }
 }

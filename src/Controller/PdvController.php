@@ -40,23 +40,9 @@ class PdvController extends DefaultController
     {
         $this->switchDB();
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
-        $conn = $em->getConnection();
-
-        // ── Produtos + serviços numa consulta cada, só com as colunas usadas
-        // pelo front. Evita hidratar milhares de entidades. ───────────────
-        $produtosRows = $conn->fetchAllAssociative(
-            "SELECT id, nome, preco_venda AS valor, estoque_atual AS estoque
-             FROM homepet_{$estabelecimentoId}.produto
-             WHERE estabelecimento_id = :estab",
-            ['estab' => $estabelecimentoId]
-        );
-
-        $servicosRows = $conn->fetchAllAssociative(
-            "SELECT id, nome, valor, descricao
-             FROM homepet_{$estabelecimentoId}.servico
-             WHERE estabelecimento_id = :estab",
-            ['estab' => $estabelecimentoId]
-        );
+        // Consultas de catálogo concentradas nos respectivos repositories.
+        $produtosRows = $this->getRepositorio(Produto::class)->listarParaPdv($estabelecimentoId);
+        $servicosRows = $this->getRepositorio(Servico::class)->listarParaPdv($estabelecimentoId);
 
         $itensNormalizados = [];
         foreach ($produtosRows as $p) {
@@ -82,13 +68,8 @@ class PdvController extends DefaultController
         usort($itensNormalizados, fn($a, $b) => strcmp((string) $a['nome'], (string) $b['nome']));
 
         // Clientes: apenas colunas realmente exibidas no autocomplete.
-        $clientesNormalizados = $conn->fetchAllAssociative(
-            "SELECT id, nome, email, telefone
-             FROM homepet_{$estabelecimentoId}.cliente
-             WHERE estabelecimento_id = :estab
-             ORDER BY nome",
-            ['estab' => $estabelecimentoId]
-        );
+        $clientesNormalizados = $this->getRepositorio(Cliente::class)
+            ->listarParaPdv($estabelecimentoId);
 
         // Vendas em carrinho
         $vendasCarrinho = $em->getRepository(Venda::class)
@@ -452,65 +433,26 @@ class PdvController extends DefaultController
     {
         $this->switchDB();
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
-        $conn = $em->getConnection();
-
         $modo = $request->query->get('modo') === 'todas' ? 'todas' : 'abertas';
         $dias = max(1, min(365, (int) $request->query->get('dias', 30)));
         $limite = 500;
 
-        $params = ['estab' => $estabelecimentoId];
-        if ($modo === 'abertas') {
-            $filtro = "AND v.status IN ('Aberta', 'Pendente')";
-        } else {
-            $filtro = 'AND v.data >= :desde';
-            $params['desde'] = (new \DateTime('today'))->modify('-' . ($dias - 1) . ' days')->format('Y-m-d 00:00:00');
-        }
-
-        $sql = "SELECT v.id,
-                       v.data,
-                       v.cliente,
-                       v.total,
-                       v.metodo_pagamento AS metodo,
-                       v.status,
-                       v.pet_id AS petId,
-                       p.nome AS petNome
-                FROM homepet_{$estabelecimentoId}.venda v
-                LEFT JOIN homepet_{$estabelecimentoId}.pet p ON p.id = v.pet_id
-                WHERE v.estabelecimento_id = :estab
-                  {$filtro}
-                ORDER BY v.data DESC, v.id DESC
-                LIMIT " . ($limite + 1);
-
-        $linhas = $conn->fetchAllAssociative($sql, $params);
+        $linhas = $this->getRepositorio(Venda::class)->listarParaPdvJson(
+            $estabelecimentoId,
+            $modo === 'abertas',
+            $dias,
+            $limite
+        );
 
         $truncado = count($linhas) > $limite;
         if ($truncado) {
             $linhas = array_slice($linhas, 0, $limite);
         }
 
-        // Itens de todas as vendas numa única consulta (sem N+1)
-        $itensPorVenda = [];
-        if ($linhas) {
-            $ids = array_map(static fn (array $l): int => (int) $l['id'], $linhas);
-            $marcadores = implode(',', array_fill(0, count($ids), '?'));
-            $itens = $conn->fetchAllAssociative(
-                "SELECT venda_id, produto, quantidade
-                 FROM homepet_{$estabelecimentoId}.venda_item
-                 WHERE venda_id IN ({$marcadores})
-                 ORDER BY id",
-                $ids
-            );
-
-            foreach ($itens as $item) {
-                $nome = trim((string) $item['produto']);
-                // Dado legado: o snapshot era só o id do cadastro
-                if ($nome === '' || is_numeric($nome)) {
-                    $nome = 'Item';
-                }
-                $qtd = max(1, (int) $item['quantidade']);
-                $itensPorVenda[(int) $item['venda_id']][] = ($qtd > 1 ? $qtd . '× ' : '') . $nome;
-            }
-        }
+        // Itens de todas as vendas em uma única consulta (sem N+1).
+        $ids = array_map(static fn (array $linha): int => (int) $linha['id'], $linhas);
+        $itensPorVenda = $this->getRepositorio(VendaItem::class)
+            ->listarDescricoesPorVendas($estabelecimentoId, $ids);
 
         $statusSelecionaveis = ['Aberta', 'Pendente'];
         $vendas = [];
@@ -1040,23 +982,8 @@ class PdvController extends DefaultController
     {
         $this->switchDB();
         $estabelecimentoId = $this->tenantContext->getEstabelecimentoId();
-        $conn = $em->getConnection();
-
-        // SQL nativo para trazer o nome do pet na mesma consulta e evitar N+1.
-        $sql = "SELECT v.id,
-                       v.data,
-                       v.cliente,
-                       v.total,
-                       v.metodo_pagamento AS metodoPagamento,
-                       v.status,
-                       v.pet_id AS petId,
-                       p.nome AS petNome
-                FROM homepet_{$estabelecimentoId}.venda v
-                LEFT JOIN homepet_{$estabelecimentoId}.pet p ON p.id = v.pet_id
-                WHERE v.estabelecimento_id = :estab
-                ORDER BY v.data DESC";
-
-        $vendas = $conn->fetchAllAssociative($sql, ['estab' => $estabelecimentoId]);
+        // O repository traz o nome do pet no mesmo SELECT, evitando N+1.
+        $vendas = $this->getRepositorio(Venda::class)->listarParaPdv($estabelecimentoId);
 
         return $this->render('clinica/pdv_listar.html.twig', [
             'vendas' => $vendas,

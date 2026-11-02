@@ -9,6 +9,7 @@ use App\Entity\Financeiro;
 use App\Entity\FinanceiroPendente;
 use App\Entity\Internacao;
 use App\Entity\Pet;
+use App\Entity\Produto;
 use App\Entity\Vacina;
 use App\Entity\Veterinario;
 use App\Repository\FinanceiroRepository;
@@ -182,8 +183,13 @@ class DashboardController extends DefaultController
         $ultimaInternacaoId = $internacaoRepo->findUltimaIdByPet($baseId, $pet['id']);
         $internacoesPet = $internacaoRepo->listarInternacoesPorPet($baseId, $pet['id']);
 
-        // --- Serviços da clínica (já retorna array) ---
+        // --- Catálogo da venda na ficha do pet ---
+        // Mantém os serviços na tabela `servico` (histórico e cadastros existentes)
+        // e acrescenta os produtos físicos da tabela `produto`. Não unificamos
+        // fisicamente as tabelas para não quebrar integrações e vendas antigas.
         $servicosClinica = $servicoRepo->findAllService($baseId, 'clinica');
+        $produtosClinica = $this->getRepositorio(Produto::class)
+            ->listarDisponiveisParaVenda($baseId);
 
         // --- VENDAS (agora com método SQL otimizado) ---
         $vendasPagas = $vendasRepo->findByPet($baseId, $pet['id'], 'Paga');
@@ -360,6 +366,7 @@ class DashboardController extends DefaultController
         }
         
         $data['servicos_clinica'] = $servicosClinica;
+        $data['produtos_clinica'] = $produtosClinica;
         $data['internacao_ativa_id'] = $internacaoAtivaId;
         $data['ultima_internacao_id'] = $ultimaInternacaoId;
         $data['internacoes_pet'] = $internacoesPet;

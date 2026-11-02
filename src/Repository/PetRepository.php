@@ -285,4 +285,14 @@ class PetRepository extends ServiceEntityRepository
         return $result->fetchAllAssociative();
     }
 
+
+public function buscarNomePorId(int $estabelecimentoId, int $petId): ?string
+    {
+        $nome = $this->conn->fetchOne(
+            'SELECT nome FROM pet WHERE id = :id AND estabelecimento_id = :estab',
+            ['id' => $petId, 'estab' => $estabelecimentoId]
+        );
+
+        return $nome !== false && $nome !== null ? (string) $nome : null;
+    }
 }

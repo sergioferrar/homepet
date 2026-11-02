@@ -3,6 +3,8 @@
 namespace App\Controller\Clinica;
 
 use App\Controller\DefaultController;
+use App\Entity\Produto;
+use App\Entity\Servico;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,23 +30,8 @@ class ComissaoController extends DefaultController
 
         $this->switchDB();
         $baseId = $this->getIdBase();
-        $conn = $this->entityManager->getConnection();
-
-        $servicos = $conn->fetchAllAssociative(
-            "SELECT id, nome, tipo, valor, comissao_percentual
-             FROM homepet_{$baseId}.servico
-             WHERE estabelecimento_id = :estab
-             ORDER BY tipo, nome",
-            ['estab' => $baseId]
-        );
-
-        $produtos = $conn->fetchAllAssociative(
-            "SELECT id, nome, categoria, preco_venda, comissao_percentual
-             FROM homepet_{$baseId}.produto
-             WHERE estabelecimento_id = :estab
-             ORDER BY categoria, nome",
-            ['estab' => $baseId]
-        );
+        $servicos = $this->getRepositorio(Servico::class)->listarParaComissao($baseId);
+        $produtos = $this->getRepositorio(Produto::class)->listarParaComissao($baseId);
 
         return $this->render('clinica/comissoes_cadastro.html.twig', [
             'servicos' => $servicos,
@@ -89,12 +76,11 @@ class ComissaoController extends DefaultController
             }
         }
 
-        $this->entityManager->getConnection()->executeStatement(
-            "UPDATE homepet_{$baseId}.{$tabela}
-             SET comissao_percentual = :pct
-             WHERE id = :id AND estabelecimento_id = :estab",
-            ['pct' => $pct, 'id' => $id, 'estab' => $baseId]
-        );
+        if ($tabela === 'servico') {
+            $this->getRepositorio(Servico::class)->atualizarComissao($baseId, $id, $pct);
+        } else {
+            $this->getRepositorio(Produto::class)->atualizarComissao($baseId, $id, $pct);
+        }
 
         return $this->json(['status' => 'success', 'percentual' => $pct]);
     }

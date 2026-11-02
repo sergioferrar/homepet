@@ -3,6 +3,7 @@ namespace App\Controller\Clinica;
 
 use App\Controller\DefaultController;
 use App\Entity\ClienteCreditoMovimento;
+use App\Entity\Consulta;
 use App\Entity\Financeiro;
 use App\Entity\FinanceiroPendente;
 use App\Entity\Pet;
@@ -68,10 +69,8 @@ class VendaController extends DefaultController
                 : null;
 
             if ($vetId === null && $consultaId !== null) {
-                $vetFromConsulta = $conn->fetchOne(
-                    'SELECT veterinario_id FROM consulta WHERE id = :id AND estabelecimento_id = :estab',
-                    ['id' => $consultaId, 'estab' => $baseId]
-                );
+                $vetFromConsulta = $this->getRepositorio(Consulta::class)
+                    ->buscarVeterinarioId($baseId, $consultaId);
                 if ($vetFromConsulta) {
                     $vetId = (int) $vetFromConsulta;
                 }
@@ -79,12 +78,8 @@ class VendaController extends DefaultController
 
             // Valida que a consulta pertence a este pet/estabelecimento antes de vincular
             if ($consultaId !== null) {
-                $consultaValida = $conn->fetchOne(
-                    'SELECT id FROM consulta
-                     WHERE id = :id AND pet_id = :pet AND estabelecimento_id = :estab
-                     LIMIT 1',
-                    ['id' => $consultaId, 'pet' => (int) $petIdFromRequest, 'estab' => $baseId]
-                );
+                $consultaValida = $this->getRepositorio(Consulta::class)
+                    ->pertenceAoPet($baseId, $consultaId, (int) $petIdFromRequest);
 
                 if (!$consultaValida) {
                     return $this->json([
@@ -152,11 +147,7 @@ class VendaController extends DefaultController
                 $comissaoItem = null;
 
                 if ($tipo === 'servico') {
-                    $servico = $conn->fetchAssociative(
-                        'SELECT id, nome, valor, comissao_percentual
-                         FROM servico WHERE id = :id AND estabelecimento_id = :estab',
-                        ['id' => (int) $realId, 'estab' => $baseId]
-                    );
+                    $servico = $servicoRepo->buscarDadosVenda($baseId, (int) $realId);
                     if (!$servico) {
                         continue;
                     }
@@ -167,11 +158,7 @@ class VendaController extends DefaultController
                         ? ($servico['comissao_percentual'] !== null ? (float) $servico['comissao_percentual'] : null)
                         : null;
                 } else {
-                    $produto = $conn->fetchAssociative(
-                        'SELECT id, nome, preco_venda, estoque_atual, comissao_percentual
-                         FROM produto WHERE id = :id AND estabelecimento_id = :estab',
-                        ['id' => (int) $realId, 'estab' => $baseId]
-                    );
+                    $produto = $produtoRepo->buscarDadosVenda($baseId, (int) $realId);
                     if (!$produto) {
                         continue;
                     }
@@ -194,10 +181,8 @@ class VendaController extends DefaultController
                 $petDoItem = $linha['pet_id'] ?? null;
                 if ($petDoItem && ($vendaMultiPet || $petDoItem !== (int) $petIdFromRequest)) {
                     if (!array_key_exists($petDoItem, $petNomesCache)) {
-                        $petNomesCache[$petDoItem] = $conn->fetchOne(
-                            'SELECT nome FROM pet WHERE id = :id AND estabelecimento_id = :estab',
-                            ['id' => $petDoItem, 'estab' => $baseId]
-                        ) ?: null;
+                        $petNomesCache[$petDoItem] = $this->getRepositorio(Pet::class)
+                            ->buscarNomePorId($baseId, (int) $petDoItem);
                     }
                     if (!empty($petNomesCache[$petDoItem])) {
                         $nome = $petNomesCache[$petDoItem] . ' — ' . $nome;
@@ -227,33 +212,12 @@ class VendaController extends DefaultController
 
                 // Baixa de estoque + movimentação (apenas para produtos físicos)
                 if ($tipo === 'produto') {
-                    $estoqueAnterior = (int) ($produto['estoque_atual'] ?? 0);
-                    $novoEstoque = max(0, $estoqueAnterior - $quantidade);
-
-                    $conn->executeStatement(
-                        'UPDATE produto SET estoque_atual = :novo
-                         WHERE id = :id AND estabelecimento_id = :estab',
-                        ['novo' => $novoEstoque, 'id' => (int) $realId, 'estab' => $baseId]
-                    );
-
-                    $conn->executeStatement(
-                        'INSERT INTO estoque_movimento
-                            (produto_id, estabelecimento_id, quantidade, tipo, origem, data, observacao)
-                         VALUES (:pid, :estab, :qtd, :tipo, :origem, :data, :obs)',
-                        [
-                            'pid'    => (int) $realId,
-                            'estab'  => $baseId,
-                            'qtd'    => $quantidade,
-                            'tipo'   => 'SAIDA',
-                            'origem' => 'Venda Clínica #' . $vendaId,
-                            'data'   => (new \DateTime())->format('Y-m-d H:i:s'),
-                            'obs'    => sprintf(
-                                'Venda para: %s | Estoque anterior: %d | Novo estoque: %d',
-                                $pet['dono_nome'] ?? 'Consumidor Final',
-                                $estoqueAnterior,
-                                $novoEstoque
-                            ),
-                        ]
+                    $produtoRepo->registrarBaixaPorVenda(
+                        $baseId,
+                        (int) $realId,
+                        $quantidade,
+                        (int) $vendaId,
+                        (string) ($pet['dono_nome'] ?? 'Consumidor Final')
                     );
                 }
             }

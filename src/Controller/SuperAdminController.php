@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Estabelecimento;
+use App\Entity\Config;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -637,55 +638,30 @@ class SuperAdminController extends DefaultController
 
     private function upsertConfigs(string $tipo, array $campos, Request $request): void
     {
-        $conn = $this->managerRegistry->getConnection();
-
+        $valores = [];
         foreach ($campos as $chave => $observacao) {
             $valor = $request->get($chave);
-            if ($valor === null) {
-                continue;
+            if ($valor !== null) {
+                $valores[$chave] = $valor;
             }
+        }
 
-            $conn->executeStatement("
-                CREATE TABLE IF NOT EXISTS `config` (
-                    `id`                INT          NOT NULL AUTO_INCREMENT,
-                    `estabelecimento_id` INT         NOT NULL DEFAULT 0,
-                    `chave`             VARCHAR(255) NOT NULL,
-                    `valor`             LONGTEXT         NULL,
-                    `tipo`              VARCHAR(255) NOT NULL,
-                    `observacao`        TEXT             NULL,
-                    PRIMARY KEY (`id`),
-                    UNIQUE KEY `uq_config_estab_tipo_chave` (`estabelecimento_id`, `tipo`(100), `chave`(100))
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-            ");
-
-            $conn->executeStatement("
-                INSERT INTO `config` (`estabelecimento_id`, `tipo`, `chave`, `valor`, `observacao`)
-                VALUES (:estab, :tipo, :chave, :valor, :obs)
-                ON DUPLICATE KEY UPDATE `valor` = VALUES(`valor`)
-            ", [
-                'estab' => self::GLOBAL_ESTAB_ID,
-                'tipo' => $tipo,
-                'chave' => $chave,
-                'valor' => $valor,
-                'obs' => $observacao,
-            ]);
+        if ($valores !== []) {
+            $this->getRepositorio(Config::class)->salvarMapaGlobalPorTipo(
+                $tipo,
+                $valores,
+                $campos,
+                self::GLOBAL_ESTAB_ID
+            );
         }
     }
 
     private function lerConfigsDbal(string $tipo): array
     {
         try {
-            $conn = $this->managerRegistry->getConnection();
-            $rows = $conn->fetchAllAssociative(
-                "SELECT chave, valor FROM config WHERE estabelecimento_id = :estab AND tipo = :tipo",
-                ['estab' => self::GLOBAL_ESTAB_ID, 'tipo' => $tipo]
-            );
-            $mapa = [];
-            foreach ($rows as $row) {
-                $mapa[$row['chave']] = $row['valor'];
-            }
-            return $mapa;
-        } catch (\Throwable ) {
+            return $this->getRepositorio(Config::class)
+                ->listarMapaGlobalPorTipo($tipo, self::GLOBAL_ESTAB_ID);
+        } catch (\Throwable) {
             return [];
         }
     }

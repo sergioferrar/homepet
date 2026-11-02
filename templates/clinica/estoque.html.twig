@@ -49,6 +49,32 @@
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
     
+
+    .estoque-main-tabs {
+        border-bottom: 1px solid #e9ecef;
+        gap: .5rem;
+    }
+    .estoque-main-tabs .nav-link {
+        border: 1px solid transparent;
+        border-radius: .75rem .75rem 0 0;
+        color: #64748b;
+        font-weight: 600;
+        padding: .85rem 1.25rem;
+        transition: color .2s ease, background-color .2s ease, border-color .2s ease;
+    }
+    .estoque-main-tabs .nav-link:hover {
+        color: #334155;
+        background: #f8fafc;
+        border-color: #e9ecef #e9ecef transparent;
+    }
+    .estoque-main-tabs .nav-link.active {
+        color: #4f46e5;
+        background: #fff;
+        border-color: #e9ecef #e9ecef #fff;
+    }
+    .estoque-main-tabs .badge { font-size: .72rem; vertical-align: middle; }
+    #conteudoProdutos, #conteudoServicos { min-height: 240px; }
+
     .quick-add-form {
         background: #f8f9fa;
         border-radius: 0.5rem;
@@ -67,6 +93,20 @@
         padding: 1rem;
         border-left: 4px solid #0d6efd;
     }
+
+    /* A listagem de serviços permanece no fluxo normal da página.
+       Não deve disputar camada com tabelas, abas ou modais. */
+    .servicos-cadastrados-card {
+        position: relative;
+        z-index: 0;
+        isolation: isolate;
+        transform: none;
+    }
+
+    /* Mantém o modal acima do conteúdo da tela, sem alterar o z-index
+       dos cards de produtos/serviços. */
+    #novoProduto.modal { z-index: 1055; }
+    .modal-backdrop { z-index: 1050; }
 
     /* ===== Impressão da planilha de uso interno ===== */
     #planilhaInternaPrint .tabela-print {
@@ -189,7 +229,30 @@
         </div>
     </div>
 
-    <!-- Navegação entre Estoque da Loja e Estoque Interno -->
+    <!-- Navegação principal: Produtos e Serviços -->
+    <ul class="nav nav-tabs estoque-main-tabs mb-4" id="tabsEstoquePrincipal" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-produtos" data-bs-toggle="tab"
+                    data-bs-target="#conteudoProdutos" type="button" role="tab"
+                    aria-controls="conteudoProdutos" aria-selected="true">
+                <i class="bi bi-box-seam me-2"></i>Produtos
+                <span class="badge rounded-pill bg-primary ms-2">{{ produtos|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-servicos" data-bs-toggle="tab"
+                    data-bs-target="#conteudoServicos" type="button" role="tab"
+                    aria-controls="conteudoServicos" aria-selected="false">
+                <i class="bi bi-scissors me-2"></i>Serviços
+                <span class="badge rounded-pill bg-secondary ms-2">{{ servicos|length }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="tabsEstoquePrincipalConteudo">
+    <div class="tab-pane fade show active" id="conteudoProdutos" role="tabpanel" aria-labelledby="tab-produtos">
+
+    <!-- Navegação secundária: Estoque da Loja e Estoque Interno -->
     <ul class="nav nav-pills nav-pills-custom gap-2 mb-4" id="tabsEstoque" role="tablist">
         <li class="nav-item">
             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#estoqueLoja" type="button">
@@ -217,7 +280,9 @@
                 Cadastro Rápido
             </h5>
             
-            <form method="post" action="{{ path('clinica_estoque_entrada') }}" class="quick-add-form">
+            <form method="post" action="{{ path('clinica_estoque_salvar_item') }}" class="quick-add-form">
+                <input type="hidden" name="_token" value="{{ csrf_token('estoque_item') }}">
+                <input type="hidden" name="tipo_item" value="produto">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label small fw-semibold">
@@ -349,6 +414,19 @@
                                         </button>
                                     </form>
                                     
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-editar-item"
+                                            data-tipo="produto" data-id="{{ p.id }}" data-nome="{{ p.nome|e('html_attr') }}"
+                                            data-codigo="{{ p.codigo|default('')|e('html_attr') }}"
+                                            data-valor="{{ p.precoVenda|default('0') }}" data-custo="{{ p.precoCusto|default('0') }}"
+                                            data-estoque="{{ p.estoqueAtual }}" data-unidade="{{ p.unidade|default('un')|e('html_attr') }}"
+                                            data-tipo-estoque="{{ p.tipo_estoque }}"
+                                            data-ncm="{{ p.ncm|default('') }}" data-cfop="{{ p.cfop|default('') }}" data-cest="{{ p.cest|default('') }}"
+                                            data-aliquota-icms="{{ p.aliquotaIcms|default('') }}" data-aliquota-iss="{{ p.aliquotaIss|default('') }}"
+                                            data-aliquota-ipi="{{ p.aliquotaIpi|default('') }}" data-aliquota-pis="{{ p.aliquotaPis|default('') }}"
+                                            data-aliquota-cofins="{{ p.aliquotaCofins|default('') }}" data-aliquota-ibs="{{ p.aliquotaIbs|default('') }}"
+                                            data-aliquota-cbs="{{ p.aliquotaCbs|default('') }}" title="Editar produto">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
                                     <button class="btn btn-sm btn-info text-white btn-gerenciar-estoque ms-2 me-2" 
                                             data-produto-id="{{ p.id }}" 
                                             data-produto-nome="{{ p.nome }}"
@@ -467,6 +545,19 @@
                                            placeholder="Ex.: Rex (internação) / dose">
                                 </td>
                                 <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-editar-item me-1"
+                                            data-tipo="produto" data-id="{{ p.id }}" data-nome="{{ p.nome|e('html_attr') }}"
+                                            data-codigo="{{ p.codigo|default('')|e('html_attr') }}"
+                                            data-valor="{{ p.precoVenda|default('0') }}" data-custo="{{ p.precoCusto|default('0') }}"
+                                            data-estoque="{{ p.estoqueAtual }}" data-unidade="{{ p.unidade|default('un')|e('html_attr') }}"
+                                            data-tipo-estoque="{{ p.tipo_estoque }}"
+                                            data-ncm="{{ p.ncm|default('') }}" data-cfop="{{ p.cfop|default('') }}" data-cest="{{ p.cest|default('') }}"
+                                            data-aliquota-icms="{{ p.aliquotaIcms|default('') }}" data-aliquota-iss="{{ p.aliquotaIss|default('') }}"
+                                            data-aliquota-ipi="{{ p.aliquotaIpi|default('') }}" data-aliquota-pis="{{ p.aliquotaPis|default('') }}"
+                                            data-aliquota-cofins="{{ p.aliquotaCofins|default('') }}" data-aliquota-ibs="{{ p.aliquotaIbs|default('') }}"
+                                            data-aliquota-cbs="{{ p.aliquotaCbs|default('') }}" title="Editar produto">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-danger btn-usar-interno"
                                             data-produto-id="{{ p.id }}"
                                             data-produto-nome="{{ p.nome }}"
@@ -499,7 +590,50 @@
     </div>
     <!-- ==================== FIM ABA INTERNO ==================== -->
     </div>
-</div>
+    </div><!-- /conteudoProdutos -->
+
+    <div class="tab-pane fade" id="conteudoServicos" role="tabpanel" aria-labelledby="tab-servicos">
+        <!-- Serviços não movimentam estoque físico, mas ficam disponíveis para o PDV. -->
+        <div class="card shadow-sm mb-4 servicos-cadastrados-card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+                <div>
+                    <h5 class="mb-1"><i class="bi bi-scissors me-2 text-primary"></i>Serviços cadastrados</h5>
+                    <small class="text-muted">Gerencie consultas, procedimentos, banho e tosa e outros serviços do estabelecimento.</small>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm novoServico">
+                    <i class="bi bi-plus-circle me-1"></i>Novo Serviço
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light"><tr><th class="ps-3">Serviço</th><th>Descrição</th><th>Tipo</th><th class="text-end">Valor</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody>
+                    {% for servico in servicos %}
+                        <tr>
+                            <td class="ps-3 fw-semibold">{{ servico.nome }}</td>
+                            <td>{{ servico.descricao|default('—') }}</td>
+                            <td><span class="badge bg-secondary">{{ servico.tipo|default('clinica') }}</span></td>
+                            <td class="text-end">R$ {{ servico.valor|number_format(2, ',', '.') }}</td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-secondary btn-editar-item"
+                                        data-tipo="servico" data-id="{{ servico.id }}" data-nome="{{ servico.nome|e('html_attr') }}"
+                                        data-descricao="{{ servico.descricao|default('')|e('html_attr') }}"
+                                        data-valor="{{ servico.valor }}" data-tipo-servico="{{ servico.tipo|default('clinica') }}">
+                                    <i class="bi bi-pencil me-1"></i>Editar
+                                </button>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="5" class="text-center text-muted py-5">
+                            <i class="bi bi-scissors fs-2 d-block mb-2"></i>Nenhum serviço cadastrado.
+                        </td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div><!-- /conteudoServicos -->
+    </div><!-- /tabsEstoquePrincipalConteudo -->
 
 <!-- Área imprimível da planilha de uso interno (visível apenas na impressão) -->
 <div id="planilhaInternaPrint" class="d-none">
@@ -586,7 +720,9 @@
             </li>
         </ul>
         
-        <form>
+        <form method="post" action="{{ path('clinica_estoque_salvar_item') }}" class="form-item-estoque">
+            <input type="hidden" name="_token" value="{{ csrf_token('estoque_item') }}">
+            <input type="hidden" name="id" value="">
             <div class="tab-content">
                 <!-- PRODUTO -->
                 <div class="tab-pane fade show active" id="dados">
@@ -595,40 +731,65 @@
                             <label class="form-label fw-semibold">
                                 <i class="bi bi-tag text-primary me-1"></i> Nome do Produto
                             </label>
-                            <input type="text" class="form-control" placeholder="Ex: Ração Premium Adulto">
+                            <input type="text" name="nome" class="form-control" placeholder="Ex: Ração Premium Adulto" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 campo-produto">
                             <label class="form-label fw-semibold">
                                 <i class="bi bi-upc-scan text-primary me-1"></i> Código EAN
                             </label>
-                            <input type="text" class="form-control" placeholder="Ex: 7894561234567">
+                            <input type="text" name="codigo" class="form-control" placeholder="Ex: 7894561234567">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">
                                 <i class="bi bi-diagram-3 text-primary me-1"></i> Tipo
                             </label>
-                            <select class="form-select">
+                            <select class="form-select" name="tipo_item" id="tipo-item-estoque">
                                 <option value="produto">Produto</option>
                                 <option value="servico">Serviço</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">
+                            <label class="form-label fw-semibold" for="preco-venda-item">
                                 <i class="bi bi-currency-dollar text-success me-1"></i> Preço de Venda
                             </label>
-                            <input type="number" step="0.01" class="form-control" placeholder="0,00">
+                            <input type="number" id="preco-venda-item" name="preco_venda" step="0.01" min="0" class="form-control" placeholder="0,00" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 campo-produto">
                             <label class="form-label fw-semibold">
                                 <i class="bi bi-cash-stack text-warning me-1"></i> Custo
                             </label>
-                            <input type="number" step="0.01" class="form-control" placeholder="0,00">
+                            <input type="number" name="preco_custo" step="0.01" min="0" class="form-control" placeholder="0,00">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 campo-produto">
                             <label class="form-label fw-semibold">
                                 <i class="bi bi-stack text-info me-1"></i> Estoque Inicial
                             </label>
-                            <input type="number" class="form-control" placeholder="0">
+                            <input type="number" name="estoque_atual" min="0" step="1" class="form-control" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-4 campo-produto">
+                            <label class="form-label fw-semibold">Unidade</label>
+                            <input type="text" name="unidade" class="form-control" value="un" placeholder="un, cx, kg">
+                        </div>
+                        <div class="col-md-4 campo-produto">
+                            <label class="form-label fw-semibold">Tipo de estoque</label>
+                            <select name="tipo_estoque" class="form-select">
+                                <option value="loja">Somente Loja</option>
+                                <option value="interno">Somente Interno</option>
+                                <option value="ambos">Loja + Interno</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 campo-servico d-none">
+                            <label class="form-label fw-semibold">Aplicação do serviço</label>
+                            <select name="tipo_servico" class="form-select">
+                                <option value="clinica">Clínica</option>
+                                <option value="pet_shop">Pet Shop</option>
+                            </select>
+                        </div>
+                        <div class="col-12 campo-servico d-none">
+                            <label class="form-label fw-semibold">Descrição do serviço</label>
+                            <textarea name="descricao" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
                 </div>
@@ -642,19 +803,19 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">NCM</label>
-                            <input type="text" class="form-control" placeholder="0000.00.00">
+                            <input type="text" name="ncm" class="form-control" placeholder="0000.00.00">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">CFOP</label>
-                            <input type="text" class="form-control" placeholder="5102">
+                            <input type="text" name="cfop" class="form-control" placeholder="5102">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">CEST (opcional)</label>
-                            <input type="text" class="form-control">
+                            <input type="text" name="cest" class="form-control">
                         </div>
                         <div class="col-md-12">
                             <label class="form-label fw-semibold">Código de Serviço Municipal (NFS-e)</label>
-                            <input type="text" class="form-control">
+                            <input type="text" name="codigo_servico_municipal" class="form-control">
                         </div>
                     </div>
                 </div>
@@ -664,23 +825,23 @@
                     <div class="row g-3">
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">ICMS (%)</label>
-                            <input type="number" step="0.01" class="form-control">
+                            <input type="number" name="aliquota_icms" step="0.01" min="0" class="form-control">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">ISS (%)</label>
-                            <input type="number" step="0.01" class="form-control">
+                            <input type="number" name="aliquota_iss" step="0.01" min="0" class="form-control">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">IPI (%)</label>
-                            <input type="number" step="0.01" class="form-control">
+                            <input type="number" name="aliquota_ipi" step="0.01" min="0" class="form-control">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">PIS (%)</label>
-                            <input type="number" step="0.01" class="form-control">
+                            <input type="number" name="aliquota_pis" step="0.01" min="0" class="form-control">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">COFINS (%)</label>
-                            <input type="number" step="0.01" class="form-control">
+                            <input type="number" name="aliquota_cofins" step="0.01" min="0" class="form-control">
                         </div>
                     </div>
                 </div>
@@ -695,11 +856,11 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">IBS (%)</label>
-                            <input type="number" step="0.01" class="form-control">
+                            <input type="number" name="aliquota_ibs" step="0.01" min="0" class="form-control">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">CBS (%)</label>
-                            <input type="number" step="0.01" class="form-control">
+                            <input type="number" name="aliquota_cbs" step="0.01" min="0" class="form-control">
                         </div>
                     </div>
                 </div>
@@ -716,6 +877,7 @@
         </form>
     </div>
 </div>
+</div><!-- /container-fluid -->
 
 <!-- Modal Novo Produto -->
 <div class="modal fade" id="novoProduto" tabindex="-1">
@@ -1107,34 +1269,96 @@
 {% block javascripts %}
 <script>
 $(function () {
-    // ========== MODAL NOVO PRODUTO ==========
-    $('.novoProd').on('click', function () {
+    // ========== MODAL CADASTRO / EDIÇÃO DE PRODUTOS E SERVIÇOS ==========
+    function abrirModalItem(tipoInicial, dados) {
         var $modal = $('#novoProduto');
         var $conteudoForm = $('.formProd').clone().removeClass('d-none');
-        
-        $modal.find('.modal-body').html($conteudoForm.html());
-        
-        var modalInstance = new bootstrap.Modal($modal[0]);
-        modalInstance.show();
-        
-        $modal.one('shown.bs.modal', function () {
-            $modal.find('[data-bs-toggle="tab"]').each(function() {
-                $(this).off('click').on('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    $modal.find('.nav-link').removeClass('active');
-                    $modal.find('.tab-pane').removeClass('show active');
-                    
-                    $(this).addClass('active');
-                    var target = $(this).data('bs-target');
-                    $modal.find(target).addClass('show active');
-                });
-            });
+        var $html = $conteudoForm;
+        var prefixo = 'estoque-item-' + Date.now();
+
+        // Os IDs originais também existem no template oculto .formProd.
+        // IDs duplicados faziam o Bootstrap abrir as abas do template escondido,
+        // impedindo acessar Classificação Fiscal, Impostos e Reforma Tributária.
+        $html.find('.tab-pane[id]').each(function () {
+            var idAntigo = this.id;
+            var idNovo = prefixo + '-' + idAntigo;
+            this.id = idNovo;
+            $html.find('[data-bs-target="#' + idAntigo + '"]').attr('data-bs-target', '#' + idNovo);
+            $html.find('[aria-controls="' + idAntigo + '"]').attr('aria-controls', idNovo);
         });
-        
-        return false;
+
+        $modal.find('.modal-body').empty().append($html.contents());
+        configurarFormularioItem($modal, dados || null, tipoInicial || 'produto');
+
+        var titulo = dados ? 'Editar ' : 'Cadastro de ';
+        titulo += tipoInicial === 'servico' ? 'Serviço' : 'Produto';
+        $modal.find('.modal-title').html('<i class="bi bi-pencil-square me-2"></i>' + titulo);
+
+        bootstrap.Modal.getOrCreateInstance($modal[0]).show();
+    }
+
+    $('.novoProd').on('click', function (e) {
+        e.preventDefault();
+        abrirModalItem('produto', null);
     });
+
+    $('.novoServico').on('click', function (e) {
+        e.preventDefault();
+        abrirModalItem('servico', null);
+    });
+
+    $(document).on('click', '.btn-editar-item', function (e) {
+        e.preventDefault();
+        var dados = $(this).data();
+        abrirModalItem(dados.tipo === 'servico' ? 'servico' : 'produto', dados);
+    });
+
+    function configurarFormularioItem($modal, dados, tipoInicial) {
+        var $form = $modal.find('.form-item-estoque');
+        var tipo = tipoInicial || (dados && dados.tipo) || 'produto';
+        $form.find('[name="id"]').val(dados && dados.id ? dados.id : '');
+        $form.find('#tipo-item-estoque').val(tipo);
+
+        if (dados) {
+            $form.find('[name="nome"]').val(dados.nome || '');
+            $form.find('[name="codigo"]').val(dados.codigo || '');
+            $form.find('[name="preco_venda"]').val(dados.valor != null ? dados.valor : 0);
+            $form.find('[name="preco_custo"]').val(dados.custo || 0);
+            $form.find('[name="estoque_atual"]').val(dados.estoque || 0);
+            $form.find('[name="unidade"]').val(dados.unidade || 'un');
+            $form.find('[name="tipo_estoque"]').val(dados.tipoEstoque || 'loja');
+            $form.find('[name="descricao"]').val(dados.descricao || '');
+            $form.find('[name="tipo_servico"]').val(dados.tipoServico || 'clinica');
+            ['ncm','cfop','cest','aliquota_icms','aliquota_iss','aliquota_ipi','aliquota_pis','aliquota_cofins','aliquota_ibs','aliquota_cbs'].forEach(function(campo) {
+                var chave = campo.replace(/_([a-z])/g, function(_, letra) { return letra.toUpperCase(); });
+                var valorCampo = dados[chave];
+                $form.find('[name="' + campo + '"]').val(valorCampo == null ? '' : valorCampo);
+            });
+        }
+
+        // O Bootstrap controla as abas nativamente. Não interceptamos o click
+        // nem removemos classes manualmente, pois isso quebrava o componente.
+        $form.find('#tipo-item-estoque').off('change.estoqueItem').on('change.estoqueItem', function () {
+            var servico = $(this).val() === 'servico';
+            $form.find('.campo-produto').toggleClass('d-none', servico);
+            $form.find('.campo-servico').toggleClass('d-none', !servico);
+            $form.find('[name="estoque_atual"]').prop('required', false);
+            if (dados && dados.id) {
+                $form.find('[name="estoque_atual"]').prop('disabled', true);
+                $form.find('[name="estoque_atual"]').closest('.col-md-4').find('label').text('Estoque atual (gerenciado em Movimentações)');
+            } else {
+                $form.find('[name="estoque_atual"]').prop('disabled', false);
+            }
+            $form.find('label[for="preco-venda-item"]').text(servico ? 'Valor do Serviço' : 'Preço de Venda');
+            $form.find('.campo-produto :input').prop('disabled', servico);
+            $form.find('.campo-servico :input').prop('disabled', !servico);
+            // O seletor do tipo precisa continuar habilitado para manter o POST correto.
+            $form.find('#tipo-item-estoque').prop('disabled', false);
+        }).trigger('change');
+
+        $form.find('button[type="submit"]').text(tipo === 'servico' ? 'Salvar Serviço' : 'Salvar Produto');
+    }
+
 
     // ========== MODAL GERENCIAR ESTOQUE ==========
     $('.btn-gerenciar-estoque').on('click', function() {

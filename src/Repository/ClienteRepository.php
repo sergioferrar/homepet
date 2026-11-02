@@ -308,4 +308,16 @@ class ClienteRepository extends ServiceEntityRepository
         return $result->fetchAllAssociative();
     }
 
+
+/** Dados mínimos dos clientes usados no autocomplete do PDV. */
+    public function listarParaPdv(int $estabelecimentoId): array
+    {
+        return $this->conn->fetchAllAssociative(
+            "SELECT id, nome, email, telefone
+             FROM homepet_{$estabelecimentoId}.cliente
+             WHERE estabelecimento_id = :estab
+             ORDER BY nome",
+            ['estab' => $estabelecimentoId]
+        );
+    }
 }

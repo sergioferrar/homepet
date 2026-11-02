@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Produto;
+use App\Entity\Servico;
 use App\Entity\Estoque;
 use App\Entity\EstoqueMovimento;
 use App\Service\TenantContext;
@@ -47,6 +48,11 @@ class EstoqueController extends DefaultController
             $produtosEntity = $this->em->getRepository(Produto::class)
                 ->findBy(['estabelecimentoId' => $estabelecimentoId], ['nome' => 'ASC']);
 
+            // Serviços não controlam quantidade em estoque, mas são cadastrados
+            // e editados pela mesma tela para também aparecerem no PDV.
+            $servicos = $this->em->getRepository(Servico::class)
+                ->findBy(['estabelecimentoId' => $estabelecimentoId], ['nome' => 'ASC']);
+
             // Indexa os registros de estoque existentes por produtoId
             $estoquesPorProduto = [];
             $estoques = $this->em->getRepository(Estoque::class)
@@ -67,6 +73,17 @@ class EstoqueController extends DefaultController
                     'nome' => $produto->getNome(),
                     'codigo' => $produto->getCodigo(),
                     'precoVenda' => $produto->getPrecoVenda(),
+                    'precoCusto' => $produto->getPrecoCusto(),
+                    'ncm' => $produto->getNcm(),
+                    'cfop' => $produto->getCfop(),
+                    'cest' => $produto->getCest(),
+                    'aliquotaIcms' => $produto->getAliquotaIcms(),
+                    'aliquotaIss' => $produto->getAliquotaIss(),
+                    'aliquotaIpi' => $produto->getAliquotaIpi(),
+                    'aliquotaPis' => $produto->getAliquotaPis(),
+                    'aliquotaCofins' => $produto->getAliquotaCofins(),
+                    'aliquotaIbs' => $produto->getAliquotaIbs(),
+                    'aliquotaCbs' => $produto->getAliquotaCbs(),
                     'unidade' => $produto->getUnidade(),
                     'estoqueAtual' => $quantidade,
                     'estoque_disponivel' => $quantidade,
@@ -87,6 +104,7 @@ class EstoqueController extends DefaultController
 
             return $this->render('clinica/estoque.html.twig', [
                 'produtos' => $produtos,
+                'servicos' => $servicos,
                 'produtosLoja' => $produtosLoja,
                 'produtosInterno' => $produtosInterno,
                 'estabelecimento' => $estabelecimento,
@@ -98,6 +116,143 @@ class EstoqueController extends DefaultController
             $this->addFlash('danger', 'Erro ao carregar estoque.');
             return $this->redirectToRoute('home');
         }
+    }
+
+    /**
+     * Cadastro e edição de produtos e serviços pela tela de estoque.
+     * O estabelecimento é sempre obtido do contexto do tenant, nunca do POST.
+     *
+     * @Route("/salvar-item", name="clinica_estoque_salvar_item", methods={"POST"})
+     */
+    public function salvarItem(Request $request): Response
+    {
+        $this->switchDB();
+        $estabelecimentoId = (int) $this->tenantContext->getEstabelecimentoId();
+
+        if (!$this->isCsrfTokenValid('estoque_item', (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'A sessão do formulário expirou. Atualize a página e tente novamente.');
+            return $this->redirectToRoute('clinica_estoque_index');
+        }
+
+        $tipo = strtolower(trim((string) $request->request->get('tipo_item', 'produto')));
+        $id = (int) $request->request->get('id', 0);
+        $nome = trim((string) $request->request->get('nome', ''));
+        $descricao = trim((string) $request->request->get('descricao', ''));
+        $valor = $this->normalizarValor($request->request->get('preco_venda', '0'));
+
+        if ($nome === '' || $valor < 0) {
+            $this->addFlash('danger', 'Informe um nome e um valor válido.');
+            return $this->redirectToRoute('clinica_estoque_index');
+        }
+
+        try {
+            if ($tipo === 'servico') {
+                $repo = $this->em->getRepository(Servico::class);
+                $servico = $id > 0
+                    ? $repo->findOneBy(['id' => $id, 'estabelecimentoId' => $estabelecimentoId])
+                    : new Servico();
+
+                if (!$servico) {
+                    throw $this->createNotFoundException('Serviço não encontrado neste estabelecimento.');
+                }
+
+                $servico->setEstabelecimentoId($estabelecimentoId);
+                $servico->setNome($nome);
+                $servico->setDescricao($descricao);
+                $servico->setValor($valor);
+                $servico->setTipo((string) $request->request->get('tipo_servico', 'clinica'));
+                $this->em->persist($servico);
+                $this->em->flush();
+
+                $this->addFlash('success', $id > 0 ? 'Serviço atualizado com sucesso.' : 'Serviço cadastrado com sucesso.');
+            } elseif ($tipo === 'produto') {
+                $repo = $this->em->getRepository(Produto::class);
+                $produto = $id > 0
+                    ? $repo->findOneBy(['id' => $id, 'estabelecimentoId' => $estabelecimentoId])
+                    : new Produto();
+
+                if (!$produto) {
+                    throw $this->createNotFoundException('Produto não encontrado neste estabelecimento.');
+                }
+
+                // Na edição, o saldo é preservado: alterações de estoque devem
+                // passar pelas rotas de entrada/saída/ajuste para gerar histórico.
+                $estoqueInformado = $id > 0
+                    ? $produto->getEstoqueAtual()
+                    : max(0, (int) $request->request->get('estoque_atual', 0));
+                $produto->setEstabelecimentoId($estabelecimentoId);
+                $produto->setNome($nome);
+                $codigo = trim((string) $request->request->get('codigo', ''));
+                $produto->setCodigo($codigo !== '' ? $codigo : null);
+                $produto->setPrecoVenda(number_format($valor, 2, '.', ''));
+                $produto->setPrecoCusto(number_format(max(0, $this->normalizarValor($request->request->get('preco_custo', '0'))), 2, '.', ''));
+                $produto->setUnidade(trim((string) $request->request->get('unidade', 'un')) ?: 'un');
+                $produto->setTipoEstoque((string) $request->request->get('tipo_estoque', 'loja'));
+                $produto->setNcm($this->normalizarInteiroOpcional($request->request->get('ncm')));
+                $produto->setCfop($this->normalizarInteiroOpcional($request->request->get('cfop')));
+                $produto->setCest($this->normalizarInteiroOpcional($request->request->get('cest')));
+                $produto->setAliquotaIcms($this->normalizarFloatOpcional($request->request->get('aliquota_icms')));
+                $produto->setAliquotaIss($this->normalizarFloatOpcional($request->request->get('aliquota_iss')));
+                $produto->setAliquotaIpi($this->normalizarFloatOpcional($request->request->get('aliquota_ipi')));
+                $produto->setAliquotaPis($this->normalizarFloatOpcional($request->request->get('aliquota_pis')));
+                $produto->setAliquotaCofins($this->normalizarFloatOpcional($request->request->get('aliquota_cofins')));
+                $produto->setAliquotaIbs($this->normalizarFloatOpcional($request->request->get('aliquota_ibs')));
+                $produto->setAliquotaCbs($this->normalizarFloatOpcional($request->request->get('aliquota_cbs')));
+                $produto->setEstoqueAtual($estoqueInformado);
+                if (!$produto->getDataCadastro()) {
+                    $produto->setDataCadastro(new \DateTime());
+                }
+
+                $this->em->persist($produto);
+                $this->em->flush();
+
+                // Registra saldo inicial somente no primeiro cadastro. Edições não
+                // criam movimentação artificial nem sobrescrevem estoque por omissão.
+                if ($id === 0 && $estoqueInformado > 0) {
+                    $this->registrarMovimento($produto, 'ENTRADA', $estoqueInformado, 'Estoque inicial do cadastro', 'Cadastro');
+                    $this->em->flush();
+                }
+
+                $this->addFlash('success', $id > 0 ? 'Produto atualizado com sucesso.' : 'Produto cadastrado com sucesso.');
+            } else {
+                $this->addFlash('danger', 'Tipo de cadastro inválido.');
+            }
+        } catch (\Throwable $e) {
+            $this->logger->error('Erro ao salvar item do estoque', [
+                'tipo' => $tipo,
+                'id' => $id,
+                'estabelecimento_id' => $estabelecimentoId,
+                'erro' => $e->getMessage(),
+            ]);
+            $this->addFlash('danger', 'Não foi possível salvar. Verifique os dados e tente novamente.');
+        }
+
+        return $this->redirectToRoute('clinica_estoque_index');
+    }
+
+    private function normalizarInteiroOpcional($valor): ?int
+    {
+        $valor = trim((string) $valor);
+        return $valor === '' ? null : (int) preg_replace('/\D+/', '', $valor);
+    }
+
+    private function normalizarFloatOpcional($valor): ?float
+    {
+        $valor = trim((string) $valor);
+        if ($valor === '') { return null; }
+        return $this->normalizarValor($valor);
+    }
+
+    private function normalizarValor($valor): float
+    {
+        if (is_string($valor)) {
+            $valor = trim($valor);
+            if (strpos($valor, ',') !== false) {
+                $valor = str_replace('.', '', $valor);
+                $valor = str_replace(',', '.', $valor);
+            }
+        }
+        return is_numeric($valor) ? (float) $valor : 0.0;
     }
 
     /**
