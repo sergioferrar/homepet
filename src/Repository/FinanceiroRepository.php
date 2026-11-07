@@ -87,8 +87,11 @@ return $financeiro; // Retorna um objeto válido
 
     public function getRelatorioPorPeriodo($baseId, \DateTime $dataInicio, \DateTime $dataFim): array
     {
-        $sql = "SELECT DATE(f.data) as data, SUM(f.total) as total
+        $sql = "SELECT DATE(f.data) as data, SUM(f.total) as total, p.nome AS pet_nome, c.nome AS cliente_nome
                 FROM homepet_{$baseId}.venda f
+                LEFT JOIN homepet_{$baseId}.pet p ON (p.id = f.pet_id)
+                LEFT JOIN homepet_{$baseId}.cliente c ON (c.id = p.dono_id)
+
                 WHERE f.estabelecimento_id = :baseId
                   AND f.data BETWEEN :dataInicio AND :dataFim
                   AND f.status NOT IN ('Inativa', 'Pendente', 'Carrinho')

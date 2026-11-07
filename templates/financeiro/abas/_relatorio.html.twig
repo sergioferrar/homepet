@@ -34,6 +34,8 @@
             <thead>
                 <tr>
                     <th scope="col">Data</th>
+                    <th scope="col">Cliente</th>
+                    <th scope="col">PET</th>
                     <th scope="col" class="fin-num">Total do dia</th>
                 </tr>
             </thead>
@@ -41,6 +43,8 @@
                 {% for item in relatorio %}
                     <tr data-busca="{{ item.data|date('d/m/Y') }}">
                         <td>{{ item.data|date('d/m/Y') }}</td>
+                        <td>{{ item.cliente_nome }}</td>
+                        <td>{{ item.pet_nome }}</td>
                         <td class="fin-num fw-semibold">R$ {{ item.total|number_format(2, ',', '.') }}</td>
                     </tr>
                 {% endfor %}

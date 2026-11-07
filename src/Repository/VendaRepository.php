@@ -631,9 +631,12 @@ class VendaRepository extends ServiceEntityRepository
         return $this->conn->fetchAllAssociative(
             "SELECT v.id, v.data, v.cliente, v.total,
                     v.metodo_pagamento AS metodoPagamento, v.status,
-                    v.pet_id AS petId, p.nome AS petNome
+                    v.pet_id AS petId, p.nome AS petNome,
+                    if(fp.valor IS NOT NULL, fp.valor, 0) AS debito,
+                    fp.status AS statusFinanceiro
              FROM homepet_{$estabelecimentoId}.venda v
              LEFT JOIN homepet_{$estabelecimentoId}.pet p ON p.id = v.pet_id
+             LEFT JOIN homepet_{$estabelecimentoId}.financeiropendente fp ON (fp.venda_id = v.id AND fp.status = 'Pendente')
              WHERE v.estabelecimento_id = :estab
              ORDER BY v.data DESC",
             ['estab' => $estabelecimentoId]
