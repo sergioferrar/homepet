@@ -37,7 +37,7 @@
                     <tr data-busca="{{ item.dono_nome }} {{ item.pet_nome }} {{ item.descricao }}">
                         <td class="fw-semibold">{{ item.dono_nome|default('—') }}</td>
                         <td>{{ item.pet_nome|default('—') }}</td>
-                        <td class="fin-sec d-none d-lg-table-cell">{{ item.descricao }}</td>
+                        <td class="fin-sec d-none d-lg-table-cell" data-bs-toggle="tooltip" title="{{ item.observacao }}">{{ item.descricao }}</td>
                         <td class="d-none d-md-table-cell">{{ item.data|date('d/m/Y') }}</td>
                         <td class="fin-num fin-pend fw-semibold">R$ {{ item.total|number_format(2, ',', '.') }}</td>
                         <td class="fin-num fin-pend fw-semibold text-success">R$ {{ (item.totalDevido - item.total)|number_format(2, ',', '.') }}</td>
