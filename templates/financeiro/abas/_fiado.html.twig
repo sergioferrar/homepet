@@ -26,7 +26,9 @@
                     <th scope="col">Pet</th>
                     <th scope="col" class="d-none d-lg-table-cell">Descrição</th>
                     <th scope="col" class="d-none d-md-table-cell">Data</th>
-                    <th scope="col" class="fin-num">Valor</th>
+                    <th scope="col" class="fin-num">Valor Devido</th>
+                    <th scope="col" class="fin-num">Total Pago</th>
+                    <th scope="col" class="fin-num">Total da Venda</th>
                     <th scope="col"><span class="visually-hidden">Ações</span></th>
                 </tr>
             </thead>
@@ -38,10 +40,12 @@
                         <td class="fin-sec d-none d-lg-table-cell">{{ item.descricao }}</td>
                         <td class="d-none d-md-table-cell">{{ item.data|date('d/m/Y') }}</td>
                         <td class="fin-num fin-pend fw-semibold">R$ {{ item.total|number_format(2, ',', '.') }}</td>
+                        <td class="fin-num fin-pend fw-semibold text-success">R$ {{ (item.totalDevido - item.total)|number_format(2, ',', '.') }}</td>
+                        <td class="fin-num fin-pend fw-semibold text-danger">R$ {{ item.totalDevido|number_format(2, ',', '.') }}</td>
                         <td class="fin-acoes">
                             <form method="post" action="{{ path('financeiro_confirmar_pagamento', {'id': item.id}) }}" class="d-inline"
                                   onsubmit="return confirm('Confirmar o pagamento de R$ {{ item.total|number_format(2, ',', '.') }}?')">
-                                {% if item.origem == 'SALDO_PDV' %}
+                                {% if item.origem == 'SALDO_PDV' or item.status|lower == 'pendente' %}
                                     {# Saldo de pagamento parcial (PDV): escolhe como o cliente pagou o que faltava #}
                                     <select name="metodo_pagamento" class="form-select form-select-sm d-inline-block w-auto me-1" aria-label="Forma de pagamento do recebimento">
                                         <option value="dinheiro">Dinheiro</option>

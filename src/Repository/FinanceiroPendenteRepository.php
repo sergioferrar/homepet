@@ -222,8 +222,9 @@ class FinanceiroPendenteRepository extends ServiceEntityRepository
 
     public function findAllClinica(int $baseId): array
     {
-        $sql = "SELECT f.id, f.descricao, f.valor, f.valor AS total, f.data, f.origem, p.nome AS pet_nome, c.nome AS dono_nome 
+        $sql = "SELECT f.id, f.descricao, f.valor, f.valor AS total, f.data, f.origem, p.nome AS pet_nome, c.nome AS dono_nome, f.status, v.total AS totalDevido
             FROM homepet_{$baseId}.financeiropendente f
+            LEFT JOIN homepet_{$baseId}.venda v ON (v.id = f.venda_id)
             LEFT JOIN homepet_{$baseId}.pet p ON f.pet_id = p.id
             LEFT JOIN homepet_{$baseId}.cliente c ON p.dono_id = c.id
             WHERE f.estabelecimento_id = :baseId
