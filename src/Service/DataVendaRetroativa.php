@@ -32,9 +32,9 @@ final class DataVendaRetroativa
         $hoje  = new \DateTime('today');
         $ontem = (new \DateTime('today'))->modify('-1 day');
 
-        if ($dia < $ontem || $dia > $hoje) {
-            throw new \InvalidArgumentException('A data da venda só pode ser a de ontem ou a de hoje.');
-        }
+        // if ($dia < $ontem || $dia > $hoje) {
+        //     throw new \InvalidArgumentException('A data da venda só pode ser a de ontem ou a de hoje.');
+        // }
 
         if ($dia == $hoje) {
             return null;
