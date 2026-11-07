@@ -1881,10 +1881,10 @@ async function salvarVenda() {
             showToast('Informe a data da venda.', 'warning');
             return;
         }
-        if (dataVenda < $('#dataVenda').attr('min') || dataVenda > $('#dataVenda').attr('max')) {
-            showToast('A data da venda só pode ser a de ontem ou a de hoje.', 'warning');
-            return;
-        }
+        // if (dataVenda < $('#dataVenda').attr('min') || dataVenda > $('#dataVenda').attr('max')) {
+        //     showToast('A data da venda só pode ser a de ontem ou a de hoje.', 'warning');
+        //     return;
+        // }
     }
 
     const $btn = $('#btnSalvarVenda');
