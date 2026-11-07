@@ -87,8 +87,8 @@ class FinanceiroController extends DefaultController
                 break;
 
             case 'relatorio':
-                $dataInicio = new \DateTime($data['mes_inicio'] . '-01');
-                $dataFim = (new \DateTime($data['mes_fim'] . '-01'))->modify('last day of this month');
+                $dataInicio = new \DateTime($data['mes_inicio']);
+                $dataFim = (new \DateTime($data['mes_fim']))->modify('last day of this month');
                 $data['relatorio'] = $financeiroRepo->getRelatorioPorPeriodo($baseId, $dataInicio, $dataFim);
                 break;
 
