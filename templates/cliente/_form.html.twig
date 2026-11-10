@@ -2,7 +2,7 @@
    Formulário compartilhado de cadastro/edição de cliente.
    Variáveis: modo ('novo'|'editar'), action (URL), cliente (array, opcional), voltar_url #}
 {% set c = cliente|default({}) %}
-{% set opcoes_origem = ['Google', 'Instagram', 'Facebook', 'Indicação de amigos', 'Placa/Fachada', 'WhatsApp', 'TikTok', 'Panfleto/Folheto', 'Outro'] %}
+{% set opcoes_origem = ['Google', 'Instagram', 'Facebook', 'Indicação de amigos', 'Placa/Fachada', 'WhatsApp', 'TikTok', 'Panfleto/Folheto', 'Plano de saúde', 'Outro'] %}
 {% set whatsapp_atual = c.whatsapp ?? (modo == 'novo' ? 'Sim' : '') %}
 {# Cadastros antigos gravavam 'on' quando o botão Sim estava marcado #}
 {% if whatsapp_atual == 'on' %}{% set whatsapp_atual = 'Sim' %}{% endif %}
