@@ -1746,7 +1746,7 @@ class PdvController extends DefaultController
             $entidade = $em->getRepository(Servico::class)->find($idBusca);
         }
 
-        return $entidade ? $entidade->getNome() : ($snapshot ?? "Item #{$idBusca}");
+        return $entidade ? $entidade->getNome() + ($entidade->getDescricao() ? "{$entidade->getDescricao()}": "") : ($snapshot ?? "Item #{$idBusca}");
     }
 
     private function normalizarItens(array $produtos, array $servicos): array
