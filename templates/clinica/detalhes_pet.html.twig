@@ -2034,7 +2034,7 @@ function montarLinhaItem(index) {
                 <optgroup label="Serviços">
                     {% for servico in servicos_clinica|default([]) %}
                         <option value="S-{{ servico.id }}" data-valor="{{ servico.valor|default(0)|number_format(2, '.', '') }}" data-tipo="servico">
-                            {{ servico.nome }} — R$ {{ servico.valor|default(0)|number_format(2, ',', '.') }}
+                            {{ servico.nome }} | {{ servico.descricao }} — R$ {{ servico.valor|default(0)|number_format(2, ',', '.') }}
                         </option>
                     {% endfor %}
                 </optgroup>
